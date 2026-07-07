@@ -1,3 +1,15 @@
+<!--
+  @fileoverview 流程设计器入口页
+  @description
+    双模式可视化流程设计器：
+      - BPMN 2.0 专业模式：基于 bpmn-js，对标炎黄盈动 / 奥哲建模工具；
+      - 经典模式：自绘 SVG，仿钉钉/飞书审批流拖拽建模。
+    附：版本管理（列表 / 切换 / 差异对比）、模拟运行、模板导入导出。
+    配套自研工作流 v2 引擎，PC 端专用，不含电子签章能力。
+  @module views/workflow/design
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 流程设计器页面

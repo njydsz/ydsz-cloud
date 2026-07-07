@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 抄送 Tab
+  @description
+    从原 approval-center/index.vue 拆分而来。
+    负责"抄送我的"列表展示、已读 / 未读状态筛选、标记已读 / 全部已读。
+    通过 emit('refresh-badge') 通知父组件刷新未读角标。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/approval-center/tabs/CCTab
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 抄送 Tab

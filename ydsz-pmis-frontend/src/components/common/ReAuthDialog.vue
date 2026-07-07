@@ -1,7 +1,14 @@
 <!--
-  @file 敏感操作二次认证弹窗
-  @description 支持 PASSWORD / TOTP / BACKUP_CODE 三种凭据切换；可配合 useReAuth 或单独受控使用
+  @fileoverview 敏感操作二次认证弹窗
+  @description 支持 PASSWORD / TOTP / BACKUP_CODE 三种凭据切换：
+  - Props: visible / operationCode / operationName / loading / method
+            / errorMessage / has2fa
+  - Emits: update:visible / update:method / confirm / cancel / switch-method
+  - 可配合 useReAuth 控制状态；也可单独受控使用
+  - 场景: 删除/导出/重置密码等高危操作的二次身份验证
   @module components/common/ReAuthDialog
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

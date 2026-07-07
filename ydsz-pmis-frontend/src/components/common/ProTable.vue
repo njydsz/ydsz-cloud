@@ -1,8 +1,13 @@
 <!--
-  @file 通用高级表格组件
-  @description 集成 el-table / el-pagination / 搜索表单 / 工具栏 / 空状态，
-               配合 useTable composable 使用，大幅减少列表页样板代码。
+  @fileoverview ProTable 通用高级表格组件
+  @description 集成 el-table / el-pagination / 搜索表单 / 工具栏 / 空状态：
+  - Props: columns / data / loading / total / page / size / selection / toolbar
+            / paginationLayout / pageSizes / maxHeight / height / rowKey
+  - Emits: update:page / update:size / selection-change / sort-change
+  - 泛型 T 为行数据类型；配合 useTable composable 使用
   @module components/common/ProTable
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts" generic="T extends Record<string, unknown> = Record<string, unknown>">
 /**

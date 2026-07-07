@@ -1,3 +1,17 @@
+<!--
+  @fileoverview 流程历史数据归档管理页
+  @description
+    运维视角的历史数据管理：
+      1. 归档策略展示（archiveEnabled / retentionDays / batchSize / cron / purgeEnabled 等）；
+      2. 手动归档（可临时覆盖阈值，立即触发一次归档）；
+      3. 手动清理（高危操作，二次确认 + purgeEnabled=false 时强提示）；
+      4. 操作结果摘要（archived / missing / errors / purgedInstances / purgedVariables / costMs）。
+    配置通过 application.yml + nacos 下发，本页仅"查看 + 触发"。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/history
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 流程历史数据归档管理页

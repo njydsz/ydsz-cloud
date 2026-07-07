@@ -1,11 +1,29 @@
 /**
- * @file 中文语言包（默认）
- * @description 集中管理前端所有中文文案，便于 i18n 接入
- * @module locales/zh-CN
+ * @fileoverview 中文语言包（默认语言 / fallbackLocale）
+ * @description 集中管理前端所有中文文案，作为 vue-i18n 的 messages['zh-CN'] 注入。
+ *               任何新增 / 修改必须与 en-US.ts 保持键路径一一对应，避免运行时命中 fallback。
  *
- * 命名规范：
- *  - 按业务模块划分（common / workflow / approval / project / ...）
- *  - 顶层 key 为模块名，二级 key 为页面/组件，三级 key 为具体文案
+ * 维护规范：
+ *  - 仅在本文件内维护中文文案；不要在组件中硬编码中文字符串，复杂短语通过 t('xxx') 调用。
+ *  - 修改前先确认下游 en-US.ts 是否需要同步；如有参数化占位符（如 {n} / {level}）必须保留并在 en-US.ts 中保持同位占位符。
+ *  - 文案长度建议 ≤ 30 个汉字；超长文案拆分子 key 并通过模板字符串组合。
+ *  - 禁止直接修改生成器自动产物（命名空间 key/_mock 等）；如有疑问先 git blame。
+ *
+ * Key 命名规范：
+ *  - 顶层 key = 业务模块名（common / workflow / approval / project / system / execution / dashboard ...）。
+ *  - 二级 key = 页面或子模块（diagram / instance / user / config / rules ...）。
+ *  - 三级及更深 key = 具体文案（confirm / cancel / rules.roleCodeRequired / presetGroups.system ...）。
+ *  - 全部小写 + 驼峰；rules.* 用于表单校验消息；preset.* 用于字典枚举；table.* 用于表头。
+ *
+ * 与 i18n-config 的关系：
+ *  - 本文件不直接依赖项目根的 i18n-config 目录；所有 messages 内联以确保构建期 tree-shaking 命中。
+ *  - 若后续接入 i18n-config（如 @/config/i18n），建议将本文件中的命名空间按模块切分为子文件
+ *    （locales/zh-CN/common.ts 等），再由 i18n-config 统一装配；切勿破坏既有 key 路径。
+ *  - 运行时通过 locales/index.ts 的 setLocale(locale) 切换；切勿在业务代码中直接修改 vue-i18n 内部状态。
+ *
+ * @module locales/zh-CN
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 export default {
   common: {

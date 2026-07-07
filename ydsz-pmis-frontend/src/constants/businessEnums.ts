@@ -1,19 +1,13 @@
 /**
- * @file 业务枚举常量集中定义
- * @description 将散落在 30+ 页面的 statusMap/typeMap/levelMap 集中管理，
- *              新代码应优先使用此文件常量，旧代码逐步迁移。
+ * @fileoverview 业务枚举常量集中定义
+ * @description 将散落在 30+ 页面的 statusMap / typeMap / levelMap 集中管理：
+ * - 按模块分组的 OptionVO 枚举（通用状态、项目模块、执行模块、财务模块、售后模块、资源模块）
+ * - STATUS_TAG_TYPE: 状态到 el-tag type 的映射
+ * - 工具函数: toOptions / getLabel
+ * - 新代码应优先使用本文件常量，旧代码逐步迁移
  * @module constants/businessEnums
- *
- * 使用方式：
- * ```ts
- * import { WBS_TASK_STATUS, STATUS_TAG_TYPE } from '@/constants/businessEnums'
- *
- * // 在模板中
- * <StatusTag :value="row.status" :map="WBS_TASK_STATUS" />
- *
- * // 在脚本中
- * if (row.status === WBS_TASK_STATUS.COMPLETED.value) { ... }
- * ```
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 import type { OptionVO } from '@/types/api'
 

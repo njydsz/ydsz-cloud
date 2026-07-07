@@ -1,10 +1,13 @@
 <!--
-  @file 快速访问组件 (P2-14 收藏/快速访问)
-  @description 收藏与最近访问的快速入口面板, 双 Tab 切换:
-               - 收藏 Tab: 展示当前用户收藏的页面/项目/合同, 点击跳转并记录访问
-               - 最近访问 Tab: 展示最近 10 条访问记录, 点击跳转
-               API 调用失败时降级为空列表, 不阻断渲染.
+  @fileoverview 快速访问组件 (P2-14 收藏/快速访问)
+  @description 收藏与最近访问的快速入口面板，双 Tab 切换：
+  - 收藏 Tab: 展示当前用户收藏的页面/项目/合同
+  - 最近访问 Tab: 展示最近 10 条访问记录
+  - 点击跳转并自动调用 recordAccess 记录访问
+  - API 调用失败时降级为空列表，不阻断渲染
   @module components/common/QuickAccess
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

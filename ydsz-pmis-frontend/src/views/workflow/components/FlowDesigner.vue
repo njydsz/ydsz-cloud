@@ -1,3 +1,20 @@
+<!--
+  @fileoverview 流程设计器（轻量经典模式，SVG 自绘）
+  @description
+    节点面板 + SVG 画布拖拽 + 边绘制 + JSON 模型导出。
+    对标钉钉 / 飞书 / Activiti-Modeler 的轻量可视化设计器。
+    实现要点：
+      1. 采用 SVG 自绘（避免引入 logic-flow 等重依赖）；
+      2. 节点拖拽：mousedown / mousemove / mouseup；
+      3. 边绘制：节点右上 / 右下锚点 → 下一节点左上锚点；
+      4. 节点属性面板：右侧抽屉编辑；
+      5. 模型导出：JSON → 后端转换为 BPMN XML；
+      6. 内置 4 套模板（立项 / 变更 / 结项 / 通用）。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/components/FlowDesigner
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 流程设计器（轻量版）

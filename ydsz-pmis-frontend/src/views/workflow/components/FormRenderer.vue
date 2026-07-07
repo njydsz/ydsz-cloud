@@ -1,3 +1,17 @@
+<!--
+  @fileoverview 运行时表单渲染组件
+  @description
+    P1-1：基于 form-create 渲染动态表单，根据后端返回的字段权限
+    （EDIT / READONLY / HIDDEN）控制每个字段的编辑 / 只读 / 隐藏状态。
+    流程实例详情页审批区域使用：
+      - 接收 instanceId 和 formSchema 作为 props；
+      - 调用 getFormRenderData 获取字段权限；
+      - 暴露 getFormData / validate 方法供父组件调用。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/components/FormRenderer
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 运行时表单渲染组件

@@ -1,7 +1,11 @@
 <!--
-  @file Element Plus 全局配置提供者
-  @description 统一注入 Element Plus 的国际化语言包与组件默认尺寸，供 App.vue 或子树使用
+  @fileoverview Element Plus 全局配置提供者
+  @description 统一注入 Element Plus 的国际化语言包与组件默认尺寸。
+  - 由 App.vue 在根节点包裹，子树无需再单独配置
+  - 默认中文 + default 尺寸
   @module components/common/ConfigProvider
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue'

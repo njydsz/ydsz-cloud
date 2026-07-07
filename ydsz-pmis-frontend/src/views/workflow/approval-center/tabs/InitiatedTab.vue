@@ -1,3 +1,13 @@
+<!--
+  @fileoverview 我发起的 Tab
+  @description
+    从原 approval-center/index.vue 拆分而来。
+    负责"我发起的"流程实例列表展示、查询（流程编码 / 状态筛选）。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/approval-center/tabs/InitiatedTab
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 我发起的 Tab

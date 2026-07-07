@@ -1,7 +1,14 @@
 <!--
-  @file 通用空状态组件
-  @description 列表/表格/搜索结果为空时的展示组件，支持 4 种预设场景与自定义内容
+  @fileoverview 通用空状态组件
+  @description 列表/表格/搜索结果为空时的展示组件：
+  - Props: preset(list/search/network/noPermission/custom) / title / description /
+            icon / imageUrl / iconSize / blockHeight / actionText / actionType
+  - Emits: action
+  - Slots: action(CTA 按钮) / default(额外说明)
+  - 场景: 列表空、搜索无结果、网络异常、无权限
   @module components/common/EmptyState
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

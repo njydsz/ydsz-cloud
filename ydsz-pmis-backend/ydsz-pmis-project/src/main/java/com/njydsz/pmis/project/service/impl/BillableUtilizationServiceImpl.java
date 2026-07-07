@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 可计费利用率服务实现
@@ -300,7 +301,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
     private long countDistinctEmployee(List<Map<String, Object>> rows) {
         return rows.stream()
                 .map(r -> toLong(r.get("employeeId")))
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .distinct()
                 .count();
     }

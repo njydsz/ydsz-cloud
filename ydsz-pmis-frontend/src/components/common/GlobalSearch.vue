@@ -1,11 +1,14 @@
 <!--
-  @file 全局搜索弹窗
-  @description Ctrl+K 唤起的全局搜索：
-    1. 空关键词：展示最近访问（复用 /recent-access 接口）
-    2. 有关键词：菜单导航本地过滤 + 项目全文检索（PG tsvector，防抖 300ms，P2-19 替代 ES）
-    3. 键盘导航：↑↓ 切换、Enter 打开、Esc 关闭
-    4. 打开页面后自动记录到最近访问
+  @fileoverview 全局搜索弹窗（Ctrl+K 唤起）
+  @description 顶部全局搜索入口：
+  - 空关键词：展示最近访问
+  - 有关键词：菜单导航本地过滤 + 项目全文检索
+  - 键盘导航：↑↓ 切换、Enter 打开、Esc 关闭
+  - 打开页面后自动记录到最近访问
+  - 数据来源: @/api/search、@/api/favorite
   @module components/common/GlobalSearch
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'

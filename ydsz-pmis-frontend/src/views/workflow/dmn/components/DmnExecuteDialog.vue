@@ -1,7 +1,12 @@
 <!--
-  @file DMN 决策表执行测试弹窗
-  @description 输入参数 JSON → 调用 execute API → 展示输出结果
+  @fileoverview DMN 决策表执行测试弹窗
+  @description
+    输入参数 JSON → 调用 execute API → 展示输出结果。
+    用于发布前 / 上线后对决策表进行规则命中验证。
+    配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/dmn/components/DmnExecuteDialog
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'

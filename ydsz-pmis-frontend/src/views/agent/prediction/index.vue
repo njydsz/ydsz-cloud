@@ -1,3 +1,14 @@
+<!--
+  @fileoverview AI 智能体预测结果历史
+
+  <详细说明，包括：>
+  - 业务模块归属: AI Agent 预测记录查询与分析
+  - 关键能力: 分页查询 + 类型/告警等级筛选 + 详情侧滑窗 + JSON 格式化输出 + 命中规则与建议措施
+  - 关联的后端接口: @/api/agent/prediction
+
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * AI 智能体预测结果历史

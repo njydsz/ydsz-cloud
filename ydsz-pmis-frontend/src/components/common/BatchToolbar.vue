@@ -1,7 +1,12 @@
 <!--
-  @file 通用批量操作工具栏组件
-  @description 列表选中行后顶部滑入展示的批量操作条，支持自定义操作按钮与清空选择
+  @fileoverview 通用批量操作工具栏组件
+  @description 列表选中行后顶部滑入展示的批量操作条：
+  - Props: selectedCount(已选行数)、actions(批量操作按钮配置)
+  - Emits: clear(清空选择)
+  - 配合 v-permission 指令实现按钮级权限控制
   @module components/common/BatchToolbar
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script lang="ts">
 /**

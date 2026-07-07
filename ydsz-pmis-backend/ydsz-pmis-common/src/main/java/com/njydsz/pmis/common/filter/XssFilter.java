@@ -12,9 +12,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.HtmlUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -113,7 +115,7 @@ public class XssFilter extends OncePerRequestFilter {
 
         private Enumeration<String> sanitizedHeaders(Enumeration<String> headers) {
             if (headers == null) return null;
-            java.util.List<String> list = new java.util.ArrayList<>();
+            List<String> list = new ArrayList<>();
             while (headers.hasMoreElements()) {
                 list.add(sanitize(headers.nextElement()));
             }

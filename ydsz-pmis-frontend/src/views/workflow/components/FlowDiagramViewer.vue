@@ -1,3 +1,19 @@
+<!--
+  @fileoverview 流程图查看器（SVG 自绘）
+  @description
+    消费后端 getDiagram 接口，渲染节点 + 边 + 高亮当前节点。
+    P0-07：对标钉钉 / 飞书审批流程图。
+    设计要点：
+      1. 不引入新依赖，纯 SVG + Vue 3 渲染；
+      2. 节点 4 种状态：已完成（灰）/ 当前（蓝）/ 未到达（白）/ 已驳回（红）；
+      3. 边的状态：已完成（实线）/ 未到达（虚线）/ 已驳回（红线）；
+      4. 鼠标悬停节点显示扩展属性；
+      5. 支持缩放与平移。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/components/FlowDiagramViewer
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 流程图查看器（SVG 自绘）

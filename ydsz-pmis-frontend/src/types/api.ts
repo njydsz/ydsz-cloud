@@ -1,12 +1,14 @@
 /**
- * PMIS 通用 API 类型（批次 19 P2-4 落地）
- *
- * 收口 79 个 any 警告的核心：
- *   1. ApiResponse<T> 统一后端 R<T> 包装
- *   2. PageData<T> 统一分页响应
- *   3. PageQuery 统一分页请求
- *   4. BusinessEntity 业务实体基类
- *   5. 配合 .eslintrc.cjs 中 no-explicit-any: error 强制收口
+ * @fileoverview PMIS 通用 API 类型（批次 19 P2-4 落地）
+ * @description 收口 any 警告的核心：
+ * - ApiResponse<T> 统一后端 R<T> 包装
+ * - PageData<T> 统一分页响应
+ * - PageQuery 统一分页请求
+ * - BusinessEntity 业务实体基类
+ * - 配合 .eslintrc.cjs 中 no-explicit-any: error 强制收口
+ * @module types/api
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 
 /** 分页查询参数（与后端 PageQuery 一致） */

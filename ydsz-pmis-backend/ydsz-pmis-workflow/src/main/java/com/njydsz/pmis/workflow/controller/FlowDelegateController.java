@@ -59,14 +59,14 @@ public class FlowDelegateController {
      */
     @PostMapping("/delegate-auth/create")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-    public Result<Long> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
+    public Result<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
         FlowDelegateAuthDO auth = new FlowDelegateAuthDO();
         BeanUtils.copyProperties(dto, auth);
         // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
         if (auth.getOwnerUserId() == null) {
             auth.setOwnerUserId(SecurityContext.getUserId());
         }
-        Long id = delegateAuthService.create(auth);
+        String id = delegateAuthService.create(auth);
         return Result.ok(id);
     }
 
@@ -75,8 +75,8 @@ public class FlowDelegateController {
      */
     @PostMapping("/delegate-auth/{id}/revoke")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-    public Result<Void> revokeDelegateAuth(@PathVariable @Min(1) Long id) {
-        Long ownerId = SecurityContext.getUserId();
+    public Result<Void> revokeDelegateAuth(@PathVariable String id) {
+        String ownerId = SecurityContext.getUserId();
         delegateAuthService.revoke(id, ownerId);
         return Result.ok();
     }
@@ -86,9 +86,9 @@ public class FlowDelegateController {
      */
     @PostMapping("/delegate-auth/{id}/status")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-    public Result<Void> updateDelegateAuthStatus(@PathVariable @Min(1) Long id,
+    public Result<Void> updateDelegateAuthStatus(@PathVariable String id,
                                                  @RequestParam String status) {
-        Long operatorId = SecurityContext.getUserId();
+        String operatorId = SecurityContext.getUserId();
         delegateAuthService.updateStatus(id, status, operatorId);
         return Result.ok();
     }
@@ -99,8 +99,8 @@ public class FlowDelegateController {
     @GetMapping("/delegate-auth/mine")
     public Result<List<FlowDelegateAuthDO>> listMyDelegateAuths(
             @RequestParam(required = false) String status) {
-        Long ownerId = SecurityContext.getUserId();
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String ownerId = SecurityContext.getUserId();
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(delegateAuthService.listMine(ownerId, tenantId, status));
     }
 
@@ -110,8 +110,8 @@ public class FlowDelegateController {
     @GetMapping("/delegate-auth/as-delegate")
     public Result<List<FlowDelegateAuthDO>> listAsDelegate(
             @RequestParam(required = false) String status) {
-        Long delegateUserId = SecurityContext.getUserId();
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String delegateUserId = SecurityContext.getUserId();
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(delegateAuthService.listAsDelegate(delegateUserId, tenantId, status));
     }
 
@@ -122,7 +122,7 @@ public class FlowDelegateController {
     public Result<PageResult<?>> myDelegateLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        Long delegateUserId = SecurityContext.getUserId();
+        String delegateUserId = SecurityContext.getUserId();
         return Result.ok(delegateAuthService.listDelegateLog(delegateUserId, page, size));
     }
 
@@ -133,7 +133,7 @@ public class FlowDelegateController {
     public Result<PageResult<?>> myOwnerLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        Long ownerUserId = SecurityContext.getUserId();
+        String ownerUserId = SecurityContext.getUserId();
         return Result.ok(delegateAuthService.listOwnerLog(ownerUserId, page, size));
     }
 }

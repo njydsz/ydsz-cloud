@@ -1,8 +1,10 @@
 /**
- * @file 表单模板库 - 预置常用业务表单 schema
- * @module views/workflow/form-design/templates
+ * @fileoverview 表单模板库 - 预置常用业务表单 schema
  * @description P2-7: 提供 5 个开箱即用的表单模板，用户可一键导入设计器。
  *   模板基于 form-create/element-ui rule 结构，分类对齐流程模板库（HR/FINANCE/ADMIN/PROJECT/GENERAL）。
+ * @module views/workflow/form-design/templates
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 
 /** 表单模板项 */

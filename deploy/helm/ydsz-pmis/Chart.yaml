@@ -1,3 +1,9 @@
+# ============================================================
+# Helm Chart 元数据
+#
+# 定义 YDSZ PMIS 项目的 Helm Chart 信息（名称、版本、维护者、关键字）
+# 渲染逻辑与默认参数见同目录 values.yaml，环境差异见 values-{dev,uat,sit,prod}.yaml
+# ============================================================
 apiVersion: v2
 name: ydsz-pmis
 description: 南京云顶 PMIS · 项目管理信息系统 Helm Chart（7 个后端微服务 + 1 个前端）

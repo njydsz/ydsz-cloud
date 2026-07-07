@@ -1,26 +1,13 @@
 /**
- * @file v-lazy 图片懒加载指令
- * @description 基于 IntersectionObserver 实现图片进入视口时才加载 src，减少首屏带宽和渲染开销。
- *              适用于长列表、表格头像、相册等大量图片场景。
+ * @fileoverview v-lazy 图片懒加载指令
+ * @description 基于 IntersectionObserver 实现图片进入视口时才加载 src，减少首屏带宽和渲染开销：
+ * - 用法: <img v-lazy="'url'" /> 或 <img v-lazy="{ src, placeholder, rootMargin, threshold }" />
+ * - 实现: 优先使用原生 loading="lazy"，回退到 IntersectionObserver
+ * - 元素卸载时自动 disconnect，避免内存泄漏
+ * - 适用于长列表、表格头像、相册等大量图片场景
  * @module directives/lazy
- *
- * 用法：
- * ```vue
- * <!-- 基础用法：进入视口时加载图片 -->
- * <img v-lazy="'https://example.com/avatar.png'" />
- *
- * <!-- 带占位图：未加载时显示占位图 -->
- * <img v-lazy="{ src: photoUrl, placeholder: '/loading.png' }" />
- *
- * <!-- 自定义 root margin：提前 100px 预加载 -->
- * <img v-lazy="{ src: photoUrl, rootMargin: '100px' }" />
- * ```
- *
- * 实现说明：
- *  - 优先使用原生 `loading="lazy"` 属性（现代浏览器支持，零 JS 开销）
- *  - 回退到 IntersectionObserver（兼容老浏览器）
- *  - 元素卸载时自动 disconnect observer，避免内存泄漏
- *  - 支持 src 变更时重新观察（updated 钩子）
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 import type { App, Directive, DirectiveBinding } from 'vue'
 

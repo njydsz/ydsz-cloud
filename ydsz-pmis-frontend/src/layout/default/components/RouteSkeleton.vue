@@ -1,8 +1,12 @@
 <!--
-  @file 路由骨架屏
-  @description 路由懒加载时的骨架屏占位组件，模拟典型列表页布局（标题栏 + 筛选栏 + 表格行），
-               避免白屏闪烁，提升用户感知性能。配合 <Suspense> 的 #fallback 插槽使用。
+  @fileoverview 路由骨架屏
+  @description 路由懒加载时的骨架屏占位组件：
+  - 模拟典型列表页布局：标题栏 + 筛选栏 + 表格行
+  - 避免白屏闪烁，提升用户感知性能
+  - 配合 <Suspense> 的 #fallback 插槽使用
   @module layout/default/components/RouteSkeleton
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <template>
   <div class="route-skeleton" role="status" :aria-label="$t('common.pageLoading')">

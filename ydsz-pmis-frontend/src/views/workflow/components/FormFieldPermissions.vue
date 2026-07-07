@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 表单字段权限配置组件
+  @description
+    BPMN 用户任务节点的"字段级权限"配置器：按用户 / 角色控制字段的
+    EDIT（可编辑）/ READONLY（只读）/ HIDDEN（隐藏）。
+    与 FormRenderer 配合，审批页面按权限动态渲染字段状态。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/components/FormFieldPermissions
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <template>
   <div class="form-field-permissions">
     <div class="ffp__header">

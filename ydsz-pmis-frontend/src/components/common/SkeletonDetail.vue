@@ -1,7 +1,12 @@
 <!--
-  @file 通用详情骨架屏组件
-  @description 详情页首次加载时以骨架占位替代空白表单
+  @fileoverview 通用详情骨架屏组件
+  @description 详情页首次加载时以骨架占位替代空白表单：
+  - Props: rows(骨架文本行数)
+  - 包含头部圆形占位 + 标题 + 多行文本
+  - 场景: 详情页/表单页首屏占位
   @module components/common/SkeletonDetail
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

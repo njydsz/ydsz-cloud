@@ -1,7 +1,12 @@
 <!--
-  @file 通用表格骨架屏组件
-  @description 列表首次加载时以骨架占位替代空白表格，缓解感知加载延迟
+  @fileoverview 通用表格骨架屏组件
+  @description 列表首次加载时以骨架占位替代空白表格：
+  - Props: rows(骨架行数) / columns(骨架列数)
+  - 渲染与表格结构一致的骨架占位，避免空白闪烁
+  - 场景: 列表首屏、骨架屏
   @module components/common/SkeletonTable
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

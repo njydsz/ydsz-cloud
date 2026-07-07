@@ -1,7 +1,12 @@
 <!--
-  @file 通用状态标签
-  @description 通过 status 编码与映射表自动渲染带色彩的 el-tag，用于状态/审批/工作流节点等枚举展示
+  @fileoverview 通用状态标签
+  @description 通过 status 编码与映射表自动渲染带色彩的 el-tag：
+  - Props: value / map / fallbackType / label / type / size / effect / plain
+  - 优先使用 map[value] 解析；未命中则回退到 fallbackType 与值本身
+  - 场景: 状态/审批结果/工作流节点等枚举展示
   @module components/common/StatusTag
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

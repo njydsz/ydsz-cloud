@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 全部流程实例 Tab（管理员视图）
+  @description
+    GAP-P0-1：对标钉钉 / 飞书 / 企微审批中心"全部"Tab。
+    仅 workflow:monitor:view 权限可见，展示当前租户下所有流程实例。
+    复用 listAllInstances API（/workflow/engine/instance/all）。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/approval-center/tabs/AllTab
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 全部流程实例 Tab（管理员视图）

@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 多智能体编排可视化页面
+
+  <详细说明，包括：>
+  - 业务模块归属: AI Agent 智能体编排，支持 4 种编排模式（SEQUENTIAL/PARALLEL/VOTING/CASCADE）
+  - 关键能力: 流程图（内嵌 SVG 自绘） + ECharts 柱状结果对比 + 阈值判定
+  - 关联的后端接口: @/api/agent/orchestration
+
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * 多智能体编排可视化页面

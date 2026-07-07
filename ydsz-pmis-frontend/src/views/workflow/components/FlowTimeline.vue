@@ -1,3 +1,15 @@
+<!--
+  @fileoverview 审批轨迹时间线组件
+  @description
+    消费后端 getTimeline 接口，按时间轴展示流程完整生命周期事件。
+    P0-08：对标钉钉 / 飞书 / Activiti History Service。
+    支持事件类型：START / TASK_COMPLETED / URGE / TRANSFER / DELEGATE / COUNTERSIGN /
+    TIMEOUT / COMPLETE / REJECT / SUSPEND / ACTIVATE / RECALL / JUMP / CC。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/components/FlowTimeline
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 审批轨迹时间线组件

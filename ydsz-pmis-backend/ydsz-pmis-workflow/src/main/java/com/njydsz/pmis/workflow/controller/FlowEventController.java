@@ -11,7 +11,6 @@ import com.njydsz.pmis.workflow.service.FlowEventSubscriptionService;
 import com.njydsz.pmis.workflow.service.FlowNotifyChannelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -80,8 +79,8 @@ public class FlowEventController {
             @RequestParam String messageName,
             @RequestParam(required = false) String correlationKey,
             @RequestBody(required = false) String payload,
-            @RequestParam(required = false) Long tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+            @RequestParam(required = false) String tenantId) {
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(eventSubscriptionService.correlateMessage(tid, messageName, correlationKey, payload));
     }
 
@@ -100,10 +99,10 @@ public class FlowEventController {
     @PostMapping("/event/throw-error")
     public Result<Integer> throwError(
             @RequestParam String errorCode,
-            @RequestParam(required = false) Long instanceId,
+            @RequestParam(required = false) String instanceId,
             @RequestBody(required = false) String payload,
-            @RequestParam(required = false) Long tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+            @RequestParam(required = false) String tenantId) {
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(eventSubscriptionService.throwError(tid, instanceId, errorCode, payload));
     }
 
@@ -115,7 +114,7 @@ public class FlowEventController {
      */
     @GetMapping("/instance/{instanceId}/event-subscriptions")
     public Result<List<com.njydsz.pmis.workflow.entity.FlowEventSubscriptionDO>> listEventSubscriptions(
-            @PathVariable @Min(1) Long instanceId) {
+            @PathVariable String instanceId) {
         return Result.ok(eventSubscriptionService.listByInstance(instanceId));
     }
 
@@ -129,8 +128,8 @@ public class FlowEventController {
      */
     @GetMapping("/notify-channel/list")
     public Result<List<FlowNotifyChannelDO>> listNotifyChannels(
-            @RequestParam(required = false) Long tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+            @RequestParam(required = false) String tenantId) {
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(notifyChannelService.listChannels(tid));
     }
 
@@ -144,7 +143,7 @@ public class FlowEventController {
     @PrePermission(PermissionCodes.WORKFLOW_NOTIFY_CONFIG)
     public Result<FlowNotifyChannelDO> saveNotifyChannel(@RequestBody FlowNotifyChannelDO dto) {
         if (dto.getTenantId() == null) {
-            dto.setTenantId(SecurityContext.getTenantIdOrDefault(1L));
+            dto.setTenantId(SecurityContext.getTenantIdOrDefault("1"));
         }
         return Result.ok(notifyChannelService.saveChannel(dto));
     }
@@ -157,7 +156,7 @@ public class FlowEventController {
      * @return 统一响应结果
      */
     @PutMapping("/notify-channel/{id}/toggle")
-    public Result<Void> toggleNotifyChannel(@PathVariable @Min(1) Long id,
+    public Result<Void> toggleNotifyChannel(@PathVariable String id,
                                              @RequestParam Boolean enabled) {
         notifyChannelService.toggleChannel(id, enabled);
         return Result.ok();
@@ -171,7 +170,7 @@ public class FlowEventController {
      */
     @OperationLog(module = "工作流", action = "删除通知通道", bizType = "FLOW_NOTIFY_CHANNEL")
     @DeleteMapping("/notify-channel/{id}")
-    public Result<Void> deleteNotifyChannel(@PathVariable @Min(1) Long id) {
+    public Result<Void> deleteNotifyChannel(@PathVariable String id) {
         notifyChannelService.deleteChannel(id);
         return Result.ok();
     }

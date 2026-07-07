@@ -1,7 +1,14 @@
 <!--
-  @file 密码强度条（5 段）
-  @description 展示 0-4 强度分对应的 5 段进度条 + 等级文字 + 改进建议；支持自带输入框或纯展示模式
+  @fileoverview 密码强度条（5 段）
+  @description 展示 0-4 强度分对应的 5 段进度条 + 等级文字 + 改进建议：
+  - Props: modelValue / password / showRules / showSuggestions / compact
+            / showInput / placeholder
+  - Emits: update:modelValue / change
+  - 支持两种模式：自带输入框（v-model）或纯展示（:password）
+  - 计算来自 @/composables/usePasswordStrength
   @module components/common/PasswordStrengthBar
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

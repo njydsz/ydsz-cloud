@@ -1,3 +1,13 @@
+<!--
+  @fileoverview 已办任务 Tab
+  @description
+    从原 approval-center/index.vue 拆分而来。
+    负责"我的已办"列表展示、查询（含时间范围 / 流程类型筛选）。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/approval-center/tabs/DoneTab
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 已办任务 Tab

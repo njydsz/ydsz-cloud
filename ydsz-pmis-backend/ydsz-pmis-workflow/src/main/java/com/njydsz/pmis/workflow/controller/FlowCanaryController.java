@@ -6,7 +6,6 @@ import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.service.FlowCanaryService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -50,7 +49,7 @@ public class FlowCanaryController {
     @PostMapping("/canary/{definitionId}/publish")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> publishCanary(
-            @PathVariable @Min(1) Long definitionId,
+            @PathVariable String definitionId,
             @RequestParam(defaultValue = "10") int initialPercent,
             @RequestParam(defaultValue = "USER_HASH") String strategy,
             @RequestParam(required = false) String note) {
@@ -72,7 +71,7 @@ public class FlowCanaryController {
     @PostMapping("/canary/{definitionId}/adjust")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> adjustCanary(
-            @PathVariable @Min(1) Long definitionId,
+            @PathVariable String definitionId,
             @RequestParam int newPercent,
             @RequestParam(required = false) String note) {
         canaryService.adjustCanaryPercent(definitionId, newPercent,
@@ -92,7 +91,7 @@ public class FlowCanaryController {
     @PostMapping("/canary/{definitionId}/promote")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> promoteCanary(
-            @PathVariable @Min(1) Long definitionId,
+            @PathVariable String definitionId,
             @RequestParam(required = false) String note) {
         canaryService.promoteCanary(definitionId,
                 SecurityContext.getUserId(), SecurityContext.getUsername(), note);
@@ -111,7 +110,7 @@ public class FlowCanaryController {
     @PostMapping("/canary/{definitionId}/rollback")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> rollbackCanary(
-            @PathVariable @Min(1) Long definitionId,
+            @PathVariable String definitionId,
             @RequestParam(required = false) String note) {
         canaryService.rollbackCanary(definitionId,
                 SecurityContext.getUserId(), SecurityContext.getUsername(), note);
@@ -128,8 +127,8 @@ public class FlowCanaryController {
     @GetMapping("/canary/{flowCode}/rollout-log")
     public Result<List<Map<String, Object>>> rolloutLog(
             @PathVariable String flowCode,
-            @RequestParam(required = false) Long tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+            @RequestParam(required = false) String tenantId) {
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(canaryService.listCanaryRolloutLog(flowCode, tid));
     }
 }

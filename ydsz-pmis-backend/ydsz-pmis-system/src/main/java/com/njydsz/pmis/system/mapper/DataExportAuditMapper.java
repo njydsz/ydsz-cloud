@@ -5,6 +5,8 @@ import com.njydsz.pmis.system.entity.DataExportAuditDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 数据导出审计 Mapper
  *
@@ -29,6 +31,6 @@ public interface DataExportAuditMapper extends BaseMapper<DataExportAuditDO> {
      * @param limit  最大条数
      * @return 导出审计列表
      */
-    java.util.List<DataExportAuditDO> selectByUser(@Param("userId") Long userId,
+    List<DataExportAuditDO> selectByUser(@Param("userId") Long userId,
                                                    @Param("limit") int limit);
 }

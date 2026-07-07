@@ -1,3 +1,15 @@
+<!--
+  @fileoverview 表单设计器入口页
+  @description
+    双模式表单设计器：
+      - 可视化拖拽模式（基于 form-create-designer）；
+      - JSON 编辑模式（CodeMirror，支持模板库一键导入）。
+    支持保存表单 schema 到后端，作为流程节点的动态表单来源。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/form-design
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 表单设计器页面

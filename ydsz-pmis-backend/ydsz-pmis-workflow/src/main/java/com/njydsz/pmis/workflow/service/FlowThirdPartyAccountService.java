@@ -21,7 +21,7 @@ public interface FlowThirdPartyAccountService {
      * @param platform 平台: DINGTALK/FEISHU/WECOM
      * @return 账号映射记录，不存在返回 null
      */
-    FlowThirdPartyAccountDO getByUserIdAndPlatform(Long userId, String platform);
+    FlowThirdPartyAccountDO getByUserIdAndPlatform(String userId, String platform);
 
     /**
      * 按平台 + openId 查询账号映射（回调反查系统用户）
@@ -51,5 +51,5 @@ public interface FlowThirdPartyAccountService {
      * @param openId  三方 openId
      * @param unionId 三方 unionId（可空）
      */
-    void bindAccount(Long userId, String platform, String openId, String unionId);
+    void bindAccount(String userId, String platform, String openId, String unionId);
 }

@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 实时监控仪表盘
+  @description
+    管理员视角：流程运行监控仪表盘。
+    内容：统计卡片、实例趋势图、节点耗时分析、审批效率排名、异常流程列表、流程类型分布。
+    数据每 30 秒自动轮询，结合 ECharts 渲染。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/monitor
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 实时监控仪表盘

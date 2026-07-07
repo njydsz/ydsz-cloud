@@ -21,7 +21,7 @@ public interface FlowJoinTokenService {
      * @param joinNodeCode join 节点编码
      * @param branchCount  并行分支数（应等于 join 节点的入边数）
      */
-    void initTokens(Long instanceId, String joinNodeCode, int branchCount);
+    void initTokens(String instanceId, String joinNodeCode, int branchCount);
 
     /**
      * 标记一个分支已到达 join 节点
@@ -30,7 +30,7 @@ public interface FlowJoinTokenService {
      * @param joinNodeCode join 节点编码
      * @return true=本次到达后所有分支均已到达（可聚合）；false=仍有分支未到达
      */
-    boolean arriveToken(Long instanceId, String joinNodeCode);
+    boolean arriveToken(String instanceId, String joinNodeCode);
 
     /**
      * 检查是否所有分支都已到达（可以聚合通过）
@@ -39,7 +39,7 @@ public interface FlowJoinTokenService {
      * @param joinNodeCode join 节点编码
      * @return true=全部到达，可聚合；false=仍有分支未到达或令牌未初始化
      */
-    boolean allArrived(Long instanceId, String joinNodeCode);
+    boolean allArrived(String instanceId, String joinNodeCode);
 
     /**
      * 清除实例的 join 令牌
@@ -49,7 +49,7 @@ public interface FlowJoinTokenService {
      * @param instanceId   流程实例 ID
      * @param joinNodeCode join 节点编码
      */
-    void clearTokens(Long instanceId, String joinNodeCode);
+    void clearTokens(String instanceId, String joinNodeCode);
 
     /**
      * 检查 join 令牌是否已初始化
@@ -58,5 +58,5 @@ public interface FlowJoinTokenService {
      * @param joinNodeCode join 节点编码
      * @return true=已初始化（total key 存在）；false=未初始化或 Redis 异常
      */
-    boolean isInitialized(Long instanceId, String joinNodeCode);
+    boolean isInitialized(String instanceId, String joinNodeCode);
 }

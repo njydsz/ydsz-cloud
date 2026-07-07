@@ -1,6 +1,14 @@
-# P3-1 安全版: 仅替换 DO 文件中 @TableId 注解下的 Long id -> String id
-# 同步 IdType.AUTO -> IdType.ASSIGN_ID
-# 不触碰其他字段
+# =============================================================================
+#  YDSZ PMIS · 实体类主键 ID 类型安全迁移脚本 (Long -> String)
+# -----------------------------------------------------------------------------
+#  用法:
+#    powershell -ExecutionPolicy Bypass -File scripts\migrate-entity-ids-safe.ps1
+#
+#  说明:
+#    P3-1 安全版: 仅替换 DO 文件中 @TableId 注解下的 Long id -> String id
+#    同步 IdType.AUTO -> IdType.ASSIGN_ID,不触碰其他字段。
+#    备份原文件至 *.bak,失败可一键回滚。
+# =============================================================================
 $ErrorActionPreference = "Stop"
 $base = "d:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend"
 $entityFiles = Get-ChildItem -Path $base -Recurse -Filter "*DO.java" -File

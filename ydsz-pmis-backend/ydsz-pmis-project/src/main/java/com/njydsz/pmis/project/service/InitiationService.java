@@ -157,7 +157,7 @@ public interface InitiationService {
      * @param id 立项 ID
      * @return {initiationId, projectCode, projectName, budgetAmount, estimatedAmount, stage}
      */
-    java.util.Map<String, Object> budgetSnapshot(String id);
+    Map<String, Object> budgetSnapshot(String id);
 
     // ============= 流程状态联动（供 workflow 模块 Feign 调用） =============
 

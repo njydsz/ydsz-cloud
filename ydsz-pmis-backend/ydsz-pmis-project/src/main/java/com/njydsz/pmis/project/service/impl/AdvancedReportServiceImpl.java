@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -841,7 +842,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         // 6) 应用过滤
         String realHealth = StringUtils.hasText(health) ? health.trim().toUpperCase() : null;
         List<Long> filterIds = initiationIds == null ? List.of() : initiationIds.stream()
-                .filter(java.util.Objects::nonNull).collect(Collectors.toList());
+                .filter(Objects::nonNull).collect(Collectors.toList());
         boolean filterByIds = !filterIds.isEmpty();
         if (realHealth != null || filterByIds) {
             List<Map<String, Object>> filtered = new ArrayList<>();

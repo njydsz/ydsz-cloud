@@ -1,8 +1,13 @@
 <!--
-  @file 表达式编辑器组件（基于 CodeMirror 6）
-  @description 提供语法高亮、字段自动补全、实时校验的表达式编辑体验，
-               用于规则引擎的条件表达式和严重度表达式编辑。
+  @fileoverview 表达式编辑器组件（基于 CodeMirror 6）
+  @description 提供语法高亮、字段/函数自动补全、实时校验的表达式编辑体验：
+  - Props: modelValue / fields / functions / placeholder / validateOnInput
+  - Emits: update:modelValue / validate / issue
+  - 快捷键: Ctrl+Enter 触发 validate，Ctrl+Space 强制补全
+  - 场景: 规则引擎条件表达式、严重度表达式
   @module components/common/ExpressionEditor
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

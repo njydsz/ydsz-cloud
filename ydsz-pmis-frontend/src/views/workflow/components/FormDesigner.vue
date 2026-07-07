@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 可视化表单设计器组件（基于 @form-create/designer）
+  @description
+    拖拽式表单设计器：左侧组件面板 + 中间预览画布 + 右侧属性配置面板。
+    能力：保存 / 预览 / 清空 / 导入 JSON / 导出 JSON。
+    与表单设计器入口页（../form-design/index.vue）配合，支持 JSON 编辑模式切换。
+    配套自研工作流 v2 引擎的动态表单，PC 端专用。
+  @module views/workflow/components/FormDesigner
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 可视化表单设计器组件（基于 @form-create/designer）

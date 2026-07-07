@@ -64,12 +64,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.LinkedHashMap;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * 规则管理 Controller
@@ -443,15 +450,15 @@ public class RuleAdminController {
         } else {
             testCases = ids.stream()
                 .map(ruleTestCaseMapper::selectById)
-                .filter(java.util.Objects::nonNull)
-                .collect(java.util.stream.Collectors.toList());
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
         }
 
         if (testCases.isEmpty()) {
             return Result.ok(Map.of("total", 0, "passed", 0, "failed", 0, "passRate", "100%"));
         }
 
-        List<Map<String, Object>> caseResults = new java.util.ArrayList<>();
+        List<Map<String, Object>> caseResults = new ArrayList<>();
         int passed = 0;
         int failed = 0;
 
@@ -459,12 +466,12 @@ public class RuleAdminController {
             List<RuleResult> results = ruleAdminService.dryRun(null, tc.getFactsData());
 
             // 获取实际触发的规则编码集合
-            java.util.Set<String> actualTriggered = results.stream()
+            Set<String> actualTriggered = results.stream()
                 .map(RuleResult::getRuleCode)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
 
             // 获取预期触发的规则编码集合
-            java.util.Set<String> expectedTriggered = new java.util.HashSet<>();
+            Set<String> expectedTriggered = new HashSet<>();
             if (tc.getExpectedTriggered() != null) {
                 expectedTriggered.addAll(tc.getExpectedTriggered());
             }
@@ -477,10 +484,10 @@ public class RuleAdminController {
                 failed++;
             }
 
-            java.util.Set<String> missing = new java.util.LinkedHashSet<>(expectedTriggered);
+            Set<String> missing = new LinkedHashSet<>(expectedTriggered);
             missing.removeAll(actualTriggered);
 
-            java.util.Set<String> unexpected = new java.util.LinkedHashSet<>(actualTriggered);
+            Set<String> unexpected = new LinkedHashSet<>(actualTriggered);
             unexpected.removeAll(expectedTriggered);
 
             Map<String, Object> caseResult = new LinkedHashMap<>();
@@ -687,24 +694,24 @@ public class RuleAdminController {
         List<RuleResult> currentResults = ruleAdminService.dryRun(null, facts);
 
         // 构建历史触发规则编码集合
-        java.util.Set<String> historicalTriggered = traces.stream()
+        Set<String> historicalTriggered = traces.stream()
             .filter(t -> Boolean.TRUE.equals(t.getTriggered()))
             .map(RuleExecutionTraceDO::getRuleCode)
-            .collect(java.util.stream.Collectors.toSet());
+            .collect(Collectors.toSet());
 
         // 构建当前触发规则编码集合
-        java.util.Set<String> currentTriggered = currentResults.stream()
+        Set<String> currentTriggered = currentResults.stream()
             .map(RuleResult::getRuleCode)
-            .collect(java.util.stream.Collectors.toSet());
+            .collect(Collectors.toSet());
 
         // 差异分析
-        java.util.Set<String> added = new java.util.LinkedHashSet<>(currentTriggered);
+        Set<String> added = new LinkedHashSet<>(currentTriggered);
         added.removeAll(historicalTriggered);
 
-        java.util.Set<String> removed = new java.util.LinkedHashSet<>(historicalTriggered);
+        Set<String> removed = new LinkedHashSet<>(historicalTriggered);
         removed.removeAll(currentTriggered);
 
-        java.util.Set<String> unchanged = new java.util.LinkedHashSet<>(currentTriggered);
+        Set<String> unchanged = new LinkedHashSet<>(currentTriggered);
         unchanged.retainAll(historicalTriggered);
 
         Map<String, Object> replay = new LinkedHashMap<>();
@@ -920,7 +927,7 @@ public class RuleAdminController {
         Boolean enabled = dto.getEnabled();
         // @NotEmpty + @NotNull 已校验非空，移除手动校验
         int success = 0;
-        List<String> failed = new java.util.ArrayList<>();
+        List<String> failed = new ArrayList<>();
         for (String code : ruleCodes) {
             try {
                 RuleDefinition def = ruleAdminService.getByCode(code);
@@ -962,7 +969,7 @@ public class RuleAdminController {
             return Result.fail("delta 不能为 0");
         }
         int success = 0;
-        List<String> failed = new java.util.ArrayList<>();
+        List<String> failed = new ArrayList<>();
         for (String code : ruleCodes) {
             try {
                 RuleDefinition def = ruleAdminService.getByCode(code);
@@ -1000,7 +1007,7 @@ public class RuleAdminController {
         String category = dto.getCategory();
         // @NotEmpty + @NotBlank 已校验非空，移除手动校验
         int success = 0;
-        List<String> failed = new java.util.ArrayList<>();
+        List<String> failed = new ArrayList<>();
         for (String code : ruleCodes) {
             try {
                 RuleDefinition def = ruleAdminService.getByCode(code);
@@ -1461,7 +1468,7 @@ public class RuleAdminController {
         List<RuleDefinition> all = ruleAdminService.listAll();
         RuleEngineStats stats = ruleEngine.getStats();
         // 逐条评分：score 方法内部会从全局 stats.perRuleStats 中按规则编码取明细
-        List<RuleHealthScore> result = new java.util.ArrayList<>(all.size());
+        List<RuleHealthScore> result = new ArrayList<>(all.size());
         for (RuleDefinition def : all) {
             result.add(svc.score(def, stats));
         }
@@ -1489,7 +1496,7 @@ public class RuleAdminController {
         RuleEngineStats stats = ruleEngine.getStats();
         // 将全局 stats 包装为 Map：recommend 内部按规则编码取 RuleEngineStats，
         // 再从其 perRuleStats 中按规则编码取明细
-        Map<String, RuleEngineStats> statsMap = new java.util.HashMap<>();
+        Map<String, RuleEngineStats> statsMap = new HashMap<>();
         if (stats != null) {
             statsMap.put(source.getCode(), stats);
         }

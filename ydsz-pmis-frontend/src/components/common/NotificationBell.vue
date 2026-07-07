@@ -1,9 +1,12 @@
 <!--
-  @file 通知中心铃铛组件
-  @description 顶栏通知入口：未读数角标、收件箱弹层、标记已读。
-    - WebSocket 实时刷新未读数（P0-2），失败时 60s 轮询兜底
-    - 与后端 NotificationController（/notifications）对接
+  @fileoverview 通知中心铃铛组件
+  @description 顶栏通知入口：未读数角标、收件箱弹层、标记已读：
+  - WebSocket 实时刷新未读数（P0-2），失败时 60s 轮询兜底
+  - 与后端 NotificationController（/notifications）对接
+  - 场景: 站内消息/通知中心快捷入口
   @module components/common/NotificationBell
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'

@@ -4,6 +4,7 @@ import com.njydsz.pmis.agent.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -94,7 +95,7 @@ public abstract class AbstractHttpLlmProvider implements LlmProvider {
     private String invokeWithTimeout(Callable<String> call, long timeoutMs) throws Exception {
         long start = System.currentTimeMillis();
         // 把当前线程的 MDC 复制到子线程, 避免跨线程上下文丢失
-        final java.util.Map<String, String> mdcSnapshot = MDC.getCopyOfContextMap();
+        final Map<String, String> mdcSnapshot = MDC.getCopyOfContextMap();
         java.util.concurrent.ExecutorService exec = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
             Thread t = new Thread(r, "llm-" + name());
             t.setDaemon(true);

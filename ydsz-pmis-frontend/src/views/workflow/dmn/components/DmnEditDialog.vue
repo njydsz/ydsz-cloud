@@ -1,7 +1,13 @@
 <!--
-  @file DMN 决策表编辑弹窗
-  @description 新建/编辑决策表：基本信息、命中策略、输入/输出列定义、规则表格
+  @fileoverview DMN 决策表编辑弹窗
+  @description
+    新建 / 编辑决策表：基本信息（tableKey / tableName / remark / status）、
+    命中策略（HIT_POLICY / COLLECT_POLICY）、输入 / 输出列定义、规则表格。
+    数据落库前做 JSON 序列化与反序列化校验。
+    配套自研工作流 v2 引擎，PC 端专用。
   @module views/workflow/dmn/components/DmnEditDialog
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'

@@ -10,7 +10,6 @@ import com.njydsz.pmis.workflow.entity.FlowCcDO;
 import com.njydsz.pmis.workflow.service.FlowCcService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -44,8 +43,8 @@ public class FlowCcController {
     @PostMapping("/cc/page")
     @PrePermission(PermissionCodes.WORKFLOW_CC_VIEW)
     public Result<PageResult<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
-        Long userId = SecurityContext.getUserId();
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        String userId = SecurityContext.getUserId();
         int pageNo = (int) query.getPage();
         int pageSize = (int) query.getSize();
         return Result.ok(ccService.listCcByUser(userId, query.getReadStatus(),
@@ -57,8 +56,8 @@ public class FlowCcController {
      */
     @GetMapping("/cc/unread-count")
     public Result<Long> ccUnreadCount() {
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
-        Long userId = SecurityContext.getUserId();
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        String userId = SecurityContext.getUserId();
         return Result.ok(ccService.countUnread(userId, tenantId));
     }
 
@@ -66,9 +65,9 @@ public class FlowCcController {
      * P0-3: 抄送标记已读
      */
     @PostMapping("/cc/{id}/read")
-    public Result<Boolean> ccMarkRead(@PathVariable @Min(1) Long id) {
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
-        Long userId = SecurityContext.getUserId();
+    public Result<Boolean> ccMarkRead(@PathVariable String id) {
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        String userId = SecurityContext.getUserId();
         ccService.markRead(tenantId, userId, id);
         return Result.ok(Boolean.TRUE);
     }
@@ -78,8 +77,8 @@ public class FlowCcController {
      */
     @PostMapping("/cc/read-all")
     public Result<Integer> ccMarkAllRead() {
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
-        Long userId = SecurityContext.getUserId();
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        String userId = SecurityContext.getUserId();
         return Result.ok(ccService.markAllRead(tenantId, userId));
     }
 }

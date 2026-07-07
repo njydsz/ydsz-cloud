@@ -22,7 +22,7 @@ public interface FlowNotifyOutboxService {
      * @param event 事件实体（status 默认 PENDING）
      * @return outbox ID
      */
-    Long saveOutbox(FlowNotifyOutboxDO event);
+    String saveOutbox(FlowNotifyOutboxDO event);
 
     /**
      * 扫描待投递事件并投递
@@ -49,5 +49,5 @@ public interface FlowNotifyOutboxService {
      * @param id 事件 ID
      * @return 重投结果（true=已重新加入待投递队列）
      */
-    boolean retryDeadEvent(Long id);
+    boolean retryDeadEvent(String id);
 }

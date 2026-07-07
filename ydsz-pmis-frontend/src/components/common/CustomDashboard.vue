@@ -1,9 +1,13 @@
 <!--
-  @file 可定制仪表盘组件 (P2-12 可定制仪表盘)
-  @description 基于 12 栅格 CSS Grid 的可定制仪表盘, 支持编辑/保存布局、删除小部件、
-               按角色预设(PM/FINANCE/EXECUTIVE)加载, 布局持久化到 localStorage.
-               各小部件内容通过具名插槽(widget.id)注入, 未提供插槽时展示骨架屏.
+  @fileoverview 可定制仪表盘组件 (P2-12)
+  @description 基于 12 栅格 CSS Grid 的可定制仪表盘：
+  - Props: preset(角色预设) / editable(是否可编辑)
+  - Emits: layout-change(布局变化时)
+  - 支持按角色预设加载、布局持久化、编辑/删除小部件
+  - 各小部件内容通过具名插槽 widget.id 注入
   @module components/common/CustomDashboard
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

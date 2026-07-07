@@ -1,3 +1,15 @@
+<!--
+  @fileoverview 统一审批中心入口（薄容器）
+  @description
+    整合"我的待办/已办/我发起的/抄送我/全部"五大 Tab，承载 WebSocket 实时角标与
+    120s 轮询降级、Tab 切换、权限过滤等横切关注点。
+    列表/搜索/分页/操作逻辑下沉至 ./tabs/* 子组件，审批动作策略见
+    ./composables/useApprovalActions.ts。
+    适用范围：PC 端，不适用于移动端 / 独立 H5。
+  @module views/workflow/approval-center
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 统一审批中心（薄容器组件）

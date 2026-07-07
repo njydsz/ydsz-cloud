@@ -1,7 +1,15 @@
 <!--
-  @file 通用列表页布局
-  @description 提供「搜索表单 + 工具栏 + 表格 + 分页」四段式布局，页面只需通过 slot 注入内容即可
+  @fileoverview 通用列表页布局
+  @description 提供「搜索表单 + 工具栏 + 表格 + 分页」四段式布局：
+  - Props: query / list / total / loading / title / tableMinHeight / tableHeight
+            / virtualScroll / pageSizes / paginationLayout / hidePagination
+            / hideSearch / hideToolbar / noPadding / loadingType
+  - Emits: query / reset / page-change / size-change
+  - Slots: search / toolbar / table / default(右上角)
+  - 内置 BatchToolbar / SkeletonTable / EmptyState 联动
   @module components/common/PageLayout
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

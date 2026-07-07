@@ -21,7 +21,7 @@ public interface FlowTaskService {
     /**
      * 创建任务
      */
-    Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables);
+    String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables);
 
     /**
      * P2-20: 按 ID 查任务（任务详情查询）
@@ -29,12 +29,12 @@ public interface FlowTaskService {
      * @param taskId 任务 ID
      * @return 任务 DO，不存在返回 null
      */
-    FlowRunTaskDO getById(Long taskId);
+    FlowRunTaskDO getById(String taskId);
 
     /**
      * 签收
      */
-    void claim(Long taskId, Long userId);
+    void claim(String taskId, String userId);
 
     /**
      * 通过
@@ -59,17 +59,17 @@ public interface FlowTaskService {
     /**
      * 取消某实例的全部 PENDING 任务（终止/驳回终态时使用）
      */
-    void cancelByInstance(Long instanceId, String reason);
+    void cancelByInstance(String instanceId, String reason);
 
     /**
      * 查实例的当前 PENDING 任务
      */
-    List<FlowRunTaskDO> listPendingByInstance(Long instanceId);
+    List<FlowRunTaskDO> listPendingByInstance(String instanceId);
 
     /**
      * 查用户的待办
      */
-    List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, Long tenantId);
+    List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId);
 
     /**
      * P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET）
@@ -80,13 +80,13 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    PageResult<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, Long tenantId,
+    PageResult<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                    int page, int size);
 
     /**
      * 查用户的已办
      */
-    List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, Long tenantId);
+    List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId);
 
     /**
      * P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET）
@@ -97,7 +97,7 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    PageResult<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, Long tenantId,
+    PageResult<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                    int page, int size);
 
     /**
@@ -108,8 +108,8 @@ public interface FlowTaskService {
      * @param deptIds   用户所属部门 ID（字符串形式，可空）
      * @param tenantId  租户 ID（可空，默认 1L）
      */
-    List<FlowRunTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
-                                     List<String> deptIds, Long tenantId);
+    List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
+                                     List<String> deptIds, String tenantId);
 
     /**
      * P1-7: 前加签 — 在当前节点前插入临时审批人
@@ -152,7 +152,7 @@ public interface FlowTaskService {
      * @param taskId 任务 ID
      * @param userId 操作人 ID
      */
-    void markRead(Long taskId, Long userId);
+    void markRead(String taskId, String userId);
 
     /**
      * GAP-P2: 沟通 — 在任务下添加沟通评论（不改变任务状态）
@@ -166,7 +166,7 @@ public interface FlowTaskService {
      *
      * @return 被催办人 ID 列表
      */
-    List<String> urge(Long instanceId, Long operatorId, String comment);
+    List<String> urge(String instanceId, String operatorId, String comment);
 
     /**
      * P2-25: 自由跳转 — 管理员强制跳转到任意节点
@@ -184,7 +184,7 @@ public interface FlowTaskService {
      * @param userId  操作人 ID
      * @param comment 审批意见
      */
-    void batchPass(List<Long> taskIds, Long userId, String comment);
+    void batchPass(List<String> taskIds, String userId, String comment);
 
     /**
      * 转视图
@@ -198,7 +198,7 @@ public interface FlowTaskService {
      * @param tenantId 租户 ID（可空）
      * @return 每个节点一行统计：nodeCode, nodeName, avgDurationMs, count
      */
-    List<Map<String, Object>> nodeDurationStats(String flowCode, Long tenantId);
+    List<Map<String, Object>> nodeDurationStats(String flowCode, String tenantId);
 
     /**
      * P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED）
@@ -207,7 +207,7 @@ public interface FlowTaskService {
      * @param tenantId   租户 ID（可空）
      * @return 超期任务列表
      */
-    List<FlowRunTaskDO> listOverdue(String assigneeId, Long tenantId);
+    List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId);
 
     /**
      * P2-32: 统计超期任务数量
@@ -216,7 +216,7 @@ public interface FlowTaskService {
      * @param tenantId   租户 ID（可空）
      * @return 超期任务数量
      */
-    long countOverdue(String assigneeId, Long tenantId);
+    long countOverdue(String assigneeId, String tenantId);
 
     /**
      * P2-4: 统计待办任务总数（PENDING + CLAIMED）
@@ -224,7 +224,7 @@ public interface FlowTaskService {
      * @param tenantId 租户 ID（可空）
      * @return 待办任务数量
      */
-    long countPending(Long tenantId);
+    long countPending(String tenantId);
 
     /**
      * P2-33: 已办多维筛选分页查询（真分页：SQL LIMIT/OFFSET）
@@ -241,7 +241,7 @@ public interface FlowTaskService {
      */
     PageResult<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                        String flowCode, LocalDateTime startTime,
-                                                       LocalDateTime endTime, Long tenantId,
+                                                       LocalDateTime endTime, String tenantId,
                                                        int page, int size);
 
     /**
@@ -253,7 +253,7 @@ public interface FlowTaskService {
      * @param taskId 任务 ID
      * @param reason 超时原因（可选）
      */
-    void timeoutTask(Long taskId, String reason);
+    void timeoutTask(String taskId, String reason);
 
     // ======================== P0-03: 暂存待审 / 追加处理人 ========================
 
@@ -270,7 +270,7 @@ public interface FlowTaskService {
     /**
      * GAP-P0: 追加处理人 — 在已有会签任务中追加一个审批人
      *
-     * <p>对标 FlowLong 的"追加处理人"功能。向 pmis_flow_user 插入新审批人，
+     * <p>对标 FlowString 的"追加处理人"功能。向 pmis_flow_user 插入新审批人，
      * approveCount +1，保持当前会签模式不变。比加签更轻量，不改变 performType。
      *
      * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）

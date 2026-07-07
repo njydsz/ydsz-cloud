@@ -7,10 +7,13 @@ import com.njydsz.pmis.literule.config.LiteRuleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -131,11 +134,11 @@ public class OpenAICompatibleLLMClient implements LLMClient {
         HttpResponse<String> response;
         try {
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (java.net.http.HttpConnectTimeoutException e) {
+        } catch (HttpConnectTimeoutException e) {
             throw new LLMException(PROVIDER, "LLM 连接超时: " + e.getMessage(), e);
-        } catch (java.net.http.HttpTimeoutException e) {
+        } catch (HttpTimeoutException e) {
             throw new LLMException(PROVIDER, "LLM 响应超时: " + e.getMessage(), e);
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             throw new LLMException(PROVIDER, "LLM 网络异常: " + e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

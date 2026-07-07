@@ -60,8 +60,8 @@ public class FlowEmbeddedApprovalController {
     @GetMapping("/panel")
     public Result<EmbeddedApprovalViewDTO> loadPanel(@RequestParam String businessType,
                                                      @RequestParam String businessId,
-                                                     @RequestParam(required = false) Long userId) {
-        Long uid = userId;
+                                                     @RequestParam(required = false) String userId) {
+        String uid = userId;
         if (uid == null) {
             LoginUser u = SecurityContext.getCurrentOrNull();
             if (u != null) {

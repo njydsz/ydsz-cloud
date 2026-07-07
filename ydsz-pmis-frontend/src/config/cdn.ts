@@ -1,9 +1,12 @@
 /**
- * @file CDN 外置配置
- * @description 生产环境通过 CDN 加载第三方库，减少打包体积；开发环境仍使用 node_modules 本地加载。
- *              - vite.config.ts 会导入 CDN_DEPS 用于 external 与 index.html 注入
- *              - 前端运行时可通过 CDN_ENABLED 判断是否启用 CDN（如需动态兜底）
+ * @fileoverview CDN 外置配置
+ * @description 生产环境通过 CDN 加载第三方库，减少打包体积：
+ * - vite.config.ts 会导入 CDN_DEPS 用于 external 与 index.html 注入
+ * - 前端运行时可通过 CDN_ENABLED 判断是否启用 CDN
+ * - 仅外置「全量导入」且「体积大、API 稳定」的库
  * @module config/cdn
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 
 /** 单个 CDN 依赖描述 */

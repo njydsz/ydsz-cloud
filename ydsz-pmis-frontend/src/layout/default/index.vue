@@ -1,7 +1,13 @@
 <!--
-  @file 默认布局
-  @description 后台主框架布局：左侧 Sidebar + 顶部 AppHeader + TagsView + MainContent（RouterView）
+  @fileoverview 默认布局
+  @description 后台主框架布局：
+  - 左侧 Sidebar + 顶部 AppHeader + TagsView + MainContent
+  - 监听 Ctrl+K / Cmd+K 唤起全局搜索
+  - 响应式：小屏自动收起侧边栏
+  - MainContent 内部由 ErrorBoundary 包裹，捕获渲染异常
   @module layout/default
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { watch } from 'vue'

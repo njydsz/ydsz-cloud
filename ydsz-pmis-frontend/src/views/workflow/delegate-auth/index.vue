@@ -1,3 +1,13 @@
+<!--
+  @fileoverview 委托授权管理页
+  @description
+    委托授权双视角管理：'我设置的'、'代理给我的'、'代理处理记录'、'被代理记录'。
+    支持创建 / 撤回 / 启停授权，以及代理范围（ALL/FLOW/TASK）与生效时间配置。
+    适用 PC 端后台办公场景。
+  @module views/workflow/delegate-auth
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 委托授权管理页

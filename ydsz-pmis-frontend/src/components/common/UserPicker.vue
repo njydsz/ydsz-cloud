@@ -1,25 +1,16 @@
 <!--
-  @file UserPicker 用户选择器
+  @fileoverview UserPicker 通用用户选择器 (P1-8)
+  @description 对标钉钉/飞书的"选择审批人"控件：
+  - Props: modelValue / multiple / placeholder / disabled / clearable / debounce
+            / pageSize / status / departmentId / levelCode / showDialog
+            / dialogTitle / options / valueKey
+  - Emits: update:modelValue / change
+  - 支持远程搜索、单选/多选、远程/外部回填、高级弹窗（按部门/职级筛选）
+  - 双向绑定支持 number/string(仅 ID) 与 object(完整用户) 两种形态
+  - 场景: 工作流审批人/委派人/抄送人、业务表单负责人字段
   @module components/common/UserPicker
-  @description P1-8: 通用用户选择器（对标钉钉/飞书的"选择审批人"控件）
-
-  使用场景：
-  1. 工作流 - 转办 / 委派 / 加签 / 抄送 的目标用户选择
-  2. 业务表单 - 项目经理 / 销售负责人 / 抄送人 等字段选择
-  3. 任何需要"远程搜索 + 单选/多选 + 展示用户信息"的场景
-
-  核心能力：
-  - 远程搜索：输入关键字后通过 /users 模糊查询
-  - 单选 / 多选：multiple 控制
-  - 信息卡片：下拉项展示姓名、用户名、部门、职级
-  - 高级模式：showDialog 显示一个更丰富的弹窗，支持部门/职级筛选 + 最近选择
-  - 双向绑定：支持 number/string（仅 ID）和 object（完整用户）两种 v-model 形态
-  - 外部回填：通过 options prop 传入已选用户列表（无需再走搜索）
-
-  与 el-select 的差异：
-  - 远程搜索时自动显示加载中
-  - 多选时支持一键清空 + 折叠 tag
-  - 高级模式弹窗可按部门、职级筛选
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

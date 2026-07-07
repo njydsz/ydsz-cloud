@@ -1,7 +1,14 @@
 <!--
-  @file 通用表单弹窗
-  @description 集中处理 el-dialog 的打开/关闭/提交/loading 状态，避免每个页面重复实现弹窗样板代码
+  @fileoverview 通用表单弹窗
+  @description 集中处理 el-dialog 的打开/关闭/提交/loading 状态：
+  - Props: modelValue / title / width / loading / beforeClose / closeOnClickModal
+            / showFooter / checkDirty / dirty
+  - Emits: update:modelValue / submit / cancel / opened / closed
+  - Expose: formRef / validate / clearValidate / resetFields
+  - 支持未保存修改确认
   @module components/common/FormDialog
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

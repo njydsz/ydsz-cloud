@@ -69,7 +69,7 @@ public class RevenueController {
     @PrePermission("execution:revenue:update")
     @Idempotent(key = "revenue:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/confirm")
-    public Result<Void> confirm(@PathVariable @Min(1) Long id, @RequestParam Long confirmedBy) {
+    public Result<Void> confirm(@PathVariable String id, @RequestParam Long confirmedBy) {
         service.confirm(id, confirmedBy);
         return Result.ok();
     }
@@ -83,7 +83,7 @@ public class RevenueController {
     @Operation(summary = "冲销收入")
     @PrePermission("execution:revenue:update")
     @PutMapping("/{id}/reverse")
-    public Result<Void> reverse(@PathVariable @Min(1) Long id) {
+    public Result<Void> reverse(@PathVariable String id) {
         service.reverse(id);
         return Result.ok();
     }

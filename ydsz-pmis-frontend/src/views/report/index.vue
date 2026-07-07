@@ -1,7 +1,10 @@
 <!--
-  @file 报表中心
-  @description 项目利润 / 成本明细 / 回款台账 / 生命周期台账 / EVM 挣值 / 双费率对比 / 风险看板 / 利用率 / Bench 成本等核心报表的 ECharts 可视化；对接 @/api/execution/report
+  @fileoverview 报表中心
+  @description 项目利润 / 成本明细 / 回款台账 / 生命周期台账 / EVM 挣值 / 双费率对比 / 风险看板 / 利用率 / Bench 成本等核心报表的 ECharts 可视化；对接 @/api/execution/report。
+               顶部 Tab 切换 11 类报表视图，下方提供查询条件（项目 ID / 期间）与图表渲染容器；所有图表实例在组件卸载时统一 dispose，避免内存泄漏。
   @module views/report
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, type ComponentPublicInstance } from 'vue'

@@ -1,7 +1,12 @@
 <!--
-  @file 标签页视图
-  @description 类 Chrome Tab 的多标签页导航：进入路由自动添加标签，关闭标签自动切换至相邻标签
+  @fileoverview 标签页视图
+  @description 类 Chrome Tab 的多标签页导航：
+  - 进入路由自动添加标签，关闭标签自动切换至相邻标签
+  - 标签状态持久化到 localStorage（STORAGE_KEY = 'pmis_tags_view'）
+  - 支持 affix 固定标签（首页不可关闭）
   @module layout/default/components/TagsView
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'

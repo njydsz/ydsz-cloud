@@ -1,12 +1,9 @@
 /**
- * @file 前端权限码常量
- * @description 与后端 com.njydsz.pmis.common.permission.PermissionCodes 一一对应
+ * @fileoverview 前端权限码常量
+ * @description 与后端 com.njydsz.pmis.common.permission.PermissionCodes 一一对应：
+ * - 统一规范: <module>:<resource>:<action> 三段式
+ * - 任何前端页面、组件中涉及权限判断时，必须从本常量引用，禁止硬编码字符串
  * @module constants/permissionCodes
- *
- * 统一规范: <module>:<resource>:<action> 三段式。
- *
- * 任何前端页面、组件中涉及权限判断时, 必须从本常量引用, 禁止硬编码字符串。
- *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */

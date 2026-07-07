@@ -1,8 +1,13 @@
 <!--
-  @file 规则目录树侧边栏
-  @description 左侧展示基于 category_path 的多级分类树，支持点击节点过滤规则列表，
-               树节点展示规则数与 Owner 数量徽标。
+  @fileoverview 规则目录树侧边栏 (P1-9)
+  @description 左侧展示基于 category_path 的多级分类树：
+  - 树节点展示规则数与 Owner 数量徽标
+  - 点击节点触发 select 事件并写入 selectedPath
+  - 数据来源: ruleApi.getCategoryTree
+  - 场景: 规则引擎列表页左侧分类筛选
   @module components/common/RuleCategoryTreeSidebar
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

@@ -1,3 +1,15 @@
+<!--
+  @fileoverview SLA 管理页
+  @description
+    SLA 配置与运维：
+      1. SLA 规则预览：选择流程定义 → 展示各节点 SLA（超时阈值 / 动作 / 提醒策略）；
+      2. 超时任务列表：手动扫描、单任务处理；
+      3. SLA 策略说明（REMIND / ESCALATE / AUTO_PASS / AUTO_REJECT）。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/sla
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file SLA 管理页

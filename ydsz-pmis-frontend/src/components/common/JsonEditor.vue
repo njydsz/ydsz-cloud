@@ -1,8 +1,12 @@
 <!--
-  @file JSON 编辑器组件（基于 CodeMirror 6）
-  @description 提供语法高亮、行号、括号匹配、代码折叠、自动缩进的 JSON 编辑体验，
-               用于表单设计器 schema 编辑、流程定义 JSON 查看等场景。
+  @fileoverview JSON 编辑器组件（基于 CodeMirror 6）
+  @description 提供语法高亮、行号、括号匹配、代码折叠、自动缩进的 JSON 编辑体验：
+  - Props: modelValue / readonly / placeholder / minHeight / maxHeight
+  - Emits: update:modelValue / validate
+  - 场景: 表单设计器 schema 编辑、流程定义 JSON 查看
   @module components/common/JsonEditor
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

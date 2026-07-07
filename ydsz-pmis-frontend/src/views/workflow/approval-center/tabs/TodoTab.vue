@@ -1,3 +1,18 @@
+<!--
+  @fileoverview 待办任务 Tab
+  @description
+    从原 approval-center/index.vue 拆分而来，"我的待办"完整功能：
+      1. 快捷筛选栏：紧急程度 / 流程类型 / 发起时间范围；
+      2. 待办置顶 / 标记：localStorage 持久化；
+      3. 自定义列显隐；
+      4. 列表快捷操作：一键通过、批量通过、超时高亮；
+      5. 任务操作弹窗：通过 / 驳回 / 转办 / 委派 / 加签 / 暂存 / 沟通 / 催办。
+    审批操作逻辑通过 useApprovalActions（策略模式）注入。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/approval-center/tabs/TodoTab
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 待办任务 Tab

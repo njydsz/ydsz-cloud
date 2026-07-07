@@ -1,8 +1,13 @@
 <!--
-  @file 表单模板库弹窗组件
-  @description P2-7: 提供分类筛选 + 卡片网格 + 一键导入的表单模板选择体验。
+  @fileoverview 表单模板库弹窗组件
+  @description
+    P2-7：提供分类筛选 + 卡片网格 + 一键导入的表单模板选择体验。
     对标流程模板库（design/index.vue）的 UI 模式。
-  @module components/FormTemplateLibrary
+    数据来源：../form-design/templates.ts 中的 FORM_TEMPLATES 预置模板。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/components/FormTemplateLibrary
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

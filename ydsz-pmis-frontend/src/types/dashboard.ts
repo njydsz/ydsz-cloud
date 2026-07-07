@@ -1,8 +1,12 @@
 /**
- * @file 仪表盘 Widget 类型定义 (P2-12 可定制仪表盘)
- * @description 定义可拖拽仪表盘小部件的数据结构与按角色预设的布局模板,
- *              供 CustomDashboard 组件与业务页面共享.
+ * @fileoverview 仪表盘 Widget 类型定义 (P2-12 可定制仪表盘)
+ * @description 定义可定制仪表盘的数据结构与按角色预设的布局模板：
+ * - DashboardWidget / DashboardLayout
+ * - WIDGET_PRESETS 预置角色模板（PM / FINANCE / EXECUTIVE）
+ * - 供 CustomDashboard 组件与业务页面共享
  * @module types/dashboard
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 
 /** 小部件类型: KPI 指标卡 / 图表 / 表格 / 待办 / 风险预警 */

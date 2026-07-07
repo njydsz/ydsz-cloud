@@ -1,7 +1,9 @@
 /**
- * @file 公共组件统一导出（barrel）
- * @description 汇总导出 P1/P2 前端体验优化新增的通用组件，便于业务页面按需引入.
+ * @fileoverview 公共组件统一导出（barrel）
+ * @description 汇总导出 P1/P2 前端体验优化新增的通用组件，便于业务页面按需引入。
  * @module components/common
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 export { default as SkeletonTable } from './SkeletonTable.vue'
 export { default as SkeletonCard } from './SkeletonCard.vue'

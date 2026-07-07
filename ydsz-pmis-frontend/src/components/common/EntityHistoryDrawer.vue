@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 实体变更历史抽屉
+  @description 业务详情页中调用的右侧抽屉，展示某条记录的操作日志与字段级 diff。
+  - Props: visible / entityType / entityId
+  - Emits: update:visible
+  - 数据来源: @/api/audit（getOperationLogByBiz / getOperationLogDiff）
+  - 场景: 审计、问题排查、变更追溯
+  @module components/common/EntityHistoryDrawer
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

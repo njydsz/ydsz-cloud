@@ -1,9 +1,28 @@
 /**
- * @file 英文语言包
- * @description 提供英文文案，配合 vue-i18n 实现多语言切换
- * @module locales/en-US
+ * @fileoverview 英文语言包
+ * @description 与 zh-CN.ts 完全对齐的英文文案，作为 vue-i18n 的 messages['en-US'] 注入。
+ *               任何 key 缺失都会触发 fallbackLocale 兜底至 zh-CN，缺失率应保持在 0。
  *
- * 命名规范：与 zh-CN.ts 完全一致，键路径相同便于切换。
+ * 维护规范：
+ *  - 与 zh-CN.ts 保持键路径一一对应；新增 / 修改必须两套语言包同步提交。
+ *  - 文案采用美式英语（en-US），日期 / 数字格式遵循前端 format 工具（@/utils/format）。
+ *  - 涉及参数化占位符（如 {n} / {level}）必须保留且顺序、命名与中文版一致。
+ *  - 专有名词保持品牌原写法（PMIS / ECharts / Element Plus / ...），不要本地化。
+ *
+ * Key 命名规范：
+ *  - 与 zh-CN.ts 完全一致：顶层 = 业务模块，二级 = 页面 / 子模块，三级及更深 = 具体文案。
+ *  - 全部小写 + 驼峰；rules.* / preset.* / table.* 等命名空间与 zh-CN 对齐。
+ *  - 禁止新增中文包中不存在的 key，反之亦然；如确需新增，需在 PR 描述中标注 i18n 变更范围。
+ *
+ * 与 i18n-config 的关系：
+ *  - 本文件不直接依赖项目根的 i18n-config 目录；所有 messages 内联以确保构建期 tree-shaking 命中。
+ *  - 若后续接入 i18n-config（如 @/config/i18n），建议按 zh-CN.ts 的拆分策略同步切分（locales/en-US/*.ts），
+ *    并在 i18n-config 中按需装配；切勿破坏既有 key 路径。
+ *  - 运行时通过 locales/index.ts 的 setLocale(locale) 切换；切勿在业务代码中直接修改 vue-i18n 内部状态。
+ *
+ * @module locales/en-US
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 export default {
   common: {

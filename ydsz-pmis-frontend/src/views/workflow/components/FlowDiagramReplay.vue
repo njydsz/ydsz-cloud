@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 流程回放组件
+  @description
+    基于 FlowDiagramViewer + 步骤序列 + 播放控制，按时间顺序回放流程审批全过程。
+    P2-4：配合 getReplaySteps 接口，依次高亮节点，展示每步操作人 / 动作 / 意见；
+    P3-1 增强：自动滚屏到当前节点、步骤类型筛选、节点点击与坐标回滚联动。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/components/FlowDiagramReplay
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 流程回放组件

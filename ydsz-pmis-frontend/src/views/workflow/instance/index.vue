@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 流程实例详情页
+  @description
+    流程图（当前节点高亮）+ 审批轨迹时间线 + 当前任务 + 操作面板。
+    集成：通过/驳回/转办/催办/终止/挂起/激活/撤回/沟通等动作。
+    移动端使用 useResponsive 适配：流程图与时间线纵向排版。
+    配套自研工作流 v2 引擎，PC 为主，兼顾响应式。
+  @module views/workflow/instance
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 流程实例详情页

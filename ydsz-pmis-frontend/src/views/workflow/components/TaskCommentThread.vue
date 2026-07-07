@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 任务评论线程组件
+  @description
+    P2-3：任务级评论线程，支持楼中楼回复、评论类型（COMMENT / QUESTION）标记、
+    删除自己的评论。
+    集成于流程实例详情页与待办操作弹窗。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/components/TaskCommentThread
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * @file 任务评论线程组件

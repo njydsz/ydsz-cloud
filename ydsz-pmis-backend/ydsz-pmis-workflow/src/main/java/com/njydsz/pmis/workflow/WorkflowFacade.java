@@ -42,7 +42,7 @@ public interface WorkflowFacade {
     /**
      * 签收任务
      */
-    void claimTask(Long taskId, Long userId);
+    void claimTask(String taskId, String userId);
 
     /**
      * 转办任务
@@ -77,12 +77,12 @@ public interface WorkflowFacade {
     /**
      * 查用户待办
      */
-    List<Map<String, Object>> listTodoTasks(Long userId, int page, int size);
+    List<Map<String, Object>> listTodoTasks(String userId, int page, int size);
 
     /**
      * 查用户已办
      */
-    List<Map<String, Object>> listDoneTasks(Long userId, int page, int size);
+    List<Map<String, Object>> listDoneTasks(String userId, int page, int size);
 
     /**
      * GAP-P0-1: 查全部流程实例（管理员视图）
@@ -121,12 +121,12 @@ public interface WorkflowFacade {
     /**
      * 催办
      */
-    List<String> urgeTask(Long instanceId, Long operatorId, String comment);
+    List<String> urgeTask(String instanceId, String operatorId, String comment);
 
     /**
      * 撤回流程
      */
-    boolean recallProcess(String processInstanceId, Long initiatorId);
+    boolean recallProcess(String processInstanceId, String initiatorId);
 
     /**
      * 查询审批轨迹（审计日志）
@@ -144,7 +144,7 @@ public interface WorkflowFacade {
      * @param taskId 任务 ID
      * @return 任务详情 Map（含办理人、状态、节点等），不存在返回 null
      */
-    Map<String, Object> getTaskDetail(Long taskId);
+    Map<String, Object> getTaskDetail(String taskId);
 
     /**
      * P2-22: 流程图查询（高亮当前节点）
@@ -168,7 +168,7 @@ public interface WorkflowFacade {
      * @param userId  操作人 ID
      * @param comment 审批意见
      */
-    void batchPassTasks(List<Long> taskIds, Long userId, String comment);
+    void batchPassTasks(List<String> taskIds, String userId, String comment);
 
     /**
      * GAP-P0-4: 一键通过所有待办 — 查询当前用户全部待办（上限 100 条）并逐一通过。
@@ -179,7 +179,7 @@ public interface WorkflowFacade {
      * @param comment 审批意见（可选）
      * @return 实际通过的任务数量
      */
-    int passAllTodoTasks(Long userId, String comment);
+    int passAllTodoTasks(String userId, String comment);
 
     /**
      * P2-30: 审批轨迹时间线查询 — 合并历史任务 + 审计日志 + 当前待办为统一时间线
@@ -218,7 +218,7 @@ public interface WorkflowFacade {
     /**
      * GAP-P0: 已阅 — 标记任务已阅
      */
-    void markReadTask(Long taskId, Long userId);
+    void markReadTask(String taskId, String userId);
 
     /**
      * GAP-P0: 沟通 — 在任务下添加沟通评论

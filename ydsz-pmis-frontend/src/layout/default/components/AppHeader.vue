@@ -1,7 +1,12 @@
 <!--
-  @file 顶部导航栏
-  @description 包含侧边栏折叠按钮、面包屑、语言切换、主题切换、全屏、用户下拉菜单
+  @fileoverview 顶部导航栏
+  @description 后台布局顶部导航栏：
+  - 包含侧边栏折叠按钮、面包屑、语言切换、主题切换、全屏、用户下拉菜单
+  - 集成了全局搜索入口（Ctrl+K）和通知铃铛
+  - 退出登录走二次确认 + userStore.logout
   @module layout/default/components/AppHeader
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'

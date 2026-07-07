@@ -1,21 +1,13 @@
 <!--
-  @file CommentEditor 意见编辑器
+  @fileoverview 意见编辑器（常用语 / @人 / 图片附件 一体化）
+  @description P1-9 审批意见增强编辑器：
+  - Props: modelValue/placeholder/rows/disabled/readonly/maxlength
+            /enableImage/enableMention/enableQuickPhrases 等
+  - Emits: update:modelValue / submit / cancel / change / exceed
+  - 场景: 流程审批 / 转办 / 委派 / 抄送等需要填写意见的场景
   @module components/common/CommentEditor
-  @description P1-9: 审批意见增强编辑器
-
-  使用场景：流程审批 / 转办 / 委派 / 抄送 等需要填写意见的场景
-
-  核心能力：
-  1. 常用语：下拉选择预设短语，一键插入到光标位置
-  2. @人：在文本中 @ 用户，自动插入 "@姓名 " 到光标处
-  3. 图片附件：拖拽或点击上传图片，自动插入 markdown 风格的图片引用
-  4. 字数统计：右下角显示已输入字符数 / 上限
-  5. v-model 双向绑定：返回纯文本字符串（已剥离 markdown 图片引用）
-
-  与原生 textarea 的差异：
-  - 工具栏：常用语 / @ / 图片 三个快捷按钮
-  - 附件列表：上传后显示在下方，可点击预览 / 删除
-  - 支持禁用 / 只读模式
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

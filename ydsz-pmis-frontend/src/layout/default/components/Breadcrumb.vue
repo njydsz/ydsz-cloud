@@ -1,7 +1,11 @@
 <!--
-  @file 面包屑导航
-  @description 基于当前路由的 route.matched 渲染面包屑，固定首页 → 当前路由
+  @fileoverview 面包屑导航
+  @description 基于当前路由的 route.matched 渲染面包屑：
+  - 固定首页 → 当前路由链路
+  - 自动识别 i18n key（以 route. 开头则翻译，否则原样）
   @module layout/default/components/Breadcrumb
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { useRoute } from 'vue-router'

@@ -1,27 +1,17 @@
+/**
+ * @fileoverview v-permission 权限指令
+ * @description 控制 DOM 元素基于用户权限的显隐或禁用：
+ * - 用法: <el-button v-permission="'system:user:create'"> / v-permission.disabled
+ * - 默认模式: 无权限时 display: none 隐藏元素
+ * - .disabled 修饰符: 无权限时元素 disabled + is-disabled class + title 提示
+ * - 同时挂载 mounted 和 updated 钩子，权限动态调整时自动重新评估
+ * - 对 el-button 设置 disabled 属性；对原生元素设置 aria-disabled + pointer-events
+ * @module directives/permission
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 import type { App, Directive, DirectiveBinding } from 'vue'
 import { useUserStore } from '@/store/modules/user'
-
-/**
- * v-permission 权限指令
- *
- * 用法:
- *   <el-button v-permission="'system:user:create'">新增</el-button>
- *   <el-button v-permission="['system:user:create', 'system:user:update']">新增</el-button>
- *   <el-button v-permission.all="['system:user:create', 'system:user:update']">管理员</el-button>
- *   <el-button v-permission.disabled="'system:user:delete'">删除（无权限时禁用而非隐藏）</el-button>
- *
- * 行为模式:
- *   - 默认: 无权限时 display: none 隐藏元素（保留原始 display，可恢复）
- *   - .disabled 修饰符: 无权限时元素 disabled + is-disabled class + title 提示
- *
- * 响应式:
- *   - 同时挂载 mounted 和 updated 钩子，权限动态调整时自动重新评估
- *   - 用户切换账号、权限刷新时无需手动刷新页面
- *
- * 兼容性:
- *   - 对 el-button 同时设置 disabled 属性（Element Plus 标准）
- *   - 对原生 div/span 设置 aria-disabled + pointer-events: none
- */
 
 type PermissionValue = string | string[]
 

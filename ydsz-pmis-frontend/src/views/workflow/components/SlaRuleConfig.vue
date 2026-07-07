@@ -1,3 +1,14 @@
+<!--
+  @fileoverview SLA 规则配置组件
+  @description
+    BPMN 用户任务节点的 SLA 规则配置：超时阈值、超时动作（REMIND / ESCALATE /
+    AUTO_PASS / AUTO_REJECT）、提醒间隔、最大提醒次数、升级审批人、自动意见模板。
+    与 BpmnDesigner.vue 的属性面板集成。
+    配套自研工作流 v2 引擎，PC 端专用。
+  @module views/workflow/components/SlaRuleConfig
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <template>
   <div class="sla-rule-config">
     <div class="sla__header">

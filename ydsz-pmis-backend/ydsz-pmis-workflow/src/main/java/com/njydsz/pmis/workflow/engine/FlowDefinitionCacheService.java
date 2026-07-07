@@ -44,8 +44,8 @@ public class FlowDefinitionCacheService {
     private final FlowNodeMapper flowNodeMapper;
     private final FlowSkipMapper flowSkipMapper;
 
-    private final Cache<Long, List<FlowNodeDO>> nodeCache;
-    private final Cache<Long, List<FlowSkipDO>> skipCache;
+    private final Cache<String, List<FlowNodeDO>> nodeCache;
+    private final Cache<String, List<FlowSkipDO>> skipCache;
 
     /**
      * Spring 注入构造器，使用系统时钟。
@@ -84,7 +84,7 @@ public class FlowDefinitionCacheService {
      *
      * @param definitionId 流程定义 ID
      */
-    public void evict(Long definitionId) {
+    public void evict(String definitionId) {
         if (definitionId == null) {
             return;
         }
@@ -98,7 +98,7 @@ public class FlowDefinitionCacheService {
     /**
      * 获取流程定义下全部节点（缓存）。
      */
-    public List<FlowNodeDO> getAllNodes(Long definitionId) {
+    public List<FlowNodeDO> getAllNodes(String definitionId) {
         if (definitionId == null) {
             return Collections.emptyList();
         }
@@ -108,7 +108,7 @@ public class FlowDefinitionCacheService {
     /**
      * 按 nodeCode 查单节点。
      */
-    public FlowNodeDO getNodeByCode(Long definitionId, String nodeCode) {
+    public FlowNodeDO getNodeByCode(String definitionId, String nodeCode) {
         if (nodeCode == null) {
             return null;
         }
@@ -121,7 +121,7 @@ public class FlowDefinitionCacheService {
     /**
      * 查开始节点（nodeType = START）。
      */
-    public FlowNodeDO getStartNode(Long definitionId) {
+    public FlowNodeDO getStartNode(String definitionId) {
         return getAllNodes(definitionId).stream()
                 .filter(n -> n.getNodeType() != null
                         && n.getNodeType() == FlowNodeType.START.getCode())
@@ -134,7 +134,7 @@ public class FlowDefinitionCacheService {
     /**
      * 获取流程定义下全部跳转（缓存）。
      */
-    public List<FlowSkipDO> getAllSkips(Long definitionId) {
+    public List<FlowSkipDO> getAllSkips(String definitionId) {
         if (definitionId == null) {
             return Collections.emptyList();
         }
@@ -146,7 +146,7 @@ public class FlowDefinitionCacheService {
      *
      * <p>返回该节点所有 skipType 的出边，调用方按需过滤 skipType。
      */
-    public List<FlowSkipDO> getSkipsByNodeCode(Long definitionId, String nodeCode) {
+    public List<FlowSkipDO> getSkipsByNodeCode(String definitionId, String nodeCode) {
         if (nodeCode == null) {
             return Collections.emptyList();
         }
@@ -158,7 +158,7 @@ public class FlowDefinitionCacheService {
     /**
      * 查指向某节点的跳转（按 nextNodeCode 过滤，用于退回时找前驱）。
      */
-    public List<FlowSkipDO> getSkipsByNextNode(Long definitionId, String nextNodeCode) {
+    public List<FlowSkipDO> getSkipsByNextNode(String definitionId, String nextNodeCode) {
         if (nextNodeCode == null) {
             return Collections.emptyList();
         }
@@ -169,14 +169,14 @@ public class FlowDefinitionCacheService {
 
     // ============================== 内部加载 ==============================
 
-    private List<FlowNodeDO> loadNodes(Long definitionId) {
+    private List<FlowNodeDO> loadNodes(String definitionId) {
         List<FlowNodeDO> nodes = flowNodeMapper.selectByDefinitionId(definitionId);
         log.debug("[FlowCache] load nodes: definitionId={} count={}",
                 definitionId, nodes == null ? 0 : nodes.size());
         return nodes == null ? Collections.emptyList() : nodes;
     }
 
-    private List<FlowSkipDO> loadSkips(Long definitionId) {
+    private List<FlowSkipDO> loadSkips(String definitionId) {
         List<FlowSkipDO> skips = flowSkipMapper.selectByDefinitionId(definitionId);
         log.debug("[FlowCache] load skips: definitionId={} count={}",
                 definitionId, skips == null ? 0 : skips.size());

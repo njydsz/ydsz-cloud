@@ -1,9 +1,14 @@
 <!--
-  @file 行内编辑组件 (P2-15 行内编辑)
-  @description 双击文本进入编辑态, 支持 text/number/select/date 四种编辑类型,
-               Enter 提交、Escape 取消、blur 自动提交, 支持自定义校验规则.
-               适用于表格单元格、详情页字段的就地编辑场景.
+  @fileoverview 行内编辑组件 (P2-15)
+  @description 双击文本进入编辑态，支持 text/number/select/date 四种编辑类型：
+  - Props: modelValue / type / options / width / placeholder / disabled / rules
+  - Emits: update:modelValue / commit
+  - Enter 提交、Escape 取消、blur 自动提交
+  - 支持自定义校验规则，校验失败不退出编辑态
+  - 场景: 表格单元格、详情页字段就地编辑
   @module components/common/InlineEdit
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 /**

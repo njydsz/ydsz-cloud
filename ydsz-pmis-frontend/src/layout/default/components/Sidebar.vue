@@ -1,7 +1,12 @@
 <!--
-  @file 侧边栏菜单
-  @description 基于 permissionStore.sidebarRoutes 渲染 el-menu，支持折叠/展开与子菜单嵌套
+  @fileoverview 侧边栏菜单
+  @description 后台布局左侧导航菜单：
+  - 基于 permissionStore.sidebarRoutes 渲染 el-menu
+  - 支持折叠/展开与子菜单嵌套
+  - 路由变化时自动高亮当前菜单（支持 meta.activeMenu 自定义高亮）
   @module layout/default/components/Sidebar
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { computed } from 'vue'

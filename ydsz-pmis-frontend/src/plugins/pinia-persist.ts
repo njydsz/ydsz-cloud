@@ -1,18 +1,13 @@
 /**
- * @file Pinia 持久化插件配置
- * @description 基于 pinia-plugin-persistedstate v4 的统一持久化方案
+ * @fileoverview Pinia 持久化插件配置
+ * @description 基于 pinia-plugin-persistedstate v4 的统一持久化方案：
+ * - 默认存储: localStorage
+ * - Key 格式: `pmis:${storeName}:v1`（含版本号，便于后续 schema 迁移）
+ * - 默认不持久化：仅当 store 在选项中显式声明 `persist` 时才开启
+ * - 敏感数据混淆：序列化后整体 Base64 编码（轻量混淆，非加密）
  * @module plugins/pinia-persist
- *
- * 设计要点：
- *  - 默认存储：localStorage
- *  - Key 格式：`pmis:${storeName}:v1`（含版本号，便于后续 schema 迁移）
- *  - 默认不持久化：仅当 store 在选项中显式声明 `persist` 时才开启（auto 默认 false）
- *  - 敏感数据混淆：序列化后整体 Base64 编码（轻量混淆，非加密；
- *    真正的字段级加密留给后续 Vault 集成）
- *
- * 使用方式：
- *   import { setupPiniaPersist } from '@/plugins/pinia-persist'
- *   setupPiniaPersist(pinia)
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 import type { Pinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'

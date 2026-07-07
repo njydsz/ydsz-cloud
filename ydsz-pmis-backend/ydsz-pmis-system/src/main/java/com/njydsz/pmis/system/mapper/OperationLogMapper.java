@@ -5,6 +5,8 @@ import com.njydsz.pmis.system.entity.OperationLogDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 操作日志 Mapper
  *
@@ -29,7 +31,7 @@ public interface OperationLogMapper extends BaseMapper<OperationLogDO> {
      * @param limit  最大条数
      * @return 操作日志列表
      */
-    java.util.List<OperationLogDO> selectByUser(@Param("userId") String userId,
+    List<OperationLogDO> selectByUser(@Param("userId") String userId,
                                                 @Param("limit") int limit);
 
     /**
@@ -40,7 +42,7 @@ public interface OperationLogMapper extends BaseMapper<OperationLogDO> {
      * @param limit   最大条数
      * @return 操作日志列表
      */
-    java.util.List<OperationLogDO> selectByBiz(@Param("bizType") String bizType,
+    List<OperationLogDO> selectByBiz(@Param("bizType") String bizType,
                                               @Param("bizId") String bizId,
                                               @Param("limit") int limit);
 

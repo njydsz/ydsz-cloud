@@ -1,15 +1,13 @@
 <!--
-  @file 全局错误边界组件（P0-E1 增强）
-  @description 基于 Vue 3 onErrorCaptured 捕获子组件树渲染异常，
-               避免未捕获异常导致白屏。生产环境自动上报到 Sentry。
+  @fileoverview 全局错误边界组件 (P0-E1 增强)
+  @description 基于 Vue 3 onErrorCaptured 捕获子组件树渲染异常，避免白屏：
+  - Props: resetOnRouteChange / maxRetry
+  - Emits: error(子组件树异常时)
+  - 监听路由变化自动重置；超出重试上限引导联系管理员
+  - 生产环境自动上报 Sentry，开发环境展示详细错误
   @module components/common/ErrorBoundary
-
-  @enhancement P0-E1:
-    1. 监听 route 变化自动重置 hasError，避免路由切换后仍显示错误态
-    2. handleGoHome 改用 router.push，走正常路由守卫
-    3. 增加重试次数上限（默认 3 次），超限后引导联系管理员
-    4. 生产环境隐藏 errorMessage 详情，改为展示短错误 ID
-    5. 新增 resetOnRouteChange prop，支持禁用路由切换重置（顶层 ErrorBoundary 用）
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { ref, computed, onErrorCaptured, watch } from 'vue'

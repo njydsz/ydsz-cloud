@@ -1,11 +1,12 @@
 <!--
-  P2-2 嵌入式审批面板
-  业务页（项目立项/合同/工时/采购等）通过本组件挂载审批面板，传入业务类型与业务ID即可。
-  使用示例：
-    <EmbeddedApprovalPanel
-      business-type="PROJECT_INITIATION"
-      :business-id="row.id"
-    />
+  @fileoverview 嵌入式审批面板 (P2-2)
+  @description 业务页（项目立项/合同/工时/采购等）通过本组件挂载审批面板：
+  - Props: business-type / business-id / compact / showStartButton
+  - Emits: start / view-diagram / approve / reject
+  - 展示流程状态、当前节点、待办与流转历史
+  @module components/common/EmbeddedApprovalPanel
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <template>
   <div class="embedded-approval-panel" :class="{ 'is-compact': compact }">

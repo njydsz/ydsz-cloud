@@ -30,14 +30,14 @@ public interface FlowThirdPartyLogService {
      * @param log 回调日志（platform/eventType/callbackData 必填）
      * @return 日志 ID，落库失败返回 null
      */
-    Long savePending(FlowThirdPartyLogDO log);
+    String savePending(FlowThirdPartyLogDO log);
 
     /**
      * 更新为 SUCCESS 状态
      *
      * @param id 日志 ID
      */
-    void updateSuccess(Long id);
+    void updateSuccess(String id);
 
     /**
      * 更新为 FAIL 状态并记录错误信息
@@ -45,5 +45,5 @@ public interface FlowThirdPartyLogService {
      * @param id       日志 ID
      * @param errorMsg 失败原因
      */
-    void updateFailed(Long id, String errorMsg);
+    void updateFailed(String id, String errorMsg);
 }

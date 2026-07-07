@@ -1,7 +1,12 @@
 <!--
-  @file 顶部语言切换组件
-  @description 下拉式语言切换，支持 zh-CN / en-US；基于 vue-i18n 实现，切换全站生效
+  @fileoverview 顶部语言切换组件
+  @description 下拉式语言切换，支持 zh-CN / en-US：
+  - 基于 vue-i18n 实现，切换全站生效
+  - 通过 setLocale / getLocale 操作 locale
+  - 场景: 顶栏多语言切换入口
   @module components/common/LanguageSwitcher
+  @author ydsz-pmis-team
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { computed } from 'vue'

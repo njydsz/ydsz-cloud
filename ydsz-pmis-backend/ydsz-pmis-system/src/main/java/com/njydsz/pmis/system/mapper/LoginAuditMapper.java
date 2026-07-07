@@ -5,6 +5,8 @@ import com.njydsz.pmis.system.entity.LoginAuditDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 登录审计 Mapper
  *
@@ -29,7 +31,7 @@ public interface LoginAuditMapper extends BaseMapper<LoginAuditDO> {
      * @param limit    最大条数
      * @return 登录审计列表
      */
-    java.util.List<LoginAuditDO> selectByUsername(@Param("username") String username,
+    List<LoginAuditDO> selectByUsername(@Param("username") String username,
                                                  @Param("limit") int limit);
 
     /**

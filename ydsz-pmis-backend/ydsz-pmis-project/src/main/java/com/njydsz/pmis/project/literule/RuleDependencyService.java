@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.LinkedList;
 
 /**
  * 规则依赖关系 Service（P1-8）
@@ -137,7 +138,7 @@ public class RuleDependencyService {
         if (ruleCode == null || ruleCode.isBlank()) return Collections.emptyList();
         List<String> result = new ArrayList<>();
         Set<String> visited = new HashSet<>();
-        Queue<String> queue = new java.util.LinkedList<>();
+        Queue<String> queue = new LinkedList<>();
         queue.offer(ruleCode);
         visited.add(ruleCode);
 

@@ -1,3 +1,14 @@
+<!--
+  @fileoverview 商机管理页面
+
+  <详细说明，包括：>
+  - 业务模块归属: 商机线索阶段，支持查询、新增、编辑、状态流转、赢率评估、转立项
+  - 关键能力: 状态机 FOLLOWING → QUOTED → NEGOTIATING → WON → CONVERTED / LOST；赢率评估；转立项
+  - 关联的后端接口: @/api/project/opportunity
+
+  @author ydsz-pmis-team
+  @since 1.0.0
+-->
 <script setup lang="ts">
 /**
  * 商机管理页面
