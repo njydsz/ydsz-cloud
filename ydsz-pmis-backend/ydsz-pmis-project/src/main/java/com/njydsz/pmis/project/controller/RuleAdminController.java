@@ -37,9 +37,9 @@ import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.config.ABTestService;
+import com.njydsz.pmis.literule.config.DecisionTableAdminService;
 import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
-import com.njydsz.pmis.literule.expr.ExpressionTraceNode;
 import com.njydsz.pmis.literule.expr.ExpressionFunctionDef;
 import com.njydsz.pmis.literule.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.orchestrator.RuleChainGraph;
@@ -80,6 +80,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 规则管理 Controller
@@ -115,6 +122,8 @@ public class RuleAdminController {
     private final RuleCategoryTreeService ruleCategoryTreeService;
     private final ABTestAutoRollbackService abTestAutoRollbackService;
     private final RulePackService rulePackService;
+    // 决策表管理服务（P0-3）：可选注入，未启用决策表时为空
+    private final org.springframework.beans.factory.ObjectProvider<DecisionTableAdminService> decisionTableAdminServiceProvider;
     // AI 增强（P2-15）：可选注入，未启用 AI 时为空
     private final org.springframework.beans.factory.ObjectProvider<RuleLLMService> ruleLLMServiceProvider;
     private final org.springframework.beans.factory.ObjectProvider<RuleHealthScoreService> ruleHealthScoreServiceProvider;
@@ -842,6 +851,89 @@ public class RuleAdminController {
             log.warn("[DecisionTable] 评估失败: tableCode={}, err={}", tableCode, e.getMessage());
             return Result.fail(e.getMessage());
         }
+    }
+
+    /**
+     * 导出决策表为 Excel（P0-3）
+     *
+     * <p>将指定决策表导出为 .xlsx 文件，便于业务人员离线编辑或备份。
+     *
+     * @param tableCode 决策表编码
+     * @return xlsx 文件流（Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
+     */
+    @OperationLog(module = "规则引擎", action = "导出决策表 Excel", bizType = "DECISION_TABLE")
+    @GetMapping("/decision-tables/{tableCode}/export-excel")
+    @PrePermission("execution:rule:view")
+    public ResponseEntity<byte[]> exportDecisionTableExcel(@PathVariable String tableCode) {
+        DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return ResponseEntity.internalServerError().build();
+        }
+        byte[] bytes = svc.exportExcel(tableCode);
+        String fileName = URLEncoder.encode(tableCode + ".xlsx", StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName);
+        return ResponseEntity.ok().headers(headers).body(bytes);
+    }
+
+    /**
+     * 导入决策表 Excel（P0-3）
+     *
+     * <p>上传 .xlsx 文件，解析为决策表定义并保存。支持新增和更新（按 tableCode 覆盖）。
+     *
+     * @param file     xlsx 文件（multipart/form-data）
+     * @param operator 操作人
+     * @return 保存后的决策表定义
+     */
+    @OperationLog(module = "规则引擎", action = "导入决策表 Excel", bizType = "DECISION_TABLE")
+    @PostMapping(value = "/decision-tables/import-excel", consumes = "multipart/form-data")
+    @PrePermission("execution:rule:save")
+    public Result<com.njydsz.pmis.literule.api.DecisionTableDefinition> importDecisionTableExcel(
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("决策表管理服务未启用");
+        }
+        if (file == null || file.isEmpty()) {
+            return Result.fail("上传文件不能为空");
+        }
+        try {
+            byte[] bytes = file.getBytes();
+            com.njydsz.pmis.literule.api.DecisionTableDefinition saved = svc.importExcel(bytes, operator);
+            return Result.ok(saved);
+        } catch (IllegalArgumentException e) {
+            log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());
+            return Result.fail(e.getMessage());
+        } catch (IOException e) {
+            log.warn("[DecisionTable] Excel 文件读取失败: {}", e.getMessage());
+            return Result.fail("文件读取失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 下载决策表 Excel 空白模板（P0-3）
+     *
+     * <p>返回预填充列结构的 .xlsx 模板，用户填写后通过 /import-excel 上传。
+     *
+     * @return xlsx 模板文件流
+     */
+    @GetMapping("/decision-tables/excel-template")
+    @PrePermission("execution:rule:view")
+    public ResponseEntity<byte[]> downloadDecisionTableExcelTemplate() {
+        DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return ResponseEntity.internalServerError().build();
+        }
+        byte[] bytes = svc.exportExcelTemplate();
+        String fileName = URLEncoder.encode("decision-table-template.xlsx", StandardCharsets.UTF_8);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName);
+        return ResponseEntity.ok().headers(headers).body(bytes);
     }
 
     // ==================== 规则导入导出 ====================

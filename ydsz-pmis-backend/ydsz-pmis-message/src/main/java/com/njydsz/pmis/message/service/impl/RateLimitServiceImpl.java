@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.service.impl;
 
 import com.njydsz.pmis.common.constant.SystemConstants;
+import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.entity.MsgPreferenceDO;
 import com.njydsz.pmis.message.service.PreferenceService;
@@ -25,6 +26,9 @@ import java.util.concurrent.TimeUnit;
  * <p>令牌桶使用 Redisson {@link RRateLimiter}；每日 / 每小时频率使用 Redis INCR + EXPIRE，
  * 上限取自用户偏好 {@link MsgPreferenceDO#getDailyLimit()} / {@code hourlyLimit}。
  *
+ * <p>P2-5: 新增 {@link #checkSendLimit} 方法，按 receiver / templateCode / tenant
+ * 三个维度分别做令牌桶限流，任一维度超限即拒绝发送。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -39,6 +43,7 @@ public class RateLimitServiceImpl implements RateLimitService {
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
     private final PreferenceService preferenceService;
+    private final MessageProperties messageProperties;
 
     @Override
     @SuppressWarnings("deprecation")
@@ -106,6 +111,46 @@ public class RateLimitServiceImpl implements RateLimitService {
                 now.format(HOUR_FMT), Duration.ofHours(1).plusMinutes(5).getSeconds());
         incrCounter(MessageConstants.FREQUENCY_DAILY_PREFIX, userId, channel, bizType,
                 now.format(DAY_FMT), Duration.ofDays(1).plusHours(1).getSeconds());
+    }
+
+    /**
+     * P2-5: 多维度发送限流检查。
+     *
+     * <p>按 receiver / templateCode / tenant 三个维度分别做令牌桶限流，
+     * 任一维度超限即返回 false。空值维度跳过。各维度开关与 permits 由配置控制。
+     */
+    @Override
+    public boolean checkSendLimit(String channel, String receiver, String templateCode, String tenantId) {
+        MessageProperties.RateLimitConfig cfg = messageProperties.getRateLimit();
+        if (cfg == null) {
+            // 无配置视为不限制
+            return true;
+        }
+        // receiver 维度
+        if (cfg.isReceiverEnabled() && receiver != null && !receiver.isBlank()) {
+            if (!tryAcquire(MessageConstants.RATE_LIMIT_RECEIVER_PREFIX + receiver, cfg.getReceiverPermits())) {
+                log.info("[RateLimit] receiver 维度限流: channel={} receiver={} permits={}/s",
+                        channel, receiver, cfg.getReceiverPermits());
+                return false;
+            }
+        }
+        // templateCode 维度
+        if (cfg.isTemplateEnabled() && templateCode != null && !templateCode.isBlank()) {
+            if (!tryAcquire(MessageConstants.RATE_LIMIT_TEMPLATE_PREFIX + templateCode, cfg.getTemplatePermits())) {
+                log.info("[RateLimit] template 维度限流: channel={} template={} permits={}/s",
+                        channel, templateCode, cfg.getTemplatePermits());
+                return false;
+            }
+        }
+        // tenant 维度
+        if (cfg.isTenantEnabled() && tenantId != null && !tenantId.isBlank()) {
+            if (!tryAcquire(MessageConstants.RATE_LIMIT_TENANT_PREFIX + tenantId, cfg.getTenantPermits())) {
+                log.info("[RateLimit] tenant 维度限流: channel={} tenant={} permits={}/s",
+                        channel, tenantId, cfg.getTenantPermits());
+                return false;
+            }
+        }
+        return true;
     }
 
     private Long readCounter(String prefix, String userId, String channel, String bizType, String suffix) {

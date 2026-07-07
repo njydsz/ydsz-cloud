@@ -48,12 +48,18 @@ public class RiskEventQueryTool implements AgentTool {
     @Override
     public ToolResult execute(Map<String, Object> parameters, AgentContext ctx) {
         // 解析参数：projectId 必填，severity 可选（默认 ALL）
-        String projectId = parameters.get("projectId") == null
+        // parameters 可能为 null（防御性判空，避免 NPE）
+        Map<String, Object> safeParams = parameters == null ? Map.of() : parameters;
+        String projectId = safeParams.get("projectId") == null
                 ? null
-                : String.valueOf(parameters.get("projectId"));
-        String severity = parameters.get("severity") == null
+                : String.valueOf(safeParams.get("projectId"));
+        // projectId 为空时兜底到 ctx.getBizRef()
+        if (projectId == null || projectId.isBlank() || "null".equals(projectId)) {
+            projectId = ctx == null ? null : ctx.getBizRef();
+        }
+        String severity = safeParams.get("severity") == null
                 ? DEFAULT_SEVERITY
-                : String.valueOf(parameters.get("severity")).toUpperCase();
+                : String.valueOf(safeParams.get("severity")).toUpperCase();
 
         log.info("[risk_events] 查询风险事件: projectId={}, severity={}, traceId={}",
                 projectId, severity, ctx == null ? null : ctx.getTraceId());

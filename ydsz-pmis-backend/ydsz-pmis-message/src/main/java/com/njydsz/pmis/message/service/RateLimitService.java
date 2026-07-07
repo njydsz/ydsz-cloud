@@ -35,4 +35,22 @@ public interface RateLimitService {
      * @param bizType 业务类型
      */
     void recordFrequency(String userId, String channel, String bizType);
+
+    /**
+     * P2-5: 多维度发送限流检查。
+     *
+     * <p>按 receiver / templateCode / tenant 三个维度分别做令牌桶限流，
+     * 任一维度超限即返回 false。各维度开关与 permits 由 {@code MessageProperties.rateLimit} 配置。
+     * 维度间为 AND 关系：所有启用的维度都通过才允许发送。
+     *
+     * <p>调用方应在限流失败时记录 {@code messageMetrics.recordSend(channel, "RATE_LIMITED", 0)}
+     * 并抛出 {@code BizException(RATE_LIMIT)}。
+     *
+     * @param channel      通道（用于日志，不参与限流 key）
+     * @param receiver     接收人（可为空，空则跳过 receiver 维度）
+     * @param templateCode 模板编码（可为空，空则跳过 template 维度）
+     * @param tenantId     租户 ID（可为空，空则跳过 tenant 维度）
+     * @return true 表示所有启用的维度都未超限，允许发送
+     */
+    boolean checkSendLimit(String channel, String receiver, String templateCode, String tenantId);
 }

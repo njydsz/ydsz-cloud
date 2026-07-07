@@ -102,6 +102,12 @@ public final class PermissionCodes {
     public static final String CRONJOB_ALERT_UPDATE = "cronjob:alert:update";
     public static final String CRONJOB_ALERT_DELETE = "cronjob:alert:delete";
     public static final String CRONJOB_ALERT_VIEW = "cronjob:alert:view";
+    /** DAG 工作流管理（P2 DAG 增强） */
+    public static final String CRONJOB_DAG_CREATE = "cronjob:dag:create";
+    public static final String CRONJOB_DAG_UPDATE = "cronjob:dag:update";
+    public static final String CRONJOB_DAG_DELETE = "cronjob:dag:delete";
+    public static final String CRONJOB_DAG_TRIGGER = "cronjob:dag:trigger";
+    public static final String CRONJOB_DAG_VIEW = "cronjob:dag:view";
 
     // ==================== 通知 ====================
 

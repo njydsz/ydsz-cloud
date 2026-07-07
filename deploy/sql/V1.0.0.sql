@@ -11448,6 +11448,59 @@ CREATE INDEX IF NOT EXISTS idx_pfdm_trace
     ON pmis_flow_delegate_message (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
 
 -- ====================================================================
+-- ============================ [070] P2-2 流程评论多级回复表 ============================
+-- ====================================================================
+-- GAP-15: 审批评论多级回复（对标钉钉/飞书审批评论区）
+-- 独立于 pmis_flow_audit_log（审计日志是操作轨迹，不可变），
+-- 评论是讨论（可回复、可删除），关注点正交。
+-- 支持：
+--   1) 一级评论（parent_comment_id = NULL）
+--   2) 多级回复（parent_comment_id 指向父评论，reply_to_user_id 标记被回复人）
+--   3) 软删除（deleted=1 保留层级结构，前端显示"该评论已删除"）
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS pmis_flow_comment (
+    id                  VARCHAR(20)       PRIMARY KEY,
+    tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
+    instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
+    task_id             VARCHAR(20),                              -- 关联任务（可为空：实例级评论）
+    node_code           VARCHAR(64),                             -- 关联节点编码
+    user_id             VARCHAR(20)     NOT NULL,                 -- 评论人 ID
+    user_name           VARCHAR(64),                             -- 评论人姓名（冗余）
+    content             TEXT            NOT NULL,                 -- 评论内容
+    parent_comment_id   VARCHAR(20),                              -- 父评论 ID（一级评论为 NULL）
+    reply_to_user_id    VARCHAR(20),                              -- 被回复人 ID（回复某条评论时标记）
+    reply_to_user_name  VARCHAR(64),                              -- 被回复人姓名（冗余）
+    -- 审计字段
+    created_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT        NOT NULL DEFAULT 0,
+    provider_trace_id   VARCHAR(64),
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 约束
+    CONSTRAINT ck_pfc_deleted CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_flow_comment IS 'P2-2: 流程评论表 — 审批评论多级回复（对标钉钉/飞书审批评论区）';
+COMMENT ON COLUMN pmis_flow_comment.instance_id IS '关联流程实例 ID';
+COMMENT ON COLUMN pmis_flow_comment.task_id IS '关联任务 ID（实例级评论可为空）';
+COMMENT ON COLUMN pmis_flow_comment.content IS '评论内容（富文本/纯文本）';
+COMMENT ON COLUMN pmis_flow_comment.parent_comment_id IS '父评论 ID（一级评论为 NULL，二级及以下回复指向父评论 ID）';
+COMMENT ON COLUMN pmis_flow_comment.reply_to_user_id IS '被回复人 ID（回复某条评论时标记，一级评论为 NULL）';
+COMMENT ON COLUMN pmis_flow_comment.reply_to_user_name IS '被回复人姓名（冗余，便于前端展示）';
+
+CREATE INDEX IF NOT EXISTS idx_pfc_instance
+    ON pmis_flow_comment (tenant_id, instance_id, created_at) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfc_parent
+    ON pmis_flow_comment (parent_comment_id, created_at) WHERE parent_comment_id IS NOT NULL AND deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfc_task
+    ON pmis_flow_comment (task_id, created_at) WHERE task_id IS NOT NULL AND deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfc_trace
+    ON pmis_flow_comment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
+
+-- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT
 -- ====================================================================
 

@@ -4,6 +4,7 @@ import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.HitPolicy;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.event.RuleConfigRefreshEvent;
+import com.njydsz.pmis.literule.excel.DecisionTableExcelExporter;
 import com.njydsz.pmis.literule.impl.DecisionTableRule;
 import com.njydsz.pmis.literule.spi.DecisionTableConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleConfigBroadcaster;
@@ -32,6 +33,8 @@ public class DecisionTableAdminService {
     private final ApplicationEventPublisher eventPublisher;
     private RuleConfigBroadcaster broadcaster;
     private String nodeId;
+    /** Excel 导入导出器（懒加载，避免 POI 不在 classpath 时初始化失败） */
+    private DecisionTableExcelExporter excelExporter;
 
     public DecisionTableAdminService(RuleEngine ruleEngine,
                                      DecisionTableConfigProvider configProvider,
@@ -112,6 +115,63 @@ public class DecisionTableAdminService {
                 com.njydsz.pmis.literule.api.RuleContext.of(facts, "DRY_RUN", "MANUAL");
         DecisionTableRule rule = new DecisionTableRule(def, null);
         return rule.evaluate(context);
+    }
+
+    // ==================== Excel 导入导出（P0-3） ====================
+
+    /**
+     * 导出指定决策表为 Excel
+     *
+     * @param tableCode 决策表编码
+     * @return xlsx 字节数组
+     * @throws IllegalArgumentException 决策表不存在
+     * @throws RuntimeException         导出失败
+     */
+    public byte[] exportExcel(String tableCode) {
+        DecisionTableDefinition def = configProvider.findByCode(tableCode);
+        if (def == null) {
+            throw new IllegalArgumentException("决策表不存在: " + tableCode);
+        }
+        byte[] bytes = getExcelExporter().exportToExcel(def);
+        log.info("[LiteRule-DecisionTable] 决策表已导出 Excel: code={}, bytes={}", tableCode, bytes.length);
+        return bytes;
+    }
+
+    /**
+     * 导入 Excel 创建/更新决策表
+     *
+     * @param excelBytes xlsx 字节数组
+     * @param operator   操作人
+     * @return 保存后的决策表定义
+     * @throws IllegalArgumentException 导入失败
+     */
+    public DecisionTableDefinition importExcel(byte[] excelBytes, String operator) {
+        DecisionTableDefinition def = getExcelExporter().importFromExcel(excelBytes);
+        DecisionTableDefinition saved = save(def, operator, "Excel 导入决策表");
+        log.info("[LiteRule-DecisionTable] 决策表已导入 Excel: code={}, operator={}",
+                saved.getTableCode(), operator);
+        return saved;
+    }
+
+    /**
+     * 导出空白 Excel 模板
+     *
+     * @return xlsx 字节数组
+     */
+    public byte[] exportExcelTemplate() {
+        byte[] bytes = getExcelExporter().exportTemplate();
+        log.info("[LiteRule-DecisionTable] Excel 模板已导出, bytes={}", bytes.length);
+        return bytes;
+    }
+
+    /**
+     * 获取 Excel 导入导出器（懒加载）
+     */
+    private DecisionTableExcelExporter getExcelExporter() {
+        if (excelExporter == null) {
+            excelExporter = new DecisionTableExcelExporter();
+        }
+        return excelExporter;
     }
 
     private void validate(DecisionTableDefinition def) {

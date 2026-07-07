@@ -29,6 +29,11 @@ public final class MessageConstants {
     /** 限流 key 前缀 */
     public static final String RATE_LIMIT_KEY_PREFIX = "pmis:msg:ratelimit:";
 
+    /** P2-5: 多维度限流 key 前缀 */
+    public static final String RATE_LIMIT_RECEIVER_PREFIX = "pmis:msg:ratelimit:receiver:";
+    public static final String RATE_LIMIT_TEMPLATE_PREFIX = "pmis:msg:ratelimit:template:";
+    public static final String RATE_LIMIT_TENANT_PREFIX = "pmis:msg:ratelimit:tenant:";
+
     /** 聚合批次锁前缀 */
     public static final String AGGREGATE_LOCK_PREFIX = "pmis:msg:aggregate:lock:";
 
@@ -58,6 +63,9 @@ public final class MessageConstants {
 
     /** 重试扫描分布式锁 key */
     public static final String RETRY_SCAN_LOCK_KEY = "pmis:msg:retry:scan:lock";
+
+    /** 聚合批次扫描分布式锁 key (P2-4: 多实例部署保证唯一执行) */
+    public static final String AGGREGATE_SCAN_LOCK_KEY = "pmis:msg:aggregate:scan:lock";
 
     /** 单次重试扫描批量大小 */
     public static final int RETRY_SCAN_BATCH_SIZE = 200;

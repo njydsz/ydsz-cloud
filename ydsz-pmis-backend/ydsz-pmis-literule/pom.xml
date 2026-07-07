@@ -113,6 +113,13 @@
             <artifactId>snakeyaml</artifactId>
         </dependency>
 
+        <!-- Apache POI（Excel 决策表导入导出，P0-3） -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- JMH 性能基准（1.5.1 起；test-scope，仅 RuleEngineBenchmark 使用） -->
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
