@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -22,7 +22,7 @@ public class DepartmentFormDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "部门 ID（更新时必填）")
-    private Long id;
+    private String id;
 
     @NotBlank
     @Size(max = 64)
@@ -35,13 +35,13 @@ public class DepartmentFormDTO implements Serializable {
     private String deptName;
 
     @Schema(description = "父部门 ID（0=根）")
-    private Long parentId;
+    private String parentId;
 
     @Schema(description = "排序")
     private Integer sortOrder;
 
     @Schema(description = "部门负责人 ID")
-    private Long leaderId;
+    private String leaderId;
 
     @Schema(description = "电话")
     private String phone;

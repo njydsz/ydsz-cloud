@@ -37,7 +37,7 @@ public class ResourcePoolDO implements Serializable {
     /** 池类型（PoolType.code） */
     private String poolType;
     /** 事业部/部门 ID */
-    private Long departmentId;
+    private String departmentId;
     /** 部门名称 */
     private String departmentName;
     /** 职级范围 e.g. "L1-L3" "L4-L12" "L13+" */
@@ -51,7 +51,7 @@ public class ResourcePoolDO implements Serializable {
     /** 状态：ACTIVE/INACTIVE */
     private String status;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 外部提供方链路追踪 ID */
     private String providerTraceId;
 

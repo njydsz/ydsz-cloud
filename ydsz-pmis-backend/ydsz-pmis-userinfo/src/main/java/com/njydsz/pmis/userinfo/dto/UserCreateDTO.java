@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -37,5 +37,5 @@ public class UserCreateDTO {
      * 员工 ID（可选，关联员工主数据）
      */
     @Schema(description = "员工 ID")
-    private Long employeeId;
+    private String employeeId;
 }

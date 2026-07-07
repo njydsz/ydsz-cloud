@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 import java.math.BigDecimal;
@@ -15,9 +15,9 @@ public class RevenueCreateDTO {
     /** 收入编号 */
     private String revenueCode;
     /** 合同ID */
-    private Long contractId;
+    private String contractId;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 收入确认方法：MILESTONE/PERCENTAGE/PERCENT_COMPLETE/POINTS/MANUAL */
     private String recognitionMethod;  // MILESTONE/PERCENTAGE/PERCENT_COMPLETE/POINTS/MANUAL
     /** 所属期间（YYYY-MM） */

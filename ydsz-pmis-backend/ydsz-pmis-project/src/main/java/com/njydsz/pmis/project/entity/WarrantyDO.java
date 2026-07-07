@@ -34,9 +34,9 @@ public class WarrantyDO implements Serializable {
     /** 业务编码（WY-YYYYMMDD-XXXX） */
     private String warrantyCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 合同ID */
-    private Long contractId;
+    private String contractId;
     /** 项目类型：ProjectType.code */
     private String projectType;
     /** 项目等级 */
@@ -66,7 +66,7 @@ public class WarrantyDO implements Serializable {
     /** 备注 */
     private String remark;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

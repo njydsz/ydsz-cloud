@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -24,7 +24,7 @@ public class InitiationStageDTO implements Serializable {
 
     /** 立项 ID */
     @Schema(description = "立项 ID", requiredMode = RequiredMode.REQUIRED)
-    private Long id;
+    private String id;
 
     /** 目标阶段（PRE_INITIATION/SUBMITTED/APPROVING/APPROVED/REJECTED/EXECUTING/CLOSED） */
     @NotBlank

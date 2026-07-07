@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.vo;
+﻿package com.njydsz.pmis.userinfo.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.njydsz.pmis.common.sensitive.Sensitive;
@@ -27,11 +27,11 @@ public class UserVO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 用户 ID */
-    private Long id;
+    private String id;
     /** 用户名 */
     private String username;
     /** 关联员工 ID */
-    private Long employeeId;
+    private String employeeId;
     /** 真实姓名 */
     private String realName;
     /** 邮箱（脱敏：a***@example.com） */
@@ -45,11 +45,11 @@ public class UserVO implements Serializable {
     /** 性别 */
     private String gender;
     /** 部门 ID */
-    private Long departmentId;
+    private String departmentId;
     /** 部门名称 */
     private String departmentName;
     /** 岗位 ID */
-    private Long positionId;
+    private String positionId;
     /** 岗位名称 */
     private String positionName;
     /** 职级编码 */
@@ -66,9 +66,9 @@ public class UserVO implements Serializable {
     /** 数据权限范围: ALL/DEPT/DEPT_AND_CHILD/SELF/CUSTOM/PROJECT */
     private String dataScope;
     /** 所属部门 ID */
-    private Long deptId;
+    private String deptId;
     /** 直属上级用户 ID */
-    private Long leaderId;
+    private String leaderId;
     /** 岗位编码 */
     private String positionCode;
     /** 是否启用双因素认证 */

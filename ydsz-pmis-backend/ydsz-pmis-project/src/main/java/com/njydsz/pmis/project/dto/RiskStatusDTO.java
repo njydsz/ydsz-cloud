@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import lombok.Data;
 @Data
 public class RiskStatusDTO {
     /** 风险ID */
-    private Long id;
+    private String id;
     /** 目标状态：RiskStatus.code */
     private String targetStatus;
 }

@@ -35,22 +35,22 @@ public class ResourceAssignmentDO implements Serializable {
     /** 业务编号 */
     private String assignmentCode;
     /** 员工 ID */
-    private Long employeeId;
+    private String employeeId;
     /** 员工姓名 */
     private String employeeName;
     /** 职级编码 */
     private String levelCode;
     /** 资源池 ID */
-    private Long poolId;
+    private String poolId;
     /** 冗余池类型便于查询 */
     private String poolType;
 
     /** 关联项目 ID */
-    private Long initiationId;
+    private String initiationId;
     /** 关联项目名称 */
     private String initiationName;
     /** 关联商机 ID（预占时） */
-    private Long opportunityId;
+    private String opportunityId;
 
     /** 分配状态（AssignmentStatus.code） */
     private String status;
@@ -71,7 +71,7 @@ public class ResourceAssignmentDO implements Serializable {
     private BigDecimal dailyHours;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 外部提供方链路追踪 ID */
     private String providerTraceId;
 

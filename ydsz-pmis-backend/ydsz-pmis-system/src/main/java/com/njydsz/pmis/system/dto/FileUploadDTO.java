@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.dto;
+﻿package com.njydsz.pmis.system.dto;
 
 import lombok.Data;
 
@@ -30,7 +30,7 @@ public class FileUploadDTO implements Serializable {
     private String description;
 
     /** 上传人 ID */
-    private Long uploaderId;
+    private String uploaderId;
 
     /** 上传人姓名 */
     private String uploaderName;

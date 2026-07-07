@@ -41,7 +41,7 @@ public class DictItemDO extends BaseDO {
     private Integer sortOrder;
 
     /** 父项 ID（0=根） */
-    private Long parentId;
+    private String parentId;
 
     /** 描述 */
     private String description;

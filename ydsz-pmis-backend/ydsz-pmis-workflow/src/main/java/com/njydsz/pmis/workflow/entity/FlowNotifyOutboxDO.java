@@ -34,7 +34,7 @@ public class FlowNotifyOutboxDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 事件类型: TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等 */
     private String eventType;
@@ -43,13 +43,13 @@ public class FlowNotifyOutboxDO extends BaseDO {
     private String bizType;
 
     /** 业务 ID（taskId / instanceId） */
-    private Long bizId;
+    private String bizId;
 
     /** 流程实例 ID（便于按实例查询） */
-    private Long instanceId;
+    private String instanceId;
 
     /** 任务 ID（便于按任务查询） */
-    private Long taskId;
+    private String taskId;
 
     /** JSON 载荷，由接收方解析 */
     private String payload;

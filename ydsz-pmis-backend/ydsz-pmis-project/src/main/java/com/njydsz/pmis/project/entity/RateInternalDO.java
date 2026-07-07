@@ -37,7 +37,7 @@ public class RateInternalDO implements Serializable {
     /** 职级 L1-L18 */
     private String levelCode;
     /** 事业部/部门 ID */
-    private Long departmentId;
+    private String departmentId;
     /** 部门名称 */
     private String departmentName;
     /** 计费单位：DAY/HOUR */
@@ -55,7 +55,7 @@ public class RateInternalDO implements Serializable {
     /** 备注 */
     private String remark;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

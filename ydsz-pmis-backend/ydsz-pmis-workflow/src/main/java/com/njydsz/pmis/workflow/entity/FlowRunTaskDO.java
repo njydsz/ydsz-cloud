@@ -35,13 +35,13 @@ public class FlowRunTaskDO extends BaseDO {
     private String id;
 
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
 
     /** 流程编码 */
     private String flowCode;
 
     /** 流程定义 ID */
-    private Long definitionId;
+    private String definitionId;
 
     /** 节点编码 */
     private String nodeCode;
@@ -68,7 +68,7 @@ public class FlowRunTaskDO extends BaseDO {
     private String title;
 
     /** 委托人 ID */
-    private Long assignorId;
+    private String assignorId;
 
     /** 委托人姓名 */
     private String assignorName;
@@ -144,7 +144,7 @@ public class FlowRunTaskDO extends BaseDO {
     private String iterVar;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 链路追踪 ID */
     private String providerTraceId;

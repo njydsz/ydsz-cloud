@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -41,7 +41,7 @@ public class OpportunityCreateDTO implements Serializable {
     /** 客户 ID */
     @NotNull
     @Schema(description = "客户 ID", requiredMode = RequiredMode.REQUIRED)
-    private Long customerId;
+    private String customerId;
 
     /** 客户名称（冗余） */
     @Schema(description = "客户名称（冗余）")
@@ -49,12 +49,12 @@ public class OpportunityCreateDTO implements Serializable {
 
     /** 业务部门 ID */
     @Schema(description = "业务部门 ID")
-    private Long businessDeptId;
+    private String businessDeptId;
 
     /** 负责人 ID */
     @NotNull
     @Schema(description = "负责人 ID", requiredMode = RequiredMode.REQUIRED)
-    private Long ownerId;
+    private String ownerId;
 
     /** 负责人姓名（冗余） */
     @Schema(description = "负责人姓名（冗余）")

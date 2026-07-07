@@ -29,7 +29,7 @@ public class EmployeeTagDO implements Serializable {
     private String id;
 
     /** 员工 ID */
-    private Long employeeId;
+    private String employeeId;
     /** 标签类型（TagType.code） */
     private String tagType;
     /** 标签编码 */
@@ -43,7 +43,7 @@ public class EmployeeTagDO implements Serializable {
     /** 备注 */
     private String remark;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 外部提供方链路追踪 ID */
     private String providerTraceId;
 

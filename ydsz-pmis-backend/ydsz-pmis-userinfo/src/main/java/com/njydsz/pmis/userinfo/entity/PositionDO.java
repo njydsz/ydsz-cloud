@@ -36,7 +36,7 @@ public class PositionDO extends BaseDO {
     private String positionName;
 
     /** 所属部门 ID（关联 pmis_department.id） */
-    private Long departmentId;
+    private String departmentId;
 
     /** 岗位职级（关联 pmis_job_level.level_code） */
     private String levelCode;
@@ -48,5 +48,5 @@ public class PositionDO extends BaseDO {
     private String status;
 
     /** 租户 ID（单租户部署默认 1） */
-    private Long tenantId;
+    private String tenantId;
 }

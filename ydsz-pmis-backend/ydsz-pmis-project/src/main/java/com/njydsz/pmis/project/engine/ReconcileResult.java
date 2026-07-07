@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.engine;
+﻿package com.njydsz.pmis.project.engine;
 
 import com.njydsz.pmis.project.enums.ReconcileLevel;
 import com.njydsz.pmis.project.enums.ReconcileType;
@@ -29,13 +29,13 @@ public class ReconcileResult implements Serializable {
     private ReconcileLevel level;
 
     /** 关联项目 ID */
-    private Long initiationId;
+    private String initiationId;
 
     /** 关联员工 ID(可能为空) */
-    private Long employeeId;
+    private String employeeId;
 
     /** 关联来源单据 ID */
-    private Long sourceId;
+    private String sourceId;
 
     /** 关联来源类型(TIME_ENTRY / COST / ...) */
     private String sourceType;

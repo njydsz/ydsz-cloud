@@ -35,7 +35,7 @@ public class CustomerCreditDO implements Serializable {
     private String id;
 
     /** 客户ID */
-    private Long customerId;
+    private String customerId;
     /** 客户名称 */
     private String customerName;
     /** 信用等级：CreditLevel.code (A/B/C/D) */
@@ -62,7 +62,7 @@ public class CustomerCreditDO implements Serializable {
     /** 备注 */
     private String remark;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

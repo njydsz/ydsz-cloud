@@ -29,7 +29,7 @@ public class FlowCcRuleDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 流程编码 */
     private String flowCode;

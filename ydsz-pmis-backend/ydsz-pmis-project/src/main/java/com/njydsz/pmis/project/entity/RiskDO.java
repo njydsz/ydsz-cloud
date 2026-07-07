@@ -34,7 +34,7 @@ public class RiskDO implements Serializable {
     /** 风险编号 */
     private String riskCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 风险标题 */
     private String riskTitle;
     /** 风险类型：SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER */
@@ -52,7 +52,7 @@ public class RiskDO implements Serializable {
     /** 应急预案 */
     private String contingency;
     /** 责任人ID */
-    private Long ownerId;
+    private String ownerId;
     /** 责任人姓名 */
     private String ownerName;
     /** 状态：RiskStatus.code */
@@ -62,7 +62,7 @@ public class RiskDO implements Serializable {
     /** 风险关闭时间 */
     private LocalDateTime closedAt;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

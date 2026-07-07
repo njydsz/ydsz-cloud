@@ -34,13 +34,13 @@ public class FlowEventSubscriptionDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
 
     /** 流程定义 ID */
-    private Long definitionId;
+    private String definitionId;
 
     /** 流程编码 */
     private String flowCode;
@@ -61,7 +61,7 @@ public class FlowEventSubscriptionDO extends BaseDO {
     private String correlationKey;
 
     /** 边界事件关联的 userTask ID（中间事件为 null） */
-    private Long boundaryTaskId;
+    private String boundaryTaskId;
 
     /** 订阅状态：WAITING / COMPLETED / CANCELLED */
     private String subscriptionStatus;

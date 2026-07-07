@@ -31,13 +31,13 @@ public class FlowCcDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
 
     /** 触发的任务 ID（CC 节点任务，可空） */
-    private Long taskId;
+    private String taskId;
 
     /** 触发抄送的节点编码 */
     private String nodeCode;
@@ -55,7 +55,7 @@ public class FlowCcDO extends BaseDO {
     private String businessKey;
 
     /** 抄送接收人 ID */
-    private Long ccUserId;
+    private String ccUserId;
 
     /** 抄送接收人姓名 */
     private String ccUserName;
@@ -64,7 +64,7 @@ public class FlowCcDO extends BaseDO {
     private String ccType;
 
     /** 触发抄送的人 */
-    private Long triggerUserId;
+    private String triggerUserId;
 
     /** 触发抄送的人姓名 */
     private String triggerUserName;

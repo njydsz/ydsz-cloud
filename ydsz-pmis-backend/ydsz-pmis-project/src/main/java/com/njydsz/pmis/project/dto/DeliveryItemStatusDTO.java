@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,12 +20,12 @@ public class DeliveryItemStatusDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull(message = "{validation.execution.msg_da609842}")
-    private Long id;
+    private String id;
 
     @NotBlank(message = "{validation.execution.msg_8304cf7d}")
     private String targetStatus;
 
     private String reviewComment;
-    private Long reviewerId;
+    private String reviewerId;
     private String reviewerName;
 }

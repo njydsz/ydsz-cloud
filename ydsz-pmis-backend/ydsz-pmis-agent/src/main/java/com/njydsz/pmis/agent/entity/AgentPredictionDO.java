@@ -38,7 +38,7 @@ public class AgentPredictionDO implements Serializable {
     /** 关联业务类型：PROJECT/OPPORTUNITY/TIMESHEET/STAFF */
     private String bizType;
     /** 关联业务 ID */
-    private Long bizId;
+    private String bizId;
     /** 关联业务名称/编码（冗余） */
     private String bizRef;
 
@@ -65,14 +65,14 @@ public class AgentPredictionDO implements Serializable {
     /** 错误信息 */
     private String errorMsg;
     /** 调用人 ID（可空，系统触发为空） */
-    private Long callerId;
+    private String callerId;
     /** 调用人姓名 */
     private String callerName;
     /** 来源（MANUAL/SCHEDULED/EVENT） */
     private String source;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 第三方大模型 provider trace ID（用于审计/账单核对） */
     private String providerTraceId;
 

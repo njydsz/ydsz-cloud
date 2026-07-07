@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -28,7 +28,7 @@ public class ContractSupplementDTO implements Serializable {
     /** 合同 ID */
     @NotNull
     @Schema(description = "合同 ID", requiredMode = RequiredMode.REQUIRED)
-    private Long contractId;
+    private String contractId;
 
     /** 补充协议编号 */
     @NotBlank
@@ -67,5 +67,5 @@ public class ContractSupplementDTO implements Serializable {
 
     /** 附件 ID */
     @Schema(description = "附件 ID")
-    private Long fileId;
+    private String fileId;
 }

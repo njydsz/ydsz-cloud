@@ -51,7 +51,7 @@ public class RuleVariableDefDO implements Serializable {
     private Boolean enabled;
 
     /** 租户 ID（单租户部署默认 1） */
-    private Long tenantId;
+    private String tenantId;
 
     private String createdBy;
     private LocalDateTime createdAt;

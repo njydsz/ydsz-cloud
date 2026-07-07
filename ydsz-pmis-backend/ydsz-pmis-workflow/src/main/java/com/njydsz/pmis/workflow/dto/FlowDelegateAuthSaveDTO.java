@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.dto;
+﻿package com.njydsz.pmis.workflow.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -25,14 +25,14 @@ public class FlowDelegateAuthSaveDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "授权人用户 ID（为空时从登录上下文兜底）")
-    private Long ownerUserId;
+    private String ownerUserId;
 
     @Schema(description = "授权人姓名")
     private String ownerUserName;
 
     @NotNull(message = "被委托人用户 ID 不能为空")
     @Schema(description = "被委托人用户 ID", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long delegateUserId;
+    private String delegateUserId;
 
     @Schema(description = "被委托人姓名")
     private String delegateUserName;

@@ -29,13 +29,13 @@ public class FlowHisInstanceDO implements Serializable {
 
     private String flowCode;
     private String flowName;
-    private Long definitionId;
+    private String definitionId;
     private String flowVersion;
     private String businessType;
     private String businessId;
     private String businessNo;
     private String title;
-    private Long initiatorId;
+    private String initiatorId;
     private String initiatorName;
     private String currentNodeCode;
     private String currentNodeName;
@@ -50,6 +50,6 @@ public class FlowHisInstanceDO implements Serializable {
     private Long updatedBy;
     private LocalDateTime updatedAt;
     private LocalDateTime archivedAt;
-    private Long tenantId;
+    private String tenantId;
     private String providerTraceId;
 }

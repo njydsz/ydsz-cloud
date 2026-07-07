@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.dto;
+﻿package com.njydsz.pmis.cronjob.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -25,7 +25,7 @@ public class JobSaveDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "任务 ID（更新时必填）")
-    private Long id;
+    private String id;
 
     @NotBlank(message = "{validation.cronjob.msg_f96f7bb7}")
     @Schema(description = "任务名称", requiredMode = Schema.RequiredMode.REQUIRED)

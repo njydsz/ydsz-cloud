@@ -1,0 +1,95 @@
+﻿[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] ydsz-pmis-parent                                                   [pom]
+[INFO] ydsz-pmis-common                                                   [jar]
+[INFO] ydsz-pmis-gateway                                                  [jar]
+[INFO] ydsz-pmis-system                                                   [jar]
+[INFO] ydsz-pmis-userinfo                                                 [jar]
+[INFO] ydsz-pmis-literule                                                 [jar]
+[INFO] ydsz-pmis-project                                                  [jar]
+[INFO] ydsz-pmis-cronjob                                                  [jar]
+[INFO] ydsz-pmis-workflow                                                 [jar]
+[INFO] ydsz-pmis-agent                                                    [jar]
+[INFO] 
+[INFO] Using the MultiThreadedBuilder implementation with a thread count of 16
+[INFO] 
+[INFO] ------------------< com.njydsz.pmis:ydsz-pmis-parent >------------------
+[INFO] Building ydsz-pmis-parent 1.0.0-SNAPSHOT                          [1/10]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- install:3.1.4:install (default-install) @ ydsz-pmis-parent ---
+[INFO] Installing D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\pom.xml to D:\Maven\remi-soft-repo\com\njydsz\pmis\ydsz-pmis-parent\1.0.0-SNAPSHOT\ydsz-pmis-parent-1.0.0-SNAPSHOT.pom
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Skipping ydsz-pmis-common
+[INFO] This project has been banned from the build due to previous failures.
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] 
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Skipping ydsz-pmis-cronjob
+[INFO] 
+[INFO] Skipping ydsz-pmis-gateway
+[INFO] This project has been banned from the build due to previous failures.
+[INFO] Skipping ydsz-pmis-userinfo
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Skipping ydsz-pmis-system
+[INFO] This project has been banned from the build due to previous failures.
+[INFO] This project has been banned from the build due to previous failures.
+[INFO] This project has been banned from the build due to previous failures.
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Skipping ydsz-pmis-literule
+[INFO] This project has been banned from the build due to previous failures.
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Skipping ydsz-pmis-project
+[INFO] This project has been banned from the build due to previous failures.
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Skipping ydsz-pmis-workflow
+[INFO] Skipping ydsz-pmis-agent
+[INFO] This project has been banned from the build due to previous failures.
+[INFO] This project has been banned from the build due to previous failures.
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for ydsz-pmis-parent 1.0.0-SNAPSHOT:
+[INFO] 
+[INFO] ydsz-pmis-parent ................................... FAILURE [  0.134 s]
+[INFO] ydsz-pmis-common ................................... SKIPPED
+[INFO] ydsz-pmis-gateway .................................. SKIPPED
+[INFO] ydsz-pmis-system ................................... SKIPPED
+[INFO] ydsz-pmis-userinfo ................................. SKIPPED
+[INFO] ydsz-pmis-literule ................................. SKIPPED
+[INFO] ydsz-pmis-project .................................. SKIPPED
+[INFO] ydsz-pmis-cronjob .................................. SKIPPED
+[INFO] ydsz-pmis-workflow ................................. SKIPPED
+[INFO] ydsz-pmis-agent .................................... SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.608 s (Wall Clock)
+[INFO] Finished at: 2026-07-07T14:30:00+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-install-plugin:3.1.4:install (default-install) on project ydsz-pmis-parent: Failed to install artifact com.njydsz.pmis:ydsz-pmis-parent:pom:1.0.0-SNAPSHOT: D:\Maven\remi-soft-repo\com\njydsz\pmis\ydsz-pmis-parent\1.0.0-SNAPSHOT\ydsz-pmis-parent-1.0.0-SNAPSHOT.pom.16543892539046195212.tmp -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

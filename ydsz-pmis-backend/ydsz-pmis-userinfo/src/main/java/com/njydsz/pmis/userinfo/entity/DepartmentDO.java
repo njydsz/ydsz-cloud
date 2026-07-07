@@ -36,7 +36,7 @@ public class DepartmentDO extends BaseDO {
     private String deptName;
 
     /** 父部门 ID（0=根） */
-    private Long parentId;
+    private String parentId;
 
     /** 部门路径：/1/3/5 */
     private String deptPath;
@@ -45,7 +45,7 @@ public class DepartmentDO extends BaseDO {
     private Integer sortOrder;
 
     /** 部门负责人 ID */
-    private Long leaderId;
+    private String leaderId;
 
     /** 联系电话（脱敏：138****8000） */
     @Sensitive(SensitiveStrategy.PHONE)

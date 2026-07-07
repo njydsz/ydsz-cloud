@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,7 +25,7 @@ public class ProjectClosureCreateDTO implements Serializable {
     private String closureCode;
 
     @NotNull(message = "{validation.execution.msg_576c2b5e}")
-    private Long initiationId;
+    private String initiationId;
 
     @NotBlank(message = "{validation.execution.msg_76ab3833}")
     private String closureType;
@@ -44,7 +44,7 @@ public class ProjectClosureCreateDTO implements Serializable {
     private LocalDate plannedArchiveDate;
     private String archiveFileIds;
     private String remark;
-    private Long applicantId;
+    private String applicantId;
     private String applicantName;
-    private Long tenantId;
+    private String tenantId;
 }

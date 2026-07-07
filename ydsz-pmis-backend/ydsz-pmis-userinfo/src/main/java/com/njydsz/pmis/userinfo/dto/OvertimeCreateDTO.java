@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -23,7 +23,7 @@ public class OvertimeCreateDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 员工 ID */
-    private Long employeeId;
+    private String employeeId;
     /** 员工姓名 */
     private String employeeName;
     /** 加班日期 */

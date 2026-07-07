@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,14 +22,14 @@ public class BenchRecordCreateDTO {
 
     /** 员工 ID */
     @NotNull(message = "{validation.user.msg_03f5ae35}")
-    private Long employeeId;
+    private String employeeId;
 
     /** 员工姓名 */
     private String employeeName;
     /** 职级编码 */
     private String levelCode;
     /** 资源池 ID */
-    private Long poolId;
+    private String poolId;
 
     /** ENTER/EXIT */
     @NotBlank(message = "{validation.user.msg_f0494194}")

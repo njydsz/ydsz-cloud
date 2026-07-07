@@ -33,13 +33,13 @@ public class CostAllocationDO implements Serializable {
     private String id;
 
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 所属期间（YYYY-MM） */
     private String period;
     /** 成本类型：CostType.code */
     private String costType;
     /** 来源业务主键ID */
-    private Long sourceId;
+    private String sourceId;
     /** 来源业务类型 */
     private String sourceType;
     /** 描述 */
@@ -51,13 +51,13 @@ public class CostAllocationDO implements Serializable {
     /** 是否已核销：1 是 / 0 否 */
     private Integer allocated;
     /** 员工ID */
-    private Long employeeId;
+    private String employeeId;
     /** 员工姓名 */
     private String employeeName;
     /** 职级编码 */
     private String levelCode;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

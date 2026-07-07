@@ -38,7 +38,7 @@ public class DailyReconcileDO implements Serializable {
     /** 维度：COST/REVENUE/PAYMENT/INVOICE/PROFIT/LABOR */
     private String reconcileType;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 期望金额（上游账应记金额） */
     private BigDecimal expectedAmount;
     /** 实际金额（业务账实记金额） */
@@ -52,7 +52,7 @@ public class DailyReconcileDO implements Serializable {
     /** 差异说明 / 明细 */
     private String detail;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

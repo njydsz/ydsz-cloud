@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.dto;
+﻿package com.njydsz.pmis.agent.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -27,11 +27,11 @@ public class AgentRunRequestDTO implements Serializable {
     /** 关联业务类型（PROJECT/OPPORTUNITY/TIMESHEET/STAFF） */
     private String bizType;
     /** 关联业务 ID */
-    private Long bizId;
+    private String bizId;
     /** 关联业务名称/编码（冗余） */
     private String bizRef;
     /** 调用人 ID（系统触发为空） */
-    private Long callerId;
+    private String callerId;
     /** 调用人姓名 */
     private String callerName;
     /** 来源（MANUAL/SCHEDULED/EVENT） */

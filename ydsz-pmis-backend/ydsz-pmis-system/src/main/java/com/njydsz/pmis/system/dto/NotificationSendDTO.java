@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.dto;
+﻿package com.njydsz.pmis.system.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -40,10 +40,10 @@ public class NotificationSendDTO implements Serializable {
     private String category = "SYSTEM";
 
     /** 发送人 ID（系统通知为 null） */
-    private Long senderId;
+    private String senderId;
 
     /** 单接收 */
-    private Long receiverId;
+    private String receiverId;
 
     /** 批量接收（优先于 receiverId） */
     private List<Long> receiverIds;

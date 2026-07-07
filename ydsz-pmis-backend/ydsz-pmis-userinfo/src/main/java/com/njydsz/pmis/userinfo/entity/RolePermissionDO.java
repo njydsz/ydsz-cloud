@@ -28,8 +28,8 @@ public class RolePermissionDO extends BaseDO {
     private String id;
 
     /** 角色 ID */
-    private Long roleId;
+    private String roleId;
 
     /** 权限 ID */
-    private Long permissionId;
+    private String permissionId;
 }

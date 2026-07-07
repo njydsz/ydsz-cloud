@@ -30,9 +30,9 @@ public class FlowUserDO extends BaseDO {
     private String id;
 
     /** 任务 ID */
-    private Long taskId;
+    private String taskId;
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
     /** 节点编码 */
     private String nodeCode;
 
@@ -70,7 +70,7 @@ public class FlowUserDO extends BaseDO {
     private String signType;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪 ID */
     private String providerTraceId;
 }

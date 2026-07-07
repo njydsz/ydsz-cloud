@@ -37,23 +37,23 @@ public class InitiationDO implements Serializable {
     /** 项目名称 */
     private String projectName;
     /** 关联商机 ID */
-    private Long opportunityId;
+    private String opportunityId;
     /** 客户 ID */
-    private Long customerId;
+    private String customerId;
     /** 客户名称 */
     private String customerName;
     /** 业务部门 ID */
-    private Long businessDeptId;
+    private String businessDeptId;
     /** 项目类型（FIXED_PRICE/T&M/OUTSOURCING/PRODUCT） */
     private String projectType;
     /** 项目分级（A/B/C） */
     private String projectLevel;
     /** 项目经理 ID */
-    private Long pmId;
+    private String pmId;
     /** 项目经理名称 */
     private String pmName;
     /** 发起人 ID */
-    private Long sponsorId;
+    private String sponsorId;
     /** 发起人名称 */
     private String sponsorName;
     /** 预估金额 */
@@ -79,7 +79,7 @@ public class InitiationDO implements Serializable {
     /** 自研工作流实例 ID */
     private String workflowId;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /**
      * 乐观锁版本号（P1-12）

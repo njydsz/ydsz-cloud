@@ -35,7 +35,7 @@ public class ProfitSimulationDO implements Serializable {
     /** 测算名称 */
     private String simulationName;
     /** 关联项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 版本号 V1/V2/V3... */
     private Integer version;
     /** 场景类型：BASE/OPTIMISTIC/PESSIMISTIC/CUSTOM */
@@ -78,11 +78,11 @@ public class ProfitSimulationDO implements Serializable {
     /** 备注 */
     private String remark;
     /** 申请人ID */
-    private Long applicantId;
+    private String applicantId;
     /** 申请人姓名 */
     private String applicantName;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

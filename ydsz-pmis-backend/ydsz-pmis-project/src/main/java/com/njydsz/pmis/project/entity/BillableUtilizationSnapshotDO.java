@@ -39,7 +39,7 @@ public class BillableUtilizationSnapshotDO implements Serializable {
     private String period;
 
     /** 员工 ID */
-    private Long employeeId;
+    private String employeeId;
 
     /** 员工姓名 */
     private String employeeName;
@@ -87,7 +87,7 @@ public class BillableUtilizationSnapshotDO implements Serializable {
     private String source;
 
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)

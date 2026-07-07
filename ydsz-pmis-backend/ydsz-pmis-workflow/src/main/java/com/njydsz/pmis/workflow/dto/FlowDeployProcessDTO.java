@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.dto;
+﻿package com.njydsz.pmis.workflow.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -63,7 +63,7 @@ public class FlowDeployProcessDTO implements Serializable {
     private List<FlowSkipDTO> skips;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 链路追踪 ID */
     private String providerTraceId;

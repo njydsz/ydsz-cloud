@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.config;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.security.SecurityContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
@@ -13,7 +14,8 @@ import java.time.LocalDateTime;
  * <p>INSERT 时填充 createdBy/createdAt/updatedBy/updatedAt；
  * UPDATE 时填充 updatedBy/updatedAt。
  *
- * <p>当前线程未登录用户时，createdBy/updatedBy 默认为 0。
+ * <p>当前线程未登录用户时，createdBy/updatedBy 默认为
+ * {@link SystemConstants#SYSTEM_USER_ID}。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -53,10 +55,11 @@ public class AuditFieldFiller implements MetaObjectHandler {
     private String currentUserId() {
         try {
             String uid = SecurityContext.getUserId();
-            return uid == null || uid.isEmpty() ? "0" : uid;
+            return uid == null || uid.isEmpty() ? SystemConstants.SYSTEM_USER_ID : uid;
         } catch (Exception e) {
-            log.debug("[AuditFieldFiller] 当前线程无登录用户，审计字段使用默认值 0: {}", e.getMessage());
-            return "0";
+            log.debug("[AuditFieldFiller] 当前线程无登录用户，审计字段使用系统占位值 {}: {}",
+                    SystemConstants.SYSTEM_USER_ID, e.getMessage());
+            return SystemConstants.SYSTEM_USER_ID;
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.event;
+﻿package com.njydsz.pmis.common.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,13 +31,13 @@ public class ProjectChangeExecutedEvent implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 变更 ID */
-    private Long changeId;
+    private String changeId;
     /** 变更编号 */
     private String changeCode;
     /** 变更标题 */
     private String changeTitle;
     /** 关联项目立项 ID */
-    private Long initiationId;
+    private String initiationId;
     /** 变更类型: SCOPE / COST / CONTRACT / STAFF / SCHEDULE */
     private String changeType;
     /** 是否重大变更 */

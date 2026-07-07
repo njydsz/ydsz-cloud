@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.dto;
+﻿package com.njydsz.pmis.workflow.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -44,7 +44,7 @@ public class FlowStartProcessDTO implements Serializable {
     private String title;
 
     /** 发起人 ID */
-    private Long initiatorId;
+    private String initiatorId;
 
     /** 发起人姓名 */
     private String initiatorName;
@@ -59,13 +59,13 @@ public class FlowStartProcessDTO implements Serializable {
     private List<FlowAssigneeDTO> assignees;
 
     /** 租户 ID（不填则取当前用户租户） */
-    private Long tenantId;
+    private String tenantId;
 
     /** 链路追踪 ID */
     private String providerTraceId;
 
     /** P1-3: 父流程实例 ID（子流程场景，可空） */
-    private Long parentInstanceId;
+    private String parentInstanceId;
 
     /** P1-3: 父流程中触发子流程的节点编码（可空） */
     private String parentNodeCode;

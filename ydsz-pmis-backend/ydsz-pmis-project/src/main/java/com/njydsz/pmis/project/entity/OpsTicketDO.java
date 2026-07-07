@@ -34,9 +34,9 @@ public class OpsTicketDO implements Serializable {
     /** 业务编码（TK-YYYYMMDD-XXXX） */
     private String ticketCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 关联质保单ID（可空） */
-    private Long warrantyId;
+    private String warrantyId;
     /** 工单标题 */
     private String title;
     /** 工单描述 */
@@ -48,13 +48,13 @@ public class OpsTicketDO implements Serializable {
     /** OpsTicketStatus.code */
     private String status;
     /** 报告人ID */
-    private Long reporterId;
+    private String reporterId;
     /** 报告人姓名 */
     private String reporterName;
     /** 报告人电话 */
     private String reporterPhone;
     /** 处理人ID */
-    private Long assigneeId;
+    private String assigneeId;
     /** 处理人姓名 */
     private String assigneeName;
     /** 受理时间 */
@@ -82,7 +82,7 @@ public class OpsTicketDO implements Serializable {
     /** 附件文件ID列表（逗号分隔） */
     private String fileIds;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

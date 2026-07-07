@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -27,7 +27,7 @@ public class ProjectChangeCreateDTO implements Serializable {
 
     /** 立项 ID */
     @NotNull(message = "{validation.project.msg_576c2b5e}")
-    private Long initiationId;
+    private String initiationId;
 
     /** 变更类型（ChangeType.code） */
     @NotBlank(message = "{validation.project.msg_970fff4b}")
@@ -54,9 +54,9 @@ public class ProjectChangeCreateDTO implements Serializable {
     /** 影响的人员数 */
     private Integer affectedStaffCount;
     /** 关联合同 ID（可选） */
-    private Long contractId;
+    private String contractId;
     /** 申请人 ID */
-    private Long applicantId;
+    private String applicantId;
     /** 申请人名称 */
     private String applicantName;
     /** 状态（ChangeStatus.code） */
@@ -64,5 +64,5 @@ public class ProjectChangeCreateDTO implements Serializable {
     /** 备注 */
     private String remark;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 }

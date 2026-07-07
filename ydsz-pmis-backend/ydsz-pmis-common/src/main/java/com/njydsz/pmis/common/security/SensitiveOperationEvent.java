@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.security;
+﻿package com.njydsz.pmis.common.security;
 
 import lombok.Builder;
 import lombok.Data;
@@ -63,5 +63,5 @@ public class SensitiveOperationEvent implements Serializable {
     private String traceId;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 }

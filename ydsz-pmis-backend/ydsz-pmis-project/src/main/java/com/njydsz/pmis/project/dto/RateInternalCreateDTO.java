@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,7 +25,7 @@ public class RateInternalCreateDTO {
     private String levelCode;
 
     /** 事业部/部门 ID */
-    private Long departmentId;
+    private String departmentId;
     /** 部门名称 */
     private String departmentName;
 

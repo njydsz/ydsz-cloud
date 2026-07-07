@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.dto;
+﻿package com.njydsz.pmis.workflow.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -91,7 +91,7 @@ public class EmbeddedApprovalViewDTO implements Serializable {
         private static final long serialVersionUID = 1L;
 
         /** 任务 ID */
-        private Long taskId;
+        private String taskId;
         /** 节点编码 */
         private String nodeCode;
         /** 节点名称 */

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,9 +17,9 @@ import java.time.LocalDate;
 public class EvmMeasureCreateDTO {
 
     @NotNull(message = "{validation.execution.msg_576c2b5e}")
-    private Long initiationId;
+    private String initiationId;
 
-    private Long wbsTaskId;
+    private String wbsTaskId;
 
     @NotBlank(message = "{validation.execution.msg_f0414199}")
     private String period;

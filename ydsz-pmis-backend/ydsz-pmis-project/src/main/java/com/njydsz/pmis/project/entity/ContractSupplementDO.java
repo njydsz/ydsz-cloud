@@ -30,7 +30,7 @@ public class ContractSupplementDO implements Serializable {
     private String id;
 
     /** 合同 ID */
-    private Long contractId;
+    private String contractId;
     /** 补充协议编号 */
     private String supplementCode;
     /** 补充协议名称 */
@@ -48,11 +48,11 @@ public class ContractSupplementDO implements Serializable {
     /** 协议内容 */
     private String content;
     /** 附件 ID */
-    private Long fileId;
+    private String fileId;
     /** 状态 */
     private String status;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)

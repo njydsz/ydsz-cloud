@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -25,7 +25,7 @@ public class ResourcePoolCreateDTO {
     private String poolType;
 
     /** 部门 ID */
-    private Long departmentId;
+    private String departmentId;
     /** 部门名称 */
     private String departmentName;
     /** 职级范围 */

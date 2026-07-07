@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -36,5 +36,5 @@ public class DeliveryStandardCreateDTO implements Serializable {
     private String acceptanceCriteria;
     private String templateRef;
     private String remark;
-    private Long tenantId;
+    private String tenantId;
 }

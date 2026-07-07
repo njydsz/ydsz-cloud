@@ -33,7 +33,7 @@ public class OvertimeDO extends BaseDO {
     /** 加班单号 */
     private String overtimeCode;
     /** 员工 ID */
-    private Long employeeId;
+    private String employeeId;
     /** 员工姓名 */
     private String employeeName;
     /** 加班日期 */
@@ -51,11 +51,11 @@ public class OvertimeDO extends BaseDO {
     /** 加班事由 */
     private String reason;
     /** 审批单 ID */
-    private Long approvalId;
+    private String approvalId;
     /** 审批状态（LeaveStatus.code） */
     private String approvalStatus;
     /** 审批人 ID */
-    private Long approverId;
+    private String approverId;
     /** 审批人姓名 */
     private String approverName;
     /** 审批时间 */
@@ -63,7 +63,7 @@ public class OvertimeDO extends BaseDO {
     /** 审批意见 */
     private String approvalRemark;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 外部提供方链路追踪 ID */
     private String providerTraceId;
 }

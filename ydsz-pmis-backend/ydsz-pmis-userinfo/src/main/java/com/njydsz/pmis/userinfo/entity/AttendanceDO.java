@@ -31,7 +31,7 @@ public class AttendanceDO extends BaseDO {
     private String id;
 
     /** 员工 ID */
-    private Long employeeId;
+    private String employeeId;
     /** 员工姓名 */
     private String employeeName;
     /** 考勤日期 */
@@ -51,7 +51,7 @@ public class AttendanceDO extends BaseDO {
     /** 备注 */
     private String remark;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 外部考勤提供方链路追踪 ID */
     private String providerTraceId;
 }

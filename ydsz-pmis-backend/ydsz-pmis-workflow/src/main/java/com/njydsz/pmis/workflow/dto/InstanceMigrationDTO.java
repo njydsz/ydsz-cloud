@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.dto;
+﻿package com.njydsz.pmis.workflow.dto;
 
 import lombok.Data;
 
@@ -22,13 +22,13 @@ public class InstanceMigrationDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 源流程定义 ID（旧版本） */
-    private Long sourceDefinitionId;
+    private String sourceDefinitionId;
 
     /** 目标流程定义 ID（新版本） */
-    private Long targetDefinitionId;
+    private String targetDefinitionId;
 
     /** 租户 ID（可选，默认从上下文获取） */
-    private Long tenantId;
+    private String tenantId;
 
     /**
      * 节点映射：旧节点编码 -> 新节点编码。

@@ -41,7 +41,7 @@ public class OperationLogDO implements Serializable {
     private String bizId;
 
     /** 用户 ID */
-    private Long userId;
+    private String userId;
 
     /** 用户名 */
     private String username;
@@ -86,7 +86,7 @@ public class OperationLogDO implements Serializable {
     private String traceId;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)

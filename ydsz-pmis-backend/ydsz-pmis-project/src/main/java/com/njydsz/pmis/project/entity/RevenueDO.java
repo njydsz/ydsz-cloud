@@ -34,9 +34,9 @@ public class RevenueDO implements Serializable {
     private String id;
 
     /** 合同ID */
-    private Long contractId;
+    private String contractId;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 收入编号 */
     private String revenueCode;
     /** 收入确认方法：RevenueRecognitionMethod.code */
@@ -52,7 +52,7 @@ public class RevenueDO implements Serializable {
     /** 完工百分比（0-1） */
     private BigDecimal percentComplete;
     /** 关联发票ID */
-    private Long invoiceId;
+    private String invoiceId;
     /** 状态 */
     private String status;
     /** 确认人ID */
@@ -62,7 +62,7 @@ public class RevenueDO implements Serializable {
     /** 描述 */
     private String description;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

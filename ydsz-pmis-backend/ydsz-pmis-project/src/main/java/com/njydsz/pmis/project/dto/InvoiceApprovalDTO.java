@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -13,7 +13,7 @@ import lombok.Data;
 public class InvoiceApprovalDTO {
 
     @NotNull(message = "{validation.execution.msg_52fbfb11}")
-    private Long operatorId;
+    private String operatorId;
 
     private String comment;
 

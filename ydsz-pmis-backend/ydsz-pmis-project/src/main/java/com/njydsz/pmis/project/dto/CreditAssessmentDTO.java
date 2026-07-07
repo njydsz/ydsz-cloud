@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -13,7 +13,7 @@ import lombok.Data;
 public class CreditAssessmentDTO {
 
     @NotNull(message = "{validation.execution.msg_6de1fd36}")
-    private Long customerId;
+    private String customerId;
 
     private String customerName;
 

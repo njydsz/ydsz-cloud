@@ -31,15 +31,15 @@ public class FlowTaskCommentDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
     /** 任务 ID */
-    private Long taskId;
+    private String taskId;
     /** 节点编码 */
     private String nodeCode;
     /** 评论人 ID */
-    private Long userId;
+    private String userId;
     /** 评论人姓名 */
     private String userName;
     /** 评论内容 */
@@ -47,5 +47,5 @@ public class FlowTaskCommentDO extends BaseDO {
     /** 评论类型：COMMENT / QUESTION / REPLY */
     private String type;
     /** 父评论 ID（可空，用于楼中楼回复） */
-    private Long parentId;
+    private String parentId;
 }

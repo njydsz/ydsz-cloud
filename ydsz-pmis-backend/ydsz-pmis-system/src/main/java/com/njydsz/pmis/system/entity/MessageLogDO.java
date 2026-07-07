@@ -73,5 +73,5 @@ public class MessageLogDO extends BaseDO {
     private Integer reconsumeTimes;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 }

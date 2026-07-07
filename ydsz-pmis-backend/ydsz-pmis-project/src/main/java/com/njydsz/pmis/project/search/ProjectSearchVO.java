@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.search;
+﻿package com.njydsz.pmis.project.search;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,7 +30,7 @@ public class ProjectSearchVO implements Serializable {
 
     /** 立项 ID（与文档 ID 等价） */
     @Schema(description = "立项 ID")
-    private Long id;
+    private String id;
 
     /** 项目编号 */
     @Schema(description = "项目编号")

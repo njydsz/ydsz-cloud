@@ -22,11 +22,11 @@ class BaseDOTest {
     }
 
     @Test
-    @DisplayName("setter/getter - createdBy 应正确存取")
+    @DisplayName("setter/getter - createdBy 应正确存取（雪花字符串）")
     void createdBy_shouldSetAndGet() {
         TestEntity entity = new TestEntity();
-        entity.setCreatedBy(100L);
-        assertEquals(100L, entity.getCreatedBy());
+        entity.setCreatedBy("100");
+        assertEquals("100", entity.getCreatedBy());
     }
 
     @Test

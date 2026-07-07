@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,9 +24,9 @@ public class DeliveryItemCreateDTO implements Serializable {
     private String itemCode;
 
     @NotNull(message = "{validation.execution.msg_576c2b5e}")
-    private Long initiationId;
+    private String initiationId;
 
-    private Long standardId;
+    private String standardId;
     private String projectType;
     private String projectLevel;
     private String deliveryName;
@@ -34,10 +34,10 @@ public class DeliveryItemCreateDTO implements Serializable {
     private String stage;
     private Integer required;
     private LocalDate plannedSubmitDate;
-    private Long submitterId;
+    private String submitterId;
     private String submitterName;
     private Integer trRequired;
     private String fileIds;
     private String remark;
-    private Long tenantId;
+    private String tenantId;
 }

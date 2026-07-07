@@ -35,17 +35,17 @@ public class TimeEntryDO implements Serializable {
     /** 填报日期 */
     private LocalDate entryDate;
     /** 员工ID */
-    private Long employeeId;
+    private String employeeId;
     /** 员工姓名 */
     private String employeeName;
     /** 职级编码 */
     private String levelCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 项目名称 */
     private String initiationName;
     /** WBS 任务ID */
-    private Long taskId;
+    private String taskId;
     /** 任务名称 */
     private String taskName;
     /** 工时（小时） */
@@ -61,13 +61,13 @@ public class TimeEntryDO implements Serializable {
     /** 工作描述 */
     private String description;
     /** 命中的费率卡 ID（关联 pmis_rate_card.id，可空：未匹配到费率卡） */
-    private Long rateId;
+    private String rateId;
     /** 人天费率（冗余，锁定当时报价，用于成本归集） */
     private BigDecimal rate;
     /** 状态：TimeEntryStatus.code */
     private String status;
     /** 审批人ID */
-    private Long approverId;
+    private String approverId;
     /** 审批人姓名 */
     private String approverName;
     /** 审批时间 */
@@ -75,7 +75,7 @@ public class TimeEntryDO implements Serializable {
     /** 驳回原因 */
     private String rejectReason;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

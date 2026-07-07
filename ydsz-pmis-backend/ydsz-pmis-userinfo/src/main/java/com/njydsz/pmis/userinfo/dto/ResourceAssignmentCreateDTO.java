@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,7 +22,7 @@ public class ResourceAssignmentCreateDTO {
 
     /** 员工 ID */
     @NotNull(message = "{validation.user.msg_03f5ae35}")
-    private Long employeeId;
+    private String employeeId;
 
     /** 员工姓名 */
     private String employeeName;
@@ -30,16 +30,16 @@ public class ResourceAssignmentCreateDTO {
     private String levelCode;
 
     /** 资源池 ID */
-    private Long poolId;
+    private String poolId;
     /** 冗余池类型便于查询 */
     private String poolType;
 
     /** 关联项目 ID */
-    private Long initiationId;
+    private String initiationId;
     /** 关联项目名称 */
     private String initiationName;
     /** 关联商机 ID（预占时） */
-    private Long opportunityId;
+    private String opportunityId;
 
     /** 业务动作：RESERVE/START/TRANSFER/RELEASE/CANCEL */
     @NotBlank(message = "{validation.user.msg_ac3aca15}")

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,7 +22,7 @@ public class ProjectChangeStatusDTO implements Serializable {
 
     /** 变更 ID */
     @NotNull(message = "{validation.project.msg_ad21f8c7}")
-    private Long id;
+    private String id;
 
     /** 目标状态（ChangeStatus.code） */
     @NotBlank(message = "{validation.project.msg_8304cf7d}")

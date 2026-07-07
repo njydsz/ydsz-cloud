@@ -33,11 +33,11 @@ public class SatisfactionDO implements Serializable {
     /** 业务编码（SV-YYYYMMDD-XXXX） */
     private String surveyCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 关联工单ID（可空） */
-    private Long ticketId;
+    private String ticketId;
     /** 关联质保单ID（可空） */
-    private Long warrantyId;
+    private String warrantyId;
     /** 总体评分 1-5 */
     private Integer score;
     /** SatisfactionLevel.code */
@@ -57,7 +57,7 @@ public class SatisfactionDO implements Serializable {
     /** 是否匿名评价 */
     private Boolean anonymous;
     /** 评价人ID */
-    private Long evaluatorId;
+    private String evaluatorId;
     /** 评价人姓名 */
     private String evaluatorName;
     /** 评价时间 */
@@ -67,7 +67,7 @@ public class SatisfactionDO implements Serializable {
     /** 回访记录 */
     private String followUpNote;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

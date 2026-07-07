@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.dto;
+﻿package com.njydsz.pmis.workflow.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +26,7 @@ public class FlowInstanceViewDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 实例 ID */
-    private Long id;
+    private String id;
     /** 流程编码 */
     private String flowCode;
     /** 流程名称 */
@@ -42,7 +42,7 @@ public class FlowInstanceViewDTO implements Serializable {
     /** 流程标题 */
     private String title;
     /** 发起人 ID */
-    private Long initiatorId;
+    private String initiatorId;
     /** 发起人姓名 */
     private String initiatorName;
     /** 当前节点编码 */
@@ -72,7 +72,7 @@ public class FlowInstanceViewDTO implements Serializable {
         @Serial
         private static final long serialVersionUID = 1L;
         /** 任务 ID */
-        private Long id;
+        private String id;
         /** 节点编码 */
         private String nodeCode;
         /** 节点名称 */

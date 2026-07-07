@@ -41,7 +41,7 @@ public class RuleChainGraphDO implements Serializable {
     private String scenario;
 
     /** 租户 ID（多租户隔离，默认 1） */
-    private Long tenantId;
+    private String tenantId;
 
     /** 画布版本号（独立递增） */
     private Integer graphVersion;

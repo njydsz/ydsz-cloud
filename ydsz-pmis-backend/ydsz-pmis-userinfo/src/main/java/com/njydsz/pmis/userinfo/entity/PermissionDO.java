@@ -28,7 +28,7 @@ public class PermissionDO extends BaseDO {
     private String id;
 
     /** 父权限 ID（0=根） */
-    private Long parentId;
+    private String parentId;
 
     /** 权限编码：system:user:create */
     private String permCode;

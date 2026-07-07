@@ -29,7 +29,7 @@ public class JobLogDO implements Serializable {
     private String id;
 
     /** 任务 ID */
-    private Long jobId;
+    private String jobId;
     /** 任务 KEY */
     private String jobKey;
     /** 开始时间 */

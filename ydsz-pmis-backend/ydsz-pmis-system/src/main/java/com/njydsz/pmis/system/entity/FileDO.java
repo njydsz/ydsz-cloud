@@ -64,13 +64,13 @@ public class FileDO extends BaseDO {
     private LocalDateTime urlExpireAt;
 
     /** 上传人 ID */
-    private Long uploaderId;
+    private String uploaderId;
 
     /** 上传人姓名 */
     private String uploaderName;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 描述 */
     private String description;

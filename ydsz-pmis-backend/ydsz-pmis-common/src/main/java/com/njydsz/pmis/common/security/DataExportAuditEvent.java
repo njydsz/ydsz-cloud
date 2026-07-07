@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.security;
+﻿package com.njydsz.pmis.common.security;
 
 import lombok.Builder;
 import lombok.Data;
@@ -62,7 +62,7 @@ public class DataExportAuditEvent implements Serializable {
     private String clientIp;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 导出时间戳（毫秒） */
     private Long exportedAt;

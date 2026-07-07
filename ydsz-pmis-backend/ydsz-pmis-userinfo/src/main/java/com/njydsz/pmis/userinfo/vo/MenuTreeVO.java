@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.vo;
+﻿package com.njydsz.pmis.userinfo.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -24,10 +24,10 @@ public class MenuTreeVO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "权限 ID")
-    private Long id;
+    private String id;
 
     @Schema(description = "父 ID (0=根)")
-    private Long parentId;
+    private String parentId;
 
     @Schema(description = "权限编码")
     private String permCode;

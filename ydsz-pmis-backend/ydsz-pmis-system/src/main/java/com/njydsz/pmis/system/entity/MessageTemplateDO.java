@@ -55,5 +55,5 @@ public class MessageTemplateDO extends BaseDO {
     private String description;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 }

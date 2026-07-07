@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -37,12 +37,12 @@ public class ContractCreateDTO implements Serializable {
 
     /** 来源立项 ID */
     @Schema(description = "来源立项 ID")
-    private Long initiationId;
+    private String initiationId;
 
     /** 客户 ID */
     @NotNull
     @Schema(description = "客户 ID", requiredMode = RequiredMode.REQUIRED)
-    private Long customerId;
+    private String customerId;
 
     /** 客户名称 */
     @Schema(description = "客户名称")
@@ -89,7 +89,7 @@ public class ContractCreateDTO implements Serializable {
     /** 负责人 ID */
     @NotNull
     @Schema(description = "负责人 ID", requiredMode = RequiredMode.REQUIRED)
-    private Long ownerId;
+    private String ownerId;
 
     /** 负责人姓名 */
     @Schema(description = "负责人姓名")
@@ -97,7 +97,7 @@ public class ContractCreateDTO implements Serializable {
 
     /** 合同文件 ID */
     @Schema(description = "合同文件 ID")
-    private Long contractFileId;
+    private String contractFileId;
 
     /** 备注 */
     @Schema(description = "备注")

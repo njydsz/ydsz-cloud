@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.dto;
+﻿package com.njydsz.pmis.workflow.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,7 +38,7 @@ public class EmbeddedApprovalActionDTO implements Serializable {
 
     /** 操作人 ID（必填） */
     @NotNull(message = "{validation.workflow.msg_f65f41e7}")
-    private Long userId;
+    private String userId;
 
     /** 操作人姓名 */
     private String userName;
@@ -50,7 +50,7 @@ public class EmbeddedApprovalActionDTO implements Serializable {
     private String commentType;
 
     /** 转办/委派目标人 ID（TRANSFER/DELEGATE 时使用） */
-    private Long targetUserId;
+    private String targetUserId;
 
     /** 转办/委派目标人姓名 */
     private String targetUserName;
@@ -59,5 +59,5 @@ public class EmbeddedApprovalActionDTO implements Serializable {
     private Map<String, Object> variables;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 }

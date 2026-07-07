@@ -31,7 +31,7 @@ public class FlowNotifyChannelDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 通道类型（IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT） */
     private String channelType;
     /** 通道名称 */

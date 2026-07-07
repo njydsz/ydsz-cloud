@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.engine;
+﻿package com.njydsz.pmis.project.engine;
 
 import lombok.Data;
 
@@ -21,7 +21,7 @@ public class ReconcileReport implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 校验的项目 ID */
-    private Long initiationId;
+    private String initiationId;
 
     /** 校验起始时间 */
     private LocalDateTime checkAt;

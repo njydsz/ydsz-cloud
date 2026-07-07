@@ -29,13 +29,13 @@ public class OpportunityFollowDO implements Serializable {
     private String id;
 
     /** 商机 ID */
-    private Long opportunityId;
+    private String opportunityId;
     /** 跟进类型（VISIT/CALL/QUOTE/NEGOTIATE/OTHER） */
     private String followType;
     /** 跟进时间 */
     private LocalDateTime followAt;
     /** 跟进人 ID */
-    private Long followerId;
+    private String followerId;
     /** 跟进人名称 */
     private String followerName;
     /** 跟进内容 */

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import lombok.Data;
 @Data
 public class OpsTicketStatusDTO {
     /** 工单ID */
-    private Long id;
+    private String id;
     /** OpsTicketStatus.code */
     private String targetStatus;
     /** 解决说明 */

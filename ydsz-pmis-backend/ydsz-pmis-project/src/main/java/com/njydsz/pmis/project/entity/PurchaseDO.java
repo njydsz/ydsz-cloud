@@ -36,7 +36,7 @@ public class PurchaseDO implements Serializable {
     /** 采购编号 */
     private String purchaseCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 供应商 */
     private String vendor;
     /** 物品/服务名称 */
@@ -52,11 +52,11 @@ public class PurchaseDO implements Serializable {
     /** 状态：ApprovalStatus.code */
     private String status;
     /** 申请人ID */
-    private Long applicantId;
+    private String applicantId;
     /** 申请人姓名 */
     private String applicantName;
     /** 审批人ID */
-    private Long approverId;
+    private String approverId;
     /** 审批人姓名 */
     private String approverName;
     /** 审批时间 */
@@ -64,7 +64,7 @@ public class PurchaseDO implements Serializable {
     /** 描述 */
     private String description;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

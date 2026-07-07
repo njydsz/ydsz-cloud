@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -26,7 +26,7 @@ public class DecisionTableSaveDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "决策表 ID（更新时传入）")
-    private Long id;
+    private String id;
 
     @NotBlank(message = "决策表编码不能为空")
     @Schema(description = "决策表编码", requiredMode = Schema.RequiredMode.REQUIRED)

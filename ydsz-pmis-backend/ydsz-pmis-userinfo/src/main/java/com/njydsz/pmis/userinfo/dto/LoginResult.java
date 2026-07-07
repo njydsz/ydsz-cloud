@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,7 +36,7 @@ public class LoginResult implements Serializable {
     private String sessionId;
 
     /** 用户 ID */
-    private Long userId;
+    private String userId;
 
     /** 用户名 */
     private String username;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import lombok.Data;
 @Data
 public class WarrantyTerminateDTO {
     /** 质保单ID */
-    private Long id;
+    private String id;
     /** 提前终止原因 */
     private String reason;
 }

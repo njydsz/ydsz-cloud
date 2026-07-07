@@ -39,9 +39,9 @@ public class WbsTaskDO implements Serializable {
     /** 任务名称 */
     private String taskName;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 父任务ID（ null 表示根节点） */
-    private Long parentId;
+    private String parentId;
     /** 任务层级（从 1 开始） */
     private Integer taskLevel;
     /** WBS 路径（如 1.2.3） */
@@ -67,7 +67,7 @@ public class WbsTaskDO implements Serializable {
     /** 进度百分比（0-100） */
     private BigDecimal progressPct;
     /** 责任人ID */
-    private Long ownerId;
+    private String ownerId;
     /** 责任人姓名 */
     private String ownerName;
     /** 派单人员ID列表（逗号分隔） */
@@ -87,7 +87,7 @@ public class WbsTaskDO implements Serializable {
     /** 风险等级 */
     private String riskLevel;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

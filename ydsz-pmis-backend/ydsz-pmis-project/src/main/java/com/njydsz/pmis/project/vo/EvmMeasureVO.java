@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.vo;
+﻿package com.njydsz.pmis.project.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
@@ -28,12 +28,12 @@ public class EvmMeasureVO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    private Long id;
+    private String id;
 
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** WBS 任务ID（可空：项目级度量） */
-    private Long wbsTaskId;
+    private String wbsTaskId;
     /** 所属期间（YYYY-MM） */
     private String period;
 

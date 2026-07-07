@@ -29,7 +29,7 @@ public class DataExportAuditDO implements Serializable {
     private String id;
 
     /** 用户 ID */
-    private Long userId;
+    private String userId;
     /** 用户名 */
     private String username;
     /** 导出模块 */
@@ -53,7 +53,7 @@ public class DataExportAuditDO implements Serializable {
     /** 客户端 IP */
     private String clientIp;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 导出时间 */
     private LocalDateTime exportedAt;
 

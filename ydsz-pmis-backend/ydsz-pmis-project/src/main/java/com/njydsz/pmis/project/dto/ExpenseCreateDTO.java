@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 import java.math.BigDecimal;
@@ -13,8 +13,8 @@ import java.time.LocalDate;
 @Data
 public class ExpenseCreateDTO {
     private String expenseCode;
-    private Long initiationId;
-    private Long employeeId;
+    private String initiationId;
+    private String employeeId;
     private String employeeName;
     private String expenseType;  // TRAVEL/CATERING/...
     private BigDecimal amount;

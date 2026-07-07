@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,7 +25,7 @@ public class ProfitSimulationCreateDTO {
 
     /** 关联项目立项ID */
     @NotNull(message = "{validation.execution.msg_576c2b5e}")
-    private Long initiationId;
+    private String initiationId;
 
     /** 场景类型：BASE/OPTIMISTIC/PESSIMISTIC/CUSTOM */
     private String scenarioType;      // BASE/OPTIMISTIC/PESSIMISTIC/CUSTOM
@@ -44,7 +44,7 @@ public class ProfitSimulationCreateDTO {
     /** 备注 */
     private String remark;
     /** 申请人ID */
-    private Long applicantId;
+    private String applicantId;
     /** 申请人姓名 */
     private String applicantName;
 }

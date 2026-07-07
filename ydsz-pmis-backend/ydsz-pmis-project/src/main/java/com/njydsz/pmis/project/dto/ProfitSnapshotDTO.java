@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 import java.math.BigDecimal;
@@ -11,7 +11,7 @@ import java.math.BigDecimal;
  */
 @Data
 public class ProfitSnapshotDTO {
-    private Long initiationId;
+    private String initiationId;
     private String period;            // YYYY-MM
     private BigDecimal contractAmount;
     private BigDecimal recognizedRevenue;

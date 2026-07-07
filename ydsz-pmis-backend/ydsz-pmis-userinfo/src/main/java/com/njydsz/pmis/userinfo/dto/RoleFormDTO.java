@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -23,7 +23,7 @@ public class RoleFormDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 主键 ID（更新时必填） */
-    private Long id;
+    private String id;
 
     /** 角色编码 */
     @NotBlank

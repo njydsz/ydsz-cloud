@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -26,7 +26,7 @@ public class GateReviewDTO implements Serializable {
     /** 立项 ID */
     @NotNull
     @Schema(description = "立项 ID", requiredMode = RequiredMode.REQUIRED)
-    private Long initiationId;
+    private String initiationId;
 
     /** 门径编码（CD1/CD2/CD3/CD4/CD5） */
     @NotBlank

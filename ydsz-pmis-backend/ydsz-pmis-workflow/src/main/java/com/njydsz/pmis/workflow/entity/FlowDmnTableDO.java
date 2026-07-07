@@ -30,7 +30,7 @@ public class FlowDmnTableDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 决策表唯一标识 */
     private String tableKey;

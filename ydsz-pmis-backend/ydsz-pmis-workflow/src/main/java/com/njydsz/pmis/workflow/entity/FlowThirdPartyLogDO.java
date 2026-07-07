@@ -60,7 +60,7 @@ public class FlowThirdPartyLogDO implements Serializable {
     private String errorMsg;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 创建时间 */
     private LocalDateTime createdAt;

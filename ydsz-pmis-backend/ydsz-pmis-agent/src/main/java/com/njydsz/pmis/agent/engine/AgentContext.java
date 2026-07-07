@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.engine;
+﻿package com.njydsz.pmis.agent.engine;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,11 +17,11 @@ public class AgentContext {
     /** 业务类型 */
     private String bizType;
     /** 业务 ID */
-    private Long bizId;
+    private String bizId;
     /** 业务引用（编码/名称） */
     private String bizRef;
     /** 调用人 ID */
-    private Long callerId;
+    private String callerId;
     /** 调用人姓名 */
     private String callerName;
     /** 来源 */

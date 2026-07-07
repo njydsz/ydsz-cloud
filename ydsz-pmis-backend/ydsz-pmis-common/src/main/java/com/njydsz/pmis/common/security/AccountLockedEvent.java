@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.security;
+﻿package com.njydsz.pmis.common.security;
 
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +27,7 @@ public class AccountLockedEvent implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 用户 ID */
-    private Long userId;
+    private String userId;
 
     /** 用户名 */
     private String username;
@@ -45,7 +45,7 @@ public class AccountLockedEvent implements Serializable {
     private String traceId;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 锁定时间戳（毫秒） */
     private Long lockedAt;

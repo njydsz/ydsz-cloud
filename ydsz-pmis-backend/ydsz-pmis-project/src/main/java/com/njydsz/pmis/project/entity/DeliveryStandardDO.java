@@ -51,7 +51,7 @@ public class DeliveryStandardDO implements Serializable {
     /** 备注 */
     private String remark;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

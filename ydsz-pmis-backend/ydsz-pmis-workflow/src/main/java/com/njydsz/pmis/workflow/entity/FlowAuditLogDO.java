@@ -30,9 +30,9 @@ public class FlowAuditLogDO extends BaseDO {
     private String id;
 
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
     /** 任务 ID（可为空） */
-    private Long taskId;
+    private String taskId;
     /** 流程编码 */
     private String flowCode;
     /** 业务类型 */
@@ -46,11 +46,11 @@ public class FlowAuditLogDO extends BaseDO {
     /** 操作类型：START/PASS/REJECT/TRANSFER/DELEGATE/COUNTERSIGN/RECALL/URGE/TERMINATE/SUSPEND/ACTIVATE/CLAIM */
     private String action;
     /** 操作人 ID */
-    private Long operatorId;
+    private String operatorId;
     /** 操作人姓名 */
     private String operatorName;
     /** 目标人 ID（转办/委派/加签） */
-    private Long targetId;
+    private String targetId;
     /** 目标人姓名 */
     private String targetName;
     /** 审批意见 */
@@ -60,7 +60,7 @@ public class FlowAuditLogDO extends BaseDO {
     /** 操作时间 */
     private LocalDateTime operatedAt;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪 ID */
     private String providerTraceId;
 }

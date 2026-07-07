@@ -32,7 +32,7 @@ public class FlowThirdPartyAccountDO extends BaseDO {
     private String id;
 
     /** 系统用户 ID */
-    private Long userId;
+    private String userId;
 
     /** 平台: DINGTALK/FEISHU/WECOM */
     private String platform;
@@ -62,5 +62,5 @@ public class FlowThirdPartyAccountDO extends BaseDO {
     private String status;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 }

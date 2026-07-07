@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import com.njydsz.pmis.common.entity.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,5 +25,5 @@ public class UserQueryDTO extends PageQuery {
     private String status;
 
     /** 员工 ID */
-    private Long employeeId;
+    private String employeeId;
 }

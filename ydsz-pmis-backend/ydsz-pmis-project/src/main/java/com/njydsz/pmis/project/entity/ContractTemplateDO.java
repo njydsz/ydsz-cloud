@@ -59,13 +59,13 @@ public class ContractTemplateDO implements Serializable {
     /** 状态：DRAFT/PUBLISHED/DEPRECATED */
     private String status;
     /** 模板作者 ID */
-    private Long authorId;
+    private String authorId;
     /** 模板作者姓名（冗余） */
     private String authorName;
     /** 备注 */
     private String remark;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)

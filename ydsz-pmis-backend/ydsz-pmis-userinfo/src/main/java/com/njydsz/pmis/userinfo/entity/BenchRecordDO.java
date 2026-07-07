@@ -35,13 +35,13 @@ public class BenchRecordDO implements Serializable {
     /** 业务编号 */
     private String benchCode;
     /** 员工 ID */
-    private Long employeeId;
+    private String employeeId;
     /** 员工姓名 */
     private String employeeName;
     /** 职级编码 */
     private String levelCode;
     /** 资源池 ID */
-    private Long poolId;
+    private String poolId;
     /** Bench 动作：ENTER/EXIT */
     private String benchReason;
     /** 入池原因：PROJECT_END/RESERVE/TRAINING/LEAVE */
@@ -66,7 +66,7 @@ public class BenchRecordDO implements Serializable {
     /** 备注 */
     private String remark;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 外部提供方链路追踪 ID */
     private String providerTraceId;
 

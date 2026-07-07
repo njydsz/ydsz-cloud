@@ -42,11 +42,11 @@ public class InvoiceDO implements Serializable {
     /** 发票类型：NORMAL/RED_REVERSE */
     private String invoiceType;
     /** 合同ID */
-    private Long contractId;
+    private String contractId;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 客户ID */
-    private Long customerId;
+    private String customerId;
     /** 客户名称 */
     private String customerName;
     /** 开票依据：MILESTONE/OUTSOURCING/MONTHLY/FINAL/OTHER */
@@ -83,7 +83,7 @@ public class InvoiceDO implements Serializable {
     /** 状态：InvoiceStatus.code */
     private String status;
     /** 被红冲的发票ID */
-    private Long reversedById;
+    private String reversedById;
     /** 发票扫描件/电子发票文件ID */
     private String attachmentId;
     /** 审批意见 */
@@ -99,7 +99,7 @@ public class InvoiceDO implements Serializable {
     /** 开票时间 */
     private LocalDateTime issuedAt;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

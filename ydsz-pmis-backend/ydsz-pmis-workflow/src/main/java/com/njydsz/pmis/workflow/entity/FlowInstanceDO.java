@@ -38,7 +38,7 @@ public class FlowInstanceDO extends BaseDO {
     private String flowName;
 
     /** 流程定义 ID */
-    private Long definitionId;
+    private String definitionId;
 
     /** 流程版本 */
     @TableField("flow_version")
@@ -57,7 +57,7 @@ public class FlowInstanceDO extends BaseDO {
     private String title;
 
     /** 发起人 ID */
-    private Long initiatorId;
+    private String initiatorId;
 
     /** 发起人姓名 */
     private String initiatorName;
@@ -90,13 +90,13 @@ public class FlowInstanceDO extends BaseDO {
     private Long durationMs;
 
     /** GAP-P1: 父流程实例 ID（子流程场景，可空） */
-    private Long parentInstanceId;
+    private String parentInstanceId;
 
     /** GAP-P1: 父流程中触发子流程的节点编码（可空） */
     private String parentNodeCode;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 链路追踪 ID */
     private String providerTraceId;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -53,9 +53,9 @@ public class ContractTemplateCreateDTO implements Serializable {
     /** 状态（ContractTemplateStatus.code） */
     private String status;
     /** 模板作者 ID */
-    private Long authorId;
+    private String authorId;
     /** 备注 */
     private String remark;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 }

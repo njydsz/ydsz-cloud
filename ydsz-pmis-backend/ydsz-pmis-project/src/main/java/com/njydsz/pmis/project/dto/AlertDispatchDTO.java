@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 
@@ -30,5 +30,5 @@ public class AlertDispatchDTO {
     private String pushChannels;
     /** 触发人/任务名 */
     private String dispatchedBy;
-    private Long tenantId;
+    private String tenantId;
 }

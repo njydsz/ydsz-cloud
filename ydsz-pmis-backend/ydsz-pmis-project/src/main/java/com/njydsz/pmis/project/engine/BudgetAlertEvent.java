@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.engine;
+﻿package com.njydsz.pmis.project.engine;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,7 +35,7 @@ public class BudgetAlertEvent implements Serializable {
     }
 
     /** 项目立项 ID */
-    private Long initiationId;
+    private String initiationId;
     /** 项目编号 */
     private String projectCode;
     /** 项目名称 */

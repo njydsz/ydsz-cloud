@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 
@@ -10,9 +10,9 @@ import lombok.Data;
  */
 @Data
 public class ApprovalDTO {
-    private Long id;
+    private String id;
     private String targetStatus;
-    private Long approverId;
+    private String approverId;
     private String approverName;
     private String rejectReason;
 }

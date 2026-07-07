@@ -36,9 +36,9 @@ public class ExpenseDO implements Serializable {
     /** 费用编号 */
     private String expenseCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 报销人ID */
-    private Long employeeId;
+    private String employeeId;
     /** 报销人姓名 */
     private String employeeName;
     /** 费用类型：TRAVEL/CATERING/... */
@@ -54,13 +54,13 @@ public class ExpenseDO implements Serializable {
     /** 状态：ApprovalStatus.code */
     private String status;
     /** 审批人ID */
-    private Long approverId;
+    private String approverId;
     /** 审批人姓名 */
     private String approverName;
     /** 审批时间 */
     private LocalDateTime approvedAt;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

@@ -73,7 +73,7 @@ public class FlowDefinitionDO extends BaseDO {
     private String description;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 链路追踪 ID */
     private String providerTraceId;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.dto;
+﻿package com.njydsz.pmis.system.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -18,7 +18,7 @@ public class ConfigFormDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 配置 ID（更新时必填） */
-    private Long id;
+    private String id;
 
     /** 配置分组 */
     @NotBlank

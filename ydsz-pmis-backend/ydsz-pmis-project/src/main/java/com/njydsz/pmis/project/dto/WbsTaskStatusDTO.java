@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 import java.math.BigDecimal;
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Data
 public class WbsTaskStatusDTO {
     /** 任务ID */
-    private Long id;
+    private String id;
     /** 目标状态：WbsTaskStatus.code */
     private String targetStatus;
     /** 进度百分比（0-100） */

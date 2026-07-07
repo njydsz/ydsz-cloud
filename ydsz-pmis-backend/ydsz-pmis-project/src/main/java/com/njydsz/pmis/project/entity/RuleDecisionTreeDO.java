@@ -31,7 +31,7 @@ public class RuleDecisionTreeDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 规则编码 */
     private String ruleCode;

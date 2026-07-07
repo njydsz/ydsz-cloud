@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -27,13 +27,13 @@ public class InvoiceCreateDTO {
     private String invoiceType;          // NORMAL/RED_REVERSE
 
     @NotNull(message = "{validation.execution.msg_af96cf73}")
-    private Long contractId;
+    private String contractId;
 
     @NotNull(message = "{validation.execution.msg_576c2b5e}")
-    private Long initiationId;
+    private String initiationId;
 
     @NotNull(message = "{validation.execution.msg_6de1fd36}")
-    private Long customerId;
+    private String customerId;
 
     private String customerName;
 
@@ -58,7 +58,7 @@ public class InvoiceCreateDTO {
     private String remark;
 
     /** 红冲时：被红冲的发票 ID */
-    private Long reversedById;
+    private String reversedById;
 
     /** 外包开票时：客户确认人天单附件 ID */
     private String outsourcingProofId;

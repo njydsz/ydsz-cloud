@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.dto;
+﻿package com.njydsz.pmis.workflow.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -24,7 +24,7 @@ public class FlowDmnTableSaveDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "决策表 ID（更新时传入）")
-    private Long id;
+    private String id;
 
     @NotBlank(message = "决策表 KEY 不能为空")
     @Schema(description = "决策表 KEY（唯一）", requiredMode = Schema.RequiredMode.REQUIRED)

@@ -30,7 +30,7 @@ public class BudgetItemDO implements Serializable {
     private String id;
 
     /** 立项 ID */
-    private Long initiationId;
+    private String initiationId;
     /** 预算大类（LABOR/PURCHASE/EXPENSE/OUTSOURCE/OTHER） */
     private String category;
     /** 预算子类 */

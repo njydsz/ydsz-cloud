@@ -32,7 +32,7 @@ public class ContractChangeDO implements Serializable {
     private String id;
 
     /** 合同 ID */
-    private Long contractId;
+    private String contractId;
     /** 变更单号 */
     private String changeCode;
     /** 变更类型（SCOPE/AMOUNT/TERM/PERSONNEL/PROGRESS） */
@@ -50,11 +50,11 @@ public class ContractChangeDO implements Serializable {
     /** 状态（DRAFT/SUBMITTED/APPROVING/APPROVED/REJECTED） */
     private String status;
     /** 申请人 ID */
-    private Long applicantId;
+    private String applicantId;
     /** 申请人名称 */
     private String applicantName;
     /** 审批人 ID */
-    private Long approverId;
+    private String approverId;
     /** 审批人名称 */
     private String approverName;
     /** 审批时间 */
@@ -62,7 +62,7 @@ public class ContractChangeDO implements Serializable {
     /** 自研工作流实例 ID */
     private String workflowId;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 乐观锁版本号（P1-12） */
     @Version

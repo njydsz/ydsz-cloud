@@ -30,7 +30,7 @@ public class SensitiveOperationDO implements Serializable {
     private String id;
 
     /** 用户 ID */
-    private Long userId;
+    private String userId;
     /** 用户名 */
     private String username;
     /** 敏感操作编码 */
@@ -55,7 +55,7 @@ public class SensitiveOperationDO implements Serializable {
     /** 链路追踪 ID */
     private String traceId;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

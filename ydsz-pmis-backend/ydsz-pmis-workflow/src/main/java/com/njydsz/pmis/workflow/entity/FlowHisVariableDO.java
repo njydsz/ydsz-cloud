@@ -29,7 +29,7 @@ public class FlowHisVariableDO implements Serializable {
     private String id;
 
     /** 归档实例 ID（对应 pmis_flow_his_instance.id） */
-    private Long instanceId;
+    private String instanceId;
 
     /** 变量键 */
     private String varKey;

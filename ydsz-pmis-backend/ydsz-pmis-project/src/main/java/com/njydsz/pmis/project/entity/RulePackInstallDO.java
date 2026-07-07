@@ -24,7 +24,7 @@ public class RulePackInstallDO implements Serializable {
 
     private String packCode;
     private String packVersion;
-    private Long tenantId;
+    private String tenantId;
     private String installedBy;
     private LocalDateTime installedAt;
     private String status;

@@ -34,9 +34,9 @@ public class DeliveryItemDO implements Serializable {
     /** 交付物业务编号 */
     private String itemCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 关联交付物标准ID */
-    private Long standardId;
+    private String standardId;
     /** 项目类型：ProjectType.code */
     private String projectType;
     /** 项目等级 */
@@ -56,11 +56,11 @@ public class DeliveryItemDO implements Serializable {
     /** 验收日期 */
     private LocalDate acceptedDate;
     /** 提交人ID */
-    private Long submitterId;
+    private String submitterId;
     /** 提交人姓名 */
     private String submitterName;
     /** 评审人ID */
-    private Long reviewerId;
+    private String reviewerId;
     /** 评审人姓名 */
     private String reviewerName;
     /** 评审意见 */
@@ -76,7 +76,7 @@ public class DeliveryItemDO implements Serializable {
     /** 备注 */
     private String remark;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

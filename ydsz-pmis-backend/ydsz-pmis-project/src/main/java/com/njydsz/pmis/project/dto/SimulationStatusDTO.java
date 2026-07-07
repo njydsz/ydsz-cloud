@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,7 +15,7 @@ public class SimulationStatusDTO {
 
     /** 测算版本ID */
     @NotNull(message = "{validation.execution.msg_06417837}")
-    private Long id;
+    private String id;
 
     /** 目标状态：SimulationStatus.code */
     @NotBlank(message = "{validation.execution.msg_8304cf7d}")

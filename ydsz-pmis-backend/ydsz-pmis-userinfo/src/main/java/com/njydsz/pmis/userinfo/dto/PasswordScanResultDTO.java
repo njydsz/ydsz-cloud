@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import lombok.Data;
 
@@ -62,7 +62,7 @@ public class PasswordScanResultDTO implements Serializable {
         private static final long serialVersionUID = 1L;
 
         /** 用户 ID */
-        private Long userId;
+        private String userId;
         /** 用户名 */
         private String username;
         /** 最近一次修改密码时间 */

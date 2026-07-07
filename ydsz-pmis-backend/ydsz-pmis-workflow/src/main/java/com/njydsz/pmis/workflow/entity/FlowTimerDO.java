@@ -38,13 +38,13 @@ public class FlowTimerDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
 
     /** 流程定义 ID */
-    private Long definitionId;
+    private String definitionId;
 
     /** 流程编码 */
     private String flowCode;
@@ -59,7 +59,7 @@ public class FlowTimerDO extends BaseDO {
     private String timerType;
 
     /** 边界定时器关联的 userTask ID（INTERMEDIATE 为 null） */
-    private Long boundaryTaskId;
+    private String boundaryTaskId;
 
     /** 到点时间（cronjob 按此扫描） */
     private LocalDateTime fireAt;

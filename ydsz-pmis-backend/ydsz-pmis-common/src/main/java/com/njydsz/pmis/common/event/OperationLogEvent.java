@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.event;
+﻿package com.njydsz.pmis.common.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -78,7 +78,7 @@ public class OperationLogEvent implements Serializable {
     /** 链路追踪 ID */
     private String traceId;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 操作时间戳（毫秒） */
     private Long timestamp;
 }

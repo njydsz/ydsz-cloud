@@ -75,5 +75,5 @@ public class JobDO extends BaseDO {
     private Long failCount;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 }

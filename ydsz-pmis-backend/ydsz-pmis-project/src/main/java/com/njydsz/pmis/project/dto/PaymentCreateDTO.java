@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,13 +22,13 @@ public class PaymentCreateDTO {
     private String paymentNo;
 
     @NotNull(message = "{validation.execution.msg_af96cf73}")
-    private Long contractId;
+    private String contractId;
 
     @NotNull(message = "{validation.execution.msg_576c2b5e}")
-    private Long initiationId;
+    private String initiationId;
 
     @NotNull(message = "{validation.execution.msg_6de1fd36}")
-    private Long customerId;
+    private String customerId;
 
     private String customerName;
 

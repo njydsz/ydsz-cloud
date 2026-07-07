@@ -30,7 +30,7 @@ public class GateReviewDO implements Serializable {
     private String id;
 
     /** 立项 ID */
-    private Long initiationId;
+    private String initiationId;
     /** 门径评审点（CD1/CD2/CD3/CD4/CD5） */
     private String gateCode;
     /** 评审点名称 */
@@ -38,7 +38,7 @@ public class GateReviewDO implements Serializable {
     /** 评审结果（PENDING/PASSED/REJECTED/CONDITIONAL） */
     private String reviewResult;
     /** 评审人 ID */
-    private Long reviewerId;
+    private String reviewerId;
     /** 评审人名称 */
     private String reviewerName;
     /** 评审时间 */

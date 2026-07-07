@@ -36,13 +36,13 @@ public class ExportRecordDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 来源：MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发 */
     private String source;
 
     /** 申请人用户 ID（MANUAL 必填，SUBSCRIPTION 取订阅人） */
-    private Long userId;
+    private String userId;
 
     /** 通用导出类型（MANUAL 主用，如 INITIATION_LIST、INVOICE_REPORT） */
     private String exportType;
@@ -51,7 +51,7 @@ public class ExportRecordDO extends BaseDO {
     private String reportType;
 
     /** 关联订阅 ID（仅 SUBSCRIPTION 来源有值） */
-    private Long subscriptionId;
+    private String subscriptionId;
 
     /** 文件名 */
     private String fileName;

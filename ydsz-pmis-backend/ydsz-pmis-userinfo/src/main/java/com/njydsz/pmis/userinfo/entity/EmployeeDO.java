@@ -35,7 +35,7 @@ public class EmployeeDO extends BaseDO {
     private String id;
 
     /** 关联登录账号 ID（pmis_user_account.id） */
-    private Long userId;
+    private String userId;
 
     /** 员工编码（工号） */
     private String empCode;
@@ -67,10 +67,10 @@ public class EmployeeDO extends BaseDO {
     private String email;
 
     /** 部门 ID（pmis_department.id） */
-    private Long departmentId;
+    private String departmentId;
 
     /** 岗位 ID（pmis_position.id，可空） */
-    private Long positionId;
+    private String positionId;
 
     /** 职级编码（pmis_job_level.level_code） */
     private String levelCode;
@@ -107,5 +107,5 @@ public class EmployeeDO extends BaseDO {
     private String description;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 }

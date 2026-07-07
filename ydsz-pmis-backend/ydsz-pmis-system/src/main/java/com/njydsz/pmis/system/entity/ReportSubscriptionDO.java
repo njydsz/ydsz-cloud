@@ -30,10 +30,10 @@ public class ReportSubscriptionDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 订阅人用户 ID */
-    private Long subscriberId;
+    private String subscriberId;
 
     /** 报表类型 */
     private String reportType;

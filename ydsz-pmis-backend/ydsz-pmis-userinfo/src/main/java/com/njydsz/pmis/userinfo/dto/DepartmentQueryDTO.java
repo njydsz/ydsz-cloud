@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import com.njydsz.pmis.common.entity.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,7 +22,7 @@ public class DepartmentQueryDTO extends PageQuery {
     private static final long serialVersionUID = 1L;
 
     /** 父部门 ID（0=根） */
-    private Long parentId;
+    private String parentId;
 
     /** 状态：ENABLED/DISABLED */
     private String status;

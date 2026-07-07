@@ -32,13 +32,13 @@ public class FlowHisTaskDO extends BaseDO {
     private String id;
 
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
     /** 原始任务 ID */
-    private Long taskId;
+    private String taskId;
     /** 流程编码 */
     private String flowCode;
     /** 流程定义 ID */
-    private Long definitionId;
+    private String definitionId;
     /** 节点编码 */
     private String nodeCode;
     /** 节点名称 */
@@ -81,7 +81,7 @@ public class FlowHisTaskDO extends BaseDO {
     /** 耗时（毫秒） */
     private Long durationMs;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪 ID */
     private String providerTraceId;
 

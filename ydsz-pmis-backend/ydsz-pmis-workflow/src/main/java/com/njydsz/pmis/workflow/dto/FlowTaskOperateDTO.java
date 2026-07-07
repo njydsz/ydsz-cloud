@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.dto;
+﻿package com.njydsz.pmis.workflow.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -22,11 +22,11 @@ public class FlowTaskOperateDTO implements Serializable {
 
     /** 任务 ID（必填） */
     @NotNull(message = "{validation.workflow.msg_5a190a79}")
-    private Long taskId;
+    private String taskId;
 
     /** 操作人 ID */
     @NotNull(message = "{validation.workflow.msg_f65f41e7}")
-    private Long userId;
+    private String userId;
 
     /** 操作人姓名 */
     private String userName;
@@ -75,13 +75,13 @@ public class FlowTaskOperateDTO implements Serializable {
     private List<String> targetAssignees;
 
     /** 转办/委派目标人 */
-    private Long targetUserId;
+    private String targetUserId;
 
     /** 转办/委派目标人姓名 */
     private String targetUserName;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 链路追踪 ID */
     private String providerTraceId;

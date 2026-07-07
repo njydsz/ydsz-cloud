@@ -39,9 +39,9 @@ public class ContractDO implements Serializable {
     /** 合同名称 */
     private String contractName;
     /** 关联立项 ID */
-    private Long initiationId;
+    private String initiationId;
     /** 客户 ID */
-    private Long customerId;
+    private String customerId;
     /** 客户名称 */
     private String customerName;
     /** 合同类型（FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE） */
@@ -69,18 +69,18 @@ public class ContractDO implements Serializable {
     /** 风险说明 */
     private String riskNotes;
     /** 责任人 ID */
-    private Long ownerId;
+    private String ownerId;
     /** 责任人名称（脱敏：保留首末字） */
     @Sensitive(SensitiveStrategy.NAME)
     private String ownerName;
     /** 合同附件 ID */
-    private Long contractFileId;
+    private String contractFileId;
     /** 自研工作流实例 ID */
     private String workflowId;
     /** 备注 */
     private String remark;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /**
      * 乐观锁版本号（P1-12）

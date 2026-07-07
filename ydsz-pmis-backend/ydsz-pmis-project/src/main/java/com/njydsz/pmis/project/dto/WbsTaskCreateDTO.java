@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 import java.math.BigDecimal;
@@ -17,9 +17,9 @@ public class WbsTaskCreateDTO {
     /** 任务名称 */
     private String taskName;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 父任务ID（null 表示根节点） */
-    private Long parentId;
+    private String parentId;
     /** 任务层级（从 1 开始） */
     private Integer taskLevel;
     /** 同级排序号 */
@@ -35,7 +35,7 @@ public class WbsTaskCreateDTO {
     /** 计划工时（人天） */
     private BigDecimal plannedEffort;
     /** 责任人ID */
-    private Long ownerId;
+    private String ownerId;
     /** 责任人姓名 */
     private String ownerName;
     /** 派单人员ID列表（逗号分隔） */

@@ -1,7 +1,6 @@
 package com.njydsz.pmis.common.util;
 
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
-import org.springframework.stereotype.Component;
 
 /**
  * MyBatis-Plus 主键生成器（雪花算法字符串版）
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Component;
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
-@Component
 public class PmisSnowflakeIdentifierGenerator implements IdentifierGenerator {
 
     /**

@@ -36,7 +36,7 @@ public class ProjectChangeDO implements Serializable {
     /** 变更单号 */
     private String changeCode;
     /** 立项 ID */
-    private Long initiationId;
+    private String initiationId;
     /** 变更类型（ChangeType.code） */
     private String changeType;
     /** 变更标题 */
@@ -71,11 +71,11 @@ public class ProjectChangeDO implements Serializable {
     private String approverRoles;
 
     /** 申请人 ID */
-    private Long applicantId;
+    private String applicantId;
     /** 申请人名称 */
     private String applicantName;
     /** 关联合同（可选） */
-    private Long contractId;
+    private String contractId;
     /** 关联流程实例 ID */
     private String workflowId;
     /** 状态（ChangeStatus.code） */
@@ -89,7 +89,7 @@ public class ProjectChangeDO implements Serializable {
     /** 备注 */
     private String remark;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
     /** LLM Provider 跟踪 ID */
     private String providerTraceId;
 

@@ -44,10 +44,10 @@ public class NotificationDO extends BaseDO {
     private String category;
 
     /** 发送人 ID（系统通知为 null） */
-    private Long senderId;
+    private String senderId;
 
     /** 接收人 ID */
-    private Long receiverId;
+    private String receiverId;
 
     /** 业务类型（如 CONTRACT/APPROVAL/RISK） */
     private String bizType;

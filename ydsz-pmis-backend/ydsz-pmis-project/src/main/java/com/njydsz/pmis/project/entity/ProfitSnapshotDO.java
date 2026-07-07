@@ -32,7 +32,7 @@ public class ProfitSnapshotDO implements Serializable {
     private String id;
 
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 所属期间（YYYY-MM） */
     private String period;
     /** 合同金额 */
@@ -68,7 +68,7 @@ public class ProfitSnapshotDO implements Serializable {
     /** 快照生成时间 */
     private LocalDateTime snapshotAt;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

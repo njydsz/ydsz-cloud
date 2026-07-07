@@ -29,7 +29,7 @@ public class User2FADO implements Serializable {
     private String id;
 
     /** 用户 ID */
-    private Long userId;
+    private String userId;
 
     /** TOTP / SMS */
     private String mfaType;
@@ -50,7 +50,7 @@ public class User2FADO implements Serializable {
     private Boolean enabled;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)

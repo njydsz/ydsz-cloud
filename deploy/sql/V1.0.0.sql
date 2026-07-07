@@ -1,4 +1,4 @@
-﻿-- ====================================================================
+-- ====================================================================
 -- Nanjing Yunding PMIS database initialization script (single-file merge)
 -- Version: V1.0.0
 -- Target: PostgreSQL 18
@@ -3848,8 +3848,8 @@ ALTER TABLE pmis_employee_tag
     ADD COLUMN IF NOT EXISTS years_exp    INTEGER      NOT NULL DEFAULT 0,
     ADD COLUMN IF NOT EXISTS remark       TEXT,
     ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64) NOT NULL DEFAULT '',
-    ADD COLUMN IF NOT EXISTS created_by   BIGINT       NOT NULL DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS updated_by   BIGINT       NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS created_by   VARCHAR(20)  NOT NULL DEFAULT '0',
+    ADD COLUMN IF NOT EXISTS updated_by   VARCHAR(20)  NOT NULL DEFAULT '0',
     ADD COLUMN IF NOT EXISTS updated_at   TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- 放宽 tag_type 枚举约束(原[001]是 TECH_STACK/INDUSTRY/DOMAIN/CERTIFICATE/SKILL,本节扩展为含 CERT)
@@ -6218,7 +6218,7 @@ COMMENT ON COLUMN pmis_flow_node.sla_config IS 'GAP-P1: SLA 超时配置 JSON �
 -- -------------------------------------------
 -- 2. pmis_flow_instance 新增子流程字段
 -- -------------------------------------------
-ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS parent_instance_id BIGINT;
+ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS parent_instance_id VARCHAR(20);
 ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS parent_node_code VARCHAR(64);
 
 COMMENT ON COLUMN pmis_flow_instance.parent_instance_id IS 'GAP-P1: 父流程实例 ID（子流程场景，可空）';
@@ -8271,7 +8271,7 @@ SELECT '✅ 索引调优完成（共 ' || count(*) || ' 个索引）' AS result
 --
 -- 说明：
 --   项目其他业务表（pmis_project_*、pmis_flow_* 等）已普遍预埋
---   tenant_id BIGINT NOT NULL DEFAULT 1 字段。LiteRule 模块的表
+--   tenant_id VARCHAR(20) NOT NULL DEFAULT '1' 字段。LiteRule 模块的表
 --   此前完全缺失该字段，本次补齐以保持 schema 一致性。
 --
 --   本迁移仅添加字段与索引，不改变现有查询逻辑（单租户部署下
@@ -8282,43 +8282,43 @@ SELECT '✅ 索引调优完成（共 ' || count(*) || ' 个索引）' AS result
 
 -- 1. 规则定义表
 ALTER TABLE pmis_rule_def
-    ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_def_tenant ON pmis_rule_def (tenant_id);
 COMMENT ON COLUMN pmis_rule_def.tenant_id IS '租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用）';
 
 -- 2. 规则版本历史表
 ALTER TABLE pmis_rule_version_history
-    ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_version_tenant ON pmis_rule_version_history (tenant_id);
 
 -- 3. 规则执行轨迹表
 ALTER TABLE pmis_rule_execution_trace
-    ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_trace_tenant ON pmis_rule_execution_trace (tenant_id);
 
 -- 4. 决策表定义表
 ALTER TABLE pmis_rule_decision_table
-    ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_dt_tenant ON pmis_rule_decision_table (tenant_id);
 
 -- 5. 评分卡定义表
 ALTER TABLE pmis_rule_scorecard
-    ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_scorecard_tenant ON pmis_rule_scorecard (tenant_id);
 
 -- 6. 决策树定义表
 ALTER TABLE pmis_rule_decision_tree
-    ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_tree_tenant ON pmis_rule_decision_tree (tenant_id);
 
 -- 7. 脚本规则定义表
 ALTER TABLE pmis_rule_script
-    ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_script_tenant ON pmis_rule_script (tenant_id);
 
 -- 8. 灰度分桶统计表
 ALTER TABLE pmis_rule_canary_bucket
-    ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON pmis_rule_canary_bucket (tenant_id);
 
 -- --------------------------------------------------------------------
@@ -8424,67 +8424,67 @@ ON CONFLICT (tenant_id, var_name, deleted) WHERE deleted = 0 DO NOTHING;
 -- ============================================================
 
 -- 1. 字典类型
-ALTER TABLE pmis_dict_type ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_dict_type ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_dict_type_tenant ON pmis_dict_type(tenant_id);
 
 -- 2. 字典项
-ALTER TABLE pmis_dict_item ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_dict_item ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_dict_item_tenant ON pmis_dict_item(tenant_id);
 
 -- 3. 字典版本
-ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_dict_version_tenant ON pmis_dict_version(tenant_id);
 
 -- 4. 角色
-ALTER TABLE pmis_role ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_role_tenant ON pmis_role(tenant_id);
 
 -- 5. 权限
-ALTER TABLE pmis_permission ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_permission ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_permission_tenant ON pmis_permission(tenant_id);
 
 -- 6. 用户-角色关联
-ALTER TABLE pmis_user_role ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_user_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_user_role_tenant ON pmis_user_role(tenant_id);
 
 -- 7. 角色-权限关联
-ALTER TABLE pmis_role_permission ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_role_permission ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_role_permission_tenant ON pmis_role_permission(tenant_id);
 
 -- 8. 部门
-ALTER TABLE pmis_department ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_department ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_department_tenant ON pmis_department(tenant_id);
 
 -- 9. 岗位
-ALTER TABLE pmis_position ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_position ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_position_tenant ON pmis_position(tenant_id);
 
 -- 10. 职级
-ALTER TABLE pmis_job_level ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_job_level ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
 
 -- 11. 职级费率
-ALTER TABLE pmis_job_level_rate ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_job_level_rate ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
 
 -- 12. 员工
-ALTER TABLE pmis_employee ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_employee ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_employee_tenant ON pmis_employee(tenant_id);
 
 -- 13. 员工标签
-ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_emp_tag_tenant ON pmis_employee_tag(tenant_id);
 
 -- 14. 用户账号
-ALTER TABLE pmis_user_account ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_user_account ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_user_account_tenant ON pmis_user_account(tenant_id);
 
 -- 15. 通知
-ALTER TABLE pmis_notification ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_notification ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_notification_tenant ON pmis_notification(tenant_id);
 
 -- 16. 配置
-ALTER TABLE pmis_config ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_config ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_config_tenant ON pmis_config(tenant_id);
 
 -- 17. 操作日志（V1.0.0_008 已含 tenant_id，跳过 ADD COLUMN，仅补索引）
@@ -8568,39 +8568,39 @@ CREATE INDEX IF NOT EXISTS idx_undo_log_status_modified ON undo_log(log_status, 
 -- ============================================================
 
 -- 任务执行日志表
-ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_job_log_tenant ON pmis_job_log(tenant_id);
 
 -- 商机跟进记录
-ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_ppof_tenant ON pmis_project_opportunity_follow(tenant_id);
 
 -- 项目预算明细
-ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_ppbi_tenant ON pmis_project_budget_item(tenant_id);
 
 -- 门径评审记录
-ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_ppgr_tenant ON pmis_project_gate_review(tenant_id);
 
 -- 报表订阅
-ALTER TABLE pmis_report_subscription ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_report_subscription ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_report_sub_tenant ON pmis_report_subscription(tenant_id);
 
 -- 异步导出记录（P0-3 合并：原报表导出记录已并入此表）
-ALTER TABLE pmis_export_record ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_export_record ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_export_rec_tenant ON pmis_export_record(tenant_id);
 
 -- 流程历史变量归档表
-ALTER TABLE pmis_flow_his_variable ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_flow_his_variable ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_flow_his_var_tenant ON pmis_flow_his_variable(tenant_id);
 
 -- 规则模板表（053 漏补）
-ALTER TABLE pmis_rule_template ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_rule_template ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_template_tenant ON pmis_rule_template(tenant_id);
 
 -- 规则测试用例表（053 漏补）
-ALTER TABLE pmis_rule_test_case ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
+ALTER TABLE pmis_rule_test_case ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 CREATE INDEX IF NOT EXISTS idx_rule_test_case_tenant ON pmis_rule_test_case(tenant_id);
 
 ANALYZE pmis_dict_type;
@@ -9315,7 +9315,7 @@ COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已
 -- V1.0.0_060  H2.7 / P1-1 字段类型统一
 -- ----------------------------------------------------------------------------
 -- 背景:历史演进过程中出现了若干类型不一致:
---   1. pmis_flow_run_task.assignor_id 为 BIGINT,assignee_id 为 VARCHAR(64) — 同含义字段类型不一致
+--   1. pmis_flow_run_task.assignor_id 为 BIGINT,assignee_id 为 VARCHAR(20) — 同含义字段类型不一致
 --   2. pmis_flow_his_task 完全缺失 assignor_id 列(主表有,历史表没有)
 --   3. pmis_finance_invoice.tax_period 为 VARCHAR(16),但 CHECK 约束限定为 YYYY-MM(7 字符),存余浪费
 --   4. pmis_dict_version 缺 updated_at/updated_by/tenant_id,且 created_at/effective_date 用了 TIMESTAMP 而非 TIMESTAMPTZ
@@ -9344,14 +9344,14 @@ COMMENT ON COLUMN pmis_rule_chain_graph.created_by   IS '创建人(同 rule_def)
 COMMENT ON COLUMN pmis_rule_dependency.created_by    IS '创建人(同 rule_def)';
 
 -- ----------------------------------------------------------------------------
--- 1) pmis_flow_run_task.assignor_id BIGINT -> VARCHAR(64),与 assignee_id 对齐
+-- 1) pmis_flow_run_task.assignor_id BIGINT -> VARCHAR(20),与 assignee_id 对齐
 --    pmis_flow_his_task 补齐 assignor_id 列
 -- ----------------------------------------------------------------------------
-ALTER TABLE pmis_flow_run_task ALTER COLUMN assignor_id TYPE VARCHAR(64) USING assignor_id::VARCHAR(64);
-ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignor_id VARCHAR(64);
+ALTER TABLE pmis_flow_run_task ALTER COLUMN assignor_id TYPE VARCHAR(20) USING assignor_id::VARCHAR(20);
+ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignor_id VARCHAR(20);
 ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignor_name VARCHAR(64);
-COMMENT ON COLUMN pmis_flow_run_task.assignor_id IS '原审批人 ID(VARCHAR(64) 与 assignee_id 对齐;支持 SSO/IM 外部账号场景)';
-COMMENT ON COLUMN pmis_flow_his_task.assignor_id IS '原审批人 ID(VARCHAR(64) 与 assignee_id 对齐)';
+COMMENT ON COLUMN pmis_flow_run_task.assignor_id IS '原审批人 ID(VARCHAR(20) 雪花 ID,与 assignee_id 对齐)';
+COMMENT ON COLUMN pmis_flow_his_task.assignor_id IS '原审批人 ID(VARCHAR(20) 雪花 ID,与 assignee_id 对齐)';
 COMMENT ON COLUMN pmis_flow_his_task.assignor_name IS '原审批人姓名';
 
 -- 同步主表与历史表 assignor_id 索引(若已存在则跳过)
@@ -9379,8 +9379,8 @@ COMMENT ON COLUMN pmis_finance_invoice.tax_period IS '税务所属期: 格式 YY
 --    - created_at / effective_date 统一为 TIMESTAMPTZ(全工程时间字段统一约定)
 -- ----------------------------------------------------------------------------
 ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS updated_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS updated_by    BIGINT      NOT NULL DEFAULT 0;
-ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS tenant_id     BIGINT      NOT NULL DEFAULT 1;
+ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS updated_by    VARCHAR(20) NOT NULL DEFAULT '0';
+ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS tenant_id     VARCHAR(20) NOT NULL DEFAULT '1';
 ALTER TABLE pmis_dict_version ALTER COLUMN created_at     TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';
 ALTER TABLE pmis_dict_version ALTER COLUMN effective_date TYPE TIMESTAMPTZ USING effective_date AT TIME ZONE 'UTC';
 
@@ -9418,7 +9418,7 @@ ANALYZE pmis_finance_invoice;
 -- 合并方案:
 --   保留 pmis_export_record 作为主表,新增:
 --     - source            VARCHAR(16)  MANUAL 用户主动 / SUBSCRIPTION 订阅触发
---     - subscription_id   BIGINT       仅 SUBSCRIPTION 来源有值
+--     - subscription_id   VARCHAR(20)  仅 SUBSCRIPTION 来源有值
 --     - report_type       VARCHAR(50)  仅 SUBSCRIPTION 来源有值(订阅报表类型)
 --   user_id 改为可空:MANUAL 必填,SUBSCRIPTION 取订阅人
 --   状态枚举统一: PENDING/GENERATING/COMPLETED/SENT/FAILED/EXPIRED
@@ -9436,7 +9436,7 @@ ALTER TABLE pmis_export_record ALTER COLUMN user_id DROP NOT NULL;
 ALTER TABLE pmis_export_record
     ADD COLUMN IF NOT EXISTS source          VARCHAR(16) NOT NULL DEFAULT 'MANUAL';
 ALTER TABLE pmis_export_record
-    ADD COLUMN IF NOT EXISTS subscription_id BIGINT;
+    ADD COLUMN IF NOT EXISTS subscription_id VARCHAR(20);
 ALTER TABLE pmis_export_record
     ADD COLUMN IF NOT EXISTS report_type     VARCHAR(50);
 
@@ -10184,7 +10184,7 @@ UPDATE pmis_meta_schema_version
 -- ----------------------------------------------------------------------------
 -- [TEMPLATE] P3-15 启用: pmis_data_export_audit 接入 OPLOG
 -- ALTER TABLE pmis_data_export_audit
---     ADD COLUMN IF NOT EXISTS op_log_id   BIGINT,
+--     ADD COLUMN IF NOT EXISTS op_log_id   VARCHAR(20),
 --     ADD COLUMN IF NOT EXISTS op_log_type VARCHAR(32) NOT NULL DEFAULT '';
 -- CREATE INDEX IF NOT EXISTS idx_pmis_data_export_audit_oplog
 --     ON pmis_data_export_audit (op_log_id) WHERE op_log_id IS NOT NULL;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -29,7 +29,7 @@ public class LoginContextDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "用户 ID")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "用户名")
     private String username;
@@ -47,10 +47,10 @@ public class LoginContextDTO implements Serializable {
     private String realName;
 
     @Schema(description = "员工 ID")
-    private Long employeeId;
+    private String employeeId;
 
     @Schema(description = "部门 ID")
-    private Long departmentId;
+    private String departmentId;
 
     @Schema(description = "部门名称")
     private String departmentName;
@@ -68,7 +68,7 @@ public class LoginContextDTO implements Serializable {
      * P1-6 修复: 所属部门 ID（与 UserAccountDO.deptId 对齐，写入 JWT）
      */
     @Schema(description = "所属部门 ID（写入 JWT, DEPT 模式使用）")
-    private Long deptId;
+    private String deptId;
 
     /**
      * P1-6 修复: DEPT_AND_CHILD 模式部门 ID 链（含所有下级部门）

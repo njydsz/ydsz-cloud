@@ -29,25 +29,25 @@ public class FlowDelegateLogDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 关联的授权 ID */
-    private Long authId;
+    private String authId;
 
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
 
     /** 任务 ID */
-    private Long taskId;
+    private String taskId;
 
     /** 节点编码 */
     private String nodeCode;
 
     /** 授权人 ID */
-    private Long ownerUserId;
+    private String ownerUserId;
 
     /** 代理人 ID */
-    private Long delegateUserId;
+    private String delegateUserId;
 
     /** 操作类型：ACT=办理 / VIEW=查看 */
     private String opType;

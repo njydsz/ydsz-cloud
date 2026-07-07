@@ -1,11 +1,13 @@
 package com.njydsz.pmis.common.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
+import com.njydsz.pmis.common.util.PmisSnowflakeIdentifierGenerator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -66,5 +68,22 @@ public class MybatisPlusAutoConfiguration {
         // 4. 乐观锁拦截器（P1-12）：实体需标注 @Version 字段，UPDATE 时自动 SET version = version + 1
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
         return interceptor;
+    }
+
+    /**
+     * 主键生成器（雪花算法字符串版，19 位 VARCHAR(20)）
+     *
+     * <p>大厂规范：所有主键由应用层雪花算法生成，数据库不做自增。
+     * 配合实体 {@code @TableId(type = IdType.ASSIGN_ID)} 使用，
+     * MyBatis-Plus 自动将雪花 Long 转为字符串写入 VARCHAR(20) 主键列。
+     *
+     * <p>使用 {@code @ConditionalOnMissingBean} 允许业务模块覆盖。
+     *
+     * @return IdentifierGenerator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(IdentifierGenerator.class)
+    public IdentifierGenerator identifierGenerator() {
+        return new PmisSnowflakeIdentifierGenerator();
     }
 }

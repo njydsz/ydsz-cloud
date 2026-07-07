@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 
@@ -15,9 +15,9 @@ public class WarrantyCreateDTO {
     /** 业务编码（WY-YYYYMMDD-XXXX） */
     private String warrantyCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 合同ID */
-    private Long contractId;
+    private String contractId;
     /** 项目类型：ProjectType.code */
     private String projectType;
     /** 项目等级 */

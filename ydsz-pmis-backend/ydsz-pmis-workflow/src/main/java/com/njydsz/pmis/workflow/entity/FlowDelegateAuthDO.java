@@ -31,16 +31,16 @@ public class FlowDelegateAuthDO extends BaseDO {
     private String id;
 
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 授权人（原办理人）ID */
-    private Long ownerUserId;
+    private String ownerUserId;
 
     /** 授权人姓名 */
     private String ownerUserName;
 
     /** 被授权人（代理人）ID */
-    private Long delegateUserId;
+    private String delegateUserId;
 
     /** 被授权人姓名 */
     private String delegateUserName;

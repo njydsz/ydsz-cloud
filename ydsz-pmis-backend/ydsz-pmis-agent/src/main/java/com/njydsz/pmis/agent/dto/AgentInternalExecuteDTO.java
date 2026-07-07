@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.dto;
+﻿package com.njydsz.pmis.agent.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -41,7 +41,7 @@ public class AgentInternalExecuteDTO {
      * 关联业务 ID
      */
     @Schema(description = "关联业务 ID")
-    private Long bizId;
+    private String bizId;
 
     /**
      * 关联业务名称/编码（冗余，可选）

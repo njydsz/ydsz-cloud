@@ -63,7 +63,7 @@ public class AlertDispatchDO implements Serializable {
     /** 重试次数 */
     private Integer retryCount;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

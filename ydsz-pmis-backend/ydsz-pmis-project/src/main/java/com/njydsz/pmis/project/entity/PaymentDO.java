@@ -40,11 +40,11 @@ public class PaymentDO implements Serializable {
     /** 业务编号 */
     private String paymentCode;
     /** 合同ID */
-    private Long contractId;
+    private String contractId;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 客户ID */
-    private Long customerId;
+    private String customerId;
     /** 客户名称 */
     private String customerName;
     /** 回款金额 */
@@ -80,7 +80,7 @@ public class PaymentDO implements Serializable {
     /** 录入人ID */
     private Long recordedBy;
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -28,10 +28,10 @@ public class UserUpdateDTO implements Serializable {
 
     @NotNull(message = "{validation.user.msg_668e9add}")
     @Schema(description = "用户 ID", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long id;
+    private String id;
 
     @Schema(description = "员工 ID")
-    private Long employeeId;
+    private String employeeId;
 
     @Schema(description = "状态: ENABLED/DISABLED")
     private String status;
@@ -46,10 +46,10 @@ public class UserUpdateDTO implements Serializable {
     private Boolean mfaEnabled;
 
     @Schema(description = "部门 ID")
-    private Long deptId;
+    private String deptId;
 
     @Schema(description = "直属上级 ID")
-    private Long leaderId;
+    private String leaderId;
 
     @Schema(description = "岗位编码")
     private String positionCode;

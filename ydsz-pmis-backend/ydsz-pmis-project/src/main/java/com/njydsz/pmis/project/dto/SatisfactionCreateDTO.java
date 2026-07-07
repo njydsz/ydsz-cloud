@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import lombok.Data;
 
@@ -13,11 +13,11 @@ public class SatisfactionCreateDTO {
     /** 评价业务编码（SV-YYYYMMDD-XXXX） */
     private String surveyCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 关联工单ID（可空） */
-    private Long ticketId;
+    private String ticketId;
     /** 关联质保单ID（可空） */
-    private Long warrantyId;
+    private String warrantyId;
     /** 总体评分 1-5 */
     private Integer score;
     /** 专业度评分 1-5 */
@@ -35,7 +35,7 @@ public class SatisfactionCreateDTO {
     /** 是否匿名评价 */
     private Boolean anonymous;
     /** 评价人ID */
-    private Long evaluatorId;
+    private String evaluatorId;
     /** 评价人姓名 */
     private String evaluatorName;
 }

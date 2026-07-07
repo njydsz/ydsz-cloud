@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+﻿package com.njydsz.pmis.userinfo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,7 +15,7 @@ public class EmployeeTagCreateDTO {
 
     /** 员工 ID */
     @NotNull(message = "{validation.user.msg_03f5ae35}")
-    private Long employeeId;
+    private String employeeId;
 
     /** 标签类型：SKILL/INDUSTRY/DOMAIN/CERT */
     @NotBlank(message = "{validation.user.msg_969983ae}")

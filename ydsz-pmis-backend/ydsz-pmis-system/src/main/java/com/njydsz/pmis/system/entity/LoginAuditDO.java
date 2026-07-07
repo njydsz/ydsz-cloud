@@ -30,7 +30,7 @@ public class LoginAuditDO implements Serializable {
     /** 用户名 */
     private String username;
     /** 用户 ID */
-    private Long userId;
+    private String userId;
     /** 登录时间 */
     private LocalDateTime loginAt;
     /** 登录 IP */
@@ -48,7 +48,7 @@ public class LoginAuditDO implements Serializable {
     /** 链路追踪 ID */
     private String traceId;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)

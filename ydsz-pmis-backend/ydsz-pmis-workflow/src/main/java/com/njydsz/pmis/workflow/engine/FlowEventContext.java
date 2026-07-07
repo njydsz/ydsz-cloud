@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.engine;
+﻿package com.njydsz.pmis.workflow.engine;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,11 +20,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class FlowEventContext {
     /** 流程实例 ID */
-    private Long instanceId;
+    private String instanceId;
     /** 任务 ID */
-    private Long taskId;
+    private String taskId;
     /** 操作人 ID */
-    private Long operatorId;
+    private String operatorId;
     /** 操作动作（PASS/REJECT/TERMINATE/SUSPEND 等） */
     private String action;
     /** 租户 ID */

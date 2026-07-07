@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto;
+﻿package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -27,7 +27,7 @@ public class OpportunityFollowDTO implements Serializable {
     /** 商机 ID */
     @NotNull
     @Schema(description = "商机 ID", requiredMode = RequiredMode.REQUIRED)
-    private Long opportunityId;
+    private String opportunityId;
 
     /** 跟进类型（VISIT/CALL/QUOTE/NEGOTIATE/OTHER） */
     @NotBlank

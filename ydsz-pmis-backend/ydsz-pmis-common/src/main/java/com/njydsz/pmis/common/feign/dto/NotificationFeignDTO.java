@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.dto;
+﻿package com.njydsz.pmis.common.feign.dto;
 
 import lombok.Data;
 import java.io.Serial;
@@ -29,9 +29,9 @@ public class NotificationFeignDTO implements Serializable {
     /** SYSTEM/WORKFLOW/ALERT/TODO */
     private String category;
     /** 发送人 ID */
-    private Long senderId;
+    private String senderId;
     /** 单接收 */
-    private Long receiverId;
+    private String receiverId;
     /** 批量接收 */
     private List<Long> receiverIds;
     /** 业务关联 */

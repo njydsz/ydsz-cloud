@@ -33,9 +33,9 @@ public class EvmMeasureDO implements Serializable {
     private String id;
 
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** WBS 任务ID（可空：项目级度量） */
-    private Long wbsTaskId;
+    private String wbsTaskId;
     /** 所属期间（YYYY-MM） */
     private String period;
 
@@ -76,7 +76,7 @@ public class EvmMeasureDO implements Serializable {
     private String remark;
 
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

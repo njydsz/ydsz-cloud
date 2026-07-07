@@ -35,7 +35,7 @@ public class ProjectClosureDO implements Serializable {
     /** 结项业务编号 */
     private String closureCode;
     /** 项目立项ID */
-    private Long initiationId;
+    private String initiationId;
     /** 结项类型：ClosureType.code */
     private String closureType;
     /** 结项原因 */
@@ -81,11 +81,11 @@ public class ProjectClosureDO implements Serializable {
 
     // 审批
     /** 申请人ID */
-    private Long applicantId;
+    private String applicantId;
     /** 申请人姓名 */
     private String applicantName;
     /** 审批人ID */
-    private Long approverId;
+    private String approverId;
     /** 审批人姓名 */
     private String approverName;
     /** 提交时间 */
@@ -98,7 +98,7 @@ public class ProjectClosureDO implements Serializable {
     private String approvalComment;
 
     /** 租户ID */
-    private Long tenantId;
+    private String tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
 

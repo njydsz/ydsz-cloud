@@ -36,13 +36,13 @@ public class OpportunityDO implements Serializable {
     /** 商机名称 */
     private String opportunityName;
     /** 客户 ID */
-    private Long customerId;
+    private String customerId;
     /** 客户名称 */
     private String customerName;
     /** 业务部门 ID */
-    private Long businessDeptId;
+    private String businessDeptId;
     /** 责任人 ID */
-    private Long ownerId;
+    private String ownerId;
     /** 责任人名称 */
     private String ownerName;
     /** 商机分级（A/B/C） */
@@ -72,7 +72,7 @@ public class OpportunityDO implements Serializable {
     /** 标签 */
     private String tags;
     /** 租户 ID */
-    private Long tenantId;
+    private String tenantId;
 
     /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)
