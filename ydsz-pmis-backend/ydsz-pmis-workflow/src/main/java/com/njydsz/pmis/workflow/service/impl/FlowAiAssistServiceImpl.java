@@ -139,6 +139,142 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
         return true;
     }
 
+    // ============================== P3-1: AI 能力扩展 ==============================
+
+    @Override
+    public Map<String, Object> predictRisk(Map<String, Object> params) {
+        if (params == null) {
+            return defaultRiskResult("无预测参数");
+        }
+        Map<String, Object> body = buildAgentBody("Risk_Predict".toUpperCase(), "FLOW_INSTANCE",
+                params, "instanceId", "flowCode");
+        try {
+            Result<Map<String, Object>> res = agentClient.execute(body);
+            if (res == null || res.getCode() != 0) {
+                log.warn("[FlowAiAssist] predictRisk 调用失败: code={} msg={}",
+                        res == null ? "null" : res.getCode(),
+                        res == null ? "" : res.getMessage());
+                return defaultRiskResult("Agent 服务暂不可用");
+            }
+            Object payload = res.getData() == null ? null : res.getData().get("payload");
+            if (payload instanceof Map<?, ?> m) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> cast = (Map<String, Object>) m;
+                return cast;
+            }
+            return defaultRiskResult("Agent 返回格式异常");
+        } catch (Exception e) {
+            log.warn("[FlowAiAssist] predictRisk 异常: {}", e.getMessage());
+            return defaultRiskResult("Agent 调用异常: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Map<String, Object> smartRemind(Map<String, Object> params) {
+        if (params == null) {
+            return defaultRemindResult("无催办参数");
+        }
+        Map<String, Object> body = buildAgentBody("Smart_Remind".toUpperCase(), "FLOW_TASK",
+                params, "taskId", "flowCode");
+        try {
+            Result<Map<String, Object>> res = agentClient.execute(body);
+            if (res == null || res.getCode() != 0) {
+                log.warn("[FlowAiAssist] smartRemind 调用失败: code={} msg={}",
+                        res == null ? "null" : res.getCode(),
+                        res == null ? "" : res.getMessage());
+                return defaultRemindResult("Agent 服务暂不可用");
+            }
+            Object payload = res.getData() == null ? null : res.getData().get("payload");
+            if (payload instanceof Map<?, ?> m) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> cast = (Map<String, Object>) m;
+                return cast;
+            }
+            return defaultRemindResult("Agent 返回格式异常");
+        } catch (Exception e) {
+            log.warn("[FlowAiAssist] smartRemind 异常: {}", e.getMessage());
+            return defaultRemindResult("Agent 调用异常: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Map<String, Object> predictSla(Map<String, Object> params) {
+        if (params == null) {
+            return defaultSlaResult("无预测参数");
+        }
+        Map<String, Object> body = buildAgentBody("Sla_Predict".toUpperCase(), "FLOW_INSTANCE",
+                params, "instanceId", "flowCode");
+        try {
+            Result<Map<String, Object>> res = agentClient.execute(body);
+            if (res == null || res.getCode() != 0) {
+                log.warn("[FlowAiAssist] predictSla 调用失败: code={} msg={}",
+                        res == null ? "null" : res.getCode(),
+                        res == null ? "" : res.getMessage());
+                return defaultSlaResult("Agent 服务暂不可用");
+            }
+            Object payload = res.getData() == null ? null : res.getData().get("payload");
+            if (payload instanceof Map<?, ?> m) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> cast = (Map<String, Object>) m;
+                return cast;
+            }
+            return defaultSlaResult("Agent 返回格式异常");
+        } catch (Exception e) {
+            log.warn("[FlowAiAssist] predictSla 异常: {}", e.getMessage());
+            return defaultSlaResult("Agent 调用异常: " + e.getMessage());
+        }
+    }
+
+    // ========== P3-1: 降级默认结果 ==========
+
+    private static Map<String, Object> defaultRiskResult(String reason) {
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("riskLevel", "UNKNOWN");
+        r.put("rejectProbability", 0.0);
+        r.put("overdueProbability", 0.0);
+        r.put("reasons", List.of(reason));
+        return r;
+    }
+
+    private static Map<String, Object> defaultRemindResult(String reason) {
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("bestTime", "IMMEDIATE");
+        r.put("channel", "IN_APP");
+        r.put("message", "您有待审批任务，请尽快处理。");
+        r.put("reasons", List.of(reason));
+        return r;
+    }
+
+    private static Map<String, Object> defaultSlaResult(String reason) {
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("estimatedDurationMs", 0L);
+        r.put("estimatedCompleteAt", null);
+        r.put("confidence", 0.0);
+        r.put("reasons", List.of(reason));
+        return r;
+    }
+
+    /**
+     * P3-1: 构建 Agent 调用请求体（复用公共逻辑）。
+     *
+     * @param agentType Agent 类型
+     * @param bizType   业务类型
+     * @param params    业务参数
+     * @param bizIdKey  bizId 取值 key（params 中）
+     * @param bizRefKey bizRef 取值 key（params 中）
+     */
+    private Map<String, Object> buildAgentBody(String agentType, String bizType,
+                                               Map<String, Object> params,
+                                               String bizIdKey, String bizRefKey) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("agentType", agentType);
+        body.put("bizType", bizType);
+        body.put("bizId", toLong(params.get(bizIdKey)));
+        body.put("bizRef", strOrEmpty(params.get(bizRefKey)));
+        body.put("params", params);
+        return body;
+    }
+
     // ========== 工具方法 ==========
 
     private static void copyIfPresent(Map<String, Object> src,

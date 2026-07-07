@@ -3,6 +3,8 @@ package com.njydsz.pmis.agent.engine;
 import com.njydsz.pmis.agent.engine.react.ReActLoop;
 import com.njydsz.pmis.agent.engine.react.ReActResult;
 import com.njydsz.pmis.agent.engine.react.ReActStep;
+import com.njydsz.pmis.agent.engine.prompt.PromptTemplateRegistry;
+import com.njydsz.pmis.agent.engine.prompt.TestPromptRegistryFactory;
 import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
 import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
@@ -60,10 +62,12 @@ class FlowGeneratorAgentTest {
     private ReActLoop reactLoop;
 
     private FlowGeneratorAgent agent;
+    private PromptTemplateRegistry promptRegistry;
 
     @BeforeEach
     void setUp() {
-        agent = new FlowGeneratorAgent(reactLoop);
+        promptRegistry = TestPromptRegistryFactory.createWithBuiltInDefaults();
+        agent = new FlowGeneratorAgent(reactLoop, promptRegistry);
     }
 
     // ==================== 辅助方法 ====================

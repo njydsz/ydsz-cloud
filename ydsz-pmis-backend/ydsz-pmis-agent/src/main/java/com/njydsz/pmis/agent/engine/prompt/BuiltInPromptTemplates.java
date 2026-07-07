@@ -18,34 +18,7 @@ public final class BuiltInPromptTemplates {
 
     private BuiltInPromptTemplates() {}
 
-    /** 内置模板映射：templateCode → content */
-    private static final Map<String, String> TEMPLATES = Map.of(
-            PromptTemplateCodes.REACT_FORMAT_INSTRUCTION, REACT_FORMAT_INSTRUCTION_TEXT,
-            PromptTemplateCodes.FLOW_GENERATOR_SYSTEM, FLOW_GENERATOR_SYSTEM_TEXT,
-            PromptTemplateCodes.FLOW_GENERATOR_USER, FLOW_GENERATOR_USER_TEXT
-    );
-
-    /**
-     * 获取内置模板内容。
-     *
-     * @param code 模板编码
-     * @return 模板内容；不存在返回 null
-     */
-    public static String get(String code) {
-        return TEMPLATES.get(code);
-    }
-
-    /**
-     * 判断是否存在内置模板。
-     *
-     * @param code 模板编码
-     * @return true=存在
-     */
-    public static boolean contains(String code) {
-        return TEMPLATES.containsKey(code);
-    }
-
-    // ==================== 模板文本 ====================
+    // ==================== 模板文本（必须声明在 TEMPLATES Map 之前） ====================
 
     /** ReAct 输出格式说明（从 ReActLoop.REACT_FORMAT_INSTRUCTION 迁移） */
     public static final String REACT_FORMAT_INSTRUCTION_TEXT = """
@@ -88,4 +61,33 @@ public final class BuiltInPromptTemplates {
             请根据以下描述生成 BPMN 2.0 流程定义 XML：
 
             ${description}""";
+
+    // ==================== 模板映射 ====================
+
+    /** 内置模板映射：templateCode → content */
+    private static final Map<String, String> TEMPLATES = Map.of(
+            PromptTemplateCodes.REACT_FORMAT_INSTRUCTION, REACT_FORMAT_INSTRUCTION_TEXT,
+            PromptTemplateCodes.FLOW_GENERATOR_SYSTEM, FLOW_GENERATOR_SYSTEM_TEXT,
+            PromptTemplateCodes.FLOW_GENERATOR_USER, FLOW_GENERATOR_USER_TEXT
+    );
+
+    /**
+     * 获取内置模板内容。
+     *
+     * @param code 模板编码
+     * @return 模板内容；不存在返回 null
+     */
+    public static String get(String code) {
+        return TEMPLATES.get(code);
+    }
+
+    /**
+     * 判断是否存在内置模板。
+     *
+     * @param code 模板编码
+     * @return true=存在
+     */
+    public static boolean contains(String code) {
+        return TEMPLATES.containsKey(code);
+    }
 }

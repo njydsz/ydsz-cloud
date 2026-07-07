@@ -3,6 +3,8 @@ package com.njydsz.pmis.agent.engine.react;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
+import com.njydsz.pmis.agent.engine.prompt.PromptTemplateRegistry;
+import com.njydsz.pmis.agent.engine.prompt.TestPromptRegistryFactory;
 import com.njydsz.pmis.agent.tool.AgentTool;
 import com.njydsz.pmis.agent.tool.ToolRegistry;
 import com.njydsz.pmis.agent.tool.ToolResult;
@@ -58,12 +60,14 @@ class ReActLoopTest {
 
     private ToolRegistry toolRegistry;
     private ReActLoop reactLoop;
+    private PromptTemplateRegistry promptRegistry;
 
     @BeforeEach
     void setUp() {
         // 构造空的 ToolRegistry（不依赖 Spring 容器）
         toolRegistry = new ToolRegistry(List.of());
-        reactLoop = new ReActLoop(llmProviderRouter, toolRegistry);
+        promptRegistry = TestPromptRegistryFactory.createWithBuiltInDefaults();
+        reactLoop = new ReActLoop(llmProviderRouter, toolRegistry, promptRegistry);
 
         when(llmProviderRouter.active()).thenReturn(llmProvider);
     }

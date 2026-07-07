@@ -3,6 +3,8 @@ package com.njydsz.pmis.agent.engine.react;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
+import com.njydsz.pmis.agent.engine.prompt.PromptTemplateRegistry;
+import com.njydsz.pmis.agent.engine.prompt.TestPromptRegistryFactory;
 import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
 import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
 import com.njydsz.pmis.agent.tool.AgentTool;
@@ -64,11 +66,13 @@ class ReActLoopStreamTest {
 
     private ToolRegistry toolRegistry;
     private ReActLoop reactLoop;
+    private PromptTemplateRegistry promptRegistry;
 
     @BeforeEach
     void setUp() {
         toolRegistry = new ToolRegistry(List.of());
-        reactLoop = new ReActLoop(llmProviderRouter, toolRegistry);
+        promptRegistry = TestPromptRegistryFactory.createWithBuiltInDefaults();
+        reactLoop = new ReActLoop(llmProviderRouter, toolRegistry, promptRegistry);
         when(llmProviderRouter.active()).thenReturn(llmProvider);
     }
 

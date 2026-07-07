@@ -54,6 +54,8 @@ import com.njydsz.pmis.literule.ai.RuleHealthScore;
 import com.njydsz.pmis.literule.ai.RuleHealthScoreService;
 import com.njydsz.pmis.literule.ai.RuleRecommendation;
 import com.njydsz.pmis.literule.ai.RuleRecommendationService;
+import com.njydsz.pmis.literule.ai.RuleAttributionService;
+import com.njydsz.pmis.literule.ai.AttributionReport;
 import com.njydsz.pmis.literule.spi.RuleVersion;
 import com.njydsz.pmis.project.literule.RuleChainGraphService;
 import com.njydsz.pmis.project.literule.RuleDependencyService;
@@ -136,6 +138,8 @@ public class RuleAdminController {
     private final org.springframework.beans.factory.ObjectProvider<RuleLLMService> ruleLLMServiceProvider;
     private final org.springframework.beans.factory.ObjectProvider<RuleHealthScoreService> ruleHealthScoreServiceProvider;
     private final org.springframework.beans.factory.ObjectProvider<RuleRecommendationService> ruleRecommendationServiceProvider;
+    // 归因分析服务（P3-3）：可选注入，未启用 AI 时为空
+    private final org.springframework.beans.factory.ObjectProvider<RuleAttributionService> ruleAttributionServiceProvider;
     // 多级审批流服务（P1-3）：可选注入，未配置 RuleConfigProvider 时为空
     private final org.springframework.beans.factory.ObjectProvider<RuleApprovalService> ruleApprovalServiceProvider;
 
@@ -2226,6 +2230,110 @@ public class RuleAdminController {
             statsMap.put(source.getCode(), stats);
         }
         return Result.ok(svc.recommend(source, all, statsMap));
+    }
+
+    // ==================================================================
+    // P3-3 LLM 辅助归因分析
+    // ==================================================================
+
+    /**
+     * 单规则归因分析
+     *
+     * <p>基于 P0-2 表达式追踪能力，对指定规则用给定事实数据执行表达式追踪，
+     * 生成人类可读的归因分析报告。LLM 可用时附加详细分析和建议。
+     *
+     * <p>请求体示例：
+     * <pre>
+     * POST /rules/{ruleCode}/attribution
+     * {
+     *   "amount": 1500,
+     *   "score": 750
+     * }
+     * </pre>
+     *
+     * @param ruleCode 规则编码
+     * @param facts    事实数据
+     * @return 归因分析报告
+     */
+    @PostMapping("/{ruleCode}/attribution")
+    @Operation(summary = "单规则归因分析", description = "基于表达式追踪 + LLM 生成规则触发/未触发的归因分析报告")
+    public Result<AttributionReport> attribution(@PathVariable String ruleCode,
+                                                   @RequestBody Map<String, Object> facts) {
+        RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("归因分析服务未启用");
+        }
+        return Result.ok(svc.analyze(ruleCode, facts));
+    }
+
+    /**
+     * 批量归因分析
+     *
+     * <p>按 traceId 列表查询历史执行轨迹，对每条轨迹的事实快照重新执行归因分析。
+     *
+     * @param traceIds traceId 列表
+     * @return 归因分析报告列表
+     */
+    @PostMapping("/attribution/batch")
+    @Operation(summary = "批量归因分析", description = "按 traceId 列表对历史执行轨迹批量归因分析")
+    public Result<List<AttributionReport>> batchAttribution(@RequestBody List<String> traceIds) {
+        RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("归因分析服务未启用");
+        }
+        if (traceIds == null || traceIds.isEmpty()) {
+            return Result.ok(List.of());
+        }
+        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
+                new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                        .in(RuleExecutionTraceDO::getTraceId, traceIds)
+                        .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
+        List<AttributionReport> reports = new ArrayList<>();
+        for (RuleExecutionTraceDO trace : traces) {
+            Map<String, Object> facts = trace.getFactsSnapshot() != null
+                    ? trace.getFactsSnapshot() : new HashMap<>();
+            AttributionReport report = svc.analyze(trace.getRuleCode(), facts);
+            report.setRuleName(trace.getRuleName());
+            report.setTriggered(Boolean.TRUE.equals(trace.getTriggered()));
+            report.setSeverity(trace.getSeverity());
+            reports.add(report);
+        }
+        return Result.ok(reports);
+    }
+
+    /**
+     * 基于 traceId 归因分析
+     *
+     * <p>按 traceId 查询执行轨迹，对每条轨迹的事实快照重新执行归因分析。
+     *
+     * @param traceId 追踪 ID
+     * @return 归因分析报告列表
+     */
+    @GetMapping("/traces/{traceId}/attribution")
+    @Operation(summary = "基于 traceId 归因分析", description = "按 traceId 查询执行轨迹并归因分析")
+    public Result<List<AttributionReport>> traceAttribution(@PathVariable String traceId) {
+        RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("归因分析服务未启用");
+        }
+        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
+                new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                        .eq(RuleExecutionTraceDO::getTraceId, traceId)
+                        .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
+        if (traces.isEmpty()) {
+            return Result.ok(List.of());
+        }
+        List<AttributionReport> reports = new ArrayList<>();
+        for (RuleExecutionTraceDO trace : traces) {
+            Map<String, Object> facts = trace.getFactsSnapshot() != null
+                    ? trace.getFactsSnapshot() : new HashMap<>();
+            AttributionReport report = svc.analyze(trace.getRuleCode(), facts);
+            report.setRuleName(trace.getRuleName());
+            report.setTriggered(Boolean.TRUE.equals(trace.getTriggered()));
+            report.setSeverity(trace.getSeverity());
+            reports.add(report);
+        }
+        return Result.ok(reports);
     }
 
     // ==================================================================

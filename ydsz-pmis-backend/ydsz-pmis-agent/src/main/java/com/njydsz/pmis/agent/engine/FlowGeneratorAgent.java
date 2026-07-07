@@ -3,6 +3,8 @@ package com.njydsz.pmis.agent.engine;
 import com.njydsz.pmis.agent.engine.react.ReActLoop;
 import com.njydsz.pmis.agent.engine.react.ReActResult;
 import com.njydsz.pmis.agent.engine.react.ReActStep;
+import com.njydsz.pmis.agent.engine.prompt.PromptTemplateCodes;
+import com.njydsz.pmis.agent.engine.prompt.PromptTemplateRegistry;
 import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
 import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
@@ -61,6 +63,8 @@ public class FlowGeneratorAgent implements StreamableAgent {
 
     /** ReAct 推理循环 */
     private final ReActLoop reactLoop;
+    /** Prompt 模板注册中心（P2-2） */
+    private final PromptTemplateRegistry promptTemplateRegistry;
 
     private static final String DEFINITIONS_CLOSE = "</bpmn:definitions>";
 
@@ -187,38 +191,23 @@ public class FlowGeneratorAgent implements StreamableAgent {
         return "";
     }
 
-    // ========== Prompt 构建 ==========
+    // ========== Prompt 构建（P2-2：从 PromptTemplateRegistry 获取） ==========
 
     /**
-     * 构建 system prompt：约束 LLM 输出符合 BPMN 2.0 规范的 XML。
+     * 构建 system prompt：从注册中心获取 FLOW_GENERATOR_SYSTEM 模板。
      *
-     * <p>注意：ReAct 格式说明与工具清单由 {@link ReActLoop} 自动拼接，
-     * 这里只描述业务角色与 BPMN 生成规则。
+     * <p>ReAct 格式说明与工具清单由 {@link ReActLoop} 自动拼接，
+     * 这里只获取业务角色与 BPMN 生成规则部分。
      */
     private String buildSystemPrompt() {
-        return """
-                你是一名资深的工作流（BPMN 2.0）建模专家。请根据用户提供的自然语言流程描述，
-                生成一段符合 BPMN 2.0 规范的 XML 流程定义。
-
-                要求：
-                1. 根元素必须为 <bpmn:definitions>，并声明 bpmn / bpmndi / dc / di 命名空间；
-                   targetNamespace 使用 "http://njydsz.com/pmis/flow"。
-                2. 流程必须包含：开始节点（startEvent）、至少一个审批节点（userTask）、结束节点（endEvent）。
-                3. 当描述中存在条件分支（如"3天以上需经理审批"）时，使用 exclusiveGateway（排他网关）
-                   配合 sequenceFlow 的 conditionExpression 表达分支。
-                4. 节点之间使用 <bpmn:sequenceFlow> 连接，sourceRef / targetRef 引用节点 id。
-                5. 为每个节点设置语义化 id 与中文 name。
-
-                工作流程建议：
-                - 先生成 BPMN XML，调用 bpmn_validate 工具校验结构完整性
-                - 校验通过后，在 final_answer 中输出完整的 BPMN XML（纯 XML 文本，不要 JSON 包裹）
-                - 在 final_answer 步骤的 thought 中用一句话描述流程特点""";
+        return promptTemplateRegistry.getTemplate(PromptTemplateCodes.FLOW_GENERATOR_SYSTEM);
     }
 
     /**
-     * 构建 user prompt：用户描述。
+     * 构建 user prompt：从注册中心渲染 FLOW_GENERATOR_USER 模板，注入 ${description} 变量。
      */
     private String buildUserPrompt(String description) {
-        return "请根据以下描述生成 BPMN 2.0 流程定义 XML：\n\n" + description;
+        return promptTemplateRegistry.render(PromptTemplateCodes.FLOW_GENERATOR_USER,
+                Map.of("description", description));
     }
 }

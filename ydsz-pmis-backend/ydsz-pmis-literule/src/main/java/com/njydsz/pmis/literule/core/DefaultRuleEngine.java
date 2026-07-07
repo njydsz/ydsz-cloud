@@ -9,6 +9,8 @@ import com.njydsz.pmis.literule.api.RuleEnvironment;
 import com.njydsz.pmis.literule.api.RuleExecutionTrace;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.StatsRecorder;
+import com.njydsz.pmis.literule.model.ModelInputRegistry;
+import com.njydsz.pmis.literule.model.ModelInvocationException;
 import com.njydsz.pmis.literule.spi.TraceRecorder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,6 +78,17 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
 
     /** 断点调试 Hook（可选，1.4.0 起支持 P2-3） */
     private volatile BreakpointHook breakpointHook;
+
+    /**
+     * 模型输入注册表（可选，1.8.0 起 P3-1 规则+模型融合）
+     *
+     * <p>非 null 且已注册 provider 时，引擎在评估前调用
+     * {@link ModelInputRegistry#collectAllModelOutputs} 获取模型输出，
+     * 合并到 {@link RuleContext} 的 facts 中（嵌套在 "model" key 下），
+     * 使规则表达式可通过 {@code model.<field>} 引用（如 {@code model.riskScore > 0.8}）。
+     * 默认 null（向后兼容，不影响现有评估）。
+     */
+    private volatile ModelInputRegistry modelInputRegistry;
 
     /** 统计计数器 */
     private final AtomicLong totalEvaluations = new AtomicLong(0);
@@ -152,6 +165,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
 
     @Override
     public List<RuleResult> evaluate(RuleContext context) {
+        // P3-1 规则+模型融合：评估前注入模型输出
+        context = injectModelOutputsIfNeeded(context);
+
         List<RuleResult> triggered = new ArrayList<>();
         // 互斥组：记录本次评估中已命中的互斥组，同组后续规则跳过
         Set<String> triggeredGroups = new HashSet<>();

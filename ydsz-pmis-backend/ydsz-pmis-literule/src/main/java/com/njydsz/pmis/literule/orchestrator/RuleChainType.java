@@ -3,7 +3,7 @@ package com.njydsz.pmis.literule.orchestrator;
 /**
  * 规则链类型枚举
  *
- * <p>定义规则编排的八种核心语义：
+ * <p>定义规则编排的九种核心语义：
  * <ul>
  *   <li>{@link #THEN} - 顺序执行：节点依次串行执行，收集触发结果</li>
  *   <li>{@link #WHEN} - 并行执行：节点并发执行（基于 CompletableFuture），收集触发结果</li>
@@ -13,6 +13,7 @@ package com.njydsz.pmis.literule.orchestrator;
  *   <li>{@link #FOR} - 循环执行：遍历集合，对每个元素执行规则链</li>
  *   <li>{@link #WHILE} - 条件循环：条件满足时持续执行规则链</li>
  *   <li>{@link #BREAK} - 终止执行：在循环中终止当前链的执行</li>
+ *   <li>{@link #AGENT} - AI Agent 执行：执行单个 ReAct Agent 节点（P3-5）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -42,7 +43,10 @@ public enum RuleChainType {
     WHILE("条件循环"),
 
     /** 终止执行 */
-    BREAK("终止");
+    BREAK("终止"),
+
+    /** AI Agent 执行（P3-5，执行单个 ReAct Agent 节点） */
+    AGENT("Agent");
 
     /** 类型描述（中文） */
     private final String desc;

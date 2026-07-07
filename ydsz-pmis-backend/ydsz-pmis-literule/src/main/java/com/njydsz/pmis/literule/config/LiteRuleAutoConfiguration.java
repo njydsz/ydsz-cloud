@@ -3,6 +3,7 @@ package com.njydsz.pmis.literule.config;
 import com.njydsz.pmis.literule.ai.LLMClient;
 import com.njydsz.pmis.literule.ai.MockLLMClient;
 import com.njydsz.pmis.literule.ai.OpenAICompatibleLLMClient;
+import com.njydsz.pmis.literule.ai.RuleAttributionService;
 import com.njydsz.pmis.literule.ai.RuleHealthScoreService;
 import com.njydsz.pmis.literule.ai.RuleLLMService;
 import com.njydsz.pmis.literule.ai.RuleRecommendationService;
@@ -487,6 +488,28 @@ public class LiteRuleAutoConfiguration {
         log.info("[LiteRule-AI] 规则推荐服务已初始化（topN={}）",
                 properties.getAi().getRecommendTopN());
         return new RuleRecommendationService(properties.getAi());
+    }
+
+    /**
+     * 规则归因分析服务（P3-3 LLM 辅助归因分析）
+     *
+     * <p>当存在 {@link RuleAdminService} 时自动装配。基础归因（summary + factors）
+     * 不依赖 LLM；LLM 可用时附加 llmAnalysis 和 recommendation。
+     *
+     * @param ruleAdminService   规则管理服务
+     * @param llmClientProvider  LLM 客户端（可选，未启用 AI 时为空）
+     * @return RuleAttributionService 实例
+     * @since 1.8.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleAdminService.class)
+    public RuleAttributionService ruleAttributionService(
+            RuleAdminService ruleAdminService,
+            org.springframework.beans.factory.ObjectProvider<LLMClient> llmClientProvider) {
+        LLMClient llmClient = llmClientProvider.getIfAvailable();
+        log.info("[LiteRule-AI] 规则归因分析服务已初始化（llmEnabled={}）", llmClient != null);
+        return new RuleAttributionService(ruleAdminService, llmClient);
     }
 
     // ------------------------------------------------------------------

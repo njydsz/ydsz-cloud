@@ -3,6 +3,8 @@ package com.njydsz.pmis.agent.engine.react;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
+import com.njydsz.pmis.agent.engine.prompt.PromptTemplateCodes;
+import com.njydsz.pmis.agent.engine.prompt.PromptTemplateRegistry;
 import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
 import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
 import com.njydsz.pmis.agent.tool.AgentTool;
@@ -55,6 +57,7 @@ public class ReActLoop {
 
     private final LlmProviderRouter llmProviderRouter;
     private final ToolRegistry toolRegistry;
+    private final PromptTemplateRegistry promptTemplateRegistry;
 
     /**
      * 运行 ReAct 推理循环（使用默认最大步数）。
@@ -296,12 +299,17 @@ public class ReActLoop {
     /**
      * 构建完整 system prompt：业务提示词 + ReAct 格式说明 + 工具清单。
      *
+     * <p>ReAct 格式说明从 {@link PromptTemplateRegistry} 获取（P2-2 变更），
+     * 支持 DB 热更新与内置默认降级。
+     *
      * @param baseSystemPrompt 业务系统提示词
      * @return 完整 system prompt
      */
     private String buildFullSystemPrompt(String baseSystemPrompt) {
+        String reactFormat = promptTemplateRegistry.getTemplate(
+                PromptTemplateCodes.REACT_FORMAT_INSTRUCTION);
         return (baseSystemPrompt == null ? "" : baseSystemPrompt)
-                + "\n\n" + REACT_FORMAT_INSTRUCTION + "\n\n"
+                + "\n\n" + reactFormat + "\n\n"
                 + toolRegistry.formatToolsForPrompt();
     }
 
@@ -310,21 +318,4 @@ public class ReActLoop {
         if (s == null) return "";
         return s.length() <= maxLen ? s : s.substring(0, maxLen) + "...";
     }
-
-    /** ReAct 输出格式说明（固定文本） */
-    private static final String REACT_FORMAT_INSTRUCTION = """
-            你正在参与 ReAct 推理循环（Thought → Action → Observation）。
-            每一步你必须输出以下 JSON 结构（不要使用 markdown 代码块包裹）：
-            {
-              "thought": "对当前步骤的思考（为何选择此 Action）",
-              "action": "工具名 或 final_answer",
-              "parameters": { "参数名": "参数值" },
-              "finalAnswer": null
-            }
-
-            规则：
-            1. 若需要调用工具获取信息，action 填写工具名，parameters 填写工具参数，finalAnswer 必须为 null。
-            2. 若已得到最终答案，action 必须填写 "final_answer"，parameters 必须为 null，finalAnswer 填写最终答案。
-            3. 你可以最多思考 5 步，请合理规划工具调用顺序。
-            4. 工具执行结果会以 "[步骤 N 观察]" 的形式追加在用户问题之后。""";
 }

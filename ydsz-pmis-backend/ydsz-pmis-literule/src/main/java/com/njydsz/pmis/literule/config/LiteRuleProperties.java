@@ -3,6 +3,9 @@ package com.njydsz.pmis.literule.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * LiteRule 配置属性
  *
@@ -178,6 +181,34 @@ public class LiteRuleProperties {
      * @since 1.6.0
      */
     private String environment = "default";
+
+    /**
+     * 规则+模型融合配置（P3-1）
+     *
+     * <p>启用后，规则引擎在评估前会调用所有已注册的 {@link com.njydsz.pmis.literule.model.ModelInputProvider}
+     * 获取模型输出，注入到 {@link com.njydsz.pmis.literule.api.RuleContext} 的 facts 中，
+     * 使规则表达式可通过 {@code model.<field>} 引用（如 {@code model.riskScore > 0.8}）。
+     *
+     * <p>对标滴滴 Newton、字节风控的"规则+模型融合"能力：
+     * <ul>
+     *   <li>规则兜底模型异常：模型不可用时降级为纯规则评估</li>
+     *   <li>模型输出触发规则：模型输出作为规则条件输入</li>
+     * </ul>
+     *
+     * <p>配置示例：
+     * <pre>
+     * pmis:
+     *   literule:
+     *     model:
+     *       enabled: true
+     *       timeout-ms: 100
+     *       fallback-on-error: true
+     *       mock-enabled: false
+     * </pre>
+     *
+     * @since 1.8.0
+     */
+    private ModelConfig model = new ModelConfig();
 
     /**
      * AI 增强配置
@@ -394,5 +425,63 @@ public class LiteRuleProperties {
          * 仅对文件系统目录有效，classpath 内资源（jar 包内）无法监听。
          */
         private boolean watch = true;
+    }
+
+    /**
+     * 规则+模型融合配置（P3-1）
+     *
+     * <p>控制 {@link com.njydsz.pmis.literule.model.ModelInputRegistry} 与
+     * {@link com.njydsz.pmis.literule.model.MockModelInputProvider} 的行为。
+     * 默认关闭（{@code enabled=false}），需显式启用以保证向后兼容。
+     *
+     * @since 1.8.0
+     */
+    @Data
+    public static class ModelConfig {
+
+        /**
+         * 是否启用规则+模型融合
+         *
+         * <p>true：规则引擎评估前调用已注册的 ModelInputProvider 注入模型输出；
+         * false（默认）：不调用，规则表达式引用 {@code model.xxx} 将因变量不存在而返回 false。
+         * 向后兼容：默认关闭，不影响现有规则评估。
+         */
+        private boolean enabled = false;
+
+        /**
+         * 单个模型调用超时（毫秒）
+         *
+         * <p>每个 {@link com.njydsz.pmis.literule.model.ModelInputProvider} 调用最多等待该时长，
+         * 超时则取消并返回空 Map（或抛异常，取决于 {@link #fallbackOnError}）。
+         * 默认 100ms，对标在线风控引擎性能要求。
+         */
+        private long timeoutMs = 100;
+
+        /**
+         * 模型异常时是否降级
+         *
+         * <p>true（默认）：模型调用失败时记录 WARN 日志，不注入模型变量，
+         * 规则表达式引用 {@code model.xxx} 将返回 false（变量不存在），规则评估继续；
+         * false：模型调用失败时抛出 {@link com.njydsz.pmis.literule.model.ModelInvocationException}，
+         * 中断规则评估流程。适用于"模型必须可用"的强一致场景。
+         */
+        private boolean fallbackOnError = true;
+
+        /**
+         * 是否启用 Mock 模型提供者
+         *
+         * <p>true：自动注册 {@link com.njydsz.pmis.literule.model.MockModelInputProvider}，
+         * 返回配置的模拟模型输出，便于开发/测试；
+         * false（默认）：不注册 Mock，需业务方提供真实 {@link com.njydsz.pmis.literule.model.ModelInputProvider} 实现。
+         */
+        private boolean mockEnabled = false;
+
+        /**
+         * Mock 模型输出（仅当 {@link #mockEnabled}=true 时生效）
+         *
+         * <p>key 为模型字段名（无需 "model." 前缀），value 为数值/字符串/布尔。
+         * 未配置时使用 MockModelInputProvider 默认值（riskScore=0.75, fraudProbability=0.05）。
+         */
+        private Map<String, Object> mockOutputs = new LinkedHashMap<>();
     }
 }
