@@ -161,13 +161,14 @@ public final class DataScopeHelper {
         return v == null ? "NULL" : v.toString();
     }
 
-    private static String joinIds(List<Long> ids) {
+    private static String joinIds(List<String> ids) {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
-        for (Long id : ids) {
-            if (id == null) continue;
+        for (String id : ids) {
+            if (id == null || id.isEmpty()) continue;
             if (!first) sb.append(",");
-            sb.append(id);
+            // P3-1：雪花字符串 ID 在 SQL 中需加引号
+            sb.append("'").append(id.replace("'", "''")).append("'");
             first = false;
         }
         return sb.length() == 0 ? "NULL" : sb.toString();
