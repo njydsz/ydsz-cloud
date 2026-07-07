@@ -68,7 +68,7 @@ public class FlowTaskController {
      * @return 统一响应结果，包含任务详情
      */
     @GetMapping("/task/{taskId}")
-    public Result<Map<String, Object>> taskDetail(@PathVariable @Min(1) Long taskId) {
+    public Result<Map<String, Object>> taskDetail(@PathVariable String taskId) {
         return Result.ok(workflowFacade.getTaskDetail(taskId));
     }
 
@@ -82,7 +82,7 @@ public class FlowTaskController {
      */
     @PostMapping("/task/claim")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> claim(@RequestParam Long taskId) {
+    public Result<Void> claim(@RequestParam String taskId) {
         workflowFacade.claimTask(taskId, SecurityContext.getUserId());
         return Result.ok();
     }
@@ -126,7 +126,7 @@ public class FlowTaskController {
      * @return 该任务所属实例经过的历史节点列表（按首次完成时间正序）
      */
     @GetMapping("/task/{taskId}/rejectable-nodes")
-    public Result<List<Map<String, Object>>> rejectableNodes(@PathVariable @Min(1) Long taskId) {
+    public Result<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
             return Result.ok(List.of());
@@ -319,8 +319,8 @@ public class FlowTaskController {
      */
     @GetMapping("/task/overdue")
     public Result<List<FlowRunTaskDO>> overdue(@RequestParam(required = false) String assigneeId,
-                                         @RequestParam(required = false) Long tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+                                         @RequestParam(required = false) String tenantId) {
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(taskService.listOverdue(assigneeId, tid));
     }
 
@@ -332,7 +332,7 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @PostMapping("/task/{taskId}/timeout")
-    public Result<Void> timeoutTask(@PathVariable @Min(1) Long taskId,
+    public Result<Void> timeoutTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
         taskService.timeoutTask(taskId, reason);
         return Result.ok();
@@ -358,10 +358,10 @@ public class FlowTaskController {
             @RequestParam(required = false) String flowCode,
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime,
-            @RequestParam(required = false) Long tenantId,
+            @RequestParam(required = false) String tenantId,
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize));
     }
@@ -390,8 +390,8 @@ public class FlowTaskController {
      * @return 统一响应结果
      */
     @PostMapping("/task/{taskId}/read")
-    public Result<Void> markRead(@PathVariable @Min(1) Long taskId) {
-        Long userId = SecurityContext.getUserId();
+    public Result<Void> markRead(@PathVariable String taskId) {
+        String userId = SecurityContext.getUserId();
         taskService.markRead(taskId, userId);
         return Result.ok();
     }
@@ -450,11 +450,11 @@ public class FlowTaskController {
      */
     @GetMapping("/todo/count")
     public Result<Map<String, Object>> myTodoCount() {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         if (userId == null) {
             return Result.ok(Map.of("userId", 0, "todoCount", 0));
         }
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         // P0-1 修复：移除 countOverdue 死代码（结果被覆盖），直接用 listTodoByUser 计算待办数
         var tasks = taskService.listTodoByUser(userId, null, null, tenantId);
         long count = tasks == null ? 0 : tasks.size();
@@ -472,7 +472,7 @@ public class FlowTaskController {
      */
     @PostMapping("/todo/push-mine")
     public Result<Boolean> pushMyTodoCount() {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         if (userId == null) {
             return Result.ok(false);
         }
@@ -549,8 +549,8 @@ public class FlowTaskController {
     @GetMapping("/stats/nodeDuration")
     public Result<List<Map<String, Object>>> nodeDurationStats(
             @RequestParam String flowCode,
-            @RequestParam(required = false) Long tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+            @RequestParam(required = false) String tenantId) {
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(taskService.nodeDurationStats(flowCode, tid));
     }
 
@@ -563,7 +563,6 @@ public class FlowTaskController {
     @GetMapping("/stats/overdue")
     public Result<List<FlowRunTaskDO>> statsOverdue(
             @RequestParam(required = false) String assigneeId) {
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(taskService.listOverdue(assigneeId, tenantId));
     }
-}

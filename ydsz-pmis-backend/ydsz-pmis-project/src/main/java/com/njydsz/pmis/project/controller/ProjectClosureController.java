@@ -108,7 +108,7 @@ public class ProjectClosureController {
     @Operation(summary = "按项目查询结项")
     @PrePermission("closure:project:list")
     @GetMapping("/by-initiation/{initiationId}")
-    public Result<ProjectClosureDO> getByInitiation(@PathVariable @Min(1) Long initiationId) {
+    public Result<ProjectClosureDO> getByInitiation(@PathVariable String initiationId) {
         return Result.ok(service.getByInitiation(initiationId));
     }
 

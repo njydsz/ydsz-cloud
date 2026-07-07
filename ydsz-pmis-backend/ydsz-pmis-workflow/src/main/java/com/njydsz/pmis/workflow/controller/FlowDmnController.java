@@ -63,7 +63,7 @@ public class FlowDmnController {
      */
     @Operation(summary = "按 ID 获取决策表详情")
     @GetMapping("/{id}")
-    public Result<FlowDmnTableDO> getById(@PathVariable @Min(1) Long id) {
+    public Result<FlowDmnTableDO> getById(@PathVariable String id) {
         return Result.ok(dmnTableService.getById(id));
     }
 
@@ -107,7 +107,7 @@ public class FlowDmnController {
      */
     @Operation(summary = "发布决策表")
     @PostMapping("/{id}/publish")
-    public Result<Void> publish(@PathVariable @Min(1) Long id) {
+    public Result<Void> publish(@PathVariable String id) {
         dmnTableService.publish(id);
         return Result.ok();
     }

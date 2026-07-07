@@ -160,7 +160,7 @@ public class DeliveryController {
     @Operation(summary = "标记 TR 完成")
     @PrePermission("execution:delivery:status")
     @PutMapping("/item/{id}/tr-completed")
-    public Result<Void> markTrCompleted(@PathVariable @Min(1) Long id,
+    public Result<Void> markTrCompleted(@PathVariable String id,
                                    @RequestParam Integer completed) {
         service.markTrCompleted(id, completed);
         return Result.ok();

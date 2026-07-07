@@ -65,7 +65,7 @@ public class AsyncExportController {
 
     @GetMapping("/{recordId}/download")
     @Operation(summary = "获取下载URL")
-    public Map<String, Object> getDownloadUrl(@PathVariable @Min(1) Long recordId) {
+    public Map<String, Object> getDownloadUrl(@PathVariable String recordId) {
         String url = asyncExportService.getDownloadUrl(recordId);
         return Map.of("url", url != null ? url : "", "success", url != null);
     }
@@ -73,7 +73,7 @@ public class AsyncExportController {
     @OperationLog(module = "异步导出", action = "删除导出记录", bizType = "ASYNC_EXPORT")
     @DeleteMapping("/{recordId}")
     @Operation(summary = "删除导出记录")
-    public Map<String, Object> deleteExportRecord(@PathVariable @Min(1) Long recordId) {
+    public Map<String, Object> deleteExportRecord(@PathVariable String recordId) {
         asyncExportService.deleteExportRecord(recordId);
         return Map.of("success", true);
     }

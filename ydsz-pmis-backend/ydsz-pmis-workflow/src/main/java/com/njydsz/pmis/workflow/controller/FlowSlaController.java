@@ -55,7 +55,7 @@ public class FlowSlaController {
      */
     @PostMapping("/sla/process/{taskId}")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
-    public Result<Boolean> slaProcess(@PathVariable @Min(1) Long taskId) {
+    public Result<Boolean> slaProcess(@PathVariable String taskId) {
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
             return Result.failed(BizErrorCode.NOT_FOUND, "任务不存在: " + taskId);

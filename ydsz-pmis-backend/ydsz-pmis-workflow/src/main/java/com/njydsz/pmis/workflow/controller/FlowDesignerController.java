@@ -50,7 +50,7 @@ public class FlowDesignerController {
      */
     @GetMapping("/definition/{id}/designer")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<Map<String, Object>> getDesignerData(@PathVariable @Min(1) Long id) {
+    public Result<Map<String, Object>> getDesignerData(@PathVariable String id) {
         return Result.ok(definitionService.getDesignerData(id));
     }
 
@@ -66,7 +66,7 @@ public class FlowDesignerController {
      */
     @PostMapping("/definition/{id}/designer")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<Void> saveDesignerData(@PathVariable @Min(1) Long id,
+    public Result<Void> saveDesignerData(@PathVariable String id,
                                           @Valid @RequestBody FlowDesignerDataDTO dto) {
         Map<String, Object> designerData = JSON.parseObject(dto.getDesignerData());
         definitionService.saveDesignerData(id, designerData);
@@ -84,7 +84,7 @@ public class FlowDesignerController {
      */
     @GetMapping("/definition/{id}/form-config/{nodeCode}")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<String> getFormConfig(@PathVariable @Min(1) Long id,
+    public Result<String> getFormConfig(@PathVariable String id,
                                          @PathVariable String nodeCode) {
         return Result.ok(definitionService.getFormConfig(id, nodeCode));
     }
@@ -99,7 +99,7 @@ public class FlowDesignerController {
      */
     @PostMapping("/definition/{id}/form-config/{nodeCode}")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<Void> saveFormConfig(@PathVariable @Min(1) Long id,
+    public Result<Void> saveFormConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
                                         @RequestBody String formFieldsConfig) {
         definitionService.saveFormConfig(id, nodeCode, formFieldsConfig);
@@ -117,7 +117,7 @@ public class FlowDesignerController {
      */
     @GetMapping("/definition/{id}/sla-config/{nodeCode}")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
-    public Result<String> getSlaConfig(@PathVariable @Min(1) Long id,
+    public Result<String> getSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode) {
         return Result.ok(definitionService.getSlaConfig(id, nodeCode));
     }
@@ -132,7 +132,7 @@ public class FlowDesignerController {
      */
     @PostMapping("/definition/{id}/sla-config/{nodeCode}")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
-    public Result<Void> saveSlaConfig(@PathVariable @Min(1) Long id,
+    public Result<Void> saveSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
                                         @RequestBody Map<String, Object> slaConfig) {
         String json = slaConfig == null ? null : JSON.toJSONString(slaConfig);

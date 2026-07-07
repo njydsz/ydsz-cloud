@@ -93,7 +93,7 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{id}/publish")
     @Operation(summary = "发布流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public Result<Void> publish(@PathVariable @Min(1) Long id) {
+    public Result<Void> publish(@PathVariable String id) {
         definitionService.publish(id);
         return Result.ok();
     }
@@ -107,7 +107,7 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{id}/deprecate")
     @Operation(summary = "废弃流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public Result<Void> deprecate(@PathVariable @Min(1) Long id) {
+    public Result<Void> deprecate(@PathVariable String id) {
         definitionService.deprecate(id);
         return Result.ok();
     }
@@ -154,7 +154,7 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/{id}")
     @Operation(summary = "查询流程定义详情（含节点与跳转）")
-    public Result<Map<String, Object>> getDefinitionDetail(@PathVariable @Min(1) Long id) {
+    public Result<Map<String, Object>> getDefinitionDetail(@PathVariable String id) {
         return Result.ok(definitionService.getDetail(id));
     }
 
@@ -185,7 +185,7 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{id}/enable")
     @Operation(summary = "启用流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public Result<Void> enable(@PathVariable @Min(1) Long id) {
+    public Result<Void> enable(@PathVariable String id) {
         definitionService.enable(id);
         return Result.ok();
     }
@@ -199,7 +199,7 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{id}/disable")
     @Operation(summary = "停用流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public Result<Void> disable(@PathVariable @Min(1) Long id) {
+    public Result<Void> disable(@PathVariable String id) {
         definitionService.disable(id);
         return Result.ok();
     }
@@ -215,7 +215,7 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
     @Operation(summary = "更新流程节点坐标")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<Void> updateNodeCoordinate(@PathVariable @Min(1) Long definitionId,
+    public Result<Void> updateNodeCoordinate(@PathVariable String definitionId,
                                              @PathVariable String nodeCode,
                                              @RequestBody String coordinate) {
         definitionService.updateNodeCoordinate(definitionId, nodeCode, coordinate);
@@ -232,7 +232,7 @@ public class FlowDefinitionController {
     @PutMapping("/definition/{id}")
     @Operation(summary = "编辑未发布的流程定义草稿")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<Void> updateDefinition(@PathVariable @Min(1) Long id,
+    public Result<Void> updateDefinition(@PathVariable String id,
                                          @Valid @RequestBody FlowDeployProcessDTO dto) {
         definitionService.updateDefinition(id, dto);
         return Result.ok();
@@ -246,7 +246,7 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/{id}/export")
     @Operation(summary = "导出流程定义为 JSON")
-    public Result<String> exportDefinition(@PathVariable @Min(1) Long id) {
+    public Result<String> exportDefinition(@PathVariable String id) {
         return Result.ok(definitionService.exportDefinition(id));
     }
 
@@ -274,7 +274,7 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/{id}/versions")
     @Operation(summary = "列出流程定义的所有历史版本")
-    public Result<List<Map<String, Object>>> listVersions(@PathVariable @Min(1) Long id) {
+    public Result<List<Map<String, Object>>> listVersions(@PathVariable String id) {
         return Result.ok(definitionService.listVersions(id));
     }
 
@@ -288,7 +288,7 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/{id}/diff")
     @Operation(summary = "流程定义版本差异对比")
-    public Result<Map<String, Object>> diffVersions(@PathVariable @Min(1) Long id,
+    public Result<Map<String, Object>> diffVersions(@PathVariable String id,
                                                      @RequestParam Integer v1,
                                                      @RequestParam Integer v2) {
         return Result.ok(definitionService.diffVersions(id, v1, v2));

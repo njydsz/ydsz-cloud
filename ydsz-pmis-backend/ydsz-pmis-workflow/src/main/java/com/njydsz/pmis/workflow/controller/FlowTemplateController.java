@@ -88,7 +88,7 @@ public class FlowTemplateController {
      */
     @Operation(summary = "导出为模板")
     @PostMapping("/export/{definitionId}")
-    public Result<Void> exportAsTemplate(@PathVariable @Min(1) Long definitionId,
+    public Result<Void> exportAsTemplate(@PathVariable String definitionId,
                                          @RequestParam String templateName,
                                          @RequestParam(required = false, defaultValue = "GENERAL") String category) {
         templateService.exportAsTemplate(definitionId, templateName, category);

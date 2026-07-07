@@ -72,7 +72,7 @@ public class FlowAutoTriggerController {
     @Operation(summary = "删除触发规则")
     @OperationLog(module = "工作流", action = "删除触发规则", bizType = "FLOW_AUTO_TRIGGER")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         autoTriggerService.deleteById(id);
         return Result.ok();
     }
@@ -85,7 +85,7 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "启用/禁用触发规则")
     @PutMapping("/{id}/toggle")
-    public Result<Map<String, Object>> toggle(@PathVariable @Min(1) Long id) {
+    public Result<Map<String, Object>> toggle(@PathVariable String id) {
         boolean enabled = autoTriggerService.toggleEnabled(id);
         return Result.ok(Map.of("id", id, "enabled", enabled));
     }

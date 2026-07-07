@@ -257,7 +257,7 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含变量 Map
      */
     @GetMapping("/instance/{id}/variables")
-    public Result<Map<String, Object>> getVariables(@PathVariable @Min(1) Long id) {
+    public Result<Map<String, Object>> getVariables(@PathVariable String id) {
         return Result.ok(instanceService.getVariables(id));
     }
 
@@ -272,7 +272,7 @@ public class FlowInstanceController {
      */
     @PostMapping("/instance/{id}/variables")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-    public Result<Void> setVariables(@PathVariable @Min(1) Long id,
+    public Result<Void> setVariables(@PathVariable String id,
                                      @Valid @RequestBody FlowInstanceVariablesDTO dto) {
         instanceService.setVariables(id, dto.getVariables());
         return Result.ok();
@@ -289,7 +289,7 @@ public class FlowInstanceController {
      */
     @PostMapping("/instance/{id}/urge")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_VIEW)
-    public Result<List<String>> urge(@PathVariable @Min(1) Long id,
+    public Result<List<String>> urge(@PathVariable String id,
                                  @RequestParam(required = false) String comment) {
         return Result.ok(workflowFacade.urgeTask(id, SecurityContext.getUserId(), comment));
     }
@@ -303,7 +303,7 @@ public class FlowInstanceController {
      */
     @GetMapping("/instance/{instanceId}/form-render")
     public Result<Map<String, Object>> getFormRenderData(
-            @PathVariable @Min(1) Long instanceId,
+            @PathVariable String instanceId,
             @RequestParam(required = false) Long taskId) {
         return Result.ok(instanceService.getFormRenderData(instanceId, taskId));
     }

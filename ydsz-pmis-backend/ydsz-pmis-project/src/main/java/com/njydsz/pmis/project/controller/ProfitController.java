@@ -77,7 +77,7 @@ public class ProfitController {
     @Operation(summary = "项目所有快照")
     @PrePermission("execution:profit:list")
     @GetMapping("/snapshots/{initiationId}")
-    public Result<List<ProfitSnapshotDO>> list(@PathVariable @Min(1) Long initiationId) {
+    public Result<List<ProfitSnapshotDO>> list(@PathVariable String initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
@@ -90,7 +90,7 @@ public class ProfitController {
     @Operation(summary = "趋势")
     @PrePermission("execution:profit:list")
     @GetMapping("/trend/{initiationId}")
-    public Result<List<Map<String, Object>>> trend(@PathVariable @Min(1) Long initiationId) {
+    public Result<List<Map<String, Object>>> trend(@PathVariable String initiationId) {
         return Result.ok(service.trendByPeriod(initiationId));
     }
 

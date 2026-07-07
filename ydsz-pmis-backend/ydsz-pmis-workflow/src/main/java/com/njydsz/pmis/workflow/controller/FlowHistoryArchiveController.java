@@ -71,7 +71,7 @@ public class FlowHistoryArchiveController {
     @PostMapping("/archive")
     public Result<Map<String, Object>> archive(@RequestParam(required = false) @Min(1) Integer retentionDays,
                                                   @RequestParam(required = false) @Min(1) @Max(1000) Integer batchSize,
-                                                  @RequestParam(required = false) @Min(1) Long maxProcessMs) {
+                                                  @RequestParam(required = false) String maxProcessMs) {
         log.info("[FlowHistoryArchiveController] 手动触发归档 retentionDays={} batchSize={} maxProcessMs={}",
                 retentionDays, batchSize, maxProcessMs);
         return Result.ok(archiveService.archive(retentionDays, batchSize, maxProcessMs));

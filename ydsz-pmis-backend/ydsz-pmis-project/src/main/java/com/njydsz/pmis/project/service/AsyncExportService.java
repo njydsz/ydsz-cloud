@@ -37,7 +37,7 @@ public interface AsyncExportService {
      * @param params     导出参数
      * @return 导出记录ID
      */
-    Long submitExport(Long userId, String exportType, Map<String, Object> params);
+    String submitExport(String userId, String exportType, Map<String, Object> params);
 
     /**
      * 查询导出记录列表。
@@ -46,7 +46,7 @@ public interface AsyncExportService {
      * @param pageable 分页参数
      * @return 导出记录分页
      */
-    Page<Map<String, Object>> getExportRecords(Long userId, Pageable pageable);
+    Page<Map<String, Object>> getExportRecords(String userId, Pageable pageable);
 
     /**
      * 获取导出文件下载 URL。
@@ -54,19 +54,19 @@ public interface AsyncExportService {
      * @param recordId 导出记录ID
      * @return 下载 URL，记录不存在或未完成时返回 null
      */
-    String getDownloadUrl(Long recordId);
+    String getDownloadUrl(String recordId);
 
     /**
      * 删除导出记录。
      *
      * @param recordId 导出记录ID
      */
-    void deleteExportRecord(Long recordId);
+    void deleteExportRecord(String recordId);
 
     /**
      * 执行异步导出（由 Job 调用）。
      *
      * @param recordId 导出记录ID
      */
-    void executeExport(Long recordId);
+    void executeExport(String recordId);
 }

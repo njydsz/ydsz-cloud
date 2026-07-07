@@ -72,7 +72,7 @@ public class TimeEntryController {
     @PrePermission("execution:time:approve")
     @Idempotent(key = "time-entry:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable @Min(1) Long id) {
+    public Result<Void> submit(@PathVariable String id) {
         service.submit(id);
         return Result.ok();
     }
@@ -102,7 +102,7 @@ public class TimeEntryController {
     @Idempotent(key = "time-entry:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "工时管理", action = "删除工时", bizType = "TIME_ENTRY")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -116,7 +116,7 @@ public class TimeEntryController {
     @Operation(summary = "工时详情")
     @PrePermission("execution:time:list")
     @GetMapping("/{id}")
-    public Result<TimeEntryDO> get(@PathVariable @Min(1) Long id) {
+    public Result<TimeEntryDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 

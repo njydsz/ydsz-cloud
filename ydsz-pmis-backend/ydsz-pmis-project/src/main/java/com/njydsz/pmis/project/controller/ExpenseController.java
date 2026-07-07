@@ -80,7 +80,7 @@ public class ExpenseController {
     @Operation(summary = "删除")
     @PrePermission("execution:expense:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -94,7 +94,7 @@ public class ExpenseController {
     @Operation(summary = "详情")
     @PrePermission("execution:expense:list")
     @GetMapping("/{id}")
-    public Result<ExpenseDO> get(@PathVariable @Min(1) Long id) {
+    public Result<ExpenseDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 

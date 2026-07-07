@@ -101,7 +101,7 @@ public class AgentController {
     @Operation(summary = "记录详情")
     @PrePermission("agent:task:view")
     @GetMapping("/{id}")
-    public Result<AgentPredictionDO> get(@PathVariable @Min(1) Long id) {
+    public Result<AgentPredictionDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 

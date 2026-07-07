@@ -136,7 +136,7 @@ public class ProjectChangeController {
     @Operation(summary = "按项目查询变更列表")
     @PrePermission("project:change:list")
     @GetMapping("/list-by-initiation/{initiationId}")
-    public Result<List<ProjectChangeDO>> listByInitiation(@PathVariable @Min(1) Long initiationId) {
+    public Result<List<ProjectChangeDO>> listByInitiation(@PathVariable String initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
@@ -175,7 +175,7 @@ public class ProjectChangeController {
     @Operation(summary = "统计项目重大变更数")
     @PrePermission("project:change:list")
     @GetMapping("/major-count/{initiationId}")
-    public Result<Long> countMajor(@PathVariable @Min(1) Long initiationId) {
+    public Result<Long> countMajor(@PathVariable String initiationId) {
         return Result.ok(service.countMajorByInitiation(initiationId));
     }
 

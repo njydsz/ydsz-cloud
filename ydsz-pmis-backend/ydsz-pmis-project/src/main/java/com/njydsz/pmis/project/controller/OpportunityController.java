@@ -125,7 +125,7 @@ public class OpportunityController {
     @Operation(summary = "商机转立项自动化(WON -> CONVERTED + 创建预立项草稿)")
     @PrePermission("project:opportunity:convert")
     @PostMapping("/{id}/convert-to-initiation")
-    public Result<Long> convertToInitiation(@Parameter(description = "商机ID") @PathVariable @Min(1) Long id,
+    public Result<Long> convertToInitiation(@Parameter(description = "商机ID") @PathVariable String id,
                                         @Parameter(description = "发起人ID") @RequestParam(required = false) Long sponsorId,
                                         @Parameter(description = "项目经理ID") @RequestParam(required = false) Long pmId) {
         return Result.ok(service.convertToInitiation(id, sponsorId, pmId));

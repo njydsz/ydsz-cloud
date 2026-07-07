@@ -83,7 +83,7 @@ public class FileController {
     @OperationLog(module = "文件存储", action = "删除文件", bizType = "FILE")
     @DeleteMapping("/{id}")
     public Result<Void> delete(
-            @Parameter(description = "文件ID") @PathVariable @Min(1) Long id) throws Exception {
+            @Parameter(description = "文件ID") @PathVariable String id) throws Exception {
         fileService.delete(id);
         return Result.ok();
     }
@@ -113,7 +113,7 @@ public class FileController {
     @Operation(summary = "文件详情")
     @GetMapping("/{id}")
     public Result<FileDO> getById(
-            @Parameter(description = "文件ID") @PathVariable @Min(1) Long id) {
+            @Parameter(description = "文件ID") @PathVariable String id) {
         return Result.ok(fileService.getById(id));
     }
 
@@ -127,7 +127,7 @@ public class FileController {
     @Operation(summary = "获取预签名下载 URL")
     @GetMapping("/{id}/presigned-url")
     public Result<String> presignedUrl(
-            @Parameter(description = "文件ID") @PathVariable @Min(1) Long id,
+            @Parameter(description = "文件ID") @PathVariable String id,
             @Parameter(description = "URL有效期（秒）") @RequestParam(required = false) @Min(1) Integer expireSeconds) {
         return Result.ok(fileService.getPresignedUrl(id, expireSeconds));
     }
@@ -142,7 +142,7 @@ public class FileController {
     @Operation(summary = "下载文件")
     @GetMapping("/{id}/download")
     public void download(
-            @Parameter(description = "文件ID") @PathVariable @Min(1) Long id,
+            @Parameter(description = "文件ID") @PathVariable String id,
             HttpServletResponse response) throws Exception {
         FileDO f = fileService.getById(id);
         try (InputStream in = fileService.download(id);

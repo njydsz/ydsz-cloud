@@ -99,7 +99,7 @@ public class RateCardController {
     @Operation(summary = "详情")
     @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
-    public Result<RateCardDO> get(@PathVariable @Min(1) Long id) {
+    public Result<RateCardDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
