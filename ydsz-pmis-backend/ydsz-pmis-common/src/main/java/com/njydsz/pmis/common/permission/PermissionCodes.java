@@ -333,6 +333,8 @@ public final class PermissionCodes {
     public static final String WORKFLOW_INSTANCE_CONTROL = "workflow:instance:control";
     /** 流程实例回滚 (管理员) */
     public static final String WORKFLOW_INSTANCE_ROLLBACK = "workflow:instance:rollback";
+    /** 流程实例重审 (发起人/管理员) */
+    public static final String WORKFLOW_INSTANCE_RESUBMIT = "workflow:instance:resubmit";
     /** 流程实例迁移 (管理员) */
     public static final String WORKFLOW_INSTANCE_MIGRATE = "workflow:instance:migrate";
     /** 任务查询/详情 (本人) */

@@ -19,6 +19,11 @@ public interface RulePackMapper extends BaseMapper<RulePackDO> {
     List<RulePackDO> selectByPackCode(@Param("packCode") String packCode);
 
     /**
+     * 按规则集编码 + 版本精确查询（P2-8 知识包版本管理）
+     */
+    RulePackDO selectByPackCodeVersion(@Param("packCode") String packCode, @Param("packVersion") String packVersion);
+
+    /**
      * 按行业筛选
      */
     List<RulePackDO> selectByIndustry(@Param("industry") String industry);

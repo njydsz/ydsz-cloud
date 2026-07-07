@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RulePack;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
@@ -65,14 +66,28 @@ public class RulePackService {
                 break;
             }
         }
+        // 计算升级来源版本（当前已发布的最高版本，P2-8 版本链路追踪）
+        String previousVersion = null;
+        if (found == null && !existing.isEmpty()) {
+            previousVersion = existing.stream()
+                    .map(RulePackDO::getPackVersion)
+                    .max((a, b) -> compareVersion(a, b))
+                    .orElse(null);
+        } else if (found != null) {
+            previousVersion = found.getPreviousVersion();
+        }
+
         RulePackDO entity = found == null ? new RulePackDO() : found;
         entity.setPackCode(pack.getPackCode());
         entity.setPackVersion(pack.getPackVersion());
         entity.setPackName(pack.getPackName());
         entity.setIndustry(pack.getIndustry());
         entity.setTags(pack.getTags() == null ? null : String.join(",", pack.getTags()));
+        entity.setPreviousVersion(previousVersion);
         try {
             entity.setRuleCodes(objectMapper.writeValueAsString(pack.getRuleCodes() == null ? Collections.emptyList() : pack.getRuleCodes()));
+            // P2-8：发布时固化规则定义快照，保证版本内容可复现
+            entity.setRuleSnapshots(objectMapper.writeValueAsString(buildSnapshots(pack.getRuleCodes())));
         } catch (Exception e) {
             throw new IllegalArgumentException("ruleCodes 序列化失败: " + e.getMessage());
         }
@@ -259,13 +274,149 @@ public class RulePackService {
     }
 
     private RulePackDO findDO(String packCode, String version) {
+        if (version != null && !version.isBlank()) {
+            RulePackDO exact = rulePackMapper.selectByPackCodeVersion(packCode, version);
+            if (exact != null) return exact;
+            return null;
+        }
         List<RulePackDO> list = rulePackMapper.selectByPackCode(packCode);
-        for (RulePackDO d : list) {
-            if (version == null || version.isBlank() || version.equals(d.getPackVersion())) {
-                return d;
+        if (list.isEmpty()) return null;
+        // 未指定版本时返回最高版本
+        return list.stream().max((a, b) -> compareVersion(a.getPackVersion(), b.getPackVersion())).orElse(null);
+    }
+
+    /**
+     * 按版本精确查询规则集（P2-8）
+     */
+    public RulePack getVersion(String packCode, String version) {
+        return toApi(rulePackMapper.selectByPackCodeVersion(packCode, version));
+    }
+
+    /**
+     * 知识包版本回滚（P2-8）
+     *
+     * <p>将该历史版本固化的规则定义快照恢复到在线规则表（逐条 save），
+     * 并记录一条回滚安装历史。与单规则回滚不同，这里以"包"为粒度整体回滚，
+     * 保证包内规则集的内容一致性。
+     *
+     * @return 回滚结果统计
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public InstallResult rollback(String packCode, String version, String operator) {
+        RulePackDO entity = rulePackMapper.selectByPackCodeVersion(packCode, version);
+        if (entity == null) {
+            throw new IllegalArgumentException("规则集版本不存在: " + packCode + " v" + version);
+        }
+        List<RuleDefinition> snapshots = parseSnapshots(entity.getRuleSnapshots());
+        int success = 0, failed = 0;
+        List<String> failedCodes = new ArrayList<>();
+        for (RuleDefinition def : snapshots) {
+            try {
+                ruleConfigProvider.save(def, operator);
+                success++;
+            } catch (Exception e) {
+                log.warn("[RulePack] 回滚规则失败: code={}, err={}", def.getCode(), e.getMessage());
+                failed++;
+                failedCodes.add(def.getCode() + "(" + e.getMessage() + ")");
             }
         }
-        return null;
+        // 记录回滚历史
+        RulePackInstallDO record = new RulePackInstallDO();
+        record.setPackCode(packCode);
+        record.setPackVersion(version);
+        record.setTenantId(TenantContext.getTenantId());
+        record.setInstalledBy(operator);
+        record.setInstalledAt(LocalDateTime.now());
+        record.setStatus(failed == 0 ? "ROLLBACK_SUCCESS" : (success == 0 ? "ROLLBACK_FAILED" : "ROLLBACK_PARTIAL"));
+        record.setErrorMessage(String.join("; ", failedCodes));
+        rulePackInstallMapper.insert(record);
+
+        InstallResult result = new InstallResult();
+        result.setPackCode(packCode);
+        result.setVersion(version);
+        result.setTotal(snapshots.size());
+        result.setSuccess(success);
+        result.setFailed(failed);
+        result.setFailedCodes(failedCodes);
+        log.info("[RulePack] 回滚完成: code={}, version={}, success={}, failed={}, operator={}",
+                packCode, version, success, failed, operator);
+        return result;
+    }
+
+    /**
+     * 知识包版本差异对比（P2-8）
+     *
+     * <p>对比两个版本在规则编码集合与规则定义内容上的差异，便于升级评审。
+     *
+     * @return 差异结果（含新增/移除/变更的规则编码列表）
+     */
+    public PackDiff diff(String packCode, String fromVersion, String toVersion) {
+        RulePackDO from = rulePackMapper.selectByPackCodeVersion(packCode, fromVersion);
+        RulePackDO to = rulePackMapper.selectByPackCodeVersion(packCode, toVersion);
+        if (from == null || to == null) {
+            throw new IllegalArgumentException("对比版本不存在: " + packCode + " [" + fromVersion + " -> " + toVersion + "]");
+        }
+        List<String> fromCodes = parseRuleCodes(from.getRuleCodes());
+        List<String> toCodes = parseRuleCodes(to.getRuleCodes());
+        List<String> added = new ArrayList<>(toCodes);
+        added.removeAll(fromCodes);
+        List<String> removed = new ArrayList<>(fromCodes);
+        removed.removeAll(toCodes);
+        List<String> common = new ArrayList<>(toCodes);
+        common.retainAll(fromCodes);
+
+        // 内容变更：基于快照逐条对比条件表达式
+        List<String> changed = new ArrayList<>();
+        if (from.getRuleSnapshots() != null && to.getRuleSnapshots() != null) {
+            var fromMap = parseSnapshots(from.getRuleSnapshots()).stream()
+                    .collect(java.util.stream.Collectors.toMap(RuleDefinition::getCode, d -> d, (a, b) -> a));
+            var toMap = parseSnapshots(to.getRuleSnapshots()).stream()
+                    .collect(java.util.stream.Collectors.toMap(RuleDefinition::getCode, d -> d, (a, b) -> a));
+            for (String code : common) {
+                RuleDefinition a = fromMap.get(code);
+                RuleDefinition b = toMap.get(code);
+                if (a == null || b == null) continue;
+                if (!java.util.Objects.equals(a.getConditionExpression(), b.getConditionExpression())
+                        || !java.util.Objects.equals(a.getSeverityExpression(), b.getSeverityExpression())
+                        || !java.util.Objects.equals(a.getPriority(), b.getPriority())) {
+                    changed.add(code);
+                }
+            }
+        }
+        PackDiff result = new PackDiff();
+        result.setPackCode(packCode);
+        result.setFromVersion(fromVersion);
+        result.setToVersion(toVersion);
+        result.setAdded(added);
+        result.setRemoved(removed);
+        result.setChanged(changed);
+        return result;
+    }
+
+    /**
+     * 构建规则定义快照（P2-8）
+     *
+     * <p>依据 ruleCodes 从在线规则表加载完整 RuleDefinition 并序列化，固化到版本中。
+     */
+    private List<RuleDefinition> buildSnapshots(List<String> ruleCodes) {
+        if (ruleCodes == null || ruleCodes.isEmpty()) return Collections.emptyList();
+        List<RuleDefinition> snapshots = new ArrayList<>(ruleCodes.size());
+        for (String code : ruleCodes) {
+            RuleDefinition def = ruleConfigProvider.findByCode(code);
+            if (def != null) snapshots.add(def);
+            else log.warn("[RulePack] 发布快照时规则 {} 不存在，跳过", code);
+        }
+        return snapshots;
+    }
+
+    private List<RuleDefinition> parseSnapshots(String json) {
+        if (json == null || json.isBlank()) return Collections.emptyList();
+        try {
+            return JSON.parseArray(json, RuleDefinition.class);
+        } catch (Exception e) {
+            log.warn("[RulePack] 解析 ruleSnapshots 失败: {}", e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     private List<String> parseRuleCodes(String json) {
@@ -287,6 +438,8 @@ public class RulePackService {
                 .industry(d.getIndustry())
                 .tags(d.getTags() == null ? null : Arrays.asList(d.getTags().split(",")))
                 .ruleCodes(parseRuleCodes(d.getRuleCodes()))
+                .ruleSnapshots(parseSnapshots(d.getRuleSnapshots()))
+                .previousVersion(d.getPreviousVersion())
                 .description(d.getDescription())
                 .author(d.getAuthor())
                 .downloadCount(d.getDownloadCount() == null ? 0 : d.getDownloadCount())
@@ -327,5 +480,21 @@ public class RulePackService {
         private int success;
         private int failed;
         private List<String> failedCodes;
+    }
+
+    /**
+     * 知识包版本差异结果（P2-8）
+     */
+    @lombok.Data
+    public static class PackDiff {
+        private String packCode;
+        private String fromVersion;
+        private String toVersion;
+        /** 新增的规则编码 */
+        private List<String> added;
+        /** 移除的规则编码 */
+        private List<String> removed;
+        /** 内容发生变更的规则编码 */
+        private List<String> changed;
     }
 }

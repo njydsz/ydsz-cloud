@@ -676,4 +676,10 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     public void communicateTask(FlowTaskOperateDTO dto) {
         taskService.communicate(dto);
     }
+
+    @Override
+    public String resubmitProcess(String instanceId, String initiatorId,
+                                  Map<String, Object> variables, String comment) {
+        return instanceService.resubmit(instanceId, initiatorId, variables, comment);
+    }
 }

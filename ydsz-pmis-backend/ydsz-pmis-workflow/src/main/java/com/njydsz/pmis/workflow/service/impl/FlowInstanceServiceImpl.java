@@ -99,6 +99,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      */
     @Lazy
     private final FlowEventSubscriptionService eventSubscriptionService;
+    /** P2-2: 审计日志 Mapper（重审时写入 RESUBMIT 轨迹） */
+    private final FlowAuditLogMapper auditLogMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -1091,5 +1093,68 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public void setDueAt(String instanceId, LocalDateTime dueAt) {
         instanceMapper.updateDueAt(instanceId, dueAt);
         log.info("[Flow] 设置实例到期时间: instanceId={} dueAt={}", instanceId, dueAt);
+    }
+
+    // ============================== P2-2 (GAP-10): 驳回后快速重审 ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @DistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    public String resubmit(String instanceId, String initiatorId,
+                           Map<String, Object> variables, String comment) {
+        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        // 1. 状态校验：仅 REJECTED 可重审
+        FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
+        if (status != FlowInstanceStatus.REJECTED) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_7f4098fb",
+                    "仅被驳回实例可重审，当前状态=" + instance.getFlowStatus());
+        }
+        // 2. 发起人校验
+        if (instance.getInitiatorId() != null
+                && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.workflow.msg_d65b2814",
+                    "仅发起人可重审");
+        }
+        // 3. 合并变量（保留历史变量，覆盖新增）
+        Map<String, Object> merged = getVariables(instanceId);
+        if (merged == null) {
+            merged = new HashMap<>();
+        }
+        if (variables != null && !variables.isEmpty()) {
+            merged.putAll(variables);
+        }
+        // 4. 重置实例状态为 RUNNING，清掉 REJECTED 标记，重置开始时间
+        instance.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        instance.setActivityStatus(1);
+        instance.setCurrentNodeCode(null);
+        instance.setCurrentNodeName(null);
+        instance.setStartAt(LocalDateTime.now());
+        instance.setEndAt(null);
+        instance.setRejectReason(null);
+        instance.setVariable(merged.isEmpty() ? null : JSON.toJSONString(merged));
+        instanceMapper.updateById(instance);
+        // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
+        FlowAuditLogDO audit = new FlowAuditLogDO();
+        audit.setInstanceId(instanceId);
+        audit.setFlowCode(instance.getFlowCode());
+        audit.setBusinessType(instance.getBusinessType());
+        audit.setBusinessId(instance.getBusinessId());
+        audit.setAction("RESUBMIT");
+        audit.setOperatorId(initiatorId);
+        audit.setOperatorName(instance.getInitiatorName());
+        audit.setComment(comment);
+        audit.setTenantId(instance.getTenantId());
+        audit.setProviderTraceId(instance.getProviderTraceId());
+        audit.setOperatedAt(LocalDateTime.now());
+        auditLogMapper.insert(audit);
+        // 6. 从开始节点重新推进（复用 advancer.start，保留 pmis_flow_user/his_task 历史）
+        try {
+            advancer.start(instanceId);
+        } catch (Exception e) {
+            fireError(instanceId, e);
+            throw e;
+        }
+        log.info("[Flow] 驳回后快速重审: instanceId={} initiatorId={}", instanceId, initiatorId);
+        return instanceId;
     }
 }

@@ -224,4 +224,16 @@ public interface WorkflowFacade {
      * GAP-P0: 沟通 — 在任务下添加沟通评论
      */
     void communicateTask(FlowTaskOperateDTO dto);
+
+    /**
+     * P2-2 (GAP-10): 驳回后快速重审 — 基于被驳回的原实例重新提交
+     *
+     * @param instanceId 被驳回的实例 ID
+     * @param initiatorId 发起人 ID
+     * @param variables 重审时新增/覆盖的变量（可空）
+     * @param comment 重审说明（可选）
+     * @return 实例 ID
+     */
+    String resubmitProcess(String instanceId, String initiatorId,
+                           Map<String, Object> variables, String comment);
 }

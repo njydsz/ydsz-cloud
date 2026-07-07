@@ -147,6 +147,19 @@ public class FlowInstanceController {
     }
 
     /**
+     * P2-2 (GAP-10): 驳回后快速重审 — 基于被驳回的原实例重新提交
+     *
+     * <p>仅发起人或拥有 workflow:instance:resubmit 权限的管理员可操作。
+     */
+    @PostMapping("/instance/{id}/resubmit")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
+    public Result<String> resubmit(@PathVariable String id,
+                                    @RequestParam(required = false) String comment,
+                                    @RequestBody(required = false) java.util.Map<String, Object> variables) {
+        return Result.ok(workflowFacade.resubmitProcess(id, SecurityContext.getUserId(), variables, comment));
+    }
+
+    /**
      * 审计轨迹查询
      *
      * @param id 流程实例 ID

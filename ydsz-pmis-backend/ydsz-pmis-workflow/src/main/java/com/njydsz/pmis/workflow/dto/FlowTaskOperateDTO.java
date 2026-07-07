@@ -40,6 +40,9 @@ public class FlowTaskOperateDTO implements Serializable {
     /** P2-42: 审批意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE（可选） */
     private String commentType;
 
+    /** P1-6: 审批时提交的附件列表（图片/文档/视频等） */
+    private List<FlowAttachmentDTO> attachments;
+
     /** 流程变量 */
     private Map<String, Object> variables;
 

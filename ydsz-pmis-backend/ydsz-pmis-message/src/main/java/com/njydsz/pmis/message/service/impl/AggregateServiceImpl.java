@@ -1,0 +1,189 @@
+package com.njydsz.pmis.message.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.message.constant.MessageConstants;
+import com.njydsz.pmis.message.entity.MsgAggregateDO;
+import com.njydsz.pmis.message.enums.AggregateBatchStatusEnum;
+import com.njydsz.pmis.message.mapper.MsgAggregateMapper;
+import com.njydsz.pmis.message.service.AggregateService;
+import com.njydsz.pmis.message.service.MessageService;
+import com.njydsz.pmis.message.template.TemplateEngine;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 聚合批次服务实现。
+ *
+ * <p>appendOrStart 在分布式锁内执行:存在 PENDING 批次则追加,否则新建 PENDING 批次并设定计划发送时间;
+ * flushDue 发送到期的 READY 批次;flushByGroup 强制刷新指定组+接收人。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AggregateServiceImpl implements AggregateService {
+
+    /** 默认聚合频率窗口(分钟) */
+    private static final long DEFAULT_FREQUENCY_MINUTES = 30L;
+
+    private final MsgAggregateMapper msgAggregateMapper;
+    private final MessageService messageService;
+    private final TemplateEngine templateEngine;
+    private final RedissonClient redissonClient;
+
+    @Override
+    public MsgAggregateDO appendOrStart(String group, String receiver, String channel, String tenantId) {
+        if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "聚合组与接收人不能为空");
+        }
+        String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContext.getTenantId();
+        String lockKey = MessageConstants.AGGREGATE_LOCK_PREFIX + group + ":" + receiver;
+        RLock lock = redissonClient.getLock(lockKey);
+        boolean locked = false;
+        try {
+            locked = lock.tryLock(3, 10, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BizException(BizErrorCode.RESOURCE_LOCKED, "获取聚合锁失败: " + group);
+            }
+            // 查 PENDING 批次
+            MsgAggregateDO batch = msgAggregateMapper.selectOne(new LambdaQueryWrapper<MsgAggregateDO>()
+                    .eq(MsgAggregateDO::getAggregateGroup, group)
+                    .eq(MsgAggregateDO::getReceiver, receiver)
+                    .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
+                    .last("LIMIT 1"));
+            LocalDateTime now = LocalDateTime.now();
+            if (batch != null) {
+                batch.setMessageCount((batch.getMessageCount() == null ? 0 : batch.getMessageCount()) + 1);
+                batch.setLastMessageAt(now);
+                msgAggregateMapper.updateById(batch);
+                return batch;
+            }
+            // 新建 PENDING 批次
+            MsgAggregateDO entity = new MsgAggregateDO();
+            entity.setAggregateGroup(group);
+            entity.setReceiver(receiver);
+            entity.setChannel(channel);
+            entity.setBatchStatus(AggregateBatchStatusEnum.PENDING.name());
+            entity.setMessageCount(1);
+            entity.setFirstMessageAt(now);
+            entity.setLastMessageAt(now);
+            entity.setScheduledSendAt(now.plusMinutes(DEFAULT_FREQUENCY_MINUTES));
+            entity.setTenantId(tid);
+            msgAggregateMapper.insert(entity);
+            log.info("[Aggregate] 新建批次: group={} receiver={} scheduledAt={}", group, receiver, entity.getScheduledSendAt());
+            return entity;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BizException(BizErrorCode.RESOURCE_LOCKED, "聚合锁等待中断");
+        } finally {
+            if (locked && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    public int flushDue() {
+        LocalDateTime now = LocalDateTime.now();
+        List<MsgAggregateDO> due = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregateDO>()
+                .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name())
+                .le(MsgAggregateDO::getScheduledSendAt, now));
+        int sent = 0;
+        for (MsgAggregateDO batch : due) {
+            if (sendBatch(batch)) {
+                sent++;
+            }
+        }
+        if (sent > 0) {
+            log.info("[Aggregate] flushDue 发送 {} 个到期批次", sent);
+        }
+        return sent;
+    }
+
+    @Override
+    public int flushByGroup(String group, String receiver) {
+        if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "聚合组与接收人不能为空");
+        }
+        List<MsgAggregateDO> batches = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregateDO>()
+                .eq(MsgAggregateDO::getAggregateGroup, group)
+                .eq(MsgAggregateDO::getReceiver, receiver)
+                .in(MsgAggregateDO::getBatchStatus,
+                        AggregateBatchStatusEnum.PENDING.name(),
+                        AggregateBatchStatusEnum.READY.name()));
+        int sent = 0;
+        for (MsgAggregateDO batch : batches) {
+            if (sendBatch(batch)) {
+                sent++;
+            }
+        }
+        log.info("[Aggregate] flushByGroup 发送 {} 个批次: group={} receiver={}", sent, group, receiver);
+        return sent;
+    }
+
+    @Override
+    public Page<MsgAggregateDO> page(PageQuery query) {
+        Page<MsgAggregateDO> page = new Page<>(
+                query == null ? 1 : query.getPage(),
+                Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
+        return msgAggregateMapper.selectPage(page, new LambdaQueryWrapper<MsgAggregateDO>()
+                .orderByDesc(MsgAggregateDO::getCreatedAt));
+    }
+
+    /**
+     * 发送单个聚合批次:渲染摘要 → 调 MessageService 发送 → 更新 SENT。
+     *
+     * @param batch 聚合批次
+     * @return true 表示发送成功
+     */
+    private boolean sendBatch(MsgAggregateDO batch) {
+        try {
+            // 渲染摘要内容
+            Map<String, Object> params = new HashMap<>();
+            params.put("count", batch.getMessageCount());
+            params.put("group", batch.getAggregateGroup());
+            String digest = templateEngine.render(
+                    "您有 ${count} 条 ${group} 相关消息,请及时查看", params);
+            batch.setDigestContent(digest);
+            MessageRequest request = new MessageRequest();
+            request.setChannel(batch.getChannel());
+            request.setReceiver(batch.getReceiver());
+            request.setContent(digest);
+            request.setBizType("AGGREGATE");
+            request.setBizId(batch.getId());
+            MessageResult result = messageService.send(request);
+            boolean ok = result != null && result.isSuccess();
+            if (ok) {
+                batch.setBatchStatus(AggregateBatchStatusEnum.SENT.name());
+                batch.setSentAt(LocalDateTime.now());
+                msgAggregateMapper.updateById(batch);
+                return true;
+            }
+            log.warn("[Aggregate] 批次发送失败: id={} err={}", batch.getId(),
+                    result == null ? "无响应" : result.getErrorMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("[Aggregate] 批次发送异常: id={} err={}", batch.getId(), e.getMessage());
+            return false;
+        }
+    }
+}

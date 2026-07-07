@@ -1438,6 +1438,39 @@ public class RuleAdminController {
     }
 
     /**
+     * 查询规则集指定版本（含规则定义快照，P2-8）
+     */
+    @GetMapping("/packs/{packCode}/versions/{version}")
+    public Result<RulePack> getPackVersion(
+            @PathVariable String packCode,
+            @PathVariable String version) {
+        return Result.ok(rulePackService.getVersion(packCode, version));
+    }
+
+    /**
+     * 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表
+     */
+    @PostMapping("/packs/{packCode}/rollback")
+    @OperationLog(module = "规则引擎", action = "知识包回滚", bizType = "RULE_PACK")
+    public Result<RulePackService.InstallResult> rollbackPack(
+            @PathVariable String packCode,
+            @RequestParam(value = "version") String version,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        return Result.ok(rulePackService.rollback(packCode, version, operator));
+    }
+
+    /**
+     * 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差异
+     */
+    @GetMapping("/packs/{packCode}/diff")
+    public Result<RulePackService.PackDiff> diffPack(
+            @PathVariable String packCode,
+            @RequestParam(value = "from") String fromVersion,
+            @RequestParam(value = "to") String toVersion) {
+        return Result.ok(rulePackService.diff(packCode, fromVersion, toVersion));
+    }
+
+    /**
      * 发布规则集到市场
      */
     @PostMapping("/packs")

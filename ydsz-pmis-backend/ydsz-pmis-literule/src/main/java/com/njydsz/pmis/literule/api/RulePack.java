@@ -55,6 +55,17 @@ public class RulePack implements Serializable {
     /** 包含的规则编码列表（引用 RuleDefinition.code） */
     private List<String> ruleCodes;
 
+    /**
+     * 规则定义快照列表（P2-8 知识包版本管理）
+     *
+     * <p>发布版本时固化的规则定义 JSON 列表，用于版本内容复现与回滚。
+     * 格式为 {@code List<RuleDefinition>} 反序列化后的对象。
+     */
+    private List<RuleDefinition> ruleSnapshots;
+
+    /** 升级来源版本号（便于审计链路追踪） */
+    private String previousVersion;
+
     /** 作者（发布方） */
     private String author;
 

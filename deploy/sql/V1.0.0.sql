@@ -9813,6 +9813,8 @@ CREATE TABLE IF NOT EXISTS pmis_rule_pack (
     industry          VARCHAR(64),
     tags              VARCHAR(512),
     rule_codes        TEXT,
+    rule_snapshots    TEXT,
+    previous_version  VARCHAR(32),
     description       VARCHAR(512),
     author            VARCHAR(128),
     download_count    BIGINT          NOT NULL DEFAULT 0,
@@ -9847,6 +9849,8 @@ COMMENT ON COLUMN pmis_rule_pack.pack_name IS '规则集名称';
 COMMENT ON COLUMN pmis_rule_pack.industry IS '适用行业';
 COMMENT ON COLUMN pmis_rule_pack.tags IS '标签, 逗号分隔';
 COMMENT ON COLUMN pmis_rule_pack.rule_codes IS '包含的规则编码列表 (逗号分隔)';
+COMMENT ON COLUMN pmis_rule_pack.rule_snapshots IS 'P2-8: 该版本固化的规则定义快照 (RuleDefinition JSON 数组)';
+COMMENT ON COLUMN pmis_rule_pack.previous_version IS 'P2-8: 升级来源版本号 (版本链路追踪)';
 COMMENT ON COLUMN pmis_rule_pack.description IS '描述';
 COMMENT ON COLUMN pmis_rule_pack.author IS '作者';
 COMMENT ON COLUMN pmis_rule_pack.download_count IS '下载次数';
@@ -9858,6 +9862,11 @@ COMMENT ON COLUMN pmis_rule_pack.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_rule_pack.updated_by IS '更新人';
 COMMENT ON COLUMN pmis_rule_pack.updated_at IS '更新时间';
 COMMENT ON COLUMN pmis_rule_pack.deleted IS '逻辑删除 0=未删 1=已删';
+
+-- P2-8: 兼容已存在库，幂等补充知识包版本管理新列
+ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS rule_snapshots    TEXT;
+ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS previous_version  VARCHAR(32);
+
 
 -- ----------------------------------------------------------------
 -- pmis_rule_pack_install -- P2-14: rule pack install history
@@ -10881,6 +10890,96 @@ VALUES
      '流程【${flowName}】节点【${nodeName}】抄送给您，请查阅。',
      '抄送时通知接收人')
 ON CONFLICT DO NOTHING;
+
+-- ====================================================================
+-- ============================ [068] P1-6 工作流审批附件表 ============================
+-- ====================================================================
+-- GAP-51: 审批附件支持（对标钉钉/飞书审批附件能力）
+-- 审批时提交的附件（图片/文档/视频等）统一落库，支持查询与下载
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS pmis_flow_attachment (
+    id                  VARCHAR(20)       PRIMARY KEY,
+    tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
+    instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
+    task_id             VARCHAR(20),                              -- 关联任务（可为空：实例级附件）
+    node_code           VARCHAR(64),                             -- 关联节点编码
+    biz_type            VARCHAR(32)     NOT NULL DEFAULT 'TASK',  -- TASK=任务附件 / INSTANCE=实例附件 / COMMENT=意见附件
+    file_name           VARCHAR(256)    NOT NULL,                -- 原始文件名
+    file_ext            VARCHAR(16),                             -- 文件扩展名（jpg/pdf...）
+    file_size           BIGINT          NOT NULL DEFAULT 0,      -- 字节大小
+    content_type        VARCHAR(128),                            -- MIME 类型
+    storage_key         VARCHAR(512)    NOT NULL,                -- 存储 key（OSS/COS/MinIO 对象 key 或本地相对路径）
+    storage_type        VARCHAR(16)     NOT NULL DEFAULT 'OSS',  -- OSS / MINIO / LOCAL
+    uploader_id         VARCHAR(20)     NOT NULL,                -- 上传人 ID
+    uploader_name       VARCHAR(64),                             -- 上传人姓名
+    download_url        VARCHAR(1024),                           -- 临时下载地址（可选，前端可直接展示）
+    md5                 VARCHAR(64),                             -- 文件 MD5（去重/校验）
+    deleted             SMALLINT        NOT NULL DEFAULT 0,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    provider_trace_id   VARCHAR(64),
+    version             INTEGER        NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pffa_biz_type   CHECK (biz_type   IN ('TASK','INSTANCE','COMMENT')),
+    CONSTRAINT ck_pffa_store_type CHECK (storage_type IN ('OSS','MINIO','LOCAL')),
+    CONSTRAINT ck_pffa_deleted    CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_flow_attachment IS 'P1-6: 工作流审批附件表 — 审批时提交的图片/文档/视频等附件统一落库';
+COMMENT ON COLUMN pmis_flow_attachment.instance_id IS '关联流程实例 ID';
+COMMENT ON COLUMN pmis_flow_attachment.task_id IS '关联任务 ID（实例级附件可为空）';
+COMMENT ON COLUMN pmis_flow_attachment.biz_type IS '附件业务类型: TASK=任务附件 / INSTANCE=实例附件 / COMMENT=意见附件';
+COMMENT ON COLUMN pmis_flow_attachment.storage_key IS '存储对象的 key（OSS/COS/MinIO 对象 key 或本地相对路径）';
+COMMENT ON COLUMN pmis_flow_attachment.download_url IS '临时下载地址（前端可直接展示，可能过期）';
+
+CREATE INDEX IF NOT EXISTS idx_pffa_instance
+    ON pmis_flow_attachment (instance_id, deleted) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pffa_task
+    ON pmis_flow_attachment (task_id, deleted) WHERE task_id IS NOT NULL AND deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pffa_trace
+    ON pmis_flow_attachment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
+
+-- ====================================================================
+-- ============================ [069] P2-1 委派沟通记录表 ============================
+-- ====================================================================
+-- GAP-08: 委派沟通记录保留（对标钉钉/飞书委托沟通）
+-- 委托人与被委托人之间可在被委托任务上留言沟通，沟通记录持久化留存
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS pmis_flow_delegate_message (
+    id                  VARCHAR(20)       PRIMARY KEY,
+    tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
+    task_id             VARCHAR(20)       NOT NULL,               -- 关联被委托任务
+    instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
+    node_code           VARCHAR(64),                             -- 关联节点编码
+    sender_id           VARCHAR(20)       NOT NULL,              -- 发送人 ID
+    sender_name         VARCHAR(64),                             -- 发送人姓名
+    sender_role         VARCHAR(16)     NOT NULL DEFAULT 'OWNER', -- OWNER=委托人 / DELEGATE=被委托人
+    content             TEXT            NOT NULL,                -- 沟通内容
+    attachment_key      VARCHAR(512),                           -- 可选附件存储 key
+    read_flag           SMALLINT        NOT NULL DEFAULT 0,     -- 0=未读 1=已读
+    deleted             SMALLINT        NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    provider_trace_id   VARCHAR(64),
+    CONSTRAINT ck_pfdm_sender_role CHECK (sender_role IN ('OWNER','DELEGATE')),
+    CONSTRAINT ck_pfdm_read_flag    CHECK (read_flag IN (0, 1)),
+    CONSTRAINT ck_pfdm_deleted      CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_flow_delegate_message IS 'P2-1: 委派沟通记录表 — 委托人与被委托人之间的留言沟通，持久化留存';
+COMMENT ON COLUMN pmis_flow_delegate_message.task_id IS '关联被委托任务 ID';
+COMMENT ON COLUMN pmis_flow_delegate_message.sender_role IS '发送人角色: OWNER=委托人 / DELEGATE=被委托人';
+COMMENT ON COLUMN pmis_flow_delegate_message.read_flag IS '是否已读: 0=未读 1=已读';
+
+CREATE INDEX IF NOT EXISTS idx_pfdm_task
+    ON pmis_flow_delegate_message (task_id, deleted) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfdm_instance
+    ON pmis_flow_delegate_message (instance_id, deleted) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfdm_trace
+    ON pmis_flow_delegate_message (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT

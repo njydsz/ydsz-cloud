@@ -21,6 +21,11 @@ import java.util.Set;
  * <ul>
  *   <li>{@code undo_log} — Seata AT 模式回滚日志表（无 tenant_id 列）</li>
  *   <li>{@code pmis_database_change_log*} — Liquibase 历史表（兼容预留）</li>
+ *   <li>{@code pmis_job_log} — 任务执行日志（系统全局资源，按设计不携带 tenant_id，
+ *       通过 job_id 关联 pmis_job 间接获得租户归属）</li>
+ *   <li>{@code pmis_job_node} — 调度节点心跳表（系统级资源，跨租户共享调度集群）</li>
+ *   <li>{@code pmis_job_relation} — 任务依赖关系表（通过 parent_job_id/child_job_id
+ *       关联 pmis_job，租户隔离通过 pmis_job.tenant_id 间接保证）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -28,11 +33,21 @@ import java.util.Set;
  */
 public class PmisTenantLineHandler implements TenantLineHandler {
 
-    /** 忽略多租户隔离的表名（小写匹配） */
+    /**
+     * 忽略多租户隔离的表名（小写匹配）。
+     *
+     * <p>这些表按设计不携带 tenant_id 列，属于系统全局资源或通过外键间接关联租户。
+     * 若不忽略，TenantLineInnerInterceptor 会追加 {@code WHERE tenant_id = ?} 导致
+     * {@code column "tenant_id" does not exist} 运行时错误。
+     */
     private static final Set<String> IGNORE_TABLES = Set.of(
             "undo_log",
             "pmis_database_change_log",
-            "pmis_database_change_log_lock"
+            "pmis_database_change_log_lock",
+            // P7-1: cronjob 系统级表（无 tenant_id 列，按设计为全局资源）
+            "pmis_job_log",
+            "pmis_job_node",
+            "pmis_job_relation"
     );
 
     @Override

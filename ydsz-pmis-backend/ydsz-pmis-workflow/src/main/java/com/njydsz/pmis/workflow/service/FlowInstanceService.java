@@ -185,4 +185,26 @@ public interface FlowInstanceService {
      * @param dueAt      超时时间（传 null 清除超时标记）
      */
     void setDueAt(String instanceId, LocalDateTime dueAt);
+
+    /**
+     * P2-2 (GAP-10): 驳回后快速重审
+     *
+     * <p>实例处于 REJECTED 终态时，发起人可基于原实例直接重新提交（而非全新发起），
+     * 引擎保留原有审批轨迹与流程变量，将实例状态恢复为 RUNNING 并从开始节点重新推进。
+     *
+     * <p>校验规则：
+     * <ul>
+     *   <li>仅 REJECTED 状态可重审（RUNNING/COMPLETED/TERMINATED/ROLLED_BACK 不可重审）；</li>
+     *   <li>仅发起人可重审；</li>
+     *   <li>重审时传入的新变量会合并覆盖（保留未覆盖的历史变量）。</li>
+     * </ul>
+     *
+     * @param instanceId 被驳回的实例 ID
+     * @param initiatorId 发起人 ID（校验一致性）
+     * @param variables  重审时新增/覆盖的变量（可空）
+     * @param comment    重审说明（可选）
+     * @return 实例 ID
+     */
+    String resubmit(String instanceId, String initiatorId,
+                    Map<String, Object> variables, String comment);
 }

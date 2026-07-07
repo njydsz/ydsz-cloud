@@ -63,4 +63,40 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
                     @Param("endTime") LocalDateTime endTime,
                     @Param("durationMs") long durationMs,
                     @Param("errorMessage") String errorMessage);
+
+    /**
+     * 查询慢任务执行日志（P6-3）。
+     *
+     * <p>筛选条件：
+     * <ul>
+     *   <li>{@code log.status IN ('SUCCESS','FAILED','TIMEOUT')}（已结束的执行）</li>
+     *   <li>{@code log.duration_ms IS NOT NULL}（耗时已记录）</li>
+     *   <li>{@code log.duration_ms > job.slow_threshold_ms}（超过慢任务阈值）</li>
+     *   <li>{@code job.slow_threshold_ms IS NOT NULL AND > 0}（任务启用了慢任务检测）</li>
+     *   <li>{@code log.created_at >= since}（仅扫描时间窗口内的日志，避免全表扫描）</li>
+     *   <li>LEFT JOIN pmis_job_slow_log 过滤已记录的 log_id（保证幂等）</li>
+     * </ul>
+     *
+     * @param since 时间窗口起点（仅扫描此时间之后的日志）
+     * @param limit 单批最多扫描条数
+     * @return 待记录的慢任务日志列表（含 jobId / jobKey 冗余字段，不含 tenantId）
+     */
+    @Select("SELECT l.id, l.job_id, l.job_key, l.start_time, l.end_time, l.duration_ms, "
+            + "       l.status, l.error_message, l.params_json, l.result_json, l.trace_id, "
+            + "       l.trigger_type, l.created_at, l.deleted "
+            + "FROM pmis_job_log l "
+            + "INNER JOIN pmis_job j ON j.id = l.job_id AND j.deleted = 0 "
+            + "LEFT JOIN pmis_job_slow_log s ON s.log_id = l.id AND s.deleted = 0 "
+            + "WHERE l.status IN ('SUCCESS','FAILED','TIMEOUT') "
+            + "  AND l.deleted = 0 "
+            + "  AND l.duration_ms IS NOT NULL "
+            + "  AND j.slow_threshold_ms IS NOT NULL "
+            + "  AND j.slow_threshold_ms > 0 "
+            + "  AND l.duration_ms > j.slow_threshold_ms "
+            + "  AND l.created_at >= #{since} "
+            + "  AND s.id IS NULL "
+            + "ORDER BY l.duration_ms DESC "
+            + "LIMIT #{limit}")
+    List<JobLogDO> selectSlowLogs(@Param("since") LocalDateTime since,
+                                    @Param("limit") int limit);
 }

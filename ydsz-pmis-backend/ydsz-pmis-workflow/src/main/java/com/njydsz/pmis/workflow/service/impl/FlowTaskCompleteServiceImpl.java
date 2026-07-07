@@ -117,6 +117,8 @@ public class FlowTaskCompleteServiceImpl {
      */
     @Lazy
     private final FlowEventSubscriptionService eventSubscriptionService;
+    /** P1-6: 审批附件服务（任务通过/驳回时保存附件） */
+    private final FlowAttachmentService attachmentService;
 
     // ============================== 创建任务 ==============================
 
@@ -839,6 +841,11 @@ public class FlowTaskCompleteServiceImpl {
                     dto.getComment(), LocalDateTime.now());
         }
 
+        // P1-6: 保存审批附件
+        attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
+                "TASK", dto.getUserId(), dto.getUserName(), dto.getAttachments(),
+                task.getTenantId(), task.getProviderTraceId());
+
         switch (performType) {
             case OR -> doPassAndAdvance(task, instance, mergedVars, dto);
             case PARALLEL -> doParallelPass(task, instance, mergedVars, dto);
@@ -881,6 +888,11 @@ public class FlowTaskCompleteServiceImpl {
         taskMapper.completeTask(task.getId(), FlowTaskStatus.REJECTED.name(),
                 dto.getComment(), now, durationMs);
         archiveTask(task, FlowTaskStatus.REJECTED);
+
+        // P1-6: 保存驳回附件
+        attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
+                "TASK", dto.getUserId(), dto.getUserName(), dto.getAttachments(),
+                task.getTenantId(), task.getProviderTraceId());
 
         FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
         Map<String, Object> mergedVars = mergeVariables(instance, dto.getVariables());

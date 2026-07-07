@@ -4,14 +4,18 @@ import com.njydsz.pmis.workflow.service.FlowJoinTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * GAP-P2: 并行网关 join 令牌服务实现（Redis）
  *
- * <p>使用 Redis 原子 INCR 维护 join 节点的已到达分支计数，
+ * <p>使用 Redis 原子 Lua 脚本维护 join 节点的已到达分支计数，
  * 配合独立的分支总数 key 实现精确聚合判断。
  *
  * <p>Key 设计：
@@ -20,6 +24,13 @@ import java.time.Duration;
  *   <li>分支总数：{@code flow:join:{instanceId}:{joinNodeCode}:total} —— 初始化时写入</li>
  * </ul>
  * 两个 key 均设置 7 天 TTL，防止异常流程导致计数器永久残留。
+ *
+ * <p>P1-7（GAP-47）原子化改造：
+ * <ul>
+ *   <li>{@code arriveToken} 的 INCR + 比较 total + 补设 TTL 改为单条 Lua 脚本原子执行，
+ *     避免原实现中 INCR 与 readTotal 分两步导致的并发竞态（多分支同时到达时可能重复聚合）</li>
+ *   <li>{@code initTokens} 的 total + arrived 写入改为单条 Lua 脚本原子执行并带 TTL</li>
+ * </ul>
  *
  * <p>容错策略：所有方法对 Redis 异常做降级处理。
  * <ul>
@@ -41,8 +52,46 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     private static final String TOTAL_SUFFIX = ":total";
     /** 默认 TTL：7 天 */
     private static final Duration TTL = Duration.ofDays(7);
+    /** 默认 TTL 秒数（Lua 脚本用） */
+    private static final long TTL_SECONDS = TTL.getSeconds();
 
     private final StringRedisTemplate redisTemplate;
+
+    /**
+     * P1-7: 初始化脚本 —— 原子写入 total + arrived 并带 TTL。
+     * KEYS[1]=arrivedKey, KEYS[2]=totalKey, ARGV[1]=total, ARGV[2]=ttlSeconds
+     * <pre>
+     *   redis.call('SET', KEYS[1], '0', 'EX', ARGV[2])
+     *   redis.call('SET', KEYS[2], ARGV[1], 'EX', ARGV[2])
+     *   return 1
+     * </pre>
+     */
+    private static final RedisScript<Long> INIT_SCRIPT = new DefaultRedisScript<>(
+            "redis.call('SET', KEYS[1], '0', 'EX', ARGV[2])\n"
+          + "redis.call('SET', KEYS[2], ARGV[1], 'EX', ARGV[2])\n"
+          + "return 1", Long.class);
+
+    /**
+     * P1-7: 到达脚本 —— 原子 INCR arrived + 比较 total + 补设 TTL，返回是否全部到达。
+     * KEYS[1]=arrivedKey, KEYS[2]=totalKey, ARGV[1]=ttlSeconds
+     * <pre>
+     *   local arrived = redis.call('INCR', KEYS[1])
+     *   redis.call('EXPIRE', KEYS[1], ARGV[1])
+     *   local total = tonumber(redis.call('GET', KEYS[2]))
+     *   if total and arrived >= total then
+     *     return 1
+     *   end
+     *   return 0
+     * </pre>
+     */
+    private static final RedisScript<Long> ARRIVE_SCRIPT = new DefaultRedisScript<>(
+            "local arrived = redis.call('INCR', KEYS[1])\n"
+          + "redis.call('EXPIRE', KEYS[1], ARGV[1])\n"
+          + "local total = tonumber(redis.call('GET', KEYS[2]))\n"
+          + "if total and arrived >= total then\n"
+          + "  return 1\n"
+          + "end\n"
+          + "return 0", Long.class);
 
     // ============================== 接口实现 ==============================
 
@@ -62,8 +111,10 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         String totalKey = buildTotalKey(instanceId, joinNodeCode);
         String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
         try {
-            redisTemplate.opsForValue().set(totalKey, String.valueOf(total), TTL);
-            redisTemplate.opsForValue().set(arrivedKey, "0", TTL);
+            // P1-7: 原子写入 total + arrived 并带 TTL（单条 Lua 脚本）
+            redisTemplate.execute(INIT_SCRIPT,
+                    List.of(arrivedKey, totalKey),
+                    String.valueOf(total), String.valueOf(TTL_SECONDS));
             log.info("[FlowJoinToken] 初始化 join 令牌 instanceId={} node={} branchCount={}",
                     instanceId, joinNodeCode, total);
         } catch (Exception e) {
@@ -84,18 +135,15 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         if (!isValidParam(instanceId, joinNodeCode)) {
             return false;
         }
+        String totalKey = buildTotalKey(instanceId, joinNodeCode);
         String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
         try {
-            Long arrived = redisTemplate.opsForValue().increment(arrivedKey);
-            // 新建 key 时 INCR 不会带 TTL，防御性补设
-            Long ttl = redisTemplate.getExpire(arrivedKey);
-            if (ttl == null || ttl < 0) {
-                redisTemplate.expire(arrivedKey, TTL);
-            }
-            int total = readTotal(instanceId, joinNodeCode);
-            boolean allArrived = arrived != null && arrived >= total;
-            log.debug("[FlowJoinToken] 分支到达 instanceId={} node={} arrived={}/{} allArrived={}",
-                    instanceId, joinNodeCode, arrived, total, allArrived);
+            // P1-7: 原子 INCR + 比较 total + 补设 TTL（单条 Lua 脚本，消除并发竞态）
+            Long result = redisTemplate.execute(ARRIVE_SCRIPT,
+                    List.of(arrivedKey, totalKey), String.valueOf(TTL_SECONDS));
+            boolean allArrived = result != null && result == 1L;
+            log.debug("[FlowJoinToken] 分支到达 instanceId={} node={} allArrived={}",
+                    instanceId, joinNodeCode, allArrived);
             return allArrived;
         } catch (Exception e) {
             log.warn("[FlowJoinToken] 标记到达失败 instanceId={} node={} err={}",
