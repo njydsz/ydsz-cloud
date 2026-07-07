@@ -1,0 +1,63 @@
+# LiteRule 规则引擎告警规则（P1-6）
+# 部署：放到 Prometheus rules 目录或通过 prometheus.yml rule_files 加载
+
+groups:
+  - name: literule-alerts
+    rules:
+      # 规则错误率 > 10%（5分钟窗口）
+      - alert: LiteRuleHighErrorRate
+        expr: |
+          sum(rate(literule_rule_errors_total[5m])) by (rule_code)
+          / sum(rate(literule_rule_evaluations_total[5m])) by (rule_code)
+          > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "规则 {{ $labels.rule_code }} 错误率过高"
+          description: "规则 {{ $labels.rule_code }} 的评估错误率超过 10%，当前为 {{ $value | humanizePercentage }}，请检查表达式或数据源。"
+
+      # 规则触发率 > 80%（可能误报风暴，5分钟窗口）
+      - alert: LiteRuleHighTriggerRate
+        expr: |
+          sum(rate(literule_rule_triggered_total[5m])) by (rule_code)
+          / sum(rate(literule_rule_evaluations_total[5m])) by (rule_code)
+          > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "规则 {{ $labels.rule_code }} 触发率过高（疑似误报）"
+          description: "规则 {{ $labels.rule_code }} 的触发率超过 80%，持续 10 分钟，可能引发告警风暴，请确认阈值是否合理。"
+
+      # 规则评估 P99 > 500ms
+      - alert: LiteRuleSlowEvaluation
+        expr: |
+          histogram_quantile(0.99, sum(rate(literule_rule_eval_duration_seconds_bucket[5m])) by (le, rule_code))
+          > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "规则 {{ $labels.rule_code }} 评估耗时过高"
+          description: "规则 {{ $labels.rule_code }} 的 P99 评估耗时超过 500ms，可能影响实时性，建议优化表达式或拆分规则。"
+
+      # Trace 队列积压 > 1000
+      - alert: LiteRuleTraceBacklog
+        expr: literule_trace_queue_size > 1000
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "规则引擎 Trace 队列积压"
+          description: "Trace 队列积压 {{ $value }} 条，持续 5 分钟，可能丢失执行链路数据，请检查消费者或扩容。"
+
+      # 有规则处于熔断状态
+      - alert: LiteRuleCircuitBreakerOpen
+        expr: literule_breaker_state{state="OPEN"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "规则 {{ $labels.rule_code }} 已熔断"
+          description: "规则 {{ $labels.rule_code }} 处于熔断状态，评估被跳过，请排查规则异常原因。"

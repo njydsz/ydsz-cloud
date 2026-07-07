@@ -245,4 +245,44 @@ public class ExpressionValidationService {
     public VariableRegistry getVariableRegistry() {
         return variableRegistry;
     }
+
+    /**
+     * 表达式求值预览（P2-8）
+     *
+     * <p>给定表达式与样例事实数据，返回求值结果，供前端表达式编辑器实时预览。
+     * 语法错误或求值异常时返回结构化的错误信息，不抛异常。
+     *
+     * @param expression 表达式
+     * @param facts      样例事实数据
+     * @return 求值结果（含 value / type / error）
+     * @since 1.5.1
+     */
+    public ExpressionPreviewResult previewEvaluate(String expression, Map<String, Object> facts) {
+        long start = System.nanoTime();
+        ExpressionPreviewResult result = new ExpressionPreviewResult();
+        result.setExpression(expression);
+        if (expression == null || expression.isBlank()) {
+            result.setError("表达式为空");
+            return result;
+        }
+        // 先校验语法
+        ExpressionValidationResult validation = evaluator.validateDetailed(expression);
+        if (!validation.isValid()) {
+            result.setError("语法错误: " + validation.getErrorMessage());
+            return result;
+        }
+        // 求值
+        try {
+            com.njydsz.pmis.literule.api.RuleContext ctx =
+                    com.njydsz.pmis.literule.api.RuleContext.of(facts != null ? facts : Map.of());
+            Object value = evaluator.eval(expression, ctx);
+            result.setValue(value == null ? "null" : String.valueOf(value));
+            result.setJavaType(value == null ? "null" : value.getClass().getSimpleName());
+            result.setBoolean(value instanceof Boolean b ? b : null);
+        } catch (Exception e) {
+            result.setError("求值失败: " + e.getMessage());
+        }
+        result.setElapsedMs((System.nanoTime() - start) / 1_000_000L);
+        return result;
+    }
 }

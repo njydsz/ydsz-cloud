@@ -32,6 +32,7 @@
       </el-button-group>
 
       <el-button type="primary" :icon="Check" :loading="saving" @click="saveGraph">保存</el-button>
+      <el-button type="success" :icon="VideoPlay" :loading="runLoading" @click="openRunDialog">运行仿真</el-button>
       <el-button :icon="Close" @click="goBack">返回</el-button>
     </div>
 
@@ -166,9 +167,57 @@
       </ul>
     </div>
 
+    <!-- 运行仿真对话框（P0-1 执行闭环） -->
+    <el-dialog v-model="runDialogVisible" title="画布 Dry-run 仿真" width="860px" :close-on-click-modal="false">
+      <el-alert
+        :title="`当前画布关联规则: ${graph.ruleCode || route.params.ruleCode}`"
+        type="info"
+        :closable="false"
+        show-icon
+        class="mb-3"
+      />
+      <el-form label-width="100px">
+        <el-form-item label="事实数据">
+          <el-input
+            v-model="runFactsText"
+            type="textarea"
+            :rows="10"
+            placeholder='{"budgetUsedRatio":0.95,"spi":0.85}'
+            class="json-input"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :loading="runLoading" @click="handleRun">
+            <el-icon><VideoPlay /></el-icon>执行仿真
+          </el-button>
+        </el-form-item>
+      </el-form>
+      <el-divider content-position="left">仿真结果</el-divider>
+      <el-table :data="runResults" border stripe size="small" empty-text="暂无仿真结果">
+        <el-table-column prop="ruleCode" label="规则编码" width="160" show-overflow-tooltip />
+        <el-table-column prop="ruleName" label="规则名称" min-width="160" show-overflow-tooltip />
+        <el-table-column label="是否触发" width="90" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.triggered ? 'danger' : 'info'" size="small">
+              {{ row.triggered ? '触发' : '未触发' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="严重度" width="90">
+          <template #default="{ row }">
+            <el-tag :type="severityOf(row.severity)" size="small">{{ row.severity || '-' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="elapsedMs" label="耗时(ms)" width="100" />
+      </el-table>
+      <template #footer>
+        <el-button @click="runDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 节点配置对话框 -->
-    <el-dialog v-model="editDialogVisible" :title="editingNode ? '编辑节点' : '添加节点'" width="540px">
-      <el-form v-if="editingNode" :model="editingNode" label-width="100px">
+    <el-dialog v-model="editDialogVisible" :title="editingNode ? '编辑节点' : '添加节点'" width="540px">      <el-form v-if="editingNode" :model="editingNode" label-width="100px">
         <el-form-item label="节点类型">
           <el-tag>{{ typeBadge(editingNode) }}</el-tag>
         </el-form-item>
@@ -235,14 +284,14 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus, Refresh, RefreshRight, Check, Close, Warning,
-  Back, ZoomIn, ZoomOut,
+  Back, ZoomIn, ZoomOut, VideoPlay,
 } from '@element-plus/icons-vue'
 import * as dagre from 'dagre'
 import {
-  getChainGraph, saveChainGraph, validateChainGraph, listRules,
+  getChainGraph, saveChainGraph, validateChainGraph, listRules, dryRunGraph,
 } from '@/api/execution/rule-engine'
 import type {
-  ChainNodeDTO, ChainEdgeDTO, RuleChainGraph, RuleChainGraphViewIssue,
+  ChainNodeDTO, ChainEdgeDTO, RuleChainGraph, RuleChainGraphViewIssue, RuleResult,
 } from '@/api/execution/rule-engine'
 
 defineOptions({ name: 'RuleChainDesigner' })
@@ -299,6 +348,52 @@ const canUndo = computed(() => historyIndex.value > 0)
 const canRedo = computed(() => historyIndex.value < history.value.length - 1)
 
 const canvasRef = ref<HTMLDivElement>()
+
+// 严重度标签类型映射（用于仿真结果展示）
+function severityOf(severity?: string): 'danger' | 'warning' | 'info' | 'success' {
+  if (!severity) return 'info'
+  if (severity === 'RED') return 'danger'
+  if (severity === 'YELLOW') return 'warning'
+  return 'info'
+}
+
+// ==================== 运行仿真（P0-1 执行闭环） ====================
+const runDialogVisible = ref(false)
+const runLoading = ref(false)
+const runFactsText = ref('{\n  "budgetUsedRatio": 0.95,\n  "spi": 0.85\n}')
+const runResults = ref<RuleResult[]>([])
+
+function openRunDialog() {
+  runResults.value = []
+  runFactsText.value = '{\n  "budgetUsedRatio": 0.95,\n  "spi": 0.85\n}'
+  runDialogVisible.value = true
+}
+
+async function handleRun() {
+  let facts: Record<string, unknown>
+  try {
+    facts = JSON.parse(runFactsText.value)
+  } catch {
+    ElMessage.error('事实数据 JSON 格式不正确')
+    return
+  }
+  const ruleCode = route.params.ruleCode as string
+  runLoading.value = true
+  try {
+    const res = await dryRunGraph(ruleCode, facts)
+    if (res.code === 0) {
+      runResults.value = res.data || []
+      const triggered = runResults.value.filter(r => r.triggered).length
+      ElMessage.success(`仿真完成，共触发 ${triggered} 条规则`)
+    } else {
+      ElMessage.error(res.message || '仿真失败')
+    }
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '仿真异常')
+  } finally {
+    runLoading.value = false
+  }
+}
 
 // ==================== 历史记录 ====================
 function snapshot() {

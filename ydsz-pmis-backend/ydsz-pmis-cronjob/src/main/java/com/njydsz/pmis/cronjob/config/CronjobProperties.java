@@ -16,6 +16,9 @@ import java.time.Duration;
  *   <li>{@link #getJobLockTtl()} 分布式锁默认 TTL（任务级未配置时使用）</li>
  *   <li>{@link #getJobLockTtlMin()} 任务级 TTL 下限（防止误配置为过短导致并发执行）</li>
  *   <li>{@link #getJobLockTtlMax()} 任务级 TTL 上限（防止误配置为过长导致锁不释放）</li>
+ *   <li>{@link #getLeader()} Leader 选举配置（P1 阶段新增）</li>
+ *   <li>{@link #getScanner()} 任务扫描器配置（P1 阶段新增）</li>
+ *   <li>{@link #getExecutor()} 执行器配置（P1 阶段新增）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -41,6 +44,15 @@ public class CronjobProperties {
     /** 调度器优雅关闭等待时间（秒） */
     private int schedulerAwaitTerminationSeconds = 30;
 
+    /** Leader 选举配置（P1 阶段新增） */
+    private Leader leader = new Leader();
+
+    /** 任务扫描器配置（P1 阶段新增） */
+    private Scanner scanner = new Scanner();
+
+    /** 执行器配置（P1 阶段新增） */
+    private Executor executor = new Executor();
+
     /**
      * 校验并规整化 TTL 值。
      *
@@ -61,4 +73,62 @@ public class CronjobProperties {
         }
         return ttl;
     }
+
+    /**
+     * Leader 选举配置。
+     */
+    @Data
+    public static class Leader {
+        /** 是否启用 Leader 选举模式（false=回退旧的 Leaderless 模式） */
+        private boolean enabled = false;
+
+        /** 角色（多套调度集群隔离时使用） */
+        private String role = "pmis-job-scheduler";
+
+        /** 租约时长（秒，到期后自动释放，需在到期前续期） */
+        private long leaseSeconds = 30;
+
+        /** 续期间隔（秒，默认 10s 续期一次） */
+        private long renewIntervalSeconds = 10;
+    }
+
+    /**
+     * 任务扫描器配置。
+     */
+    @Data
+    public static class Scanner {
+        /** 扫描间隔（毫秒，默认 5s） */
+        private long intervalMs = 5000;
+
+        /** 单批最多触发任务数 */
+        private int batchSize = 100;
+
+        /** Misfire 宽容窗口（分钟，超过此窗口的任务按 misfire_policy 处理） */
+        private int misfireGraceMinutes = 30;
+    }
+
+    /**
+     * 执行器配置。
+     */
+    @Data
+    public static class Executor {
+        /** 启动时注册到 pmis_job_node 表 */
+        private boolean registerOnStartup = true;
+
+        /** 心跳上报间隔（秒，默认 10s） */
+        private long heartbeatIntervalSeconds = 10;
+
+        /** 节点离线判定阈值（秒，超过此时间无心跳视为离线） */
+        private long offlineThresholdSeconds = 30;
+
+        /** 优雅下线时排空在执行任务 */
+        private boolean drainOnShutdown = true;
+
+        /** 排空超时时间（秒） */
+        private long drainTimeoutSeconds = 60;
+
+        /** 单节点最大并发任务数 */
+        private int maxConcurrent = 16;
+    }
 }
+

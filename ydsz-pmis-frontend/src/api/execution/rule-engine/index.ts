@@ -250,6 +250,33 @@ export const validateExpression = (expression: string) =>
     params: { expression },
   })
 
+/**
+ * 表达式求值预览结果
+ */
+export interface ExpressionPreviewResult {
+  expression: string
+  value: string
+  javaType: string
+  boolean?: boolean | null
+  elapsedMs: number
+  error?: string
+  isSuccess: boolean
+}
+
+/**
+ * 表达式求值预览（P2-8）
+ * @param expression 表达式
+ * @param facts 样例事实数据
+ * @returns 求值结果
+ */
+export const previewExpression = (expression: string, facts: Record<string, unknown>) =>
+  request<ExpressionPreviewResult>({
+    url: '/execution/rules/expression-preview',
+    method: 'POST',
+    params: { expression },
+    data: facts,
+  })
+
 // ==================== 执行统计 ====================
 
 /**
@@ -776,6 +803,30 @@ export const deleteChainGraph = (ruleCode: string) =>
   request<void>({
     url: `/execution/rules/${ruleCode}/graph`,
     method: 'DELETE',
+  })
+
+/**
+ * 画布 Dry-run 仿真（P0-1 执行闭环）
+ * @param ruleCode 规则编码
+ * @param facts 事实数据
+ * @returns 已触发的规则结果列表
+ */
+export const dryRunGraph = (ruleCode: string, facts: Record<string, unknown>) =>
+  request<RuleResult[]>({
+    url: `/execution/rules/${ruleCode}/graph/dry-run`,
+    method: 'POST',
+    data: facts,
+  })
+
+/**
+ * 检查画布中失效的规则引用
+ * @param ruleCode 规则编码
+ * @returns 失效规则编码列表
+ */
+export const invalidGraphRefs = (ruleCode: string) =>
+  request<string[]>({
+    url: `/execution/rules/${ruleCode}/graph/invalid-refs`,
+    method: 'GET',
   })
 
 // ==================== 函数市场（P1-7） ====================

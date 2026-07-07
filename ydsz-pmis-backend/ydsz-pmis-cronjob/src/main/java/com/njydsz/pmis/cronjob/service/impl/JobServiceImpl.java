@@ -8,6 +8,8 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.core.dispatch.TaskDispatcher;
+import com.njydsz.pmis.cronjob.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.common.job.JobHandler;
@@ -18,6 +20,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
@@ -44,6 +47,17 @@ import java.util.concurrent.ScheduledFuture;
 /**
  * 任务调度服务实现
  *
+ * <p>P1-7 重构：支持 Leader 模式与 Leaderless 模式双轨运行。
+ * <ul>
+ *   <li>{@code pmis.cronjob.leader.enabled=false}（默认）：每节点独立 TaskScheduler 注册 CronTrigger，
+ *       通过 Redis SET NX EX 锁防止重复执行（P0 行为保持不变）</li>
+ *   <li>{@code pmis.cronjob.leader.enabled=true}：仅 Leader 节点扫描 pmis_job 并派发任务，
+ *       Follower 节点只注册心跳、不注册 CronTrigger，避免重复扫描</li>
+ * </ul>
+ *
+ * <p>手动触发（{@link #trigger(String, boolean)}）始终走 {@link TaskDispatcher}（如果可用），
+ * 否则回退到内部 {@link #executeJob(JobDO, boolean)} 旧路径。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -62,6 +76,15 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     private final StringRedisTemplate redisTemplate;
     /** 调度配置属性（P0-4: 锁 TTL 等可配置项） */
     private final CronjobProperties cronjobProperties;
+
+    /**
+     * 任务派发器（P1-7 可选注入）。
+     *
+     * <p>Leader 模式启用时由 {@link DefaultTaskDispatcher} 提供；
+     * Leaderless 模式下若未注册 Dispatcher 则回退到内部 {@link #executeJob(JobDO, boolean)} 旧路径。
+     */
+    @org.springframework.beans.factory.annotation.Autowired
+    private ObjectProvider<TaskDispatcher> taskDispatcherProvider;
 
     /** 调度器 */
     private TaskScheduler taskScheduler;
@@ -141,12 +164,23 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     }
 
     /**
-     * 应用启动回调，加载所有 NORMAL 任务到调度器
+     * 应用启动回调。
+     *
+     * <p>P1-7 双轨：
+     * <ul>
+     *   <li>Leaderless 模式：调用 {@link #loadOnStartup()} 加载所有 NORMAL 任务到 TaskScheduler</li>
+     *   <li>Leader 模式：跳过本地注册（由 {@link com.njydsz.pmis.cronjob.core.dispatch.JobScanner} 接管扫描）</li>
+     * </ul>
      *
      * @param args 启动参数
      */
     @Override
     public void run(ApplicationArguments args) {
+        if (cronjobProperties.getLeader().isEnabled()) {
+            log.info("[Cronjob] Leader 模式启用, 跳过本地 CronTrigger 注册（由 JobScanner 接管）: role={}",
+                    cronjobProperties.getLeader().getRole());
+            return;
+        }
         try {
             loadOnStartup();
         } catch (Exception e) {
@@ -315,6 +349,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 立即执行一次（可选是否抢占分布式锁）。
      *
      * <p>P0-5: 修复手动触发绕过锁的问题。
+     * P1-7: Leader 模式下优先走 {@link TaskDispatcher}（若可用），否则回退到内部 executeJob 旧路径。
      *
      * @param id       任务 ID
      * @param holdLock 是否抢占分布式锁
@@ -324,11 +359,29 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     @Override
     public String trigger(String id, boolean holdLock) {
         JobDO j = getById(id);
+        TaskDispatcher dispatcher = taskDispatcherProvider != null
+                ? taskDispatcherProvider.getIfAvailable() : null;
+        if (dispatcher != null) {
+            // P1-7: 走 Dispatcher 派发路径
+            // holdLock=true → triggerType=CRON（Dispatcher 内部会抢锁）
+            // holdLock=false → triggerType=MANUAL（Dispatcher 内部不抢锁）
+            String triggerType = holdLock
+                    ? DefaultTaskDispatcher.TRIGGER_CRON
+                    : DefaultTaskDispatcher.TRIGGER_MANUAL;
+            return dispatcher.dispatch(j, null, triggerType);
+        }
+        // Leaderless 回退路径（保留 P0 行为）
         return executeJob(j, !holdLock);
     }
 
     /**
-     * 注册到调度器（从 DB 加载/动态新增）
+     * 注册到调度器（从 DB 加载/动态新增）。
+     *
+     * <p>P1-7 双轨：
+     * <ul>
+     *   <li>Leaderless 模式：注册到本地 TaskScheduler（保留 P0 行为）</li>
+     *   <li>Leader 模式：仅更新 next_fire_time，由 JobScanner 扫描后统一派发</li>
+     * </ul>
      *
      * @param job 任务定义
      * @return 注册成功返回 true，否则返回 false
@@ -341,6 +394,16 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (!StringUtils.hasText(job.getCronExpression())) {
             log.warn("[Cronjob] 注册失败: 任务 {} cron 表达式为空", job.getJobKey());
             return false;
+        }
+        // P1-7: Leader 模式下跳过本地 CronTrigger 注册，仅确保 next_fire_time 已计算
+        if (cronjobProperties.getLeader().isEnabled()) {
+            if (job.getNextFireTime() == null) {
+                job.setNextFireTime(nextFireTime(job.getCronExpression()));
+                jobMapper.updateById(job);
+            }
+            log.debug("[Cronjob] Leader 模式跳过本地注册: key={}（由 JobScanner 扫描派发）",
+                    job.getJobKey());
+            return true;
         }
         if (scheduledMap.containsKey(job.getJobKey())) {
             unregister(job.getJobKey());

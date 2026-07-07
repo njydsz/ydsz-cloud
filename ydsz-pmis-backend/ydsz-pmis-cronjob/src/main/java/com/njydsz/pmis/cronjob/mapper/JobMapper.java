@@ -35,6 +35,37 @@ public interface JobMapper extends BaseMapper<JobDO> {
     List<JobDO> selectAllNormal();
 
     /**
+     * 扫描已到触发时间的 NORMAL 任务（P1-7 Leader 模式专用）。
+     *
+     * <p>使用 {@code SELECT ... FOR UPDATE SKIP LOCKED} 抢占式行锁，
+     * 多个 Leader 候选节点并发扫描时互不阻塞，每个节点拿到不同的任务集合。
+     * 调用方必须在事务中调用，并立即更新 {@code next_fire_time} 以释放行锁语义。
+     *
+     * @param now    当前时间（用于判断 next_fire_time &lt;= now）
+     * @param limit  单批最多扫描任务数
+     * @return 待触发任务列表（已按 next_fire_time 升序排序）
+     */
+    List<JobDO> selectDueJobs(@Param("now") LocalDateTime now,
+                              @Param("limit") int limit);
+
+    /**
+     * 原子推进 next_fire_time（P1-7 Leader 模式专用）。
+     *
+     * <p>Leader 扫描到任务后立即推进 next_fire_time，避免重复派发。
+     * 仅当 next_fire_time 未被其他节点推进时才更新成功（CAS 语义）。
+     *
+     * @param id             任务 ID
+     * @param oldNextFireTime 旧的 next_fire_time（CAS 条件）
+     * @param newNextFireTime 新的 next_fire_time
+     * @param lastFireTime   本次触发时间
+     * @return 受影响行数（1=推进成功；0=已被其他节点推进）
+     */
+    int advanceNextFireTime(@Param("id") String id,
+                            @Param("oldNextFireTime") LocalDateTime oldNextFireTime,
+                            @Param("newNextFireTime") LocalDateTime newNextFireTime,
+                            @Param("lastFireTime") LocalDateTime lastFireTime);
+
+    /**
      * 更新任务统计字段
      *
      * @param id           任务 ID

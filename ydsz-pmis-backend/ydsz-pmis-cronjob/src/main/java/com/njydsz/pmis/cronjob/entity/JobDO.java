@@ -80,6 +80,14 @@ public class JobDO extends BaseDO {
     /** 任务超时时间（毫秒，null 表示不限超时） */
     private Long timeoutMs;
 
+    /**
+     * Misfire 策略（P2-1）：FIRE_NOW / SKIP / COALESCE。
+     *
+     * <p>当 next_fire_time 早于 NOW() - misfireGraceMinutes 时按本策略处理。
+     * null 视为 {@link com.njydsz.pmis.cronjob.core.dispatch.MisfirePolicy#FIRE_NOW}。
+     */
+    private String misfirePolicy;
+
     /** 租户 ID */
     private String tenantId;
 }

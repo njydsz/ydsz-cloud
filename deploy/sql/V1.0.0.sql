@@ -1147,6 +1147,8 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     -- [P0-4] 任务级锁 TTL（毫秒, NULL 使用全局默认值）和任务超时（毫秒, NULL 不限）
     lock_ttl_ms     BIGINT,
     timeout_ms      BIGINT,
+    -- [P2-1] Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行并标记 MISFIRED
+    misfire_policy  VARCHAR(32)    NOT NULL DEFAULT 'FIRE_NOW',
     created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
@@ -1160,6 +1162,7 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     CONSTRAINT ck_pj_success_le     CHECK (success_count <= fire_count),
     CONSTRAINT ck_pj_lock_ttl_nonneg CHECK (lock_ttl_ms IS NULL OR lock_ttl_ms > 0),
     CONSTRAINT ck_pj_timeout_nonneg  CHECK (timeout_ms IS NULL OR timeout_ms > 0),
+    CONSTRAINT ck_pj_misfire_enum   CHECK (misfire_policy IN ('FIRE_NOW', 'SKIP', 'COALESCE')),
     CONSTRAINT ck_pj_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
@@ -1180,6 +1183,7 @@ COMMENT ON COLUMN pmis_job.success_count IS '成功执行次数';
 COMMENT ON COLUMN pmis_job.fail_count IS '失败次数(超过阈值告警)';
 COMMENT ON COLUMN pmis_job.lock_ttl_ms IS '任务级分布式锁 TTL(毫秒, NULL 使用全局默认 pmis.cronjob.job-lock-ttl)';
 COMMENT ON COLUMN pmis_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示不限超时; 超时后 Leader 标记 FAILED 并重派)';
+COMMENT ON COLUMN pmis_job.misfire_policy IS 'Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过推进 next_fire_time / COALESCE 合并执行并日志标记 MISFIRED';
 COMMENT ON COLUMN pmis_job.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_job.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_job.updated_by IS '最后修改人 ID';
@@ -1200,6 +1204,46 @@ CREATE INDEX IF NOT EXISTS idx_pmis_job_next_fire
     ON pmis_job (next_fire_time) WHERE deleted = 0 AND status = 'NORMAL' AND next_fire_time IS NOT NULL;
 
 
+-- ============================================================================
+-- [P1-3] 调度节点心跳表 pmis_job_node
+-- ----------------------------------------------------------------------------
+-- 每个 cronjob 实例启动时注册一条记录，定时（默认 10s）更新 last_heartbeat。
+-- Leader 节点通过 last_heartbeat 判断节点是否在线，用于任务派发选择执行节点。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_node(
+    node_id         VARCHAR(128)  PRIMARY KEY,
+    app_name        VARCHAR(128)  NOT NULL,
+    host            VARCHAR(128)  NOT NULL,
+    port            INTEGER,
+    last_heartbeat  TIMESTAMPTZ   NOT NULL,
+    status          VARCHAR(32)   NOT NULL DEFAULT 'ONLINE',
+    cpu_usage       NUMERIC(5,2),
+    mem_usage_pct   NUMERIC(5,2),
+    running_count   INTEGER       NOT NULL DEFAULT 0,
+    tags            JSONB,
+    CONSTRAINT ck_pjn_status_enum CHECK (status IN ('ONLINE', 'OFFLINE', 'DRAINING')),
+    CONSTRAINT ck_pjn_cpu_range   CHECK (cpu_usage IS NULL OR (cpu_usage >= 0 AND cpu_usage <= 100)),
+    CONSTRAINT ck_pjn_mem_range   CHECK (mem_usage_pct IS NULL OR (mem_usage_pct >= 0 AND mem_usage_pct <= 100)),
+    CONSTRAINT ck_pjn_running_nonneg CHECK (running_count >= 0)
+);
+-- 心跳时间索引：Leader 扫描在线节点
+CREATE INDEX IF NOT EXISTS idx_pjn_last_hb ON pmis_job_node(last_heartbeat);
+-- 状态索引：筛选 ONLINE 节点
+CREATE INDEX IF NOT EXISTS idx_pjn_status ON pmis_job_node(status);
+
+COMMENT ON TABLE pmis_job_node IS '调度节点心跳表（P1-3）';
+COMMENT ON COLUMN pmis_job_node.node_id IS '节点 ID（hostname:port 或 hostname:pid）';
+COMMENT ON COLUMN pmis_job_node.app_name IS '应用名称';
+COMMENT ON COLUMN pmis_job_node.host IS '主机名';
+COMMENT ON COLUMN pmis_job_node.port IS '服务端口';
+COMMENT ON COLUMN pmis_job_node.last_heartbeat IS '最后心跳时间（Leader 据此判断节点是否在线）';
+COMMENT ON COLUMN pmis_job_node.status IS '节点状态: ONLINE 在线 / OFFLINE 离线 / DRAINING 排空退出中';
+COMMENT ON COLUMN pmis_job_node.cpu_usage IS 'CPU 使用率（百分比 0-100）';
+COMMENT ON COLUMN pmis_job_node.mem_usage_pct IS '内存使用率（百分比 0-100）';
+COMMENT ON COLUMN pmis_job_node.running_count IS '当前正在执行的任务数（用于负载均衡选择）';
+COMMENT ON COLUMN pmis_job_node.tags IS '节点标签（JSON，用于任务亲和性选择）';
+
+
 -- 任务执行日志表 pmis_job_log
 CREATE TABLE IF NOT EXISTS pmis_job_log(
     id              VARCHAR(20)      PRIMARY KEY,
@@ -1213,6 +1257,8 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     params_json     TEXT,
     result_json     TEXT,
     trace_id        VARCHAR(20),
+    -- [P2-2] 触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发
+    trigger_type    VARCHAR(32)    NOT NULL DEFAULT 'CRON',
     -- [INLINE-OPT] P0-D3 内联:MQ 投递元信息字段
     msg_id          VARCHAR(20),
     topic           VARCHAR(128),
@@ -1221,10 +1267,11 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     -- 数据完整性约束
-    CONSTRAINT ck_pjl_status_enum   CHECK (status IN ('RUNNING', 'SUCCESS', 'FAILED')),
+    CONSTRAINT ck_pjl_status_enum   CHECK (status IN ('RUNNING', 'SUCCESS', 'FAILED', 'TIMEOUT')),
     CONSTRAINT ck_pjl_duration_nonneg CHECK (duration_ms IS NULL OR duration_ms >= 0),
     CONSTRAINT ck_pjl_times_valid   CHECK (end_time IS NULL OR end_time >= start_time),
     CONSTRAINT ck_pjl_reconsume_nonneg CHECK (reconsume_times >= 0),
+    CONSTRAINT ck_pjl_trigger_type_enum CHECK (trigger_type IN ('CRON', 'MANUAL', 'RETRY', 'MISFIRED')),
     CONSTRAINT ck_pjl_deleted_enum  CHECK (deleted IN (0, 1))
 );
 -- [INLINE-OPT] 任务日志不需要 tenant_id 维度(系统全局资源)
@@ -1237,11 +1284,12 @@ COMMENT ON COLUMN pmis_job_log.job_key IS '任务 KEY(冗余,避免连表)';
 COMMENT ON COLUMN pmis_job_log.start_time IS '任务开始时间';
 COMMENT ON COLUMN pmis_job_log.end_time IS '任务结束时间';
 COMMENT ON COLUMN pmis_job_log.duration_ms IS '任务执行耗时(毫秒)';
-COMMENT ON COLUMN pmis_job_log.status IS '执行状态: RUNNING 进行中 / SUCCESS 成功 / FAILED 失败';
+COMMENT ON COLUMN pmis_job_log.status IS '执行状态: RUNNING 进行中 / SUCCESS 成功 / FAILED 失败 / TIMEOUT 超时';
 COMMENT ON COLUMN pmis_job_log.error_message IS '异常堆栈(失败时填充)';
 COMMENT ON COLUMN pmis_job_log.params_json IS '执行参数 JSON';
 COMMENT ON COLUMN pmis_job_log.result_json IS '执行结果 JSON';
 COMMENT ON COLUMN pmis_job_log.trace_id IS '链路追踪 ID(SkyWalking/TLog)';
+COMMENT ON COLUMN pmis_job_log.trigger_type IS '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发';
 COMMENT ON COLUMN pmis_job_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
 COMMENT ON COLUMN pmis_job_log.topic IS 'RocketMQ Topic(标识消息来源 Topic,DLQ 消息填充原 Topic)';
 COMMENT ON COLUMN pmis_job_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';

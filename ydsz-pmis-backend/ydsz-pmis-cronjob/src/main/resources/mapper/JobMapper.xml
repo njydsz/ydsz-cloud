@@ -19,6 +19,7 @@
         <result column="fail_count" property="failCount"/>
         <result column="lock_ttl_ms" property="lockTtlMs"/>
         <result column="timeout_ms" property="timeoutMs"/>
+        <result column="misfire_policy" property="misfirePolicy"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
@@ -30,7 +31,7 @@
     <sql id="Base_Column_List">
         id, job_name, job_group, job_key, handler, cron_expression, params_json,
         status, remark, next_fire_time, last_fire_time, fire_count, success_count, fail_count,
-        lock_ttl_ms, timeout_ms, tenant_id,
+        lock_ttl_ms, timeout_ms, misfire_policy, tenant_id,
         created_by, created_at, updated_by, updated_at, deleted
     </sql>
 
@@ -45,6 +46,31 @@
         FROM pmis_job
         WHERE status = 'NORMAL' AND deleted = 0
     </select>
+
+    <!-- P1-7: Leader 模式扫描待触发任务，FOR UPDATE SKIP LOCKED 抢占式行锁 -->
+    <select id="selectDueJobs" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_job
+        WHERE status = 'NORMAL'
+          AND deleted = 0
+          AND next_fire_time IS NOT NULL
+          AND next_fire_time &lt;= #{now}
+        ORDER BY next_fire_time ASC
+        LIMIT #{limit}
+        FOR UPDATE SKIP LOCKED
+    </select>
+
+    <!-- P1-7: CAS 推进 next_fire_time，防止 Leader 切换时重复派发 -->
+    <update id="advanceNextFireTime">
+        UPDATE pmis_job
+        SET next_fire_time = #{newNextFireTime},
+            last_fire_time = #{lastFireTime},
+            fire_count = fire_count + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+          AND next_fire_time = #{oldNextFireTime}
+    </update>
 
     <update id="updateStats">
         UPDATE pmis_job

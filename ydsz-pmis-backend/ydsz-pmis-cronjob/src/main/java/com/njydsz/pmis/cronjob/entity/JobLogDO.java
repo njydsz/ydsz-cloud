@@ -50,6 +50,10 @@ public class JobLogDO implements Serializable {
     private String resultJson;
     /** 链路追踪 ID */
     private String traceId;
+    /**
+     * 触发类型（P2-2）：CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发。
+     */
+    private String triggerType;
     /** 创建时间（与 SQL 字段 created_at 对齐） */
     private LocalDateTime createdAt;
     /** 逻辑删除标识：0 未删除 / 1 已删除 */

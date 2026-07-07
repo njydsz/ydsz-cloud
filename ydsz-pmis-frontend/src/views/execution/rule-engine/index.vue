@@ -22,7 +22,7 @@ import { ref, reactive, computed, onMounted, watch, nextTick, shallowRef } from 
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { CircleCheck, CircleClose, Connection, Expand, Fold, User } from '@element-plus/icons-vue'
+import { CircleCheck, CircleClose, Connection, Expand, Fold, User, Document } from '@element-plus/icons-vue'
 import * as echarts from '@/utils/echarts'
 import * as ruleApi from '@/api/execution/rule-engine'
 import type {
@@ -35,6 +35,7 @@ import type {
   ReplayResult,
   RegressionReport,
   ABTestReport,
+  RuleTestCase,
 } from '@/api/execution/rule-engine'
 import ExpressionEditor from '@/components/common/ExpressionEditor.vue'
 import RuleCategoryTreeSidebar from '@/components/common/RuleCategoryTreeSidebar.vue'
@@ -953,6 +954,105 @@ async function openRegressionTest() {
   }
 }
 
+// ==================== 测试用例管理（P1-7） ====================
+
+/** 测试用例对话框可见性 */
+const testCaseDialogVisible = ref(false)
+/** 测试用例列表 */
+const testCases = ref<RuleTestCase[]>([])
+/** 测试用例加载状态 */
+const testCaseLoading = ref(false)
+/** 测试用例编辑对话框 */
+const testCaseEditDialogVisible = ref(false)
+/** 当前编辑的测试用例 */
+const editingTestCase = ref<RuleTestCase | null>(null)
+/** 测试用例事实数据 JSON 文本 */
+const testCaseFactsText = ref('{}')
+/** 预期触发规则（逗号分隔） */
+const testCaseExpectedText = ref('')
+
+/** 打开测试用例管理对话框 */
+async function openTestCases() {
+  testCaseDialogVisible.value = true
+  await fetchTestCases()
+}
+
+/** 拉取测试用例列表 */
+async function fetchTestCases() {
+  testCaseLoading.value = true
+  try {
+    const { data } = await ruleApi.listTestCases()
+    testCases.value = data || []
+  } catch {
+    testCases.value = []
+  } finally {
+    testCaseLoading.value = false
+  }
+}
+
+/** 打开新建测试用例对话框 */
+function openCreateTestCase() {
+  editingTestCase.value = {
+    name: '',
+    factsData: {},
+    expectedTriggered: [],
+  }
+  testCaseFactsText.value = '{}'
+  testCaseExpectedText.value = ''
+  testCaseEditDialogVisible.value = true
+}
+
+/** 打开编辑测试用例对话框 */
+function openEditTestCase(tc: RuleTestCase) {
+  editingTestCase.value = { ...tc }
+  testCaseFactsText.value = JSON.stringify(tc.factsData || {}, null, 2)
+  testCaseExpectedText.value = (tc.expectedTriggered || []).join(', ')
+  testCaseEditDialogVisible.value = true
+}
+
+/** 保存测试用例 */
+async function saveTestCaseItem() {
+  if (!editingTestCase.value) return
+  if (!editingTestCase.value.name) {
+    ElMessage.warning('请输入用例名称')
+    return
+  }
+  try {
+    editingTestCase.value.factsData = JSON.parse(testCaseFactsText.value)
+  } catch {
+    ElMessage.error('事实数据 JSON 格式不正确')
+    return
+  }
+  editingTestCase.value.expectedTriggered = testCaseExpectedText.value
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+  try {
+    await ruleApi.saveTestCase(editingTestCase.value)
+    ElMessage.success('测试用例已保存')
+    testCaseEditDialogVisible.value = false
+    await fetchTestCases()
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '保存失败')
+  }
+}
+
+/** 删除测试用例 */
+async function deleteTestCaseItem(tc: RuleTestCase) {
+  try {
+    await ElMessageBox.confirm(`确认删除测试用例「${tc.name}」？`, '提示', { type: 'warning' })
+  } catch {
+    return
+  }
+  try {
+    await ruleApi.deleteTestCase(Number(tc.id))
+    ElMessage.success('已删除')
+    await fetchTestCases()
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '删除失败')
+  }
+}
+
 // ==================== 页面初始化 ====================
 
 onMounted(() => {
@@ -1041,6 +1141,9 @@ onMounted(() => {
           </el-button>
           <el-button type="primary" plain aria-label="回归测试" @click="openRegressionTest">
             <el-icon><CircleCheck /></el-icon>回归测试
+          </el-button>
+          <el-button plain aria-label="测试用例管理" @click="openTestCases">
+            <el-icon><Document /></el-icon>测试用例
           </el-button>
         </div>
         <div class="toolbar-right">
@@ -1836,6 +1939,68 @@ onMounted(() => {
       </template>
       <template #footer>
         <el-button @click="abTestDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+    <!-- ==================== 测试用例管理对话框（P1-7） ==================== -->
+    <el-dialog v-model="testCaseDialogVisible" title="测试用例管理" width="960px" :close-on-click-modal="false">
+      <div class="toolbar" style="margin-bottom:12px">
+        <div class="toolbar-left">
+          <el-button type="primary" aria-label="新建测试用例" @click="openCreateTestCase">
+            <el-icon><Plus /></el-icon>新建用例
+          </el-button>
+          <el-button type="primary" plain aria-label="批量回归测试" @click="openRegressionTest">
+            <el-icon><CircleCheck /></el-icon>批量回归
+          </el-button>
+        </div>
+      </div>
+      <el-table v-loading="testCaseLoading" :data="testCases" border stripe size="small" max-height="500">
+        <el-table-column prop="name" label="用例名称" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="ruleCode" label="关联规则" width="160" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span>{{ row.ruleCode || '通用' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="预期触发" min-width="160">
+          <template #default="{ row }">
+            <el-tag v-for="code in (row.expectedTriggered || [])" :key="code" type="info" size="small" style="margin:1px">{{ code }}</el-tag>
+            <span v-if="!row.expectedTriggered || row.expectedTriggered.length === 0" style="color:#999">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="updatedAt" label="更新时间" width="160" />
+        <el-table-column label="操作" width="140" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" size="small" @click="openEditTestCase(row as RuleTestCase)">编辑</el-button>
+            <el-button link type="danger" size="small" @click="deleteTestCaseItem(row as RuleTestCase)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="testCaseDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 测试用例编辑对话框 -->
+    <el-dialog v-model="testCaseEditDialogVisible" :title="editingTestCase?.id ? '编辑测试用例' : '新建测试用例'" width="640px">
+      <el-form v-if="editingTestCase" :model="editingTestCase" label-width="100px">
+        <el-form-item label="用例名称" required>
+          <el-input v-model="editingTestCase.name" placeholder="如：预算超支90%场景" />
+        </el-form-item>
+        <el-form-item label="关联规则">
+          <el-input v-model="editingTestCase.ruleCode" placeholder="可选，留空表示通用用例" />
+        </el-form-item>
+        <el-form-item label="事实数据">
+          <el-input v-model="testCaseFactsText" type="textarea" :rows="6" placeholder='{"budgetUsedRatio":0.95}' class="json-input" />
+        </el-form-item>
+        <el-form-item label="预期触发">
+          <el-input v-model="testCaseExpectedText" placeholder="逗号分隔规则编码，如 BUDGET_WARN,CPI_RED" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="editingTestCase.description" type="textarea" :rows="2" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="testCaseEditDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveTestCaseItem">保存</el-button>
       </template>
     </el-dialog>
   </div>

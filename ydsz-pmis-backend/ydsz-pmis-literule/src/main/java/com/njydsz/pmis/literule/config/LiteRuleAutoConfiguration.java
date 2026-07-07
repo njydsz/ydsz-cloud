@@ -449,4 +449,57 @@ public class LiteRuleAutoConfiguration {
                 properties.getAi().getRecommendTopN());
         return new RuleRecommendationService(properties.getAi());
     }
+
+    // ------------------------------------------------------------------
+    // CEP 复杂事件处理引擎（P0-2）
+    // ------------------------------------------------------------------
+
+    /**
+     * CEP 引擎 Bean
+     *
+     * <p>默认装配为单例，业务侧通过 {@link com.njydsz.pmis.literule.cep.CEPEngine#feed}
+     * 投递事件、通过 {@link com.njydsz.pmis.literule.cep.CEPEngine#registerPattern}
+     * 注册模式。命中模式后通过 Listener 回调触发关联规则。
+     *
+     * <p>可通过 {@code pmis.literule.cep.enabled=false} 关闭。
+     *
+     * @return CEPEngine 实例
+     * @since 1.5.1
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            prefix = "pmis.literule.cep", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public com.njydsz.pmis.literule.cep.CEPEngine cepEngine() {
+        com.njydsz.pmis.literule.cep.CEPEngine engine = new com.njydsz.pmis.literule.cep.CEPEngine();
+        log.info("[LiteRule-CEP] 复杂事件处理引擎已初始化");
+        return engine;
+    }
+
+    // ------------------------------------------------------------------
+    // 断点调试器（P0-3 落地）
+    // ------------------------------------------------------------------
+
+    /**
+     * 默认断点调试器 Bean
+     *
+     * <p>装配后自动注入到 {@link com.njydsz.pmis.literule.core.DefaultRuleEngine}，
+     * 业务侧可通过 {@code /execution/rules/breakpoints} REST API 管理断点与下发调试指令。
+     *
+     * <p>可通过 {@code pmis.literule.debug.enabled=false} 关闭。
+     *
+     * @return DefaultBreakpointHook 实例
+     * @since 1.5.1
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            prefix = "pmis.literule.debug", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public com.njydsz.pmis.literule.core.DefaultBreakpointHook defaultBreakpointHook(LiteRuleProperties properties) {
+        com.njydsz.pmis.literule.core.DefaultBreakpointHook hook =
+                new com.njydsz.pmis.literule.core.DefaultBreakpointHook();
+        log.info("[LiteRule-Debug] 断点调试器已初始化（suspendTimeout={}s）",
+                60);
+        return hook;
+    }
 }

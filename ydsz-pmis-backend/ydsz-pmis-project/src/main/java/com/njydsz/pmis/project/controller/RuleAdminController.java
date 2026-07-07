@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.entity.DecisionTableDO;
 import com.njydsz.pmis.project.entity.RuleExecutionTraceDO;
@@ -107,6 +108,7 @@ public class RuleAdminController {
     private final DecisionTableEvalService decisionTableEvalService;
     private final ExpressionValidationService expressionValidationService;
     private final RuleChainGraphService ruleChainGraphService;
+    private final com.njydsz.pmis.project.literule.GraphExecutionService graphExecutionService;
     private final RuleDependencyService ruleDependencyService;
     private final RuleCategoryTreeService ruleCategoryTreeService;
     private final ABTestAutoRollbackService abTestAutoRollbackService;
@@ -146,6 +148,7 @@ public class RuleAdminController {
      * @return 保存后的规则定义
      */
     @PostMapping
+    @PrePermission("execution:rule:save")
     public Result<RuleDefinition> save(@RequestBody RuleDefinition definition,
                                         @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator,
                                         @RequestParam(value = "changeDesc", defaultValue = "API 更新") String changeDesc) {
@@ -161,6 +164,7 @@ public class RuleAdminController {
      * @return 操作结果
      */
     @PutMapping("/{ruleCode}/toggle")
+    @PrePermission("execution:rule:toggle")
     public Result<Void> toggle(@PathVariable String ruleCode,
                                 @RequestParam boolean enabled,
                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -527,6 +531,7 @@ public class RuleAdminController {
      * @return 操作结果
      */
     @PutMapping("/{ruleCode}/status")
+    @PrePermission("execution:rule:status")
     public Result<RuleDefinition> changeStatus(@PathVariable String ruleCode,
                                                @Valid @RequestBody RuleStatusChangeDTO dto,
                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -559,6 +564,7 @@ public class RuleAdminController {
      * @return 审批后的规则定义
      */
     @PostMapping("/{ruleCode}/approve")
+    @PrePermission("execution:rule:approve")
     public Result<RuleDefinition> approve(@PathVariable String ruleCode,
                                            @Valid @RequestBody RuleApproveDTO dto,
                                            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -599,6 +605,7 @@ public class RuleAdminController {
      * @return 驳回后的规则定义
      */
     @PostMapping("/{ruleCode}/reject")
+    @PrePermission("execution:rule:approve")
     public Result<RuleDefinition> reject(@PathVariable String ruleCode,
                                           @Valid @RequestBody RuleRejectDTO dto,
                                           @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -843,6 +850,67 @@ public class RuleAdminController {
     }
 
     /**
+     * 导出全部规则为 YAML（P2-11 GitOps）
+     *
+     * <p>供 GitOps 工作流使用：CI 定时拉取 YAML → 提交到 Git 仓库 →
+     * 审核合并后通过 Webhook 触发 /import 同步回 DB，实现规则即代码。
+     *
+     * @return YAML 文本（Content-Type: text/plain）
+     */
+    @GetMapping(value = "/export.yaml", produces = "text/plain;charset=UTF-8")
+    public String exportRulesAsYaml() {
+        List<RuleDefinition> rules = ruleAdminService.listAll();
+        StringBuilder sb = new StringBuilder();
+        sb.append("# LiteRule 规则导出（YAML）\n");
+        sb.append("# 导出时间: ").append(LocalDateTime.now()).append("\n");
+        sb.append("# 规则数量: ").append(rules.size()).append("\n");
+        sb.append("# 用途: GitOps 规则即代码，提交到 Git 仓库后通过 CI 校验与 Webhook 发布\n\n");
+        sb.append("rules:\n");
+        for (RuleDefinition r : rules) {
+            sb.append("  - code: ").append(r.getCode()).append("\n");
+            sb.append("    name: ").append(escapeYaml(r.getName())).append("\n");
+            sb.append("    category: ").append(r.getCategory()).append("\n");
+            if (r.getDescription() != null) {
+                sb.append("    description: ").append(escapeYaml(r.getDescription())).append("\n");
+            }
+            sb.append("    conditionExpression: ").append(escapeYaml(r.getConditionExpression())).append("\n");
+            if (r.getSeverityExpression() != null) {
+                sb.append("    severityExpression: ").append(escapeYaml(r.getSeverityExpression())).append("\n");
+            }
+            sb.append("    defaultSeverity: ")
+                    .append(r.getDefaultSeverity() != null ? r.getDefaultSeverity().name() : "YELLOW").append("\n");
+            if (r.getTitleTemplate() != null) {
+                sb.append("    titleTemplate: ").append(escapeYaml(r.getTitleTemplate())).append("\n");
+            }
+            if (r.getDescriptionTemplate() != null) {
+                sb.append("    descriptionTemplate: ").append(escapeYaml(r.getDescriptionTemplate())).append("\n");
+            }
+            sb.append("    priority: ").append(r.getPriority()).append("\n");
+            if (r.getScope() != null) {
+                sb.append("    scope: ").append(r.getScope()).append("\n");
+            }
+            sb.append("    version: ").append(r.getVersion()).append("\n");
+            if (r.getTenantId() != null && !"1".equals(r.getTenantId())) {
+                sb.append("    tenantId: ").append(r.getTenantId()).append("\n");
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * YAML 字符串转义（处理特殊字符与换行）
+     */
+    private String escapeYaml(String s) {
+        if (s == null) return "null";
+        // 含特殊字符时用双引号包裹并转义
+        if (s.contains(":") || s.contains("#") || s.contains("\n") || s.contains("\"")) {
+            return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\"";
+        }
+        return s;
+    }
+
+    /**
      * 导入规则（JSON 格式）
      */
     @PostMapping("/import")
@@ -893,6 +961,7 @@ public class RuleAdminController {
      */
     @OperationLog(module = "规则引擎", action = "删除规则", bizType = "RULE")
     @DeleteMapping("/{ruleCode}")
+    @PrePermission("execution:rule:delete")
     public Result<Void> deleteRule(@PathVariable String ruleCode,
                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
@@ -921,6 +990,7 @@ public class RuleAdminController {
      * @return 成功与失败明细
      */
     @PostMapping("/batch-toggle")
+    @PrePermission("execution:rule:toggle")
     public Result<Map<String, Object>> batchToggle(@Valid @RequestBody RuleBatchToggleDTO dto,
                                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> ruleCodes = dto.getRuleCodes();
@@ -1095,6 +1165,58 @@ public class RuleAdminController {
     @PostMapping("/{ruleCode}/graph/validate")
     public Result<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(@RequestBody RuleChainGraph graph) {
         return Result.ok(RuleGraphValidator.validate(graph));
+    }
+
+    /**
+     * 表达式求值预览（P2-8）
+     *
+     * <p>给定表达式与样例事实数据，返回求值结果，供前端表达式编辑器实时预览。
+     *
+     * @param expression 表达式
+     * @param facts      样例事实数据
+     * @return 求值结果（含 value / type / error）
+     */
+    @PostMapping("/expression-preview")
+    public Result<com.njydsz.pmis.literule.expr.ExpressionPreviewResult> previewExpression(
+            @RequestParam String expression,
+            @RequestBody Map<String, Object> facts) {
+        return Result.ok(expressionValidationService.previewEvaluate(expression, facts));
+    }
+
+    /**
+     * 画布 Dry-run 仿真（P0-1 执行闭环）
+     *
+     * <p>将画布转换为可执行规则链后执行 Dry-run 评估，返回已触发的规则结果。
+     * 画布不存在时返回空列表；画布校验失败返回 400。
+     *
+     * @param ruleCode 规则编码（画布关联 key）
+     * @param facts    事实数据
+     * @return 评估结果列表
+     */
+    @PostMapping("/{ruleCode}/graph/dry-run")
+    public Result<List<RuleResult>> dryRunGraph(@PathVariable String ruleCode,
+                                                 @RequestBody Map<String, Object> facts) {
+        try {
+            List<RuleResult> results = graphExecutionService.dryRunGraph(ruleCode, facts);
+            return Result.ok(results);
+        } catch (IllegalArgumentException e) {
+            log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
+            return Result.fail(e.getMessage());
+        }
+    }
+
+    /**
+     * 检查画布中失效的规则引用（P0-1 执行闭环）
+     *
+     * <p>返回画布中引用了但已不存在或已禁用的规则编码列表，
+     * 供前端在保存画布时提示用户修复失效节点。
+     *
+     * @param ruleCode 规则编码
+     * @return 失效规则编码列表
+     */
+    @GetMapping("/{ruleCode}/graph/invalid-refs")
+    public Result<List<String>> invalidGraphRefs(@PathVariable String ruleCode) {
+        return Result.ok(graphExecutionService.collectInvalidReferences(ruleCode));
     }
 
     // ==================== 函数市场（P1-7） ====================

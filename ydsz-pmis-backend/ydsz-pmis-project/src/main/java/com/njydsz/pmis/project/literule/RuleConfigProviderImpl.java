@@ -90,6 +90,46 @@ public class RuleConfigProviderImpl implements RuleConfigProvider {
     }
 
     /**
+     * 按租户加载启用规则（物理隔离，1.5.1）
+     *
+     * <p>覆写为带 {@code WHERE tenant_id = ?} 的 SQL 查询，
+     * 避免全量加载后内存过滤的开销，实现租户级数据隔离。
+     *
+     * @param tenantId 租户 ID
+     * @return 该租户下启用的规则定义列表
+     */
+    @Override
+    public List<RuleDefinition> loadEnabledRulesByTenant(String tenantId) {
+        if (tenantId == null || tenantId.isBlank()) {
+            return loadEnabledRules();
+        }
+        List<RuleDefinitionDO> list = ruleDefinitionMapper.selectList(
+                new LambdaQueryWrapper<RuleDefinitionDO>()
+                        .eq(RuleDefinitionDO::getEnabled, true)
+                        .eq(RuleDefinitionDO::getTenantId, tenantId)
+                        .orderByAsc(RuleDefinitionDO::getPriority));
+        return list.stream().map(this::toDefinition).collect(Collectors.toList());
+    }
+
+    /**
+     * 按租户加载全部规则（物理隔离，1.5.1）
+     *
+     * @param tenantId 租户 ID
+     * @return 该租户下全部规则定义列表
+     */
+    @Override
+    public List<RuleDefinition> loadAllRulesByTenant(String tenantId) {
+        if (tenantId == null || tenantId.isBlank()) {
+            return loadAllRules();
+        }
+        List<RuleDefinitionDO> list = ruleDefinitionMapper.selectList(
+                new LambdaQueryWrapper<RuleDefinitionDO>()
+                        .eq(RuleDefinitionDO::getTenantId, tenantId)
+                        .orderByAsc(RuleDefinitionDO::getPriority));
+        return list.stream().map(this::toDefinition).collect(Collectors.toList());
+    }
+
+    /**
      * DO → API Definition
      *
      * @param DO 数据库实体

@@ -54,4 +54,43 @@ public interface RuleConfigProvider {
      * @return 规则定义；不存在返回 null
      */
     RuleDefinition findByCode(String ruleCode);
+
+    /**
+     * 加载指定租户下全部启用的规则定义（1.5.1 起支持物理隔离）
+     *
+     * <p>默认实现调用 {@link #loadEnabledRules()} 后在内存按 tenantId 过滤，
+     * 性能敏感场景应覆写为带 {@code WHERE tenant_id = ?} 的 SQL 查询。
+     *
+     * @param tenantId 租户 ID
+     * @return 该租户下启用的规则定义列表
+     * @since 1.5.1
+     */
+    default List<RuleDefinition> loadEnabledRulesByTenant(String tenantId) {
+        List<RuleDefinition> all = loadEnabledRules();
+        if (tenantId == null || tenantId.isBlank()) {
+            return all;
+        }
+        return all.stream()
+                .filter(r -> tenantId.equals(r.getTenantId()))
+                .toList();
+    }
+
+    /**
+     * 加载指定租户下全部规则定义（含禁用，1.5.1 起支持物理隔离）
+     *
+     * <p>默认实现调用 {@link #loadAllRules()} 后在内存按 tenantId 过滤。
+     *
+     * @param tenantId 租户 ID
+     * @return 该租户下全部规则定义列表
+     * @since 1.5.1
+     */
+    default List<RuleDefinition> loadAllRulesByTenant(String tenantId) {
+        List<RuleDefinition> all = loadAllRules();
+        if (tenantId == null || tenantId.isBlank()) {
+            return all;
+        }
+        return all.stream()
+                .filter(r -> tenantId.equals(r.getTenantId()))
+                .toList();
+    }
 }

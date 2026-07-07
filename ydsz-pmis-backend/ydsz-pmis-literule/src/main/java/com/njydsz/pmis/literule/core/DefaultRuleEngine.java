@@ -89,12 +89,38 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         }
         // 先移除同编码旧规则（支持热更新覆盖）
         unregister(rule.getCode());
-        rules.add(rule);
-        // 按优先级排序
-        rules.sort(Comparator.comparingInt(Rule::getPriority));
+        // 增量保序插入（P2-10）：二分查找插入位置，避免全量 sort
+        int insertIdx = binarySearchInsertIndex(rule.getPriority());
+        rules.add(insertIdx, rule);
         recordRegisteredRules();
         log.info("[LiteRule] 规则已注册: code={}, name={}, priority={}, total={}",
                 rule.getCode(), rule.getName(), rule.getPriority(), rules.size());
+    }
+
+    /**
+     * 二分查找按 priority 的插入位置（priority 升序）
+     *
+     * <p>由于 rules 已按 priority 升序排列，使用二分查找可将"找位置"从 O(n) 降到 O(log n)，
+     * 总体插入复杂度由 O(n log n)（全量 sort）降为 O(n)（数组移动 + 二分查找）。
+     * 规模化（>1000 规则）注册时性能提升显著。
+     *
+     * @param priority 待插入规则的优先级
+     * @return 插入位置索引
+     * @since 1.5.1
+     */
+    private int binarySearchInsertIndex(int priority) {
+        int low = 0;
+        int high = rules.size();
+        while (low < high) {
+            int mid = (low + high) >>> 1;
+            int midPriority = rules.get(mid).getPriority();
+            if (midPriority < priority) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        return low;
     }
 
     @Override

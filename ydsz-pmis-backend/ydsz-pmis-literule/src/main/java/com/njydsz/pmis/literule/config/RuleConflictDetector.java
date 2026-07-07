@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,6 +91,12 @@ public class RuleConflictDetector {
         // 解析新规则的简单比较条件（用于范围重叠分析）
         ComparisonCondition newComparison = parseComparison(newConditionRaw);
 
+        // ===== 单规则自检（1.5.1 新增）=====
+        // 1. 死规则检测：复合条件中同变量存在矛盾范围
+        detectDeadRule(conflicts, newDefinition);
+        // 2. 子条件不可达检测：复合条件中被包含的冗余子句
+        detectUnreachableSubcondition(conflicts, newDefinition);
+
         for (RuleDefinition other : existingRules) {
             if (Objects.equals(other.getCode(), newCode)) continue;
             if (!Objects.equals(other.getTenantId(), newTenantId)) continue;
@@ -157,6 +165,139 @@ public class RuleConflictDetector {
         }
 
         return conflicts;
+    }
+
+    /**
+     * 死规则检测：复合 AND 条件中同一变量存在矛盾范围
+     *
+     * <p>检测形如 {@code x > 10 && x < 5} 的永假条件。
+     * 仅对 AND 连接的简单比较做检测，OR/嵌套表达式降级为不检测。
+     *
+     * @param conflicts     冲突输出列表
+     * @param newDefinition 待检测规则
+     * @since 1.5.1
+     */
+    private void detectDeadRule(List<RuleConflict> conflicts, RuleDefinition newDefinition) {
+        String expr = newDefinition.getConditionExpression();
+        if (expr == null || expr.isBlank()) return;
+        // 拆分 AND 子句（支持 && 和 and）
+        List<String> clauses = splitAndClauses(expr);
+        if (clauses.size() < 2) return;
+        // 按变量分组收集比较条件
+        Map<String, List<ComparisonCondition>> byVar = new LinkedHashMap<>();
+        for (String clause : clauses) {
+            ComparisonCondition cc = parseComparison(clause.trim());
+            if (cc != null) {
+                byVar.computeIfAbsent(cc.variable, k -> new ArrayList<>()).add(cc);
+            }
+        }
+        // 检查同变量的条件范围是否无交集
+        for (Map.Entry<String, List<ComparisonCondition>> entry : byVar.entrySet()) {
+            List<ComparisonCondition> conds = entry.getValue();
+            if (conds.size() < 2) continue;
+            // 取所有条件的范围交集
+            double lower = -Double.MAX_VALUE;
+            double upper = Double.MAX_VALUE;
+            for (ComparisonCondition cc : conds) {
+                double[] range = toRange(cc.operator, cc.value);
+                if (range[0] > lower) lower = range[0];
+                if (range[1] < upper) upper = range[1];
+            }
+            if (lower > upper) {
+                conflicts.add(RuleConflict.builder()
+                        .type(RuleConflict.Type.DEAD_RULE)
+                        .level(RuleConflict.Level.ERROR)
+                        .newRuleCode(newDefinition.getCode())
+                        .conflictingRuleCode(newDefinition.getCode())
+                        .description("规则条件为死规则：变量 '" + entry.getKey()
+                                + "' 的范围条件存在矛盾（" + conds.stream()
+                                    .map(c -> c.original).reduce((a, b) -> a + " && " + b).orElse("")
+                                + "），永远不会触发")
+                        .build());
+            }
+        }
+    }
+
+    /**
+     * 子条件不可达检测：AND 条件中被包含的冗余子句
+     *
+     * <p>检测形如 {@code x > 5 && x > 3} 中 {@code x > 3} 被 {@code x > 5} 完全包含的情况，
+     * 该子句恒为冗余。
+     *
+     * @param conflicts     冲突输出列表
+     * @param newDefinition 待检测规则
+     * @since 1.5.1
+     */
+    private void detectUnreachableSubcondition(List<RuleConflict> conflicts, RuleDefinition newDefinition) {
+        String expr = newDefinition.getConditionExpression();
+        if (expr == null || expr.isBlank()) return;
+        List<String> clauses = splitAndClauses(expr);
+        if (clauses.size() < 2) return;
+        // 按变量分组
+        Map<String, List<ComparisonCondition>> byVar = new LinkedHashMap<>();
+        for (String clause : clauses) {
+            ComparisonCondition cc = parseComparison(clause.trim());
+            if (cc != null) {
+                byVar.computeIfAbsent(cc.variable, k -> new ArrayList<>()).add(cc);
+            }
+        }
+        for (Map.Entry<String, List<ComparisonCondition>> entry : byVar.entrySet()) {
+            List<ComparisonCondition> conds = entry.getValue();
+            if (conds.size() < 2) continue;
+            // 两两检查包含关系
+            for (int i = 0; i < conds.size(); i++) {
+                for (int j = 0; j < conds.size(); j++) {
+                    if (i == j) continue;
+                    if (isSubset(conds.get(i), conds.get(j))) {
+                        // conds[i] 的范围被 conds[j] 包含 → conds[j] 冗余
+                        conflicts.add(RuleConflict.builder()
+                                .type(RuleConflict.Type.UNREACHABLE_SUBCONDITION)
+                                .level(RuleConflict.Level.WARN)
+                                .newRuleCode(newDefinition.getCode())
+                                .conflictingRuleCode(newDefinition.getCode())
+                                .description("子条件不可达：'" + conds.get(j).original
+                                        + "' 被 '" + conds.get(i).original + "' 完全包含，为冗余子句")
+                                .build());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 拆分 AND 连接的子句（支持 && 和 and，忽略 ||）
+     *
+     * @param expr 表达式
+     * @return AND 子句列表；含 OR 时整表达式作为一个子句返回
+     */
+    private List<String> splitAndClauses(String expr) {
+        List<String> result = new ArrayList<>();
+        if (expr == null || expr.isBlank()) return result;
+        // 先按 && 拆分
+        String[] parts = expr.split("&&|(?i)\\band\\b");
+        for (String p : parts) {
+            String t = p.trim();
+            if (!t.isEmpty()) {
+                result.add(t);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 判断条件 a 的范围是否完全包含条件 b 的范围
+     *
+     * @param a 条件 a（更严格）
+     * @param b 条件 b（更宽松，被包含）
+     * @return true 表示 b 被 a 包含，b 冗余
+     */
+    private boolean isSubset(ComparisonCondition a, ComparisonCondition b) {
+        if (!a.variable.equals(b.variable)) return false;
+        if (a.operator.equals(b.operator) && a.value == b.value) return false;
+        double[] ra = toRange(a.operator, a.value);
+        double[] rb = toRange(b.operator, b.value);
+        // a 包含 b：a 的范围 ⊇ b 的范围 → ra.lower ≤ rb.lower 且 ra.upper ≥ rb.upper
+        return ra[0] <= rb[0] && ra[1] >= rb[1];
     }
 
     /**

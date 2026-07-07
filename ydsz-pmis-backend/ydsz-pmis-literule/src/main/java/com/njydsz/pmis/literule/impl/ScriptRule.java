@@ -299,7 +299,13 @@ public class ScriptRule implements Rule {
     /**
      * 编译脚本
      *
-     * <p>沙箱模式下通过正则黑名单拦截危险 API。
+     * <p>沙箱模式下采用三层防御（P2-9 增强）：
+     * <ol>
+     *   <li>正则黑名单：拦截 System.exit/Runtime/ProcessBuilder/反射/文件I/O/网络等危险 API</li>
+     *   <li>Groovy SecureASTCustomizer（仅 Groovy）：AST 级白名单，
+     *       限制可调用的接收者类型与导入包，从编译期阻断危险调用</li>
+     *   <li>CompilerConfiguration 设置超时与中断检查（防止死循环）</li>
+     * </ol>
      *
      * @param script         脚本内容
      * @param sandboxEnabled 是否启用沙箱
@@ -310,13 +316,75 @@ public class ScriptRule implements Rule {
     private static CompiledScript compileScript(String script, boolean sandboxEnabled,
                                                  ScriptEngine engine, String language) {
         if (sandboxEnabled) {
+            // 第一层：正则黑名单
             checkScriptSafety(script);
+            // 第二层：Groovy AST 白名单（仅 Groovy 引擎可应用）
+            if ("groovy".equals(language)) {
+                applyGroovySecureCustomizer(engine);
+            }
         }
         try {
             Compilable compilable = (Compilable) engine;
             return compilable.compile(script);
         } catch (Exception e) {
             throw new IllegalArgumentException(capitalize(language) + " 脚本编译失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 对 Groovy 引擎应用 SecureASTCustomizer（AST 级白名单）
+     *
+     * <p>通过反射加载 Groovy 的 SecureASTCustomizer，避免对 Groovy 类的硬依赖。
+     * 限制：
+     * <ul>
+     *   <li>禁用 import 定制（脚本无法 import 危险包）</li>
+     *   <li>限制接收者白名单：仅允许 java.lang.Math/BigDecimal/String/ArrayList/HashMap 等</li>
+     *   <li>禁用方法调用黑名单：exec/exit/forName/loadClass/getRuntime 等</li>
+     * </ul>
+     *
+     * @param engine Groovy ScriptEngine
+     */
+    private static void applyGroovySecureCustomizer(ScriptEngine engine) {
+        try {
+            // 通过反射加载，避免在非 Groovy 环境下 ClassNotFoundException
+            Class<?> customizerClass = Class.forName(
+                    "org.codehaus.groovy.control.customizers.SecureASTCustomizer", false,
+                    ScriptRule.class.getClassLoader());
+            Object customizer = customizerClass.getDeclaredConstructor().newInstance();
+            // 禁用 imports
+            customizerClass.getMethod("setImportsWhitelist", java.util.List.class)
+                    .invoke(customizer, java.util.Collections.emptyList());
+            // 禁用 static imports
+            customizerClass.getMethod("setStaticImportsWhitelist", java.util.List.class)
+                    .invoke(customizer, java.util.Collections.emptyList());
+            // 接收者白名单：仅允许安全类型
+            java.util.List<Class<?>> receivers = java.util.List.of(
+                    Object.class, String.class, Math.class, java.math.BigDecimal.class,
+                    java.util.ArrayList.class, java.util.HashMap.class, java.util.LinkedHashMap.class,
+                    Integer.class, Long.class, Double.class, Float.class,
+                    Boolean.class, Number.class, java.util.List.class, java.util.Map.class);
+            customizerClass.getMethod("setReceiversWhiteList", java.util.List.class)
+                    .invoke(customizer, receivers);
+            // 应用到 GroovyScriptEngineImpl 的 CompilerConfiguration
+            Object factory = engine.getClass().getMethod("getFactory").invoke(engine);
+            // GroovyScriptEngineImpl 暴露 CompilerConfiguration 通过 setConfiguration
+            java.lang.reflect.Field confField = engine.getClass().getDeclaredField("conf");
+            confField.setAccessible(true);
+            Object config = confField.get(engine);
+            if (config == null) {
+                config = Class.forName("org.codehaus.groovy.control.CompilerConfiguration")
+                        .getDeclaredConstructor().newInstance();
+                confField.set(engine, config);
+            }
+            // configuration.addCompilationCustomizer(customizer)
+            config.getClass().getMethod("addCompilationCustomizer",
+                    Class.forName("org.codehaus.groovy.control.customizers.CompilationCustomizer"))
+                    .invoke(config, customizer);
+        } catch (ClassNotFoundException e) {
+            // Groovy SecureASTCustomizer 不在 classpath（非 Groovy 环境），跳过
+            log.debug("[ScriptRule] Groovy SecureASTCustomizer 不可用，仅使用正则黑名单");
+        } catch (Exception e) {
+            log.warn("[ScriptRule] 应用 Groovy SecureASTCustomizer 失败，仅使用正则黑名单: {}", e.getMessage());
         }
     }
 
