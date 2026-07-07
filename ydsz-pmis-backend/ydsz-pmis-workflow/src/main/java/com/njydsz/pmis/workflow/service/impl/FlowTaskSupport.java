@@ -54,7 +54,7 @@ public class FlowTaskSupport {
      * @param id 任务 ID
      * @return 任务 DO
      */
-    public FlowRunTaskDO getTaskOrThrow(Long id) {
+    public FlowRunTaskDO getTaskOrThrow(String id) {
         FlowRunTaskDO task = taskMapper.selectById(id);
         if (task == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);

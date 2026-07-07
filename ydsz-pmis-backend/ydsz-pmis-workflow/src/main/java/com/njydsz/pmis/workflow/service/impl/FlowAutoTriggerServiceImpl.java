@@ -219,14 +219,14 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteById(Long id) {
+    public void deleteById(String id) {
         autoTriggerMapper.deleteById(id);
         log.info("[FlowAutoTrigger] 删除触发规则: id={}", id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean toggleEnabled(Long id) {
+    public boolean toggleEnabled(String id) {
         FlowAutoTriggerDO trigger = autoTriggerMapper.selectById(id);
         if (trigger == null) {
             log.warn("[FlowAutoTrigger] 触发规则不存在: id={}", id);

@@ -26,7 +26,7 @@ public class RuleTestCaseSaveDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "测试用例 ID（更新时传入）")
-    private Long id;
+    private String id;
 
     @NotBlank(message = "测试用例名称不能为空")
     @Schema(description = "测试用例名称", requiredMode = Schema.RequiredMode.REQUIRED)

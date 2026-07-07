@@ -68,7 +68,7 @@ public class FlowNotifyChannelServiceImpl implements FlowNotifyChannelService {
     }
 
     @Override
-    public void toggleChannel(Long id, Boolean enabled) {
+    public void toggleChannel(String id, Boolean enabled) {
         FlowNotifyChannelDO update = new FlowNotifyChannelDO();
         update.setId(id);
         update.setEnabled(enabled);
@@ -78,7 +78,7 @@ public class FlowNotifyChannelServiceImpl implements FlowNotifyChannelService {
     }
 
     @Override
-    public void deleteChannel(Long id) {
+    public void deleteChannel(String id) {
         notifyChannelMapper.deleteById(id);
         log.info("[FlowNotifyChannel] 删除通道配置: id={}", id);
     }

@@ -59,7 +59,7 @@ public class SensitiveOperationServiceImpl {
      * @param id 记录 ID
      * @return 敏感操作实体
      */
-    public SensitiveOperationDO getById(Long id) {
+    public SensitiveOperationDO getById(String id) {
         return mapper.selectById(id);
     }
 }

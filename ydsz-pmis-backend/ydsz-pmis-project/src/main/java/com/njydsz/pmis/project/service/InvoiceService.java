@@ -25,37 +25,37 @@ public interface InvoiceService {
     /**
      * 提交审批 (DRAFT → SUBMITTED)
      */
-    void submit(Long id, Long operatorId);
+    void submit(String id, Long operatorId);
 
     /**
      * 审批通过 (SUBMITTED → APPROVED)
      */
-    void approve(Long id, InvoiceApprovalDTO dto);
+    void approve(String id, InvoiceApprovalDTO dto);
 
     /**
      * 审批驳回 (SUBMITTED → REJECTED)
      */
-    void reject(Long id, InvoiceApprovalDTO dto);
+    void reject(String id, InvoiceApprovalDTO dto);
 
     /**
      * 财务开具 (APPROVED → ISSUED)
      */
-    void issue(Long id, InvoiceApprovalDTO dto);
+    void issue(String id, InvoiceApprovalDTO dto);
 
     /**
      * 红冲 (ISSUED → RED_REVERSED)
      */
-    void redReverse(Long id, Long operatorId, String comment);
+    void redReverse(String id, Long operatorId, String comment);
 
     /**
      * 取消 (DRAFT/APPROVED → CANCELLED)
      */
-    void cancel(Long id, Long operatorId, String comment);
+    void cancel(String id, Long operatorId, String comment);
 
     /**
      * 删除（仅 DRAFT 状态可删）
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询发票
@@ -63,7 +63,7 @@ public interface InvoiceService {
      * @param id 发票ID
      * @return 发票实体
      */
-    InvoiceDO getById(Long id);
+    InvoiceDO getById(String id);
 
     /**
      * 分页查询发票

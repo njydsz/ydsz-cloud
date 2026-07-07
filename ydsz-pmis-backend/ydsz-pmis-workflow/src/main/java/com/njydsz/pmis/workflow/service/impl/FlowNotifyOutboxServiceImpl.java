@@ -125,7 +125,7 @@ public class FlowNotifyOutboxServiceImpl implements FlowNotifyOutboxService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public boolean retryDeadEvent(Long id) {
+    public boolean retryDeadEvent(String id) {
         if (id == null) {
             return false;
         }

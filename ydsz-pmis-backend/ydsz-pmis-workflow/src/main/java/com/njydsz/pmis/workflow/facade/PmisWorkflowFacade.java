@@ -53,7 +53,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
 
     @Override
     public String startProcess(FlowStartProcessDTO dto) {
-        Long id = instanceService.start(dto);
+        String id = instanceService.start(dto);
         return id == null ? null : String.valueOf(id);
     }
 
@@ -231,7 +231,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      * @return 包含 definition / nodes / skips 的 Map，nodes 中每个节点带 active 标记
      */
     public Map<String, Object> getDiagram(String instanceId) {
-        Long id = Long.parseLong(instanceId);
+        String id = Long.parseLong(instanceId);
         FlowInstanceDO instance = instanceService.getById(id);
         if (instance == null) {
             return null;
@@ -275,7 +275,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      */
     @Override
     public List<Map<String, Object>> getTimeline(String instanceId) {
-        Long id = Long.parseLong(instanceId);
+        String id = Long.parseLong(instanceId);
         // 1. 获取实例信息
         FlowInstanceDO instance = instanceService.getById(id);
         if (instance == null) {
@@ -462,7 +462,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      * @return 步骤列表（按 timestamp 升序），实例不存在时返回空列表
      */
     public List<Map<String, Object>> getReplaySteps(String instanceId) {
-        Long id;
+        String id;
         try {
             id = Long.parseLong(instanceId);
         } catch (NumberFormatException nfe) {

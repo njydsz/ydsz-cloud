@@ -32,7 +32,7 @@ public interface CustomerCreditMapper extends BaseMapper<CustomerCreditDO> {
      * @param score 信用分值
      * @return 受影响行数
      */
-    int updateLevel(@Param("id") Long id,
+    int updateLevel(@Param("id") String id,
                     @Param("level") String level,
                     @Param("score") Integer score);
 

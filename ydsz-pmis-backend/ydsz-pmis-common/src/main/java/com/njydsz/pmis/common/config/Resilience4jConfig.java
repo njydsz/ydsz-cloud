@@ -32,7 +32,7 @@ import java.util.function.Predicate;
  * <p>使用方式:
  * <pre>
  *   @Retry(name = "feignRetry")
- *   public Result&lt;UserDTO&gt; getUser(Long id) { ... }
+ *   public Result&lt;UserDTO&gt; getUser(String id) { ... }
  * </pre>
  *
  * @author ydsz-pmis-team

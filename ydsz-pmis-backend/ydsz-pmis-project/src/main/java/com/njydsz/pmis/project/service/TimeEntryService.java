@@ -32,7 +32,7 @@ public interface TimeEntryService {
      *
      * @param id 工时记录ID
      */
-    void submit(Long id);
+    void submit(String id);
 
     /**
      * 审批通过/驳回
@@ -46,7 +46,7 @@ public interface TimeEntryService {
      *
      * @param id 工时记录ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询工时记录
@@ -54,7 +54,7 @@ public interface TimeEntryService {
      * @param id 工时记录ID
      * @return 工时实体
      */
-    TimeEntryDO getById(Long id);
+    TimeEntryDO getById(String id);
 
     /**
      * 分页查询工时

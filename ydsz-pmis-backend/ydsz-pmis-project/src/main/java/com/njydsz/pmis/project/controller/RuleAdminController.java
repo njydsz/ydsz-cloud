@@ -424,7 +424,7 @@ public class RuleAdminController {
      */
     @OperationLog(module = "规则引擎", action = "删除测试用例", bizType = "RULE_TEST_CASE")
     @DeleteMapping("/test-cases/{id}")
-    public Result<Void> deleteTestCase(@PathVariable Long id) {
+    public Result<Void> deleteTestCase(@PathVariable String id) {
         ruleTestCaseMapper.deleteById(id);
         return Result.ok();
     }
@@ -782,7 +782,7 @@ public class RuleAdminController {
      */
     @OperationLog(module = "规则引擎", action = "删除决策表", bizType = "DECISION_TABLE")
     @DeleteMapping("/decision-tables/{id}")
-    public Result<Void> deleteDecisionTable(@PathVariable Long id) {
+    public Result<Void> deleteDecisionTable(@PathVariable String id) {
         decisionTableMapper.deleteById(id);
         return Result.ok();
     }

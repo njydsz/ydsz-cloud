@@ -169,7 +169,7 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) throws Exception {
+    public void delete(String id) throws Exception {
         FileDO f = fileMapper.selectById(id);
         if (f == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "文件不存在");
@@ -191,7 +191,7 @@ public class FileServiceImpl implements FileService {
         if (ids == null || ids.isEmpty()) {
             return;
         }
-        for (Long id : ids) {
+        for (String id : ids) {
             try {
                 delete(id);
             } catch (Exception e) {
@@ -209,7 +209,7 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     @Transactional(readOnly = true)
-    public FileDO getById(Long id) {
+    public FileDO getById(String id) {
         FileDO f = fileMapper.selectById(id);
         if (f == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "文件不存在");
@@ -226,7 +226,7 @@ public class FileServiceImpl implements FileService {
      * @throws BizException 当生成预签名 URL 失败时抛出
      */
     @Override
-    public String getPresignedUrl(Long id, Integer expireSeconds) {
+    public String getPresignedUrl(String id, Integer expireSeconds) {
         FileDO f = getById(id);
         int expire = expireSeconds == null ? minioConfig.getUrlExpireSeconds() : expireSeconds;
         try {
@@ -256,7 +256,7 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     @Transactional(readOnly = true)
-    public InputStream download(Long id) throws Exception {
+    public InputStream download(String id) throws Exception {
         FileDO f = getById(id);
         return minioClient.getObject(GetObjectArgs.builder()
                 .bucket(f.getBucket())

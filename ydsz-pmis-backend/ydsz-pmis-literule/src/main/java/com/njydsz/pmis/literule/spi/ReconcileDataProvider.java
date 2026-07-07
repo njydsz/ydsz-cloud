@@ -41,7 +41,7 @@ public interface ReconcileDataProvider {
      * @author ydsz-pmis-team
      */
     record TimeEntryRecord(
-            Long id,
+            String id,
             String projectId,
             String userId,
             LocalDate entryDate,
@@ -57,7 +57,7 @@ public interface ReconcileDataProvider {
      * @author ydsz-pmis-team
      */
     record CostAllocationRecord(
-            Long id,
+            String id,
             String projectId,
             LocalDate allocationDate,
             BigDecimal amount,

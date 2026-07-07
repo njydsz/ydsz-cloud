@@ -148,7 +148,7 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     @Transactional(readOnly = true)
-    public AgentPredictionDO getById(Long id) {
+    public AgentPredictionDO getById(String id) {
         AgentPredictionDO r = predictionMapper.selectById(id);
         if (r == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.agent.msg_99e3df42");

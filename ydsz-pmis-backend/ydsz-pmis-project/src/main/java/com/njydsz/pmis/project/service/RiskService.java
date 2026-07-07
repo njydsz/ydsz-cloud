@@ -38,7 +38,7 @@ public interface RiskService {
      *
      * @param id 风险ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询风险
@@ -46,7 +46,7 @@ public interface RiskService {
      * @param id 风险ID
      * @return 风险 VO（剥离 tenantId/providerTraceId/deleted/version 等敏感字段）
      */
-    RiskVO getById(Long id);
+    RiskVO getById(String id);
 
     /**
      * 分页查询风险

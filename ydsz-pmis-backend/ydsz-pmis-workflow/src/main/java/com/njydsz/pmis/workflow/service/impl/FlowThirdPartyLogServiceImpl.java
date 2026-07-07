@@ -61,13 +61,13 @@ public class FlowThirdPartyLogServiceImpl implements FlowThirdPartyLogService {
 
     @Override
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
-    public void updateSuccess(Long id) {
+    public void updateSuccess(String id) {
         updateStatus(id, STATUS_SUCCESS, null);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
-    public void updateFailed(Long id, String errorMsg) {
+    public void updateFailed(String id, String errorMsg) {
         updateStatus(id, STATUS_FAIL, truncate(errorMsg, 512));
     }
 
@@ -78,7 +78,7 @@ public class FlowThirdPartyLogServiceImpl implements FlowThirdPartyLogService {
      * @param status   处理状态
      * @param errorMsg 失败原因
      */
-    private void updateStatus(Long id, String status, String errorMsg) {
+    private void updateStatus(String id, String status, String errorMsg) {
         if (id == null) {
             return;
         }

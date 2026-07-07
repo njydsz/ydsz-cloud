@@ -151,7 +151,7 @@ public class SnowflakeIdGenerator {
      * @return 16 位 16 进制 traceId
      */
     public static String nextTraceId() {
-        long id = INSTANCE.generateId();
+        String id = INSTANCE.generateId();
         // 取低 64 位的中间 16 位作为 traceId，避免过长
         return String.format("%016x", id);
     }

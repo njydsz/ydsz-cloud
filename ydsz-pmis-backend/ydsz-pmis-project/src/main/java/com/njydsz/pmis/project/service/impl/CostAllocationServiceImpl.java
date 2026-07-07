@@ -116,7 +116,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
     @Transactional(rollbackFor = Exception.class)
     public void markAllocated(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
-        for (Long id : ids) {
+        for (String id : ids) {
             CostAllocationDO c = costAllocationMapper.selectById(id);
             if (c != null) {
                 c.setAllocated(1);

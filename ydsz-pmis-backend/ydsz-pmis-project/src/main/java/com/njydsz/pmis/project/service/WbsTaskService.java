@@ -41,14 +41,14 @@ public interface WbsTaskService {
      * @param progressPct  进度百分比
      * @param actualEffort 实际工时（人天）
      */
-    void updateProgress(Long id, BigDecimal progressPct, BigDecimal actualEffort);
+    void updateProgress(String id, BigDecimal progressPct, BigDecimal actualEffort);
 
     /**
      * 删除任务
      *
      * @param id 任务ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询任务
@@ -56,7 +56,7 @@ public interface WbsTaskService {
      * @param id 任务ID
      * @return 任务实体
      */
-    WbsTaskDO getById(Long id);
+    WbsTaskDO getById(String id);
 
     /**
      * 分页查询任务

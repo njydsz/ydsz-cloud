@@ -59,7 +59,7 @@ public class DataExportAuditServiceImpl {
      * @param id 记录 ID
      * @return 导出审计实体
      */
-    public DataExportAuditDO getById(Long id) {
+    public DataExportAuditDO getById(String id) {
         return mapper.selectById(id);
     }
 }

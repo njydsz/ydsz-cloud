@@ -21,7 +21,7 @@ public interface UserFeignClient {
      * @param id 用户 ID
      * @return 用户视图对象，不存在时返回 null
      */
-    UserVO getById(Long id);
+    UserVO getById(String id);
 
     /**
      * 批量查询用户

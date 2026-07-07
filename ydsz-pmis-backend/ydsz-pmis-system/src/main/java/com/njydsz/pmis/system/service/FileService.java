@@ -29,7 +29,7 @@ public interface FileService {
     /**
      * 删除文件
      */
-    void delete(Long id) throws Exception;
+    void delete(String id) throws Exception;
 
     /**
      * 批量删除
@@ -39,17 +39,17 @@ public interface FileService {
     /**
      * 获取文件元信息
      */
-    FileDO getById(Long id);
+    FileDO getById(String id);
 
     /**
      * 获取预签名下载 URL
      */
-    String getPresignedUrl(Long id, Integer expireSeconds);
+    String getPresignedUrl(String id, Integer expireSeconds);
 
     /**
      * 下载文件字节流
      */
-    InputStream download(Long id) throws Exception;
+    InputStream download(String id) throws Exception;
 
     /**
      * 按业务查询文件

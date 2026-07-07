@@ -291,7 +291,7 @@ public class EncryptedFieldMigrationService {
      * @param cipher 密文值
      * @throws SQLException SQL 执行异常
      */
-    private void updateCipher(Connection conn, MigrationColumn col, long id, String cipher) throws SQLException {
+    private void updateCipher(Connection conn, MigrationColumn col, String id, String cipher) throws SQLException {
         String sql = String.format("UPDATE %s SET \"%s\" = ? WHERE id = ?", col.table, col.cipherColumn);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, cipher);
@@ -429,7 +429,7 @@ public class EncryptedFieldMigrationService {
     /** 单行明文/密文数据（内部读取/比对用） */
     private static class RowData {
         /** 行主键 */
-        long id;
+        String id;
         /** 明文值 */
         String plainValue;
         /** 密文值 */

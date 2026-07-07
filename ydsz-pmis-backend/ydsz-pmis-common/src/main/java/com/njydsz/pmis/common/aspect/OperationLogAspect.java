@@ -185,7 +185,7 @@ public class OperationLogAspect {
      * 从方法参数中提取业务 ID（bizId）。
      *
      * <p>提取策略：遍历方法参数，优先取第一个 Long/Integer 类型且值 > 0 的参数，
-     * 常见于 {@code create(Long id)}、{@code update(Long id, DTO)}、{@code delete(Long id)} 等。
+     * 常见于 {@code create(String id)}、{@code update(String id, DTO)}、{@code delete(String id)} 等。
      * 跳过分页对象（IPage）。</p>
      *
      * @param args 方法参数数组

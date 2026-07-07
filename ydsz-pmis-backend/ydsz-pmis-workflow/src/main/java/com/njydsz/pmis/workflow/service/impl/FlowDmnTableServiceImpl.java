@@ -57,7 +57,7 @@ public class FlowDmnTableServiceImpl implements FlowDmnTableService {
 
     @Override
     @Transactional(readOnly = true)
-    public FlowDmnTableDO getById(Long id) {
+    public FlowDmnTableDO getById(String id) {
         if (id == null) {
             return null;
         }
@@ -145,7 +145,7 @@ public class FlowDmnTableServiceImpl implements FlowDmnTableService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CacheConstants.FLOW_DMN_BY_KEY_CACHE, allEntries = true)
-    public void publish(Long id) {
+    public void publish(String id) {
         if (id == null) {
             throw new IllegalArgumentException("决策表 id 不能为空");
         }

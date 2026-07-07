@@ -35,7 +35,7 @@ public interface ExpenseService {
      *
      * @param id 费用记录ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询费用记录
@@ -43,7 +43,7 @@ public interface ExpenseService {
      * @param id 费用记录ID
      * @return 费用实体
      */
-    ExpenseDO getById(Long id);
+    ExpenseDO getById(String id);
 
     /**
      * 分页查询费用记录

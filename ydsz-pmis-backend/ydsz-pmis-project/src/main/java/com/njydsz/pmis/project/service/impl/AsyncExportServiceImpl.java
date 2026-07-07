@@ -67,7 +67,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
                 + "VALUES (?, ?, ?::text, ?, ?, ?)";
         LocalDateTime now = LocalDateTime.now();
         jdbcTemplate.update(sql, userId, exportType, toJson(params), "PENDING", now, now.plusDays(7));
-        Long id = jdbcTemplate.queryForObject(
+        String id = jdbcTemplate.queryForObject(
                 "SELECT MAX(id) FROM pmis_export_record WHERE user_id = ? AND export_type = ?",
                 Long.class, userId, exportType);
         log.info("[AsyncExport] 提交导出任务: id={}, userId={}, type={}", id, userId, exportType);

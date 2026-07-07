@@ -342,7 +342,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         if (receiverIds instanceof List<?> list) {
             List<Long> ids = new ArrayList<>(list.size());
             for (Object o : list) {
-                Long id = asLong(o);
+                String id = asLong(o);
                 if (id != null) {
                     ids.add(id);
                 }

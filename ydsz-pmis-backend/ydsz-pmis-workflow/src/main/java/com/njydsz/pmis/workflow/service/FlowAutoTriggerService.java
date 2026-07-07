@@ -58,7 +58,7 @@ public interface FlowAutoTriggerService {
      *
      * @param id 规则 ID
      */
-    void deleteById(Long id);
+    void deleteById(String id);
 
     /**
      * 切换触发规则的启用/禁用状态
@@ -66,5 +66,5 @@ public interface FlowAutoTriggerService {
      * @param id 规则 ID
      * @return 切换后的状态：true=启用 / false=禁用
      */
-    boolean toggleEnabled(Long id);
+    boolean toggleEnabled(String id);
 }

@@ -29,7 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @Autowired
  * private ChaosService chaosService;
  *
- * public ContractVO getContract(Long id) {
+ * public ContractVO getContract(String id) {
  *     chaosService.maybeInject("ContractService.getContract");
  *     // ... 正常业务逻辑
  * }

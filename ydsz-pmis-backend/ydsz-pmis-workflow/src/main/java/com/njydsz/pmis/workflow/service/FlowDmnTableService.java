@@ -23,7 +23,7 @@ public interface FlowDmnTableService {
      * @param id 主键 ID
      * @return 决策表定义，不存在返回 null
      */
-    FlowDmnTableDO getById(Long id);
+    FlowDmnTableDO getById(String id);
 
     /**
      * 按 tableKey 获取决策表
@@ -67,7 +67,7 @@ public interface FlowDmnTableService {
      *
      * @param id 主键 ID
      */
-    void publish(Long id);
+    void publish(String id);
 
     /**
      * 执行决策

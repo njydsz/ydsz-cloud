@@ -32,7 +32,7 @@ public interface DeliveryItemMapper extends BaseMapper<DeliveryItemDO> {
      * @param status 目标状态
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status);
+    int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
      * 更新完成标记
@@ -41,7 +41,7 @@ public interface DeliveryItemMapper extends BaseMapper<DeliveryItemDO> {
      * @param completed 是否完成（0/1）
      * @return 受影响行数
      */
-    int updateTrCompleted(@Param("id") Long id, @Param("completed") Integer completed);
+    int updateTrCompleted(@Param("id") String id, @Param("completed") Integer completed);
 
     /**
      * 按立项 ID 查询交付项列表

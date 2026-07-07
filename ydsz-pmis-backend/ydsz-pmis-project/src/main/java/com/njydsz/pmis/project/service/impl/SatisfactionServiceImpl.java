@@ -68,7 +68,7 @@ public class SatisfactionServiceImpl implements SatisfactionService {
     }
 
     @Override
-    public void markFollowUp(Long id, String note) {
+    public void markFollowUp(String id, String note) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
         SatisfactionDO s = satisfactionMapper.selectById(id);
         if (s == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_4b213f7c");
@@ -78,7 +78,7 @@ public class SatisfactionServiceImpl implements SatisfactionService {
     }
 
     @Override
-    public void closeFollowUp(Long id) {
+    public void closeFollowUp(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
         SatisfactionDO s = satisfactionMapper.selectById(id);
         if (s == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_4b213f7c");
