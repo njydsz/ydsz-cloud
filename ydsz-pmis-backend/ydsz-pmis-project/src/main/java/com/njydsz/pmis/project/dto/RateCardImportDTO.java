@@ -31,7 +31,7 @@ import java.math.BigDecimal;
 @ColumnWidth(20)
 public class RateCardImportDTO implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 职级 L1-L18 */
     @NotBlank(message = "{validation.execution.msg_11653d4c}")

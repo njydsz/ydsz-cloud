@@ -24,7 +24,7 @@ import java.util.List;
 public class DataScopeContext implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 数据权限范围 */
     private DataScope scope;

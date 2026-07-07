@@ -22,7 +22,7 @@ import java.util.Map;
 public class FlowInstanceVariablesDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 流程变量（动态键值对，保持 Map 类型） */
     @NotNull(message = "{validation.workflow.msg_a2b3c4d1}")

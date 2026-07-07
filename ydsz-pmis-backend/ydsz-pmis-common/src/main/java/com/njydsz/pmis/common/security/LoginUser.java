@@ -24,7 +24,7 @@ import java.util.List;
 public class LoginUser implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 用户 ID（雪花算法字符串） */
     private String userId;

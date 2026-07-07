@@ -22,7 +22,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class VariableDefinition implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 变量名（如 cpi / budgetAmount / evmRedCount） */
     private String name;

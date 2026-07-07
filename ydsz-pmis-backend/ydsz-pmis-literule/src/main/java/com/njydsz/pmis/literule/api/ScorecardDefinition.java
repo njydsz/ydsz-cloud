@@ -64,7 +64,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ScorecardDefinition implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 规则编码（唯一） */
     private String ruleCode;
@@ -129,7 +129,7 @@ public class ScorecardDefinition implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ScoreFactor implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         /** 条件表达式（Aviator，返回 boolean） */
         private String conditionExpression;
         /** 命中时的固定得分（正分加分，负分扣分） */
@@ -154,7 +154,7 @@ public class ScorecardDefinition implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ScoreGrade implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         /** 评级名称（如 "A"、"优"、"高风险"） */
         private String label;
         /** 区间下界（含） */

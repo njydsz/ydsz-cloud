@@ -43,7 +43,7 @@ import java.util.Map;
 public class CEPPattern implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 模式类型 */
     public enum PatternType {
@@ -113,7 +113,7 @@ public class CEPPattern implements Serializable {
     @AllArgsConstructor
     public static class SequenceStep implements Serializable {
         @Serial
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
 
         /** 步骤序号（从 1 开始） */
         private int order;

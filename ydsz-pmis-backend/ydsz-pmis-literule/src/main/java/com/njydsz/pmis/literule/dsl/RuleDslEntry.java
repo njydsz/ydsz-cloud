@@ -33,7 +33,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class RuleDslEntry implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 规则编码（唯一） */
     private String code;
@@ -178,7 +178,7 @@ public class RuleDslEntry implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class FactorDsl implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         /** 条件表达式（命中条件） */
         private String when;
         /** 固定得分（正数加分，负数扣分） */
@@ -199,7 +199,7 @@ public class RuleDslEntry implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class GradeDsl implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         /** 评级名称（如 A / B / C / D） */
         private String label;
         /** 区间范围 [minScore, maxScore) */

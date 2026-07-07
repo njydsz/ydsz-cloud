@@ -17,7 +17,7 @@ import java.util.Map;
 @Data
 public class RealtimePushDTO implements Serializable {
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 消息数据（键值对形式） */
     private Map<String, Object> data;

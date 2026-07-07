@@ -17,7 +17,7 @@ public class ContractTemplateStatusDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 模板 ID */
     @NotBlank(message = "{validation.project.msg_ff1828c0}")

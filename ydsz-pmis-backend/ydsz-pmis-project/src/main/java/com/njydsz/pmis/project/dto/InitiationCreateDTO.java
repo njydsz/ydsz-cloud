@@ -23,7 +23,7 @@ public class InitiationCreateDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 项目编号 */
     @NotBlank

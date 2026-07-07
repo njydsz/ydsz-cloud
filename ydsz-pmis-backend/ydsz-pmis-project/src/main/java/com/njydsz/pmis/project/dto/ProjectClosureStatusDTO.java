@@ -17,7 +17,7 @@ import java.io.Serializable;
 public class ProjectClosureStatusDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @NotNull(message = "{validation.execution.msg_c9491140}")
     private String id;

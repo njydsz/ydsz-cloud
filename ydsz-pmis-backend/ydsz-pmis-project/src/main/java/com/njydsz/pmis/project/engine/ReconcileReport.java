@@ -18,7 +18,7 @@ import java.util.Map;
 public class ReconcileReport implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 校验的项目 ID */
     private String initiationId;

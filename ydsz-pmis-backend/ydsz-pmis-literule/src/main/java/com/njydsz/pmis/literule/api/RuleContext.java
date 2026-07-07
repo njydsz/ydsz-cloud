@@ -23,7 +23,7 @@ import java.util.UUID;
  */
 public final class RuleContext implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 默认租户 ID（单租户部署） */
     private static final String DEFAULT_TENANT_ID = "1";

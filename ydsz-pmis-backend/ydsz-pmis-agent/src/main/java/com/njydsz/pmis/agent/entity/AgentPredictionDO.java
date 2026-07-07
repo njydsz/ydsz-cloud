@@ -26,7 +26,7 @@ public class AgentPredictionDO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

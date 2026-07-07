@@ -22,7 +22,7 @@ import java.util.Map;
 @TableName(value = "pmis_rule_test_case", autoResultMap = true)
 public class RuleTestCaseDO implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

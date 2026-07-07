@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 public class InvoiceDO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)

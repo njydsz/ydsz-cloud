@@ -158,7 +158,7 @@ public class RuleCategoryTreeService {
     @lombok.Data
     public static class CategoryNode implements Serializable {
         @Serial
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
 
         private String name;
         private String path;

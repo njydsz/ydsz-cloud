@@ -37,7 +37,7 @@ import java.util.List;
 public class DmnRule implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 输入条件表达式列表（与决策表 inputs 一一对应） */
     private List<String> inputEntries;

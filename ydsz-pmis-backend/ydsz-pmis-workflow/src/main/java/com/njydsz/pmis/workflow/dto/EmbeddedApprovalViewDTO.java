@@ -41,7 +41,7 @@ import java.util.Map;
 public class EmbeddedApprovalViewDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 业务类型 */
     private String businessType;
@@ -88,7 +88,7 @@ public class EmbeddedApprovalViewDTO implements Serializable {
     @AllArgsConstructor
     public static class CurrentTaskView implements Serializable {
         @Serial
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
 
         /** 任务 ID */
         private String taskId;

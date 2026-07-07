@@ -21,7 +21,7 @@ import java.io.Serial;
 public class BizException extends RuntimeException {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 业务错误码 */
     private final int code;

@@ -22,7 +22,7 @@ import java.io.Serializable;
 public class FlowAiDraftCommentDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 任务 ID（必填） */
     @NotBlank(message = "{validation.workflow.msg_5a190a79}")

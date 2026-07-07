@@ -19,7 +19,7 @@ import java.io.Serial;
 public class NotificationQueryDTO extends PageQuery {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 分类过滤: SYSTEM/WORKFLOW/ALERT/TODO（可空） */
     private String category;

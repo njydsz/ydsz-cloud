@@ -26,7 +26,7 @@ public class OrchestrationResult implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 使用的编排模式 */
     private OrchestrationMode mode;

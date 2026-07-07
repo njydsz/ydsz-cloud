@@ -20,7 +20,7 @@ import java.util.Map;
 public class FlowStartProcessDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 流程编码（必填，如 project_initiation） */
     @NotBlank(message = "{validation.workflow.msg_ebccbe46}")

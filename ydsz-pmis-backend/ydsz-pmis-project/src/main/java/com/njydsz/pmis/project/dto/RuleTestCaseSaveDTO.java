@@ -23,7 +23,7 @@ import java.util.Map;
 public class RuleTestCaseSaveDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @Schema(description = "测试用例 ID（更新时传入）")
     private String id;

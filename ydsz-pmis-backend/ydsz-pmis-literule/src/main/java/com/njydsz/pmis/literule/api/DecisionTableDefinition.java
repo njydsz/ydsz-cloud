@@ -46,7 +46,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class DecisionTableDefinition implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 表编码（唯一） */
     private String tableCode;
@@ -99,7 +99,7 @@ public class DecisionTableDefinition implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Column implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         /** 列字段名（事实键名） */
         private String name;
         /** 列显示名 */
@@ -116,7 +116,7 @@ public class DecisionTableDefinition implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Row implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         /**
          * 条件映射：key=列名，value=条件表达式
          * <p>支持以下形式：

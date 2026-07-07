@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @AllArgsConstructor
 public class RuleEngineStats implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 总评估次数 */
     private long totalEvaluations;
@@ -56,7 +56,7 @@ public class RuleEngineStats implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RuleStat implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         /** 执行次数 */
         private long executions;
         /** 触发次数 */

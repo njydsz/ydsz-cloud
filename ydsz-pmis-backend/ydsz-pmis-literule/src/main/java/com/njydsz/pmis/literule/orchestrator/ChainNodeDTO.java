@@ -37,7 +37,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class ChainNodeDTO implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 节点 ID（画布内唯一，前端生成的 uuid 或后端分配的有序 id） */
     private String nodeId;
@@ -89,7 +89,7 @@ public class ChainNodeDTO implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Position implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         private double x;
         private double y;
     }
@@ -104,7 +104,7 @@ public class ChainNodeDTO implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Size implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         private double width;
         private double height;
     }

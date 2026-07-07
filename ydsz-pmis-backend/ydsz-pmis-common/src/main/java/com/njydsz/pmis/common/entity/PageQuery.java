@@ -25,7 +25,7 @@ public class PageQuery implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 每页最大限制（P2-3 安全防护） */
     public static final long MAX_SIZE = 200;

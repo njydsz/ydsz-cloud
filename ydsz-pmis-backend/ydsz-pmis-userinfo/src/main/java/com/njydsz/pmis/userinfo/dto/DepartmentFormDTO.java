@@ -19,7 +19,7 @@ import java.io.Serializable;
 public class DepartmentFormDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @Schema(description = "部门 ID（更新时必填）")
     private String id;

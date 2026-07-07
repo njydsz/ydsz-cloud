@@ -16,7 +16,7 @@ import java.util.List;
 @Slf4j
 public class CEPPatternFactory implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 

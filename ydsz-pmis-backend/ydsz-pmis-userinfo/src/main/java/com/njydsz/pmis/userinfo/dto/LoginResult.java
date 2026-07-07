@@ -21,7 +21,7 @@ import java.io.Serializable;
 public class LoginResult implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 访问 token */
     private String accessToken;

@@ -21,7 +21,7 @@ import java.util.Map;
 public class CEPHit implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 命中的模式 ID */
     private String patternId;

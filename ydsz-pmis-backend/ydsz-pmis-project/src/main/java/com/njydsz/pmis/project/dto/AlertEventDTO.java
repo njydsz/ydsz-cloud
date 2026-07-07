@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 public class AlertEventDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 事件 ID（UUID） */
     private String eventId;

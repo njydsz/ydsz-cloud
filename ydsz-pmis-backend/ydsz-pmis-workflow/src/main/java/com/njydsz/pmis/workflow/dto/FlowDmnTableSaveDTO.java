@@ -21,7 +21,7 @@ import java.io.Serializable;
 public class FlowDmnTableSaveDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @Schema(description = "决策表 ID（更新时传入）")
     private String id;

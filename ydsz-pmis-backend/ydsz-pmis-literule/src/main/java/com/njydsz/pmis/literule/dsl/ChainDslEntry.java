@@ -69,7 +69,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class ChainDslEntry implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 链名称（唯一标识） */
     private String name;

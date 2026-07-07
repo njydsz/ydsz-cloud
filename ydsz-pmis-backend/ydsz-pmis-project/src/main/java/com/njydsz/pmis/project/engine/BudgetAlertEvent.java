@@ -27,7 +27,7 @@ import java.math.BigDecimal;
 public class BudgetAlertEvent implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 预算告警级别 */
     public enum Level {

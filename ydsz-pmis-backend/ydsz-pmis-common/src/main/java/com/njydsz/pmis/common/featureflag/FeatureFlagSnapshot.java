@@ -26,7 +26,7 @@ public class FeatureFlagSnapshot implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 唯一键 (对应 FeatureFlag.name()) */
     private String key;

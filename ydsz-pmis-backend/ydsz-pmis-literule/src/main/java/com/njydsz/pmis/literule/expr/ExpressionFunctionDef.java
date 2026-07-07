@@ -28,7 +28,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ExpressionFunctionDef implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 函数名 */
     private String name;

@@ -12,7 +12,7 @@ package com.njydsz.pmis.literule.ai;
  */
 public class LLMException extends RuntimeException {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 提供方 */
     private final String provider;

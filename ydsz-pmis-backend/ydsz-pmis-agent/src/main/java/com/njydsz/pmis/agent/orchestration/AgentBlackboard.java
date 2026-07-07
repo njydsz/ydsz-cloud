@@ -32,7 +32,7 @@ public class AgentBlackboard implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 业务事实（只读上下文） */
     private Map<String, Object> facts = new HashMap<>();
@@ -106,7 +106,7 @@ public class AgentBlackboard implements Serializable {
     public static class TraceEntry implements Serializable {
         /** 序列化版本号 */
         @Serial
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         /** Agent 类型 */
         private String agentType;
         /** 编排模式码（OrchestrationMode.code） */

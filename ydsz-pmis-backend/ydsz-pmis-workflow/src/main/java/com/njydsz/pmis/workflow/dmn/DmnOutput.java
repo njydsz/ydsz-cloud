@@ -22,7 +22,7 @@ import java.io.Serializable;
 public class DmnOutput implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 输出字段名 */
     private String name;

@@ -19,7 +19,7 @@ import java.util.Map;
 public class MessageSendDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @Schema(description = "通道: SMS/EMAIL/PUSH", requiredMode = RequiredMode.REQUIRED)
     private String channel;

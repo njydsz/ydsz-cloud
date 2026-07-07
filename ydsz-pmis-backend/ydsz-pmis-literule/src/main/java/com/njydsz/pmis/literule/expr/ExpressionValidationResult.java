@@ -27,7 +27,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ExpressionValidationResult implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 错误类型枚举 */
     public enum ErrorType {

@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 public class ProfitSimulationDO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

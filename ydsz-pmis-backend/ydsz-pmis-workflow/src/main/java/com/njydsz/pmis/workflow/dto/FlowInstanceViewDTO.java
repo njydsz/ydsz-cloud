@@ -23,7 +23,7 @@ import java.util.List;
 public class FlowInstanceViewDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 实例 ID */
     private String id;
@@ -70,7 +70,7 @@ public class FlowInstanceViewDTO implements Serializable {
     @AllArgsConstructor
     public static class FlowTaskViewDTO implements Serializable {
         @Serial
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         /** 任务 ID */
         private String id;
         /** 节点编码 */

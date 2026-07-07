@@ -23,7 +23,7 @@ public abstract class BaseDO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 创建人 ID（雪花算法字符串） */
     @TableField(fill = FieldFill.INSERT)

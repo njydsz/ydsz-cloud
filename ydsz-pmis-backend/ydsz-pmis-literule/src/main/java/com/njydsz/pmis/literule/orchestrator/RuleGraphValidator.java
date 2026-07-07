@@ -142,7 +142,7 @@ public final class RuleGraphValidator {
      * 画布验证问题
      */
     public static final class GraphValidationIssue implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
 
         private final Level level;
         private final String code;

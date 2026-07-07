@@ -19,7 +19,7 @@ import java.io.Serializable;
 public class DataExportAuditEvent implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /**
      * 操作用户 ID（雪花算法字符串 VARCHAR(20)）。

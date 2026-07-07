@@ -19,7 +19,7 @@ import java.time.LocalDate;
 public class LeaveCreateDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 员工 ID */
     private String employeeId;

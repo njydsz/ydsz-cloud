@@ -62,7 +62,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class RuleDsl implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 规则定义列表 */
     private List<RuleDslEntry> rules;

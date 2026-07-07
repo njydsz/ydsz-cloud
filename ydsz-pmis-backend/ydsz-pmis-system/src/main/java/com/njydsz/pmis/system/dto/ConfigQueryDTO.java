@@ -16,7 +16,7 @@ import java.io.Serial;
 public class ConfigQueryDTO extends PageQuery {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 关键字: 模糊匹配 configKey / configValue / description */
     private String keyword;

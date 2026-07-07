@@ -19,7 +19,7 @@ import java.util.Map;
 public class InstanceMigrationResultDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 符合迁移条件的实例总数 */
     private int totalInstances;
@@ -49,7 +49,7 @@ public class InstanceMigrationResultDTO implements Serializable {
     public static class MigrationDetail implements Serializable {
 
         @Serial
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
 
         /** 实例 ID */
         private String instanceId;

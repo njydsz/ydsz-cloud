@@ -24,7 +24,7 @@ public class OpportunityCreateDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 商机编号 */
     @NotBlank

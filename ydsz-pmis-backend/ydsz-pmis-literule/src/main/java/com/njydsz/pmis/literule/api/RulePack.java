@@ -32,7 +32,7 @@ import java.util.List;
 @Builder
 public class RulePack implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 规则集编码（唯一） */
     private String packCode;

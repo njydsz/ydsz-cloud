@@ -23,7 +23,7 @@ import java.io.Serializable;
 public class DmnInput implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 输入字段名（对应上下文变量 key） */
     private String name;

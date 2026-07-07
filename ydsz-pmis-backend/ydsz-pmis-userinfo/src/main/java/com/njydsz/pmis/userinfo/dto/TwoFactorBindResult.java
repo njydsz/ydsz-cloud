@@ -22,7 +22,7 @@ import java.util.List;
 public class TwoFactorBindResult implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** TOTP secret (Base32) */
     private String secret;

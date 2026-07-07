@@ -18,7 +18,7 @@ public class ProjectChangeStatusDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 变更 ID */
     @NotNull(message = "{validation.project.msg_ad21f8c7}")

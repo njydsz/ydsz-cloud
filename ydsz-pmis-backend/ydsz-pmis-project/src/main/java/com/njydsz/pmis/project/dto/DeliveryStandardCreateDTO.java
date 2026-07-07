@@ -16,7 +16,7 @@ import java.io.Serializable;
 public class DeliveryStandardCreateDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "{validation.execution.msg_40dfe929}")
     private String projectType;

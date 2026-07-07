@@ -21,7 +21,7 @@ import java.io.Serializable;
 public class LoginRequest implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 用户名 */
     private String username;

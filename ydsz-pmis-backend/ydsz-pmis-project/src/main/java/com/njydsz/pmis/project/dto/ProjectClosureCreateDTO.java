@@ -19,7 +19,7 @@ import java.time.LocalDate;
 public class ProjectClosureCreateDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "{validation.execution.msg_baf9cac6}")
     private String closureCode;

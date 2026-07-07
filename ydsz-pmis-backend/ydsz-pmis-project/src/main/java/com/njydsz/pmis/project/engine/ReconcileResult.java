@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 public class ReconcileResult implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 校验类型 */
     private ReconcileType type;

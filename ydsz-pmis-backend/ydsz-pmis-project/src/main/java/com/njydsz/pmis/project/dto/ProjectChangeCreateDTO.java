@@ -19,7 +19,7 @@ public class ProjectChangeCreateDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 变更编号 */
     @NotBlank(message = "{validation.project.msg_00a4ec00}")

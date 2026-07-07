@@ -30,7 +30,7 @@ import java.io.Serializable;
 public class CursorPageQuery implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 每页最大限制 */
     public static final long MAX_SIZE = 200;

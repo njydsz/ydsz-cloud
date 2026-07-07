@@ -24,7 +24,7 @@ import java.util.List;
 public class UserVO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 用户 ID */
     private String id;

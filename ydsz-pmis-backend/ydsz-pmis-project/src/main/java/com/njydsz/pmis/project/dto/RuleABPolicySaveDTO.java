@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 public class RuleABPolicySaveDTO implements Serializable {
 
     @Serial
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     @Schema(description = "是否启用自动回滚")
     private Boolean autoRollbackEnabled;
