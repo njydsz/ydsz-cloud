@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
@@ -78,7 +79,7 @@ class ConfigServiceImplTest {
 
             assertThat(result).isNotNull();
             verify(configMapper).selectByGroupAndKey("test_group", "test_key");
-            verify(valueOperations).set(anyString(), anyString(), any(java.time.Duration.class));
+            verify(valueOperations).set(anyString(), anyString(), any(Duration.class));
         }
     }
 

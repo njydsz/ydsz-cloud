@@ -8,7 +8,11 @@ import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.impl.ExpressionRule;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -39,8 +43,8 @@ public class RuleCanaryRouter {
     private final ExpressionEvaluator evaluator;
 
     /** 灰度桶计数器：ruleCode -> {PRIMARY: count, CANARY: count} */
-    private final java.util.concurrent.ConcurrentMap<String, long[]> bucketCounts =
-            new java.util.concurrent.ConcurrentHashMap<>();
+    private final ConcurrentMap<String, long[]> bucketCounts =
+            new ConcurrentHashMap<>();
 
     public RuleCanaryRouter(ExpressionEvaluator evaluator) {
         this.evaluator = evaluator;
@@ -187,8 +191,8 @@ public class RuleCanaryRouter {
      *
      * @return ruleCode -> [primaryCount, canaryCount]
      */
-    public java.util.Map<String, long[]> getCanaryBucketStats() {
-        return new java.util.HashMap<>(bucketCounts);
+    public Map<String, long[]> getCanaryBucketStats() {
+        return new HashMap<>(bucketCounts);
     }
 
     /**

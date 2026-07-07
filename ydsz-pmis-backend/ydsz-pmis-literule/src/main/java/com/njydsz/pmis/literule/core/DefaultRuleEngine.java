@@ -152,12 +152,12 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             // 断点调试（P2-3）：仅在规则设置了断点时触发，避免对全部规则产生性能开销
             BreakpointHook bpHook = this.breakpointHook;
             boolean hasBreakpoint = bpHook != null && bpHook.hasBreakpoint(rule.getCode());
-            java.util.Map<String, Object> bpFactsSnapshot = null;
+            Map<String, Object> bpFactsSnapshot = null;
             if (hasBreakpoint) {
                 // 提取 final 局部变量，IDE 才能识别为非空
                 final BreakpointHook hook = Objects.requireNonNull(bpHook, "breakpointHook");
                 try {
-                    bpFactsSnapshot = new java.util.LinkedHashMap<>(context.getFacts());
+                    bpFactsSnapshot = new LinkedHashMap<>(context.getFacts());
                     BreakpointHook.BreakpointContext beforeCtx = new BreakpointHook.BreakpointContext(
                             "BEFORE", context.getTraceId(), rule.getCode(), rule.getName(),
                             scenario, bpFactsSnapshot);

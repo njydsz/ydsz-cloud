@@ -47,7 +47,7 @@ public class BenchRecordDO implements Serializable {
     /** 入池原因：PROJECT_END/RESERVE/TRAINING/LEAVE */
     private String reasonType;
     /** 触发本次 Bench 的分配记录 ID */
-    private Long sourceAssignment;
+    private String sourceAssignment;
 
     /** 入池日期 */
     private LocalDate benchDate;

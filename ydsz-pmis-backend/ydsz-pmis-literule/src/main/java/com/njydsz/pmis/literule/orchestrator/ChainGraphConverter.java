@@ -168,7 +168,7 @@ public final class ChainGraphConverter {
                                     AtomicInteger nodeSeq,
                                     List<ChainNodeDTO> nodes,
                                     List<ChainEdgeDTO> edges) {
-        java.util.List<Map.Entry<String, RuleNode>> branches = chain.getElifBranches();
+        List<Map.Entry<String, RuleNode>> branches = chain.getElifBranches();
         if (branches != null) {
             for (Map.Entry<String, RuleNode> branch : branches) {
                 String nodeId = "node-" + nodeSeq.incrementAndGet();

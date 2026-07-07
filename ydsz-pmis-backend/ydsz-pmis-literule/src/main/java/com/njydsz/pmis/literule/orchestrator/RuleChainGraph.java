@@ -90,7 +90,7 @@ public class RuleChainGraph implements Serializable {
     private Viewport viewport;
 
     /** 画布元数据扩展（如作者、标签、自定义属性） */
-    private java.util.Map<String, Object> metadata;
+    private Map<String, Object> metadata;
 
     /** 创建时间 */
     private LocalDateTime createdAt;

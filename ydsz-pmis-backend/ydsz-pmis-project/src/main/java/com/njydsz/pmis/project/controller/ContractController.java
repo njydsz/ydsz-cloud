@@ -85,7 +85,7 @@ public class ContractController {
     @Idempotent(key = "contract:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "合同管理", action = "删除合同", bizType = "CONTRACT")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "合同ID") @PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "合同ID") @PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -99,7 +99,7 @@ public class ContractController {
     @Operation(summary = "合同详情")
     @PrePermission("project:contract:list")
     @GetMapping("/{id}")
-    public Result<ContractDO> get(@Parameter(description = "合同ID") @PathVariable @Min(1) Long id) {
+    public Result<ContractDO> get(@Parameter(description = "合同ID") @PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
@@ -136,7 +136,7 @@ public class ContractController {
     @Operation(summary = "重新评估风险等级")
     @PrePermission("project:contract:evaluate")
     @PostMapping("/{id}/evaluate-risk")
-    public Result<String> evaluateRisk(@Parameter(description = "合同ID") @PathVariable @Min(1) Long id) {
+    public Result<String> evaluateRisk(@Parameter(description = "合同ID") @PathVariable String id) {
         return Result.ok(service.evaluateRisk(id));
     }
 
@@ -149,7 +149,7 @@ public class ContractController {
     @Operation(summary = "按状态聚合")
     @PrePermission("project:contract:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByStatus(tenantId));
     }
 
@@ -162,7 +162,7 @@ public class ContractController {
     @Operation(summary = "按风险等级聚合")
     @PrePermission("project:contract:list")
     @GetMapping("/aggregate/risk")
-    public Result<List<Map<String, Object>>> aggregateByRisk(@Parameter(description = "租户ID") @RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByRisk(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByRisk(tenantId));
     }
 }

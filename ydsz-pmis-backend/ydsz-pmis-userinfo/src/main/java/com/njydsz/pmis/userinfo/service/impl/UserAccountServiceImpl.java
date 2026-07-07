@@ -127,7 +127,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.USER_BY_ID_CACHE, key = "#userId",
             unless = "#result == null")
-    public UserAccountDO findById(Long userId) {
+    public UserAccountDO findById(String userId) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
@@ -137,7 +137,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserVO findVoById(Long userId) {
+    public UserVO findVoById(String userId) {
         return toVo(findById(userId));
     }
 
@@ -199,7 +199,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(UserAccountDO user, String rawPassword) {
+    public String create(UserAccountDO user, String rawPassword) {
         if (findByUsername(user.getUsername()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_a633b7b9");
         }
@@ -246,7 +246,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.USER_BY_ID_CACHE, CacheConstants.USER_BY_USERNAME_CACHE},
             allEntries = true)
-    public void delete(Long userId) {
+    public void delete(String userId) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
@@ -267,7 +267,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.USER_BY_ID_CACHE, CacheConstants.USER_BY_USERNAME_CACHE},
             allEntries = true)
-    public void resetPassword(Long userId, String newPassword) {
+    public void resetPassword(String userId, String newPassword) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
@@ -290,7 +290,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @CacheEvict(value = {CacheConstants.USER_BY_ID_CACHE, CacheConstants.USER_BY_USERNAME_CACHE},
             allEntries = true)
-    public void toggleStatus(Long userId, String status) {
+    public void toggleStatus(String userId, String status) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
@@ -301,13 +301,13 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void assignRoles(Long userId, List<Long> roleIds) {
+    public void assignRoles(String userId, List<String> roleIds) {
         userRoleMapper.delete(new LambdaQueryWrapper<UserRoleDO>()
                 .eq(UserRoleDO::getUserId, userId));
         if (roleIds == null || roleIds.isEmpty()) {
             return;
         }
-        for (Long rid : roleIds) {
+        for (String rid : roleIds) {
             UserRoleDO ur = new UserRoleDO();
             ur.setUserId(userId);
             ur.setRoleId(rid);
@@ -318,7 +318,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @DS(DataSourceConstants.SLAVE)
     @Transactional(readOnly = true)
-    public List<Long> listRoleIds(Long userId) {
+    public List<String> listRoleIds(String userId) {
         return userRoleMapper.selectRoleIdsByUserId(userId);
     }
 
@@ -418,7 +418,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @SuppressWarnings("deprecation")
-    public void changePassword(Long userId, String oldPassword, String newPassword) {
+    public void changePassword(String userId, String oldPassword, String newPassword) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
@@ -450,7 +450,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void upgradePasswordHash(Long userId, String bcryptHash) {
+    public void upgradePasswordHash(String userId, String bcryptHash) {
         if (userId == null || !CryptoUtil.isBCryptFormat(bcryptHash)) {
             log.warn("[User] 跳过密码哈希升级：参数非法 userId={} format={}",
                     userId, bcryptHash == null ? "null" : "invalid");
@@ -472,7 +472,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void clearLoginFailCount(Long userId) {
+    public void clearLoginFailCount(String userId) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) return;
         u.setLoginFailCount(0);
@@ -484,7 +484,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.USER_BY_ID_CACHE, CacheConstants.USER_BY_USERNAME_CACHE},
             allEntries = true)
-    public void lockAccount(Long userId, LocalDateTime lockedUntil) {
+    public void lockAccount(String userId, LocalDateTime lockedUntil) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
             log.warn("[User] 锁定账号失败: 用户不存在 userId={}", userId);
@@ -535,18 +535,18 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (u.getDeptId() != null) {
             claims.put("deptId", u.getDeptId());
         }
-        List<Long> deptIds = resolveDeptIds(u.getDeptId());
+        List<String> deptIds = resolveDeptIds(u.getDeptId());
         if (deptIds != null && !deptIds.isEmpty()) {
             claims.put("deptIds", deptIds);
         }
-        List<Long> customDeptIds = parseCustomDeptIds(u.getCustomDeptIds());
+        List<String> customDeptIds = parseCustomDeptIds(u.getCustomDeptIds());
         if (customDeptIds != null && !customDeptIds.isEmpty()) {
             claims.put("customDeptIds", customDeptIds);
         }
         return JwtSimpleBuilder.build(claims, ACCESS_TOKEN_EXPIRE_SECONDS);
     }
 
-    private String issueRefreshToken(Long userId) {
+    private String issueRefreshToken(String userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("type", "refresh");
@@ -556,25 +556,21 @@ public class UserAccountServiceImpl implements UserAccountService {
     /**
      * P1-6 修复: 解析 CUSTOM 模式自定义部门 ID 集
      *
-     * <p>UserAccountDO.customDeptIds 为逗号分隔字符串（如 "1,3,5"），解析为 List&lt;Long&gt;。
+     * <p>UserAccountDO.customDeptIds 为逗号分隔字符串（如 "1,3,5"），解析为 List&lt;String&gt;。
      * 解析失败时跳过非法值并打印告警。
      *
      * @param customDeptIds 逗号分隔的部门 ID 字符串
-     * @return Long 列表，为空时返回 null
+     * @return String 列表，为空时返回 null
      */
-    private List<Long> parseCustomDeptIds(String customDeptIds) {
+    private List<String> parseCustomDeptIds(String customDeptIds) {
         if (customDeptIds == null || customDeptIds.isBlank()) {
             return null;
         }
-        List<Long> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (String s : customDeptIds.split(",")) {
             String trimmed = s.trim();
             if (!trimmed.isEmpty()) {
-                try {
-                    result.add(Long.parseLong(trimmed));
-                } catch (NumberFormatException e) {
-                    log.warn("[User] customDeptIds 解析失败，跳过非数字值: {}", trimmed);
-                }
+                result.add(trimmed);
             }
         }
         return result.isEmpty() ? null : result;
@@ -589,7 +585,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @param deptId 当前用户所属部门 ID
      * @return 部门 ID 链（含当前部门），为 null 时返回 null
      */
-    private List<Long> resolveDeptIds(Long deptId) {
+    private List<String> resolveDeptIds(String deptId) {
         if (deptId == null) {
             return null;
         }
@@ -602,7 +598,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                 return List.of(deptId);
             }
             String prefix = current.getDeptPath() + "/";
-            List<Long> ids = new ArrayList<>();
+            List<String> ids = new ArrayList<>();
             ids.add(deptId);
             for (DepartmentDO d : all) {
                 if (d.getDeptPath() != null && d.getDeptPath().startsWith(prefix)) {
@@ -617,7 +613,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
     }
 
-    private void publishAudit(LoginRequest req, Long userId, LoginStatus status,
+    private void publishAudit(LoginRequest req, String userId, LoginStatus status,
                               String reason, boolean mfaUsed, Boolean mfaSuccess) {
         try {
             LoginAuditEvent e = LoginAuditEvent.builder()

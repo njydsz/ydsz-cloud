@@ -14,6 +14,8 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -319,7 +321,7 @@ public class ScriptRule implements Rule {
     }
 
     /** 危险 API 模式正则（通用，适用于所有 JSR-223 语言） */
-    private static final java.util.regex.Pattern DANGEROUS_PATTERN = java.util.regex.Pattern.compile(
+    private static final Pattern DANGEROUS_PATTERN = Pattern.compile(
         "\\b(System\\s*\\.\\s*exit|Runtime\\s*\\.\\s*getRuntime|ProcessBuilder|Class\\s*\\.\\s*forName|" +
         "ClassLoader|FileInputStream|FileOutputStream|RandomAccessFile|Socket\\s*\\(|URL\\s*\\.\\s*openConnection|" +
         "HttpURLConnection|\\bexec\\s*\\(|loadClass|invokeMethod|ScriptEngine|GroovyShell|" +
@@ -333,7 +335,7 @@ public class ScriptRule implements Rule {
      * @throws SecurityException 检测到危险 API
      */
     private static void checkScriptSafety(String script) {
-        java.util.regex.Matcher matcher = DANGEROUS_PATTERN.matcher(script);
+        Matcher matcher = DANGEROUS_PATTERN.matcher(script);
         if (matcher.find()) {
             throw new SecurityException("脚本包含被禁止的 API 调用: " + matcher.group()
                     + "（沙箱模式禁止 System.exit/Runtime.exec/反射/文件I/O/网络访问等）");

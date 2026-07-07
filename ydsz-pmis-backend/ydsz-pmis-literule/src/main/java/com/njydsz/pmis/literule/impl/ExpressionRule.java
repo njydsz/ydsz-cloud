@@ -10,6 +10,8 @@ import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 表达式规则：基于 Aviator 表达式动态评估
@@ -161,8 +163,8 @@ public class ExpressionRule implements Rule {
         }
         String result = template;
         // 匹配 ${...} 模式，支持嵌套表达式和格式化
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\$\\{([^}]+)}");
-        java.util.regex.Matcher matcher = pattern.matcher(result);
+        Pattern pattern = Pattern.compile("\\$\\{([^}]+)}");
+        Matcher matcher = pattern.matcher(result);
         StringBuilder sb = new StringBuilder();
         while (matcher.find()) {
             String expr = matcher.group(1).trim();
@@ -196,7 +198,7 @@ public class ExpressionRule implements Rule {
                 Object factValue = context.getFacts().get(expr);
                 replacement = factValue != null ? String.valueOf(factValue) : "${" + expr + "}";
             }
-            matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(replacement));
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(sb);
         return sb.toString();

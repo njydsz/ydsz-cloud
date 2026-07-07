@@ -11,6 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -72,7 +74,7 @@ class FlowThirdPartyLogServiceImplTest {
     @Test
     @DisplayName("savePending - 已有 createdAt 时不覆盖")
     void savePendingShouldNotOverwriteExistingCreatedAt() {
-        java.time.LocalDateTime fixed = java.time.LocalDateTime.of(2026, 1, 1, 10, 0);
+        LocalDateTime fixed = LocalDateTime.of(2026, 1, 1, 10, 0);
         FlowThirdPartyLogDO logEntry = new FlowThirdPartyLogDO();
         logEntry.setPlatform("FEISHU");
         logEntry.setEventType("approval.approved");

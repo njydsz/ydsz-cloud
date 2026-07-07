@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -145,7 +146,7 @@ public class RuleHealthScoreService {
      * @return 评分结果列表（与输入顺序一致）
      */
     public List<RuleHealthScore> scoreBatch(List<RuleDefinition> rules,
-                                            java.util.Map<String, RuleEngineStats> stats) {
+                                            Map<String, RuleEngineStats> stats) {
         if (rules == null || rules.isEmpty()) {
             return Collections.emptyList();
         }

@@ -299,7 +299,7 @@ public class RuleRecommendationService {
         }
         String result = expression.replace(">=", ">").replace("<=", "<");
         // 简单的数字字面量放宽（不处理完整表达式解析，仅适合作为提示）
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+(?:\\.\\d+)?)").matcher(result);
+        Matcher m = Pattern.compile("(\\d+(?:\\.\\d+)?)").matcher(result);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
             double v = Double.parseDouble(m.group(1));

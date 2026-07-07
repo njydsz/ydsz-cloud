@@ -53,7 +53,7 @@ public class ResourceAssignmentController {
     @PrePermission("resource:assign:act")
     @OperationLog(module = "资源分配", action = "分配动作", bizType = "RESOURCE_ASSIGN")
     @PostMapping("/act")
-    public Result<Long> act(@Valid @RequestBody ResourceAssignmentCreateDTO dto) {
+    public Result<String> act(@Valid @RequestBody ResourceAssignmentCreateDTO dto) {
         return Result.ok(assignmentService.act(dto));
     }
 
@@ -65,7 +65,7 @@ public class ResourceAssignmentController {
      */
     @Operation(summary = "分配详情")
     @GetMapping("/{id}")
-    public Result<ResourceAssignmentDO> get(@PathVariable @Min(1) Long id) {
+    public Result<ResourceAssignmentDO> get(@PathVariable String id) {
         return Result.ok(assignmentService.getById(id));
     }
 
@@ -77,7 +77,7 @@ public class ResourceAssignmentController {
      */
     @Operation(summary = "按员工查询")
     @GetMapping("/by-employee/{employeeId}")
-    public Result<List<ResourceAssignmentDO>> listByEmployee(@PathVariable @Min(1) Long employeeId) {
+    public Result<List<ResourceAssignmentDO>> listByEmployee(@PathVariable String employeeId) {
         return Result.ok(assignmentService.listByEmployee(employeeId));
     }
 
@@ -89,7 +89,7 @@ public class ResourceAssignmentController {
      */
     @Operation(summary = "按项目查询")
     @GetMapping("/by-initiation/{initiationId}")
-    public Result<List<ResourceAssignmentDO>> listByInitiation(@PathVariable @Min(1) Long initiationId) {
+    public Result<List<ResourceAssignmentDO>> listByInitiation(@PathVariable String initiationId) {
         return Result.ok(assignmentService.listByInitiation(initiationId));
     }
 
@@ -101,7 +101,7 @@ public class ResourceAssignmentController {
      */
     @Operation(summary = "员工活跃项目数")
     @GetMapping("/active-count/{employeeId}")
-    public Result<Integer> activeCount(@PathVariable @Min(1) Long employeeId) {
+    public Result<Integer> activeCount(@PathVariable String employeeId) {
         return Result.ok(assignmentService.activeCount(employeeId));
     }
 
@@ -113,7 +113,7 @@ public class ResourceAssignmentController {
      */
     @Operation(summary = "员工利用率")
     @GetMapping("/utilization/{employeeId}")
-    public Result<Map<String, Object>> utilization(@PathVariable @Min(1) Long employeeId) {
+    public Result<Map<String, Object>> utilization(@PathVariable String employeeId) {
         return Result.ok(assignmentService.utilization(employeeId));
     }
 
@@ -132,8 +132,8 @@ public class ResourceAssignmentController {
     public Result<Page<ResourceAssignmentDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) Long employeeId,
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String employeeId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String status) {
         return Result.ok(assignmentService.page(page, size, employeeId, initiationId, status));
     }

@@ -216,7 +216,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BizException(BizErrorCode.TOKEN_INVALID);
         }
 
-        Long userId = jwtTokenProvider.getUserId(refreshToken);
+        String userId = jwtTokenProvider.getUserId(refreshToken);
 
         // 重新加载上下文（角色权限可能已变）
         LoginContextDTO ctx = buildContext(userAccountService.findById(userId));

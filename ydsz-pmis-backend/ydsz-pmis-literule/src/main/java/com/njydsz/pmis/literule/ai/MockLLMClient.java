@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.ai;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,7 +33,7 @@ public class MockLLMClient implements LLMClient {
     }
 
     @Override
-    public String chatWithHistory(java.util.List<Map<String, String>> messages, Map<String, Object> options) {
+    public String chatWithHistory(List<Map<String, String>> messages, Map<String, Object> options) {
         if (messages == null || messages.isEmpty()) {
             return "";
         }

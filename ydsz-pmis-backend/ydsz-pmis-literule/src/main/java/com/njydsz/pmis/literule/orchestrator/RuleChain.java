@@ -17,6 +17,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * 规则链，支持 THEN/IF/ELIF/SWITCH/WHEN/FOR/WHILE/BREAK 编排
@@ -326,7 +329,7 @@ public class RuleChain {
      */
     public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator,
                                      StatsRecorder statsRecorder,
-                                     java.util.concurrent.ExecutorService parallelExecutor,
+                                     ExecutorService parallelExecutor,
                                      long timeoutMs) {
         Objects.requireNonNull(context, "context 不能为 null");
         // 保存并行参数供 evaluateWhen 使用
@@ -345,7 +348,7 @@ public class RuleChain {
     }
 
     /** 当前并行线程池（WHEN 链执行时使用） */
-    private transient java.util.concurrent.ExecutorService currentParallelExecutor;
+    private transient ExecutorService currentParallelExecutor;
     /** 当前超时（毫秒） */
     private transient long currentTimeoutMs;
 
@@ -383,7 +386,7 @@ public class RuleChain {
             return results;
         }
         // 使用自定义线程池或默认 ForkJoinPool
-        java.util.concurrent.ExecutorService executor = currentParallelExecutor;
+        ExecutorService executor = currentParallelExecutor;
         // 并行执行所有节点
         List<CompletableFuture<List<RuleResult>>> futures = new ArrayList<>();
         for (RuleNode node : nodes) {
@@ -399,11 +402,11 @@ public class RuleChain {
         CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         try {
             if (currentTimeoutMs > 0) {
-                allOf.get(currentTimeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+                allOf.get(currentTimeoutMs, TimeUnit.MILLISECONDS);
             } else {
                 allOf.join();
             }
-        } catch (java.util.concurrent.TimeoutException e) {
+        } catch (TimeoutException e) {
             log.warn("[LiteRule-Chain] WHEN 并行执行超时: timeoutMs={}", currentTimeoutMs);
             // 超时后取消未完成的任务
             futures.forEach(f -> f.cancel(true));

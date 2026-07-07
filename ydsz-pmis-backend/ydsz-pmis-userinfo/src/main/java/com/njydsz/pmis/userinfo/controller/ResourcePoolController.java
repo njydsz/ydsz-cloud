@@ -54,7 +54,7 @@ public class ResourcePoolController {
     @PrePermission("resource:pool:create")
     @OperationLog(module = "资源池", action = "创建资源池", bizType = "RESOURCE_POOL")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
         return Result.ok(poolService.create(dto));
     }
 
@@ -69,7 +69,7 @@ public class ResourcePoolController {
     @PrePermission("resource:pool:update")
     @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable @Min(1) Long id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
+    public Result<Void> update(@PathVariable String id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
         poolService.update(id, dto);
         return Result.ok();
     }
@@ -84,7 +84,7 @@ public class ResourcePoolController {
     @PrePermission("resource:pool:delete")
     @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         poolService.delete(id);
         return Result.ok();
     }
@@ -97,7 +97,7 @@ public class ResourcePoolController {
      */
     @Operation(summary = "资源池详情")
     @GetMapping("/{id}")
-    public Result<ResourcePoolDO> get(@PathVariable @Min(1) Long id) {
+    public Result<ResourcePoolDO> get(@PathVariable String id) {
         return Result.ok(poolService.getById(id));
     }
 
@@ -121,7 +121,7 @@ public class ResourcePoolController {
      */
     @Operation(summary = "按部门查询")
     @GetMapping("/by-dept/{departmentId}")
-    public Result<List<ResourcePoolDO>> listByDept(@PathVariable @Min(1) Long departmentId) {
+    public Result<List<ResourcePoolDO>> listByDept(@PathVariable String departmentId) {
         return Result.ok(poolService.listByDept(departmentId));
     }
 

@@ -33,7 +33,7 @@ public interface ContractMapper extends BaseMapper<ContractDO> {
      * @param status 目标状态码（ContractStatus.code）
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status);
+    int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
      * 调整合同总金额（用于补充协议生效后累计变更）。
@@ -50,7 +50,7 @@ public interface ContractMapper extends BaseMapper<ContractDO> {
      * @param tenantId 租户 ID
      * @return 每种状态对应的数量列表
      */
-    List<Map<String, Object>> aggregateByStatus(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByStatus(@Param("tenantId") String tenantId);
 
     /**
      * 按风险等级聚合计数（用于看板）。

@@ -84,7 +84,7 @@ public class ContractTemplateController {
     @Idempotent(key = "contract-template:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "合同模板", action = "删除模板", bizType = "CONTRACT_TEMPLATE")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -98,7 +98,7 @@ public class ContractTemplateController {
     @Operation(summary = "模板详情")
     @PrePermission("project:contract-template:list")
     @GetMapping("/{id}")
-    public Result<ContractTemplateDO> get(@PathVariable @Min(1) Long id) {
+    public Result<ContractTemplateDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 

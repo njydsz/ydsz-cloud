@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 规则定义（元数据）
@@ -159,7 +160,7 @@ public class RuleDefinition implements Serializable {
      *
      * @since 1.4.0
      */
-    private java.util.List<String> canaryConditions;
+    private List<String> canaryConditions;
 
     /**
      * 灰度候选版本表达式（条件/严重度表达式，覆盖主版本）
