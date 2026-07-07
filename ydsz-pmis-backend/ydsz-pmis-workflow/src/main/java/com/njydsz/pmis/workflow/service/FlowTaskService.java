@@ -169,6 +169,19 @@ public interface FlowTaskService {
     List<String> urge(String instanceId, String operatorId, String comment);
 
     /**
+     * P2-3 (GAP-13): 节点级催办 — 仅催办指定节点（nodeCode）的待办任务
+     *
+     * <p>当 nodeCode 为 null 或空时，退化为 {@link #urge} 的实例级催办行为。
+     *
+     * @param instanceId 实例 ID
+     * @param nodeCode   节点编码（指定则只催办该节点的待办）
+     * @param operatorId 催办人 ID
+     * @param comment    催办说明
+     * @return 被催办人 ID 列表
+     */
+    List<String> urgeByNode(String instanceId, String nodeCode, String operatorId, String comment);
+
+    /**
      * P2-25: 自由跳转 — 管理员强制跳转到任意节点
      *
      * <p>完成当前任务、取消同实例其他 PENDING 任务、在目标节点创建新任务。

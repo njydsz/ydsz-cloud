@@ -43,6 +43,16 @@ public final class RuleContext implements Serializable {
     /** 租户 ID（运行时隔离，1.5.0 起） */
     private final String tenantId;
 
+    /**
+     * 表达式求值结果缓存（P2-9 条件冗余计算缓存）
+     *
+     * <p>{@code transient} 不随上下文序列化；仅在单次 {@code evaluate} 生命周期内有效，
+     * 随 {@link RuleContext} 一起被 GC，无需额外失效/清理逻辑。
+     * key=表达式字符串，value=该表达式在当前 facts 下的求值结果。
+     * 跨规则、同规则内（条件/严重度/模板）重复表达式均可复用，避免冗余计算。
+     */
+    private transient Map<String, Object> expressionCache;
+
     private RuleContext(Map<String, Object> facts, String scenario, String source,
                         String traceId, String tenantId) {
         this.facts = Collections.unmodifiableMap(new LinkedHashMap<>(facts));
@@ -139,6 +149,35 @@ public final class RuleContext implements Serializable {
      * @since 1.5.0
      */
     public String getTenantId() { return tenantId; }
+
+    /**
+     * 获取表达式求值结果缓存（P2-9）
+     *
+     * <p>懒初始化、线程封闭（同一 evaluate 调用链内共享）。用于冗余条件/表达式计算缓存。
+     * 仅读取不纳入序列化（{@code transient}）。
+     *
+     * @return 表达式缓存 Map（key=表达式，value=求值结果）
+     * @since 1.5.2
+     */
+    public Map<String, Object> getExpressionCache() {
+        if (expressionCache == null) {
+            expressionCache = new java.util.concurrent.ConcurrentHashMap<>();
+        }
+        return expressionCache;
+    }
+
+    /**
+     * 清空表达式求值缓存（P2-9）
+     *
+     * <p>在复用同一 {@link RuleContext} 进行多次独立评估前调用，避免跨批次污染。
+     *
+     * @since 1.5.2
+     */
+    public void clearExpressionCache() {
+        if (expressionCache != null) {
+            expressionCache.clear();
+        }
+    }
 
     @Override
     public String toString() {

@@ -65,6 +65,10 @@ public class JobSaveDTO implements Serializable {
     @Schema(description = "任务超时时间（毫秒，null 表示不限超时）")
     private Long timeoutMs;
 
+    @Min(value = 1, message = "慢任务阈值必须为正数")
+    @Schema(description = "慢任务阈值（毫秒，P6-3）：null 不检测慢任务；执行耗时超过此值记入 pmis_job_slow_log")
+    private Long slowThresholdMs;
+
     @Pattern(regexp = "^(FIRE_NOW|SKIP|COALESCE)$",
             message = "Misfire 策略必须为 FIRE_NOW / SKIP / COALESCE 之一")
     @Schema(description = "Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行")

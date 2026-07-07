@@ -53,6 +53,9 @@ public class CronjobProperties {
     /** 执行器配置（P1 阶段新增） */
     private Executor executor = new Executor();
 
+    /** 租户级配额配置（P7-2 新增） */
+    private Quota quota = new Quota();
+
     /**
      * 校验并规整化 TTL 值。
      *
@@ -129,6 +132,34 @@ public class CronjobProperties {
 
         /** 单节点最大并发任务数 */
         private int maxConcurrent = 16;
+    }
+
+    /**
+     * 租户级配额配置（P7-2）。
+     *
+     * <p>控制单个租户可创建的任务数、并发执行数、日执行总量，防止 noisy neighbor 问题。
+     * 默认禁用（{@link #isEnabled} = false），启用后：
+     * <ul>
+     *   <li>任务创建时检查 {@link TenantQuotaDO#getMaxJobs()}（DB 驱动，每租户独立配置）</li>
+     *   <li>任务派发时检查 {@link TenantQuotaDO#getMaxConcurrent()}（Redis 实时计数器，P7-3 实现）</li>
+     *   <li>任务派发时检查 {@link TenantQuotaDO#getMaxDailyExecutions()}（Redis 日计数器，P7-3 实现）</li>
+     * </ul>
+     *
+     * <p>未配置租户配额记录时（{@code pmis_tenant_quota} 表无对应行），默认不限制（unlimited）。
+     */
+    @Data
+    public static class Quota {
+        /** 是否启用租户级配额检查（false=不检查，所有租户 unlimited） */
+        private boolean enabled = false;
+
+        /** 默认任务数上限（当租户未在 pmis_tenant_quota 表配置时使用，null=unlimited） */
+        private Integer defaultMaxJobs = null;
+
+        /** 默认并发执行上限（当租户未配置时使用，null=unlimited） */
+        private Integer defaultMaxConcurrent = null;
+
+        /** 默认日执行量上限（当租户未配置时使用，null=unlimited） */
+        private Integer defaultMaxDailyExecutions = null;
     }
 }
 

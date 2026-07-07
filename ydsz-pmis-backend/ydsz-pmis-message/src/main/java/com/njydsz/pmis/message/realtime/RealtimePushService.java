@@ -52,11 +52,24 @@ public class RealtimePushService {
      * @param payload 消息内容
      */
     public void broadcast(Object payload) {
+        broadcast("BROADCAST", payload);
+    }
+
+    /**
+     * 向所有在线用户广播消息（带类型标签）。
+     *
+     * <p>路由到 {@code /topic/broadcast}，{@code type} 仅作为日志标签使用。
+     * 推送失败时降级吞掉异常。
+     *
+     * @param type    消息类型标签（如 BROADCAST / ALERT）
+     * @param payload 消息内容
+     */
+    public void broadcast(String type, Object payload) {
         try {
             messagingTemplate.convertAndSend(MessageConstants.WS_BROADCAST_DESTINATION, payload);
-            log.debug("[WebSocket] 广播消息");
+            log.debug("[WebSocket] 广播消息: type={}", type);
         } catch (Exception e) {
-            log.warn("[WebSocket] 广播消息失败，降级忽略: error={}", e.getMessage());
+            log.warn("[WebSocket] 广播消息失败，降级忽略: type={}, error={}", type, e.getMessage());
         }
     }
 

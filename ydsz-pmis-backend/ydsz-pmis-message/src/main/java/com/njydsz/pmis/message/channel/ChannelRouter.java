@@ -3,7 +3,9 @@ package com.njydsz.pmis.message.channel;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.config.MessageProperties;
+import com.njydsz.pmis.message.entity.MsgLogDO;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,6 +99,45 @@ public class ChannelRouter {
             log.error("[ChannelRouter] channel={} 发送异常 costMs={}", channel, cost, e);
             return MessageResult.fail(channel, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
+    }
+
+    /**
+     * 基于 {@link MsgLogDO} 的分发重载：将日志实体转换为 {@link MessageRequest} 后委托
+     * {@link #dispatch(MessageRequest)} 执行，便于上层 service 直接传入日志实体。
+     *
+     * <p>返回供应商侧追踪 ID（{@code providerTraceId}）；发送失败时抛 {@link BizException}，
+     * 由调用方 catch 处理。
+     *
+     * @param logDO 消息日志实体
+     * @return 供应商侧追踪 ID
+     * @throws BizException 发送失败
+     */
+    public String dispatch(MsgLogDO logDO) {
+        if (logDO == null) {
+            throw new BizException("消息日志为空");
+        }
+        MessageRequest request = new MessageRequest();
+        request.setChannel(logDO.getChannel());
+        request.setReceiver(logDO.getReceiver());
+        request.setContent(logDO.getContent());
+        request.setBizType(logDO.getBizType());
+        request.setBizId(logDO.getBizId());
+        request.setTemplateCode(logDO.getTemplateCode());
+        request.setMessageId(logDO.getMsgId());
+        String templateParams = logDO.getTemplateParams();
+        if (templateParams != null && !templateParams.isBlank()) {
+            try {
+                request.setParams(JsonUtils.parseMap(templateParams));
+            } catch (Exception e) {
+                log.warn("[ChannelRouter] templateParams 解析失败,忽略: msgId={}, err={}",
+                        logDO.getMsgId(), e.getMessage());
+            }
+        }
+        MessageResult result = dispatch(request);
+        if (!result.isSuccess()) {
+            throw new BizException(result.getErrorMessage());
+        }
+        return result.getProviderTraceId();
     }
 
     /**

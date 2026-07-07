@@ -124,6 +124,17 @@ public interface WorkflowFacade {
     List<String> urgeTask(String instanceId, String operatorId, String comment);
 
     /**
+     * P2-3 (GAP-13): 节点级催办 — 仅催办指定节点的待办任务
+     *
+     * @param instanceId 实例 ID
+     * @param nodeCode   节点编码（null/空则退化为实例级催办）
+     * @param operatorId 催办人 ID
+     * @param comment    催办说明
+     * @return 被催办人 ID 列表
+     */
+    List<String> urgeNodeTask(String instanceId, String nodeCode, String operatorId, String comment);
+
+    /**
      * 撤回流程
      */
     boolean recallProcess(String processInstanceId, String initiatorId);

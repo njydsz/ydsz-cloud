@@ -45,6 +45,8 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     public static final String TYPE_TASK_COMPLETED = "TASK_COMPLETED";
     /** 推送消息类型：任务已驳回 */
     public static final String TYPE_TASK_REJECTED = "TASK_REJECTED";
+    /** P2-7 (GAP-42): 推送消息类型：心跳保活（网关层定时驱动，确认连接存活 + 刷新待办数） */
+    public static final String TYPE_HEARTBEAT = "HEARTBEAT";
 
     @Override
     public void pushTodoCount(String userId) {
@@ -147,6 +149,35 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
                     task.getId(), operatorUserId, reason);
         } catch (Exception e) {
             log.warn("[FlowPush] 推送任务驳回失败: taskId={} err={}", task.getId(), e.getMessage());
+        }
+    }
+
+    // ============================== P2-7 (GAP-42): 心跳保活 ==============================
+
+    /**
+     * P2-7 (GAP-42): 心跳保活推送
+     *
+     * <p>由 WebSocket 网关层（或前端心跳定时器）定时调用，确认连接存活并刷新待办数。
+     * 工作流侧不直接维护 TCP 连接，仅提供"心跳消息"下发能力（携带最新待办数），
+     * 真正的 TCP 级 ping/pong 心跳由网关的 WebSocket 握手配置（如 STOMP heartbeat / ServerEndpoint KeepAlive）负责。
+     *
+     * @param userId 用户 ID
+     */
+    @Override
+    public void pushHeartbeat(String userId) {
+        if (userId == null) {
+            return;
+        }
+        try {
+            long count = taskMapper.countTodoByAssignee(userId, null);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("userId", userId);
+            payload.put("todoCount", count);
+            payload.put("timestamp", System.currentTimeMillis());
+            notificationClient.pushRealtime(userId, TYPE_HEARTBEAT, new RealtimePushDTO(payload));
+            log.debug("[FlowPush] 心跳保活推送: userId={} todoCount={}", userId, count);
+        } catch (Exception e) {
+            log.warn("[FlowPush] 心跳保活推送失败: userId={} err={}", userId, e.getMessage());
         }
     }
 }

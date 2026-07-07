@@ -1689,6 +1689,53 @@ CREATE INDEX IF NOT EXISTS idx_pjal_tenant_created
 CREATE INDEX IF NOT EXISTS idx_pjal_trace_id
     ON pmis_job_alert_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
 
+-- ============================ [006e] P7-2 租户级配额 ============================
+
+-- [P7-2] 租户级配额表：控制单个租户可创建任务数、并发执行数、日执行总量
+-- 未配置记录的租户视为 unlimited（由应用层 CronjobProperties.Quota.defaultMax* 兜底）
+CREATE TABLE IF NOT EXISTS pmis_tenant_quota(
+    id                    VARCHAR(20)      PRIMARY KEY,
+    tenant_id             VARCHAR(20)      NOT NULL UNIQUE,
+    -- 任务数上限（NULL=unlimited；超过此值拒绝创建新任务）
+    max_jobs              INTEGER,
+    -- 并发执行上限（NULL=unlimited；超过此值拒绝派发，P7-3 实现）
+    max_concurrent        INTEGER,
+    -- 日执行量上限（NULL=unlimited；超过此值拒绝派发，P7-3 实现）
+    max_daily_executions  INTEGER,
+    -- 是否启用配额检查（false=该租户不受配额限制，即使配置了上限）
+    enabled               SMALLINT       NOT NULL DEFAULT 1,
+    -- 审计字段
+    created_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at            TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at            TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted               SMALLINT       NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_ptq_max_jobs_pos        CHECK (max_jobs IS NULL OR max_jobs > 0),
+    CONSTRAINT ck_ptq_max_concurrent_pos CHECK (max_concurrent IS NULL OR max_concurrent > 0),
+    CONSTRAINT ck_ptq_max_daily_pos      CHECK (max_daily_executions IS NULL OR max_daily_executions > 0),
+    CONSTRAINT ck_ptq_enabled_enum       CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_ptq_deleted_enum      CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_tenant_quota IS '租户级配额表（P7-2）：控制单个租户的任务数/并发数/日执行量上限';
+COMMENT ON COLUMN pmis_tenant_quota.id IS '主键 ID';
+COMMENT ON COLUMN pmis_tenant_quota.tenant_id IS '租户 ID（唯一，一个租户一条配额记录）';
+COMMENT ON COLUMN pmis_tenant_quota.max_jobs IS '任务数上限（NULL=unlimited）';
+COMMENT ON COLUMN pmis_tenant_quota.max_concurrent IS '并发执行上限（NULL=unlimited，P7-3 实现）';
+COMMENT ON COLUMN pmis_tenant_quota.max_daily_executions IS '日执行量上限（NULL=unlimited，P7-3 实现）';
+COMMENT ON COLUMN pmis_tenant_quota.enabled IS '是否启用配额检查: 0 禁用 / 1 启用';
+COMMENT ON COLUMN pmis_tenant_quota.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_tenant_quota.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_tenant_quota.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_tenant_quota.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_tenant_quota.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+-- 默认租户（tenant_id='1'）的初始配额记录（unlimited，便于单租户部署直接使用）
+INSERT INTO pmis_tenant_quota (id, tenant_id, max_jobs, max_concurrent, max_daily_executions, enabled)
+VALUES ('1', '1', NULL, NULL, NULL, 1)
+ON CONFLICT (tenant_id) DO NOTHING;
+
 -- --------------------------------------------------------------------
 
 -- ============================ [007] init pmis message schema ============================
@@ -9332,11 +9379,15 @@ CREATE TABLE IF NOT EXISTS pmis_flow_third_party_log (
     callback_data       TEXT,
     handle_status       VARCHAR(20)     NOT NULL DEFAULT 'PENDING',
     error_msg           VARCHAR(512),
+    -- P2-6: 双向同步 — 本地→三方回撤状态与结果
+    sync_back_status    VARCHAR(20)     NOT NULL DEFAULT 'NOT_REQUIRED',
+    sync_back_msg       VARCHAR(512),
     provider_trace_id   VARCHAR(64),
     created_at          TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     -- 数据完整性约束
     CONSTRAINT ck_pftpl_platform         CHECK (platform IN ('DINGTALK','FEISHU','WECOM')),
-    CONSTRAINT ck_pftpl_handle_status    CHECK (handle_status IN ('PENDING','SUCCESS','FAIL'))
+    CONSTRAINT ck_pftpl_handle_status    CHECK (handle_status IN ('PENDING','SUCCESS','FAIL')),
+    CONSTRAINT ck_pftpl_sync_back_status CHECK (sync_back_status IN ('NOT_REQUIRED','PENDING','SUCCESS','FAIL'))
 );
 
 COMMENT ON TABLE pmis_flow_third_party_log IS 'P0-2: 三方审批回调日志表';

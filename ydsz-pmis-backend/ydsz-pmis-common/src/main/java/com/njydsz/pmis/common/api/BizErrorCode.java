@@ -41,6 +41,8 @@ public enum BizErrorCode {
     SERVICE_UNAVAILABLE(10202, "服务暂不可用"),
     REQUEST_TIMEOUT(10203, "请求超时"),
     RATE_LIMIT(10301, "请求频率超限"),
+    /** P7-2: 租户级配额超限（任务数/并发数/日执行量超过租户配额上限） */
+    QUOTA_EXCEEDED(10302, "租户配额超限"),
     // H9.2 修复：数据库相关错误码（与 GlobalExceptionHandler H9.1 配合使用）
     DB_DUPLICATE_KEY(10401, "数据唯一性冲突"),
     DB_CONSTRAINT_VIOLATION(10402, "数据约束冲突"),
@@ -165,7 +167,7 @@ public enum BizErrorCode {
             case DUPLICATE_KEY, USERNAME_DUPLICATE, TIMESHEET_DUPLICATE,
                  RESOURCE_CONFLICT, PROJECT_STATUS_INVALID,
                  DB_DUPLICATE_KEY, DB_LOCK_CONTENTION, RESOURCE_LOCKED -> HttpStatus.CONFLICT;
-            case RATE_LIMIT -> HttpStatus.TOO_MANY_REQUESTS;
+            case RATE_LIMIT, QUOTA_EXCEEDED -> HttpStatus.TOO_MANY_REQUESTS;
             case REQUEST_TIMEOUT -> HttpStatus.REQUEST_TIMEOUT;
             case INTERNAL_ERROR, UNKNOWN, REPORT_GENERATE_FAILED -> HttpStatus.INTERNAL_SERVER_ERROR;
             case SERVICE_UNAVAILABLE, DB_QUERY_TIMEOUT, DB_CONNECTION_FAILED -> HttpStatus.SERVICE_UNAVAILABLE;

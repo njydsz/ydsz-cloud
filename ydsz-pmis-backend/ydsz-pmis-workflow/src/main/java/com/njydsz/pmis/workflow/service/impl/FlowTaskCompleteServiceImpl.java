@@ -347,7 +347,98 @@ public class FlowTaskCompleteServiceImpl {
         if (todoCountPushService != null) {
             todoCountPushService.pushTaskAssigned(task);
         }
+        // P2-4 (GAP-14): 自动审批节点 — 满足 autoApprove 条件时无需人工，自动通过
+        tryAutoApprove(instance, node, task, variables);
         return task.getId();
+    }
+
+    // ============================== P2-4 (GAP-14): 自动审批节点 ==============================
+
+    /**
+     * P2-4 (GAP-14): 自动审批节点
+     *
+     * <p>节点 ext 中配置 autoApprove 规则，满足任一条件时该审批任务自动通过，不阻塞人工：
+     * <ul>
+     *   <li>{@code whenInitiatorIsApprover=true} 且当前审批人包含发起人 → 自动通过（自己审自己）</li>
+     *   <li>{@code expr} 为 Aviator 表达式，基于流程变量求值，结果为 true → 自动通过</li>
+     * </ul>
+     * 仅对单人 OR 模式生效（会签/并行模式不自动通过，需人工确认）。
+     *
+     * @param instance  流程实例
+     * @param node      审批节点
+     * @param task      已创建的任务
+     * @param variables 流程变量
+     */
+    private void tryAutoApprove(FlowInstanceDO instance, FlowNodeDO node,
+                                FlowRunTaskDO task, Map<String, Object> variables) {
+        if (node.getExt() == null || node.getExt().isBlank()) {
+            return;
+        }
+        Map<String, Object> extConfig;
+        try {
+            extConfig = JsonUtils.parseMap(node.getExt());
+        } catch (Exception e) {
+            return;
+        }
+        if (extConfig == null) {
+            return;
+        }
+        Object autoApproveObj = extConfig.get("autoApprove");
+        if (!(autoApproveObj instanceof Map<?, ?> autoApprove)) {
+            return;
+        }
+        Map<String, Object> cfg = (Map<String, Object>) autoApprove;
+        Boolean enabled = (Boolean) cfg.get("enabled");
+        if (enabled == null || !enabled) {
+            return;
+        }
+        // 仅单人 OR 模式自动通过
+        if (!FlowPerformType.OR.name().equals(task.getPerformType())) {
+            return;
+        }
+        boolean matched = false;
+        // 条件1：发起人是审批人
+        Object whenInitiator = cfg.get("whenInitiatorIsApprover");
+        if (Boolean.TRUE.equals(whenInitiator) && instance.getInitiatorId() != null) {
+            String initiator = String.valueOf(instance.getInitiatorId());
+            if (initiator.equals(task.getAssigneeId())
+                    || (task.getAssigneeName() != null
+                    && task.getAssigneeName().contains(initiator))) {
+                matched = true;
+            }
+        }
+        // 条件2：Aviator 表达式
+        if (!matched) {
+            Object exprObj = cfg.get("expr");
+            if (exprObj instanceof String expr && !expr.isBlank()) {
+                try {
+                    Map<String, Object> env = new HashMap<>(variables);
+                    env.put("_initiatorId", instance.getInitiatorId());
+                    env.put("_assigneeId", task.getAssigneeId());
+                    Object result = serviceNodeExecutor.evalExpr(expr, env);
+                    matched = Boolean.TRUE.equals(result);
+                } catch (Exception e) {
+                    log.warn("[Flow] 自动审批表达式求值失败 node={} expr={} err={}",
+                            node.getNodeCode(), exprObj, e.getMessage());
+                }
+            }
+        }
+        if (matched) {
+            FlowTaskOperateDTO autoDto = new FlowTaskOperateDTO();
+            autoDto.setTaskId(task.getId());
+            autoDto.setUserId("0");
+            autoDto.setUserName("SYSTEM_AUTO_APPROVE");
+            autoDto.setComment("自动审批节点满足条件，自动通过");
+            autoDto.setVariables(variables);
+            try {
+                pass(autoDto);
+                log.info("[Flow] 自动审批节点通过: instanceId={} node={} taskId={}",
+                        instance.getId(), node.getNodeCode(), task.getId());
+            } catch (Exception e) {
+                log.warn("[Flow] 自动审批节点通过失败（降级为人工）: instanceId={} node={} err={}",
+                        instance.getId(), node.getNodeCode(), e.getMessage());
+            }
+        }
     }
 
     // ============================== P0-4: 逐级审批节点 ==============================
@@ -1055,6 +1146,48 @@ public class FlowTaskCompleteServiceImpl {
         support.fireEvent(l -> l.onTaskUrged(instanceId, null), null);
         // P2-35: 发布 Spring 异步事件
         support.publishWorkflowEvent("TASK_URGED", instanceId, null);
+        return urged;
+    }
+
+    // ============================== P2-3 (GAP-13): 节点级催办 ==============================
+
+    /**
+     * P2-3 (GAP-13): 节点级催办 — 仅催办指定节点（nodeCode）的待办任务
+     *
+     * <p>nodeCode 为 null/空时退化为实例级催办（{@link #urge}）。
+     * 限流维度：催办人 + 任务 ID（节点级），避免单节点被频繁催办刷屏。
+     */
+    @Override
+    public List<String> urgeByNode(String instanceId, String nodeCode, String operatorId, String comment) {
+        if (nodeCode == null || nodeCode.isBlank()) {
+            // 退化为实例级催办
+            return urge(instanceId, operatorId, comment);
+        }
+        // P0-2: 节点级限流：同一催办人对该节点 30 分钟内只允许一次
+        if (operatorId != null && instanceId != null) {
+            String nodeTarget = instanceId + ":" + nodeCode;
+            if (!urgeLimiter.tryAcquire(operatorId, nodeTarget.hashCode() & Long.MAX_VALUE, "NODE")) {
+                throw new BizException(BizErrorCode.RATE_LIMIT, "error.workflow.msg_75474a57");
+            }
+        }
+        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByNode(instanceId, nodeCode);
+        List<String> urged = new ArrayList<>();
+        for (FlowRunTaskDO task : pendingTasks) {
+            urged.add(task.getAssigneeId());
+            support.audit(task, "URGE", operatorId, null, comment);
+            // P2-3: 节点级催办事件（taskId 透传，便于前端按任务高亮）
+            support.fireEvent(l -> l.onTaskUrged(instanceId, task.getId()), task.getId());
+            support.publishWorkflowEvent("TASK_URGED", instanceId, task.getId());
+        }
+        log.info("[Flow] 节点级催办: instanceId={} nodeCode={} 被催办人={}", instanceId, nodeCode, urged);
+        if (flowMetrics != null) {
+            try {
+                FlowInstanceDO ins = instanceMapper.selectById(instanceId);
+                flowMetrics.incTaskUrged(ins != null ? ins.getFlowCode() : "unknown");
+            } catch (Exception e) {
+                flowMetrics.incTaskUrged("unknown");
+            }
+        }
         return urged;
     }
 

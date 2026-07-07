@@ -111,6 +111,33 @@ public class FlowServiceNodeExecutor {
     }
 
     /**
+     * P2-4 (GAP-14): 在沙箱环境内求值 Aviator 表达式
+     *
+     * <p>复用 {@link #aviatorInstance}（已禁用 NewInstance/Module/Lambda 危险 Feature），
+     * 供自动审批节点（autoApprove.expr）等场景安全地基于流程变量做布尔求值。
+     *
+     * @param expr      表达式（如 {@code amount < 1000}），空表达式返回 false
+     * @param variables 流程变量环境
+     * @return 表达式求值结果（Boolean/数值/字符串等）；求值异常时返回 false
+     */
+    public Object evalExpr(String expr, Map<String, Object> variables) {
+        if (expr == null || expr.isBlank()) {
+            return false;
+        }
+        try {
+            Expression expression = aviatorInstance.compile(expr, true);
+            Map<String, Object> env = new HashMap<>();
+            if (variables != null) {
+                env.putAll(variables);
+            }
+            return expression.execute(env);
+        } catch (Exception e) {
+            log.warn("[Flow-Service] 表达式求值异常 expr={} err={}", expr, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * HTTP 类型：通过 RestTemplate 调用外部接口
      */
     private ServiceExecutionResult executeHttp(FlowNodeDO node, Map<String, Object> config,

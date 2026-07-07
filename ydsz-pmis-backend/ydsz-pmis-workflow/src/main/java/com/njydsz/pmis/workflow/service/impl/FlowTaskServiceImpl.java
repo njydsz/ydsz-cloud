@@ -110,6 +110,12 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         return completeService.urge(instanceId, operatorId, comment);
     }
 
+    /** P2-3 (GAP-13): 节点级催办 */
+    @Override
+    public List<String> urgeByNode(String instanceId, String nodeCode, String operatorId, String comment) {
+        return completeService.urgeByNode(instanceId, nodeCode, operatorId, comment);
+    }
+
     /** P0-1: 自由跳转加分布式锁 */
     @Override
     @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)

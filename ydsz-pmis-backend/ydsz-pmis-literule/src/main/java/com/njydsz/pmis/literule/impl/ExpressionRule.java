@@ -83,7 +83,7 @@ public class ExpressionRule implements Rule {
     public RuleResult evaluate(RuleContext context) {
         long start = System.nanoTime();
         try {
-            boolean triggered = evaluator.evalBoolean(definition.getConditionExpression(), context);
+            boolean triggered = Boolean.TRUE.equals(evalBooleanCached(definition.getConditionExpression(), context));
             if (!triggered) {
                 return RuleResult.builder()
                         .ruleCode(getCode())
@@ -136,8 +136,8 @@ public class ExpressionRule implements Rule {
     private RuleSeverity resolveSeverity(RuleContext context) {
         String expr = definition.getSeverityExpression();
         if (StrUtil.isNotBlank(expr)) {
-            String code = evaluator.eval(expr, context);
-            RuleSeverity dynamic = RuleSeverity.fromCode(code);
+            Object code = evalCached(expr, context);
+            RuleSeverity dynamic = RuleSeverity.fromCode(code == null ? null : String.valueOf(code));
             if (dynamic != null) return dynamic;
         }
         return definition.getDefaultSeverity() != null ? definition.getDefaultSeverity() : RuleSeverity.INFO;
@@ -178,7 +178,7 @@ public class ExpressionRule implements Rule {
                 expr = expr.substring(0, pipeIdx).trim();
             }
             try {
-                Object value = evaluator.eval(expr, context);
+                Object value = evalCached(expr, context);
                 if (value == null) {
                     replacement = "";
                 } else if (formatPattern != null) {
@@ -244,5 +244,55 @@ public class ExpressionRule implements Rule {
      */
     public RuleDefinition getDefinition() {
         return definition;
+    }
+
+    /**
+     * 带缓存的布尔表达式求值（P2-9 条件冗余计算缓存）
+     *
+     * <p>同一 {@link RuleContext} 内，相同条件表达式仅求值一次；命中缓存直接返回，
+     * 避免多条规则或同规则内（条件+严重度+模板）重复表达式的冗余计算。
+     * 缓存随 {@code context} 生命周期自动失效，无需额外清理。
+     *
+     * @param expr    条件表达式
+     * @param context 评估上下文
+     * @return 布尔结果；expr 为 null/空返回 null
+     */
+    private Boolean evalBooleanCached(String expr, RuleContext context) {
+        if (expr == null || expr.isBlank()) {
+            return null;
+        }
+        Map<String, Object> cache = context.getExpressionCache();
+        String key = "B:" + expr;
+        Object cached = cache.get(key);
+        if (cached != null) {
+            return cached instanceof Boolean ? (Boolean) cached : Boolean.valueOf(String.valueOf(cached));
+        }
+        Boolean result = evaluator.evalBoolean(expr, context);
+        cache.put(key, result);
+        return result;
+    }
+
+    /**
+     * 带缓存的对象表达式求值（P2-9 条件冗余计算缓存）
+     *
+     * <p>与 {@link #evalBooleanCached(String, RuleContext)} 同理，用于严重度/模板渲染表达式。
+     *
+     * @param expr    表达式
+     * @param context 评估上下文
+     * @return 求值结果；expr 为 null/空返回 null
+     */
+    private Object evalCached(String expr, RuleContext context) {
+        if (expr == null || expr.isBlank()) {
+            return null;
+        }
+        Map<String, Object> cache = context.getExpressionCache();
+        String key = "O:" + expr;
+        Object cached = cache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        Object result = evaluator.eval(expr, context);
+        cache.put(key, result);
+        return result;
     }
 }

@@ -74,6 +74,20 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
         }
     }
 
+    @Override
+    public FlowThirdPartyAccountDO getActiveByPlatform(String platform) {
+        try {
+            if (!StringUtils.hasText(platform)) {
+                return null;
+            }
+            return thirdPartyAccountMapper.selectActiveByPlatform(platform);
+        } catch (Exception e) {
+            log.error("[ThirdPartyAccount] 按平台查询激活账号异常: platform={} err={}",
+                    platform, e.getMessage(), e);
+            return null;
+        }
+    }
+
     // ============================== 保存 / 更新 ==============================
 
     @Override

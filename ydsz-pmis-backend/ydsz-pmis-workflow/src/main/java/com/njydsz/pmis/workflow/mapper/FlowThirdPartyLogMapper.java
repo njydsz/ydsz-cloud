@@ -27,4 +27,19 @@ public interface FlowThirdPartyLogMapper extends BaseMapper<FlowThirdPartyLogDO>
     int updateStatus(@Param("id") String id,
                      @Param("status") String status,
                      @Param("errorMsg") String errorMsg);
+
+    /**
+     * P2-6: 按业务 ID（本地流程实例 ID）查询关联的三方审批日志
+     */
+    @org.apache.ibatis.annotations.Select(
+            "SELECT * FROM pmis_flow_third_party_log WHERE business_id = #{businessId} " +
+            "AND platform IS NOT NULL ORDER BY created_at DESC")
+    java.util.List<FlowThirdPartyLogDO> selectByBusinessId(@Param("businessId") String businessId);
+
+    /**
+     * P2-6: 更新双向同步状态与消息
+     */
+    int updateSyncBack(@Param("id") String id,
+                       @Param("syncBackStatus") String syncBackStatus,
+                       @Param("syncBackMsg") String syncBackMsg);
 }

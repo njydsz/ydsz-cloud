@@ -16,6 +16,7 @@ import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.service.JobService;
+import com.njydsz.pmis.cronjob.service.TenantQuotaService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -84,6 +85,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * Leaderless 模式下若未注册 Dispatcher 则回退到内部 {@link #executeJob(JobDO, boolean)} 旧路径。
      */
     private final ObjectProvider<TaskDispatcher> taskDispatcherProvider;
+
+    /**
+     * 租户级配额服务（P7-2 新增）。
+     *
+     * <p>用于在任务创建时检查租户任务数配额，防止 noisy neighbor 问题。
+     * 配额检查默认禁用（{@code pmis.cronjob.quota.enabled=false}），启用后生效。
+     */
+    private final TenantQuotaService tenantQuotaService;
 
     /** 调度器 */
     private TaskScheduler taskScheduler;
@@ -227,6 +236,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (job.getTenantId() == null) {
             job.setTenantId(TenantContext.getTenantId());
         }
+        // P7-2: 租户级配额检查（在 insert 之前调用，避免任务计数提前增加导致误判）
+        tenantQuotaService.checkJobQuota(job.getTenantId());
         // P3 收尾: 分片/misfire 默认值规整
         if (job.getShardTotal() == null || job.getShardTotal() < 1) {
             job.setShardTotal(1);
@@ -280,6 +291,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (job.getTimeoutMs() != null) exists.setTimeoutMs(job.getTimeoutMs());
         if (StringUtils.hasText(job.getMisfirePolicy())) exists.setMisfirePolicy(job.getMisfirePolicy());
         if (job.getShardTotal() != null && job.getShardTotal() >= 1) exists.setShardTotal(job.getShardTotal());
+        // P6-3: 同步慢任务阈值（null 表示不检测，允许清空）
+        exists.setSlowThresholdMs(job.getSlowThresholdMs());
         jobMapper.updateById(exists);
 
         // 重新调度

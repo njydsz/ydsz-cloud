@@ -9,6 +9,7 @@ import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.service.TenantQuotaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,11 +29,13 @@ import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -69,6 +72,8 @@ class JobServiceImplTest {
     private ValueOperations<String, String> valueOps;
     @Mock
     private JobHandler jobHandler;
+    @Mock
+    private TenantQuotaService tenantQuotaService;
 
     private CronjobProperties cronjobProperties;
 
@@ -304,6 +309,36 @@ class JobServiceImplTest {
     // ==================== P3 收尾: create/update 字段传递测试 ====================
 
     @Test
+    @DisplayName("P7-2: create 时应调用租户配额检查")
+    void create_shouldCheckTenantQuota() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO job = buildJob("create-quota-check", "0 0 8 * * ?", null);
+        job.setTenantId("tenant-001");
+        when(jobMapper.selectByJobKey("create-quota-check")).thenReturn(null);
+
+        jobService.create(job);
+
+        verify(tenantQuotaService, times(1)).checkJobQuota("tenant-001");
+        verify(jobMapper, times(1)).insert(any(JobDO.class));
+    }
+
+    @Test
+    @DisplayName("P7-2: create 配额超限时抛 BizException 且不 insert")
+    void create_quotaExceeded_throwsAndNoInsert() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO job = buildJob("create-quota-exceeded", "0 0 8 * * ?", null);
+        job.setTenantId("tenant-002");
+        when(jobMapper.selectByJobKey("create-quota-exceeded")).thenReturn(null);
+        doThrow(new BizException(BizErrorCode.QUOTA_EXCEEDED, "error.cronjob.msg_quota_jobs_exceeded",
+                "tenant-002", 10L, 10))
+                .when(tenantQuotaService).checkJobQuota("tenant-002");
+
+        BizException ex = assertThrows(BizException.class, () -> jobService.create(job));
+        assertEquals(BizErrorCode.QUOTA_EXCEEDED.getCode(), ex.getCode());
+        verify(jobMapper, never()).insert(any(JobDO.class));
+    }
+
+    @Test
     @DisplayName("P3: create 时 shardTotal=null 应默认设为 1")
     void create_nullShardTotal_defaultsToOne() {
         cronjobProperties.getLeader().setEnabled(true); // 避免 taskScheduler NPE
@@ -410,6 +445,33 @@ class JobServiceImplTest {
 
         assertEquals(60000L, existing.getLockTtlMs());
         assertEquals(120000L, existing.getTimeoutMs());
+    }
+
+    @Test
+    @DisplayName("P6-3: update 时 slowThresholdMs 应被同步到 exists（含清空场景）")
+    void update_slowThresholdMs_syncedToExists() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO existing = buildJob("update-slow-exist", "0 0 8 * * ?", null);
+        existing.setSlowThresholdMs(5000L); // 原阈值 5s
+        when(jobMapper.selectById("job-update-slow")).thenReturn(existing);
+
+        // 场景 1: 更新为新阈值
+        JobDO update1 = new JobDO();
+        update1.setId("job-update-slow");
+        update1.setSlowThresholdMs(10000L);
+        update1.setCronExpression("0 0 8 * * ?");
+        jobService.update(update1);
+        assertEquals(10000L, existing.getSlowThresholdMs(),
+                "slowThresholdMs 应更新为 10s");
+
+        // 场景 2: 清空阈值（null 表示不检测慢任务）
+        JobDO update2 = new JobDO();
+        update2.setId("job-update-slow");
+        update2.setSlowThresholdMs(null);
+        update2.setCronExpression("0 0 8 * * ?");
+        jobService.update(update2);
+        assertNull(existing.getSlowThresholdMs(),
+                "slowThresholdMs 应被清空为 null（关闭慢任务检测）");
     }
 
     /**

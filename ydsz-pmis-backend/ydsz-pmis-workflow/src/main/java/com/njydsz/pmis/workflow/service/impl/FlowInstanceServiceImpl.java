@@ -101,6 +101,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowEventSubscriptionService eventSubscriptionService;
     /** P2-2: 审计日志 Mapper（重审时写入 RESUBMIT 轨迹） */
     private final FlowAuditLogMapper auditLogMapper;
+    /** P2-6: 三方审批双向同步服务（终止/撤回时主动同步回三方） */
+    private final FlowThirdPartySyncService thirdPartySyncService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -258,6 +260,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         fireEvent(l -> l.onInstanceTerminated(instanceId, reason, ctx));
         // P2-35: 发布 Spring 异步事件
         publishWorkflowEvent("INSTANCE_TERMINATED", instanceId, null);
+        // P2-6: 双向同步 — 本地→三方取消审批单
+        try {
+            thirdPartySyncService.syncBackOnTerminate(instanceId, reason);
+        } catch (Exception e) {
+            log.warn("[Flow] 三方审批同步回退失败（不影响本地终止）: instanceId={} err={}",
+                    instanceId, e.getMessage());
+        }
     }
 
     @Override
@@ -419,6 +428,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         fireEvent(l -> l.onInstanceRecalled(instanceId, initiatorId));
         // P2-35: 发布 Spring 异步事件
         publishWorkflowEvent("INSTANCE_RECALLED", instanceId, null);
+        // P2-6: 双向同步 — 撤回对应三方 canceled（发起人撤回），主动取消三方审批单
+        try {
+            thirdPartySyncService.syncBackOnRecall(instanceId, initiatorId);
+        } catch (Exception e) {
+            log.warn("[Flow] 三方审批同步撤回失败（不影响本地撤回）: instanceId={} err={}",
+                    instanceId, e.getMessage());
+        }
         return true;
     }
 

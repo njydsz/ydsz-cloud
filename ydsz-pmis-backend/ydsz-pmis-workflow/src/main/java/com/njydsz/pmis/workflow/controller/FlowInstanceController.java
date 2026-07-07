@@ -307,6 +307,19 @@ public class FlowInstanceController {
     }
 
     /**
+     * P2-3 (GAP-13): 节点级催办 — 仅催办指定节点（nodeCode）的待办任务
+     *
+     * <p>nodeCode 不传时退化为实例级催办。
+     */
+    @PostMapping("/instance/{id}/urge/node")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_VIEW)
+    public Result<List<String>> urgeByNode(@PathVariable String id,
+                                           @RequestParam(required = false) String nodeCode,
+                                           @RequestParam(required = false) String comment) {
+        return Result.ok(workflowFacade.urgeNodeTask(id, nodeCode, SecurityContext.getUserId(), comment));
+    }
+
+    /**
      * GAP-V2-02: 获取表单渲染数据 — 审批人打开待办时获取字段权限
      *
      * @param instanceId 流程实例 ID

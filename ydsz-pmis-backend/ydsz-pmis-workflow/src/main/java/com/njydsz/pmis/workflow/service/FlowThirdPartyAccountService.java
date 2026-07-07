@@ -52,4 +52,12 @@ public interface FlowThirdPartyAccountService {
      * @param unionId 三方 unionId（可空）
      */
     void bindAccount(String userId, String platform, String openId, String unionId);
+
+    /**
+     * P2-6: 取平台下任一激活账号（用于读取平台级 cancelWebhookUrl 做本地→三方同步）
+     *
+     * @param platform 平台: DINGTALK/FEISHU/WECOM
+     * @return 激活账号记录，不存在返回 null
+     */
+    FlowThirdPartyAccountDO getActiveByPlatform(String platform);
 }

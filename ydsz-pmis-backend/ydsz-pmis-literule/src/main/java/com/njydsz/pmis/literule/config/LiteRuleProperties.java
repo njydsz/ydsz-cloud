@@ -110,6 +110,18 @@ public class LiteRuleProperties {
     private RuleSourceConfig ruleSource = new RuleSourceConfig();
 
     /**
+     * 声明式注解扫描包路径（P2-10）
+     *
+     * <p>指定扫描 {@code @LiteRule} / {@code @RuleDefinitionMeta} 注解的基包，逗号分隔。
+     * 配置后，这些包下的规则类将在 Spring 启动时被自动注册到引擎。
+     * 未配置时仅扫描 {@code @LiteRule} 标注的已注册 Spring Bean（无需指定包），
+     * 而 {@code @RuleDefinitionMeta} 类扫描需显式配置本项以提高扫描性能。
+     *
+     * @since 1.5.2
+     */
+    private String annotationScanBasePackages = "";
+
+    /**
      * AI 增强配置
      *
      * <p>支持自然语言转规则表达式、规则推荐、健康度评分。

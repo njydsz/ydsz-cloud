@@ -53,7 +53,7 @@ class RealtimePushServiceTest {
     @Test
     void pushToUser_swallowsExceptionAndDoesNotThrow() {
         doThrow(new RuntimeException("ws down"))
-                .when(messagingTemplate).convertAndSend(eq("/topic/user/u2/notifications"), any());
+                .when(messagingTemplate).convertAndSend(eq("/topic/user/u2/notifications"), any(Object.class));
 
         assertDoesNotThrow(() -> service.pushToUser("u2", "ALERT", "x"));
     }
@@ -61,7 +61,7 @@ class RealtimePushServiceTest {
     @Test
     void broadcast_swallowsExceptionAndDoesNotThrow() {
         doThrow(new RuntimeException("ws down"))
-                .when(messagingTemplate).convertAndSend(eq("/topic/broadcast"), any());
+                .when(messagingTemplate).convertAndSend(eq("/topic/broadcast"), any(Object.class));
 
         assertDoesNotThrow(() -> service.broadcast("x"));
     }
@@ -69,7 +69,7 @@ class RealtimePushServiceTest {
     @Test
     void pushToTopic_swallowsExceptionAndDoesNotThrow() {
         doThrow(new RuntimeException("ws down"))
-                .when(messagingTemplate).convertAndSend(eq("/topic/dashboard"), any());
+                .when(messagingTemplate).convertAndSend(eq("/topic/dashboard"), any(Object.class));
 
         assertDoesNotThrow(() -> service.pushToTopic("dashboard", "x"));
     }

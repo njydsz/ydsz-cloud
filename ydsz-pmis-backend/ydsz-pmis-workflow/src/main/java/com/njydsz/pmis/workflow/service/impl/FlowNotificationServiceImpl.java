@@ -53,6 +53,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     /** P1-2: 通知模板解析器（可选注入，不可用时回退到硬编码） */
     private final FlowNotifyTemplateResolver templateResolver;
 
+    /** P2-5 (GAP-39): 通知频率控制器（可选注入，不可用时不做频率限制） */
+    private final FlowNotifyFrequencyLimiter frequencyLimiter;
+
     /**
      * WEBHOOK 通道使用的 RestTemplate。
      *
@@ -66,6 +69,11 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     public void notifyTaskCreated(String instanceId, String taskId, String assigneeId, String assigneeName) {
         try {
             if (assigneeId == null) {
+                return;
+            }
+            // P2-5 (GAP-39): 通知频率控制 — 同一接收人 + TASK_CREATED + 任务维度 5 分钟内只发一次
+            if (frequencyLimiter != null && !frequencyLimiter.tryAcquire("TASK_CREATED", assigneeId, taskId)) {
+                log.debug("[FlowNotify] 任务创建通知被频率控制拦截: taskId={} assigneeId={}", taskId, assigneeId);
                 return;
             }
             Map<String, Object> vars = new HashMap<>();
@@ -102,6 +110,11 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             }
             for (String assigneeId : assigneeIds) {
                 String userId = assigneeId;
+                // P2-5 (GAP-39): 催办通知频率控制 — 同一接收人 + URGE + 任务维度 5 分钟内只发一次
+                if (frequencyLimiter != null && !frequencyLimiter.tryAcquire("URGE", userId, taskId)) {
+                    log.debug("[FlowNotify] 催办通知被频率控制拦截: taskId={} userId={}", taskId, userId);
+                    continue;
+                }
                 Map<String, Object> extra = new HashMap<>();
                 extra.put("bizType", "WORKFLOW_URGE");
                 extra.put("instanceId", instanceId);

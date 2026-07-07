@@ -59,6 +59,12 @@ public class FlowThirdPartyLogDO implements Serializable {
     /** 处理失败原因 */
     private String errorMsg;
 
+    /** P2-6: 双向同步 — 本地→三方回撤状态: NOT_REQUIRED/PENDING/SUCCESS/FAIL */
+    private String syncBackStatus;
+
+    /** P2-6: 双向同步 — 本地→三方回撤结果消息 */
+    private String syncBackMsg;
+
     /** 租户 ID */
     private String tenantId;
 

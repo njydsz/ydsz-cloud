@@ -50,4 +50,11 @@ public interface FlowTodoCountPushService {
      * @param reason         驳回原因
      */
     void pushTaskRejected(FlowRunTaskDO task, String operatorUserId, String reason);
+
+    /**
+     * P2-7 (GAP-42): 心跳保活推送 — 由 WebSocket 网关层定时驱动，确认连接存活并刷新待办数
+     *
+     * @param userId 用户 ID
+     */
+    void pushHeartbeat(String userId);
 }

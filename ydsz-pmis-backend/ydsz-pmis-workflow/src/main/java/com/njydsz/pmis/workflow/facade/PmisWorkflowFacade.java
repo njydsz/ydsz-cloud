@@ -165,6 +165,11 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
+    public List<String> urgeNodeTask(String instanceId, String nodeCode, String operatorId, String comment) {
+        return taskService.urgeByNode(instanceId, nodeCode, operatorId, comment);
+    }
+
+    @Override
     public boolean recallProcess(String processInstanceId, String initiatorId) {
         return instanceService.recall(processInstanceId, initiatorId);
     }
