@@ -23,7 +23,7 @@ public interface ProjectClosureService {
      * @param dto 结项创建参数
      * @return 结项记录ID
      */
-    Long create(ProjectClosureCreateDTO dto);
+    String create(ProjectClosureCreateDTO dto);
 
     /**
      * 状态迁移

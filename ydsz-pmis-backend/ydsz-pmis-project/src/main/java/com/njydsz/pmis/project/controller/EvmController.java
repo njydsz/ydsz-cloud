@@ -52,7 +52,7 @@ public class EvmController {
     @Operation(summary = "录入/更新 EVM 测量（按 initiation+wbs+period 幂等）")
     @PrePermission("execution:evm:save")
     @PostMapping
-    public Result<Long> save(@Valid @RequestBody EvmMeasureCreateDTO dto) {
+    public Result<String> save(@Valid @RequestBody EvmMeasureCreateDTO dto) {
         return Result.ok(service.save(dto));
     }
 

@@ -25,7 +25,7 @@ public interface TimeEntryService {
      * @param dto 工时创建参数
      * @return 工时记录ID
      */
-    Long create(TimeEntryCreateDTO dto);
+    String create(TimeEntryCreateDTO dto);
 
     /**
      * 提交审批

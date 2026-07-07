@@ -66,7 +66,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long submit(AlertDispatchDTO dto) {
+    public String submit(AlertDispatchDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }

@@ -143,8 +143,7 @@ public class FlowInstanceController {
     public Result<Boolean> rollback(@PathVariable String id,
                                     @RequestParam String reason,
                                     @RequestParam(required = false, defaultValue = "7") int maxRollbackDays) {
-        Long instanceId = Long.parseLong(id);
-        return Result.ok(instanceService.rollback(instanceId, SecurityContext.getUserId(), reason, maxRollbackDays));
+        return Result.ok(instanceService.rollback(id, SecurityContext.getUserId(), reason, maxRollbackDays));
     }
 
     /**
@@ -212,12 +211,12 @@ public class FlowInstanceController {
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
             @RequestParam(required = false) String businessType,
-            @RequestParam(required = false) Long initiatorId,
+            @RequestParam(required = false) String initiatorId,
             @RequestParam(required = false) String flowStatus,
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(required = false) String tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(instanceService.page(businessType, initiatorId, flowStatus,
                 startTime, endTime, tid, pageNo, pageSize));
     }
@@ -304,7 +303,7 @@ public class FlowInstanceController {
     @GetMapping("/instance/{instanceId}/form-render")
     public Result<Map<String, Object>> getFormRenderData(
             @PathVariable String instanceId,
-            @RequestParam(required = false) Long taskId) {
+            @RequestParam(required = false) String taskId) {
         return Result.ok(instanceService.getFormRenderData(instanceId, taskId));
     }
 }

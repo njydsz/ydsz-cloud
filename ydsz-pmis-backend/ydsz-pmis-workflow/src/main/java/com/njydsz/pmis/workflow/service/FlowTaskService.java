@@ -106,7 +106,7 @@ public interface FlowTaskService {
      * @param userId    用户 ID
      * @param roleCodes 用户拥有的角色编码（可空）
      * @param deptIds   用户所属部门 ID（字符串形式，可空）
-     * @param tenantId  租户 ID（可空，默认 "1"）
+     * @param tenantId  租户 ID（可空，默认 1L）
      */
     List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
                                      List<String> deptIds, String tenantId);

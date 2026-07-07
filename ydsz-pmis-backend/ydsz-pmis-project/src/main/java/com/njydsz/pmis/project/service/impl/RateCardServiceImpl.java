@@ -38,7 +38,7 @@ public class RateCardServiceImpl implements RateCardService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(RateCardCreateDTO dto) {
+    public String create(RateCardCreateDTO dto) {
         validate(dto);
         if (rateCardMapper.selectByCode(dto.getRateCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_f713b711", dto.getRateCode());

@@ -38,7 +38,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(FlowDelegateAuthDO auth) {
+    public String create(FlowDelegateAuthDO auth) {
         if (auth == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_fdf18ac3");
         }

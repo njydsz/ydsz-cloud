@@ -44,7 +44,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(WbsTaskCreateDTO dto) {
+    public String create(WbsTaskCreateDTO dto) {
         validate(dto);
         if (wbsTaskMapper.selectByCode(dto.getTaskCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_aecdf567", dto.getTaskCode());

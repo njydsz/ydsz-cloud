@@ -38,7 +38,7 @@ public class RateInternalServiceImpl implements RateInternalService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(RateInternalCreateDTO dto) {
+    public String create(RateInternalCreateDTO dto) {
         validate(dto);
         if (rateMapper.selectByCode(dto.getRateCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_f713b711", dto.getRateCode());

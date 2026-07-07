@@ -44,7 +44,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(ProfitSimulationCreateDTO dto) {
+    public String create(ProfitSimulationCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getSimulationCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_dd45c4cb");

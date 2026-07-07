@@ -63,7 +63,7 @@ public class BillableUtilizationController {
     @PrePermission("execution:utilization:view")
     @GetMapping("/personal")
     public Result<Map<String, Object>> personal(
-            @RequestParam Long employeeId,
+            @RequestParam String employeeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return Result.ok(service.personal(employeeId, from, to));

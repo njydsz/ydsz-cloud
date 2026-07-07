@@ -37,7 +37,7 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(PurchaseCreateDTO dto) {
+    public String create(PurchaseCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getPurchaseCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_5e907df2");

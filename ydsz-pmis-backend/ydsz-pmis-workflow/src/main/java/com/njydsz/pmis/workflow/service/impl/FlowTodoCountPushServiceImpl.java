@@ -52,7 +52,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
             return;
         }
         try {
-            long count = taskMapper.countTodoByAssignee(String.valueOf(userId), null);
+            long count = taskMapper.countTodoByAssignee(userId, null);
             Map<String, Object> payload = new HashMap<>();
             payload.put("userId", userId);
             payload.put("todoCount", count);
@@ -74,7 +74,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
         if (task == null) {
             return;
         }
-        String userId = parseUserId(task.getAssigneeId());
+        String userId = task.getAssigneeId();
         if (userId == null) {
             return;
         }
@@ -100,7 +100,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
 
     @Override
-    public void pushTaskCompleted(FlowRunTaskDO task, Long operatorUserId) {
+    public void pushTaskCompleted(FlowRunTaskDO task, String operatorUserId) {
         if (task == null) {
             return;
         }
@@ -126,7 +126,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
 
     @Override
-    public void pushTaskRejected(FlowRunTaskDO task, Long operatorUserId, String reason) {
+    public void pushTaskRejected(FlowRunTaskDO task, String operatorUserId, String reason) {
         if (task == null) {
             return;
         }
@@ -147,16 +147,6 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
                     task.getId(), operatorUserId, reason);
         } catch (Exception e) {
             log.warn("[FlowPush] 推送任务驳回失败: taskId={} err={}", task.getId(), e.getMessage());
-        }
-    }
-
-    private Long parseUserId(String s) {
-        if (s == null) return null;
-        try {
-            return Long.parseLong(s.trim());
-        } catch (NumberFormatException e) {
-            log.warn("[FlowTodoCountPushServiceImpl] 用户 ID 解析失败 s={}: {}", s, e.getMessage());
-            return null;
         }
     }
 }

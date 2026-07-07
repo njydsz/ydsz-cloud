@@ -62,7 +62,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
     }
 
     @Override
-    public Map<String, Object> personal(Long employeeId, LocalDate from, LocalDate to) {
+    public Map<String, Object> personal(String employeeId, LocalDate from, LocalDate to) {
         if (employeeId == null) {
             throw new IllegalArgumentException("员工 ID 不能为空");
         }

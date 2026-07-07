@@ -44,7 +44,7 @@ public class OpsTicketServiceImpl implements OpsTicketService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(OpsTicketCreateDTO dto) {
+    public String create(OpsTicketCreateDTO dto) {
         validate(dto);
         OpsTicketPriority priority = OpsTicketPriority.fromCode(dto.getPriority());
         if (priority == null) {

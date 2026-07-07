@@ -5,8 +5,6 @@ import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.List;
-
 /**
  * 流程定义 Mapper
  *
@@ -65,7 +63,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      * @param tenantId 租户 ID
      * @return 灰度中定义列表（按 version desc）
      */
-    List<FlowDefinitionDO> selectCanaryingByCode(@Param("flowCode") String flowCode,
+    java.util.List<FlowDefinitionDO> selectCanaryingByCode(@Param("flowCode") String flowCode,
                                                            @Param("tenantId") String tenantId);
 
     /**
@@ -75,6 +73,6 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      * @param tenantId 租户 ID
      * @return 所有定义列表
      */
-    List<FlowDefinitionDO> selectByFlowCode(@Param("flowCode") String flowCode,
+    java.util.List<FlowDefinitionDO> selectByFlowCode(@Param("flowCode") String flowCode,
                                                       @Param("tenantId") String tenantId);
 }

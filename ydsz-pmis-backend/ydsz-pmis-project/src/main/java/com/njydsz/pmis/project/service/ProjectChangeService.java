@@ -22,7 +22,7 @@ public interface ProjectChangeService {
      * @param dto 变更创建参数
      * @return 变更 ID
      */
-    String create(ProjectChangeCreateDTO dto);
+    Long create(ProjectChangeCreateDTO dto);
 
     /**
      * 项目变更状态迁移（遵循 ChangeStatus 状态机）。

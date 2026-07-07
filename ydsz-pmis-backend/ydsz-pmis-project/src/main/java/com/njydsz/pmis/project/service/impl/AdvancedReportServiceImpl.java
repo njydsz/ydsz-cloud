@@ -70,7 +70,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     private static final BigDecimal STANDARD_MONTHLY_HOURS = new BigDecimal("174");
 
     @Override
-    public List<Map<String, Object>> evmReport(String initiationId) {
+    public List<Map<String, Object>> evmReport(Long initiationId) {
         if (initiationId == null) {
             return new ArrayList<>();
         }
@@ -490,7 +490,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     }
 
     @Override
-    public List<Map<String, Object>> resourceGantt(String initiationId) {
+    public List<Map<String, Object>> resourceGantt(Long initiationId) {
         if (initiationId == null) {
             return new ArrayList<>();
         }

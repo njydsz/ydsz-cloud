@@ -37,7 +37,7 @@ public class RevenueServiceImpl implements RevenueService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(RevenueCreateDTO dto) {
+    public String create(RevenueCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getRevenueCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_378203d4");

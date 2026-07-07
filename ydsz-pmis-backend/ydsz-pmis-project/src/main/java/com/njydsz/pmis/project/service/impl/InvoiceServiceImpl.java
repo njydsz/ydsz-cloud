@@ -41,7 +41,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(InvoiceCreateDTO dto) {
+    public String create(InvoiceCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getInvoiceCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0bf89391");

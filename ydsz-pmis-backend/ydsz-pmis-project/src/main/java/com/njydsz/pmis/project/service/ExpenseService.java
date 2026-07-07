@@ -21,7 +21,7 @@ public interface ExpenseService {
      * @param dto 费用创建参数
      * @return 费用记录ID
      */
-    Long create(ExpenseCreateDTO dto);
+    String create(ExpenseCreateDTO dto);
 
     /**
      * 提交、审批

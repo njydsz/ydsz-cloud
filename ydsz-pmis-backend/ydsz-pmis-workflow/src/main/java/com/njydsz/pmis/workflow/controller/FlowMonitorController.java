@@ -348,7 +348,7 @@ public class FlowMonitorController {
         int effectiveDays = (days == 30) ? 30 : 7;
 
         LocalDate today = LocalDate.now();
-        LocalDate start = today.minusDays(effectiveDays - "1");
+        LocalDate start = today.minusDays(effectiveDays - 1L);
         LocalDateTime startDt = start.atStartOfDay();
         LocalDateTime endDt = today.atTime(23, 59, 59);
 

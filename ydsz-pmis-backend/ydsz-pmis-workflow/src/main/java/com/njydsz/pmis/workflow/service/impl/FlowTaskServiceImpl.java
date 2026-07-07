@@ -47,7 +47,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 创建任务 ==============================
 
     @Override
-    public Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
+    public String createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
         return completeService.createTask(instanceId, node, variables);
     }
 

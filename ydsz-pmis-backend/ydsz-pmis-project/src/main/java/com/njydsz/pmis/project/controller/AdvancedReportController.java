@@ -62,7 +62,7 @@ public class AdvancedReportController {
     @PrePermission("report:advanced:view")
     @GetMapping("/utilization/employee")
     public Result<Map<String, Object>> utilizationOf(
-            @RequestParam Long employeeId,
+            @RequestParam String employeeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return Result.ok(service.utilizationOf(employeeId, from, to));

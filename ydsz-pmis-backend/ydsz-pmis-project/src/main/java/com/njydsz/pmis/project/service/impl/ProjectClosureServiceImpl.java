@@ -42,7 +42,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(ProjectClosureCreateDTO dto) {
+    public String create(ProjectClosureCreateDTO dto) {
         validate(dto);
         if (closureMapper.selectByCode(dto.getClosureCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,

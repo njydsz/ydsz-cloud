@@ -40,7 +40,7 @@ public class RiskServiceImpl implements RiskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(RiskCreateDTO dto) {
+    public String create(RiskCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getRiskCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_cad9859b");

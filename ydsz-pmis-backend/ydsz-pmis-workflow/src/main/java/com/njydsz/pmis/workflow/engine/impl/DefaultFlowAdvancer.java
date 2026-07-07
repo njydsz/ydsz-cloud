@@ -81,7 +81,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     @Override
-    public FlowInstanceViewDTO start(Long instanceId) {
+    public FlowInstanceViewDTO start(String instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
         if (instance == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
@@ -167,7 +167,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             if (isJoinNode(next) && hasMultipleIncoming(currentInstance.getDefinitionId(), next.getNodeCode())) {
                 int incomingCount = flowDefinitionCacheService.getSkipsByNextNode(
                         currentInstance.getDefinitionId(), next.getNodeCode()).size();
-                Long instId = currentInstance.getId();
+                String instId = currentInstance.getId();
                 String joinCode = next.getNodeCode();
                 try {
                     // 懒初始化：首次到达时初始化令牌（branchCount = 入边数）
@@ -330,7 +330,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     @Override
-    public String resolveRejectTarget(Long definitionId, String currentNodeCode) {
+    public String resolveRejectTarget(String definitionId, String currentNodeCode) {
         List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, currentNodeCode);
         if (!incoming.isEmpty()) {
             return incoming.get(0).getSkipName() == null
@@ -351,12 +351,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     /** 判断节点是否有多个入边 */
-    private boolean hasMultipleIncoming(Long definitionId, String nodeCode) {
+    private boolean hasMultipleIncoming(String definitionId, String nodeCode) {
         List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, nodeCode);
         return incoming != null && incoming.size() > 1;
     }
 
-    private String lookupNodeCodeByName(Long definitionId, String skipName) {
+    private String lookupNodeCodeByName(String definitionId, String skipName) {
         List<FlowNodeDO> all = flowDefinitionCacheService.getAllNodes(definitionId);
         return all.stream()
                 .filter(n -> skipName.equals(n.getNodeName()))
@@ -377,7 +377,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         }
     }
 
-    private List<FlowInstanceViewDTO.FlowTaskViewDTO> loadCurrentTasks(Long instanceId) {
+    private List<FlowInstanceViewDTO.FlowTaskViewDTO> loadCurrentTasks(String instanceId) {
         return taskService.listPendingByInstance(instanceId).stream()
                 .map(taskService::toView)
                 .toList();

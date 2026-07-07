@@ -21,7 +21,7 @@ import java.util.Map;
 public interface OpsTicketService {
 
     /** 创建工单（按优先级自动计算 SLA 截止） */
-    Long create(OpsTicketCreateDTO dto);
+    String create(OpsTicketCreateDTO dto);
 
     /** 派单 */
     void assign(OpsTicketAssignDTO dto);

@@ -45,7 +45,7 @@ public class FlowHisInstanceDO implements Serializable {
     private LocalDateTime startAt;
     private LocalDateTime endAt;
     private Long durationMs;
-    private Long createdBy;
+    private String createdBy;
     private LocalDateTime createdAt;
     private Long updatedBy;
     private LocalDateTime updatedAt;

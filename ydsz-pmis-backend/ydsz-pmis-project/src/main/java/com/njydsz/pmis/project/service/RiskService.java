@@ -24,7 +24,7 @@ public interface RiskService {
      * @param dto 风险创建参数
      * @return 风险ID
      */
-    Long create(RiskCreateDTO dto);
+    String create(RiskCreateDTO dto);
 
     /**
      * 变更风险状态

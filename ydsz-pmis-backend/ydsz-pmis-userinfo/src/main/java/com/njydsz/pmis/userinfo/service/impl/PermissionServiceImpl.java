@@ -66,7 +66,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_PERM_CODES, key = "#userId", unless = "#result == null || #result.isEmpty()")
-    public List<String> listPermCodesByUserId(String userId) {
+    public List<String> listPermCodesByUserId(Long userId) {
         return permissionMapper.selectPermCodesByUserId(userId);
     }
 

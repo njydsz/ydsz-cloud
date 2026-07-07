@@ -142,7 +142,7 @@ public class TimeEntryController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) Long taskId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -179,7 +179,7 @@ public class TimeEntryController {
     @PrePermission("execution:time:list")
     @GetMapping("/conflict")
     public Result<List<Map<String, Object>>> detectCrossProject(
-            @RequestParam Long employeeId,
+            @RequestParam String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate) {
         return Result.ok(service.detectCrossProject(employeeId, entryDate));
     }

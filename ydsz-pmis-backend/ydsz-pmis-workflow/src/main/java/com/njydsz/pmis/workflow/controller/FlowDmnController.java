@@ -89,7 +89,7 @@ public class FlowDmnController {
      */
     @Operation(summary = "新建/更新决策表")
     @PostMapping("/save")
-    public Result<Long> save(@Valid @RequestBody FlowDmnTableSaveDTO dto) {
+    public Result<String> save(@Valid @RequestBody FlowDmnTableSaveDTO dto) {
         FlowDmnTableDO table = new FlowDmnTableDO();
         BeanUtils.copyProperties(dto, table);
         if (table.getId() != null) {

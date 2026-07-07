@@ -37,7 +37,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(ExpenseCreateDTO dto) {
+    public String create(ExpenseCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getExpenseCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_01247121");
@@ -116,7 +116,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Transactional(readOnly = true)
     public Page<ExpenseDO> page(int page, int size, String keyword, String status,
-                                String expenseType, Long employeeId, String initiationId) {
+                                String expenseType, String employeeId, String initiationId) {
         Page<ExpenseDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ExpenseDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {

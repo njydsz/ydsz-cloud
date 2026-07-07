@@ -52,7 +52,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class RuleChainGraph implements Serializable {
 
-    private static final String serialVersionUID = "1";
+    private static final long serialVersionUID = 1L;
 
     /** 画布 ID（全局唯一） */
     private String graphId;
@@ -116,7 +116,7 @@ public class RuleChainGraph implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Viewport implements Serializable {
-        private static final String serialVersionUID = "1";
+        private static final long serialVersionUID = 1L;
         private double x;
         private double y;
         private double zoom = 1.0;

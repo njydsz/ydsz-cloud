@@ -35,7 +35,7 @@ public class ProfitServiceImpl implements ProfitService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long generateSnapshot(ProfitSnapshotDTO dto) {
+    public String generateSnapshot(ProfitSnapshotDTO dto) {
         if (dto == null || dto.getInitiationId() == null
                 || !StringUtils.hasText(dto.getPeriod())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_99e1d335");

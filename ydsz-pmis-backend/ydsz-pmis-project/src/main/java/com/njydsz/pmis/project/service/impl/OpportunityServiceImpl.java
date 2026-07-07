@@ -69,7 +69,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(OpportunityCreateDTO dto) {
+    public String create(OpportunityCreateDTO dto) {
         validate(dto);
         if (opportunityMapper.selectByCode(dto.getOpportunityCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,

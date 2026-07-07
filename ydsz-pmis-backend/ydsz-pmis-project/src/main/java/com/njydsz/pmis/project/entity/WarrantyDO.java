@@ -72,7 +72,7 @@ public class WarrantyDO implements Serializable {
 
     /** 创建人ID */
     @TableField(fill = FieldFill.INSERT)
-    private Long createdBy;
+    private String createdBy;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)

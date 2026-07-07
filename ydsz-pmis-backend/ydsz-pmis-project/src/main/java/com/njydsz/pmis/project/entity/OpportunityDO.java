@@ -76,7 +76,7 @@ public class OpportunityDO implements Serializable {
 
     /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)
-    private Long createdBy;
+    private String createdBy;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)

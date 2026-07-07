@@ -132,7 +132,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
 
     @Override
     @Transactional(readOnly = true)
-    public CustomerCreditDO getByCustomer(Long customerId) {
+    public CustomerCreditDO getByCustomer(String customerId) {
         if (customerId == null) return null;
         return creditMapper.selectByCustomerId(customerId);
     }

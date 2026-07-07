@@ -44,7 +44,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long createStandard(DeliveryStandardCreateDTO dto) {
+    public String createStandard(DeliveryStandardCreateDTO dto) {
         validateStandard(dto);
         DeliveryStandardDO s = new DeliveryStandardDO();
         BeanUtils.copyProperties(dto, s);
@@ -97,7 +97,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long createItem(DeliveryItemCreateDTO dto) {
+    public String createItem(DeliveryItemCreateDTO dto) {
         validateItem(dto);
         if (itemMapper.selectByCode(dto.getItemCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
@@ -152,7 +152,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public void markTrCompleted(Long itemId, Integer completed) {
+    public void markTrCompleted(String itemId, Integer completed) {
         DeliveryItemDO i = getItemById(itemId);
         if (Integer.valueOf(1).equals(i.getTrRequired()) == false) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_f693a197");

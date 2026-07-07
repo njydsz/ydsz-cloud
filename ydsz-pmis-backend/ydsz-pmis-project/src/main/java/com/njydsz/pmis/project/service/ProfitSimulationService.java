@@ -24,7 +24,7 @@ public interface ProfitSimulationService {
      * @param dto 测算创建参数
      * @return 测算版本ID
      */
-    Long create(ProfitSimulationCreateDTO dto);
+    String create(ProfitSimulationCreateDTO dto);
 
     /**
      * 状态迁移（DRAFT→SUBMITTED→APPROVED/REJECTED→ARCHIVED）

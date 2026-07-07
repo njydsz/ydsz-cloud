@@ -129,7 +129,7 @@ public class FlowTaskCompleteServiceImpl {
      * @return 任务 ID
      */
     @Transactional(rollbackFor = Exception.class)
-    public Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
+    public String createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
         return createTask(instanceId, node, variables, null);
     }
 
@@ -147,7 +147,7 @@ public class FlowTaskCompleteServiceImpl {
      * @return 任务 ID
      */
     @Transactional(rollbackFor = Exception.class)
-    public Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables,
+    public String createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables,
                            List<String> explicitAssignees) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
@@ -360,7 +360,7 @@ public class FlowTaskCompleteServiceImpl {
      * @param explicitAssignees  显式办理人（P2-9 自由流跳转传入，FOREACH 场景一般不传）
      * @return 首条 task ID（集合为空且 AUTO_PASS 时返回自动完成的 task ID）
      */
-    private Long createForeachTasks(FlowInstanceDO instance, FlowNodeDO node,
+    private String createForeachTasks(FlowInstanceDO instance, FlowNodeDO node,
                                       Map<String, Object> variables,
                                       List<String> explicitAssignees) {
         // 展开集合元素（复用 expandAssignees，支持 collection 变量 / permissionFlag / 显式指定）

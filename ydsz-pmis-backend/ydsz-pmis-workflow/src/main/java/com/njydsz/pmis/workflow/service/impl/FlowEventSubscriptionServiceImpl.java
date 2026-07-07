@@ -61,7 +61,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long createSubscription(Long instanceId, FlowNodeDO node,
+    public String createSubscription(Long instanceId, FlowNodeDO node,
                                     Map<String, Object> variables, Long boundaryTaskId) {
         if (instanceId == null || node == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "instanceId/node 不能为空");

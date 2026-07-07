@@ -119,7 +119,7 @@ public class ExpenseController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String expenseType,
-            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String initiationId) {
         return Result.ok(service.page(page, size, keyword, status, expenseType, employeeId, initiationId));
     }

@@ -57,7 +57,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(ProjectChangeCreateDTO dto) {
+    public String create(ProjectChangeCreateDTO dto) {
         validate(dto);
         if (changeMapper.selectByCode(dto.getChangeCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,

@@ -23,7 +23,7 @@ public interface RevenueService {
      * @param dto 收入创建参数
      * @return 收入记录ID
      */
-    Long create(RevenueCreateDTO dto);
+    String create(RevenueCreateDTO dto);
 
     /**
      * 确认收入

@@ -23,7 +23,7 @@ public interface RateCardService {
      * @param dto 费率创建参数
      * @return 费率ID
      */
-    Long create(RateCardCreateDTO dto);
+    String create(RateCardCreateDTO dto);
 
     /**
      * 更新费率

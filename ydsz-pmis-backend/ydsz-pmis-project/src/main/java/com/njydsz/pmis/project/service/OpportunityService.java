@@ -24,7 +24,7 @@ public interface OpportunityService {
      * @param dto 商机创建参数
      * @return 商机 ID
      */
-    Long create(OpportunityCreateDTO dto);
+    String create(OpportunityCreateDTO dto);
 
     /**
      * 更新商机信息。

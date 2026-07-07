@@ -23,7 +23,7 @@ public interface RateInternalService {
      * @param dto 费率创建参数
      * @return 费率ID
      */
-    Long create(RateInternalCreateDTO dto);
+    String create(RateInternalCreateDTO dto);
 
     /**
      * 更新费率

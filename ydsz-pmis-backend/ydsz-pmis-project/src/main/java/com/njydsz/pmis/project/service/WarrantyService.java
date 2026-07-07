@@ -21,7 +21,7 @@ public interface WarrantyService {
     /**
      * 创建质保期（结项审批通过后自动调用）
      */
-    Long create(WarrantyCreateDTO dto);
+    String create(WarrantyCreateDTO dto);
 
     /**
      * 手动提前终止质保期

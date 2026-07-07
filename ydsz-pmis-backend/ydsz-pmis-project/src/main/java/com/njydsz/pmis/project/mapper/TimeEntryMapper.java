@@ -41,7 +41,7 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @param to         截止日期
      * @return 工时列表
      */
-    List<TimeEntryDO> selectByEmployeeAndDateRange(@Param("employeeId") Long employeeId,
+    List<TimeEntryDO> selectByEmployeeAndDateRange(@Param("employeeId") String employeeId,
                                                     @Param("from") LocalDate from,
                                                     @Param("to") LocalDate to);
 
@@ -93,7 +93,7 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @param to         截止日期
      * @return 按天聚合列表
      */
-    List<Map<String, Object>> aggregateByDay(@Param("employeeId") Long employeeId,
+    List<Map<String, Object>> aggregateByDay(@Param("employeeId") String employeeId,
                                              @Param("from") LocalDate from,
                                              @Param("to") LocalDate to);
 
@@ -125,7 +125,7 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @param to         截止日期
      * @return 单员工可计费利用率数据
      */
-    Map<String, Object> aggregateBillableOne(@Param("employeeId") Long employeeId,
+    Map<String, Object> aggregateBillableOne(@Param("employeeId") String employeeId,
                                              @Param("from") LocalDate from,
                                              @Param("to") LocalDate to);
 

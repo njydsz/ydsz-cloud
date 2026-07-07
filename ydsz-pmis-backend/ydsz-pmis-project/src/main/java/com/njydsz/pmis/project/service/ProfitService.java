@@ -19,7 +19,7 @@ public interface ProfitService {
     /**
      * 生成/更新项目月度利润快照
      */
-    String generateSnapshot(ProfitSnapshotDTO dto);
+    Long generateSnapshot(ProfitSnapshotDTO dto);
 
     /**
      * 查询项目某月快照

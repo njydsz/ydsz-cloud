@@ -67,7 +67,7 @@ public interface DeliveryService {
      * @param dto 实例创建参数
      * @return 实例ID
      */
-    String createItem(DeliveryItemCreateDTO dto);
+    Long createItem(DeliveryItemCreateDTO dto);
 
     /**
      * 变更交付物实例状态
@@ -105,7 +105,7 @@ public interface DeliveryService {
      * @param initiationId 项目立项ID
      * @return 实例列表
      */
-    List<DeliveryItemDO> listItemsByInitiation(String initiationId);
+    List<DeliveryItemDO> listItemsByInitiation(Long initiationId);
 
     /**
      * 按阶段查询交付物实例

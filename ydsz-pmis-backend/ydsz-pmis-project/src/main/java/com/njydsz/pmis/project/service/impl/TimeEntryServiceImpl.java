@@ -55,7 +55,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(TimeEntryCreateDTO dto) {
+    public String create(TimeEntryCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getEntryDate() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_f4a1a58d");
@@ -225,7 +225,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TimeEntryDO> listByEmployeeAndDateRange(Long employeeId, LocalDate from, LocalDate to) {
+    public List<TimeEntryDO> listByEmployeeAndDateRange(String employeeId, LocalDate from, LocalDate to) {
         return timeEntryMapper.selectByEmployeeAndDateRange(employeeId, from, to);
     }
 
@@ -244,7 +244,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> detectCrossProject(Long employeeId, LocalDate entryDate) {
+    public List<Map<String, Object>> detectCrossProject(String employeeId, LocalDate entryDate) {
         if (employeeId == null || entryDate == null) return List.of();
         return timeEntryMapper.detectCrossProject(employeeId, entryDate);
     }

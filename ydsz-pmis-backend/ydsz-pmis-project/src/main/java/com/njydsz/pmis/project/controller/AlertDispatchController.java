@@ -46,7 +46,7 @@ public class AlertDispatchController {
      */
     @Operation(summary = "提交预警（自动按 level 解析目标角色）")
     @PostMapping
-    public Result<Long> submit(@Valid @RequestBody AlertDispatchDTO dto) {
+    public Result<String> submit(@Valid @RequestBody AlertDispatchDTO dto) {
         return Result.ok(service.submit(dto));
     }
 

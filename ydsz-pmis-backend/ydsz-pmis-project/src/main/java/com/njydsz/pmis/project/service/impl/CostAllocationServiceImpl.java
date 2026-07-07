@@ -56,7 +56,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long syncFromPurchase(Long purchaseId, String initiationId, String period,
+    public Long syncFromPurchase(String purchaseId, String initiationId, String period,
                                   BigDecimal amount, boolean billable) {
         CostAllocationDO c = new CostAllocationDO();
         c.setInitiationId(initiationId);
@@ -75,7 +75,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long syncFromExpense(Long expenseId, String initiationId, String period,
+    public Long syncFromExpense(String expenseId, String initiationId, String period,
                                  BigDecimal amount, boolean billable) {
         CostAllocationDO c = new CostAllocationDO();
         c.setInitiationId(initiationId);

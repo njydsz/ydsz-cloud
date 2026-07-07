@@ -37,7 +37,7 @@ public class WarrantyServiceImpl implements WarrantyService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(WarrantyCreateDTO dto) {
+    public String create(WarrantyCreateDTO dto) {
         validate(dto);
         // 同一项目不允许存在多个 ACTIVE 质保期
         List<WarrantyDO> active = warrantyMapper.selectByInitiation(dto.getInitiationId());
