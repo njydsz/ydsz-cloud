@@ -140,7 +140,8 @@ public class DagInstanceExecutor {
             nodeInstance.setJobKey(node.jobKey());
             nodeInstance.setNodeStatus(DagNodeStatus.PENDING.name());
             nodeInstance.setRetryCount(0);
-            nodeInstance.setMaxRetries(0);
+            // P2-6: 从 JobDO 读取 maxRetries，支持 RETRY 失败策略
+            nodeInstance.setMaxRetries(resolveNodeMaxRetries(node.jobId()));
             nodeInstance.setTenantId(instance.getTenantId());
             dagNodeInstanceMapper.insert(nodeInstance);
         }
@@ -250,13 +251,32 @@ public class DagInstanceExecutor {
         long durationMs = nodeInstance.getStartedAt() != null
                 ? ChronoUnit.MILLIS.between(nodeInstance.getStartedAt(), now) : 0;
 
-        // 更新节点状态
+        // P2-5: 通过 logId 查询 JobLog 获取节点执行结果
+        String nodeResultJson = null;
+        if (event.success() && event.logId() != null) {
+            try {
+                JobLogDO jobLog = jobLogMapper.selectById(event.logId());
+                if (jobLog != null) {
+                    nodeResultJson = jobLog.getResultJson();
+                }
+            } catch (Exception e) {
+                log.warn("[DagInstance] 查询节点执行结果异常, 忽略上下文合并: logId={} reason={}",
+                        event.logId(), e.getMessage());
+            }
+        }
+
+        // 更新节点状态（含 resultJson）
         dagNodeInstanceMapper.markFinished(nodeInstance.getId(),
-                finalStatus.name(), now, durationMs, null,
+                finalStatus.name(), now, durationMs, nodeResultJson,
                 event.success() ? null : "任务执行失败", event.logId());
 
         log.info("[DagInstance] 节点完成: instanceId={} jobKey={} status={}",
                 dagInstanceId, nodeInstance.getJobKey(), finalStatus);
+
+        // P2-5: 节点成功时，将结果合并到 DAG 实例级上下文
+        if (event.success() && nodeResultJson != null) {
+            mergeNodeResultToContext(dagInstanceId, nodeInstance.getJobKey(), nodeResultJson);
+        }
 
         // 加载 DAG 实例和定义
         JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
@@ -273,16 +293,9 @@ public class DagInstanceExecutor {
             // 节点成功：触发后继
             triggerSuccessors(dagInstanceId, instance.getDagId(), nodeInstance.getJobKey(), definition);
         } else {
-            // 节点失败：根据 DAG 级失败策略处理
+            // 节点失败：根据 DAG 级失败策略处理（P2-6 增强）
             FailStrategy dagStrategy = FailStrategy.parse(dag.getFailStrategy());
-            if (dagStrategy == FailStrategy.FAIL_FAST) {
-                // FAIL_FAST: 标记所有未完成的节点为 SKIPPED
-                skipPendingNodes(dagInstanceId);
-                log.info("[DagInstance] FAIL_FAST, 跳过未完成节点: instanceId={}", dagInstanceId);
-            } else {
-                // CONTINUE_ON_FAIL: 仍然触发后继（CONTINUE_ON_FAIL 策略的后继）
-                triggerSuccessors(dagInstanceId, instance.getDagId(), nodeInstance.getJobKey(), definition);
-            }
+            handleNodeFailure(dagInstanceId, instance.getDagId(), nodeInstance, definition, dagStrategy);
         }
 
         // 检查是否所有节点完成
@@ -290,17 +303,161 @@ public class DagInstanceExecutor {
     }
 
     /**
+     * P2-6: 节点失败时的策略处理。
+     *
+     * <p>支持四种 DAG 级失败策略：
+     * <ul>
+     *   <li>{@link FailStrategy#RETRY}：若 retryCount &lt; maxRetries，重置为 PENDING 并重新派发；
+     *       否则按 {@link FailStrategy#FAIL_FAST} 处理</li>
+     *   <li>{@link FailStrategy#FAIL_FAST}：标记所有未完成节点为 SKIPPED</li>
+     *   <li>{@link FailStrategy#SKIP_SUBSEQUENT}：仅跳过失败节点的直接后继，其他分支继续</li>
+     *   <li>{@link FailStrategy#CONTINUE_ON_FAIL}：仍触发后继（通知/清理类）</li>
+     * </ul>
+     */
+    private void handleNodeFailure(String dagInstanceId, String dagId,
+                                    JobDagNodeInstanceDO nodeInstance, DagDefinition definition,
+                                    FailStrategy dagStrategy) {
+        String jobKey = nodeInstance.getJobKey();
+        // P2-6: RETRY 策略优先处理
+        if (dagStrategy == FailStrategy.RETRY) {
+            if (tryRetryNode(nodeInstance, definition)) {
+                log.info("[DagInstance] RETRY 重试节点: instanceId={} jobKey={} retry={}/{}",
+                        dagInstanceId, jobKey, nodeInstance.getRetryCount() + 1, nodeInstance.getMaxRetries());
+                return; // 重试中，不触发后继也不 finalize
+            }
+            // 重试次数用尽，降级为 FAIL_FAST
+            log.info("[DagInstance] RETRY 重试次数用尽, 按 FAIL_FAST 处理: instanceId={} jobKey={}",
+                    dagInstanceId, jobKey);
+            skipPendingNodes(dagInstanceId);
+            return;
+        }
+
+        if (dagStrategy == FailStrategy.FAIL_FAST) {
+            skipPendingNodes(dagInstanceId);
+            log.info("[DagInstance] FAIL_FAST, 跳过未完成节点: instanceId={}", dagInstanceId);
+        } else if (dagStrategy == FailStrategy.SKIP_SUBSEQUENT) {
+            // P2-6: 仅跳过失败节点的直接后继（递归跳过后继的后继）
+            skipSubsequentNodes(dagInstanceId, jobKey, definition);
+            log.info("[DagInstance] SKIP_SUBSEQUENT, 跳过失败节点后继: instanceId={} jobKey={}",
+                    dagInstanceId, jobKey);
+        } else {
+            // CONTINUE_ON_FAIL: 仍然触发后继（仅 CONTINUE_ON_FAIL 边级策略的边触发）
+            triggerSuccessors(dagInstanceId, dagId, jobKey, definition, false);
+        }
+    }
+
+    /**
+     * P2-6: 尝试重试节点。
+     *
+     * @return true 表示重试已触发；false 表示重试次数用尽
+     */
+    private boolean tryRetryNode(JobDagNodeInstanceDO nodeInstance, DagDefinition definition) {
+        int updated = dagNodeInstanceMapper.markRetry(nodeInstance.getId());
+        if (updated == 0) {
+            return false; // 重试次数用尽或状态非 FAILED
+        }
+        // 重新查询节点实例获取最新状态（retryCount 已递增）
+        JobDagNodeInstanceDO refreshed = dagNodeInstanceMapper.selectById(nodeInstance.getId());
+        if (refreshed == null) {
+            return false;
+        }
+        // 重新派发该节点
+        DagNode node = definition.findNode(refreshed.getJobKey());
+        if (node == null) {
+            return false;
+        }
+        dispatchNode(refreshed.getDagInstanceId(), refreshed.getDagId(), node, definition);
+        return true;
+    }
+
+    /**
+     * P2-6: 跳过失败节点的所有直接后继（递归跳过后继的后继）。
+     *
+     * <p>与 {@link #skipPendingNodes} 的区别：本方法只跳过失败节点的后继链路，
+     * 不影响其他分支的 PENDING 节点。
+     */
+    private void skipSubsequentNodes(String dagInstanceId, String failedJobKey, DagDefinition definition) {
+        // 使用 DagParser 的后代查询，递归跳过所有后继
+        List<DagEdge> outgoing = definition.outgoingEdges(failedJobKey);
+        for (DagEdge edge : outgoing) {
+            skipNodeAndSubsequent(dagInstanceId, edge.to(), definition);
+        }
+    }
+
+    /**
+     * 递归跳过指定节点及其后继（仅 PENDING 状态才跳过）。
+     */
+    private void skipNodeAndSubsequent(String dagInstanceId, String jobKey, DagDefinition definition) {
+        // 通过 jobKey 查找节点，再查节点实例
+        DagNode node = definition.findNode(jobKey);
+        if (node == null) {
+            return;
+        }
+        JobDagNodeInstanceDO nodeInstance = dagNodeInstanceMapper.selectByDagInstanceAndJob(
+                dagInstanceId, node.jobId());
+        if (nodeInstance != null && DagNodeStatus.PENDING.name().equals(nodeInstance.getNodeStatus())) {
+            dagNodeInstanceMapper.markSkipped(nodeInstance.getId());
+            log.debug("[DagInstance] SKIP_SUBSEQUENT 跳过节点: instanceId={} jobKey={}",
+                    dagInstanceId, jobKey);
+        }
+        // 递归跳过后继
+        for (DagEdge edge : definition.outgoingEdges(jobKey)) {
+            skipNodeAndSubsequent(dagInstanceId, edge.to(), definition);
+        }
+    }
+
+    /**
+     * P2-6: 从 JobDO 读取 maxRetries（节点级重试上限）。
+     *
+     * @return JobDO.maxRetries；任务不存在或为 null 返回 0
+     */
+    private int resolveNodeMaxRetries(String jobId) {
+        try {
+            JobDO job = jobMapper.selectById(jobId);
+            if (job != null && job.getMaxRetries() != null) {
+                return job.getMaxRetries();
+            }
+        } catch (Exception e) {
+            log.warn("[DagInstance] 读取 maxRetries 异常, 默认 0: jobId={} reason={}",
+                    jobId, e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
      * 触发指定节点的后继节点（仅当后继的所有前置都成功时才派发）。
+     *
+     * <p>P2-6: 支持边级失败策略。当前置节点成功时，所有边都触发；
+     * 当前置节点失败时（CONTINUE_ON_FAIL 场景），仅边级策略为 CONTINUE_ON_FAIL 的边才触发。
      */
     private void triggerSuccessors(String dagInstanceId, String dagId, String completedJobKey,
                                     DagDefinition definition) {
+        triggerSuccessors(dagInstanceId, dagId, completedJobKey, definition, true);
+    }
+
+    /**
+     * 触发指定节点的后继节点（带前置成功标志，支持边级策略）。
+     *
+     * @param predecessorSuccess 前置节点是否成功；false 时仅 CONTINUE_ON_FAIL 边触发
+     */
+    private void triggerSuccessors(String dagInstanceId, String dagId, String completedJobKey,
+                                    DagDefinition definition, boolean predecessorSuccess) {
         List<DagEdge> outgoing = definition.outgoingEdges(completedJobKey);
         for (DagEdge edge : outgoing) {
             DagNode successor = definition.findNode(edge.to());
             if (successor == null) {
                 continue;
             }
-            // 检查后继的所有前置是否都成功
+            // P2-6: 边级失败策略判断
+            if (!predecessorSuccess) {
+                FailStrategy edgeStrategy = edge.resolveFailStrategy();
+                if (!edgeStrategy.shouldTriggerOnFailure()) {
+                    log.debug("[DagInstance] 边级策略不触发后继: instanceId={} edge={}→{} strategy={}",
+                            dagInstanceId, edge.from(), edge.to(), edgeStrategy);
+                    continue;
+                }
+            }
+            // 检查后继的所有前置是否都成功（CONTINUE_ON_FAIL 场景下，失败的前置也算"完成"）
             if (areAllPredecessorsSuccessful(dagInstanceId, edge.to(), definition)) {
                 dispatchNode(dagInstanceId, dagId, successor, definition);
             }
@@ -426,5 +583,84 @@ public class DagInstanceExecutor {
                 dagInstanceId, jobKey);
         if (node == null) return;
         dagNodeInstanceMapper.markSkipped(node.getId());
+    }
+
+    // ==================== P2-5: 跨节点上下文传递 ====================
+
+    /**
+     * 将节点执行结果合并到 DAG 实例级上下文（contextJson）。
+     *
+     * <p>合并策略：以 jobKey 为 key，节点结果为 value，写入 contextJson 对象。
+     * 同一 jobKey 的多次执行（重试）会覆盖旧值。
+     *
+     * <p>线程安全：DAG 实例级 contextJson 更新采用 read-modify-write，
+     * 由于 DAG 节点完成事件是异步串行处理的（@Async 单线程默认），
+     * 且同一 DAG 实例的节点不会并行完成（拓扑顺序），冲突概率低。
+     * 如需强一致，可后续改为 PostgreSQL jsonb 合并或 Redis HSET。
+     *
+     * @param dagInstanceId DAG 实例 ID
+     * @param jobKey        节点 jobKey（作为 contextJson 的 key）
+     * @param nodeResultJson 节点执行结果 JSON
+     */
+    private void mergeNodeResultToContext(String dagInstanceId, String jobKey, String nodeResultJson) {
+        try {
+            JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+            if (instance == null) {
+                return;
+            }
+            JSONObject context = parseContextJson(instance.getContextJson());
+            // 尝试将 nodeResultJson 解析为对象/数组，保留原始类型；解析失败则作为字符串存储
+            Object parsed;
+            try {
+                parsed = JSON.parse(nodeResultJson);
+            } catch (Exception parseEx) {
+                parsed = nodeResultJson;
+            }
+            context.put(jobKey, parsed);
+            dagInstanceMapper.updateContext(dagInstanceId, JSON.toJSONString(context));
+            log.debug("[DagInstance] 上下文合并: instanceId={} jobKey={} keys={}",
+                    dagInstanceId, jobKey, context.size());
+        } catch (Exception e) {
+            log.warn("[DagInstance] 上下文合并异常, 不影响主流程: instanceId={} jobKey={} reason={}",
+                    dagInstanceId, jobKey, e.getMessage());
+        }
+    }
+
+    /**
+     * 解析 contextJson，空值或异常时返回空 JSONObject。
+     */
+    private JSONObject parseContextJson(String contextJson) {
+        if (contextJson == null || contextJson.isBlank()) {
+            return new JSONObject();
+        }
+        try {
+            Object parsed = JSON.parse(contextJson);
+            if (parsed instanceof JSONObject jo) {
+                return jo;
+            }
+        } catch (Exception ignored) {
+            // contextJson 非法时返回空对象，避免覆盖
+        }
+        return new JSONObject();
+    }
+
+    /**
+     * P2-5: 获取 DAG 实例级上下文（供业务侧查询跨节点传递的参数）。
+     *
+     * <p>业务侧可在节点执行时调用本方法获取上游节点的执行结果：
+     * <pre>{@code
+     * JSONObject context = dagInstanceExecutor.getDagContext(dagInstanceId);
+     * Object upstreamResult = context.get("upstreamJobKey");
+     * }</pre>
+     *
+     * @param dagInstanceId DAG 实例 ID
+     * @return 上下文 JSON 对象（不可变副本）；实例不存在或无上下文返回空对象
+     */
+    public JSONObject getDagContext(String dagInstanceId) {
+        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        if (instance == null) {
+            return new JSONObject();
+        }
+        return parseContextJson(instance.getContextJson());
     }
 }

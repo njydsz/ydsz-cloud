@@ -1623,7 +1623,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_dag(
     CONSTRAINT uk_pmis_job_dag_key UNIQUE (dag_key, deleted),
     CONSTRAINT ck_pjd_status_enum  CHECK (status IN ('DRAFT', 'ENABLED', 'DISABLED')),
     CONSTRAINT ck_pjd_trigger_enum CHECK (trigger_type IN ('MANUAL', 'CRON')),
-    CONSTRAINT ck_pjd_fail_strategy_enum CHECK (fail_strategy IN ('FAIL_FAST', 'CONTINUE_ON_FAIL')),
+    CONSTRAINT ck_pjd_fail_strategy_enum CHECK (fail_strategy IN ('FAIL_FAST', 'CONTINUE_ON_FAIL', 'RETRY', 'SKIP_SUBSEQUENT')),
     CONSTRAINT ck_pjd_max_concurrent_nonneg CHECK (max_concurrent_instances >= 0),
     CONSTRAINT ck_pjd_counts_nonneg CHECK (fire_count >= 0 AND success_count >= 0 AND fail_count >= 0),
     CONSTRAINT ck_pjd_version_pos  CHECK (version >= 1),

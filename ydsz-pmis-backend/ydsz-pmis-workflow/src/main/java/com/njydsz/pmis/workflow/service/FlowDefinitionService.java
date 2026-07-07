@@ -242,4 +242,30 @@ public interface FlowDefinitionService {
      *   定义不存在返回 null。
      */
     Map<String, Object> getLockStatus(String definitionId);
+
+    /**
+     * P2-5: 变更影响分析报告 — 评估老版本定义升级到新版本对在途实例的影响。
+     *
+     * <p>对标 Activiti/Flowable 的"流程定义升级影响分析"：
+     * <ul>
+     *   <li>对比两个版本的节点 / 跳转差异（复用 {@link #diffVersions}）</li>
+     *   <li>统计老版本在途实例数 + 按当前节点分组分布</li>
+     *   <li>识别被删除节点上的在途实例（HIGH 风险：会卡死）</li>
+     *   <li>识别节点类型/审批人变更（MEDIUM 风险）</li>
+     *   <li>输出整体风险等级（HIGH / MEDIUM / LOW / NONE）与迁移建议</li>
+     * </ul>
+     *
+     * @param oldDefinitionId 老版本流程定义 ID
+     * @param newDefinitionId 新版本流程定义 ID
+     * @return Map 包含：
+     *   <ul>
+     *     <li>{@code oldDefinition} / {@code newDefinition} — 两个版本元信息</li>
+     *     <li>{@code diff} — 节点/跳转差异（同 {@link #diffVersions} 输出结构）</li>
+     *     <li>{@code runningInstances} — 在途实例统计：total / byNode</li>
+     *     <li>{@code impactedInstances} — 受影响实例：stuckInstances（卡死）/ affectedInstances（受影响）</li>
+     *     <li>{@code riskLevel} — 风险等级：HIGH / MEDIUM / LOW / NONE</li>
+     *     <li>{@code recommendations} — 迁移建议列表</li>
+     *   </ul>
+     */
+    Map<String, Object> analyzeMigrationImpact(String oldDefinitionId, String newDefinitionId);
 }

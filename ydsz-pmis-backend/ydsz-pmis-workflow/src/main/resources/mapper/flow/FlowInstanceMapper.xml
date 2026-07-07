@@ -234,4 +234,32 @@
         GROUP BY DATE(end_at)
         ORDER BY DATE(end_at) ASC
     </select>
+
+    <!-- P2-5: 统计某流程定义的在途实例数（flow_status = 'RUNNING'） -->
+    <select id="countRunningByDefinition" resultType="long">
+        SELECT COUNT(1)
+        FROM pmis_flow_instance
+        WHERE definition_id = #{definitionId}
+          AND flow_status = 'RUNNING'
+          AND status = 'ENABLED'
+          AND deleted = 0
+    </select>
+
+    <!--
+        P2-5: 按当前节点分组统计某流程定义的在途实例数
+        用于变更影响分析：识别哪些节点有在途实例
+    -->
+    <select id="selectRunningGroupByNode" resultType="java.util.Map">
+        SELECT current_node_code AS "currentNodeCode",
+               MAX(current_node_name) AS "currentNodeName",
+               COUNT(1) AS "cnt"
+        FROM pmis_flow_instance
+        WHERE definition_id = #{definitionId}
+          AND flow_status = 'RUNNING'
+          AND status = 'ENABLED'
+          AND deleted = 0
+          AND current_node_code IS NOT NULL
+        GROUP BY current_node_code
+        ORDER BY cnt DESC
+    </select>
 </mapper>

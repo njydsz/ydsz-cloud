@@ -453,5 +453,72 @@ public class RuleIndexer {
             String mutexKey = tenantId + "|" + mutexGroup;
             mutexGroupIndex.computeIfAbsent(mutexKey, k -> new ArrayList<>()).add(rule);
         }
+
+        // 倒排索引（P1-2）：从条件表达式提取字段，构建 field -> ruleCodes 和 ruleCode -> fields
+        Set<String> fields = extractFields(rule);
+        if (!fields.isEmpty()) {
+            String ruleCode = rule.getCode();
+            // 正排索引：ruleCode -> fields
+            ruleToFields.put(ruleCode, ConcurrentHashMap.newKeySet(fields.size()));
+            ruleToFields.get(ruleCode).addAll(fields);
+            // 倒排索引：field -> ruleCodes
+            for (String field : fields) {
+                fieldToRules.computeIfAbsent(field, k -> ConcurrentHashMap.newKeySet()).add(ruleCode);
+            }
+        }
+    }
+
+    /**
+     * 从规则中提取条件表达式引用的字段名集合（P1-2）
+     *
+     * <p>提取逻辑：
+     * <ul>
+     *   <li>仅对 {@link Rule#getRuleDefinition()} 返回非空且 conditionExpression 非空的规则提取
+     *     （即仅 ExpressionRule 等基于定义的规则参与倒排索引过滤）</li>
+     *   <li>复用 AviatorExpressionEvaluator 的正则逻辑：{@code \b([a-zA-Z_]\w*)\b}，
+     *     扩展支持中文标识符</li>
+     *   <li>过滤 Aviator 关键字（true/false/null/if/else/return 等）</li>
+     *   <li>过滤纯数字字面量</li>
+     *   <li>过滤首字母大写的标识符（类名/常量），保留首字母小写、含下划线或中文开头的标识符</li>
+     * </ul>
+     *
+     * <p>对于非 ExpressionRule 类型（如 DecisionTableRule/ScriptRule），
+     * {@code getRuleDefinition()} 返回 null 或 conditionExpression 为空时返回空集合，
+     * 该规则不参与倒排索引过滤（保留为候选）。
+     *
+     * @param rule 规则
+     * @return 字段名集合；非表达式规则或空表达式返回空集合
+     */
+    Set<String> extractFields(Rule rule) {
+        if (rule == null) {
+            return Collections.emptySet();
+        }
+        RuleDefinition def = rule.getRuleDefinition();
+        if (def == null) {
+            return Collections.emptySet();
+        }
+        String expr = def.getConditionExpression();
+        if (expr == null || expr.isBlank()) {
+            return Collections.emptySet();
+        }
+        Set<String> fields = new LinkedHashSet<>();
+        Matcher m = FIELD_PATTERN.matcher(expr);
+        while (m.find()) {
+            String word = m.group(1);
+            if (AVIATOR_KEYWORDS.contains(word)) {
+                continue;
+            }
+            if (word.matches("\\d+")) {
+                continue;
+            }
+            char firstChar = word.charAt(0);
+            // 保留首字母小写、下划线开头、中文开头的标识符，或含下划线的标识符
+            if (Character.isLowerCase(firstChar) || firstChar == '_'
+                    || (firstChar >= '\u4e00' && firstChar <= '\u9fa5')
+                    || word.contains("_")) {
+                fields.add(word);
+            }
+        }
+        return fields;
     }
 }

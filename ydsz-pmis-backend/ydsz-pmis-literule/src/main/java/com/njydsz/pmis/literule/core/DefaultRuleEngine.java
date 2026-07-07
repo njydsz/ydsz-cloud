@@ -157,11 +157,13 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         Set<String> triggeredGroups = new HashSet<>();
         String scenario = context.getScenario();
         String contextTenantId = context.getTenantId();
+        String contextEnvironment = context.getEnvironment();
         int evaluatedCount = 0;
 
         // P0-1：使用索引查找候选规则（大规则量场景性能优化）
+        // 1.6.0 起索引模式已按租户+环境+场景+互斥组过滤
         List<Rule> candidateRules = ruleIndexer.isIndexEnabled()
-                ? ruleIndexer.findCandidates(contextTenantId, scenario, triggeredGroups)
+                ? ruleIndexer.findCandidates(contextTenantId, contextEnvironment, scenario, triggeredGroups)
                 : rules;
 
         // P1-2：倒排索引第二层过滤，按 facts 字段进一步缩小候选集
@@ -171,12 +173,16 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             candidateRules = ruleIndexer.filterByFacts(candidateRules, factKeys);
         }
 
-        // 遍历候选规则（索引模式下已按租户+场景+互斥组+字段过滤）
+        // 遍历候选规则（索引模式下已按租户+环境+场景+互斥组+字段过滤）
         for (Rule rule : candidateRules) {
-            // 索引未启用时仍需租户和场景过滤
+            // 索引未启用时仍需租户、环境、场景过滤
             if (!ruleIndexer.isIndexEnabled()) {
                 // 租户隔离（1.5.0）：仅评估与上下文租户匹配的规则
                 if (!java.util.Objects.equals(rule.getTenantId(), contextTenantId)) {
+                    continue;
+                }
+                // 环境隔离（1.6.0，P1-5）：rule.environment="default" 匹配任何上下文；非 default 必须完全匹配
+                if (!environmentMatches(rule, contextEnvironment)) {
                     continue;
                 }
                 // 场景过滤：非 DEFAULT 场景下，跳过 scope 不匹配的规则
@@ -383,9 +389,14 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     public List<RuleResult> dryRun(RuleContext context) {
         List<RuleResult> all = new ArrayList<>();
         String contextTenantId = context.getTenantId();
+        String contextEnvironment = context.getEnvironment();
         for (Rule rule : rules) {
             // 租户隔离（1.5.0）：dry-run 同样仅评估与上下文租户匹配的规则
             if (!java.util.Objects.equals(rule.getTenantId(), contextTenantId)) {
+                continue;
+            }
+            // 环境隔离（1.6.0，P1-5）：dry-run 同样遵循环境隔离
+            if (!environmentMatches(rule, contextEnvironment)) {
                 continue;
             }
             try {
@@ -695,6 +706,29 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             return true;
         }
         return scope.equalsIgnoreCase(scenario);
+    }
+
+    /**
+     * 判断规则环境是否匹配上下文环境（P1-5 多环境隔离）
+     *
+     * <p>过滤规则：
+     * <ul>
+     *   <li>rule.environment 为 null/空 或 {@link RuleEnvironment#DEFAULT "default"} 时，
+     *       匹配任何上下文环境（向后兼容）</li>
+     *   <li>rule.environment 非 "default" 时，必须与 contextEnvironment 完全匹配</li>
+     * </ul>
+     *
+     * @param rule 规则
+     * @param contextEnvironment 上下文环境标识
+     * @return true=匹配；false=不匹配
+     * @since 1.6.0
+     */
+    private boolean environmentMatches(Rule rule, String contextEnvironment) {
+        String ruleEnv = rule.getEnvironment();
+        if (ruleEnv == null || ruleEnv.isBlank() || RuleEnvironment.DEFAULT.equals(ruleEnv)) {
+            return true;
+        }
+        return ruleEnv.equals(contextEnvironment);
     }
 
     /**

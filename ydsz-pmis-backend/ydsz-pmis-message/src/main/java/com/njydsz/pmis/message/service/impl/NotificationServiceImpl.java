@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.dto.NotificationQueryDTO;
 import com.njydsz.pmis.message.dto.NotificationSendDTO;
 import com.njydsz.pmis.message.entity.MsgNotificationDO;
@@ -153,6 +154,8 @@ public class NotificationServiceImpl implements NotificationService {
         n.setReadStatus(0);
         n.setRecallStatus(RecallStatusEnum.NONE.name());
         n.setExpiredAt(dto.getExpiredAt());
+        // P2-7: 补齐租户隔离,与其他消息实体一致(原依赖 DB DEFAULT '1',多租户场景会越权)
+        n.setTenantId(TenantContext.getTenantId());
         return n;
     }
 }

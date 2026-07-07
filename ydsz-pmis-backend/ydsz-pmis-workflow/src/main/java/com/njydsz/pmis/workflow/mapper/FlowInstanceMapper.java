@@ -170,4 +170,24 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
     List<Map<String, Object>> selectDailyCompletedCount(@Param("tenantId") String tenantId,
                                                          @Param("startTime") LocalDateTime startTime,
                                                          @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * P2-5: 统计某流程定义的在途实例数（flow_status = 'RUNNING'）。
+     *
+     * <p>用于变更影响分析：判断老版本定义是否还有未完成的实例。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 在途实例数
+     */
+    long countRunningByDefinition(@Param("definitionId") String definitionId);
+
+    /**
+     * P2-5: 按当前节点分组统计某流程定义的在途实例数。
+     *
+     * <p>用于变更影响分析：识别哪些节点有在途实例，评估节点变更的影响范围。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 每个节点一行：currentNodeCode / currentNodeName / cnt
+     */
+    List<Map<String, Object>> selectRunningGroupByNode(@Param("definitionId") String definitionId);
 }

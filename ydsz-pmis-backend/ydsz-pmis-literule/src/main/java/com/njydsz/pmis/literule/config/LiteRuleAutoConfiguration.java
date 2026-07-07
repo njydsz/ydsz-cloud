@@ -451,6 +451,54 @@ public class LiteRuleAutoConfiguration {
     }
 
     // ------------------------------------------------------------------
+    // P1-1 多级缓存（Caffeine + Redis）
+    // ------------------------------------------------------------------
+
+    /**
+     * 多级缓存 RuleConfigProvider 装饰器（P1-1）
+     *
+     * <p>当 classpath 存在 {@link RuleConfigProvider} 实现且
+     * {@code pmis.literule.cache.enabled=true}（默认 true）时，
+     * 自动装饰委托 Provider 为 {@link com.njydsz.pmis.literule.cache.CachingRuleConfigProvider}，
+     * 启用 Caffeine（L1 本地）+ Redis（L2 分布式）两级缓存，减少 DB 压力。
+     *
+     * <p>L2 启用条件：
+     * <ul>
+     *   <li>classpath 存在 {@code RedissonClient}（通过 {@code ObjectProvider} 安全获取）</li>
+     *   <li>{@code pmis.literule.cache.l2-enabled=true}（默认 true）</li>
+     * </ul>
+     * 任一不满足则仅启用 L1。
+     *
+     * <p>使用 {@link org.springframework.context.annotation.Primary} 确保其他组件
+     * （{@link RuleHotReloader} / {@link RuleAdminService}）注入的是缓存装饰器而非原始 Provider。
+     *
+     * @param providers           所有 RuleConfigProvider Bean（过滤掉 CachingRuleConfigProvider 自身）
+     * @param redissonClientProvider Redisson 客户端（可选，不存在时降级为仅 L1）
+     * @param properties          配置属性
+     * @return CachingRuleConfigProvider 实例
+     * @since 1.6.0
+     */
+    @Bean
+    @ConditionalOnMissingBean(com.njydsz.pmis.literule.cache.CachingRuleConfigProvider.class)
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleConfigProvider.class)
+    @ConditionalOnProperty(prefix = "pmis.literule.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @org.springframework.context.annotation.Primary
+    public com.njydsz.pmis.literule.cache.CachingRuleConfigProvider cachingRuleConfigProvider(
+            java.util.List<RuleConfigProvider> providers,
+            org.springframework.beans.factory.ObjectProvider<org.redisson.api.RedissonClient> redissonClientProvider,
+            LiteRuleProperties properties) {
+        // 过滤掉 CachingRuleConfigProvider 自身（避免循环装饰），取第一个作为委托
+        RuleConfigProvider delegate = providers.stream()
+                .filter(p -> !(p instanceof com.njydsz.pmis.literule.cache.CachingRuleConfigProvider))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("未找到可装饰的 RuleConfigProvider 委托实现"));
+        org.redisson.api.RedissonClient redissonClient = redissonClientProvider.getIfAvailable();
+        log.info("[LiteRule-Cache] 多级缓存 RuleConfigProvider 已初始化 (delegate={}, L2={})",
+                delegate.getClass().getSimpleName(), redissonClient != null);
+        return new com.njydsz.pmis.literule.cache.CachingRuleConfigProvider(delegate, redissonClient, properties);
+    }
+
+    // ------------------------------------------------------------------
     // CEP 复杂事件处理引擎（P0-2）
     // ------------------------------------------------------------------
 

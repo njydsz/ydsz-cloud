@@ -110,6 +110,24 @@ public class LiteRuleProperties {
     private RuleSourceConfig ruleSource = new RuleSourceConfig();
 
     /**
+     * 多级缓存配置（P1-1）
+     *
+     * <p>启用后自动装饰 {@link com.njydsz.pmis.literule.spi.RuleConfigProvider} 为
+     * {@link com.njydsz.pmis.literule.cache.CachingRuleConfigProvider}，
+     * 实现 Caffeine（L1 本地）+ Redis（L2 分布式）两级缓存，减少 DB 压力。
+     *
+     * <p>对标银行风控/Drools 优化实践：
+     * <ul>
+     *   <li>L1 命中直接返回，避免序列化开销</li>
+     *   <li>L2 命中回填 L1，跨实例共享缓存</li>
+     *   <li>写操作通过 Redis 版本号失效全部节点 L1</li>
+     * </ul>
+     *
+     * @since 1.6.0
+     */
+    private CacheConfig cache = new CacheConfig();
+
+    /**
      * 声明式注解扫描包路径（P2-10）
      *
      * <p>指定扫描 {@code @LiteRule} / {@code @RuleDefinitionMeta} 注解的基包，逗号分隔。
@@ -120,6 +138,24 @@ public class LiteRuleProperties {
      * @since 1.5.2
      */
     private String annotationScanBasePackages = "";
+
+    /**
+     * 当前运行环境（P1-5 多环境隔离）
+     *
+     * <p>可选值：
+     * <ul>
+     *   <li>{@code default}（默认）- 全环境生效，向后兼容</li>
+     *   <li>{@code dev} - 开发环境</li>
+     *   <li>{@code staging} - 预发环境</li>
+     *   <li>{@code prod} - 生产环境</li>
+     * </ul>
+     *
+     * <p>配置后，引擎评估时仅放行 environment 为 {@code "default"} 或与本配置匹配的规则。
+     * 用于 dev/staging/prod 环境的规则隔离，避免开发环境的测试规则在生产环境触发。
+     *
+     * @since 1.6.0
+     */
+    private String environment = "default";
 
     /**
      * AI 增强配置
@@ -263,5 +299,36 @@ public class LiteRuleProperties {
         private String connectString = "127.0.0.1:2181";
         /** 规则定义节点路径 */
         private String path = "/literule/definitions";
+    }
+
+    /**
+     * 多级缓存配置（P1-1）
+     *
+     * <p>控制 Caffeine（L1）+ Redis（L2）两级缓存行为。
+     *
+     * @since 1.6.0
+     */
+    @Data
+    public static class CacheConfig {
+
+        /** 是否启用多级缓存（关闭后直接透传到 delegate） */
+        private boolean enabled = true;
+
+        /** L1（Caffeine 本地）TTL，单位秒 */
+        private int l1TtlSeconds = 60;
+
+        /** L1 最大条数 */
+        private int l1MaxSize = 1000;
+
+        /** L2（Redis 分布式）TTL，单位秒 */
+        private int l2TtlSeconds = 300;
+
+        /**
+         * 是否启用 L2（需 Redisson 在 classpath）
+         *
+         * <p>true：RedissonClient 可用时启用 L2；
+         * false：强制仅用 L1，即便 RedissonClient 存在也不使用。
+         */
+        private boolean l2Enabled = true;
     }
 }

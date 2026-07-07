@@ -1,6 +1,7 @@
 package com.njydsz.pmis.literule.spi;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleEnvironment;
 
 import java.util.List;
 
@@ -91,6 +92,37 @@ public interface RuleConfigProvider {
         }
         return all.stream()
                 .filter(r -> tenantId.equals(r.getTenantId()))
+                .toList();
+    }
+
+    /**
+     * 加载指定租户和环境下启用的规则定义（1.6.0 起，P1-5 多环境隔离）
+     *
+     * <p>默认实现调用 {@link #loadEnabledRulesByTenant(String)} 后在内存按 environment 过滤：
+     * <ul>
+     *   <li>规则的 environment 为 {@link RuleEnvironment#DEFAULT "default"} 时，匹配任何环境（向后兼容）</li>
+     *   <li>规则的 environment 非 "default" 时，必须与 {@code environment} 完全匹配</li>
+     * </ul>
+     * 性能敏感场景应覆写为带 {@code WHERE tenant_id = ? AND (environment = 'default' OR environment = ?)}
+     * 的 SQL 查询。
+     *
+     * @param tenantId    租户 ID
+     * @param environment 环境标识（dev/staging/prod/default）
+     * @return 该租户下匹配环境的启用规则定义列表
+     * @since 1.6.0
+     */
+    default List<RuleDefinition> loadEnabledRulesByEnv(String tenantId, String environment) {
+        List<RuleDefinition> all = loadEnabledRulesByTenant(tenantId);
+        if (environment == null || environment.isBlank() || RuleEnvironment.DEFAULT.equals(environment)) {
+            return all;
+        }
+        return all.stream()
+                .filter(r -> {
+                    String ruleEnv = r.getEnvironment();
+                    return ruleEnv == null || ruleEnv.isBlank()
+                            || RuleEnvironment.DEFAULT.equals(ruleEnv)
+                            || environment.equals(ruleEnv);
+                })
                 .toList();
     }
 }

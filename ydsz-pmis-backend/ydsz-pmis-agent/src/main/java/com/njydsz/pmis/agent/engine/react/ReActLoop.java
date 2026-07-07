@@ -3,6 +3,8 @@ package com.njydsz.pmis.agent.engine.react;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
+import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
+import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
 import com.njydsz.pmis.agent.tool.AgentTool;
 import com.njydsz.pmis.agent.tool.ToolRegistry;
 import com.njydsz.pmis.agent.tool.ToolResult;
@@ -69,6 +71,9 @@ public class ReActLoop {
     /**
      * 运行 ReAct 推理循环（指定最大步数）。
      *
+     * <p>不带事件监听器，等价于 {@link #runStream(String, String, AgentContext, int, ReActEventListener)}
+     * 传入 {@link NoOpReActEventListener}。
+     *
      * @param baseSystemPrompt 业务系统提示词（工具清单会自动拼接）
      * @param userPrompt       用户问题
      * @param ctx              Agent 上下文
@@ -77,6 +82,48 @@ public class ReActLoop {
      */
     public ReActResult run(String baseSystemPrompt, String userPrompt,
                            AgentContext ctx, int maxSteps) {
+        return runStream(baseSystemPrompt, userPrompt, ctx, maxSteps,
+                NoOpReActEventListener.getInstance());
+    }
+
+    /**
+     * 运行 ReAct 推理循环（流式版本，P2-1 落地）。
+     *
+     * <p>与 {@link #run(String, String, AgentContext, int)} 行为一致，但在循环关键节点
+     * 触发 {@link ReActEventListener} 回调，用于 SSE 推送 / 日志 / Tracing 等输出。
+     *
+     * <p>监听器回调顺序（每步）：
+     * <ol>
+     *   <li>{@link ReActEventListener#onStepStart(int)}</li>
+     *   <li>{@link ReActEventListener#onThought(int, String)}（拿到 thought 后）</li>
+     *   <li>{@link ReActEventListener#onAction(int, ReActDecision)}（拿到 action 后）</li>
+     *   <li>{@link ReActEventListener#onObservation(int, String)}（拿到工具结果后，非终止步骤）</li>
+     *   <li>{@link ReActEventListener#onFinalAnswer(int, String)}（终止步骤）</li>
+     *   <li>{@link ReActEventListener#onStepEnd(int)}</li>
+     * </ol>
+     *
+     * <p>循环结束时触发：
+     * <ul>
+     *   <li>正常结束：{@link ReActEventListener#onComplete(ReActResult)}</li>
+     *   <li>未捕获异常：{@link ReActEventListener#onError(int, Throwable)} +
+     *       {@link ReActEventListener#onComplete(ReActResult)}（返回失败结果）</li>
+     * </ul>
+     *
+     * <p><b>线程安全</b>：监听器实现的异常会被捕获并记录日志，不会中断主流程。
+     *
+     * @param baseSystemPrompt 业务系统提示词（工具清单会自动拼接）
+     * @param userPrompt       用户问题
+     * @param ctx              Agent 上下文
+     * @param maxSteps         最大循环次数（&lt;= 0 时使用默认值）
+     * @param listener         事件监听器（null 时使用 NoOp）
+     * @return 推理结果（包含步骤轨迹 + 最终答案）
+     */
+    public ReActResult runStream(String baseSystemPrompt, String userPrompt,
+                                 AgentContext ctx, int maxSteps,
+                                 ReActEventListener listener) {
+        if (listener == null) {
+            listener = NoOpReActEventListener.getInstance();
+        }
         if (maxSteps <= 0) {
             maxSteps = DEFAULT_MAX_STEPS;
         }
@@ -89,65 +136,119 @@ public class ReActLoop {
         List<ReActStep> steps = new ArrayList<>();
         LlmProvider llm = llmProviderRouter.active();
 
-        for (int step = 1; step <= maxSteps; step++) {
-            ReActStep stepRecord = new ReActStep();
-            stepRecord.setStepIndex(step);
+        ReActResult finalResult;
+        try {
+            for (int step = 1; step <= maxSteps; step++) {
+                safeNotify(listener, l -> l.onStepStart(step));
 
-            // 1. 调用 LLM，获取决策
-            ReActDecision decision;
-            try {
-                decision = llm.chatForJson(fullSystemPrompt,
-                        currentUserPrompt.toString(), ReActDecision.class, ctx);
-            } catch (Exception e) {
-                log.warn("[ReAct] step={} LLM 调用或 JSON 解析异常: {}", step, e.getMessage());
-                stepRecord.setThought("[LLM 异常] " + e.getMessage());
-                stepRecord.setAction(ACTION_FINAL_ANSWER);
-                stepRecord.setFinalAnswer(null);
+                ReActStep stepRecord = new ReActStep();
+                stepRecord.setStepIndex(step);
+
+                // 1. 调用 LLM，获取决策
+                ReActDecision decision;
+                try {
+                    decision = llm.chatForJson(fullSystemPrompt,
+                            currentUserPrompt.toString(), ReActDecision.class, ctx);
+                } catch (Exception e) {
+                    log.warn("[ReAct] step={} LLM 调用或 JSON 解析异常: {}", step, e.getMessage());
+                    stepRecord.setThought("[LLM 异常] " + e.getMessage());
+                    stepRecord.setAction(ACTION_FINAL_ANSWER);
+                    stepRecord.setFinalAnswer(null);
+                    steps.add(stepRecord);
+                    finalResult = ReActResult.failure(
+                            "LLM 调用失败: " + e.getMessage(), steps);
+                    safeNotify(listener, l -> l.onStepEnd(step));
+                    safeNotifyComplete(listener, finalResult);
+                    return finalResult;
+                }
+
+                // 防御：LLM 返回 null
+                if (decision == null || decision.getAction() == null) {
+                    log.warn("[ReAct] step={} LLM 返回空决策", step);
+                    stepRecord.setThought("[空决策]");
+                    stepRecord.setAction(ACTION_FINAL_ANSWER);
+                    stepRecord.setFinalAnswer(null);
+                    steps.add(stepRecord);
+                    finalResult = ReActResult.failure("LLM 返回空决策", steps);
+                    safeNotify(listener, l -> l.onStepEnd(step));
+                    safeNotifyComplete(listener, finalResult);
+                    return finalResult;
+                }
+
+                // 记录 Thought + Action
+                stepRecord.setThought(decision.getThought());
+                stepRecord.setAction(decision.getAction());
+                stepRecord.setParameters(decision.getParameters());
+
+                log.info("[ReAct] step={} thought={} action={}", step,
+                        truncate(decision.getThought(), 80), decision.getAction());
+
+                // 通知 thought + action
+                safeNotify(listener, l -> l.onThought(step, decision.getThought()));
+                safeNotify(listener, l -> l.onAction(step, decision));
+
+                // 2. 判断是否为终止步骤
+                if (decision.isTerminal()) {
+                    stepRecord.setFinalAnswer(decision.getFinalAnswer());
+                    steps.add(stepRecord);
+                    safeNotify(listener, l -> l.onFinalAnswer(step, decision.getFinalAnswer()));
+                    safeNotify(listener, l -> l.onStepEnd(step));
+                    log.info("[ReAct] 循环完成, steps={}, finalAnswer.length={}",
+                            step, decision.getFinalAnswer() == null ? 0 : decision.getFinalAnswer().length());
+                    finalResult = ReActResult.success(decision.getFinalAnswer(), steps);
+                    safeNotifyComplete(listener, finalResult);
+                    return finalResult;
+                }
+
+                // 3. 执行工具调用，得到 Observation
+                String observation = executeTool(decision, ctx);
+                stepRecord.setObservation(observation);
                 steps.add(stepRecord);
-                return ReActResult.failure(
-                        "LLM 调用失败: " + e.getMessage(), steps);
+                safeNotify(listener, l -> l.onObservation(step, observation));
+
+                // 4. 将 Observation 拼接到下一轮 user prompt
+                currentUserPrompt.append("\n\n[步骤 ").append(step).append(" 观察]\n")
+                        .append(observation);
+
+                safeNotify(listener, l -> l.onStepEnd(step));
             }
 
-            // 防御：LLM 返回 null
-            if (decision == null || decision.getAction() == null) {
-                log.warn("[ReAct] step={} LLM 返回空决策", step);
-                stepRecord.setThought("[空决策]");
-                stepRecord.setAction(ACTION_FINAL_ANSWER);
-                stepRecord.setFinalAnswer(null);
-                steps.add(stepRecord);
-                return ReActResult.failure("LLM 返回空决策", steps);
-            }
-
-            // 记录 Thought + Action
-            stepRecord.setThought(decision.getThought());
-            stepRecord.setAction(decision.getAction());
-            stepRecord.setParameters(decision.getParameters());
-
-            log.info("[ReAct] step={} thought={} action={}", step,
-                    truncate(decision.getThought(), 80), decision.getAction());
-
-            // 2. 判断是否为终止步骤
-            if (decision.isTerminal()) {
-                stepRecord.setFinalAnswer(decision.getFinalAnswer());
-                steps.add(stepRecord);
-                log.info("[ReAct] 循环完成, steps={}, finalAnswer.length={}",
-                        step, decision.getFinalAnswer() == null ? 0 : decision.getFinalAnswer().length());
-                return ReActResult.success(decision.getFinalAnswer(), steps);
-            }
-
-            // 3. 执行工具调用，得到 Observation
-            String observation = executeTool(decision, ctx);
-            stepRecord.setObservation(observation);
-            steps.add(stepRecord);
-
-            // 4. 将 Observation 拼接到下一轮 user prompt
-            currentUserPrompt.append("\n\n[步骤 ").append(step).append(" 观察]\n")
-                    .append(observation);
+            // 达到最大循环次数仍未得到 final_answer
+            log.warn("[ReAct] 达到最大循环次数 {} 仍未得到 final_answer", maxSteps);
+            finalResult = ReActResult.failure("达到最大循环次数: " + maxSteps, steps);
+        } catch (RuntimeException e) {
+            log.error("[ReAct] 未捕获异常: {}", e.getMessage(), e);
+            safeNotifyError(listener, steps.size(), e);
+            finalResult = ReActResult.failure("未捕获异常: " + e.getMessage(), steps);
         }
 
-        // 达到最大循环次数仍未得到 final_answer
-        log.warn("[ReAct] 达到最大循环次数 {} 仍未得到 final_answer", maxSteps);
-        return ReActResult.failure("达到最大循环次数: " + maxSteps, steps);
+        safeNotifyComplete(listener, finalResult);
+        return finalResult;
+    }
+
+    /**
+     * 安全触发监听器回调（捕获所有异常，仅记录日志）。
+     *
+     * @param listener 监听器
+     * @param action   回调动作
+     */
+    private void safeNotify(ReActEventListener listener,
+                            java.util.function.Consumer<ReActEventListener> action) {
+        try {
+            action.accept(listener);
+        } catch (Exception e) {
+            log.warn("[ReAct] 监听器回调异常: {}", e.getMessage(), e);
+        }
+    }
+
+    /** 安全触发 onComplete */
+    private void safeNotifyComplete(ReActEventListener listener, ReActResult result) {
+        safeNotify(listener, l -> l.onComplete(result));
+    }
+
+    /** 安全触发 onError */
+    private void safeNotifyError(ReActEventListener listener, int step, Throwable error) {
+        safeNotify(listener, l -> l.onError(step, error));
     }
 
     /**
