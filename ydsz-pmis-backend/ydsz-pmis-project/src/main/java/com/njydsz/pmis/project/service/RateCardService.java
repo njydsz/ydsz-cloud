@@ -31,14 +31,14 @@ public interface RateCardService {
      * @param id  费率ID
      * @param dto 费率更新参数
      */
-    void update(Long id, RateCardCreateDTO dto);
+    void update(String id, RateCardCreateDTO dto);
 
     /**
      * 删除费率
      *
      * @param id 费率ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询费率
@@ -46,7 +46,7 @@ public interface RateCardService {
      * @param id 费率ID
      * @return 费率实体
      */
-    RateCardDO getById(Long id);
+    RateCardDO getById(String id);
 
     /** 按职级+项目类型+客户等级 命中当前生效的费率 */
     RateCardDO matchEffective(String levelCode, String projectType, String customerLevel, LocalDate date);

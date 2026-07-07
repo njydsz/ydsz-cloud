@@ -27,7 +27,7 @@ public interface ContractSupplementService {
      *
      * @param id 补充协议 ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据补充协议 ID 查询详情。
@@ -35,7 +35,7 @@ public interface ContractSupplementService {
      * @param id 补充协议 ID
      * @return 补充协议实体；不存在返回 null
      */
-    ContractSupplementDO getById(Long id);
+    ContractSupplementDO getById(String id);
 
     /**
      * 按合同查询补充协议列表。

@@ -58,7 +58,7 @@ public class RateInternalServiceImpl implements RateInternalService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(Long id, RateInternalCreateDTO dto) {
+    public void update(String id, RateInternalCreateDTO dto) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateInternalDO r = rateMapper.selectById(id);
         if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c90e3407");
@@ -76,14 +76,14 @@ public class RateInternalServiceImpl implements RateInternalService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         rateMapper.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public RateInternalDO getById(Long id) {
+    public RateInternalDO getById(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateInternalDO r = rateMapper.selectById(id);
         if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c90e3407");

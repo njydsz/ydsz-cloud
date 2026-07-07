@@ -58,7 +58,7 @@ public class RateCardServiceImpl implements RateCardService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(Long id, RateCardCreateDTO dto) {
+    public void update(String id, RateCardCreateDTO dto) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateCardDO r = rateCardMapper.selectById(id);
         if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c90e3407");
@@ -76,14 +76,14 @@ public class RateCardServiceImpl implements RateCardService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         rateCardMapper.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public RateCardDO getById(Long id) {
+    public RateCardDO getById(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateCardDO r = rateCardMapper.selectById(id);
         if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c90e3407");

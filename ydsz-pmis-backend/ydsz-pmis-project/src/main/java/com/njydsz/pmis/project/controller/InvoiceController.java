@@ -215,7 +215,7 @@ public class InvoiceController {
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "合同ID") @RequestParam(required = false) Long contractId,
-            @Parameter(description = "立项ID") @RequestParam(required = false) Long initiationId,
+            @Parameter(description = "立项ID") @RequestParam(required = false) String initiationId,
             @Parameter(description = "客户ID") @RequestParam(required = false) Long customerId,
             @Parameter(description = "发票类型") @RequestParam(required = false) String invoiceType) {
         return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, customerId, invoiceType));

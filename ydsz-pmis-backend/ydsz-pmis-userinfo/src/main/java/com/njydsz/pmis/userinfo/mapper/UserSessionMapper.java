@@ -5,6 +5,7 @@ import com.njydsz.pmis.userinfo.entity.UserSessionDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -30,7 +31,7 @@ public interface UserSessionMapper extends BaseMapper<UserSessionDO> {
      * @param userId 用户 ID
      * @return 活跃会话列表
      */
-    List<UserSessionDO> selectActiveByUserId(@Param("userId") Long userId);
+    List<UserSessionDO> selectActiveByUserId(@Param("userId") String userId);
 
     /**
      * 更新会话状态（登出/失效）
@@ -43,7 +44,7 @@ public interface UserSessionMapper extends BaseMapper<UserSessionDO> {
      */
     int updateStatus(@Param("sessionId") String sessionId,
                      @Param("status") String status,
-                     @Param("logoutAt") java.time.LocalDateTime logoutAt,
+                     @Param("logoutAt") LocalDateTime logoutAt,
                      @Param("logoutReason") String logoutReason);
 
     /**
@@ -53,6 +54,6 @@ public interface UserSessionMapper extends BaseMapper<UserSessionDO> {
      * @param keepSessionId 保留的会话 ID
      * @return 被踢掉的会话数
      */
-    int kickOtherByUserId(@Param("userId") Long userId,
+    int kickOtherByUserId(@Param("userId") String userId,
                           @Param("keepSessionId") String keepSessionId);
 }

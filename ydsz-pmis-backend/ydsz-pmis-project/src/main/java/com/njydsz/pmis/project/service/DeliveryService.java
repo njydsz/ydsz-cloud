@@ -32,7 +32,7 @@ public interface DeliveryService {
      *
      * @param id 标准ID
      */
-    void deleteStandard(Long id);
+    void deleteStandard(String id);
 
     /**
      * 根据ID查询交付物标准
@@ -40,7 +40,7 @@ public interface DeliveryService {
      * @param id 标准ID
      * @return 标准实体
      */
-    DeliveryStandardDO getStandardById(Long id);
+    DeliveryStandardDO getStandardById(String id);
 
     /**
      * 按项目类型/等级/阶段列出交付物标准
@@ -89,7 +89,7 @@ public interface DeliveryService {
      *
      * @param id 实例ID
      */
-    void deleteItem(Long id);
+    void deleteItem(String id);
 
     /**
      * 根据ID查询交付物实例
@@ -97,7 +97,7 @@ public interface DeliveryService {
      * @param id 实例ID
      * @return 实例实体
      */
-    DeliveryItemDO getItemById(Long id);
+    DeliveryItemDO getItemById(String id);
 
     /**
      * 查询项目下所有交付物实例

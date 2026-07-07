@@ -5,6 +5,8 @@ import com.njydsz.pmis.agent.orchestration.AgentBlackboard;
 import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 
+import java.util.Map;
+
 /**
  * 编排策略接口
  *
@@ -24,6 +26,6 @@ public interface OrchestrationStrategy {
      * @return 编排结果
      */
     OrchestrationResult apply(OrchestrationRequest req,
-                              java.util.Map<String, Agent> agents,
+                              Map<String, Agent> agents,
                               AgentBlackboard blackboard);
 }

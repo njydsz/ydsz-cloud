@@ -59,7 +59,7 @@ public class AlertDispatchController {
      */
     @Operation(summary = "立即分发")
     @PutMapping("/{id}/dispatch")
-    public Result<Boolean> dispatchNow(@PathVariable @Min(1) Long id) {
+    public Result<Boolean> dispatchNow(@PathVariable String id) {
         return Result.ok(service.dispatchNow(id));
     }
 
@@ -84,7 +84,7 @@ public class AlertDispatchController {
      */
     @Operation(summary = "取消预警")
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable @Min(1) Long id, @RequestParam(required = false) String reason) {
+    public Result<Void> cancel(@PathVariable String id, @RequestParam(required = false) String reason) {
         service.cancel(id, reason);
         return Result.ok();
     }

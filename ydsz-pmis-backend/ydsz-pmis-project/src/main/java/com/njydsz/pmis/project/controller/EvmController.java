@@ -78,7 +78,7 @@ public class EvmController {
     @Operation(summary = "按项目查询")
     @PrePermission("execution:evm:list")
     @GetMapping("/by-initiation")
-    public Result<List<EvmMeasureVO>> listByInitiation(@RequestParam Long initiationId) {
+    public Result<List<EvmMeasureVO>> listByInitiation(@RequestParam String initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
@@ -104,7 +104,7 @@ public class EvmController {
     @Operation(summary = "项目偏差趋势（按周期）")
     @PrePermission("execution:evm:list")
     @GetMapping("/trend")
-    public Result<List<Map<String, Object>>> trend(@RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> trend(@RequestParam String initiationId) {
         return Result.ok(service.trend(initiationId));
     }
 
@@ -117,7 +117,7 @@ public class EvmController {
     @Operation(summary = "项目 EVM 健康仪表盘")
     @PrePermission("execution:evm:dashboard")
     @GetMapping("/dashboard")
-    public Result<Map<String, Object>> dashboard(@RequestParam Long initiationId) {
+    public Result<Map<String, Object>> dashboard(@RequestParam String initiationId) {
         return Result.ok(service.dashboard(initiationId));
     }
 
@@ -136,7 +136,7 @@ public class EvmController {
     public Result<Page<EvmMeasureVO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String alertLevel) {
         return Result.ok(service.page(page, size, initiationId, alertLevel));
     }

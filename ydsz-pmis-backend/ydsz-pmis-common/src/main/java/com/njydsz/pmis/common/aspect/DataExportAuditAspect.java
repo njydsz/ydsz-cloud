@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Collection;
 import java.util.Objects;
 
 /**
@@ -73,7 +74,7 @@ public class DataExportAuditAspect {
         LoginUser user = SecurityContext.getCurrentOrNull();
 
         int rowCount = 0;
-        if (result instanceof java.util.Collection<?> col) {
+        if (result instanceof Collection<?> col) {
             rowCount = col.size();
         } else if (result instanceof Number n) {
             rowCount = n.intValue();

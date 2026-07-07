@@ -21,10 +21,10 @@ public interface SatisfactionService {
     Long submit(SatisfactionCreateDTO dto);
 
     /** 标记需跟进（满意度 ≤ 2 星） */
-    void markFollowUp(Long id, String note);
+    void markFollowUp(String id, String note);
 
     /** 关闭跟进 */
-    void closeFollowUp(Long id);
+    void closeFollowUp(String id);
 
     /** 整体满意度均值 */
     Map<String, Object> overall();

@@ -59,7 +59,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public void deleteStandard(Long id) {
+    public void deleteStandard(String id) {
         DeliveryStandardDO s = standardMapper.selectById(id);
         if (s == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_ea3dc234");
@@ -69,7 +69,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     @Transactional(readOnly = true)
-    public DeliveryStandardDO getStandardById(Long id) {
+    public DeliveryStandardDO getStandardById(String id) {
         DeliveryStandardDO s = standardMapper.selectById(id);
         if (s == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_ea3dc234");
@@ -161,7 +161,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public void deleteItem(Long id) {
+    public void deleteItem(String id) {
         DeliveryItemDO i = getItemById(id);
         DeliveryItemStatus st = DeliveryItemStatus.fromCode(i.getStatus());
         if (st == DeliveryItemStatus.ACCEPTED) {
@@ -172,7 +172,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     @Transactional(readOnly = true)
-    public DeliveryItemDO getItemById(Long id) {
+    public DeliveryItemDO getItemById(String id) {
         DeliveryItemDO i = itemMapper.selectById(id);
         if (i == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_2bb641ec");

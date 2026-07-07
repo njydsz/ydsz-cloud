@@ -38,7 +38,7 @@ public interface ProfitSimulationService {
      *
      * @param id 测算版本ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询测算版本
@@ -46,7 +46,7 @@ public interface ProfitSimulationService {
      * @param id 测算版本ID
      * @return 测算版本实体
      */
-    ProfitSimulationDO getById(Long id);
+    ProfitSimulationDO getById(String id);
 
     /**
      * 查询项目下所有测算版本

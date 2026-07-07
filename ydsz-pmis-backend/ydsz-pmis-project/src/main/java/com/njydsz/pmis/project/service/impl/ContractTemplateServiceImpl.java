@@ -99,7 +99,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      * @throws BizException 模板不存在或处于已发布状态时抛出
      */
     @Override
-    public void delete(Long id) {
+    public void delete(String id) {
         ContractTemplateDO t = getById(id);
         ContractTemplateStatus st = ContractTemplateStatus.fromCode(t.getStatus());
         if (st == ContractTemplateStatus.PUBLISHED) {
@@ -118,7 +118,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ContractTemplateDO getById(Long id) {
+    public ContractTemplateDO getById(String id) {
         ContractTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_e8185aa1");

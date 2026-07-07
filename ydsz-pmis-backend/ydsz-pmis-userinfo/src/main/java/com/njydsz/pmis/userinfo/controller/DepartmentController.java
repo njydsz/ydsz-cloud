@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -68,7 +67,7 @@ public class DepartmentController {
     @Operation(summary = "部门详情")
     @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
-    public Result<DepartmentDO> get(@Parameter(description = "部门ID") @PathVariable @Min(1) Long id) {
+    public Result<DepartmentDO> get(@Parameter(description = "部门ID") @PathVariable String id) {
         return Result.ok(departmentService.getById(id));
     }
 
@@ -82,7 +81,7 @@ public class DepartmentController {
     @PrePermission("org:dept:create")
     @OperationLog(module = "组织架构", action = "创建部门", bizType = "DEPARTMENT")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody DepartmentFormDTO dto) {
+    public Result<String> create(@Valid @RequestBody DepartmentFormDTO dto) {
         return Result.ok(departmentService.create(dto));
     }
 
@@ -111,7 +110,7 @@ public class DepartmentController {
     @PrePermission("org:dept:delete")
     @OperationLog(module = "组织架构", action = "删除部门", bizType = "DEPARTMENT")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "部门ID") @PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "部门ID") @PathVariable String id) {
         departmentService.delete(id);
         return Result.ok();
     }

@@ -5,6 +5,7 @@ import com.njydsz.pmis.userinfo.dto.BenchRecordCreateDTO;
 import com.njydsz.pmis.userinfo.entity.BenchRecordDO;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public interface BenchService {
      * @param reasonType      出池原因类型
      * @param exitDate        出池日期
      */
-    void autoExit(String employeeId, String sourceAssignment, String reasonType, java.time.LocalDate exitDate);
+    void autoExit(String employeeId, String sourceAssignment, String reasonType, LocalDate exitDate);
 
     /**
      * 根据 ID 查询 Bench 记录
@@ -72,7 +73,7 @@ public interface BenchService {
      * @param to   结束日期
      * @return 流动统计结果
      */
-    List<Map<String, Object>> flowByDateRange(java.time.LocalDate from, java.time.LocalDate to);
+    List<Map<String, Object>> flowByDateRange(LocalDate from, LocalDate to);
 
     /**
      * 分页查询 Bench 记录

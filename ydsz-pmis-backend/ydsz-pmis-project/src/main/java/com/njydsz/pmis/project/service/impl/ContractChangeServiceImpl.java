@@ -156,7 +156,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ContractChangeDO getById(Long id) {
+    public ContractChangeDO getById(String id) {
         ContractChangeDO c = changeMapper.selectById(id);
         if (c == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_49023973");

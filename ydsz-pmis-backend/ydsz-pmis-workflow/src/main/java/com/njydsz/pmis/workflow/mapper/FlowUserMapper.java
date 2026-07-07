@@ -5,6 +5,7 @@ import com.njydsz.pmis.workflow.entity.FlowUserDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ public interface FlowUserMapper extends BaseMapper<FlowUserDO> {
     int markProcessed(@Param("taskId") Long taskId,
                       @Param("userId") String userId,
                       @Param("comment") String comment,
-                      @Param("processAt") java.time.LocalDateTime processAt);
+                      @Param("processAt") LocalDateTime processAt);
 
     /**
      * 查某实例某节点未处理的用户（会签场景）

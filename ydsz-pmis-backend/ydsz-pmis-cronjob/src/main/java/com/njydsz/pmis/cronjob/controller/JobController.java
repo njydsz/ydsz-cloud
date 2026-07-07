@@ -48,7 +48,7 @@ public class JobController {
     @Operation(summary = "新增任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_CREATE)
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody JobSaveDTO dto) {
+    public Result<String> create(@Valid @RequestBody JobSaveDTO dto) {
         JobDO job = new JobDO();
         BeanUtils.copyProperties(dto, job);
         return Result.ok(jobService.create(job));
@@ -80,7 +80,7 @@ public class JobController {
     @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
     @OperationLog(module = "任务调度", action = "删除任务", bizType = "CRONJOB_JOB")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         jobService.delete(id);
         return Result.ok();
     }
@@ -94,7 +94,7 @@ public class JobController {
     @Operation(summary = "暂停任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @PostMapping("/{id}/pause")
-    public Result<Void> pause(@PathVariable @Min(1) Long id) {
+    public Result<Void> pause(@PathVariable String id) {
         jobService.pause(id);
         return Result.ok();
     }
@@ -108,7 +108,7 @@ public class JobController {
     @Operation(summary = "恢复任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @PostMapping("/{id}/resume")
-    public Result<Void> resume(@PathVariable @Min(1) Long id) {
+    public Result<Void> resume(@PathVariable String id) {
         jobService.resume(id);
         return Result.ok();
     }
@@ -122,7 +122,7 @@ public class JobController {
     @Operation(summary = "立即执行一次")
     @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
     @PostMapping("/{id}/trigger")
-    public Result<Long> trigger(@PathVariable @Min(1) Long id) {
+    public Result<String> trigger(@PathVariable String id) {
         return Result.ok(jobService.trigger(id));
     }
 
@@ -134,7 +134,7 @@ public class JobController {
      */
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
-    public Result<JobDO> getById(@PathVariable @Min(1) Long id) {
+    public Result<JobDO> getById(@PathVariable String id) {
         return Result.ok(jobService.getById(id));
     }
 

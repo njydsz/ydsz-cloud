@@ -118,7 +118,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         ProfitSimulationDO s = mapper.selectById(id);
         if (s == null) return;
@@ -131,7 +131,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProfitSimulationDO getById(Long id) {
+    public ProfitSimulationDO getById(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         ProfitSimulationDO s = mapper.selectById(id);
         if (s == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_a246acf1");

@@ -453,7 +453,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 4. 校验：时间窗口
         int days = maxRollbackDays > 0 ? maxRollbackDays : DEFAULT_ROLLBACK_DAYS;
         if (instance.getEndAt() != null) {
-            long elapsedDays = java.time.Duration.between(instance.getEndAt(), LocalDateTime.now()).toDays();
+            long elapsedDays = Duration.between(instance.getEndAt(), LocalDateTime.now()).toDays();
             if (elapsedDays > days) {
                 throw new BizException(BizErrorCode.BAD_REQUEST,
                         "error.workflow.msg_c3d4e5f6", days);

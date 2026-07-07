@@ -5,6 +5,7 @@ import com.njydsz.pmis.agent.entity.AgentPredictionDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -91,8 +92,8 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
      * @return 统计结果: p50Ms, p90Ms, p95Ms, maxMs, avgMs, sampleCount
      */
     Map<String, Object> selectDurationStats(@Param("agentType") String agentType,
-                                            @Param("from") java.time.LocalDateTime from,
-                                            @Param("to") java.time.LocalDateTime to,
+                                            @Param("from") LocalDateTime from,
+                                            @Param("to") LocalDateTime to,
                                             @Param("tenantId") Long tenantId);
 
     /**
@@ -105,7 +106,7 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
      * @param tenantId 租户 ID，可空
      * @return 每类 Agent 的 P50/P95 耗时统计列表
      */
-    List<Map<String, Object>> selectDurationStatsByAgentType(@Param("from") java.time.LocalDateTime from,
-                                                              @Param("to") java.time.LocalDateTime to,
+    List<Map<String, Object>> selectDurationStatsByAgentType(@Param("from") LocalDateTime from,
+                                                              @Param("to") LocalDateTime to,
                                                               @Param("tenantId") Long tenantId);
 }

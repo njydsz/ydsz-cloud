@@ -8,6 +8,7 @@ import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 商机更新 DTO
@@ -50,15 +51,15 @@ public class OpportunityUpdateDTO implements Serializable {
 
     /** 预计签约日期 */
     @Schema(description = "预计签约日期")
-    private java.time.LocalDate expectedSignDate;
+    private LocalDate expectedSignDate;
 
     /** 预计开始日期 */
     @Schema(description = "预计开始日期")
-    private java.time.LocalDate expectedStartDate;
+    private LocalDate expectedStartDate;
 
     /** 预计结束日期 */
     @Schema(description = "预计结束日期")
-    private java.time.LocalDate expectedEndDate;
+    private LocalDate expectedEndDate;
 
     /** 竞争对手 */
     @Schema(description = "竞争对手")

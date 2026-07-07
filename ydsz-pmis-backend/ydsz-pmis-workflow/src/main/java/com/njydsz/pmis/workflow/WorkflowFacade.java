@@ -4,6 +4,7 @@ import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -98,8 +99,8 @@ public interface WorkflowFacade {
      * @return 实例 Map 列表
      */
     List<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
-                                                java.time.LocalDateTime startTime,
-                                                java.time.LocalDateTime endTime,
+                                                LocalDateTime startTime,
+                                                LocalDateTime endTime,
                                                 int page, int size);
 
     /**

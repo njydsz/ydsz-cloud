@@ -39,7 +39,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public TwoFactorBindResult bindTotp(Long userId, String account) {
+    public TwoFactorBindResult bindTotp(String userId, String account) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
@@ -75,7 +75,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean confirmBind(Long userId, String otp) {
+    public boolean confirmBind(String userId, String otp) {
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_b9b014df");
@@ -97,7 +97,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     }
 
     @Override
-    public boolean verify(Long userId, String otp) {
+    public boolean verify(String userId, String otp) {
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null || !Boolean.TRUE.equals(e.getEnabled())) {
             return false;
@@ -112,7 +112,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean verifyBackup(Long userId, String code) {
+    public boolean verifyBackup(String userId, String code) {
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null || e.getBackupCodes() == null) {
             return false;
@@ -131,7 +131,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void disable(Long userId) {
+    public void disable(String userId) {
         user2FAMapper.disableByUserId(userId);
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u != null) {
@@ -143,13 +143,13 @@ public class TwoFactorServiceImpl implements TwoFactorService {
 
     @Override
     @Transactional(readOnly = true)
-    public User2FADO find(Long userId) {
+    public User2FADO find(String userId) {
         return user2FAMapper.selectByUserId(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<String> listBackupCodesMasked(Long userId) {
+    public List<String> listBackupCodesMasked(String userId) {
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null || e.getBackupCodes() == null) {
             return Collections.emptyList();

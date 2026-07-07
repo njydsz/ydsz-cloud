@@ -26,7 +26,7 @@ public interface ReportService {
      * @param period       期间（YYYY-MM，可空，空表示累计）
      * @return 利润报表数据
      */
-    Map<String, Object> projectProfitReport(Long initiationId, String period);
+    Map<String, Object> projectProfitReport(String initiationId, String period);
 
     /**
      * 项目成本归集明细表
@@ -35,7 +35,7 @@ public interface ReportService {
      * @param period       期间（YYYY-MM，可空，空表示累计）
      * @return 成本明细报表数据
      */
-    Map<String, Object> costDetailReport(Long initiationId, String period);
+    Map<String, Object> costDetailReport(String initiationId, String period);
 
     /**
      * 项目回款台账
@@ -43,7 +43,7 @@ public interface ReportService {
      * @param initiationId 项目 ID
      * @return 回款台账数据
      */
-    Map<String, Object> paymentLedgerReport(Long initiationId);
+    Map<String, Object> paymentLedgerReport(String initiationId);
 
     /**
      * 项目全生命周期台账
@@ -51,7 +51,7 @@ public interface ReportService {
      * @param initiationId 项目 ID
      * @return 全生命周期台账数据
      */
-    Map<String, Object> projectLifecycleReport(Long initiationId);
+    Map<String, Object> projectLifecycleReport(String initiationId);
 
     /**
      * 跨项目利润表（汇总）

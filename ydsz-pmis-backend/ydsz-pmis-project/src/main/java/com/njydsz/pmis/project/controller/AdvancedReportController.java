@@ -35,7 +35,7 @@ public class AdvancedReportController {
     @Operation(summary = "EVM 挣值管理报表")
     @PrePermission("report:advanced:view")
     @GetMapping("/evm")
-    public Result<List<Map<String, Object>>> evm(@RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> evm(@RequestParam String initiationId) {
         return Result.ok(service.evmReport(initiationId));
     }
 
@@ -103,7 +103,7 @@ public class AdvancedReportController {
     @Operation(summary = "资源负载甘特图")
     @PrePermission("report:advanced:view")
     @GetMapping("/gantt")
-    public Result<List<Map<String, Object>>> gantt(@RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> gantt(@RequestParam String initiationId) {
         return Result.ok(service.resourceGantt(initiationId));
     }
 
@@ -118,7 +118,7 @@ public class AdvancedReportController {
     @PrePermission("report:advanced:view")
     @GetMapping("/risk-matrix")
     public Result<Map<String, Object>> riskMatrix(
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String riskType,
             @RequestParam(required = false) String status) {
         return Result.ok(service.riskMatrix(initiationId, riskType, status));
@@ -138,7 +138,7 @@ public class AdvancedReportController {
     @PrePermission("report:advanced:view")
     @GetMapping("/project-health-dashboard")
     public Result<Map<String, Object>> projectHealthDashboard(
-            @RequestParam(required = false) List<Long> initiationIds,
+            @RequestParam(required = false) List<String> initiationIds,
             @RequestParam(required = false) String health) {
         return Result.ok(service.projectHealthDashboard(initiationIds, health));
     }

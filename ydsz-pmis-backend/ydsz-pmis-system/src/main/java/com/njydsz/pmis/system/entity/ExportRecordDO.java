@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.time.LocalDateTime;
 
 /**
  * 异步导出记录实体（下载中心 + 报表订阅分发）
@@ -78,10 +79,10 @@ public class ExportRecordDO extends BaseDO {
     private String providerTraceId;
 
     /** 完成时间 */
-    private java.time.LocalDateTime completedAt;
+    private LocalDateTime completedAt;
 
     /** 过期时间（过期自动清理） */
-    private java.time.LocalDateTime expiredAt;
+    private LocalDateTime expiredAt;
 
     /** 乐观锁版本号 */
     private Integer version;

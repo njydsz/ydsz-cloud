@@ -35,7 +35,7 @@ public interface ContractTemplateService {
      *
      * @param id 模板 ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据模板 ID 查询模板详情。
@@ -43,7 +43,7 @@ public interface ContractTemplateService {
      * @param id 模板 ID
      * @return 模板实体；不存在返回 null
      */
-    ContractTemplateDO getById(Long id);
+    ContractTemplateDO getById(String id);
 
     /**
      * 分页查询合同模板。

@@ -183,8 +183,8 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
      */
     private static BigDecimal toBigDecimal(Object o) {
         if (o == null) return null;
-        if (o instanceof BigDecimal b) return b;
-        if (o instanceof Number n) return new BigDecimal(n.toString());
+        if (o instanceof BigDecimal) return (BigDecimal) o;
+        if (o instanceof Number) return new BigDecimal(o.toString());
         try {
             return new BigDecimal(o.toString());
         } catch (Exception e) {

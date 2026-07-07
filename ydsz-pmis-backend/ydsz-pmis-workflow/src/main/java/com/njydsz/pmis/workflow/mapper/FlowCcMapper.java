@@ -5,6 +5,7 @@ import com.njydsz.pmis.workflow.entity.FlowCcDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -61,14 +62,14 @@ public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
      */
     int markRead(@Param("id") Long id,
                  @Param("ccUserId") Long ccUserId,
-                 @Param("readAt") java.time.LocalDateTime readAt);
+                 @Param("readAt") LocalDateTime readAt);
 
     /**
      * 全部标记为已读
      */
     int markAllRead(@Param("tenantId") Long tenantId,
                     @Param("ccUserId") Long ccUserId,
-                    @Param("readAt") java.time.LocalDateTime readAt);
+                    @Param("readAt") LocalDateTime readAt);
 
     /**
      * 查实例的抄送列表

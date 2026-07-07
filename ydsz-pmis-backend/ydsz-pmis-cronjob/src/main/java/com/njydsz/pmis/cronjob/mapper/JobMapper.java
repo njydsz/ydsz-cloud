@@ -5,6 +5,7 @@ import com.njydsz.pmis.cronjob.entity.JobDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -46,8 +47,8 @@ public interface JobMapper extends BaseMapper<JobDO> {
      * @return 受影响行数
      */
     int updateStats(@Param("id") String id,
-                    @Param("lastFireTime") java.time.LocalDateTime lastFireTime,
-                    @Param("nextFireTime") java.time.LocalDateTime nextFireTime,
+                    @Param("lastFireTime") LocalDateTime lastFireTime,
+                    @Param("nextFireTime") LocalDateTime nextFireTime,
                     @Param("fireCount") Long fireCount,
                     @Param("successCount") Long successCount,
                     @Param("failCount") Long failCount,

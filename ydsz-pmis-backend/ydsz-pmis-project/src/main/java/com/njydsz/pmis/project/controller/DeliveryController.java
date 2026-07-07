@@ -203,7 +203,7 @@ public class DeliveryController {
     @Operation(summary = "按项目查询所有交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-initiation/{initiationId}")
-    public Result<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable @Min(1) Long initiationId) {
+    public Result<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable String initiationId) {
         return Result.ok(service.listItemsByInitiation(initiationId));
     }
 
@@ -217,7 +217,7 @@ public class DeliveryController {
     @Operation(summary = "按项目+阶段查询交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-stage")
-    public Result<List<DeliveryItemDO>> listItemsByStage(@RequestParam Long initiationId,
+    public Result<List<DeliveryItemDO>> listItemsByStage(@RequestParam String initiationId,
                                                     @RequestParam String stage) {
         return Result.ok(service.listItemsByStage(initiationId, stage));
     }
@@ -231,7 +231,7 @@ public class DeliveryController {
     @Operation(summary = "按状态聚合交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateItemStatus(@RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> aggregateItemStatus(@RequestParam String initiationId) {
         return Result.ok(service.aggregateItemStatus(initiationId));
     }
 
@@ -249,7 +249,7 @@ public class DeliveryController {
     @PrePermission("execution:delivery:status")
     @GetMapping("/stage-gate/check")
     public Result<StageGateValidator.GateCheckResult> checkStageGate(
-            @RequestParam Long initiationId,
+            @RequestParam String initiationId,
             @RequestParam String targetStage,
             @RequestParam(required = false) String projectLevel) {
         return Result.ok(service.checkStageGate(initiationId, targetStage, projectLevel));

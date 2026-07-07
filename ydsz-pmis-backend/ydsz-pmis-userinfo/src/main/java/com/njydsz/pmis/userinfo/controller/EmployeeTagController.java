@@ -10,7 +10,6 @@ import com.njydsz.pmis.userinfo.service.EmployeeTagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -51,7 +50,7 @@ public class EmployeeTagController {
     @PrePermission(PermissionCodes.RESOURCE_TAG_CREATE)
     @OperationLog(module = "人员标签", action = "添加标签", bizType = "EMPLOYEE_TAG")
     @PostMapping
-    public Result<Long> add(@Valid @RequestBody EmployeeTagCreateDTO dto) {
+    public Result<String> add(@Valid @RequestBody EmployeeTagCreateDTO dto) {
         return Result.ok(tagService.add(dto));
     }
 
@@ -65,7 +64,7 @@ public class EmployeeTagController {
     @PrePermission(PermissionCodes.RESOURCE_TAG_DELETE)
     @OperationLog(module = "人员标签", action = "删除标签", bizType = "EMPLOYEE_TAG")
     @DeleteMapping("/{id}")
-    public Result<Void> remove(@PathVariable @Min(1) Long id) {
+    public Result<Void> remove(@PathVariable String id) {
         tagService.remove(id);
         return Result.ok();
     }
@@ -81,7 +80,7 @@ public class EmployeeTagController {
     @PrePermission(PermissionCodes.RESOURCE_TAG_UPDATE)
     @OperationLog(module = "人员标签", action = "覆盖员工标签", bizType = "EMPLOYEE_TAG")
     @PutMapping("/replace/{employeeId}")
-    public Result<Void> replaceByEmployee(@PathVariable @Min(1) Long employeeId,
+    public Result<Void> replaceByEmployee(@PathVariable String employeeId,
                                      @Valid @RequestBody List<EmployeeTagCreateDTO> tags) {
         tagService.replaceByEmployee(employeeId, tags);
         return Result.ok();
@@ -95,7 +94,7 @@ public class EmployeeTagController {
      */
     @Operation(summary = "按员工查询")
     @GetMapping("/by-employee/{employeeId}")
-    public Result<List<EmployeeTagDO>> listByEmployee(@PathVariable @Min(1) Long employeeId) {
+    public Result<List<EmployeeTagDO>> listByEmployee(@PathVariable String employeeId) {
         return Result.ok(tagService.listByEmployee(employeeId));
     }
 

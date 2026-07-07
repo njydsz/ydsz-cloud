@@ -31,21 +31,21 @@ public interface RevenueService {
      * @param id          收入记录ID
      * @param confirmedBy 确认人ID
      */
-    void confirm(Long id, Long confirmedBy);
+    void confirm(String id, Long confirmedBy);
 
     /**
      * 冲红
      *
      * @param id 收入记录ID
      */
-    void reverse(Long id);
+    void reverse(String id);
 
     /**
      * 删除收入记录
      *
      * @param id 收入记录ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询收入记录
@@ -53,7 +53,7 @@ public interface RevenueService {
      * @param id 收入记录ID
      * @return 收入实体
      */
-    RevenueDO getById(Long id);
+    RevenueDO getById(String id);
 
     /**
      * 分页查询收入记录

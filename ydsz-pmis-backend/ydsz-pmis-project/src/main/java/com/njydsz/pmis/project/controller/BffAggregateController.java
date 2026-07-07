@@ -47,7 +47,7 @@ public class BffAggregateController {
     @RateLimit(key = "bff", qps = 20, windowSeconds = 60)
     @Operation(summary = "项目详情聚合", description = "一次返回立项+合同+WBS概览+EVM摘要")
     public Map<String, Object> projectDetailAggregate(
-            @PathVariable @Min(1) @NotNull(message = "{validation.execution.msg_1d72f14c}") Long initiationId) {
+            @PathVariable @NotNull(message = "{validation.execution.msg_1d72f14c}") String initiationId) {
         Map<String, Object> result = new HashMap<>();
         // 聚合多维度数据，减少前端多次请求
         try {

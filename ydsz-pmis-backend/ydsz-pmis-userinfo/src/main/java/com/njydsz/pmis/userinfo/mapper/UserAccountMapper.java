@@ -24,7 +24,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
      * @return 用户 ID 列表
      */
     @Select("SELECT id FROM pmis_user_account WHERE dept_id = #{deptId} AND status = 'ENABLED' AND deleted = 0")
-    List<Long> selectUserIdsByDeptId(@Param("deptId") Long deptId);
+    List<String> selectUserIdsByDeptId(@Param("deptId") String deptId);
 
     /**
      * P2-2: 根据岗位编码查询启用状态的用户 ID 列表
@@ -33,7 +33,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
      * @return 用户 ID 列表
      */
     @Select("SELECT id FROM pmis_user_account WHERE position_code = #{positionCode} AND status = 'ENABLED' AND deleted = 0")
-    List<Long> selectUserIdsByPositionCode(@Param("positionCode") String positionCode);
+    List<String> selectUserIdsByPositionCode(@Param("positionCode") String positionCode);
 
     /**
      * P2-2: 根据用户 ID 查询直属上级用户 ID
@@ -42,7 +42,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
      * @return 直属上级用户 ID，未设置时返回 null
      */
     @Select("SELECT leader_id FROM pmis_user_account WHERE id = #{userId} AND deleted = 0")
-    Long selectLeaderIdByUserId(@Param("userId") Long userId);
+    String selectLeaderIdByUserId(@Param("userId") String userId);
 
     /**
      * P2-2: 根据用户 ID 查询所属部门 ID
@@ -51,5 +51,5 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
      * @return 部门 ID，未设置时返回 null
      */
     @Select("SELECT dept_id FROM pmis_user_account WHERE id = #{userId} AND deleted = 0")
-    Long selectDeptIdByUserId(@Param("userId") Long userId);
+    String selectDeptIdByUserId(@Param("userId") String userId);
 }

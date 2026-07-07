@@ -90,7 +90,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      * @throws BizException 补充协议不存在时抛出
      */
     @Override
-    public void delete(Long id) {
+    public void delete(String id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
         if (s == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_163e0077");
@@ -107,7 +107,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      */
     @Override
     @Transactional(readOnly = true)
-    public ContractSupplementDO getById(Long id) {
+    public ContractSupplementDO getById(String id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
         if (s == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_163e0077");

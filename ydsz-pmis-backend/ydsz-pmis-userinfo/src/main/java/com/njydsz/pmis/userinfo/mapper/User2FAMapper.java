@@ -20,7 +20,7 @@ public interface User2FAMapper extends BaseMapper<User2FADO> {
      * @param userId 用户 ID
      * @return 双因素认证记录，未找到返回 null
      */
-    User2FADO selectByUserId(@Param("userId") Long userId);
+    User2FADO selectByUserId(@Param("userId") String userId);
 
     /**
      * 根据用户 ID 禁用双因素认证
@@ -28,5 +28,5 @@ public interface User2FAMapper extends BaseMapper<User2FADO> {
      * @param userId 用户 ID
      * @return 受影响行数
      */
-    int disableByUserId(@Param("userId") Long userId);
+    int disableByUserId(@Param("userId") String userId);
 }

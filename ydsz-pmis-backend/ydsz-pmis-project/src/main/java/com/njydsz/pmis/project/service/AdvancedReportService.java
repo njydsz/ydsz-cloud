@@ -28,7 +28,7 @@ public interface AdvancedReportService {
      * @param initiationId 项目 ID
      * @return EVM 指标列表
      */
-    List<Map<String, Object>> evmReport(Long initiationId);
+    List<Map<String, Object>> evmReport(String initiationId);
 
     /**
      * 人效排行榜（按可计费利用率倒序，默认近 3 个月）
@@ -105,7 +105,7 @@ public interface AdvancedReportService {
      * @param initiationId 项目 ID
      * @return 甘特图数据列表
      */
-    List<Map<String, Object>> resourceGantt(Long initiationId);
+    List<Map<String, Object>> resourceGantt(String initiationId);
 
     /**
      * 项目风险预警看板
@@ -133,7 +133,7 @@ public interface AdvancedReportService {
      * @param status       风险状态过滤（OPEN/IN_PROGRESS/CLOSED 等，可空）
      * @return 风险矩阵数据
      */
-    Map<String, Object> riskMatrix(Long initiationId, String riskType, String status);
+    Map<String, Object> riskMatrix(String initiationId, String riskType, String status);
 
     /**
      * 资源占用趋势图（双 Y 轴，P2-3 体验增强）
@@ -170,5 +170,5 @@ public interface AdvancedReportService {
      * @param health        可选健康度过滤（GREEN/YELLOW/RED/UNKNOWN）
      * @return 项目健康仪表盘数据
      */
-    Map<String, Object> projectHealthDashboard(List<Long> initiationIds, String health);
+    Map<String, Object> projectHealthDashboard(List<String> initiationIds, String health);
 }

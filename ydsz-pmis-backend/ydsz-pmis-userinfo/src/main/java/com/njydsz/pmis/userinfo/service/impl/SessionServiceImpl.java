@@ -29,7 +29,7 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserSessionDO create(Long userId, String clientIp, String userAgent, String deviceType, int expireSeconds) {
+    public UserSessionDO create(String userId, String clientIp, String userAgent, String deviceType, int expireSeconds) {
         UserSessionDO s = new UserSessionDO();
         s.setUserId(userId);
         s.setSessionId(SnowflakeIdGenerator.nextIdStr());
@@ -64,13 +64,13 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int kickOthers(Long userId, String keepSessionId) {
+    public int kickOthers(String userId, String keepSessionId) {
         return sessionMapper.kickOtherByUserId(userId, keepSessionId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserSessionDO> listActive(Long userId) {
+    public List<UserSessionDO> listActive(String userId) {
         return sessionMapper.selectActiveByUserId(userId);
     }
 

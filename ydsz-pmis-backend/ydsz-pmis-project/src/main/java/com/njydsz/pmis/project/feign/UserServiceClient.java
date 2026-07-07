@@ -38,7 +38,7 @@ public interface UserServiceClient {
      * @return 客户名称；服务降级时返回空字符串
      */
     @GetMapping("/user/customers/name")
-    Result<String> getCustomerName(@RequestParam("customerId") Long customerId);
+    Result<String> getCustomerName(@RequestParam("customerId") String customerId);
 
     /**
      * 批量查询员工姓名

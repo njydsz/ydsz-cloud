@@ -70,7 +70,7 @@ public class RevenueServiceImpl implements RevenueService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void confirm(Long id, Long confirmedBy) {
+    public void confirm(String id, Long confirmedBy) {
         RevenueDO r = getById(id);
         if (!"DRAFT".equals(r.getStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0f0b1394");
@@ -84,7 +84,7 @@ public class RevenueServiceImpl implements RevenueService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void reverse(Long id) {
+    public void reverse(String id) {
         RevenueDO r = getById(id);
         if (!"CONFIRMED".equals(r.getStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1971a360");
@@ -95,7 +95,7 @@ public class RevenueServiceImpl implements RevenueService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         RevenueDO r = getById(id);
         if ("CONFIRMED".equals(r.getStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6891a16a");
@@ -105,7 +105,7 @@ public class RevenueServiceImpl implements RevenueService {
 
     @Override
     @Transactional(readOnly = true)
-    public RevenueDO getById(Long id) {
+    public RevenueDO getById(String id) {
         RevenueDO r = revenueMapper.selectById(id);
         if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_4924d9b4");
         return r;

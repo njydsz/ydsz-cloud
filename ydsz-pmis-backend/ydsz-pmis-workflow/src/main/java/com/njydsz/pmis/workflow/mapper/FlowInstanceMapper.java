@@ -33,7 +33,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
                      @Param("flowStatus") String flowStatus,
                      @Param("currentNodeCode") String currentNodeCode,
                      @Param("currentNodeName") String currentNodeName,
-                     @Param("endAt") java.time.LocalDateTime endAt,
+                     @Param("endAt") LocalDateTime endAt,
                      @Param("durationMs") Long durationMs);
 
     /**

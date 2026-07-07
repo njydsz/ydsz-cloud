@@ -5,6 +5,7 @@ import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -72,7 +73,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
     int completeTask(@Param("id") Long id,
                      @Param("taskStatus") String taskStatus,
                      @Param("comment") String comment,
-                     @Param("finishAt") java.time.LocalDateTime finishAt,
+                     @Param("finishAt") LocalDateTime finishAt,
                      @Param("durationMs") Long durationMs);
 
     /**
@@ -178,7 +179,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
      */
     int incrementReminderCount(@Param("id") Long id,
                                @Param("reminderCount") int reminderCount,
-                               @Param("lastRemindedAt") java.time.LocalDateTime lastRemindedAt);
+                               @Param("lastRemindedAt") LocalDateTime lastRemindedAt);
 
     /**
      * P1-6: 标记 SLA 动作（用于审计：AUTO_PASS / AUTO_REJECT / ESCALATE 等）

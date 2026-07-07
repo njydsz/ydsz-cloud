@@ -24,5 +24,5 @@ public interface RolePermissionMapper extends BaseMapper<RolePermissionDO> {
      * @return 权限 ID 列表
      */
     @Select("SELECT permission_id FROM pmis_role_permission WHERE role_id = #{roleId} AND deleted = 0")
-    List<Long> selectPermissionIdsByRoleId(@Param("roleId") Long roleId);
+    List<String> selectPermissionIdsByRoleId(@Param("roleId") String roleId);
 }
