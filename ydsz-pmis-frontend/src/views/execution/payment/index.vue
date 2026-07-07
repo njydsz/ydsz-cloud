@@ -21,7 +21,8 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import {
   pagePayments,
   createPayment,
-  changePaymentStatus,
+  confirmPayment,
+  cancelPayment,
   allocatePayment,
   deletePayment,
 } from '@/api/execution/payment'
@@ -160,7 +161,7 @@ async function submitForm() {
 /**
  * 变更回款状态（确认/取消），需二次确认
  * @param row 回款记录
- * @param target 目标状态
+ * @param target 目标状态：CONFIRMED / CANCELLED
  */
 async function handleStatus(row: PaymentVO, target: string) {
   const targetText = (statusMap.value as any)[target]?.label || target
@@ -170,7 +171,15 @@ async function handleStatus(row: PaymentVO, target: string) {
   )
   if (!confirmed) return
   try {
-    await changePaymentStatus(row.id, target, 1, t('finance.payment.systemApprover'))
+    // 系统操作人 ID 固定为 1（系统审批人），与原 changePaymentStatus 行为保持一致
+    const systemOperatorId = 1
+    if (target === 'CONFIRMED') {
+      await confirmPayment(row.id, systemOperatorId)
+    } else if (target === 'CANCELLED') {
+      await cancelPayment(row.id, systemOperatorId)
+    } else {
+      throw new Error(`Unsupported payment status transition: ${target}`)
+    }
     showSuccess(t('finance.payment.messages.statusUpdated'))
     fetchList()
   } catch (e) {

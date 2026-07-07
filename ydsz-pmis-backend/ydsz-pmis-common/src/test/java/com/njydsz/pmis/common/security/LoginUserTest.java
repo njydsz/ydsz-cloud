@@ -18,15 +18,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class LoginUserTest {
 
     @Test
-    @DisplayName("Builder 构造 - 应正确设置所有字段")
+    @DisplayName("Builder 构造 - 应正确设置所有字段（雪花字符串 ID）")
     void builder_shouldSetAllFields() {
         LoginUser user = LoginUser.builder()
-                .userId(1L)
+                .userId("1")
                 .username("zhangsan")
                 .realName("张三")
-                .deptId(100L)
+                .deptId("100")
                 .deptName("技术部")
-                .tenantId(1L)
+                .tenantId("1")
                 .levelCode("P7")
                 .roles(Arrays.asList("admin", "user"))
                 .permissions(Arrays.asList("system:user:create", "system:user:view"))
@@ -36,12 +36,12 @@ class LoginUserTest {
                 .expireTime(1700086400000L)
                 .build();
 
-        assertEquals(1L, user.getUserId());
+        assertEquals("1", user.getUserId());
         assertEquals("zhangsan", user.getUsername());
         assertEquals("张三", user.getRealName());
-        assertEquals(100L, user.getDeptId());
+        assertEquals("100", user.getDeptId());
         assertEquals("技术部", user.getDeptName());
-        assertEquals(1L, user.getTenantId());
+        assertEquals("1", user.getTenantId());
         assertEquals("P7", user.getLevelCode());
         assertEquals(Arrays.asList("admin", "user"), user.getRoles());
         assertEquals(Arrays.asList("system:user:create", "system:user:view"), user.getPermissions());
@@ -74,25 +74,25 @@ class LoginUserTest {
     }
 
     @Test
-    @DisplayName("全参构造 - 应正确设置所有字段")
+    @DisplayName("全参构造 - 应正确设置所有字段（雪花字符串 ID）")
     void allArgsConstructor_shouldSetAllFields() {
         List<String> roles = Arrays.asList("admin");
         List<String> permissions = Arrays.asList("*:*:*");
-        List<Long> customDeptIds = Arrays.asList(1L, 2L);
-        List<Long> deptIds = Arrays.asList(200L, 300L);
+        List<String> customDeptIds = Arrays.asList("1", "2");
+        List<String> deptIds = Arrays.asList("200", "300");
 
         LoginUser user = new LoginUser(
-                1L, "lisi", "李四", 200L, "财务部", 1L, "P8",
+                "1", "lisi", "李四", "200", "财务部", "1", "P8",
                 roles, permissions, "DEPT", customDeptIds, deptIds, "token123",
                 1700000000000L, 1700086400000L
         );
 
-        assertEquals(1L, user.getUserId());
+        assertEquals("1", user.getUserId());
         assertEquals("lisi", user.getUsername());
         assertEquals("李四", user.getRealName());
-        assertEquals(200L, user.getDeptId());
+        assertEquals("200", user.getDeptId());
         assertEquals("财务部", user.getDeptName());
-        assertEquals(1L, user.getTenantId());
+        assertEquals("1", user.getTenantId());
         assertEquals("P8", user.getLevelCode());
         assertEquals(roles, user.getRoles());
         assertEquals(permissions, user.getPermissions());
@@ -181,10 +181,10 @@ class LoginUserTest {
     }
 
     @Test
-    @DisplayName("setter/getter - customDeptIds 应正确存取")
+    @DisplayName("setter/getter - customDeptIds 应正确存取（雪花字符串）")
     void customDeptIds_shouldSetAndGet() {
         LoginUser user = new LoginUser();
-        List<Long> deptIds = Arrays.asList(10L, 20L, 30L);
+        List<String> deptIds = Arrays.asList("10", "20", "30");
         user.setCustomDeptIds(deptIds);
 
         assertEquals(deptIds, user.getCustomDeptIds());

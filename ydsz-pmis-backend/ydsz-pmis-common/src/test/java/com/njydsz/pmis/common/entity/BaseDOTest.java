@@ -39,11 +39,11 @@ class BaseDOTest {
     }
 
     @Test
-    @DisplayName("setter/getter - updatedBy 应正确存取")
+    @DisplayName("setter/getter - updatedBy 应正确存取（雪花字符串）")
     void updatedBy_shouldSetAndGet() {
         TestEntity entity = new TestEntity();
-        entity.setUpdatedBy(200L);
-        assertEquals(200L, entity.getUpdatedBy());
+        entity.setUpdatedBy("200");
+        assertEquals("200", entity.getUpdatedBy());
     }
 
     @Test

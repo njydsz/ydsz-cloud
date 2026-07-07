@@ -42,18 +42,30 @@ export const createPayment = (data: PaymentCreateDTO) =>
   request<number>({ url: '/execution/payment', method: 'POST', data })
 
 /**
- * 变更回款状态
- * @param id 回款 ID
- * @param targetStatus 目标状态
- * @param approverId 审批人 ID（可选）
- * @param approverName 审批人姓名（可选）
+ * 确认回款（PENDING → CONFIRMED）
+ * @param id         回款 ID
+ * @param operatorId 操作人 ID
  * @returns 无返回值
  */
-export const changePaymentStatus = (id: number, targetStatus: string, approverId?: number, approverName?: string) =>
+export const confirmPayment = (id: number, operatorId: number) =>
   request<void>({
-    url: `/execution/payment/${id}/status`,
+    url: `/execution/payment/${id}/confirm`,
     method: 'PUT',
-    params: { targetStatus, approverId, approverName },
+    params: { operatorId },
+  })
+
+/**
+ * 取消回款（PENDING/CONFIRMED → CANCELLED）
+ * @param id         回款 ID
+ * @param operatorId 操作人 ID
+ * @param reason     取消原因（可选）
+ * @returns 无返回值
+ */
+export const cancelPayment = (id: number, operatorId: number, reason?: string) =>
+  request<void>({
+    url: `/execution/payment/${id}/cancel`,
+    method: 'PUT',
+    params: { operatorId, reason },
   })
 
 /**

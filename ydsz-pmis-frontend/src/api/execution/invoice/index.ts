@@ -53,7 +53,7 @@ export const createInvoice = (data: InvoiceCreateDTO) =>
  * @returns 无返回值
  */
 export const approveInvoice = (data: InvoiceApprovalDTO) =>
-  request<void>({ url: '/execution/invoice/approve', method: 'PUT', data })
+  request<void>({ url: `/execution/invoice/${data.id}/approve`, method: 'PUT', data })
 
 /**
  * 开具发票
@@ -61,7 +61,7 @@ export const approveInvoice = (data: InvoiceApprovalDTO) =>
  * @returns 无返回值
  */
 export const issueInvoice = (data: InvoiceApprovalDTO) =>
-  request<void>({ url: '/execution/invoice/issue', method: 'PUT', data })
+  request<void>({ url: `/execution/invoice/${data.id}/issue`, method: 'PUT', data })
 
 /**
  * 红冲发票
@@ -69,7 +69,7 @@ export const issueInvoice = (data: InvoiceApprovalDTO) =>
  * @returns 无返回值
  */
 export const reverseInvoice = (data: InvoiceApprovalDTO) =>
-  request<void>({ url: '/execution/invoice/reverse', method: 'PUT', data })
+  request<void>({ url: `/execution/invoice/${data.id}/reverse`, method: 'PUT', data })
 
 /**
  * 删除发票

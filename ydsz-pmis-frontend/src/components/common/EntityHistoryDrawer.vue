@@ -1,24 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { getOperationLogPage, getOperationLogDiff } from '@/api/audit'
+import { getOperationLogByBiz, getOperationLogDiff } from '@/api/audit'
+import type { OperationLogVO, FieldDiffVO } from '@/api/audit'
 
 const { t } = useI18n()
-
-interface FieldDiff {
-  field: string
-  oldValue: string
-  newValue: string
-  changeType: 'ADD' | 'DELETE' | 'MODIFY'
-}
-
-interface OperationLog {
-  id: number
-  operationType: string
-  operatorName: string
-  operatedAt: string
-  description: string
-}
 
 const props = defineProps<{
   visible: boolean
@@ -29,8 +15,8 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:visible': [val: boolean] }>()
 
 const loading = ref(false)
-const logs = ref<OperationLog[]>([])
-const currentDiff = ref<FieldDiff[]>([])
+const logs = ref<OperationLogVO[]>([])
+const currentDiff = ref<FieldDiffVO[]>([])
 const diffVisible = ref(false)
 const currentLogId = ref<number>(0)
 
@@ -38,13 +24,8 @@ const fetchHistory = async () => {
   if (!props.entityId) return
   loading.value = true
   try {
-    const { data } = await getOperationLogPage({
-      entityType: props.entityType,
-      entityId: props.entityId,
-      page: 1,
-      size: 50,
-    })
-    logs.value = (data?.list as unknown as OperationLog[]) ?? []
+    const { data } = await getOperationLogByBiz(props.entityType, props.entityId, 50)
+    logs.value = data ?? []
   } catch {
     logs.value = []
   } finally {
@@ -57,7 +38,7 @@ const showDiff = async (logId: number) => {
   diffVisible.value = true
   try {
     const { data } = await getOperationLogDiff(logId)
-    currentDiff.value = (data as unknown as FieldDiff[]) ?? []
+    currentDiff.value = data ?? []
   } catch {
     currentDiff.value = []
   }
@@ -94,10 +75,10 @@ watch(() => props.visible, (val) => {
     @update:model-value="emit('update:visible', $event)"
   >
     <el-table v-loading="loading" :data="logs" stripe>
-      <el-table-column prop="operatedAt" :label="t('common.entityHistory.colTime')" width="180" />
-      <el-table-column prop="operatorName" :label="t('common.entityHistory.colOperator')" width="120" />
-      <el-table-column prop="operationType" :label="t('common.entityHistory.colOperationType')" width="100" />
-      <el-table-column prop="description" :label="t('common.entityHistory.colDescription')" show-overflow-tooltip />
+      <el-table-column prop="createdAt" :label="t('common.entityHistory.colTime')" width="180" />
+      <el-table-column prop="username" :label="t('common.entityHistory.colOperator')" width="120" />
+      <el-table-column prop="action" :label="t('common.entityHistory.colOperationType')" width="120" />
+      <el-table-column prop="module" :label="t('common.entityHistory.colDescription')" show-overflow-tooltip />
       <el-table-column :label="t('common.entityHistory.colChangeDetail')" width="100" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="showDiff(row.id)">{{ t('common.entityHistory.viewDiff') }}</el-button>

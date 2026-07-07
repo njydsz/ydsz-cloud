@@ -1,7 +1,7 @@
 /**
  * @file 项目结项 API 接口封装
  * @description 提供项目结项的分页查询、详情查询、创建结项申请、变更结项状态等能力，
- *              对应后端 ProjectClosureController（/execution/project-closure）。
+ *              对应后端 ProjectClosureController（/execution/closure）。
  * @module api/execution/closure
  */
 import { request } from '@/utils/request'
@@ -20,7 +20,7 @@ export const pageProjectClosures = (
   params?: { keyword?: string; status?: string; type?: string; initiationId?: number },
 ) =>
   request<PageResult<ProjectClosureVO>>({
-    url: '/execution/project-closure/page',
+    url: '/execution/closure/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -32,7 +32,7 @@ export const pageProjectClosures = (
  */
 export const getProjectClosure = (id: number) =>
   request<ProjectClosureVO>({
-    url: `/execution/project-closure/${id}`,
+    url: `/execution/closure/${id}`,
     method: 'GET',
   })
 
@@ -43,7 +43,7 @@ export const getProjectClosure = (id: number) =>
  */
 export const createProjectClosure = (data: ProjectClosureCreateDTO) =>
   request<number>({
-    url: '/execution/project-closure',
+    url: '/execution/closure',
     method: 'POST',
     data,
   })
@@ -55,7 +55,7 @@ export const createProjectClosure = (data: ProjectClosureCreateDTO) =>
  */
 export const changeProjectClosureStatus = (data: ProjectClosureStatusDTO) =>
   request<void>({
-    url: '/execution/project-closure/status',
+    url: '/execution/closure/status',
     method: 'PUT',
     data,
   })

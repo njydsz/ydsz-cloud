@@ -177,32 +177,39 @@ export const pageOperationLog = (
   })
 
 /**
- * 按业务实体查询操作日志分页
+ * 按业务实体查询操作日志列表
  *
- * 根据业务实体类型与 ID 查询其关联的操作日志（变更历史），
+ * 根据业务类型与业务 ID 查询其关联的操作日志（变更历史），
  * 用于 EntityHistoryDrawer 等组件展示实体变更轨迹。
+ * 对应后端 OperationLogController#byBiz（GET /audit/operation/by-biz）。
  *
- * @param params 查询条件（entityType / entityId / page / size）
- * @returns 操作日志分页结果
+ * @param bizType 业务类型
+ * @param bizId   业务单据 ID
+ * @param limit   最大条数（默认 50，最大 100）
+ * @returns 操作日志列表
  */
-export const getOperationLogPage = (
-  params: { entityType: string; entityId: string | number; page: number; size: number },
+export const getOperationLogByBiz = (
+  bizType: string,
+  bizId: string | number,
+  limit: number = 50,
 ) =>
-  request<PageResult<OperationLogVO>>({
-    url: '/audit/operation-log/list',
+  request<OperationLogVO[]>({
+    url: '/audit/operation/by-biz',
     method: 'GET',
-    params,
+    params: { bizType, bizId, limit },
   })
 
 /**
  * 查询指定操作日志的字段级变更对比（Diff）
+ *
+ * 对应后端 OperationLogController#getDiff（GET /audit/operation/{id}/diff）。
  *
  * @param logId 操作日志 ID
  * @returns 字段级变更对比列表
  */
 export const getOperationLogDiff = (logId: number) =>
   request<FieldDiffVO[]>({
-    url: `/audit/operation-log/${logId}/diff`,
+    url: `/audit/operation/${logId}/diff`,
     method: 'GET',
   })
 

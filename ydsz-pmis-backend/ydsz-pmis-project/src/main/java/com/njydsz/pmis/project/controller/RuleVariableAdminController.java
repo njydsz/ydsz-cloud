@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/rule-variables")
+@RequestMapping("/execution/rule-variables")
 @RequiredArgsConstructor
 @Validated
 public class RuleVariableAdminController {

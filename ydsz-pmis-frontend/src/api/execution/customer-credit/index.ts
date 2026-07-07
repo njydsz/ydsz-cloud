@@ -1,8 +1,8 @@
 /**
  * @file 客户信用 API 接口封装
  * @description 提供客户信用的分页查询、详情查询、信用评估、按客户查询信用等能力，
- *              对应后端 CustomerCreditController（/execution/customer-credit）。
- * @module api/execution/customer-credit
+ *              对应后端 CustomerCreditController（/execution/credit）。
+ * @module api/execution/credit
  */
 import { request } from '@/utils/request'
 import type { CustomerCreditVO, CreditAssessmentDTO } from './types'
@@ -20,7 +20,7 @@ export const pageCustomerCredits = (
   params?: { keyword?: string; level?: string; customerId?: number },
 ) =>
   request<PageResult<CustomerCreditVO>>({
-    url: '/execution/customer-credit/page',
+    url: '/execution/credit/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -32,7 +32,7 @@ export const pageCustomerCredits = (
  */
 export const getCustomerCredit = (id: number) =>
   request<CustomerCreditVO>({
-    url: `/execution/customer-credit/${id}`,
+    url: `/execution/credit/${id}`,
     method: 'GET',
   })
 
@@ -43,7 +43,7 @@ export const getCustomerCredit = (id: number) =>
  */
 export const assessCustomerCredit = (data: CreditAssessmentDTO) =>
   request<CustomerCreditVO>({
-    url: '/execution/customer-credit/assess',
+    url: '/execution/credit/assess',
     method: 'POST',
     data,
   })
@@ -55,6 +55,6 @@ export const assessCustomerCredit = (data: CreditAssessmentDTO) =>
  */
 export const getCreditByCustomer = (customerId: number) =>
   request<CustomerCreditVO>({
-    url: `/execution/customer-credit/by-customer/${customerId}`,
+    url: `/execution/credit/customer/${customerId}`,
     method: 'GET',
   })

@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * SecurityContext 单元测试
  *
+ * <p>P3-1：随主键雪花化，userId / deptId / tenantId 统一为 String 类型。
+ *
  * @author ydsz-pmis-team
  */
 @DisplayName("SecurityContext 测试")
@@ -22,11 +24,11 @@ class SecurityContextTest {
 
     private LoginUser createTestUser() {
         return LoginUser.builder()
-                .userId(1L)
+                .userId("1")
                 .username("testuser")
                 .realName("测试用户")
-                .deptId(100L)
-                .tenantId(1L)
+                .deptId("100")
+                .tenantId("1")
                 .build();
     }
 
@@ -75,12 +77,12 @@ class SecurityContextTest {
     }
 
     @Test
-    @DisplayName("getUserId - 应返回当前用户 ID")
+    @DisplayName("getUserId - 应返回当前用户 ID（雪花字符串）")
     void getUserId_shouldReturnCurrentUserId() {
         LoginUser user = createTestUser();
         SecurityContext.setCurrent(user);
 
-        assertEquals(1L, SecurityContext.getUserId());
+        assertEquals("1", SecurityContext.getUserId());
     }
 
     @Test
@@ -93,40 +95,40 @@ class SecurityContextTest {
     }
 
     @Test
-    @DisplayName("getDeptId - 应返回当前部门 ID")
+    @DisplayName("getDeptId - 应返回当前部门 ID（雪花字符串）")
     void getDeptId_shouldReturnCurrentDeptId() {
         LoginUser user = createTestUser();
         SecurityContext.setCurrent(user);
 
-        assertEquals(100L, SecurityContext.getDeptId());
+        assertEquals("100", SecurityContext.getDeptId());
     }
 
     @Test
-    @DisplayName("getTenantIdOrDefault - 未登录时应返回默认值 1L")
+    @DisplayName("getTenantIdOrDefault - 未登录时应返回默认值 1")
     void getTenantIdOrDefault_shouldReturnDefaultWhenNotLoggedIn() {
-        assertEquals(1L, SecurityContext.getTenantIdOrDefault());
+        assertEquals("1", SecurityContext.getTenantIdOrDefault());
     }
 
     @Test
     @DisplayName("getTenantIdOrDefault - 已登录时应返回用户 tenantId")
     void getTenantIdOrDefault_shouldReturnUserTenantId() {
-        LoginUser user = LoginUser.builder().userId(1L).tenantId(999L).build();
+        LoginUser user = LoginUser.builder().userId("1").tenantId("999").build();
         SecurityContext.setCurrent(user);
 
-        assertEquals(999L, SecurityContext.getTenantIdOrDefault());
+        assertEquals("999", SecurityContext.getTenantIdOrDefault());
     }
 
     @Test
     @DisplayName("getTenantIdOrDefault(自定义默认值) - 未登录时应返回自定义默认值")
     void getTenantIdOrDefault_withCustomDefault() {
-        assertEquals(100L, SecurityContext.getTenantIdOrDefault(100L));
+        assertEquals("100", SecurityContext.getTenantIdOrDefault("100"));
     }
 
     @Test
     @DisplayName("requirePermission - 拥有权限时不抛异常")
     void requirePermission_shouldNotThrowWhenHasPermission() {
         LoginUser user = LoginUser.builder()
-                .userId(1L)
+                .userId("1")
                 .permissions(java.util.List.of("system:user:create"))
                 .build();
         SecurityContext.setCurrent(user);
@@ -138,7 +140,7 @@ class SecurityContextTest {
     @DisplayName("requirePermission - 无权限时应抛出 BizException")
     void requirePermission_shouldThrowWhenNoPermission() {
         LoginUser user = LoginUser.builder()
-                .userId(1L)
+                .userId("1")
                 .permissions(java.util.List.of("system:user:view"))
                 .build();
         SecurityContext.setCurrent(user);
@@ -150,7 +152,7 @@ class SecurityContextTest {
     @DisplayName("requireAnyPermission - 拥有任一权限时不抛异常")
     void requireAnyPermission_shouldNotThrowWhenHasAnyPermission() {
         LoginUser user = LoginUser.builder()
-                .userId(1L)
+                .userId("1")
                 .permissions(java.util.List.of("system:user:view"))
                 .build();
         SecurityContext.setCurrent(user);
@@ -162,7 +164,7 @@ class SecurityContextTest {
     @DisplayName("requireAnyPermission - 全部不拥有时应抛出 BizException")
     void requireAnyPermission_shouldThrowWhenNoPermission() {
         LoginUser user = LoginUser.builder()
-                .userId(1L)
+                .userId("1")
                 .permissions(java.util.List.of("system:user:view"))
                 .build();
         SecurityContext.setCurrent(user);
