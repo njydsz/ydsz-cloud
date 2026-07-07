@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.PasswordPolicy;
+import com.njydsz.pmis.common.service.BloomFilterService;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
@@ -48,6 +49,8 @@ class UserAccountServiceImplTest {
     private DepartmentService departmentService;
     @Mock
     private ApplicationEventPublisher publisher;
+    @Mock
+    private BloomFilterService bloomFilterService;
 
     @InjectMocks
     private UserAccountServiceImpl userAccountService;
@@ -61,6 +64,7 @@ class UserAccountServiceImplTest {
         user.setUsername("admin");
         user.setStatus("ENABLED");
 
+        when(bloomFilterService.mightContain("user:username", "admin")).thenReturn(true);
         when(userAccountMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(user);
 
         UserAccountDO result = userAccountService.findByUsername("admin");
@@ -125,6 +129,7 @@ class UserAccountServiceImplTest {
         UserAccountDO existing = new UserAccountDO();
         existing.setUsername("testuser");
 
+        when(bloomFilterService.mightContain("user:username", "testuser")).thenReturn(true);
         when(userAccountMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(existing);
 
         UserAccountDO newUser = new UserAccountDO();
@@ -185,12 +190,11 @@ class UserAccountServiceImplTest {
 
     @Test
     @DisplayName("创建用户 - 密码应使用 BCrypt 哈希且 salt 为空")
-    @SuppressWarnings("unchecked")
     void create_shouldUseBCryptHash() {
         try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class);
              MockedStatic<PasswordPolicy> policy = mockStatic(PasswordPolicy.class)) {
-            // 无重名
-            when(userAccountMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+            // 布隆过滤器判定不存在（新用户）
+            when(bloomFilterService.mightContain("user:username", "newuser")).thenReturn(false);
             // 密码策略通过
             PasswordPolicy.PasswordCheckResult passResult = mock(PasswordPolicy.PasswordCheckResult.class);
             when(passResult.pass()).thenReturn(true);

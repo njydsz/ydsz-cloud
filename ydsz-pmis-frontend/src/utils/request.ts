@@ -156,7 +156,7 @@ function getRetryDelay(retryCount: number): number {
 
 /** Axios 实例（统一 baseURL、超时、Content-Type） */
 const service: AxiosInstance = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}${import.meta.env.VITE_API_PREFIX}`,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 30000,
   headers: { 'Content-Type': 'application/json;charset=UTF-8' },
 })

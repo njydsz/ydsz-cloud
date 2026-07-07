@@ -149,6 +149,8 @@ management:
   endpoint:
     gateway:
       enabled: true
+    health:
+      show-details: when-authorized
   endpoints:
     web:
       exposure:
@@ -156,9 +158,8 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-    export:
-      prometheus:
+  # 注：management.metrics.export.prometheus.enabled 已废弃，迁移至 prometheus.metrics.export.enabled
+  prometheus:
+    metrics:
+      export:
         enabled: true
-  endpoint:
-    health:
-      show-details: when-authorized

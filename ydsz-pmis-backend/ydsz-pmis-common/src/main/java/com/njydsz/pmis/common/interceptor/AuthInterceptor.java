@@ -162,7 +162,6 @@ public class AuthInterceptor implements HandlerInterceptor {
      * @param claim JWT claim 值
      * @return Long 列表，null 时返回 null
      */
-    @SuppressWarnings("unchecked")
     private List<Long> parseLongList(Object claim) {
         if (claim == null) {
             return null;

@@ -35,8 +35,8 @@ class PathGuardTest {
     @Test
     @DisplayName("sanitize - 连续斜杠应合并为单个")
     void sanitize_consecutiveSlashes_shouldCollapse() {
-        assertEquals("/users", PathGuard.sanitize("//api///v1//users"));
-        assertEquals("/users/", PathGuard.sanitize("//api///v1//users//"));
+        assertEquals("/users", PathGuard.sanitize("///users"));
+        assertEquals("/users/", PathGuard.sanitize("///users//"));
     }
 
     @Test
@@ -49,7 +49,7 @@ class PathGuardTest {
     @Test
     @DisplayName("sanitize - 非绝对路径应返回 null")
     void sanitize_nonAbsolute_shouldReturnNull() {
-        assertNull(PathGuard.sanitize("api/v1/users"));
+        assertNull(PathGuard.sanitize("api/users"));
     }
 
     @Test

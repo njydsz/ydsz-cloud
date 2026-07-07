@@ -3,7 +3,6 @@
  * @description 提供收件箱分页、未读数、标记已读、全部已读、发送通知、删除通知等能力，
  *              对应后端 NotificationController（/notifications）。
  *
- *   - 路径前缀  由 VITE_API_PREFIX 注入，此处 BASE 仅写 /notifications
  *   - 收件箱/未读数/标记已读等后台静默请求，不触发全局 loading
  * @module api/notification
  */
@@ -11,7 +10,7 @@ import { request } from '@/utils/request'
 import type { PageData } from '@/types/api'
 import type { NotificationVO, NotificationSendDTO, NotificationPageQuery } from './types'
 
-/** 通知中心接口路径（ 前缀由 baseURL 注入） */
+/** 通知中心接口路径（baseURL 由 VITE_API_BASE_URL 注入） */
 const BASE = '/notifications'
 
 /**
