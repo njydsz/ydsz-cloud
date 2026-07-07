@@ -1,10 +1,13 @@
 package com.njydsz.pmis.workflow.service.impl;
 
+import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.workflow.entity.FlowThirdPartyAccountDO;
 import com.njydsz.pmis.workflow.mapper.FlowThirdPartyAccountMapper;
 import com.njydsz.pmis.workflow.service.FlowThirdPartyAccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -39,6 +42,8 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE,
+            key = "#userId + ':' + #platform", unless = "#result == null")
     public FlowThirdPartyAccountDO getByUserIdAndPlatform(Long userId, String platform) {
         try {
             if (userId == null || !StringUtils.hasText(platform)) {
@@ -54,6 +59,8 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.FLOW_THIRDPARTY_BY_OPENID_CACHE,
+            key = "#platform + ':' + #openId", unless = "#result == null")
     public FlowThirdPartyAccountDO getByOpenId(String platform, String openId) {
         try {
             if (!StringUtils.hasText(platform) || !StringUtils.hasText(openId)) {
@@ -71,6 +78,8 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.FLOW_THIRDPARTY_BY_OPENID_CACHE,
+            CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE}, allEntries = true)
     public void saveOrUpdate(FlowThirdPartyAccountDO account) {
         try {
             if (account == null) {
@@ -112,6 +121,8 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.FLOW_THIRDPARTY_BY_OPENID_CACHE,
+            CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE}, allEntries = true)
     public void bindAccount(Long userId, String platform, String openId, String unionId) {
         try {
             if (userId == null || !StringUtils.hasText(platform) || !StringUtils.hasText(openId)) {

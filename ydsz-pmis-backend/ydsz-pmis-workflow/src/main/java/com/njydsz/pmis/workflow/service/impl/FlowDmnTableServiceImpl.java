@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.workflow.dmn.DmnDecisionTable;
 import com.njydsz.pmis.workflow.dmn.DmnEngine;
 import com.njydsz.pmis.workflow.dmn.DmnHitPolicy;
@@ -15,6 +16,8 @@ import com.njydsz.pmis.workflow.mapper.FlowDmnTableMapper;
 import com.njydsz.pmis.workflow.service.FlowDmnTableService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -63,6 +66,7 @@ public class FlowDmnTableServiceImpl implements FlowDmnTableService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.FLOW_DMN_BY_KEY_CACHE, key = "#tableKey", unless = "#result == null")
     public FlowDmnTableDO getByKey(String tableKey) {
         if (!StringUtils.hasText(tableKey)) {
             return null;
@@ -90,6 +94,7 @@ public class FlowDmnTableServiceImpl implements FlowDmnTableService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CacheConstants.FLOW_DMN_BY_KEY_CACHE, allEntries = true)
     public Long save(FlowDmnTableDO table) {
         if (table == null) {
             throw new IllegalArgumentException("决策表定义不能为空");
@@ -126,6 +131,7 @@ public class FlowDmnTableServiceImpl implements FlowDmnTableService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CacheConstants.FLOW_DMN_BY_KEY_CACHE, allEntries = true)
     public void update(FlowDmnTableDO table) {
         if (table == null || table.getId() == null) {
             throw new IllegalArgumentException("决策表 id 不能为空");
@@ -138,6 +144,7 @@ public class FlowDmnTableServiceImpl implements FlowDmnTableService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CacheConstants.FLOW_DMN_BY_KEY_CACHE, allEntries = true)
     public void publish(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("决策表 id 不能为空");

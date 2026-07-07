@@ -62,4 +62,21 @@ public final class CacheConstants {
 
     /** 驾驶舱报表缓存（TTL 5m） */
     public static final String COCKPIT_CACHE = "cockpit:report";
+
+    // ==================== 工作流模块 ====================
+
+    /** 流程定义缓存 - 按已发布版本查询（TTL 30m） */
+    public static final String FLOW_DEF_PUBLISHED_CACHE = "flow:def:published";
+
+    /** 流程定义缓存 - 按最新版本查询（TTL 30m） */
+    public static final String FLOW_DEF_LATEST_CACHE = "flow:def:latest";
+
+    /** DMN 决策表缓存 - 按 tableKey 查询（TTL 1h，变更频率低） */
+    public static final String FLOW_DMN_BY_KEY_CACHE = "flow:dmn:by_key";
+
+    /** 三方账号映射缓存 - 按 platform+openId 查询（TTL 30m） */
+    public static final String FLOW_THIRDPARTY_BY_OPENID_CACHE = "flow:thirdparty:by_openid";
+
+    /** 三方账号映射缓存 - 按 userId+platform 查询（TTL 30m） */
+    public static final String FLOW_THIRDPARTY_BY_USER_CACHE = "flow:thirdparty:by_user";
 }

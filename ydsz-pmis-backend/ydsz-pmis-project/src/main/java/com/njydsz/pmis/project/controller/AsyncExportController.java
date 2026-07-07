@@ -57,10 +57,10 @@ public class AsyncExportController {
     @Operation(summary = "查询导出记录列表")
     public Page<Map<String, Object>> getExportRecords(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return asyncExportService.getExportRecords(userId,
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, AsyncExportService.COL_CREATED_AT)));
+                PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, AsyncExportService.COL_CREATED_AT)));
     }
 
     @GetMapping("/{recordId}/download")

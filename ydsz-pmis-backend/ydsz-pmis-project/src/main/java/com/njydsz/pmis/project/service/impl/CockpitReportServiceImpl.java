@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.service.impl;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.project.dto.AlertEventDTO;
 import com.njydsz.pmis.project.dto.CockpitAlertSummaryVO;
@@ -99,8 +100,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
-    @Cacheable(value = "cockpit:overview",
-            key = "(#period ?: 'all') + '::' + (#drillDown == null ? 'none' : (#drillDown.dimension ?: '') + '_' + (#drillDown.value ?: ''))",
+    @Cacheable(value = CacheConstants.COCKPIT_CACHE,
+            key = "'overview::' + (#period ?: 'all') + '::' + (#drillDown == null ? 'none' : (#drillDown.dimension ?: '') + '_' + (#drillDown.value ?: ''))",
             unless = "#result == null")
     public CockpitKpiVO overview(String period, CockpitDrillDownDTO drillDown) {
         CockpitKpiVO kpi = new CockpitKpiVO();
@@ -222,7 +223,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
-    @Cacheable(value = "cockpit:drill:dept", key = "(#period ?: 'all')",
+    @Cacheable(value = CacheConstants.COCKPIT_CACHE, key = "'drill:dept::' + (#period ?: 'all')",
             unless = "#result == null || #result.isEmpty()")
     public List<Map<String, Object>> drillByDept(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
@@ -235,7 +236,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
-    @Cacheable(value = "cockpit:drill:projectType", key = "(#period ?: 'all')",
+    @Cacheable(value = CacheConstants.COCKPIT_CACHE, key = "'drill:projectType::' + (#period ?: 'all')",
             unless = "#result == null || #result.isEmpty()")
     public List<Map<String, Object>> drillByProjectType(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
@@ -248,7 +249,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
-    @Cacheable(value = "cockpit:drill:customer", key = "(#period ?: 'all')",
+    @Cacheable(value = CacheConstants.COCKPIT_CACHE, key = "'drill:customer::' + (#period ?: 'all')",
             unless = "#result == null || #result.isEmpty()")
     public List<Map<String, Object>> drillByCustomer(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
@@ -261,7 +262,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
-    @Cacheable(value = "cockpit:contractYearlyTrend", unless = "#result == null")
+    @Cacheable(value = CacheConstants.COCKPIT_CACHE, key = "'contractYearlyTrend'", unless = "#result == null")
     public Map<String, Object> contractAmountYearlyTrend() {
         Map<String, Object> out = new HashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -625,7 +626,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
-    @Cacheable(value = "cockpit:kpiTrend", key = "(#months == null ? 12 : #months)", unless = "#result == null")
+    @Cacheable(value = CacheConstants.COCKPIT_CACHE, key = "'kpiTrend::' + (#months == null ? 12 : #months)", unless = "#result == null")
     public KpiTrendVO kpiTrend(Integer months) {
         int limit = months == null || months <= 0 ? 12 : Math.min(months, 36);
 

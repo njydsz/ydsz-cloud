@@ -118,6 +118,14 @@ public class PmisCacheConfig {
         // 驾驶舱报表：5 分钟（高频刷新）
         cacheConfigs.put("cockpit", defaultConfig.entryTtl(Duration.ofMinutes(5)));
         cacheConfigs.put("cockpit:report", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        // 工作流模块：流程定义 30 分钟（写操作 @CacheEvict 主动失效）
+        cacheConfigs.put("flow:def:published", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        cacheConfigs.put("flow:def:latest", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        // DMN 决策表：1 小时（变更频率低）
+        cacheConfigs.put("flow:dmn:by_key", defaultConfig.entryTtl(Duration.ofHours(1)));
+        // 三方账号映射：30 分钟
+        cacheConfigs.put("flow:thirdparty:by_openid", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        cacheConfigs.put("flow:thirdparty:by_user", defaultConfig.entryTtl(Duration.ofMinutes(30)));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)

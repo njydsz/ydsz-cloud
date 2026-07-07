@@ -188,7 +188,7 @@ watch(keyword, (val) => {
   projectLoading.value = true
   searchTimer = setTimeout(async () => {
     try {
-      const res = await searchProjects(kw, 0, 8)
+      const res = await searchProjects(kw, 1, 8)
       projectResults.value = res?.data?.records ?? []
     } catch (e) {
       logger.warn('[GlobalSearch]', '项目搜索失败', e)

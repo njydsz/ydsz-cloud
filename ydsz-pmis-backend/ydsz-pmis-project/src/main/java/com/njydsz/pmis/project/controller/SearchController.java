@@ -39,7 +39,7 @@ public class SearchController {
      * 全文检索项目。
      *
      * @param keyword 搜索关键词
-     * @param page    页码（从 0 开始）
+     * @param page    页码（从 1 开始，与 PageQuery 约定一致）
      * @param size    每页条数
      * @return 搜索结果分页
      */
@@ -48,10 +48,10 @@ public class SearchController {
     @GetMapping("/projects")
     public Result<Page<ProjectSearchVO>> searchProjects(
             @RequestParam @NotBlank(message = "{validation.execution.msg_ede12b69}") String keyword,
-            @RequestParam(defaultValue = "0") @Min(value = 0, message = "{validation.execution.msg_9aaebb77}") int page,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.execution.msg_9aaebb77}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.execution.msg_15154512}") @Max(100) int size) {
         return Result.ok(searchService.searchProjects(keyword,
-                PageRequest.of(page, size, SortBy.desc(ProjectSearchVO::getCreatedAt))));
+                PageRequest.of(page - 1, size, SortBy.desc(ProjectSearchVO::getCreatedAt))));
     }
 
     /**

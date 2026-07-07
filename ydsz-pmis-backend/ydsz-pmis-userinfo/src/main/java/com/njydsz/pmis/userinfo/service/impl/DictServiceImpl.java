@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.userinfo.entity.DictItemDO;
 import com.njydsz.pmis.userinfo.entity.DictTypeDO;
 import com.njydsz.pmis.userinfo.mapper.DictItemMapper;
@@ -35,8 +36,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DictServiceImpl implements DictService {
 
-    /** 字典项缓存名称 */
-    public static final String CACHE_NAME = "dict:items";
+    /** 字典项缓存名称（引用 CacheConstants.DICT_CACHE，TTL 2h 由 PmisCacheConfig 配置生效） */
+    public static final String CACHE_NAME = CacheConstants.DICT_CACHE;
 
     private final DictTypeMapper dictTypeMapper;
     private final DictItemMapper dictItemMapper;

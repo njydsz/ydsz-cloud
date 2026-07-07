@@ -69,12 +69,17 @@ class FlowDefinitionServiceImplTest {
         setSelfField(service);
     }
 
-    /** 通过反射设置 private final self 字段 */
+    /** 通过反射将 target 的 self 字段指向自身 */
     private void setSelfField(FlowDefinitionServiceImpl target) {
+        setSelfField(target, target);
+    }
+
+    /** 通过反射将 target 的 private final self 字段指向 value */
+    private void setSelfField(FlowDefinitionServiceImpl target, FlowDefinitionServiceImpl value) {
         try {
             java.lang.reflect.Field selfField = FlowDefinitionServiceImpl.class.getDeclaredField("self");
             selfField.setAccessible(true);
-            selfField.set(target, target);
+            selfField.set(target, value);
         } catch (Exception e) {
             throw new RuntimeException("Failed to set self field", e);
         }
@@ -375,6 +380,7 @@ class FlowDefinitionServiceImplTest {
         service.saveFormConfig(DEFINITION_ID, "approval_1", "{\"fields\":[{\"name\":\"reason\"}]}");
 
         verify(nodeMapper).updateById(node);
+        verify(flowDefinitionCacheService).evict(DEFINITION_ID);
         assertThat(node.getFormFieldsConfig()).isEqualTo("{\"fields\":[{\"name\":\"reason\"}]}");
     }
 
@@ -402,7 +408,60 @@ class FlowDefinitionServiceImplTest {
         service.saveSlaConfig(DEFINITION_ID, "approval_1", "{\"timeoutHours\":48}");
 
         verify(nodeMapper).updateById(node);
+        verify(flowDefinitionCacheService).evict(DEFINITION_ID);
         assertThat(node.getSlaConfig()).isEqualTo("{\"timeoutHours\":48}");
+    }
+
+    // ============ 节点坐标更新 ============
+
+    @Test
+    @DisplayName("更新节点坐标 - 成功并清除缓存")
+    void updateNodeCoordinateShouldSucceedAndEvictCache() {
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("approval_1");
+        when(nodeMapper.selectByCode(DEFINITION_ID, "approval_1")).thenReturn(node);
+
+        service.updateNodeCoordinate(DEFINITION_ID, "approval_1", "{\"x\":100,\"y\":200}");
+
+        verify(nodeMapper).updateById(node);
+        verify(flowDefinitionCacheService).evict(DEFINITION_ID);
+        assertThat(node.getCoordinate()).isEqualTo("{\"x\":100,\"y\":200}");
+    }
+
+    @Test
+    @DisplayName("更新节点坐标 - 节点不存在抛出异常")
+    void updateNodeCoordinateNonExistentShouldThrow() {
+        when(nodeMapper.selectByCode(DEFINITION_ID, "bad_node")).thenReturn(null);
+
+        assertThatThrownBy(() -> service.updateNodeCoordinate(DEFINITION_ID, "bad_node", "{}"))
+                .isInstanceOf(BizException.class)
+                .satisfies(ex -> {
+                    BizException biz = (BizException) ex;
+                    assertThat(biz.getCode()).isEqualTo(BizErrorCode.NOT_FOUND.getCode());
+                });
+    }
+
+    // ============ 设计器数据保存 ============
+
+    @Test
+    @DisplayName("保存设计器数据 - 成功并清除缓存")
+    void saveDesignerDataShouldSucceedAndEvictCache() {
+        FlowDefinitionDO def = buildDefinition();
+        def.setIsPublish(0);
+        when(definitionMapper.selectById(DEFINITION_ID)).thenReturn(def);
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("start_1");
+        when(nodeMapper.selectByCode(DEFINITION_ID, "start_1")).thenReturn(node);
+
+        Map<String, Object> designerData = Map.of(
+                "nodes", List.of(Map.of(
+                        "nodeCode", "start_1",
+                        "coordinate", "{\"x\":50,\"y\":50}",
+                        "nodeName", "开始")));
+
+        service.saveDesignerData(DEFINITION_ID, designerData);
+
+        verify(flowDefinitionCacheService).evict(DEFINITION_ID);
     }
 
     // ============ 版本历史 ============
@@ -536,7 +595,7 @@ class FlowDefinitionServiceImplTest {
         // 用 spy 替换 self，mock deploy 方法返回成功，避免触发真实 deploy 的图校验逻辑
         FlowDefinitionServiceImpl spySelf = org.mockito.Mockito.spy(service);
         org.mockito.Mockito.doReturn(DEFINITION_ID).when(spySelf).deploy(any(FlowDeployProcessDTO.class));
-        setSelfField(spySelf);
+        setSelfField(service, spySelf);
 
         // bpmnXmlParser 对两个文件分别返回不同 processId 的 model
         when(bpmnXmlParser.parse(xml1)).thenReturn(buildBpmnModel("flow_a", "流程A"));
@@ -570,7 +629,7 @@ class FlowDefinitionServiceImplTest {
             }
             return DEFINITION_ID;
         }).when(spySelf).deploy(any(FlowDeployProcessDTO.class));
-        setSelfField(spySelf);
+        setSelfField(service, spySelf);
 
         when(bpmnXmlParser.parse(xmlOk)).thenReturn(buildBpmnModel("flow_ok", "OK流程"));
         when(bpmnXmlParser.parse(xmlBad)).thenThrow(new RuntimeException("XML 解析错误"));

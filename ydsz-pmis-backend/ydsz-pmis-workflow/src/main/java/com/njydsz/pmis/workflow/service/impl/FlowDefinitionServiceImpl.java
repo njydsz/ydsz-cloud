@@ -6,6 +6,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
@@ -24,6 +25,8 @@ import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,6 +89,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
+            CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
     public Long deploy(FlowDeployProcessDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getFlowCode())
                 || !StringUtils.hasText(dto.getFlowName())) {
@@ -236,6 +241,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     }
 
     @Override
+    @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
+            CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
     public void publish(Long definitionId) {
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
@@ -246,6 +253,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     }
 
     @Override
+    @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
+            CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
     public void deprecate(Long definitionId) {
         definitionMapper.publish(definitionId, 9);
         log.info("[Flow] 停用流程: defId={}", definitionId);
@@ -253,6 +262,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
+            key = "#flowCode + ':' + #version + ':' + #tenantId", unless = "#result == null")
     public FlowDefinitionDO getPublished(String flowCode, String version, Long tenantId) {
         if (!StringUtils.hasText(version)) {
             version = "1.0";
@@ -264,6 +275,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.FLOW_DEF_LATEST_CACHE,
+            key = "#flowCode + ':' + #tenantId", unless = "#result == null")
     public FlowDefinitionDO getLatestByCode(String flowCode, Long tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
@@ -304,6 +317,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
+            CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
     public void switchActiveVersion(String flowCode, Long definitionId, Long tenantId) {
         if (!StringUtils.hasText(flowCode)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode 不能为空");
@@ -355,6 +370,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
         node.setCoordinate(coordinate);
         nodeMapper.updateById(node);
+        // 节点数据变更，清除该定义的本地节点/跳转缓存避免脏读
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] 更新节点坐标: defId={} node={} coordinate={}",
                 definitionId, nodeCode, coordinate);
     }
@@ -363,6 +380,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
+            CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
     public void updateDefinition(Long definitionId, FlowDeployProcessDTO dto) {
         if (definitionId == null || dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId/dto 不能为空");
@@ -652,6 +671,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
         // 2. 批量更新边（skips）— 目前仅支持坐标和属性更新，不支持增删边
         // 边的增删需要通过 updateDefinition 端点处理
+        // 节点数据批量变更，清除该定义的本地节点/跳转缓存避免脏读
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] 设计器数据已保存: definitionId={} nodes={}",
                 definitionId, nodes != null ? nodes.size() : 0);
     }
@@ -679,6 +700,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
         node.setFormFieldsConfig(formFieldsConfig);
         nodeMapper.updateById(node);
+        // 节点数据变更，清除该定义的本地节点/跳转缓存避免脏读
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] 表单字段配置已保存: definitionId={} nodeCode={}",
                 definitionId, nodeCode);
     }
@@ -706,6 +729,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
         node.setSlaConfig(slaConfig);
         nodeMapper.updateById(node);
+        // 节点数据变更，清除该定义的本地节点/跳转缓存避免脏读
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] SLA 配置已保存: definitionId={} nodeCode={} slaConfig={}",
                 definitionId, nodeCode, slaConfig);
     }

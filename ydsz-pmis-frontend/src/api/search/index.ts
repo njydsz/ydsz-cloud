@@ -36,11 +36,11 @@ export interface ProjectSearchDoc {
  * 全文检索项目
  *
  * @param keyword 关键词
- * @param page    页码（从 0 开始，默认 0）
+ * @param page    页码（从 1 开始，默认 1，与后端 PageQuery 约定一致）
  * @param size    每页条数（默认 10）
  * @returns 分页项目搜索结果；PG 检索异常时降级返回空页
  */
-export const searchProjects = (keyword: string, page = 0, size = 10) =>
+export const searchProjects = (keyword: string, page = 1, size = 10) =>
   request<PageData<ProjectSearchDoc>>({
     url: '/execution/search/projects',
     method: 'GET',
