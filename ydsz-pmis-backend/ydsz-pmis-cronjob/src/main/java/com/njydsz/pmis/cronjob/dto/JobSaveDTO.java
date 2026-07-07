@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.dto;
+package com.njydsz.pmis.cronjob.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

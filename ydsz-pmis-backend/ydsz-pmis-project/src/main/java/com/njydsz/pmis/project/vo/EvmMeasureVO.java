@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.vo;
+package com.njydsz.pmis.project.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

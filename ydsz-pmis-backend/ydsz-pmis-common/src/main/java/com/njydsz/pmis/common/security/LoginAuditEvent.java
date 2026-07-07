@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.security;
+package com.njydsz.pmis.common.security;
 
 import lombok.Builder;
 import lombok.Data;

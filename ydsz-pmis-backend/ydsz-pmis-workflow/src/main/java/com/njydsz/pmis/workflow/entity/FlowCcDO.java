@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.entity;
+package com.njydsz.pmis.workflow.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

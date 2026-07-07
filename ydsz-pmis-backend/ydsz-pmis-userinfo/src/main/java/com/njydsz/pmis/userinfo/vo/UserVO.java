@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.vo;
+package com.njydsz.pmis.userinfo.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.njydsz.pmis.common.sensitive.Sensitive;

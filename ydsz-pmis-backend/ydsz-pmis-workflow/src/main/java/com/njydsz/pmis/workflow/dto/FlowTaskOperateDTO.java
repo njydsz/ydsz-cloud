@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.dto;
+package com.njydsz.pmis.workflow.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

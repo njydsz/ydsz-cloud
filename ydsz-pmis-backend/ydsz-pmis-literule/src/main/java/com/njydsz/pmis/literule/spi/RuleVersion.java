@@ -23,7 +23,7 @@ public class RuleVersion implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 版本 ID */
-    private Long id;
+    private String id;
 
     /** 规则编码 */
     private String ruleCode;

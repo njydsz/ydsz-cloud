@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.event;
+package com.njydsz.pmis.common.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.system.dto;
+package com.njydsz.pmis.system.dto;
 
 import lombok.Data;
 

@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.config;
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.njydsz.pmis.common.security.TenantContext;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.StringValue;
 
 import java.util.Locale;
 import java.util.Set;
@@ -37,7 +37,8 @@ public class PmisTenantLineHandler implements TenantLineHandler {
 
     @Override
     public Expression getTenantId() {
-        return new LongValue(TenantContext.getTenantId());
+        // VARCHAR(20) 雪花 ID 字符串，使用 StringValue 生成 SQL 字面量 '1'
+        return new StringValue(TenantContext.getTenantId());
     }
 
     @Override
