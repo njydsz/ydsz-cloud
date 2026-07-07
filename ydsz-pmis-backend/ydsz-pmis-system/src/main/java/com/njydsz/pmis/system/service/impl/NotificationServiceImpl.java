@@ -56,9 +56,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int send(NotificationSendDTO dto) {
-        List<Long> receiverIds = resolveReceiverIds(dto);
+        List<String> receiverIds = resolveReceiverIds(dto);
         int count = 0;
-        for (Long rid : receiverIds) {
+        for (String rid : receiverIds) {
             NotificationDO notificationDO = buildEntity(dto, rid);
             notificationMapper.insert(notificationDO);
             // P0-2: 实时推送通知到接收人（推送失败不影响主流程，由 RealtimePushService 内部降级）
@@ -130,7 +130,7 @@ public class NotificationServiceImpl implements NotificationService {
             log.error("[Notification] 邮件投递异常: receiverId={} reason={}", dto.getReceiverId(), e.getMessage(), e);
         }
         // P0-2: 实时推送（含邮件投递结果）到接收人，失败不影响主流程
-        Long pushUserId = dto.getReceiverId() != null ? dto.getReceiverId()
+        String pushUserId = dto.getReceiverId() != null ? dto.getReceiverId()
                 : (dto.getReceiverIds() != null && !dto.getReceiverIds().isEmpty()
                         ? dto.getReceiverIds().get(0) : null);
         if (pushUserId != null) {
@@ -148,7 +148,7 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<NotificationDO> inbox(Long userId, NotificationQueryDTO query) {
+    public Page<NotificationDO> inbox(String userId, NotificationQueryDTO query) {
         Page<NotificationDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
         LambdaQueryWrapper<NotificationDO> w = new LambdaQueryWrapper<>();
         w.eq(NotificationDO::getReceiverId, userId);
@@ -173,7 +173,7 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public long countUnread(Long userId) {
+    public long countUnread(String userId) {
         Long count = notificationMapper.countUnread(userId);
         return count == null ? 0L : count;
     }
@@ -186,7 +186,7 @@ public class NotificationServiceImpl implements NotificationService {
      * @return 是否标记成功（通知不存在或不属于该用户时返回 false）
      */
     @Override
-    public boolean markRead(Long userId, Long id) {
+    public boolean markRead(String userId, String id) {
         return notificationMapper.markRead(id, userId) > 0;
     }
 
@@ -197,7 +197,7 @@ public class NotificationServiceImpl implements NotificationService {
      * @return 实际标记条数
      */
     @Override
-    public int markAllRead(Long userId) {
+    public int markAllRead(String userId) {
         return notificationMapper.markAllRead(userId);
     }
 
@@ -209,11 +209,11 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long userId, List<Long> ids) {
+    public void delete(String userId, List<String> ids) {
         if (CollectionUtils.isEmpty(ids)) {
             return;
         }
-        for (Long id : ids) {
+        for (String id : ids) {
             NotificationDO n = notificationMapper.selectById(id);
             if (n != null && n.getReceiverId().equals(userId)) {
                 notificationMapper.deleteById(id);
@@ -230,8 +230,8 @@ public class NotificationServiceImpl implements NotificationService {
      * @return 接收人 ID 列表
      * @throws BizException 当接收人为空时抛出
      */
-    private List<Long> resolveReceiverIds(NotificationSendDTO dto) {
-        List<Long> receiverIds = dto.getReceiverIds();
+    private List<String> resolveReceiverIds(NotificationSendDTO dto) {
+        List<String> receiverIds = dto.getReceiverIds();
         if (CollectionUtils.isEmpty(receiverIds) && dto.getReceiverId() != null) {
             receiverIds = List.of(dto.getReceiverId());
         }
@@ -248,7 +248,7 @@ public class NotificationServiceImpl implements NotificationService {
      * @param receiverId  接收人 ID
      * @return 通知实体
      */
-    private NotificationDO buildEntity(NotificationSendDTO dto, Long receiverId) {
+    private NotificationDO buildEntity(NotificationSendDTO dto, String receiverId) {
         NotificationDO n = new NotificationDO();
         n.setTitle(dto.getTitle());
         n.setContent(dto.getContent());
@@ -273,7 +273,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (StringUtils.hasText(dto.getReceiverEmail())) {
             return dto.getReceiverEmail().trim();
         }
-        Long uid = dto.getReceiverId();
+        String uid = dto.getReceiverId();
         if (uid == null && dto.getReceiverIds() != null && dto.getReceiverIds().size() == 1) {
             uid = dto.getReceiverIds().get(0);
         }

@@ -32,10 +32,10 @@ public final class CursorHelper {
      * 编码游标（LocalDateTime + id）
      *
      * @param sortValue 排序字段值（通常为 created_at）
-     * @param id        主键 ID
+     * @param id        主键 ID（雪花算法字符串）
      * @return Base64 编码的 cursor 字符串
      */
-    public static String encode(LocalDateTime sortValue, Long id) {
+    public static String encode(LocalDateTime sortValue, String id) {
         String raw = sortValue.format(FORMATTER) + "|" + id;
         return ENCODER.encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
@@ -44,7 +44,7 @@ public final class CursorHelper {
      * 解码游标，提取排序值和 ID
      *
      * @param cursor 游标字符串
-     * @return [0] = LocalDateTime, [1] = Long id
+     * @return [0] = LocalDateTime, [1] = String id
      * @throws IllegalArgumentException 游标格式非法时抛出
      */
     public static Object[] decode(String cursor) {
@@ -59,7 +59,7 @@ public final class CursorHelper {
                 throw new IllegalArgumentException("cursor 格式非法: token 数量 != 2");
             }
             LocalDateTime sortValue = LocalDateTime.parse(st.nextToken(), FORMATTER);
-            Long id = Long.parseLong(st.nextToken());
+            String id = st.nextToken();
             return new Object[]{sortValue, id};
         } catch (Exception e) {
             throw new IllegalArgumentException("cursor 解码失败: " + e.getMessage(), e);

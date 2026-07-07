@@ -41,7 +41,7 @@ public class OperationLogServiceImpl {
      * @param endTime   截止时间（包含），可为 null
      * @return 分页结果
      */
-    public Page<OperationLogDO> page(int page, int size, Long userId, String bizType,
+    public Page<OperationLogDO> page(int page, int size, String userId, String bizType,
                                      String status, String module,
                                      LocalDateTime startTime, LocalDateTime endTime) {
         Page<OperationLogDO> p = new Page<>(page, size);
@@ -63,7 +63,7 @@ public class OperationLogServiceImpl {
      * @param limit  最大条数
      * @return 操作日志列表
      */
-    public List<OperationLogDO> listByUser(Long userId, int limit) {
+    public List<OperationLogDO> listByUser(String userId, int limit) {
         return operationLogMapper.selectByUser(userId, Math.max(1, Math.min(limit, 500)));
     }
 
@@ -100,7 +100,7 @@ public class OperationLogServiceImpl {
      * @param id 日志 ID
      * @return 操作日志实体，不存在返回 null
      */
-    public OperationLogDO getById(Long id) {
+    public OperationLogDO getById(String id) {
         return operationLogMapper.selectById(id);
     }
 
@@ -123,7 +123,7 @@ public class OperationLogServiceImpl {
      * @return 游标分页结果
      */
     public CursorPageResult<OperationLogDO> pageByCursor(long size, String cursor,
-                                                          Long userId, String bizType,
+                                                          String userId, String bizType,
                                                           String status, String module,
                                                           LocalDateTime startTime,
                                                           LocalDateTime endTime) {
@@ -144,7 +144,7 @@ public class OperationLogServiceImpl {
             Object[] decoded = CursorHelper.decode(cursor);
             if (decoded != null) {
                 LocalDateTime cursorTime = (LocalDateTime) decoded[0];
-                Long cursorId = (Long) decoded[1];
+                String cursorId = (String) decoded[1];
                 w.and(wrapper -> wrapper
                         .lt(OperationLogDO::getCreatedAt, cursorTime)
                         .or(sub -> sub

@@ -46,7 +46,7 @@ public class NotificationSendDTO implements Serializable {
     private String receiverId;
 
     /** 批量接收（优先于 receiverId） */
-    private List<Long> receiverIds;
+    private List<String> receiverIds;
 
     /** 业务关联 */
     private String bizType;

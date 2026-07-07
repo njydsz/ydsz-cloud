@@ -38,7 +38,7 @@ public class RealtimePushService {
      * @param type        消息类型 (NOTIFICATION/ALERT/DASHBOARD/TODO_COUNT/TASK_ASSIGNED 等)
      * @param payload     消息内容
      */
-    public void pushToUser(Long userId, String type, Object payload) {
+    public void pushToUser(String userId, String type, Object payload) {
         try {
             Map<String, Object> message = new HashMap<>();
             message.put("type", type);

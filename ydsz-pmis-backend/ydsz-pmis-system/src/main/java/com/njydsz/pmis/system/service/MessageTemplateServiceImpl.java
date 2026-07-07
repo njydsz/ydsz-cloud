@@ -35,9 +35,9 @@ public class MessageTemplateServiceImpl {
      * @return 新建模板 ID
      * @throws BizException templateCode/channel/content 为空或 (code, channel) 已存在时抛出
      */
-    public Long create(MessageTemplateDO t) {
+    public String create(MessageTemplateDO t) {
         validate(t);
-        if (templateMapper.selectByCodeAndChannel(t.getTemplateCode(), t.getChannel().toUpperCase(), 1L) != null) {
+        if (templateMapper.selectByCodeAndChannel(t.getTemplateCode(), t.getChannel().toUpperCase(), TenantContext.getTenantId()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
                     "error.message.msg_74548ac6", t.getTemplateCode(), t.getChannel());
         }
@@ -80,7 +80,7 @@ public class MessageTemplateServiceImpl {
      * @param id 模板 ID
      * @throws BizException 模板不存在时抛出
      */
-    public void delete(Long id) {
+    public void delete(String id) {
         MessageTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.message.msg_246b57f0");
@@ -96,7 +96,7 @@ public class MessageTemplateServiceImpl {
      * @return 模板实体
      * @throws BizException 模板不存在时抛出
      */
-    public MessageTemplateDO getById(Long id) {
+    public MessageTemplateDO getById(String id) {
         MessageTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.message.msg_246b57f0");
@@ -132,7 +132,7 @@ public class MessageTemplateServiceImpl {
      * @return 模板列表
      */
     public List<MessageTemplateDO> listByChannel(String channel) {
-        return templateMapper.selectByChannel(channel.toUpperCase(), 1L);
+        return templateMapper.selectByChannel(channel.toUpperCase(), "1");
     }
 
     /**

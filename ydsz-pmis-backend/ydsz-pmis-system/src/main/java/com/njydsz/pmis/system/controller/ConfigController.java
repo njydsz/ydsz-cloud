@@ -72,7 +72,7 @@ public class ConfigController {
     @PrePermission("sys:config:create")
     @OperationLog(module = "系统配置", action = "创建配置", bizType = "CONFIG")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody ConfigFormDTO dto) {
+    public Result<String> create(@Valid @RequestBody ConfigFormDTO dto) {
         return Result.ok(configService.create(dto));
     }
 
@@ -90,7 +90,7 @@ public class ConfigController {
     @OperationLog(module = "系统配置", action = "删除配置", bizType = "CONFIG")
     @DeleteMapping("/{id}")
     public Result<Void> delete(
-            @Parameter(description = "配置ID") @PathVariable @Min(1) Long id) {
+            @Parameter(description = "配置ID") @PathVariable @NotBlank String id) {
         configService.delete(id);
         return Result.ok();
     }

@@ -29,7 +29,7 @@ public interface OperationLogMapper extends BaseMapper<OperationLogDO> {
      * @param limit  最大条数
      * @return 操作日志列表
      */
-    java.util.List<OperationLogDO> selectByUser(@Param("userId") Long userId,
+    java.util.List<OperationLogDO> selectByUser(@Param("userId") String userId,
                                                 @Param("limit") int limit);
 
     /**

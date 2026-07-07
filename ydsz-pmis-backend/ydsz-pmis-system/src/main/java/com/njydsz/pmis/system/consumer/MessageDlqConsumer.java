@@ -102,7 +102,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
                     msgId, originTopic, reconsumeTimes));
             logDO.setTopic(originTopic);
             logDO.setReconsumeTimes(reconsumeTimes);
-            logDO.setTenantId(1L);
+            logDO.setTenantId("1");
             messageLogMapper.insert(logDO);
         } catch (Exception e) {
             // 落库失败仅记录日志，不抛出（避免 DLQ 循环重投）

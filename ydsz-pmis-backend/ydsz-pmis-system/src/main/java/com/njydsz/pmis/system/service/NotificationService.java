@@ -41,7 +41,7 @@ public interface NotificationService {
      * @param query  查询条件（分类/级别/已读状态）
      * @return 通知分页结果
      */
-    Page<NotificationDO> inbox(Long userId, NotificationQueryDTO query);
+    Page<NotificationDO> inbox(String userId, NotificationQueryDTO query);
 
     /**
      * 未读数量
@@ -49,7 +49,7 @@ public interface NotificationService {
      * @param userId 接收人 ID
      * @return 未读通知数
      */
-    long countUnread(Long userId);
+    long countUnread(String userId);
 
     /**
      * 标记已读
@@ -58,7 +58,7 @@ public interface NotificationService {
      * @param id     通知 ID
      * @return 是否标记成功（通知不存在或不属于该用户时返回 false）
      */
-    boolean markRead(Long userId, Long id);
+    boolean markRead(String userId, String id);
 
     /**
      * 全部标记已读
@@ -66,7 +66,7 @@ public interface NotificationService {
      * @param userId 接收人 ID
      * @return 实际标记条数
      */
-    int markAllRead(Long userId);
+    int markAllRead(String userId);
 
     /**
      * 删除（逻辑）
@@ -74,7 +74,7 @@ public interface NotificationService {
      * @param userId 接收人 ID（仅允许删除属于自己的通知）
      * @param ids    通知 ID 列表
      */
-    void delete(Long userId, List<Long> ids);
+    void delete(String userId, List<String> ids);
 
     /**
      * 邮件投递结果

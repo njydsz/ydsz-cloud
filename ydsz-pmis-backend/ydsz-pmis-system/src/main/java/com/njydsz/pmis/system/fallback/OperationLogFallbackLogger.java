@@ -65,7 +65,7 @@ public class OperationLogFallbackLogger {
             String action,
             String bizType,
             String bizId,
-            Long userId,
+            String userId,
             String username,
             String status,
             String errorMessage

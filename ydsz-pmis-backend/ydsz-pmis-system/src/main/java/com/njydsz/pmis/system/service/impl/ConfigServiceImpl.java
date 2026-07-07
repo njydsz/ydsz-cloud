@@ -95,7 +95,7 @@ public class ConfigServiceImpl implements ConfigService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ConfigDO getById(Long id) {
+    public ConfigDO getById(String id) {
         ConfigDO c = configMapper.selectById(id);
         if (c == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "配置不存在");
@@ -171,7 +171,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public Long create(ConfigFormDTO dto) {
+    public String create(ConfigFormDTO dto) {
         if (dto.getValueType() == null
                 || !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "valueType 必须是 STRING/NUMBER/BOOLEAN/JSON");
@@ -268,7 +268,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public void delete(Long id) {
+    public void delete(String id) {
         ConfigDO c = configMapper.selectById(id);
         if (c == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "配置不存在");

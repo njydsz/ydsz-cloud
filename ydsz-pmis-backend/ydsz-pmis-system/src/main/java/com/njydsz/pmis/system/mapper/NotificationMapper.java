@@ -27,7 +27,7 @@ public interface NotificationMapper extends BaseMapper<NotificationDO> {
      */
     @Update("UPDATE pmis_notification SET read_status = 1, read_time = CURRENT_TIMESTAMP " +
             "WHERE id = #{id} AND receiver_id = #{userId} AND read_status = 0 AND deleted = 0")
-    int markRead(@Param("id") Long id, @Param("userId") Long userId);
+    int markRead(@Param("id") String id, @Param("userId") String userId);
 
     /**
      * 全部标记已读
@@ -37,7 +37,7 @@ public interface NotificationMapper extends BaseMapper<NotificationDO> {
      */
     @Update("UPDATE pmis_notification SET read_status = 1, read_time = CURRENT_TIMESTAMP " +
             "WHERE receiver_id = #{userId} AND read_status = 0 AND deleted = 0")
-    int markAllRead(@Param("userId") Long userId);
+    int markAllRead(@Param("userId") String userId);
 
     /**
      * 未读数量
@@ -47,5 +47,5 @@ public interface NotificationMapper extends BaseMapper<NotificationDO> {
      */
     @Select("SELECT COUNT(*) FROM pmis_notification " +
             "WHERE receiver_id = #{userId} AND read_status = 0 AND deleted = 0")
-    Long countUnread(@Param("userId") Long userId);
+    Long countUnread(@Param("userId") String userId);
 }

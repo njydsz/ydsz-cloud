@@ -25,5 +25,5 @@ public interface UserServiceClient {
      * @return 统一响应结果，包含员工信息映射
      */
     @GetMapping("/user/employee/{id}")
-    Result<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
+    Result<Map<String, Object>> getEmployee(@PathVariable("id") String id);
 }

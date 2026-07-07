@@ -41,7 +41,7 @@ public class TwoFactorController {
     @Operation(summary = "发起 TOTP 绑定")
     @PostMapping("/bind")
     public Result<TwoFactorBindResult> bind() {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         String account = SecurityContext.getUsername();
         return Result.ok(service.bindTotp(userId, account));
     }
@@ -55,7 +55,7 @@ public class TwoFactorController {
     @Operation(summary = "校验 OTP 完成绑定")
     @PostMapping("/confirm")
     public Result<Boolean> confirm(@RequestParam String otp) {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         return Result.ok(service.confirmBind(userId, otp));
     }
 
@@ -68,7 +68,7 @@ public class TwoFactorController {
     @Operation(summary = "校验 2FA 码（用于登录第二步）")
     @PostMapping("/verify")
     public Result<Boolean> verify(@RequestParam String otp) {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         return Result.ok(service.verify(userId, otp));
     }
 
@@ -81,7 +81,7 @@ public class TwoFactorController {
     @Operation(summary = "使用备份码")
     @PostMapping("/verify-backup")
     public Result<Boolean> verifyBackup(@RequestParam String code) {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         return Result.ok(service.verifyBackup(userId, code));
     }
 
@@ -93,7 +93,7 @@ public class TwoFactorController {
     @Operation(summary = "关闭 2FA")
     @PostMapping("/disable")
     public Result<Void> disable() {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         service.disable(userId);
         return Result.ok();
     }
@@ -106,7 +106,7 @@ public class TwoFactorController {
     @Operation(summary = "查询我的 2FA 状态")
     @GetMapping("/me")
     public Result<User2FADO> me() {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         return Result.ok(service.find(userId));
     }
 
@@ -118,7 +118,7 @@ public class TwoFactorController {
     @Operation(summary = "查询备份码（脱敏）")
     @GetMapping("/backup-codes")
     public Result<List<String>> backupCodes() {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         return Result.ok(service.listBackupCodesMasked(userId));
     }
 }

@@ -50,7 +50,7 @@ public class MessageTemplateController {
     @Operation(summary = "创建模板")
     @PrePermission("notif:message:send")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody MessageTemplateDTO dto) {
+    public Result<String> create(@Valid @RequestBody MessageTemplateDTO dto) {
         return Result.ok(templateService.create(dto.toDO()));
     }
 
@@ -80,7 +80,7 @@ public class MessageTemplateController {
     @PrePermission("notif:message:send")
     @DeleteMapping("/{id}")
     public Result<Void> delete(
-            @Parameter(description = "模板ID") @PathVariable @Min(1) Long id) {
+            @Parameter(description = "模板ID") @PathVariable String id) {
         templateService.delete(id);
         return Result.ok();
     }
@@ -95,7 +95,7 @@ public class MessageTemplateController {
     @PrePermission("notif:message:send")
     @GetMapping("/{id}")
     public Result<MessageTemplateDO> get(
-            @Parameter(description = "模板ID") @PathVariable @Min(1) Long id) {
+            @Parameter(description = "模板ID") @PathVariable String id) {
         return Result.ok(templateService.getById(id));
     }
 
@@ -139,7 +139,7 @@ public class MessageTemplateController {
     @lombok.Data
     public static class MessageTemplateDTO {
         /** 模板 ID */
-        private Long id;
+        private String id;
         /** 模板编码 */
         private String templateCode;
         /** 通道 */

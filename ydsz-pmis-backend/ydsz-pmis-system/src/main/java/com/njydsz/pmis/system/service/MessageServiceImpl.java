@@ -164,11 +164,11 @@ public class MessageServiceImpl implements MessageService {
      * @return 模板对象，不存在时返回 null
      */
     @Override
-    public MessageTemplateDO loadTemplate(String templateCode, String channel, Long tenantId) {
+    public MessageTemplateDO loadTemplate(String templateCode, String channel, String tenantId) {
         if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
             return null;
         }
-        if (tenantId == null) tenantId = 1L;
+        if (tenantId == null) tenantId = "1";
         return messageTemplateMapper.selectByCodeAndChannel(templateCode, channel.toUpperCase(), tenantId);
     }
 

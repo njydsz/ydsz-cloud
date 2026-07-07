@@ -52,7 +52,7 @@ public class SessionController {
     @Operation(summary = "我的活跃会话")
     @GetMapping("/active")
     public Result<List<UserSessionDO>> active() {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         return Result.ok(sessionService.listActive(userId));
     }
 
@@ -77,7 +77,7 @@ public class SessionController {
     @Operation(summary = "下线其他会话（同账号仅保留当前）")
     @DeleteMapping("/others")
     public Result<Integer> kickOthers() {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         return Result.ok(sessionService.kickOthers(userId, ""));
     }
 
@@ -96,7 +96,7 @@ public class SessionController {
     public Result<PageResult<UserSessionDO>> adminPage(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String userId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String clientIp) {
         Page<UserSessionDO> p = new Page<>(page, size);

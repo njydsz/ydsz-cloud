@@ -26,7 +26,7 @@ public interface MessageTemplateMapper extends BaseMapper<MessageTemplateDO> {
      */
     MessageTemplateDO selectByCodeAndChannel(@Param("code") String code,
                                               @Param("channel") String channel,
-                                              @Param("tenantId") Long tenantId);
+                                              @Param("tenantId") String tenantId);
 
     /**
      * 按通道 + 租户列出全部启用模板
@@ -36,5 +36,5 @@ public interface MessageTemplateMapper extends BaseMapper<MessageTemplateDO> {
      * @return 模板列表
      */
     List<MessageTemplateDO> selectByChannel(@Param("channel") String channel,
-                                            @Param("tenantId") Long tenantId);
+                                            @Param("tenantId") String tenantId);
 }

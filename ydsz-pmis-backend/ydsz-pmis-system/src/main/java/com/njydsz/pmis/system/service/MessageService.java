@@ -48,8 +48,8 @@ public interface MessageService {
      *
      * @param templateCode 模板编码
      * @param channel      通道（大写）
-     * @param tenantId     租户 ID（为空时默认 1L）
+     * @param tenantId     租户 ID（为空时默认 "1"）
      * @return 模板实体，不存在返回 null
      */
-    MessageTemplateDO loadTemplate(String templateCode, String channel, Long tenantId);
+    MessageTemplateDO loadTemplate(String templateCode, String channel, String tenantId);
 }

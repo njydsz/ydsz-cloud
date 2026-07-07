@@ -88,7 +88,7 @@ public class NotificationController {
     @Operation(summary = "标记已读")
     @PostMapping("/{id}/read")
     public Result<Boolean> markRead(
-            @Parameter(description = "通知ID") @PathVariable @Min(1) Long id) {
+            @Parameter(description = "通知ID") @PathVariable String id) {
         return Result.ok(notificationService.markRead(SecurityContext.getUserId(), id));
     }
 
@@ -112,7 +112,7 @@ public class NotificationController {
     @Operation(summary = "删除通知")
     @OperationLog(module = "通知中心", action = "删除通知", bizType = "NOTIF")
     @DeleteMapping
-    public Result<Void> delete(@RequestBody List<Long> ids) {
+    public Result<Void> delete(@RequestBody List<String> ids) {
         notificationService.delete(SecurityContext.getUserId(), ids);
         return Result.ok();
     }
@@ -132,7 +132,7 @@ public class NotificationController {
     @PrePermission(PermissionCodes.NOTIF_PUSH)
     @PostMapping("/push")
     public Result<Map<String, Object>> push(
-            @Parameter(description = "接收用户ID") @RequestParam Long userId,
+            @Parameter(description = "接收用户ID") @RequestParam String userId,
             @Parameter(description = "消息类型") @RequestParam String type,
             @RequestBody RealtimePushDTO payload) {
         Object data = payload != null ? payload.getData() : null;

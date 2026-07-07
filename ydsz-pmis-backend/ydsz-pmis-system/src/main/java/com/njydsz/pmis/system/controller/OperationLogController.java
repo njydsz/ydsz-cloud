@@ -62,7 +62,7 @@ public class OperationLogController {
     public Result<PageResult<OperationLogDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "用户ID") @RequestParam(required = false) String userId,
             @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "模块名") @RequestParam(required = false) String module,
@@ -97,7 +97,7 @@ public class OperationLogController {
     public Result<CursorPageResult<OperationLogDO>> cursorPage(
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "游标（首次请求不传）") @RequestParam(required = false) String cursor,
-            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "用户ID") @RequestParam(required = false) String userId,
             @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "模块名") @RequestParam(required = false) String module,
@@ -121,7 +121,7 @@ public class OperationLogController {
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/by-user")
     public Result<List<OperationLogDO>> byUser(
-            @Parameter(description = "用户ID") @RequestParam Long userId,
+            @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
         return Result.ok(service.listByUser(userId, limit));
     }
@@ -169,7 +169,7 @@ public class OperationLogController {
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/{id}/diff")
     public List<DiffCalculator.FieldDiff> getDiff(
-            @Parameter(description = "操作日志ID") @PathVariable @Min(1) Long id) {
+            @Parameter(description = "操作日志ID") @PathVariable String id) {
         OperationLogDO log = service.getById(id);
         if (log == null) return List.of();
         return DiffCalculator.calculateDiff(log.getBeforeData(), log.getAfterData());

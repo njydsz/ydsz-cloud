@@ -61,7 +61,7 @@ public class AuthFeignController {
      */
     @Operation(summary = "根据用户 ID 加载登录上下文")
     @GetMapping("/context/by-id")
-    public Result<LoginContextDTO> getLoginContextById(@RequestParam Long userId) {
+    public Result<LoginContextDTO> getLoginContextById(@RequestParam String userId) {
         return Result.ok(buildContext(userAccountService.findById(userId)));
     }
 

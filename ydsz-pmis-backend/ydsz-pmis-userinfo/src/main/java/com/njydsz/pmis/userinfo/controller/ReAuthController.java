@@ -43,7 +43,7 @@ public class ReAuthController {
     @Operation(summary = "颁发二次认证 token")
     @PostMapping("/token")
     public Result<ReAuthResult> issueToken(@Valid @RequestBody ReAuthRequest request) {
-        Long userId = SecurityContext.getUserId();
+        String userId = SecurityContext.getUserId();
         return Result.ok(reAuthService.issueToken(userId, request));
     }
 }

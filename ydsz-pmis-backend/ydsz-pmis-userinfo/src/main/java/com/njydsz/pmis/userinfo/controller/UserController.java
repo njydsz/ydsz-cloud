@@ -68,7 +68,7 @@ public class UserController {
     @Operation(summary = "用户详情")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}")
-    public Result<UserVO> get(@Parameter(description = "用户ID") @PathVariable @Min(1) Long id) {
+    public Result<UserVO> get(@Parameter(description = "用户ID") @PathVariable String id) {
         return Result.ok(userAccountService.findVoById(id));
     }
 
@@ -111,10 +111,10 @@ public class UserController {
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_7aa2293e}")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody UserCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody UserCreateDTO dto) {
         String username = dto.getUsername();
         String password = dto.getPassword();
-        Long employeeId = dto.getEmployeeId();
+        String employeeId = dto.getEmployeeId();
         // @NotBlank + @Size 已校验 username/password，移除手动校验
         UserAccountDO u = new UserAccountDO();
         u.setUsername(username);
@@ -151,7 +151,7 @@ public class UserController {
     @RequireReAuth(code = "USER_DELETE", name = "删除用户")
     @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "用户ID") @PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "用户ID") @PathVariable String id) {
         userAccountService.delete(id);
         return Result.ok();
     }
@@ -170,7 +170,7 @@ public class UserController {
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_538560c7}")
     @PostMapping("/{id}/reset-password")
-    public Result<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable @Min(1) Long id,
+    public Result<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable String id,
                                       @Valid @RequestBody PasswordResetDTO dto) {
         userAccountService.resetPassword(id, dto.getNewPassword());
         return Result.ok();
@@ -187,7 +187,7 @@ public class UserController {
     @PrePermission("auth:user:toggle")
     @OperationLog(module = "权限管理", action = "切换状态", bizType = "USER")
     @PostMapping("/{id}/status")
-    public Result<Void> toggleStatus(@Parameter(description = "用户ID") @PathVariable @Min(1) Long id, @Parameter(description = "目标状态") @RequestParam @NotBlank String status) {
+    public Result<Void> toggleStatus(@Parameter(description = "用户ID") @PathVariable String id, @Parameter(description = "目标状态") @RequestParam @NotBlank String status) {
         userAccountService.toggleStatus(id, status);
         return Result.ok();
     }
@@ -203,7 +203,7 @@ public class UserController {
     @PrePermission("auth:user:assign")
     @OperationLog(module = "权限管理", action = "分配角色", bizType = "USER")
     @PutMapping("/{id}/roles")
-    public Result<Void> assignRoles(@Parameter(description = "用户ID") @PathVariable @Min(1) Long id, @Valid @RequestBody List<Long> roleIds) {
+    public Result<Void> assignRoles(@Parameter(description = "用户ID") @PathVariable String id, @Valid @RequestBody List<String> roleIds) {
         userAccountService.assignRoles(id, roleIds);
         return Result.ok();
     }
@@ -217,7 +217,7 @@ public class UserController {
     @Operation(summary = "查询用户角色 ID 列表")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}/roles")
-    public Result<List<Long>> listRoles(@Parameter(description = "用户ID") @PathVariable @Min(1) Long id) {
+    public Result<List<String>> listRoles(@Parameter(description = "用户ID") @PathVariable String id) {
         return Result.ok(userAccountService.listRoleIds(id));
     }
 }

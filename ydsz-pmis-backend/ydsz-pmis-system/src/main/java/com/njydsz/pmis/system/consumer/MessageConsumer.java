@@ -193,7 +193,7 @@ public class MessageConsumer implements RocketMQListener<String> {
             logDO.setMsgId(request.getMessageId());
             logDO.setTopic(PmisMessageTopics.TOPIC_MESSAGE);
             logDO.setReconsumeTimes(0);
-            logDO.setTenantId(1L);
+            logDO.setTenantId("1");
             messageLogMapper.insert(logDO);
         } catch (Exception logEx) {
             // 日志落库失败不影响主流程，仅记录

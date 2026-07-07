@@ -40,7 +40,7 @@ public interface ConfigService {
      * @param id 配置 ID
      * @return 配置实体
      */
-    ConfigDO getById(Long id);
+    ConfigDO getById(String id);
 
     /**
      * 按 group + key 查配置
@@ -72,7 +72,7 @@ public interface ConfigService {
      * @param dto 配置表单
      * @return 配置 ID
      */
-    Long create(ConfigFormDTO dto);
+    String create(ConfigFormDTO dto);
 
     /**
      * 更新配置
@@ -86,7 +86,7 @@ public interface ConfigService {
      *
      * @param id 配置 ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 批量按 group 删除（清理整个分组的配置）
