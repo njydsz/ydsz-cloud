@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 
+import java.util.List;
+
 /**
  * 任务调度服务
  *
@@ -79,6 +81,46 @@ public interface JobService {
      * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
      */
     String trigger(String id, boolean holdLock);
+
+    /**
+     * 批量暂停任务
+     *
+     * <p>逐个调用 {@link #pause(String)}，单条失败不影响其他任务。
+     *
+     * @param jobIds 任务 ID 列表
+     * @return 成功处理的数量
+     */
+    int batchPause(List<String> jobIds);
+
+    /**
+     * 批量恢复任务
+     *
+     * <p>逐个调用 {@link #resume(String)}，单条失败不影响其他任务。
+     *
+     * @param jobIds 任务 ID 列表
+     * @return 成功处理的数量
+     */
+    int batchResume(List<String> jobIds);
+
+    /**
+     * 批量触发任务
+     *
+     * <p>逐个调用 {@link #trigger(String)}，单条失败不影响其他任务。
+     *
+     * @param jobIds 任务 ID 列表
+     * @return 成功处理的数量
+     */
+    int batchTrigger(List<String> jobIds);
+
+    /**
+     * 批量删除任务
+     *
+     * <p>逐个调用 {@link #delete(String)}，单条失败不影响其他任务。
+     *
+     * @param jobIds 任务 ID 列表
+     * @return 成功处理的数量
+     */
+    int batchDelete(List<String> jobIds);
 
     /**
      * 注册到调度器（从 DB 加载/动态新增）

@@ -2,6 +2,7 @@ package com.njydsz.pmis.agent.tool;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -10,12 +11,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 风险事件查询工具（P1-1 落地）
+ * 风险事件查询工具（P1-1 落地，P1-5 改造支持真实数据源切换）
  *
  * <p>内置 Agent 工具，用于按严重级别查询项目风险事件列表。
  * 由 {@link ToolRegistry} 自动收集，可被 LLM 通过 function-calling 调用。
  *
- * <p>当前为模拟数据实现，后续将接入真实数据源。
+ * <p>数据源切换：通过 {@code pmis.agent.tool.mock-enabled} 配置控制
+ * <ul>
+ *   <li>{@code true}（默认）：返回模拟数据，适用于开发/测试环境</li>
+ *   <li>{@code false}：调用 {@link #fetchRealData} 获取真实数据，需子类或后续实现覆盖</li>
+ * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0 (P1-1)
@@ -26,6 +31,19 @@ public class RiskEventQueryTool implements AgentTool {
 
     /** 默认严重级别：全部 */
     private static final String DEFAULT_SEVERITY = "ALL";
+
+    /**
+     * 是否使用模拟数据（true=模拟，false=真实数据源）。
+     *
+     * <p>字段默认值为 {@code true}，保证在以下场景都安全降级到 mock 数据：
+     * <ul>
+     *   <li>单元测试直接 new 实例（无 Spring 容器，@Value 不生效）</li>
+     *   <li>配置文件未配置该项（@Value 默认值也是 true）</li>
+     * </ul>
+     * Spring 环境下 {@code @Value} 注入的值会覆盖此默认值。
+     */
+    @Value("${pmis.agent.tool.mock-enabled:true}")
+    protected boolean mockEnabled = true;
 
     @Override
     public String name() {
@@ -48,12 +66,10 @@ public class RiskEventQueryTool implements AgentTool {
     @Override
     public ToolResult execute(Map<String, Object> parameters, AgentContext ctx) {
         // 解析参数：projectId 必填，severity 可选（默认 ALL）
-        // parameters 可能为 null（防御性判空，避免 NPE）
         Map<String, Object> safeParams = parameters == null ? Map.of() : parameters;
         String projectId = safeParams.get("projectId") == null
                 ? null
                 : String.valueOf(safeParams.get("projectId"));
-        // projectId 为空时兜底到 ctx.getBizRef()
         if (projectId == null || projectId.isBlank() || "null".equals(projectId)) {
             projectId = ctx == null ? null : ctx.getBizRef();
         }
@@ -61,27 +77,12 @@ public class RiskEventQueryTool implements AgentTool {
                 ? DEFAULT_SEVERITY
                 : String.valueOf(safeParams.get("severity")).toUpperCase();
 
-        log.info("[risk_events] 查询风险事件: projectId={}, severity={}, traceId={}",
-                projectId, severity, ctx == null ? null : ctx.getTraceId());
+        log.info("[risk_events] 查询风险事件: projectId={}, severity={}, traceId={}, mockEnabled={}",
+                projectId, severity, ctx == null ? null : ctx.getTraceId(), mockEnabled);
 
-        // 按严重级别收集风险事件（模拟数据）
-        List<Map<String, Object>> events = new ArrayList<>();
-
-        // 高风险事件：进度延期、成本超支
-        if ("HIGH".equals(severity) || "ALL".equals(severity)) {
-            events.add(buildEvent("进度延期", "HIGH", "项目关键路径任务延期，可能影响里程碑达成"));
-            events.add(buildEvent("成本超支", "HIGH", "项目实际成本超出预算 15%"));
-        }
-
-        // 中风险事件：资源不足
-        if ("MEDIUM".equals(severity) || "ALL".equals(severity)) {
-            events.add(buildEvent("资源不足", "MEDIUM", "核心研发人员配置不足，影响交付节奏"));
-        }
-
-        // 低风险事件：需求变更
-        if ("LOW".equals(severity) || "ALL".equals(severity)) {
-            events.add(buildEvent("需求变更", "LOW", "客户提出新增功能需求，需评估范围影响"));
-        }
+        List<Map<String, Object>> events = mockEnabled
+                ? fetchMockData(projectId, severity)
+                : fetchRealData(projectId, severity, ctx);
 
         // 构建文本输出（LLM 可读的观察结果）
         StringBuilder output = new StringBuilder();
@@ -97,7 +98,6 @@ public class RiskEventQueryTool implements AgentTool {
             }
         }
 
-        // 构建结构化数据
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("projectId", projectId);
         data.put("severity", severity);
@@ -108,12 +108,47 @@ public class RiskEventQueryTool implements AgentTool {
     }
 
     /**
-     * 构建单个风险事件数据。
+     * 获取模拟风险事件数据（开发/测试环境使用）。
      *
-     * @param name        事件名称
-     * @param severity    严重级别（HIGH / MEDIUM / LOW）
-     * @param description 事件描述
-     * @return 风险事件数据 Map
+     * @param projectId 项目 ID
+     * @param severity  严重级别（HIGH / MEDIUM / LOW / ALL）
+     * @return 风险事件列表
+     */
+    protected List<Map<String, Object>> fetchMockData(String projectId, String severity) {
+        List<Map<String, Object>> events = new ArrayList<>();
+        if ("HIGH".equals(severity) || "ALL".equals(severity)) {
+            events.add(buildEvent("进度延期", "HIGH", "项目关键路径任务延期，可能影响里程碑达成"));
+            events.add(buildEvent("成本超支", "HIGH", "项目实际成本超出预算 15%"));
+        }
+        if ("MEDIUM".equals(severity) || "ALL".equals(severity)) {
+            events.add(buildEvent("资源不足", "MEDIUM", "核心研发人员配置不足，影响交付节奏"));
+        }
+        if ("LOW".equals(severity) || "ALL".equals(severity)) {
+            events.add(buildEvent("需求变更", "LOW", "客户提出新增功能需求，需评估范围影响"));
+        }
+        return events;
+    }
+
+    /**
+     * 获取真实风险事件数据（生产环境使用）。
+     *
+     * <p>当前为占位实现，后续接入真实风险事件数据源后覆盖此方法。
+     * 建议通过 Feign 调用 execution 模块的风险查询接口。
+     *
+     * @param projectId 项目 ID
+     * @param severity  严重级别
+     * @param ctx       Agent 上下文
+     * @return 风险事件列表
+     * @throws UnsupportedOperationException 当未实现真实数据源时抛出
+     */
+    protected List<Map<String, Object>> fetchRealData(String projectId, String severity, AgentContext ctx) {
+        // TODO P1-5: 接入真实风险事件数据源（execution 模块 Feign 调用）
+        throw new UnsupportedOperationException(
+                "RiskEventQueryTool 真实数据源未实现，请配置 pmis.agent.tool.mock-enabled=true 或实现 fetchRealData 方法");
+    }
+
+    /**
+     * 构建单个风险事件数据。
      */
     private Map<String, Object> buildEvent(String name, String severity, String description) {
         Map<String, Object> event = new LinkedHashMap<>();

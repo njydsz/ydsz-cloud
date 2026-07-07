@@ -267,6 +267,119 @@ class ChatMemoryTest {
         }
     }
 
+    // ==================== LRU + 容量上限测试（P1-8） ====================
+
+    @Nested
+    @DisplayName("LRU 与容量上限测试（P1-8）")
+    class LruAndCapacityTest {
+
+        @Test
+        @DisplayName("超过 maxSessions 时活跃会话数不超过上限（LRU 淘汰）")
+        void shouldEvictOldSessionsWhenExceedCapacity() {
+            // 使用小容量方便测试：maxSessions=5
+            ChatMemory small = new ChatMemory(100, 1, 5, 30);
+
+            // 写入 8 个会话，超过容量 5
+            for (int i = 0; i < 8; i++) {
+                small.addMessage("sess-" + i, ChatMessage.user("msg-" + i));
+            }
+
+            // 活跃会话数不应超过上限
+            assertThat(small.getActiveSessionCount()).isLessThanOrEqualTo(5);
+        }
+
+        @Test
+        @DisplayName("超过容量时触发淘汰：至少淘汰一个旧会话，总数不超过上限")
+        void shouldEvictAtLeastOneSessionWhenOverCapacity() {
+            // Caffeine 使用 W-TinyLFU（非严格 LRU），此处验证可靠的容量上限与淘汰触发
+            ChatMemory small = new ChatMemory(100, 1, 3, 30);
+
+            // 写入 4 个会话，超过容量 3
+            small.addMessage("s1", ChatMessage.user("m1"));
+            small.addMessage("s2", ChatMessage.user("m2"));
+            small.addMessage("s3", ChatMessage.user("m3"));
+            small.addMessage("s4", ChatMessage.user("m4"));
+            // 触发 cleanUp 使淘汰即时生效
+            int active = small.getActiveSessionCount();
+
+            // 活跃会话数不超过上限
+            assertThat(active).isLessThanOrEqualTo(3);
+            // 4 个会话中至少有一个被淘汰（getMessageCount 返回 0）
+            int evictedCount = 0;
+            for (int i = 1; i <= 4; i++) {
+                if (small.getMessageCount("s" + i) == 0) {
+                    evictedCount++;
+                }
+            }
+            assertThat(evictedCount).isGreaterThanOrEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("高压力写入：会话数始终不超过 maxSessions 上限（防 OOM）")
+        void shouldNeverExceedCapacityUnderHeavyChurn() {
+            // Caffeine W-TinyLFU 的具体淘汰对象在单元测试中难以确定性断言，
+            // 此处验证 P1-8 的核心保证：无论写入多少会话，活跃数始终受 maxSessions 上限约束
+            ChatMemory mem = new ChatMemory(100, 1, 10, 30);
+
+            // 写入远超容量的会话
+            for (int i = 0; i < 100; i++) {
+                mem.addMessage("sess-" + i, ChatMessage.user("msg-" + i));
+            }
+
+            // 最终活跃会话数不超过上限（getActiveSessionCount 内部会触发 cleanUp）
+            assertThat(mem.getActiveSessionCount()).isLessThanOrEqualTo(10);
+            // 幸存的会话仍可正常读取（只读副本）
+            int surviving = 0;
+            for (int i = 0; i < 100; i++) {
+                if (mem.getMessageCount("sess-" + i) > 0) {
+                    surviving++;
+                    assertThat(mem.getHistory("sess-" + i)).isNotEmpty();
+                }
+            }
+            assertThat(surviving).isLessThanOrEqualTo(10);
+            assertThat(surviving).isGreaterThan(0);
+        }
+
+        @Test
+        @DisplayName("clearAll 后所有会话被清除")
+        void shouldClearAllSessionsInCaffeine() {
+            ChatMemory small = new ChatMemory(100, 1, 10, 30);
+            small.addMessage("s1", ChatMessage.user("m1"));
+            small.addMessage("s2", ChatMessage.user("m2"));
+            assertThat(small.getActiveSessionCount()).isEqualTo(2);
+
+            small.clearAll();
+
+            assertThat(small.getActiveSessionCount()).isEqualTo(0);
+            assertThat(small.getMessageCount("s1")).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("默认构造器使用默认容量与过期时间，无异常")
+        void shouldCreateWithDefaults() {
+            ChatMemory mem = new ChatMemory();
+            mem.addMessage("s1", ChatMessage.user("hello"));
+            assertThat(mem.getMessageCount("s1")).isEqualTo(1);
+            // 默认容量上限 1000，活跃会话数远小于此
+            assertThat(mem.getActiveSessionCount()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("过期会话：getHistory 返回空（模拟过期后读取）")
+        void shouldReturnEmptyForEvictedSession() {
+            // 使用 1 个会话容量 + 写入 2 个会话淘汰第一个
+            ChatMemory tiny = new ChatMemory(100, 1, 1, 30);
+            tiny.addMessage("only", ChatMessage.user("first"));
+            tiny.addMessage("next", ChatMessage.user("second"));
+            // 触发 cleanUp 使淘汰即时生效
+            tiny.getActiveSessionCount();
+
+            // only 被淘汰，getHistory 返回空
+            assertThat(tiny.getHistory("only")).isEmpty();
+            assertThat(tiny.getMessageCount("only")).isEqualTo(0);
+        }
+    }
+
     // ==================== 辅助方法 ====================
 
     /** 验证列表是不可变的（修改应抛 UnsupportedOperationException） */

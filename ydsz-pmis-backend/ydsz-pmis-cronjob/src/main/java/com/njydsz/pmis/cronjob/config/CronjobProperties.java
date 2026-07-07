@@ -65,6 +65,15 @@ public class CronjobProperties {
     /** 告警扫描配置（P3-2 新增：周期性告警扫描使用） */
     private Alert alert = new Alert();
 
+    /** P1-1: 节点发现策略配置（Nacos 服务发现 / 心跳表） */
+    private NodeDiscovery nodeDiscovery = new NodeDiscovery();
+
+    /** P1-4: 失败自动转移（FailoverScanner）配置 */
+    private Failover failover = new Failover();
+
+    /** P2-2: 日志归档清理配置 */
+    private LogRetention logRetention = new LogRetention();
+
     /**
      * 校验并规整化 TTL 值。
      *
@@ -152,6 +161,22 @@ public class CronjobProperties {
 
         /** P1-7: 线程名前缀 */
         private String threadNamePrefix = "job-exec-";
+
+        /**
+         * P2-5: 线程池隔离策略。
+         * <ul>
+         *   <li>{@code none}（默认）：所有租户共享全局线程池</li>
+         *   <li>{@code tenant}：按 tenantId 隔离，每个租户独立线程池</li>
+         *   <li>{@code job_group}：按 jobGroup 隔离，每个分组独立线程池</li>
+         * </ul>
+         */
+        private String isolationStrategy = "none";
+
+        /** P2-5: 每个租户/分组独立线程池的核心线程数 */
+        private int tenantPoolSize = 10;
+
+        /** P2-5: 每个租户/分组独立线程池的队列容量 */
+        private int tenantPoolQueueCapacity = 200;
     }
 
     /**
@@ -252,6 +277,76 @@ public class CronjobProperties {
     public static class Alert {
         /** 告警扫描间隔（毫秒，默认 5 分钟） */
         private long scanIntervalMs = 300000L;
+    }
+
+    /**
+     * P1-1: 节点发现策略配置。
+     *
+     * <p>控制执行器节点发现方式：
+     * <ul>
+     *   <li>{@code nacos}（默认）：基于 Nacos 服务发现，复用现有注册能力，无需维护心跳表</li>
+     *   <li>{@code db}：基于 pmis_job_node 心跳表（向后兼容，需配合 JobNodeHeartbeat + JobNodeReaper）</li>
+     * </ul>
+     */
+    @Data
+    public static class NodeDiscovery {
+        /** 节点发现策略: nacos(Nacos服务发现, 默认) / db(心跳表) */
+        private String type = "nacos";
+    }
+
+    /**
+     * P1-4: 失败自动转移配置（FailoverScanner）。
+     *
+     * <p>当执行器节点宕机后，Leader 节点定时扫描该节点上 RUNNING 状态的任务日志，
+     * 标记为 FAILED 后以 triggerType=FAILOVER 重新派发任务。
+     *
+     * <h3>工作流程</h3>
+     * <ol>
+     *   <li>获取在线节点列表（Nacos 或 DB 心跳表）</li>
+     *   <li>查询所有 RUNNING 日志的 exec_node_id，找出不在在线列表中的下线节点</li>
+     *   <li>对每个下线节点：
+     *     <ul>
+     *       <li>调用 selectRunningByNode 获取 RUNNING 日志</li>
+     *       <li>调用 markFailedByNodeOffline 标记为 FAILED</li>
+     *       <li>对每条失败日志，若任务仍为 NORMAL 状态，重新派发（triggerType=FAILOVER）</li>
+     *     </ul>
+     *   </li>
+     * </ol>
+     */
+    @Data
+    public static class Failover {
+        /** 是否启用故障转移扫描 */
+        private boolean enabled = true;
+        /** 扫描间隔（秒） */
+        private int scanIntervalSeconds = 30;
+        /** 单批最多扫描节点数 */
+        private int scanNodeLimit = 10;
+        /** 单节点最多转移任务数 */
+        private int failoverTaskLimit = 50;
+    }
+
+    /**
+     * P2-2: 日志归档清理配置。
+     *
+     * <p>控制 {@link com.njydsz.pmis.cronjob.core.cleaner.LogCleaner} 的清理行为：
+     * <ul>
+     *   <li>{@link #retentionDays} 日志保留天数（超过此天数的日志将被清理，默认 30 天）</li>
+     *   <li>{@link #batchSize} 单批删除条数（避免大事务锁表，默认 1000 条/批）</li>
+     * </ul>
+     *
+     * <p>清理范围：pmis_job_log / pmis_job_log_content / pmis_job_slow_log /
+     * pmis_job_alert_log / pmis_job_task，每天凌晨 3 点由 Leader 节点执行。
+     */
+    @Data
+    public static class LogRetention {
+        /** 日志保留天数（超过此天数的日志将被硬删除，默认 30 天） */
+        private int retentionDays = 30;
+
+        /** 单批删除条数（避免大事务锁表，默认 1000 条/批） */
+        private int batchSize = 1000;
+
+        /** 定时清理 cron 表达式（默认每天凌晨 3 点：0 0 3 * * ?） */
+        private String cron = "0 0 3 * * ?";
     }
 }
 

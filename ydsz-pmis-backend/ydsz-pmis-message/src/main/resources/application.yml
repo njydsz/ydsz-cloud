@@ -105,6 +105,26 @@ pmis:
     global-daily-limit: 0
     # 全局每小时发送上限（单用户单通道，0 表示不限）
     global-hourly-limit: 0
+    # P0-1: 短信服务商配置（provider=mock 降级日志 / aliyun 真实发送）
+    sms:
+      provider: ${PMIS_SMS_PROVIDER:mock}
+      aliyun:
+        access-key-id: ${PMIS_SMS_ALIYUN_AK:}
+        access-key-secret: ${PMIS_SMS_ALIYUN_SK:}
+        sign-name: ${PMIS_SMS_ALIYUN_SIGN:}
+        endpoint: dysmsapi.aliyuncs.com
+        connect-timeout: 5000
+        read-timeout: 10000
+    # P0-2: APP 推送服务商配置（provider=mock 降级日志 / getui 真实推送）
+    push:
+      provider: ${PMIS_PUSH_PROVIDER:mock}
+      getui:
+        app-id: ${PMIS_PUSH_GETUI_APPID:}
+        app-key: ${PMIS_PUSH_GETUI_APPKEY:}
+        master-secret: ${PMIS_PUSH_GETUI_MASTER:}
+        base-url: https://restapi.getui.com
+        connect-timeout: 5000
+        read-timeout: 10000
   # Webhook 通道兜底配置
   webhook:
     default-url: ${PMIS_WEBHOOK_DEFAULT_URL:}

@@ -9,6 +9,9 @@
         <result column="job_key" property="jobKey"/>
         <result column="handler" property="handler"/>
         <result column="cron_expression" property="cronExpression"/>
+        <result column="schedule_type" property="scheduleType"/>
+        <result column="fixed_rate_ms" property="fixedRateMs"/>
+        <result column="fixed_delay_ms" property="fixedDelayMs"/>
         <result column="params_json" property="paramsJson"/>
         <result column="status" property="status"/>
         <result column="remark" property="remark"/>
@@ -21,6 +24,7 @@
         <result column="timeout_ms" property="timeoutMs"/>
         <result column="misfire_policy" property="misfirePolicy"/>
         <result column="shard_total" property="shardTotal"/>
+        <result column="timezone" property="timezone"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
@@ -30,9 +34,11 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, job_name, job_group, job_key, handler, cron_expression, params_json,
+        id, job_name, job_group, job_key, handler, cron_expression,
+        schedule_type, fixed_rate_ms, fixed_delay_ms,
+        params_json,
         status, remark, next_fire_time, last_fire_time, fire_count, success_count, fail_count,
-        lock_ttl_ms, timeout_ms, misfire_policy, shard_total, tenant_id,
+        lock_ttl_ms, timeout_ms, misfire_policy, shard_total, timezone, tenant_id,
         created_by, created_at, updated_by, updated_at, deleted
     </sql>
 
@@ -49,11 +55,13 @@
     </select>
 
     <!-- P1-7: Leader 模式扫描待触发任务，FOR UPDATE SKIP LOCKED 抢占式行锁 -->
+    <!-- P0-3: 仅扫描 CRON 类型任务（FIXED_RATE/FIXED_DELAY 由 SecondLevelScheduler 接管） -->
     <select id="selectDueJobs" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM pmis_job
         WHERE status = 'NORMAL'
           AND deleted = 0
+          AND schedule_type = 'CRON'
           AND next_fire_time IS NOT NULL
           AND next_fire_time &lt;= #{now}
         ORDER BY next_fire_time ASC

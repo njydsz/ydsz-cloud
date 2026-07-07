@@ -3,6 +3,7 @@ package com.njydsz.pmis.agent.engine.react;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
+import com.njydsz.pmis.agent.engine.memory.ChatMemory;
 import com.njydsz.pmis.agent.engine.prompt.PromptTemplateRegistry;
 import com.njydsz.pmis.agent.engine.prompt.TestPromptRegistryFactory;
 import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,6 +66,9 @@ class ReActLoopStreamTest {
     @Mock
     private LlmProvider llmProvider;
 
+    @Mock
+    private ObjectProvider<ChatMemory> chatMemoryProvider;
+
     private ToolRegistry toolRegistry;
     private ReActLoop reactLoop;
     private PromptTemplateRegistry promptRegistry;
@@ -72,7 +77,8 @@ class ReActLoopStreamTest {
     void setUp() {
         toolRegistry = new ToolRegistry(List.of());
         promptRegistry = TestPromptRegistryFactory.createWithBuiltInDefaults();
-        reactLoop = new ReActLoop(llmProviderRouter, toolRegistry, promptRegistry);
+        // chatMemoryProvider 默认返回 null（无 ChatMemory），ReActLoop 退化为无状态单轮
+        reactLoop = new ReActLoop(llmProviderRouter, toolRegistry, promptRegistry, chatMemoryProvider);
         when(llmProviderRouter.active()).thenReturn(llmProvider);
     }
 

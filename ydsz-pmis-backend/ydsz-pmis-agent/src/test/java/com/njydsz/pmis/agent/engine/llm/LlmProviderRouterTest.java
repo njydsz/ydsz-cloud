@@ -14,6 +14,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>使用真实 GenericApplicationContext 注册 stub LlmProvider Bean，不 mock ApplicationContext。
  * 使用真实 MockLlmProvider 实例，不 mock。
  *
+ * <p>P0-2 修复后：active() 按 {@code pmis.agent.llm.provider} 配置精确匹配 Provider name，
+ * 不再硬编码优先取 "spring-ai" 开头。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -22,7 +25,7 @@ class LlmProviderRouterTest {
 
     // ==================== 测试用 Stub Provider ====================
 
-    /** Stub Provider - 用于模拟 spring-ai 系列 */
+    /** Stub Provider - 用于模拟各厂商 LLM */
     static class StubLlmProvider implements LlmProvider {
         private final String name;
         private final String response;
@@ -52,37 +55,70 @@ class LlmProviderRouterTest {
         return ctx;
     }
 
-    /** 构造路由器并注入真实 MockLlmProvider */
+    /** 构造路由器，注入真实 MockLlmProvider + 指定配置的 provider name */
+    private LlmProviderRouter routerWith(GenericApplicationContext ctx, String configuredProvider) {
+        return new LlmProviderRouter(ctx, new MockLlmProvider(), configuredProvider);
+    }
+
+    /** 构造路由器，默认配置 provider=mock */
     private LlmProviderRouter routerWith(GenericApplicationContext ctx) {
-        return new LlmProviderRouter(ctx, new MockLlmProvider());
+        return routerWith(ctx, "mock");
     }
 
     // ==================== active() 测试 ====================
 
     @Nested
-    @DisplayName("active() 选择策略测试")
+    @DisplayName("active() 配置驱动选择测试")
     class ActiveTest {
 
         @Test
-        @DisplayName("active() 优先返回 name 以 'spring-ai' 开头的 Provider")
-        void shouldPreferSpringAiProvider() {
+        @DisplayName("配置 spring-ai-openai 时返回对应的 Provider")
+        void shouldSelectConfiguredSpringAiProvider() {
             GenericApplicationContext ctx = freshContext();
             StubLlmProvider springAiProvider = new StubLlmProvider("spring-ai-openai", "spring-ai-response");
             StubLlmProvider otherProvider = new StubLlmProvider("dashscope", "dashscope-response");
             ctx.getBeanFactory().registerSingleton("springAiProvider", springAiProvider);
             ctx.getBeanFactory().registerSingleton("otherProvider", otherProvider);
 
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "spring-ai-openai");
             LlmProvider active = router.active();
 
             assertThat(active).isSameAs(springAiProvider);
         }
 
         @Test
+        @DisplayName("配置 dashscope 时返回 dashscope Provider（不再硬编码优先 spring-ai）")
+        void shouldSelectConfiguredDashscopeProvider() {
+            GenericApplicationContext ctx = freshContext();
+            StubLlmProvider springAiProvider = new StubLlmProvider("spring-ai-openai", "spring-ai-response");
+            StubLlmProvider dashscopeProvider = new StubLlmProvider("dashscope", "dashscope-response");
+            ctx.getBeanFactory().registerSingleton("springAiProvider", springAiProvider);
+            ctx.getBeanFactory().registerSingleton("dashscope", dashscopeProvider);
+
+            LlmProviderRouter router = routerWith(ctx, "dashscope");
+            LlmProvider active = router.active();
+
+            assertThat(active).isSameAs(dashscopeProvider);
+        }
+
+        @Test
+        @DisplayName("配置 qianfan 时返回 qianfan Provider")
+        void shouldSelectConfiguredQianfanProvider() {
+            GenericApplicationContext ctx = freshContext();
+            StubLlmProvider qianfanProvider = new StubLlmProvider("qianfan", "qianfan-response");
+            ctx.getBeanFactory().registerSingleton("qianfan", qianfanProvider);
+
+            LlmProviderRouter router = routerWith(ctx, "qianfan");
+            LlmProvider active = router.active();
+
+            assertThat(active).isSameAs(qianfanProvider);
+        }
+
+        @Test
         @DisplayName("无任何 Provider 时降级到 MockLlmProvider")
         void shouldFallbackToMockWhenNoProvider() {
             GenericApplicationContext ctx = freshContext();
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "mock");
 
             LlmProvider active = router.active();
 
@@ -90,15 +126,16 @@ class LlmProviderRouterTest {
         }
 
         @Test
-        @DisplayName("有 Provider 但都不是 spring-ai 时降级到 mock")
-        void shouldFallbackToMockWhenNoSpringAiProvider() {
+        @DisplayName("配置的 Provider 不存在时降级到 mock")
+        void shouldFallbackToMockWhenConfiguredProviderNotFound() {
             GenericApplicationContext ctx = freshContext();
             StubLlmProvider dashscopeProvider = new StubLlmProvider("dashscope", "dashscope-response");
             StubLlmProvider qianfanProvider = new StubLlmProvider("qianfan", "qianfan-response");
             ctx.getBeanFactory().registerSingleton("dashscope", dashscopeProvider);
             ctx.getBeanFactory().registerSingleton("qianfan", qianfanProvider);
 
-            LlmProviderRouter router = routerWith(ctx);
+            // 配置了不存在的 provider name
+            LlmProviderRouter router = routerWith(ctx, "non-existent");
             LlmProvider active = router.active();
 
             assertThat(active).isInstanceOf(MockLlmProvider.class);
@@ -111,7 +148,7 @@ class LlmProviderRouterTest {
             StubLlmProvider provider = new StubLlmProvider("spring-ai-openai", "cached");
             ctx.getBeanFactory().registerSingleton("provider", provider);
 
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "spring-ai-openai");
             LlmProvider first = router.active();
             LlmProvider second = router.active();
 
@@ -120,19 +157,17 @@ class LlmProviderRouterTest {
         }
 
         @Test
-        @DisplayName("多个 spring-ai Provider - 取第一个匹配的")
-        void shouldReturnFirstMatchingSpringAiProvider() {
+        @DisplayName("配置 mock 时即使有其他 Provider 也返回 MockLlmProvider")
+        void shouldReturnMockWhenConfiguredMockEvenWithOtherProviders() {
             GenericApplicationContext ctx = freshContext();
-            StubLlmProvider first = new StubLlmProvider("spring-ai-openai", "openai");
-            StubLlmProvider second = new StubLlmProvider("spring-ai-dashscope", "dashscope");
-            ctx.getBeanFactory().registerSingleton("first", first);
-            ctx.getBeanFactory().registerSingleton("second", second);
+            StubLlmProvider springAiProvider = new StubLlmProvider("spring-ai-openai", "openai");
+            ctx.getBeanFactory().registerSingleton("springAi", springAiProvider);
 
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "mock");
             LlmProvider active = router.active();
 
-            // 应返回其中一个 spring-ai 开头的（具体取决于 Bean 注册顺序）
-            assertThat(active.name()).startsWith("spring-ai");
+            // MockLlmProvider 已注册为 Bean（@Component），应返回 MockLlmProvider 实例
+            assertThat(active).isInstanceOf(MockLlmProvider.class);
         }
     }
 
@@ -151,7 +186,7 @@ class LlmProviderRouterTest {
             ctx.getBeanFactory().registerSingleton("springAi", springAiProvider);
             ctx.getBeanFactory().registerSingleton("dashscope", dashscopeProvider);
 
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "spring-ai-openai");
             // 初始激活 spring-ai
             router.active();
             // 切换到 dashscope
@@ -168,7 +203,7 @@ class LlmProviderRouterTest {
             StubLlmProvider springAiProvider = new StubLlmProvider("spring-ai-openai", "openai");
             ctx.getBeanFactory().registerSingleton("springAi", springAiProvider);
 
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "spring-ai-openai");
             router.active();
             // 切换到不存在的 Provider
             router.reload("non-existent-provider");
@@ -184,11 +219,11 @@ class LlmProviderRouterTest {
             StubLlmProvider springAiProvider = new StubLlmProvider("spring-ai-openai", "openai");
             ctx.getBeanFactory().registerSingleton("springAi", springAiProvider);
 
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "spring-ai-openai");
             // 初始 active = spring-ai
             assertThat(router.active()).isSameAs(springAiProvider);
 
-            // reload 到 mock（不在 context 中，降级）
+            // reload 到 mock（MockLlmProvider 已作为 Bean 注册）
             router.reload("mock");
             // 此时 active 应为 MockLlmProvider 实例
             LlmProvider active = router.active();
@@ -209,7 +244,7 @@ class LlmProviderRouterTest {
             StubLlmProvider springAiProvider = new StubLlmProvider("spring-ai-openai", "openai");
             ctx.getBeanFactory().registerSingleton("springAi", springAiProvider);
 
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "spring-ai-openai");
             String name = router.getActiveProviderName();
 
             assertThat(name).isEqualTo("spring-ai-openai");
@@ -219,7 +254,7 @@ class LlmProviderRouterTest {
         @DisplayName("无 Provider 时 getActiveProviderName() 返回 'mock'")
         void shouldReturnMockNameWhenNoProvider() {
             GenericApplicationContext ctx = freshContext();
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "mock");
 
             String name = router.getActiveProviderName();
 
@@ -233,8 +268,8 @@ class LlmProviderRouterTest {
             StubLlmProvider dashscopeProvider = new StubLlmProvider("dashscope", "dashscope");
             ctx.getBeanFactory().registerSingleton("dashscope", dashscopeProvider);
 
-            LlmProviderRouter router = routerWith(ctx);
-            // 初始降级到 mock
+            LlmProviderRouter router = routerWith(ctx, "mock");
+            // 初始降级到 mock（配置了 mock）
             assertThat(router.getActiveProviderName()).isEqualTo("mock");
 
             // reload 到 dashscope
@@ -256,7 +291,7 @@ class LlmProviderRouterTest {
             StubLlmProvider springAiProvider = new StubLlmProvider("spring-ai-openai", "hello from stub");
             ctx.getBeanFactory().registerSingleton("springAi", springAiProvider);
 
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "spring-ai-openai");
             String response = router.active().chat("sys", "user", null);
 
             assertThat(response).isEqualTo("hello from stub");
@@ -266,7 +301,7 @@ class LlmProviderRouterTest {
         @DisplayName("降级到 mock 时返回 MockLlmProvider 的标准输出")
         void shouldReturnMockOutputWhenFallback() {
             GenericApplicationContext ctx = freshContext();
-            LlmProviderRouter router = routerWith(ctx);
+            LlmProviderRouter router = routerWith(ctx, "mock");
 
             String response = router.active().chat("", "普通查询", null);
 

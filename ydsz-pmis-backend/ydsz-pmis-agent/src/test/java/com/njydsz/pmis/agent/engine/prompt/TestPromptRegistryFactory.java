@@ -40,7 +40,6 @@ public final class TestPromptRegistryFactory {
 
         when(registry.render(anyString(), any())).thenAnswer(inv -> {
             String code = inv.getArgument(0);
-            @SuppressWarnings("unchecked")
             Map<String, Object> params = inv.getArgument(1);
             String template = BuiltInPromptTemplates.get(code);
             return template == null ? "" : renderer.render(template, params);

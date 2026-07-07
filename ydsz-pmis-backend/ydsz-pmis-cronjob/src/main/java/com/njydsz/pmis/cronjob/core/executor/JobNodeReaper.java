@@ -8,6 +8,7 @@ import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -31,6 +32,8 @@ import java.util.List;
  * <ul>
  *   <li>仅当 {@code pmis.cronjob.leader.enabled=true} 时启用</li>
  *   <li>仅 Leader 节点执行，避免多实例重复清理</li>
+ *   <li>P1-1: 仅在 {@code pmis.cronjob.node-discovery.type=db} 时注册
+ *       （type=nacos 时由 Nacos 自动管理节点上下线，无需回收）</li>
  * </ul>
  *
  * <p>清理阈值：
@@ -51,6 +54,7 @@ import java.util.List;
 @Configuration
 @RequiredArgsConstructor
 @ConditionalOnBean(LeaderElector.class)
+@ConditionalOnProperty(name = "pmis.cronjob.node-discovery.type", havingValue = "db")
 public class JobNodeReaper {
 
     private final JobNodeMapper jobNodeMapper;

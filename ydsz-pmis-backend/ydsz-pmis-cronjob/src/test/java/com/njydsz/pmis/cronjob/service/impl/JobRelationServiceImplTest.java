@@ -122,7 +122,7 @@ class JobRelationServiceImplTest {
         when(jobRelationMapper.selectById("nonexistent")).thenReturn(null);
 
         assertThrows(BizException.class, () -> jobRelationService.removeRelation("nonexistent"));
-        verify(jobRelationMapper, never()).deleteById(any());
+        verify(jobRelationMapper, never()).deleteById(any(java.io.Serializable.class));
     }
 
     @Test

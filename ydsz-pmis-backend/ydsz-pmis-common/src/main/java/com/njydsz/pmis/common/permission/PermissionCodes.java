@@ -108,6 +108,13 @@ public final class PermissionCodes {
     public static final String CRONJOB_DAG_DELETE = "cronjob:dag:delete";
     public static final String CRONJOB_DAG_TRIGGER = "cronjob:dag:trigger";
     public static final String CRONJOB_DAG_VIEW = "cronjob:dag:view";
+    /** 执行统计查看（P2-3 执行历史趋势可视化） */
+    public static final String CRONJOB_STATS_VIEW = "cronjob:stats:view";
+    /** SLA 管理（P2-7 SLA 管理） */
+    public static final String CRONJOB_SLA_CREATE = "cronjob:sla:create";
+    public static final String CRONJOB_SLA_UPDATE = "cronjob:sla:update";
+    public static final String CRONJOB_SLA_DELETE = "cronjob:sla:delete";
+    public static final String CRONJOB_SLA_VIEW = "cronjob:sla:view";
 
     // ==================== 通知 ====================
 
@@ -160,6 +167,13 @@ public final class PermissionCodes {
 
     /** 发送日志查询 / 批次进度查询 (运营/管理视角,区别于收件箱 NOTIF_MESSAGE_LIST) */
     public static final String MESSAGE_LOG_VIEW = "message:log:view";
+
+    // ==================== 消息死信 ====================
+
+    /** 死信查询 / 分页 (运营/管理视角) */
+    public static final String MESSAGE_DEAD_LETTER_VIEW = "message:dead-letter:view";
+    /** 死信手动重发 (管理员) */
+    public static final String MESSAGE_DEAD_LETTER_RESEND = "message:dead-letter:resend";
 
     // ==================== 消息撤回 ====================
 

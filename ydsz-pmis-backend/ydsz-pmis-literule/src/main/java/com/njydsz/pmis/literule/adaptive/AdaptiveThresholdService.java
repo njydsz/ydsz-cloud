@@ -457,7 +457,6 @@ public class AdaptiveThresholdService {
                                                DistributionStats stats) {
         String op = ti.getOperator();
         double currentThreshold = ti.getThreshold();
-        boolean upperBound = op.equals("<") || op.equals("<=");
 
         // 去重后的候选阈值
         List<Double> candidates = new ArrayList<>(new java.util.LinkedHashSet<>(values));

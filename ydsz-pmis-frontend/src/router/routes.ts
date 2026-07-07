@@ -588,4 +588,36 @@ export const asyncRoutes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/cronjob',
+    component: () => import('@/layout/default/index.vue'),
+    redirect: '/cronjob/list',
+    meta: { title: 'route.cronjob', icon: 'Timer' },
+    children: [
+      {
+        path: 'list',
+        name: 'CronjobList',
+        component: () => import('@/views/cronjob/index.vue'),
+        meta: { title: 'route.cronjobList', icon: 'List', keepAlive: true, permCode: PC.CRONJOB_JOB_LIST },
+      },
+      {
+        path: 'log',
+        name: 'CronjobLog',
+        component: () => import('@/views/cronjob/log/index.vue'),
+        meta: { title: 'route.cronjobLog', icon: 'Document', keepAlive: true, permCode: PC.CRONJOB_LOG_VIEW },
+      },
+      {
+        path: 'log/content/:logId',
+        name: 'CronjobLogContent',
+        component: () => import('@/views/cronjob/log/content.vue'),
+        meta: { title: 'route.cronjobLogContent', icon: 'Document', hidden: true, permCode: PC.CRONJOB_LOG_VIEW },
+      },
+      {
+        path: 'monitor',
+        name: 'CronjobMonitor',
+        component: () => import('@/views/cronjob/monitor/index.vue'),
+        meta: { title: 'route.cronjobMonitor', icon: 'Monitor', keepAlive: true, permCode: PC.CRONJOB_STATS_VIEW },
+      },
+    ],
+  },
 ]

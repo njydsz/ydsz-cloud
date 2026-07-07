@@ -3,26 +3,45 @@ package com.njydsz.pmis.agent.tool;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * BPMN XML 结构完整性校验工具（P1-1 落地）
+ * BPMN XML 结构完整性校验工具（P1-1 落地，P1-6 加固）
  *
  * <p>内置 Agent 工具，用于在流程定义入库 / 发布前对 BPMN 2.0 XML 进行轻量级
  * 结构校验，确保流程图至少包含 definitions / process / startEvent / endEvent
  * 等关键节点，避免无效流程进入运行时引擎。
  *
- * <p>校验维度（基于字符串包含匹配，非严格 XML 解析）：
+ * <p>校验维度（基于 {@link DocumentBuilder} 严格 XML 解析，P1-6 加固）：
  * <ul>
- *   <li>{@code <bpmn:definitions>} 开始标签存在</li>
- *   <li>{@code </bpmn:definitions>} 结束标签存在</li>
- *   <li>{@code <bpmn:process} 流程定义存在</li>
- *   <li>{@code <bpmn:startEvent} 起始事件存在</li>
- *   <li>{@code <bpmn:endEvent} 结束事件存在</li>
+ *   <li>XML 格式合法（标签闭合、嵌套正确，能被 XML 解析器成功解析）</li>
+ *   <li>根元素 localName 为 {@code definitions}（忽略命名空间前缀：bpmn: / bpmn2: / 自定义）</li>
+ *   <li>至少存在一个 {@code process} 子元素（忽略命名空间前缀）</li>
+ *   <li>至少存在一个 {@code startEvent} 元素（忽略命名空间前缀）</li>
+ *   <li>至少存在一个 {@code endEvent} 元素（忽略命名空间前缀）</li>
+ * </ul>
+ *
+ * <p>相比 P1-1 的字符串包含匹配，严格 XML 解析可避免：
+ * <ul>
+ *   <li>命名空间前缀变化（bpmn2: / 自定义前缀）导致的误报</li>
+ *   <li>注释或 CDATA 内的误匹配导致的漏报</li>
+ *   <li>标签未闭合 / 嵌套错误但字符串匹配仍通过的问题</li>
  * </ul>
  *
  * <p>调用示例（LLM function-calling）：
@@ -40,15 +59,40 @@ import java.util.Map;
 @Component
 public class BpmnValidatorTool implements AgentTool {
 
-    /** BPMN 2.0 命名空间前缀 */
-    private static final String BPMN_NS_PREFIX = "bpmn:";
+    /** 必须校验的结构元素 local name（忽略命名空间前缀） */
+    private static final String ELEM_DEFINITIONS = "definitions";
+    private static final String ELEM_PROCESS = "process";
+    private static final String ELEM_START_EVENT = "startEvent";
+    private static final String ELEM_END_EVENT = "endEvent";
 
-    /** 必须存在的结构标签片段 */
-    private static final String TAG_DEFINITIONS_OPEN = "<" + BPMN_NS_PREFIX + "definitions>";
-    private static final String TAG_DEFINITIONS_CLOSE = "</" + BPMN_NS_PREFIX + "definitions>";
-    private static final String TAG_PROCESS = "<" + BPMN_NS_PREFIX + "process";
-    private static final String TAG_START_EVENT = "<" + BPMN_NS_PREFIX + "startEvent";
-    private static final String TAG_END_EVENT = "<" + BPMN_NS_PREFIX + "endEvent";
+    /**
+     * 复用的 DocumentBuilderFactory（线程安全：Factory 可复用，DocumentBuilder 不可）。
+     *
+     * <p>关闭命名空间感知（{@code setNamespaceAware(false)}）：允许未声明 xmlns 的
+     * XML（如 {@code <bpmn:definitions>} 无 xmlns 声明）通过解析，由 {@link #localName(String)}
+     * 手动剥离前缀以兼容 bpmn: / bpmn2: / 自定义前缀。
+     *
+     * <p>XXE 防护：禁用 DOCTYPE 声明与外部实体，避免 XXE 攻击。
+     */
+    private static final DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY;
+
+    static {
+        DOCUMENT_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
+        DOCUMENT_BUILDER_FACTORY.setNamespaceAware(false);
+        // XXE 防护：禁用 DOCTYPE 与外部实体
+        try {
+            DOCUMENT_BUILDER_FACTORY.setFeature(
+                    "http://apache.org/xml/features/disallow-doctype-decl", true);
+            DOCUMENT_BUILDER_FACTORY.setFeature(
+                    "http://xml.org/sax/features/external-general-entities", false);
+            DOCUMENT_BUILDER_FACTORY.setFeature(
+                    "http://xml.org/sax/features/external-parameter-entities", false);
+            DOCUMENT_BUILDER_FACTORY.setFeature(
+                    "http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        } catch (ParserConfigurationException ignored) {
+            // 某些解析器实现可能不支持上述特性，忽略以便继续工作（已禁用 DOCTYPE 足以防御 XXE）
+        }
+    }
 
     @Override
     public String name() {
@@ -78,22 +122,56 @@ public class BpmnValidatorTool implements AgentTool {
         log.info("[bpmn_validate] 开始校验 BPMN XML, length={}, bizRef={}",
                 bpmnXml.length(), ctx == null ? null : ctx.getBizRef());
 
-        // 逐项校验关键结构元素，收集缺失项
+        // 使用 DocumentBuilder 严格解析 XML，捕获解析异常
+        Document document;
+        try {
+            document = parseXml(bpmnXml);
+        } catch (SAXException e) {
+            String msg = "BPMN XML 解析失败（格式非法）: " + e.getMessage();
+            log.warn("[bpmn_validate] {}", msg);
+            return ToolResult.failure(msg);
+        } catch (IOException e) {
+            String msg = "BPMN XML 读取失败: " + e.getMessage();
+            log.warn("[bpmn_validate] {}", msg);
+            return ToolResult.failure(msg);
+        } catch (ParserConfigurationException e) {
+            String msg = "XML 解析器配置异常: " + e.getMessage();
+            log.warn("[bpmn_validate] {}", msg);
+            return ToolResult.failure(msg);
+        }
+
+        // 校验根元素 localName 是否为 definitions
+        Element root = document.getDocumentElement();
         List<String> missingElements = new ArrayList<>();
-        if (!bpmnXml.contains(TAG_DEFINITIONS_OPEN)) {
-            missingElements.add(TAG_DEFINITIONS_OPEN);
+        if (root == null || !ELEM_DEFINITIONS.equals(localName(root.getNodeName()))) {
+            missingElements.add(ELEM_DEFINITIONS);
         }
-        if (!bpmnXml.contains(TAG_DEFINITIONS_CLOSE)) {
-            missingElements.add(TAG_DEFINITIONS_CLOSE);
+
+        // 遍历所有后代元素，按 localName 检查关键结构是否存在
+        boolean hasProcess = false;
+        boolean hasStartEvent = false;
+        boolean hasEndEvent = false;
+        if (root != null) {
+            NodeList all = root.getElementsByTagName("*");
+            for (int i = 0; i < all.getLength(); i++) {
+                String ln = localName(all.item(i).getNodeName());
+                if (ELEM_PROCESS.equals(ln)) {
+                    hasProcess = true;
+                } else if (ELEM_START_EVENT.equals(ln)) {
+                    hasStartEvent = true;
+                } else if (ELEM_END_EVENT.equals(ln)) {
+                    hasEndEvent = true;
+                }
+            }
         }
-        if (!bpmnXml.contains(TAG_PROCESS)) {
-            missingElements.add(TAG_PROCESS);
+        if (!hasProcess) {
+            missingElements.add(ELEM_PROCESS);
         }
-        if (!bpmnXml.contains(TAG_START_EVENT)) {
-            missingElements.add(TAG_START_EVENT);
+        if (!hasStartEvent) {
+            missingElements.add(ELEM_START_EVENT);
         }
-        if (!bpmnXml.contains(TAG_END_EVENT)) {
-            missingElements.add(TAG_END_EVENT);
+        if (!hasEndEvent) {
+            missingElements.add(ELEM_END_EVENT);
         }
 
         boolean valid = missingElements.isEmpty();
@@ -114,5 +192,44 @@ public class BpmnValidatorTool implements AgentTool {
         log.info("[bpmn_validate] 校验完成, valid={}, missing={}", valid, missingElements);
 
         return ToolResult.success(output, data);
+    }
+
+    /**
+     * 使用 {@link DocumentBuilder} 解析 XML 字符串。
+     *
+     * <p>每次调用创建新的 {@link DocumentBuilder}（DocumentBuilder 非线程安全），
+     * 但复用线程安全的 {@link DocumentBuilderFactory}。同时设置空
+     * {@link org.xml.sax.EntityResolver} 阻断外部实体加载。
+     *
+     * @param xml XML 字符串
+     * @return 解析后的 {@link Document}
+     * @throws SAXException                 XML 格式非法
+     * @throws IOException                  IO 异常
+     * @throws ParserConfigurationException 解析器配置异常
+     */
+    private static Document parseXml(String xml)
+            throws SAXException, IOException, ParserConfigurationException {
+        DocumentBuilder builder = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
+        // 阻断外部实体加载（XXE 防护）
+        builder.setEntityResolver((publicId, systemId) ->
+                new InputSource(new StringReader("")));
+        return builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    /**
+     * 从节点 nodeName 中提取 localName（忽略命名空间前缀）。
+     *
+     * <p>兼容 {@code bpmn:definitions} / {@code bpmn2:definitions} / {@code definitions}
+     * 等多种形式，统一返回冒号后的部分（无冒号则返回原值）。
+     *
+     * @param nodeName 节点全名（可能含前缀）
+     * @return localName（不含前缀）
+     */
+    private static String localName(String nodeName) {
+        if (nodeName == null) {
+            return "";
+        }
+        int idx = nodeName.indexOf(':');
+        return idx >= 0 ? nodeName.substring(idx + 1) : nodeName;
     }
 }

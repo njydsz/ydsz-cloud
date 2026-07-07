@@ -181,7 +181,7 @@ public class ReActAgentExecutor {
         if (systemPrompt != null && !systemPrompt.isEmpty()) {
             sb.append(systemPrompt).append("\n\n");
         }
-        sb.append("你是一个 ReAct Agent，需要通过"思考-行动-观察"循环逐步解决问题。\n\n");
+        sb.append("你是一个 ReAct Agent，需要通过【思考-行动-观察】循环逐步解决问题。\n\n");
         if (tools != null && !tools.isEmpty()) {
             sb.append("可用工具（规则编码）：").append(String.join(", ", tools)).append("\n");
         } else {
@@ -227,13 +227,11 @@ public class ReActAgentExecutor {
         String[] lines = llmOutput.split("\n");
         String toolName = null;
         String toolInput = null;
-        int actionLineIdx = -1;
 
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
             if (toolName == null && startsWithIgnoreCase(line, ACTION_PREFIX)) {
                 toolName = line.substring(ACTION_PREFIX.length()).trim();
-                actionLineIdx = i;
             }
             if (toolInput == null && startsWithIgnoreCase(line, ACTION_INPUT_PREFIX)) {
                 toolInput = line.substring(ACTION_INPUT_PREFIX.length()).trim();

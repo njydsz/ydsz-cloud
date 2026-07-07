@@ -66,4 +66,18 @@ public class MessageRequest {
      * <p>由消息引擎在级联发送时自动填充,用于追溯级联关系。
      */
     private String parentMsgId;
+
+    /**
+     * 渠道元数据（引擎内部使用,调用方无需设置）。
+     *
+     * <p>由消息引擎在加载模板后填充,承载渠道特定参数:
+     * <ul>
+     *   <li>SMS: signName(签名), providerKey(阿里云模板 Code)</li>
+     *   <li>PUSH: providerKey(个推 appId), deviceToken(设备标识)</li>
+     * </ul>
+     * 渠道实现按需读取,无对应 key 时跳过。
+     *
+     * @since 1.1.0
+     */
+    private Map<String, String> channelMeta;
 }

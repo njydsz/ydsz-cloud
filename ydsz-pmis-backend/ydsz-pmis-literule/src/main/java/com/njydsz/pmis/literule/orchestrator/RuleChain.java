@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.orchestrator;
 
+import com.njydsz.pmis.literule.agent.AgentRuleNode;
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
@@ -287,6 +288,24 @@ public class RuleChain {
     }
 
     /**
+     * 构建 AI Agent 执行链（AGENT，P3-5）
+     *
+     * <p>将 {@link AgentRuleNode} 包装为 SINGLE 节点，执行 ReAct 推理循环。
+     * Agent 节点可通过 {@code RuleNode.of(agentRuleNode)} 嵌入任意 THEN/WHEN/IF 链，
+     * 本工厂方法用于将 Agent 作为独立链执行的便捷入口。
+     *
+     * @param agentRuleNode AI Agent 节点
+     * @return AGENT 类型规则链
+     * @since 1.8.0
+     */
+    public static RuleChain agent(AgentRuleNode agentRuleNode) {
+        Objects.requireNonNull(agentRuleNode, "agentRuleNode 不能为 null");
+        List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(agentRuleNode));
+        return new RuleChain(RuleChainType.AGENT,
+                nodeList, null, null, null, null, null, null, null, null, 0);
+    }
+
+    /**
      * 评估规则链
      *
      * <p>按链类型分派执行语义，返回已触发（triggered=true）的结果列表。
@@ -342,6 +361,7 @@ public class RuleChain {
             case FOR -> evaluateFor(context, evaluator, statsRecorder);
             case WHILE -> evaluateWhile(context, evaluator, statsRecorder);
             case BREAK -> evaluateBreak(context, evaluator);
+            case AGENT -> evaluateAgent(context, evaluator, statsRecorder);
         };
     }
 
@@ -618,6 +638,30 @@ public class RuleChain {
         breakResult.setSeverity(RuleSeverity.INFO);
         breakResult.setTitle("BREAK 终止循环");
         return Collections.singletonList(breakResult);
+    }
+
+    /**
+     * AGENT 语义：执行单个 AI Agent 节点（P3-5）
+     *
+     * <p>AGENT 链包装单个 {@link AgentRuleNode}（以 SINGLE 节点形式存储在 nodes 中），
+     * 评估时委托给 {@link #evaluateNode}，由 SINGLE 分支调用 AgentRuleNode.evaluate 执行 ReAct 循环。
+     * 节点异常将被隔离，不影响规则链整体流程。
+     *
+     * @param context   规则上下文
+     * @param evaluator 表达式求值器（AGENT 链不直接使用，传递给嵌套节点）
+     * @return Agent 评估结果列表
+     * @since 1.8.0
+     */
+    private List<RuleResult> evaluateAgent(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+        List<RuleResult> results = new ArrayList<>();
+        if (nodes == null || nodes.isEmpty()) {
+            return results;
+        }
+        // AGENT 链只包含单个 Agent 节点，复用 evaluateNode（SINGLE 分支）执行
+        for (RuleNode node : nodes) {
+            results.addAll(evaluateNode(node, context, evaluator, statsRecorder));
+        }
+        return results;
     }
 
     /**

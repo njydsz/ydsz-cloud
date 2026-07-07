@@ -40,7 +40,7 @@ class DagDefinitionCodecTest {
     @Test
     @DisplayName("toJson 正常定义生成正确 JSON")
     void toJson_normalDefinition_correctJson() {
-        DagNode nodeA = new DagNode("key-a", "job-1", "抽取", 100, 200, "{}");
+        DagNode nodeA = DagNode.of("key-a", "job-1", "抽取", 100, 200, "{}");
         DagNode nodeB = DagNode.of("key-b", "job-2", "清洗");
         DagEdge edge = new DagEdge("key-a", "key-b", "FAIL_FAST", null);
         DagDefinition def = new DagDefinition(List.of(nodeA, nodeB), List.of(edge));
@@ -197,7 +197,7 @@ class DagDefinitionCodecTest {
     @Test
     @DisplayName("toJson -> fromJson 往返测试")
     void toJson_thenFromJson_roundTrip() {
-        DagNode nodeA = new DagNode("key-a", "job-1", "抽取", 100, 200, "{\"k\":\"v\"}");
+        DagNode nodeA = DagNode.of("key-a", "job-1", "抽取", 100, 200, "{\"k\":\"v\"}");
         DagNode nodeB = DagNode.of("key-b", "job-2", "清洗", 300, 200);
         DagNode nodeC = DagNode.of("key-c", "job-3", "加载");
         DagEdge edgeAB = new DagEdge("key-a", "key-b", "FAIL_FAST", null);

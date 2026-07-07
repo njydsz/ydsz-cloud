@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.cronjob.dto.JobBatchDTO;
 import com.njydsz.pmis.cronjob.dto.JobSaveDTO;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
@@ -127,6 +128,59 @@ public class JobController {
     public Result<String> trigger(@PathVariable String id,
                                    @RequestParam(defaultValue = "false") boolean holdLock) {
         return Result.ok(jobService.trigger(id, holdLock));
+    }
+
+    /**
+     * 批量暂停任务
+     *
+     * @param dto 批量操作请求（含任务 ID 列表）
+     * @return 统一响应结果，包含成功处理的数量
+     */
+    @Operation(summary = "批量暂停任务")
+    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @PostMapping("/batch/pause")
+    public Result<Integer> batchPause(@RequestBody @Valid JobBatchDTO dto) {
+        return Result.ok(jobService.batchPause(dto.getJobIds()));
+    }
+
+    /**
+     * 批量恢复任务
+     *
+     * @param dto 批量操作请求（含任务 ID 列表）
+     * @return 统一响应结果，包含成功处理的数量
+     */
+    @Operation(summary = "批量恢复任务")
+    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @PostMapping("/batch/resume")
+    public Result<Integer> batchResume(@RequestBody @Valid JobBatchDTO dto) {
+        return Result.ok(jobService.batchResume(dto.getJobIds()));
+    }
+
+    /**
+     * 批量触发任务
+     *
+     * @param dto 批量操作请求（含任务 ID 列表）
+     * @return 统一响应结果，包含成功处理的数量
+     */
+    @Operation(summary = "批量触发任务")
+    @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
+    @PostMapping("/batch/trigger")
+    public Result<Integer> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
+        return Result.ok(jobService.batchTrigger(dto.getJobIds()));
+    }
+
+    /**
+     * 批量删除任务
+     *
+     * @param dto 批量操作请求（含任务 ID 列表）
+     * @return 统一响应结果，包含成功处理的数量
+     */
+    @Operation(summary = "批量删除任务")
+    @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
+    @OperationLog(module = "任务调度", action = "批量删除任务", bizType = "CRONJOB_JOB")
+    @PostMapping("/batch/delete")
+    public Result<Integer> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
+        return Result.ok(jobService.batchDelete(dto.getJobIds()));
     }
 
     /**

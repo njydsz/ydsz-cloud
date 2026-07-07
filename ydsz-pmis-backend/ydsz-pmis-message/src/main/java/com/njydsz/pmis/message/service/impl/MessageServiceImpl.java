@@ -14,6 +14,7 @@ import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.message.channel.ChannelRouter;
 import com.njydsz.pmis.message.config.MessageProperties;
+import com.njydsz.pmis.message.config.RetryStrategyResolver;
 import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.dto.BatchSendResult;
 import com.njydsz.pmis.message.dto.MessageLogQueryDTO;
@@ -74,6 +75,7 @@ public class MessageServiceImpl implements MessageService {
     private final PreferenceService preferenceService;
     private final AggregateService aggregateService;
     private final SensitiveWordFilter sensitiveWordFilter;
+    private final RetryStrategyResolver retryStrategyResolver;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -217,7 +219,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setRecallStatus(RecallStatusEnum.NONE.name());
         logDO.setReceiptStatus("NONE");
         logDO.setRetryCount(0);
-        logDO.setTraceId(TraceIdUtil.get());
+        logDO.setTraceId(TraceIdUtil.getOrCreate());
         logDO.setMsgId(StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
                 : SnowflakeIdGenerator.nextIdStr());
         logDO.setDedupKey(buildDedupKey(request));
@@ -286,7 +288,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * 执行通道分发,包含 P0-3 重试落库 与 P0-4 通道降级。
+     * 执行通道分发,包含 P0-3 重试落库 与 P0-4 通道降级 / P1-8 多级降级链。
      */
     private MessageResult doDispatch(MsgLogDO logDO, MsgRouteRuleDO matchedRule, String receiver) {
         String channel = logDO.getChannel();
@@ -311,10 +313,10 @@ public class MessageServiceImpl implements MessageService {
             long cost = System.currentTimeMillis() - start;
             logDO.setCostMs(cost);
             logDO.setErrorMessage(e.getMessage());
-            // P0-4 通道降级：matchedRule 有 fallbackChannel 时尝试降级发送
-            if (matchedRule != null && StringUtils.hasText(matchedRule.getFallbackChannel())
-                    && !matchedRule.getFallbackChannel().equalsIgnoreCase(channel)) {
-                MessageResult fallback = tryFallback(logDO, matchedRule.getFallbackChannel(), cost);
+            // P0-4 + P1-8: 多级降级链（优先）→ 单通道降级
+            List<String> fallbackChannels = resolveFallbackChannels(matchedRule, channel);
+            if (!fallbackChannels.isEmpty()) {
+                MessageResult fallback = tryFallbackChain(logDO, fallbackChannels, cost);
                 if (fallback != null) {
                     return fallback;
                 }
@@ -325,46 +327,97 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P0-4 通道降级：用 fallbackChannel 重新分发。
+     * P1-8: 解析有序降级通道列表。
      *
-     * @return 降级成功返回 MessageResult.ok;降级失败返回 null(继续走重试逻辑)
+     * <p>优先使用 {@link MsgRouteRuleDO#getFallbackChain()}（逗号分隔多通道），
+     * 为空时回退到 {@link MsgRouteRuleDO#getFallbackChannel()}（单通道）。
+     * 自动过滤空白项与当前通道(避免循环降级)。
+     *
+     * @param matchedRule    命中的路由规则
+     * @param currentChannel 当前发送通道(排除自身)
+     * @return 有序降级通道列表（大写），可能为空
      */
-    private MessageResult tryFallback(MsgLogDO logDO, String fallbackChannel, long prevCost) {
-        String origChannel = logDO.getChannel();
-        long start = System.currentTimeMillis();
-        try {
-            logDO.setStatus(MessageStatusEnum.SENDING.name());
-            logDO.setChannel(fallbackChannel);
-            msgLogMapper.updateById(logDO);
-            String providerTraceId = channelRouter.dispatch(logDO);
-            long cost = System.currentTimeMillis() - start;
-            logDO.setStatus(MessageStatusEnum.SUCCESS.name());
-            logDO.setProviderTraceId(providerTraceId);
-            logDO.setCostMs(prevCost + cost);
-            msgLogMapper.updateById(logDO);
-            messageMetrics.recordSend(fallbackChannel, "SUCCESS", cost);
-            log.info("[Message] 降级发送成功: msgId={} orig={} fallback={} cost={}ms",
-                    logDO.getMsgId(), origChannel, fallbackChannel, cost);
-            return MessageResult.ok(fallbackChannel, providerTraceId);
-        } catch (Exception fe) {
-            log.warn("[Message] 降级发送失败: msgId={} fallback={} err={}",
-                    logDO.getMsgId(), fallbackChannel, fe.getMessage());
-            // 恢复原 channel,继续走重试逻辑
-            logDO.setChannel(origChannel);
-            logDO.setErrorMessage(origChannel + "→" + fallbackChannel + " 均失败: " + fe.getMessage());
-            return null;
+    private List<String> resolveFallbackChannels(MsgRouteRuleDO matchedRule, String currentChannel) {
+        if (matchedRule == null) {
+            return java.util.Collections.emptyList();
         }
+        String chain = matchedRule.getFallbackChain();
+        java.util.List<String> result = new java.util.ArrayList<>();
+        if (StringUtils.hasText(chain)) {
+            for (String ch : chain.split(",")) {
+                String trimmed = ch == null ? "" : ch.trim();
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+                String upper = trimmed.toUpperCase();
+                if (!upper.equalsIgnoreCase(currentChannel) && !result.contains(upper)) {
+                    result.add(upper);
+                }
+            }
+        }
+        if (result.isEmpty()) {
+            String single = matchedRule.getFallbackChannel();
+            if (StringUtils.hasText(single)
+                    && !single.equalsIgnoreCase(currentChannel)) {
+                result.add(single.trim().toUpperCase());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * P0-4 + P1-8: 按降级链顺序逐个尝试,任一成功即返回。
+     *
+     * @param logDO            消息日志(会被修改 channel)
+     * @param fallbackChannels 有序降级通道列表
+     * @param prevCost         前序累计耗时
+     * @return 降级成功返回 MessageResult.ok;全部失败返回 null(继续走重试逻辑)
+     */
+    private MessageResult tryFallbackChain(MsgLogDO logDO, List<String> fallbackChannels, long prevCost) {
+        String origChannel = logDO.getChannel();
+        long accumulatedCost = prevCost;
+        java.util.List<String> tried = new java.util.ArrayList<>();
+        tried.add(origChannel);
+        for (String fallbackChannel : fallbackChannels) {
+            long start = System.currentTimeMillis();
+            try {
+                logDO.setStatus(MessageStatusEnum.SENDING.name());
+                logDO.setChannel(fallbackChannel);
+                msgLogMapper.updateById(logDO);
+                String providerTraceId = channelRouter.dispatch(logDO);
+                long cost = System.currentTimeMillis() - start;
+                logDO.setStatus(MessageStatusEnum.SUCCESS.name());
+                logDO.setProviderTraceId(providerTraceId);
+                logDO.setCostMs(accumulatedCost + cost);
+                msgLogMapper.updateById(logDO);
+                messageMetrics.recordSend(fallbackChannel, "SUCCESS", cost);
+                log.info("[Message] 降级发送成功: msgId={} chain={} final={} cost={}ms",
+                        logDO.getMsgId(), tried, fallbackChannel, cost);
+                return MessageResult.ok(fallbackChannel, providerTraceId);
+            } catch (Exception fe) {
+                long cost = System.currentTimeMillis() - start;
+                accumulatedCost += cost;
+                tried.add(fallbackChannel);
+                log.warn("[Message] 降级发送失败: msgId={} fallback={} err={} 继续尝试下一通道",
+                        logDO.getMsgId(), fallbackChannel, fe.getMessage());
+            }
+        }
+        // 全部降级失败,恢复原 channel,继续走重试逻辑
+        logDO.setChannel(origChannel);
+        logDO.setErrorMessage(String.join("→", tried) + " 均失败");
+        return null;
     }
 
     /**
      * P0-3 失败处理：retryCount < MAX → RETRY + nextRetryAt(指数退避),否则 FAILED。
+     *
+     * <p>P1-7: 重试次数与退避由 {@link RetryStrategyResolver} 按通道解析,替代硬编码常量。
      */
     private MessageResult handleFailure(MsgLogDO logDO, Exception e, long cost) {
         int retryCount = logDO.getRetryCount() == null ? 0 : logDO.getRetryCount();
-        if (retryCount < MessageConstants.MAX_RETRY_COUNT) {
-            long backoff = MessageConstants.RETRY_BASE_BACKOFF_MS * (1L << retryCount);
+        if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logDO.getChannel())) {
             logDO.setStatus(MessageStatusEnum.RETRY.name());
-            logDO.setNextRetryAt(java.time.LocalDateTime.now().plusNanos(backoff * 1_000_000L));
+            logDO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(retryCount, logDO.getChannel()));
             msgLogMapper.updateById(logDO);
             messageMetrics.recordRetry(logDO.getChannel());
             log.warn("[Message] 发送失败转重试: msgId={} channel={} retryCount={} nextRetryAt={} err={}",

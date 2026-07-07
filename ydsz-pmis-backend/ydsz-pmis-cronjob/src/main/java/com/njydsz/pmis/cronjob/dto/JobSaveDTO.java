@@ -44,9 +44,19 @@ public class JobSaveDTO implements Serializable {
     @Schema(description = "任务处理器 Bean 名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String handler;
 
-    @NotBlank(message = "{validation.cronjob.msg_14201280}")
-    @Schema(description = "Cron 表达式", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Cron 表达式（scheduleType=CRON 时必填）")
     private String cronExpression;
+
+    @Schema(description = "调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)")
+    private String scheduleType;
+
+    @Min(value = 1, message = "固定频率间隔必须为正数")
+    @Schema(description = "固定频率间隔（毫秒, scheduleType=FIXED_RATE 时生效, 如 30000=每 30 秒执行一次）")
+    private Long fixedRateMs;
+
+    @Min(value = 1, message = "固定延迟间隔必须为正数")
+    @Schema(description = "固定延迟间隔（毫秒, scheduleType=FIXED_DELAY 时生效, 上次完成后等待此毫秒数再执行）")
+    private Long fixedDelayMs;
 
     @Schema(description = "参数 JSON")
     private String paramsJson;
@@ -77,4 +87,7 @@ public class JobSaveDTO implements Serializable {
     @Min(value = 1, message = "分片总数必须 >= 1")
     @Schema(description = "分片总数（1=非分片任务，>1 时按 ShardingStrategy 分配到在线节点并行执行）")
     private Integer shardTotal;
+
+    @Schema(description = "任务时区（如 Asia/Shanghai / America/New_York / UTC，null 使用默认）")
+    private String timezone;
 }

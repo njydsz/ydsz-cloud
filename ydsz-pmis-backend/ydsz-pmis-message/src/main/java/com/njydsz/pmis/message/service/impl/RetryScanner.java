@@ -2,11 +2,13 @@ package com.njydsz.pmis.message.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.message.channel.ChannelRouter;
+import com.njydsz.pmis.message.config.RetryStrategyResolver;
 import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.entity.MsgLogDO;
 import com.njydsz.pmis.message.enums.MessageStatusEnum;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
 import com.njydsz.pmis.message.metric.MessageMetrics;
+import com.njydsz.pmis.message.tracing.MessageTraceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -46,6 +48,7 @@ public class RetryScanner {
     private final ChannelRouter channelRouter;
     private final MessageMetrics messageMetrics;
     private final RedissonClient redissonClient;
+    private final RetryStrategyResolver retryStrategyResolver;
 
     /**
      * 定时扫描重试队列。
@@ -118,44 +121,47 @@ public class RetryScanner {
      * @return 重试后的状态
      */
     private MessageStatusEnum retryOnce(MsgLogDO logDO) {
-        // ① 流转到 SENDING
-        logDO.setStatus(MessageStatusEnum.SENDING.name());
-        msgLogMapper.updateById(logDO);
-        long start = System.currentTimeMillis();
-        try {
-            String providerTraceId = channelRouter.dispatch(logDO);
-            long cost = System.currentTimeMillis() - start;
-            logDO.setStatus(MessageStatusEnum.SUCCESS.name());
-            logDO.setProviderTraceId(providerTraceId);
-            logDO.setCostMs(cost);
+        // P1-3: 进入追踪上下文，将 logDO.traceId 写入 MDC，确保重试日志可追溯
+        try (MessageTraceContext ctx = MessageTraceContext.enter(logDO.getTraceId())) {
+            // ① 流转到 SENDING
+            logDO.setStatus(MessageStatusEnum.SENDING.name());
             msgLogMapper.updateById(logDO);
-            messageMetrics.recordSend(logDO.getChannel(), "SUCCESS", cost);
-            log.info("[RetryScanner] 重试成功: logId={} retryCount={}", logDO.getId(), logDO.getRetryCount());
-            return MessageStatusEnum.SUCCESS;
-        } catch (Exception e) {
-            long cost = System.currentTimeMillis() - start;
-            int newRetryCount = (logDO.getRetryCount() == null ? 0 : logDO.getRetryCount()) + 1;
-            logDO.setRetryCount(newRetryCount);
-            logDO.setCostMs(cost);
-            logDO.setErrorMessage(e.getMessage());
-            if (newRetryCount >= MessageConstants.MAX_RETRY_COUNT) {
-                // 超过最大重试次数 → DEAD
-                logDO.setStatus(MessageStatusEnum.DEAD.name());
+            long start = System.currentTimeMillis();
+            try {
+                String providerTraceId = channelRouter.dispatch(logDO);
+                long cost = System.currentTimeMillis() - start;
+                logDO.setStatus(MessageStatusEnum.SUCCESS.name());
+                logDO.setProviderTraceId(providerTraceId);
+                logDO.setCostMs(cost);
                 msgLogMapper.updateById(logDO);
-                messageMetrics.recordDead(logDO.getChannel());
-                log.warn("[RetryScanner] 重试耗尽转死信: logId={} retryCount={}",
-                        logDO.getId(), newRetryCount);
-                return MessageStatusEnum.DEAD;
+                messageMetrics.recordSend(logDO.getChannel(), "SUCCESS", cost);
+                log.info("[RetryScanner] 重试成功: logId={} retryCount={}", logDO.getId(), logDO.getRetryCount());
+                return MessageStatusEnum.SUCCESS;
+            } catch (Exception e) {
+                long cost = System.currentTimeMillis() - start;
+                int newRetryCount = (logDO.getRetryCount() == null ? 0 : logDO.getRetryCount()) + 1;
+                logDO.setRetryCount(newRetryCount);
+                logDO.setCostMs(cost);
+                logDO.setErrorMessage(e.getMessage());
+                // P1-7: 使用可配重试策略替代硬编码常量
+                if (retryStrategyResolver.isMaxRetriesReached(newRetryCount, logDO.getChannel())) {
+                    // 超过最大重试次数 → DEAD
+                    logDO.setStatus(MessageStatusEnum.DEAD.name());
+                    msgLogMapper.updateById(logDO);
+                    messageMetrics.recordDead(logDO.getChannel());
+                    log.warn("[RetryScanner] 重试耗尽转死信: logId={} retryCount={}",
+                            logDO.getId(), newRetryCount);
+                    return MessageStatusEnum.DEAD;
+                }
+                // 继续重试,指数退避（P1-7: 策略可配）
+                logDO.setStatus(MessageStatusEnum.RETRY.name());
+                logDO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(newRetryCount, logDO.getChannel()));
+                msgLogMapper.updateById(logDO);
+                messageMetrics.recordRetry(logDO.getChannel());
+                log.info("[RetryScanner] 重试失败继续等待: logId={} retryCount={} nextRetryAt={}",
+                        logDO.getId(), newRetryCount, logDO.getNextRetryAt());
+                return MessageStatusEnum.RETRY;
             }
-            // 继续重试,指数退避
-            long backoff = MessageConstants.RETRY_BASE_BACKOFF_MS * (1L << newRetryCount);
-            logDO.setStatus(MessageStatusEnum.RETRY.name());
-            logDO.setNextRetryAt(LocalDateTime.now().plusNanos(backoff * 1_000_000L));
-            msgLogMapper.updateById(logDO);
-            messageMetrics.recordRetry(logDO.getChannel());
-            log.info("[RetryScanner] 重试失败继续等待: logId={} retryCount={} nextRetryAt={}",
-                    logDO.getId(), newRetryCount, logDO.getNextRetryAt());
-            return MessageStatusEnum.RETRY;
         }
     }
 }

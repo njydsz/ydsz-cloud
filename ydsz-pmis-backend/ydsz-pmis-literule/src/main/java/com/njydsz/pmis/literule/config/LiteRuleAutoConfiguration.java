@@ -20,6 +20,9 @@ import com.njydsz.pmis.literule.core.RuleMetrics;
 import com.njydsz.pmis.literule.core.RuleTimeoutExecutor;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.model.ModelInputProvider;
+import com.njydsz.pmis.literule.model.ModelInputRegistry;
+import com.njydsz.pmis.literule.model.MockModelInputProvider;
 import com.njydsz.pmis.literule.spi.DecisionTableConfigProvider;
 import com.njydsz.pmis.literule.spi.DecisionTreeConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleConfigBroadcaster;
@@ -38,6 +41,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -112,6 +116,7 @@ public class LiteRuleAutoConfiguration {
                                   ObjectProvider<TraceRecorder> traceDelegateProvider,
                                   ObjectProvider<ExpressionEvaluator> evaluatorProvider,
                                   ObjectProvider<com.njydsz.pmis.literule.core.BreakpointHook> breakpointHookProvider,
+                                  ObjectProvider<ModelInputRegistry> modelRegistryProvider,
                                   ApplicationContext applicationContext) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
@@ -120,6 +125,12 @@ public class LiteRuleAutoConfiguration {
         com.njydsz.pmis.literule.core.BreakpointHook bpHook = breakpointHookProvider.getIfAvailable();
         if (bpHook != null) {
             engine.setBreakpointHook(bpHook);
+        }
+
+        // P3-1 规则+模型融合：可选注入模型注册表
+        ModelInputRegistry modelRegistry = modelRegistryProvider.getIfAvailable();
+        if (modelRegistry != null) {
+            engine.setModelInputRegistry(modelRegistry);
         }
 
         if (properties.isTraceEnabled()) {
@@ -170,11 +181,11 @@ public class LiteRuleAutoConfiguration {
         // Micrometer 桥接（仅当 classpath 存在 MeterRegistry 时启用）
         bindMicrometerIfAvailable(engine, applicationContext);
 
-        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, breakpoint={}）",
+        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, breakpoint={}, model={}）",
                 properties.isStatsEnabled(), properties.isTraceEnabled(),
                 properties.getRuleTimeoutMs(), properties.getCircuitBreakerMinEvaluations() > 0,
                 engine.getMetrics() != null, engine.getCanaryRouter() != null,
-                engine.getBreakpointHook() != null);
+                engine.getBreakpointHook() != null, engine.getModelInputRegistry() != null);
         return engine;
     }
 
@@ -491,6 +502,44 @@ public class LiteRuleAutoConfiguration {
     }
 
     /**
+     * ReAct Agent 执行器（P3-5 AI Agent 规则编排）
+     *
+     * <p>依赖 {@link LLMClient}，仅当 AI 增强启用且 LLMClient Bean 存在时装配。
+     * 提供 ReAct 推理循环能力，供 {@link com.njydsz.pmis.literule.agent.AgentRuleNode} 调用。
+     *
+     * @param llmClient LLM 客户端
+     * @return ReActAgentExecutor 实例
+     * @since 1.8.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(LLMClient.class)
+    public com.njydsz.pmis.literule.agent.ReActAgentExecutor reActAgentExecutor(LLMClient llmClient) {
+        log.info("[LiteRule-Agent] ReAct Agent 执行器已初始化（provider={}, model={}）",
+                llmClient.provider(), llmClient.model());
+        return new com.njydsz.pmis.literule.agent.ReActAgentExecutor(llmClient);
+    }
+
+    /**
+     * AgentRuleNode 工厂（P3-5）
+     *
+     * <p>依赖 {@link com.njydsz.pmis.literule.agent.ReActAgentExecutor}，
+     * 提供快速创建 {@link com.njydsz.pmis.literule.agent.AgentRuleNode} 的便捷方法。
+     *
+     * @param executor ReAct 执行器
+     * @return AgentRuleNodeFactory 实例
+     * @since 1.8.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(com.njydsz.pmis.literule.agent.ReActAgentExecutor.class)
+    public com.njydsz.pmis.literule.agent.AgentRuleNodeFactory agentRuleNodeFactory(
+            com.njydsz.pmis.literule.agent.ReActAgentExecutor executor) {
+        log.info("[LiteRule-Agent] AgentRuleNode 工厂已初始化");
+        return new com.njydsz.pmis.literule.agent.AgentRuleNodeFactory(executor);
+    }
+
+    /**
      * 规则归因分析服务（P3-3 LLM 辅助归因分析）
      *
      * <p>当存在 {@link RuleAdminService} 时自动装配。基础归因（summary + factors）
@@ -641,6 +690,51 @@ public class LiteRuleAutoConfiguration {
     }
 
     // ------------------------------------------------------------------
+    // P3-4 自适应智能风控（自适应阈值分析）
+    // ------------------------------------------------------------------
+
+    /**
+     * 自适应阈值分析服务（P3-4）
+     *
+     * <p>当存在 {@link com.njydsz.pmis.literule.spi.RuleConfigProvider} 和
+     * {@link com.njydsz.pmis.literule.spi.TraceDataProvider} 时自动装配，
+     * 提供基于历史触发数据的规则阈值自适应调整能力。
+     *
+     * <p>对标字节巨量引擎"规则 2.0"的自适应阈值能力：
+     * <ul>
+     *   <li>分析规则历史触发数据，计算最优阈值</li>
+     *   <li>支持 PERCENTILE/FALSE_RATE/MISS_RATE/BALANCED 四种策略</li>
+     *   <li>LLM 可用时生成自然语言调整原因，不可用时降级为模板</li>
+     *   <li>支持一键应用阈值调整</li>
+     * </ul>
+     *
+     * @param configProvider        规则配置提供者
+     * @param traceDataProvider     轨迹数据提供者（SPI，由消费方提供）
+     * @param ruleAdminServiceProvider 规则管理服务（可选，仅 applyThreshold 需要）
+     * @param llmClientProvider     LLM 客户端（可选，用于生成调整原因）
+     * @return AdaptiveThresholdService 实例
+     * @since 1.8.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean({RuleConfigProvider.class,
+            com.njydsz.pmis.literule.spi.TraceDataProvider.class})
+    public com.njydsz.pmis.literule.adaptive.AdaptiveThresholdService adaptiveThresholdService(
+            RuleConfigProvider configProvider,
+            com.njydsz.pmis.literule.spi.TraceDataProvider traceDataProvider,
+            org.springframework.beans.factory.ObjectProvider<RuleAdminService> ruleAdminServiceProvider,
+            org.springframework.beans.factory.ObjectProvider<LLMClient> llmClientProvider) {
+        RuleAdminService ruleAdminService = ruleAdminServiceProvider.getIfAvailable();
+        LLMClient llmClient = llmClientProvider.getIfAvailable();
+        com.njydsz.pmis.literule.adaptive.AdaptiveThresholdService service =
+                new com.njydsz.pmis.literule.adaptive.AdaptiveThresholdService(
+                        configProvider, traceDataProvider, ruleAdminService, llmClient);
+        log.info("[LiteRule-Adaptive] 自适应阈值分析服务已初始化（ruleAdmin={}, llm={}）",
+                ruleAdminService != null, llmClient != null);
+        return service;
+    }
+
+    // ------------------------------------------------------------------
     // P2-3 DSL YAML/JSON 规则文件加载（FileRuleSource）
     // ------------------------------------------------------------------
 
@@ -674,5 +768,81 @@ public class LiteRuleAutoConfiguration {
             throw new IllegalStateException("FileRuleSource 初始化失败: " + e.getMessage(), e);
         }
         return source;
+    }
+
+    // ------------------------------------------------------------------
+    // P3-1 规则+模型融合
+    // ------------------------------------------------------------------
+
+    /**
+     * 模型输入注册表 Bean（P3-1）
+     *
+     * <p>当 {@code pmis.literule.model.enabled=true} 时自动装配，聚合所有
+     * {@link ModelInputProvider} Bean（包括可选的 {@link MockModelInputProvider}）。
+     * 注册表会自动注入到 {@link DefaultRuleEngine}，使规则表达式可通过
+     * {@code model.<field>} 引用模型输出（如 {@code model.riskScore > 0.8}）。
+     *
+     * <p>对标滴滴 Newton、字节风控的"规则+模型融合"能力：
+     * <ul>
+     *   <li>规则兜底模型异常：模型不可用时降级为纯规则评估</li>
+     *   <li>模型输出触发规则：模型输出作为规则条件输入</li>
+     * </ul>
+     *
+     * @param properties         配置属性
+     * @param providersProvider  所有 ModelInputProvider Bean（可选，含 Mock）
+     * @return ModelInputRegistry 实例
+     * @since 1.8.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.model", name = "enabled", havingValue = "true")
+    public ModelInputRegistry modelInputRegistry(LiteRuleProperties properties,
+                                                  ObjectProvider<ModelInputProvider> providersProvider) {
+        LiteRuleProperties.ModelConfig cfg = properties.getModel();
+        ModelInputRegistry registry = new ModelInputRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError());
+        // 注册所有 ModelInputProvider Bean（包括 MockModelInputProvider）
+        List<ModelInputProvider> providers = providersProvider.orderedStream().toList();
+        for (ModelInputProvider provider : providers) {
+            registry.register(provider);
+        }
+        log.info("[LiteRule-Model] 模型输入注册表已初始化 (providers={}, timeoutMs={}, fallbackOnError={})",
+                registry.size(), cfg.getTimeoutMs(), cfg.isFallbackOnError());
+        return registry;
+    }
+
+    /**
+     * Mock 模型输入提供者 Bean（P3-1）
+     *
+     * <p>当 {@code pmis.literule.model.mock-enabled=true} 时自动装配，返回配置的
+     * 模拟模型输出，便于开发/测试环境验证规则+模型融合能力，无需依赖真实模型服务。
+     *
+     * <p>输出可通过 {@code pmis.literule.model.mock-outputs} 配置自定义：
+     * <pre>
+     * pmis:
+     *   literule:
+     *     model:
+     *       enabled: true
+     *       mock-enabled: true
+     *       mock-outputs:
+     *         riskScore: 0.9
+     *         fraudProbability: 0.02
+     * </pre>
+     *
+     * @param properties 配置属性
+     * @return MockModelInputProvider 实例
+     * @since 1.8.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.model", name = "mock-enabled", havingValue = "true")
+    public MockModelInputProvider mockModelInputProvider(LiteRuleProperties properties) {
+        LiteRuleProperties.ModelConfig cfg = properties.getModel();
+        Map<String, Object> outputs = cfg.getMockOutputs();
+        if (outputs != null && !outputs.isEmpty()) {
+            log.info("[LiteRule-Model] MockModelInputProvider 已初始化（自定义输出: {}）", outputs);
+            return new MockModelInputProvider(MockModelInputProvider.DEFAULT_MODEL_ID, outputs);
+        }
+        log.info("[LiteRule-Model] MockModelInputProvider 已初始化（默认输出）");
+        return new MockModelInputProvider();
     }
 }

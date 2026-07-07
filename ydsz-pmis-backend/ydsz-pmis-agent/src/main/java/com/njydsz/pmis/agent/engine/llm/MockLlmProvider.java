@@ -2,6 +2,7 @@ package com.njydsz.pmis.agent.engine.llm;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * Mock LLM Provider - 内置规则推理（批次 19 P3-1 落地）
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
+@Component
 public class MockLlmProvider implements LlmProvider {
 
     @Override

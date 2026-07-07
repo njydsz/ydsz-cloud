@@ -86,7 +86,14 @@ public class StreamEvent implements Serializable {
         /** 整个 ReAct 循环完成 */
         DONE,
         /** 异常终止 */
-        ERROR
+        ERROR,
+        /**
+         * 心跳保活（P2-5）。
+         *
+         * <p>LLM 调用耗时较长时（如 10s+），客户端可能因超时断开 SSE 连接。
+         * 心跳事件定期推送，告知客户端服务端仍在工作，防止中间代理 / 浏览器超时断连。
+         */
+        HEARTBEAT
     }
 
     /** 构造简单事件（仅 type） */
@@ -128,5 +135,16 @@ public class StreamEvent implements Serializable {
                 "success", false,
                 "failureReason", reason == null ? "" : reason);
         return e;
+    }
+
+    /**
+     * 构造 HEARTBEAT 事件（P2-5）。
+     *
+     * <p>心跳事件仅携带时间戳，无业务数据，用于保活。
+     *
+     * @return HEARTBEAT 事件
+     */
+    public static StreamEvent heartbeat() {
+        return of(Type.HEARTBEAT);
     }
 }

@@ -9,6 +9,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 把 ReAct 事件转换为 SSE 推送的监听器（P2-1 落地）
@@ -57,16 +61,55 @@ public class SseEventListener implements ReActEventListener {
     private volatile boolean clientDisconnected = false;
 
     /**
-     * 构造 SSE 监听器。
+     * 心跳调度器（P2-5）。
+     *
+     * <p>每个 SseEventListener 实例独占一个单线程调度器，避免多 SSE 连接共享调度器
+     * 导致一个连接的心跳任务异常影响其他连接。心跳任务本身非常轻量（仅推送时间戳），
+     * 独占调度器的开销可忽略。
+     */
+    private final ScheduledExecutorService heartbeatScheduler;
+
+    /** 心跳定时任务句柄（用于取消，P2-5） */
+    private ScheduledFuture<?> heartbeatFuture;
+
+    /** 心跳间隔（秒，P2-5） */
+    private final long heartbeatIntervalSeconds;
+
+    /**
+     * 构造 SSE 监听器（使用默认心跳间隔 15s，P2-5）。
      *
      * @param emitter Spring MVC SseEmitter
      */
     public SseEventListener(SseEmitter emitter) {
+        this(emitter, 15L);
+    }
+
+    /**
+     * 构造 SSE 监听器（指定心跳间隔，P2-5）。
+     *
+     * <p>心跳保活机制：LLM 调用耗时较长时（如 10s+），客户端或中间代理（nginx /
+     * ELB）可能因超时断开 SSE 连接。心跳事件定期推送，告知连接仍在活跃，
+     * 防止超时断连。心跳在 {@link #onComplete} / {@link #onError} 时自动停止。
+     *
+     * @param emitter                   Spring MVC SseEmitter
+     * @param heartbeatIntervalSeconds  心跳间隔（秒），<= 0 表示禁用心跳
+     */
+    public SseEventListener(SseEmitter emitter, long heartbeatIntervalSeconds) {
         this.emitter = emitter;
+        this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
+        this.heartbeatScheduler = heartbeatIntervalSeconds > 0
+                ? Executors.newSingleThreadScheduledExecutor(r -> {
+                    Thread t = new Thread(r, "sse-heartbeat");
+                    t.setDaemon(true);
+                    return t;
+                })
+                : null;
     }
 
     @Override
     public void onStepStart(int stepIndex) {
+        // P2-5：首个步骤开始时启动心跳（仅启动一次）
+        startHeartbeat();
         send(StreamEvent.of(StreamEvent.Type.STEP_START, stepIndex));
     }
 
@@ -106,6 +149,8 @@ public class SseEventListener implements ReActEventListener {
 
     @Override
     public void onComplete(ReActResult result) {
+        // P2-5：完成时停止心跳
+        stopHeartbeat();
         if (result == null) {
             send(StreamEvent.error(0, "result is null"));
         } else {
@@ -116,6 +161,8 @@ public class SseEventListener implements ReActEventListener {
 
     @Override
     public void onError(int stepIndex, Throwable error) {
+        // P2-5：异常时停止心跳（onComplete 会再次调用 stopHeartbeat，但内部有幂等保护）
+        stopHeartbeat();
         String reason = error == null ? "unknown" : error.getMessage();
         send(StreamEvent.error(stepIndex, reason));
         // 不在这里 complete，让 onComplete 处理
@@ -138,8 +185,58 @@ public class SseEventListener implements ReActEventListener {
         } catch (IOException | IllegalStateException e) {
             log.warn("[SSE] 客户端断开或推送失败: {}", e.getMessage());
             clientDisconnected = true;
+            // P2-5：客户端断开时停止心跳，避免无效推送
+            stopHeartbeat();
         } catch (Exception e) {
             log.warn("[SSE] 推送异常: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 启动心跳定时任务（P2-5）。
+     *
+     * <p>仅在心跳调度器存在且心跳任务未启动时生效（幂等）。
+     * 心跳任务定期推送 {@link StreamEvent.Type#HEARTBEAT} 事件，
+     * 推送失败（客户端断开）时自动停止。
+     */
+    private void startHeartbeat() {
+        if (heartbeatScheduler == null || heartbeatFuture != null) {
+            return;
+        }
+        heartbeatFuture = heartbeatScheduler.scheduleAtFixedRate(() -> {
+            if (clientDisconnected) {
+                stopHeartbeat();
+                return;
+            }
+            try {
+                SseEmitter.SseEventBuilder builder = SseEmitter.event()
+                        .name(StreamEvent.Type.HEARTBEAT.name())
+                        .data(JSON.toJSONString(StreamEvent.heartbeat()));
+                emitter.send(builder);
+            } catch (IOException | IllegalStateException e) {
+                log.debug("[SSE] 心跳推送失败，客户端可能已断开: {}", e.getMessage());
+                clientDisconnected = true;
+                stopHeartbeat();
+            } catch (Exception e) {
+                log.debug("[SSE] 心跳推送异常: {}", e.getMessage());
+            }
+        }, heartbeatIntervalSeconds, heartbeatIntervalSeconds, TimeUnit.SECONDS);
+        log.debug("[SSE] 心跳已启动, 间隔 {}s", heartbeatIntervalSeconds);
+    }
+
+    /**
+     * 停止心跳定时任务并关闭调度器（P2-5）。
+     *
+     * <p>幂等：多次调用安全。停止后不再推送心跳事件。
+     */
+    private void stopHeartbeat() {
+        if (heartbeatFuture != null) {
+            heartbeatFuture.cancel(false);
+            heartbeatFuture = null;
+        }
+        if (heartbeatScheduler != null && !heartbeatScheduler.isShutdown()) {
+            heartbeatScheduler.shutdownNow();
+            log.debug("[SSE] 心跳调度器已关闭");
         }
     }
 

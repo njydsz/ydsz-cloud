@@ -54,6 +54,9 @@ public class MessageProperties {
     /** P2-5: 多维度限流配置 */
     private RateLimitConfig rateLimit = new RateLimitConfig();
 
+    /** P0-1: 短信服务商配置 */
+    private SmsConfig sms = new SmsConfig();
+
     /**
      * 多维度限流配置（P2-5）。
      *
@@ -77,5 +80,129 @@ public class MessageProperties {
         private boolean tenantEnabled = true;
         /** tenant 维度每秒令牌数 */
         private int tenantPermits = 1000;
+    }
+
+    /**
+     * P0-1: 短信服务商配置。
+     *
+     * <p>通过 {@code pmis.message.sms.provider} 选择服务商（aliyun/mock），
+     * 无凭证或选 mock 时降级为日志输出，保证开发环境可运行。
+     */
+    @Data
+    public static class SmsConfig {
+        /** 服务商: aliyun / mock（默认 mock 降级） */
+        private String provider = "mock";
+        /** 阿里云 SMS 配置 */
+        private AliyunSmsConfig aliyun = new AliyunSmsConfig();
+    }
+
+    /**
+     * 阿里云 SMS 配置。
+     */
+    @Data
+    public static class AliyunSmsConfig {
+        /** AccessKey ID */
+        private String accessKeyId;
+        /** AccessKey Secret */
+        private String accessKeySecret;
+        /** 默认签名（模板未配置时回退） */
+        private String signName;
+        /** 阿里云 SMS endpoint */
+        private String endpoint = "dysmsapi.aliyuncs.com";
+        /** 连接超时（毫秒） */
+        private int connectTimeout = 5000;
+        /** 读取超时（毫秒） */
+        private int readTimeout = 10000;
+    }
+
+    /** P0-2: APP 推送服务商配置 */
+    private PushConfig push = new PushConfig();
+
+    /**
+     * P0-2: APP 推送服务商配置。
+     *
+     * <p>通过 {@code pmis.message.push.provider} 选择服务商（getui/mock），
+     * 无凭证或选 mock 时降级为日志输出。
+     */
+    @Data
+    public static class PushConfig {
+        /** 服务商: getui / mock（默认 mock 降级） */
+        private String provider = "mock";
+        /** 个推配置 */
+        private GetuiPushConfig getui = new GetuiPushConfig();
+    }
+
+    /**
+     * 个推（GeTui）推送配置。
+     */
+    @Data
+    public static class GetuiPushConfig {
+        /** 个推 AppID */
+        private String appId;
+        /** 个推 AppKey */
+        private String appKey;
+        /** 个推 MasterSecret */
+        private String masterSecret;
+        /** 个推 REST API base url */
+        private String baseUrl = "https://restapi.getui.com";
+        /** 连接超时（毫秒） */
+        private int connectTimeout = 5000;
+        /** 读取超时（毫秒） */
+        private int readTimeout = 10000;
+    }
+
+    /** P1-4: 死信告警配置 */
+    private DeadLetterAlertConfig deadLetterAlert = new DeadLetterAlertConfig();
+
+    /** P1-7: 默认重试策略（全局兜底） */
+    private RetryPolicy defaultRetryPolicy = new RetryPolicy();
+
+    /**
+     * P1-7: 按通道覆盖的重试策略。
+     *
+     * <p>key 为通道大写名（SMS/EMAIL/PUSH/...），value 为该通道专属重试策略。
+     * 未命中的通道回退到 {@link #defaultRetryPolicy}。
+     */
+    private Map<String, RetryPolicy> channelRetryPolicies;
+
+    /**
+     * P1-7: 重试策略配置。
+     *
+     * <p>支持最大重试次数、基础退避、退避倍率、退避上限。退避公式：
+     * {@code backoff = min(baseBackoffMs * backoffMultiplier^retryCount, maxBackoffMs)}。
+     *
+     * <p>默认值与原 {@code MessageConstants.MAX_RETRY_COUNT=3} /
+     * {@code RETRY_BASE_BACKOFF_MS=2000} 保持等价（倍率 2.0，上限 60s），
+     * 确保不配置时行为不变。
+     */
+    @Data
+    public static class RetryPolicy {
+        /** 最大重试次数（达到后转死信/失败） */
+        private int maxRetryCount = 3;
+        /** 基础退避（毫秒） */
+        private long baseBackoffMs = 2000L;
+        /** 退避倍率（指数退避底数，默认 2.0） */
+        private double backoffMultiplier = 2.0;
+        /** 退避上限（毫秒，防止单次退避过大） */
+        private long maxBackoffMs = 60000L;
+    }
+
+    /**
+     * P1-4: 死信告警配置。
+     *
+     * <p>当指定时间窗口内某通道死信数量达到阈值时触发告警事件
+     * ({@link com.njydsz.pmis.message.event.DeadLetterAlertEvent})，
+     * 通过 {@code cooldownMinutes} 控制同一通道告警冷却，避免告警风暴。
+     */
+    @Data
+    public static class DeadLetterAlertConfig {
+        /** 死信告警开关（关闭后仅落库不告警） */
+        private boolean enabled = true;
+        /** 告警阈值：窗口内死信数达到此值触发告警 */
+        private int threshold = 10;
+        /** 统计窗口（分钟） */
+        private int windowMinutes = 60;
+        /** 告警冷却（分钟）：同一通道告警后多久内不重复告警 */
+        private int cooldownMinutes = 30;
     }
 }

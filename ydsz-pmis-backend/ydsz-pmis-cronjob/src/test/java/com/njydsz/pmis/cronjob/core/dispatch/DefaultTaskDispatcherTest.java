@@ -5,7 +5,9 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.alert.AlertTrigger;
+import com.njydsz.pmis.cronjob.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.pmis.cronjob.core.executor.JobNodeHeartbeat;
+import com.njydsz.pmis.cronjob.core.executor.TenantAwareExecutorPool;
 import com.njydsz.pmis.cronjob.core.sharding.ShardingStrategy;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
@@ -14,6 +16,7 @@ import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
 import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
+import com.njydsz.pmis.cronjob.service.JobLogContentService;
 import com.njydsz.pmis.cronjob.service.TenantQuotaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -85,6 +88,10 @@ class DefaultTaskDispatcherTest {
     @Mock
     private JobNodeHeartbeat jobNodeHeartbeat;
     @Mock
+    private ObjectProvider<JobNodeHeartbeat> jobNodeHeartbeatProvider;
+    @Mock
+    private ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
+    @Mock
     private JobNodeMapper jobNodeMapper;
     @Mock
     private ObjectProvider<ShardingStrategy> shardingStrategyProvider;
@@ -101,7 +108,17 @@ class DefaultTaskDispatcherTest {
     @Mock
     private ObjectProvider<com.njydsz.pmis.cronjob.core.handler.HttpJobHandler> httpJobHandlerProvider;
     @Mock
+    private ObjectProvider<com.njydsz.pmis.cronjob.core.handler.GlueJobHandler> glueJobHandlerProvider;
+    @Mock
+    private ObjectProvider<com.njydsz.pmis.cronjob.core.handler.ScriptJobHandler> scriptJobHandlerProvider;
+    @Mock
     private ObjectProvider<RemoteTaskClient> remoteTaskClientProvider;
+    @Mock
+    private ObjectProvider<JobLogContentService> jobLogContentServiceProvider;
+    @Mock
+    private ObjectProvider<com.njydsz.pmis.cronjob.core.map.MapTaskExecutor> mapTaskExecutorProvider;
+    @Mock
+    private ObjectProvider<TenantAwareExecutorPool> tenantAwareExecutorPoolProvider;
 
     private CronjobProperties cronjobProperties;
 
@@ -139,10 +156,38 @@ class DefaultTaskDispatcherTest {
             java.lang.reflect.Field f5 = DefaultTaskDispatcher.class.getDeclaredField("httpJobHandlerProvider");
             f5.setAccessible(true);
             f5.set(dispatcher, httpJobHandlerProvider);
+            // P1-2: 注入 GlueJobHandler ObjectProvider
+            java.lang.reflect.Field f5b = DefaultTaskDispatcher.class.getDeclaredField("glueJobHandlerProvider");
+            f5b.setAccessible(true);
+            f5b.set(dispatcher, glueJobHandlerProvider);
+            // P1-3: 注入 ScriptJobHandler ObjectProvider
+            java.lang.reflect.Field f5c = DefaultTaskDispatcher.class.getDeclaredField("scriptJobHandlerProvider");
+            f5c.setAccessible(true);
+            f5c.set(dispatcher, scriptJobHandlerProvider);
             // P1-4: 注入 RemoteTaskClient ObjectProvider
             java.lang.reflect.Field f6 = DefaultTaskDispatcher.class.getDeclaredField("remoteTaskClientProvider");
             f6.setAccessible(true);
             f6.set(dispatcher, remoteTaskClientProvider);
+            // P0-2: 注入 JobLogContentService ObjectProvider
+            java.lang.reflect.Field f7 = DefaultTaskDispatcher.class.getDeclaredField("jobLogContentServiceProvider");
+            f7.setAccessible(true);
+            f7.set(dispatcher, jobLogContentServiceProvider);
+            // P0-4: 注入 MapTaskExecutor ObjectProvider
+            java.lang.reflect.Field f8 = DefaultTaskDispatcher.class.getDeclaredField("mapTaskExecutorProvider");
+            f8.setAccessible(true);
+            f8.set(dispatcher, mapTaskExecutorProvider);
+            // P2-5: 注入 TenantAwareExecutorPool ObjectProvider（默认不启用，使用全局池）
+            java.lang.reflect.Field f11 = DefaultTaskDispatcher.class.getDeclaredField("tenantAwareExecutorPoolProvider");
+            f11.setAccessible(true);
+            f11.set(dispatcher, tenantAwareExecutorPoolProvider);
+            // P1-1: 注入 JobNodeHeartbeat ObjectProvider（type=db 时可用）
+            java.lang.reflect.Field f9 = DefaultTaskDispatcher.class.getDeclaredField("jobNodeHeartbeatProvider");
+            f9.setAccessible(true);
+            f9.set(dispatcher, jobNodeHeartbeatProvider);
+            // P1-1: 注入 NodeDiscoveryStrategy ObjectProvider（默认不启用，回退到 DB 查询）
+            java.lang.reflect.Field f10 = DefaultTaskDispatcher.class.getDeclaredField("nodeDiscoveryStrategyProvider");
+            f10.setAccessible(true);
+            f10.set(dispatcher, nodeDiscoveryStrategyProvider);
         } catch (Exception e) {
             throw new IllegalStateException("注入 ObjectProvider 失败", e);
         }
@@ -157,8 +202,22 @@ class DefaultTaskDispatcherTest {
         lenient().when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(null);
         // P1-5: HttpJobHandler 默认不启用（HTTP 任务类型在测试中默认降级到 BEAN 模式）
         lenient().when(httpJobHandlerProvider.getIfAvailable()).thenReturn(null);
+        // P1-2: GlueJobHandler 默认不启用（GLUE 任务类型在测试中默认降级到 BEAN 模式）
+        lenient().when(glueJobHandlerProvider.getIfAvailable()).thenReturn(null);
+        // P1-3: ScriptJobHandler 默认不启用（SHELL 任务类型在测试中默认降级到 BEAN 模式）
+        lenient().when(scriptJobHandlerProvider.getIfAvailable()).thenReturn(null);
         // P1-4: RemoteTaskClient 默认不启用（分片任务在测试中默认本地执行）
         lenient().when(remoteTaskClientProvider.getIfAvailable()).thenReturn(null);
+        // P0-2: JobLogContentService 默认不启用（在线日志写入在测试中默认降级丢弃）
+        lenient().when(jobLogContentServiceProvider.getIfAvailable()).thenReturn(null);
+        // P0-4: MapTaskExecutor 默认不启用（MAP/MAP_REDUCE 任务在测试中默认降级到 BEAN 模式）
+        lenient().when(mapTaskExecutorProvider.getIfAvailable()).thenReturn(null);
+        // P2-5: TenantAwareExecutorPool 默认不启用（isolation-strategy=none 使用全局池）
+        lenient().when(tenantAwareExecutorPoolProvider.getIfAvailable()).thenReturn(null);
+        // P1-1: JobNodeHeartbeat 默认可用（现有测试基于 DB 心跳模式）
+        lenient().when(jobNodeHeartbeatProvider.getIfAvailable()).thenReturn(jobNodeHeartbeat);
+        // P1-1: NodeDiscoveryStrategy 默认不启用（回退到 DB 查询，保持现有测试行为）
+        lenient().when(nodeDiscoveryStrategyProvider.getIfAvailable()).thenReturn(null);
         // P1-7: 初始化执行线程池（测试用同步执行器，任务在调用线程中执行）
         try {
             java.util.concurrent.ThreadPoolExecutor syncPool = new java.util.concurrent.ThreadPoolExecutor(

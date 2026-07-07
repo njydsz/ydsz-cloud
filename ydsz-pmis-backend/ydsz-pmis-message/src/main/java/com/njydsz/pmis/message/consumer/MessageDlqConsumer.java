@@ -8,6 +8,7 @@ import com.njydsz.pmis.message.entity.MsgLogDO;
 import com.njydsz.pmis.message.enums.MessageStatusEnum;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
 import com.njydsz.pmis.message.metric.MessageMetrics;
+import com.njydsz.pmis.message.tracing.MessageTraceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -53,44 +54,47 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         String body = new String(messageExt.getBody() == null ? new byte[0] : messageExt.getBody());
         String originTopic = messageExt.getTopic();
 
-        MessageRequest request = null;
-        try {
-            request = JsonUtils.parseObject(body, MessageRequest.class);
-        } catch (Exception e) {
-            log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage());
-        }
-
-        try {
-            MsgLogDO logDO = new MsgLogDO();
-            if (request != null) {
-                logDO.setChannel(request.getChannel());
-                logDO.setBizType(request.getBizType());
-                logDO.setBizId(request.getBizId());
-                logDO.setReceiver(request.getReceiver());
-                logDO.setTemplateCode(request.getTemplateCode());
-                logDO.setContent(request.getContent());
-                logDO.setMsgId(request.getMessageId());
-            } else {
-                logDO.setChannel("UNKNOWN");
-                logDO.setReceiver("UNKNOWN");
-                logDO.setContent(body.length() > 500 ? body.substring(0, 500) + "..." : body);
+        // P1-3: 死信处理进入追踪上下文（无原始 traceId 时自动生成）
+        try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
+            MessageRequest request = null;
+            try {
+                request = JsonUtils.parseObject(body, MessageRequest.class);
+            } catch (Exception e) {
+                log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage());
             }
-            logDO.setStatus(MessageStatusEnum.DEAD.name());
-            logDO.setErrorMessage(String.format(
-                    "DLQ: msgId=%s, originTopic=%s, reconsumeTimes=%d", msgId, originTopic, reconsumeTimes));
-            logDO.setTopic(originTopic);
-            logDO.setReconsumeTimes(reconsumeTimes);
-            logDO.setTenantId(TenantContext.getTenantId());
-            msgLogMapper.insert(logDO);
-            messageMetrics.recordDead(logDO.getChannel());
-        } catch (Exception e) {
-            log.error("[MessageDlqConsumer] 死信落库失败: msgId={} err={}", msgId, e.getMessage(), e);
-        }
 
-        log.error("[MessageDlqConsumer] 死信已落库: msgId={} originTopic={} reconsumeTimes={} bizType={} bizId={} receiver={}",
-                msgId, originTopic, reconsumeTimes,
-                request == null ? null : request.getBizType(),
-                request == null ? null : request.getBizId(),
-                request == null ? null : request.getReceiver());
+            try {
+                MsgLogDO logDO = new MsgLogDO();
+                if (request != null) {
+                    logDO.setChannel(request.getChannel());
+                    logDO.setBizType(request.getBizType());
+                    logDO.setBizId(request.getBizId());
+                    logDO.setReceiver(request.getReceiver());
+                    logDO.setTemplateCode(request.getTemplateCode());
+                    logDO.setContent(request.getContent());
+                    logDO.setMsgId(request.getMessageId());
+                } else {
+                    logDO.setChannel("UNKNOWN");
+                    logDO.setReceiver("UNKNOWN");
+                    logDO.setContent(body.length() > 500 ? body.substring(0, 500) + "..." : body);
+                }
+                logDO.setStatus(MessageStatusEnum.DEAD.name());
+                logDO.setErrorMessage(String.format(
+                        "DLQ: msgId=%s, originTopic=%s, reconsumeTimes=%d", msgId, originTopic, reconsumeTimes));
+                logDO.setTopic(originTopic);
+                logDO.setReconsumeTimes(reconsumeTimes);
+                logDO.setTenantId(TenantContext.getTenantId());
+                msgLogMapper.insert(logDO);
+                messageMetrics.recordDead(logDO.getChannel());
+            } catch (Exception e) {
+                log.error("[MessageDlqConsumer] 死信落库失败: msgId={} err={}", msgId, e.getMessage(), e);
+            }
+
+            log.error("[MessageDlqConsumer] 死信已落库: msgId={} originTopic={} reconsumeTimes={} bizType={} bizId={} receiver={}",
+                    msgId, originTopic, reconsumeTimes,
+                    request == null ? null : request.getBizType(),
+                    request == null ? null : request.getBizId(),
+                    request == null ? null : request.getReceiver());
+        }
     }
 }

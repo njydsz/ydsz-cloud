@@ -134,8 +134,8 @@ public class MessageController {
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/batch/{batchId}/progress")
     public Result<Page<MsgLogDO>> batchProgress(@PathVariable String batchId,
-                                                @RequestParam(defaultValue = "1") int page,
-                                                @RequestParam(defaultValue = "20") int size) {
+                                                @RequestParam(defaultValue = "1") long page,
+                                                @RequestParam(defaultValue = "20") long size) {
         MessageLogQueryDTO query = new MessageLogQueryDTO();
         query.setBizId(batchId);
         query.setPage(page);

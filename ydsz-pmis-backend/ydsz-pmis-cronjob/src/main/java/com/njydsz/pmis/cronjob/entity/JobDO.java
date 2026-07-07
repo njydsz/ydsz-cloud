@@ -50,6 +50,27 @@ public class JobDO extends BaseDO {
     @NotBlank(message = "{validation.cronjob.msg_14201280}")
     private String cronExpression;
 
+    /**
+     * 调度类型（P0-3）：CRON / FIXED_RATE / FIXED_DELAY / API。
+     *
+     * <p>null 视为 CRON（向后兼容）。
+     */
+    private String scheduleType;
+
+    /**
+     * 固定频率间隔（毫秒，P0-3）：scheduleType=FIXED_RATE 时生效。
+     *
+     * <p>如 30000 = 每 30 秒执行一次。
+     */
+    private Long fixedRateMs;
+
+    /**
+     * 固定延迟间隔（毫秒，P0-3）：scheduleType=FIXED_DELAY 时生效。
+     *
+     * <p>上次执行完成后等待此毫秒数再执行下一次。
+     */
+    private Long fixedDelayMs;
+
     /** 参数 JSON */
     private String paramsJson;
 
@@ -162,6 +183,12 @@ public class JobDO extends BaseDO {
      * 版本号（P4-8）：每次修改 +1，用于乐观锁和版本追溯。
      */
     private Integer version;
+
+    /**
+     * 任务级时区（P2-8）：如 Asia/Shanghai / America/New_York / UTC。
+     * null 使用系统默认时区（Asia/Shanghai）。
+     */
+    private String timezone;
 
     /** 租户 ID */
     private String tenantId;

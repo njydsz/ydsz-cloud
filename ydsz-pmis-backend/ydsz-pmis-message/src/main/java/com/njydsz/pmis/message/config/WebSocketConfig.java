@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.config;
 
+import com.njydsz.pmis.message.realtime.WebSocketAuthHandshakeInterceptor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -13,12 +15,20 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  * 订阅 {@code /topic/broadcast} 接收广播，订阅 {@code /topic/{topic}} 接收主题消息。
  * 心跳 10s/10s（服务端 / 客户端），由 STOMP 协议层自动保活。
  *
+ * <p>P0-4 增强：注册 {@link WebSocketAuthHandshakeInterceptor}，握手时校验 JWT token，
+ * 拒绝未认证连接；在线状态 / 离线消息补偿由 {@code OnlineUserService} /
+ * {@code OfflineMessageService} / {@code WebSocketSessionListener} 协作完成。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    /** P0-4: 握手鉴权拦截器 */
+    private final WebSocketAuthHandshakeInterceptor authInterceptor;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -34,6 +44,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
+                .addInterceptors(authInterceptor)
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
     }

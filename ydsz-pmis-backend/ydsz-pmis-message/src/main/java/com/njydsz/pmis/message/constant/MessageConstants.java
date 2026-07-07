@@ -87,4 +87,30 @@ public final class MessageConstants {
 
     /** P2-9: 回执超时阈值(分钟): 超过此时间仍未收到回执则标记为 TIMEOUT */
     public static final long RECEIPT_TIMEOUT_MINUTES = 30L;
+
+    // ========== P0-4: WebSocket 鉴权 / 在线状态 / 离线消息补偿 ==========
+
+    /** P0-4: 在线用户 Redis key 前缀（Hash: pmis:ws:online:{userId} -> sessionId） */
+    public static final String WS_ONLINE_KEY_PREFIX = "pmis:ws:online:";
+
+    /** P0-4: 离线消息 Redis List key 前缀（pmis:ws:offline:{userId}） */
+    public static final String WS_OFFLINE_KEY_PREFIX = "pmis:ws:offline:";
+
+    /** P0-4: 离线消息缓存最大条数（防止内存溢出，FIFO 淘汰） */
+    public static final int WS_OFFLINE_MAX_CACHE = 100;
+
+    /** P0-4: 离线消息缓存 TTL（秒），默认 7 天 */
+    public static final long WS_OFFLINE_TTL_SECONDS = 7 * 24 * 3600L;
+
+    /** P0-4: WebSocket 握手属性中的 userId key */
+    public static final String WS_ATTR_USER_ID = "userId";
+
+    /** P0-4: WebSocket 握手属性中的 username key */
+    public static final String WS_ATTR_USERNAME = "username";
+
+    /** P0-4: 握手请求中 JWT token 的查询参数名 */
+    public static final String WS_TOKEN_PARAM = "token";
+
+    /** P0-4: 握手请求中 JWT token 的请求头名 */
+    public static final String WS_TOKEN_HEADER = "Authorization";
 }

@@ -216,7 +216,7 @@ class AlertServiceImplTest {
         BizException ex = assertThrows(BizException.class,
                 () -> alertService.deleteRule("rule-x"));
         assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
-        verify(jobAlertRuleMapper, never()).deleteById(any());
+        verify(jobAlertRuleMapper, never()).deleteById(any(java.io.Serializable.class));
     }
 
     @Test

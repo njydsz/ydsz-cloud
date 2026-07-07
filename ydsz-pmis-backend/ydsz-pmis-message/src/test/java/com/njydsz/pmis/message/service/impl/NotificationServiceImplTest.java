@@ -62,8 +62,8 @@ class NotificationServiceImplTest {
 
         assertEquals(2, count);
         verify(msgNotificationMapper, times(2)).insert(any(MsgNotificationDO.class));
-        verify(realtimePushService).pushToUser(eq("u1"), anyString(), any());
-        verify(realtimePushService).pushToUser(eq("u2"), anyString(), any());
+        verify(realtimePushService).pushToUserWithOffline(eq("u1"), anyString(), any());
+        verify(realtimePushService).pushToUserWithOffline(eq("u2"), anyString(), any());
     }
 
     @Test

@@ -10,11 +10,14 @@ import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.dispatch.TaskDispatcher;
 import com.njydsz.pmis.cronjob.core.dispatch.DefaultTaskDispatcher;
+import com.njydsz.pmis.cronjob.core.scheduler.ScheduleType;
+import com.njydsz.pmis.cronjob.core.scheduler.SecondLevelScheduler;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.service.JobHistoryService;
 import com.njydsz.pmis.cronjob.service.JobService;
 import com.njydsz.pmis.cronjob.service.TenantQuotaService;
 import jakarta.annotation.PostConstruct;
@@ -38,6 +41,7 @@ import org.springframework.util.StringUtils;
 import java.lang.management.ManagementFactory;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -93,6 +97,23 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 配额检查默认禁用（{@code pmis.cronjob.quota.enabled=false}），启用后生效。
      */
     private final TenantQuotaService tenantQuotaService;
+
+    /**
+     * 秒级调度器（P0-3 可选注入）。
+     *
+     * <p>仅在 Leader 模式启用（{@code @ConditionalOnBean(LeaderElector.class)}），
+     * 用于管理 FIXED_RATE / FIXED_DELAY 类型任务的调度。
+     * Leaderless 模式下为 null，由 {@link #register} 回退到本地 TaskScheduler 处理。
+     */
+    private final ObjectProvider<SecondLevelScheduler> secondLevelSchedulerProvider;
+
+    /**
+     * 任务历史版本服务（P1-6 可选注入）。
+     *
+     * <p>用于在任务配置更新前自动保存历史快照，支持版本对比和一键回滚。
+     * 通过 ObjectProvider 可选注入，避免循环依赖且便于测试。
+     */
+    private final ObjectProvider<JobHistoryService> jobHistoryServiceProvider;
 
     /** 调度器 */
     private TaskScheduler taskScheduler;
@@ -216,6 +237,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     /**
      * 新增任务
      *
+     * <p>P0-3: 根据 {@code scheduleType} 决定是否计算 nextFireTime：
+     * <ul>
+     *   <li>CRON: 计算 nextFireTime（由 JobScanner 扫描）</li>
+     *   <li>FIXED_RATE / FIXED_DELAY: 不计算 nextFireTime（由 SecondLevelScheduler 管理）</li>
+     *   <li>API: 不计算 nextFireTime（仅手动触发）</li>
+     * </ul>
+     *
      * @param job 任务定义
      * @return 新增任务 ID
      * @throws BizException 当 jobKey 已存在或参数非法时抛出
@@ -223,6 +251,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(JobDO job) {
+        // P0-3: scheduleType 默认为 CRON（向后兼容）
+        if (!StringUtils.hasText(job.getScheduleType())) {
+            job.setScheduleType(ScheduleType.CRON.name());
+        }
         validate(job);
         if (jobMapper.selectByJobKey(job.getJobKey()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640", job.getJobKey());
@@ -245,20 +277,26 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (!StringUtils.hasText(job.getMisfirePolicy())) {
             job.setMisfirePolicy("FIRE_NOW");
         }
-        // 计算 nextFireTime
-        LocalDateTime next = nextFireTime(job.getCronExpression());
-        job.setNextFireTime(next);
+        // P0-3: 仅 CRON 类型计算 nextFireTime（FIXED_RATE/FIXED_DELAY 由 SecondLevelScheduler 管理）
+        ScheduleType type = ScheduleType.parse(job.getScheduleType());
+        if (type == ScheduleType.CRON) {
+            LocalDateTime next = nextFireTime(job);
+            job.setNextFireTime(next);
+        }
         jobMapper.insert(job);
         if ("NORMAL".equals(job.getStatus())) {
             register(job);
         }
-        log.info("[Cronjob] 创建任务: key={} cron={} handler={} shardTotal={}",
-                job.getJobKey(), job.getCronExpression(), job.getHandler(), job.getShardTotal());
+        log.info("[Cronjob] 创建任务: key={} scheduleType={} cron={} handler={} shardTotal={}",
+                job.getJobKey(), job.getScheduleType(), job.getCronExpression(),
+                job.getHandler(), job.getShardTotal());
         return job.getId();
     }
 
     /**
      * 更新任务
+     *
+     * <p>P0-3: 同步 scheduleType/fixedRateMs/fixedDelayMs 字段，并按新调度类型重新注册。
      *
      * @param job 任务定义
      * @throws BizException 当任务不存在或 cron 表达式非法时抛出
@@ -273,13 +311,46 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (exists == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
-        if (StringUtils.hasText(job.getCronExpression())) {
-            validateCron(job.getCronExpression());
+        // P1-6: 保存历史版本（在更新之前保存当前快照）
+        JobHistoryService historyService = jobHistoryServiceProvider.getIfAvailable();
+        if (historyService != null) {
+            historyService.saveHistory(exists, job.getUpdatedBy());
         }
-        // 重新计算 nextFireTime
-        if (StringUtils.hasText(job.getCronExpression())) {
-            exists.setNextFireTime(nextFireTime(job.getCronExpression()));
+        // P0-3: 同步 scheduleType（空值不覆盖，保持原值）
+        if (StringUtils.hasText(job.getScheduleType())) {
+            exists.setScheduleType(job.getScheduleType());
         }
+        // P0-3: 同步 fixedRateMs/fixedDelayMs（允许清空为 null）
+        exists.setFixedRateMs(job.getFixedRateMs());
+        exists.setFixedDelayMs(job.getFixedDelayMs());
+        // P2-8: 同步时区（允许清空为 null，使用默认时区）
+        exists.setTimezone(job.getTimezone());
+        // 按新调度类型校验
+        ScheduleType type = ScheduleType.parse(exists.getScheduleType());
+        if (type == ScheduleType.CRON) {
+            if (StringUtils.hasText(job.getCronExpression())) {
+                validateCron(job.getCronExpression());
+            }
+            // 重新计算 nextFireTime（CRON 类型）
+            if (StringUtils.hasText(job.getCronExpression())) {
+                exists.setNextFireTime(nextFireTime(exists));
+            }
+        } else if (type == ScheduleType.FIXED_RATE) {
+            if (exists.getFixedRateMs() == null || exists.getFixedRateMs() <= 0) {
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "error.cronjob.msg_5d0044ca", "fixedRateMs 必须为正数");
+            }
+            // FIXED_RATE 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
+            exists.setNextFireTime(null);
+        } else if (type == ScheduleType.FIXED_DELAY) {
+            if (exists.getFixedDelayMs() == null || exists.getFixedDelayMs() <= 0) {
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "error.cronjob.msg_5d0044ca", "fixedDelayMs 必须为正数");
+            }
+            // FIXED_DELAY 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
+            exists.setNextFireTime(null);
+        }
+        if (StringUtils.hasText(job.getCronExpression())) exists.setCronExpression(job.getCronExpression());
         if (StringUtils.hasText(job.getHandler())) exists.setHandler(job.getHandler());
         if (StringUtils.hasText(job.getJobName())) exists.setJobName(job.getJobName());
         if (StringUtils.hasText(job.getJobGroup())) exists.setJobGroup(job.getJobGroup());
@@ -295,12 +366,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         exists.setSlowThresholdMs(job.getSlowThresholdMs());
         jobMapper.updateById(exists);
 
-        // 重新调度
+        // 重新调度：先注销旧的本地调度（CRON/FIXED_RATE/FIXED_DELAY 共用 scheduledMap）
         unregister(exists.getJobKey());
+        // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
+        unregisterFromSecondLevel(exists.getId());
         if ("NORMAL".equals(exists.getStatus())) {
             register(exists);
         }
-        log.info("[Cronjob] 更新任务: key={}", exists.getJobKey());
+        log.info("[Cronjob] 更新任务: key={} scheduleType={}", exists.getJobKey(), exists.getScheduleType());
     }
 
     /**
@@ -316,6 +389,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         unregister(j.getJobKey());
+        // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
+        unregisterFromSecondLevel(j.getId());
         jobMapper.deleteById(id);
         log.info("[Cronjob] 删除任务: key={}", j.getJobKey());
     }
@@ -330,6 +405,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public void pause(String id) {
         JobDO j = getById(id);
         unregister(j.getJobKey());
+        // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
+        unregisterFromSecondLevel(j.getId());
         j.setStatus("PAUSED");
         jobMapper.updateById(j);
         log.info("[Cronjob] 暂停任务: key={}", j.getJobKey());
@@ -400,12 +477,110 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     }
 
     /**
+     * 批量暂停任务
+     *
+     * <p>逐个调用 {@link #pause(String)}，单条失败记录 warn 日志并继续处理后续任务，
+     * 不影响其他任务的暂停操作。不使用整体事务，避免单条失败回滚所有操作。
+     *
+     * @param jobIds 任务 ID 列表
+     * @return 成功处理的数量
+     */
+    @Override
+    public int batchPause(List<String> jobIds) {
+        int success = 0;
+        for (String jobId : jobIds) {
+            try {
+                pause(jobId);
+                success++;
+            } catch (Exception e) {
+                log.warn("[Cronjob] 批量暂停失败: jobId={} reason={}", jobId, e.getMessage());
+            }
+        }
+        log.info("[Cronjob] 批量暂停完成: total={} success={}", jobIds.size(), success);
+        return success;
+    }
+
+    /**
+     * 批量恢复任务
+     *
+     * <p>逐个调用 {@link #resume(String)}，单条失败记录 warn 日志并继续处理后续任务，
+     * 不影响其他任务的恢复操作。不使用整体事务，避免单条失败回滚所有操作。
+     *
+     * @param jobIds 任务 ID 列表
+     * @return 成功处理的数量
+     */
+    @Override
+    public int batchResume(List<String> jobIds) {
+        int success = 0;
+        for (String jobId : jobIds) {
+            try {
+                resume(jobId);
+                success++;
+            } catch (Exception e) {
+                log.warn("[Cronjob] 批量恢复失败: jobId={} reason={}", jobId, e.getMessage());
+            }
+        }
+        log.info("[Cronjob] 批量恢复完成: total={} success={}", jobIds.size(), success);
+        return success;
+    }
+
+    /**
+     * 批量触发任务
+     *
+     * <p>逐个调用 {@link #trigger(String)}，单条失败记录 warn 日志并继续处理后续任务，
+     * 不影响其他任务的触发操作。不使用整体事务，避免单条失败回滚所有操作。
+     *
+     * @param jobIds 任务 ID 列表
+     * @return 成功处理的数量
+     */
+    @Override
+    public int batchTrigger(List<String> jobIds) {
+        int success = 0;
+        for (String jobId : jobIds) {
+            try {
+                trigger(jobId);
+                success++;
+            } catch (Exception e) {
+                log.warn("[Cronjob] 批量触发失败: jobId={} reason={}", jobId, e.getMessage());
+            }
+        }
+        log.info("[Cronjob] 批量触发完成: total={} success={}", jobIds.size(), success);
+        return success;
+    }
+
+    /**
+     * 批量删除任务
+     *
+     * <p>逐个调用 {@link #delete(String)}，单条失败记录 warn 日志并继续处理后续任务，
+     * 不影响其他任务的删除操作。不使用整体事务，避免单条失败回滚所有操作。
+     *
+     * @param jobIds 任务 ID 列表
+     * @return 成功处理的数量
+     */
+    @Override
+    public int batchDelete(List<String> jobIds) {
+        int success = 0;
+        for (String jobId : jobIds) {
+            try {
+                delete(jobId);
+                success++;
+            } catch (Exception e) {
+                log.warn("[Cronjob] 批量删除失败: jobId={} reason={}", jobId, e.getMessage());
+            }
+        }
+        log.info("[Cronjob] 批量删除完成: total={} success={}", jobIds.size(), success);
+        return success;
+    }
+
+    /**
      * 注册到调度器（从 DB 加载/动态新增）。
      *
-     * <p>P1-7 双轨：
+     * <p>P0-3: 根据 {@code scheduleType} 分发到不同调度器：
      * <ul>
-     *   <li>Leaderless 模式：注册到本地 TaskScheduler（保留 P0 行为）</li>
-     *   <li>Leader 模式：仅更新 next_fire_time，由 JobScanner 扫描后统一派发</li>
+     *   <li>CRON: 注册到 CronTrigger（Leaderless 模式）或由 JobScanner 扫描（Leader 模式）</li>
+     *   <li>FIXED_RATE / FIXED_DELAY: Leader 模式由 SecondLevelScheduler 接管；
+     *       Leaderless 模式注册到本地 TaskScheduler 的 scheduleAtFixedRate/scheduleWithFixedDelay</li>
+     *   <li>API: 不注册任何调度（仅手动触发）</li>
      * </ul>
      *
      * @param job 任务定义
@@ -416,6 +591,17 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (!"NORMAL".equals(job.getStatus())) {
             return false;
         }
+        ScheduleType type = ScheduleType.parse(job.getScheduleType());
+        // P0-3: API 类型不注册任何调度
+        if (type == ScheduleType.API) {
+            log.info("[Cronjob] API 类型任务不注册调度: key={}", job.getJobKey());
+            return true;
+        }
+        // P0-3: FIXED_RATE / FIXED_DELAY 类型优先交给 SecondLevelScheduler（Leader 模式）
+        if (type == ScheduleType.FIXED_RATE || type == ScheduleType.FIXED_DELAY) {
+            return registerFixedRateJob(job, type);
+        }
+        // CRON 类型走原有逻辑
         if (!StringUtils.hasText(job.getCronExpression())) {
             log.warn("[Cronjob] 注册失败: 任务 {} cron 表达式为空", job.getJobKey());
             return false;
@@ -423,7 +609,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         // P1-7: Leader 模式下跳过本地 CronTrigger 注册，仅确保 next_fire_time 已计算
         if (cronjobProperties.getLeader().isEnabled()) {
             if (job.getNextFireTime() == null) {
-                job.setNextFireTime(nextFireTime(job.getCronExpression()));
+                job.setNextFireTime(nextFireTime(job));
                 jobMapper.updateById(job);
             }
             log.debug("[Cronjob] Leader 模式跳过本地注册: key={}（由 JobScanner 扫描派发）",
@@ -434,7 +620,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             unregister(job.getJobKey());
         }
         try {
-            CronTrigger trigger = buildTrigger(job.getCronExpression());
+            CronTrigger trigger = buildTrigger(job);
             ScheduledFuture<?> f = taskScheduler.schedule(
                     () -> executeJob(job, false),
                     trigger
@@ -444,6 +630,68 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             return true;
         } catch (Exception e) {
             log.error("[Cronjob] 注册任务失败: key={} reason={}", job.getJobKey(), e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 注册 FIXED_RATE / FIXED_DELAY 类型任务（P0-3）。
+     *
+     * <p>Leader 模式：委托给 {@link SecondLevelScheduler}（仅 Leader 节点派发）；
+     * Leaderless 模式：回退到本地 {@link TaskScheduler} 的 scheduleAtFixedRate / scheduleWithFixedDelay，
+     * 通过 Redis 分布式锁防止多实例重复执行。
+     *
+     * @param job  任务定义
+     * @param type 调度类型（FIXED_RATE / FIXED_DELAY）
+     * @return 注册成功返回 true，否则返回 false
+     */
+    private boolean registerFixedRateJob(JobDO job, ScheduleType type) {
+        // Leader 模式：委托给 SecondLevelScheduler
+        if (cronjobProperties.getLeader().isEnabled()) {
+            SecondLevelScheduler scheduler = secondLevelSchedulerProvider != null
+                    ? secondLevelSchedulerProvider.getIfAvailable() : null;
+            if (scheduler == null) {
+                log.warn("[Cronjob] Leader 模式但 SecondLevelScheduler 未启用, FIXED_RATE/FIXED_DELAY 任务无法注册: key={}",
+                        job.getJobKey());
+                return false;
+            }
+            return scheduler.register(job);
+        }
+        // Leaderless 模式：回退到本地 TaskScheduler
+        long intervalMs;
+        if (type == ScheduleType.FIXED_RATE) {
+            intervalMs = job.getFixedRateMs() == null ? 0 : job.getFixedRateMs();
+        } else {
+            intervalMs = job.getFixedDelayMs() == null ? 0 : job.getFixedDelayMs();
+        }
+        if (intervalMs <= 0) {
+            log.warn("[Cronjob] 注册失败: 任务 {} 间隔非法, type={} fixedRateMs={} fixedDelayMs={}",
+                    job.getJobKey(), type, job.getFixedRateMs(), job.getFixedDelayMs());
+            return false;
+        }
+        if (scheduledMap.containsKey(job.getJobKey())) {
+            unregister(job.getJobKey());
+        }
+        try {
+            ScheduledFuture<?> f;
+            if (type == ScheduleType.FIXED_RATE) {
+                f = taskScheduler.scheduleAtFixedRate(
+                        () -> executeJob(job, false),
+                        Duration.ofMillis(intervalMs)
+                );
+            } else {
+                f = taskScheduler.scheduleWithFixedDelay(
+                        () -> executeJob(job, false),
+                        Duration.ofMillis(intervalMs)
+                );
+            }
+            scheduledMap.put(job.getJobKey(), f);
+            log.info("[Cronjob] 注册 {} 任务成功: key={} intervalMs={}",
+                    type, job.getJobKey(), intervalMs);
+            return true;
+        } catch (Exception e) {
+            log.error("[Cronjob] 注册 {} 任务失败: key={} reason={}",
+                    type, job.getJobKey(), e.getMessage());
             return false;
         }
     }
@@ -463,6 +711,25 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 注销 SecondLevelScheduler 中的调度（P0-3）。
+     *
+     * <p>仅 Leader 模式下 SecondLevelScheduler Bean 存在时才调用；
+     * Leaderless 模式下为空操作（FIXED_RATE/FIXED_DELAY 已由 {@link #unregister} 注销本地调度）。
+     *
+     * @param jobId 任务 ID
+     */
+    private void unregisterFromSecondLevel(String jobId) {
+        if (jobId == null) {
+            return;
+        }
+        SecondLevelScheduler scheduler = secondLevelSchedulerProvider != null
+                ? secondLevelSchedulerProvider.getIfAvailable() : null;
+        if (scheduler != null) {
+            scheduler.unregister(jobId);
+        }
     }
 
     /**
@@ -614,7 +881,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             Long incFail = success ? 0L : 1L;
             LocalDateTime next = null;
             if (!manual) {
-                next = nextFireTime(job.getCronExpression());
+                next = nextFireTime(job);
             }
             jobMapper.updateStats(job.getId(), log0.getStartTime(), next, incFire, incSucc, incFail,
                     success ? null : "ERROR");
@@ -654,8 +921,16 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     /**
      * 校验任务必填字段
      *
+     * <p>P0-3: 根据 {@code scheduleType} 校验：
+     * <ul>
+     *   <li>CRON: 必须有 cronExpression</li>
+     *   <li>FIXED_RATE: 必须有 fixedRateMs &gt; 0</li>
+     *   <li>FIXED_DELAY: 必须有 fixedDelayMs &gt; 0</li>
+     *   <li>API: 无额外必填字段</li>
+     * </ul>
+     *
      * @param job 任务定义
-     * @throws BizException 当 jobKey/handler/cronExpression 为空或非法时抛出
+     * @throws BizException 当 jobKey/handler 为空或调度参数非法时抛出
      */
     private void validate(JobDO job) {
         if (!StringUtils.hasText(job.getJobKey())) {
@@ -664,7 +939,39 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (!StringUtils.hasText(job.getHandler())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_04ebee77");
         }
-        validateCron(job.getCronExpression());
+        // P2-8: 校验任务级时区（非空时必须为有效时区 ID）
+        if (StringUtils.hasText(job.getTimezone())) {
+            try {
+                ZoneId.of(job.getTimezone());
+            } catch (Exception e) {
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "error.cronjob.msg_5d0044ca", "无效的时区 ID: " + job.getTimezone());
+            }
+        }
+        ScheduleType type = ScheduleType.parse(job.getScheduleType());
+        switch (type) {
+            case CRON:
+                validateCron(job.getCronExpression());
+                break;
+            case FIXED_RATE:
+                if (job.getFixedRateMs() == null || job.getFixedRateMs() <= 0) {
+                    throw new BizException(BizErrorCode.BAD_REQUEST,
+                            "error.cronjob.msg_5d0044ca", "fixedRateMs 必须为正数");
+                }
+                break;
+            case FIXED_DELAY:
+                if (job.getFixedDelayMs() == null || job.getFixedDelayMs() <= 0) {
+                    throw new BizException(BizErrorCode.BAD_REQUEST,
+                            "error.cronjob.msg_5d0044ca", "fixedDelayMs 必须为正数");
+                }
+                break;
+            case API:
+                // API 类型仅手动触发，无额外必填字段
+                break;
+            default:
+                // 不会到达此处（parse 方法已兜底）
+                validateCron(job.getCronExpression());
+        }
     }
 
     /**
@@ -685,34 +992,42 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     }
 
     /**
-     * 构造 CronTrigger（使用统一调度时区 Asia/Shanghai）
+     * 构造 CronTrigger（P2-8: 支持任务级时区）。
      *
      * <p>P0-3 修复: 不再使用系统默认时区，避免多时区部署时触发时间漂移。
+     * P2-8: 优先使用任务级时区，为空时回退到 {@link #SCHEDULE_TIMEZONE}。
      *
-     * @param cron cron 表达式
+     * @param job 任务定义（含 cron 表达式和时区）
      * @return CronTrigger 实例
      */
-    private CronTrigger buildTrigger(String cron) {
-        return new CronTrigger(cron, SCHEDULE_TIMEZONE);
+    private CronTrigger buildTrigger(JobDO job) {
+        String tz = StringUtils.hasText(job.getTimezone()) ? job.getTimezone() : "Asia/Shanghai";
+        return new CronTrigger(job.getCronExpression(), TimeZone.getTimeZone(tz));
     }
 
     /**
-     * 计算下次触发时间
+     * 计算下次触发时间（P2-8: 支持任务级时区）。
      *
      * <p>P0-5 修复: 仅调用一次 expr.next() 避免竞态条件。
-     * CronExpression 基于 LocalDateTime 直接计算，无需时区转换。
+     * P2-8: 优先使用 {@link JobDO#getTimezone()} 指定的时区计算当前时间，
+     * 为空时回退到默认时区 Asia/Shanghai。
      *
-     * @param cron cron 表达式
+     * @param job 任务定义（含 cron 表达式和时区）
      * @return 下次触发时间；表达式非法时返回 null
      */
-    private LocalDateTime nextFireTime(String cron) {
+    private LocalDateTime nextFireTime(JobDO job) {
         try {
-            CronExpression expr = CronExpression.parse(cron);
+            // P2-8: 任务级时区，null 使用默认 Asia/Shanghai
+            String tz = StringUtils.hasText(job.getTimezone()) ? job.getTimezone() : "Asia/Shanghai";
+            ZoneId zoneId = ZoneId.of(tz);
+            CronExpression expr = CronExpression.parse(job.getCronExpression());
             // P0-5 修复: 仅调用一次 expr.next() 避免竞态条件
-            // CronExpression 基于 LocalDateTime 直接计算, 无需时区转换
-            return expr.next(LocalDateTime.now());
+            // P2-8: 使用任务时区的当前时间计算
+            LocalDateTime now = LocalDateTime.now(zoneId);
+            return expr.next(now);
         } catch (Exception e) {
-            log.warn("[Cronjob] 计算 nextFireTime 失败: cron={} err={}", cron, e.getMessage());
+            log.warn("[Cronjob] 计算 nextFireTime 失败: cron={} tz={} err={}",
+                    job.getCronExpression(), job.getTimezone(), e.getMessage());
             return null;
         }
     }

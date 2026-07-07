@@ -167,6 +167,15 @@ public class RuleAttributionService {
     /**
      * 递归遍历追踪树，提取 COMPARISON 节点为归因因子
      *
+     * <p>处理顺序说明：
+     * <ol>
+     *   <li>LOGICAL 节点优先处理：即使自身 shortCircuited=true（表示它短路了右侧子节点），
+     *       仍需递归处理子节点以收集左侧已评估的条件因子和右侧被跳过的短路因子</li>
+     *   <li>非 LOGICAL 节点（如被跳过的 ROOT/COMPARISON 子节点）：shortCircuited=true 时
+     *       标记为短路因子并返回</li>
+     *   <li>COMPARISON 节点：提取变量名/当前值/运算符/阈值为归因因子</li>
+     * </ol>
+     *
      * @param node             当前节点
      * @param factors          归因因子收集列表
      * @param parentShortCircuited 父节点是否短路
@@ -178,7 +187,21 @@ public class RuleAttributionService {
             return;
         }
 
-        // 短路跳过的节点：标记为短路因子
+        // LOGICAL 节点优先处理：自身 shortCircuited=true 表示它短路了子节点，需继续递归
+        if (node.getNodeType() == ExpressionTraceNode.NodeType.LOGICAL) {
+            if (node.getChildren() != null) {
+                boolean logicalShortCircuited = node.isShortCircuited();
+                for (int i = 0; i < node.getChildren().size(); i++) {
+                    ExpressionTraceNode child = node.getChildren().get(i);
+                    // AND 短路时右侧子节点被跳过；OR 短路时右侧子节点被跳过
+                    boolean childShortCircuited = logicalShortCircuited && i > 0;
+                    collectFactors(child, factors, childShortCircuited || parentShortCircuited);
+                }
+            }
+            return;
+        }
+
+        // 短路跳过的节点（非 LOGICAL）：标记为短路因子
         if (node.isShortCircuited() || "短路跳过".equals(node.getError())) {
             if (node.getExpression() != null) {
                 factors.add(AttributionReport.AttributionFactor.builder()
@@ -203,18 +226,6 @@ public class RuleAttributionService {
                 AttributionReport.AttributionFactor factor = buildFactorFromComparison(node, parentShortCircuited);
                 if (factor != null) {
                     factors.add(factor);
-                }
-            }
-            case LOGICAL -> {
-                // 递归处理子节点
-                if (node.getChildren() != null) {
-                    boolean logicalShortCircuited = node.isShortCircuited();
-                    for (int i = 0; i < node.getChildren().size(); i++) {
-                        ExpressionTraceNode child = node.getChildren().get(i);
-                        // AND 短路时右侧子节点被跳过；OR 短路时右侧子节点被跳过
-                        boolean childShortCircuited = logicalShortCircuited && i > 0;
-                        collectFactors(child, factors, childShortCircuited || parentShortCircuited);
-                    }
                 }
             }
             case ROOT -> {

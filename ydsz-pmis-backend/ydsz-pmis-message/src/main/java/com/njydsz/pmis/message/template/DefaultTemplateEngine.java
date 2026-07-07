@@ -1,16 +1,35 @@
 package com.njydsz.pmis.message.template;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.BizException;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 默认模板引擎实现。
+ * 默认模板引擎实现（P0-3 增强）。
  *
- * <p>使用正则 {@code \$\{([\w.]+)\}} 匹配 {@code ${var}} 与 {@code ${a.b.c}} 形式占位符，
- * 支持 {@code a.b.c} 嵌套 Map 取值，未命中替换为空串。
+ * <p>支持三层渲染能力，向后兼容 {@code ${var}} 简单变量语法：
+ * <ol>
+ *   <li><b>变量替换</b>：{@code ${var}} / {@code ${a.b.c}} 嵌套 Map 取值；未命中替换为空串。
+ *       在 {@code {{#each}}} 块内额外支持 {@code ${this}}、{@code ${this.prop}}、{@code ${@index}}。</li>
+ *   <li><b>条件渲染</b>：{@code {{#if var}}A{{else}}B{{/if}}}；
+ *       truthy 判定规则：null→false / Boolean→自身 / String→非空白 / Number→非 0 /
+ *       Collection→非空 / Map→非空 / 其他→true。else 分支可省略。</li>
+ *   <li><b>循环渲染</b>：{@code {{#each list}}...{{/each}}}；
+ *       仅对 {@link Iterable} 元素迭代（Map 不视为可迭代），每次迭代将 {@code this}
+ *       与 {@code @index} 注入到子作用域；非可迭代值渲染空串。支持嵌套 each 与 if。</li>
+ * </ol>
+ *
+ * <p>渲染顺序：{@code {{#each}}} → {@code {{#if}}} → {@code ${var}}}（由内向外，确保块内条件与变量先解析）。
+ *
+ * <p>多渠道差异化由 {@code TemplateService.loadByCodeAndChannel} 在模板加载层实现，
+ * 引擎仅按传入的模板内容渲染。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -18,41 +37,209 @@ import java.util.regex.Pattern;
 @Component
 public class DefaultTemplateEngine implements TemplateEngine {
 
-    /** 占位符正则：匹配 ${var} 或 ${a.b.c} 形式的变量 */
-    private static final Pattern PATTERN = Pattern.compile("\\$\\{([\\w.]+)\\}");
+    /** 变量占位符正则：匹配 ${var} / ${a.b.c} / ${this} / ${@index} */
+    private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([\\w.@]+)\\}");
 
-    /**
-     * 渲染模板，将 {@code ${var}} 占位符替换为参数值，未命中时替换为空串。
-     *
-     * @param template 模板内容
-     * @param params   参数映射
-     * @return 渲染后文本；模板为 null/空时返回空串；params 为 null 时返回原模板
-     */
+    /** if-else 块正则：{{#if var}}truePart{{else}}falsePart{{/if}} */
+    private static final Pattern IF_ELSE_PATTERN = Pattern.compile(
+            "\\{\\{#if\\s+([\\w.]+)\\}\\}(.*?)\\{\\{else\\}\\}(.*?)\\{\\{/if\\}\\}",
+            Pattern.DOTALL);
+
+    /** 纯 if 块正则（无 else）：{{#if var}}truePart{{/if}} */
+    private static final Pattern IF_PATTERN = Pattern.compile(
+            "\\{\\{#if\\s+([\\w.]+)\\}\\}(.*?)\\{\\{/if\\}\\}",
+            Pattern.DOTALL);
+
+    /** each 块正则：{{#each list}}body{{/each}} */
+    private static final Pattern EACH_PATTERN = Pattern.compile(
+            "\\{\\{#each\\s+([\\w.]+)\\}\\}(.*?)\\{\\{/each\\}\\}",
+            Pattern.DOTALL);
+
     @Override
     public String render(String template, Map<String, Object> params) {
+        return render(template, params, null);
+    }
+
+    @Override
+    public String render(String template, Map<String, Object> params, Set<String> requiredKeys) {
         if (template == null || template.isEmpty()) {
             return "";
         }
-        if (params == null) {
+        // 保留原行为：params 为 null 且无必填校验时，返回原模板（不做任何替换）
+        if (params == null && (requiredKeys == null || requiredKeys.isEmpty())) {
             return template;
         }
-        Matcher m = PATTERN.matcher(template);
+        Map<String, Object> safeParams = params != null ? params : Map.of();
+        if (requiredKeys != null && !requiredKeys.isEmpty()) {
+            validateRequired(safeParams, requiredKeys);
+        }
+        String result = template;
+        result = processEach(result, safeParams);
+        result = processIf(result, safeParams);
+        result = processVars(result, safeParams);
+        return result;
+    }
+
+    /**
+     * 校验必填参数：缺失 / null / 空白字符串均视为缺失，抛 {@link BizException}。
+     *
+     * @param params       参数映射
+     * @param requiredKeys 必填 key 集合
+     */
+    private void validateRequired(Map<String, Object> params, Set<String> requiredKeys) {
+        for (String key : requiredKeys) {
+            Object value = resolve(params, key);
+            if (value == null) {
+                throw new BizException(BizErrorCode.MISSING_PARAMETER,
+                        "模板必填参数缺失: " + key);
+            }
+            if (value instanceof String s && s.isBlank()) {
+                throw new BizException(BizErrorCode.MISSING_PARAMETER,
+                        "模板必填参数为空: " + key);
+            }
+        }
+    }
+
+    /**
+     * 处理 {@code {{#each list}}...{{/each}}} 块，递归支持嵌套。
+     *
+     * @param template 模板内容
+     * @param params   参数映射
+     * @return 处理后的内容
+     */
+    private String processEach(String template, Map<String, Object> params) {
+        Matcher m = EACH_PATTERN.matcher(template);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
             String key = m.group(1);
+            String body = m.group(2);
             Object value = resolve(params, key);
-            String replacement = Matcher.quoteReplacement(value == null ? "" : String.valueOf(value));
-            m.appendReplacement(sb, replacement);
+            String replacement = renderEachBody(body, value, params);
+            m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
         m.appendTail(sb);
         return sb.toString();
     }
 
     /**
-     * 解析占位符 key 对应的值，支持 {@code a.b.c} 形式的嵌套 Map 取值。
+     * 渲染 each 块体：对 {@link Iterable} 元素逐项渲染，注入 {@code this} / {@code @index}。
+     *
+     * @param body       块体模板
+     * @param listValue  列表值
+     * @param parentParams 父级参数（用于继承非循环变量）
+     * @return 拼接后的渲染结果
+     */
+    @SuppressWarnings("unchecked")
+    private String renderEachBody(String body, Object listValue, Map<String, Object> parentParams) {
+        if (!(listValue instanceof Iterable<?> iterable)) {
+            return "";
+        }
+        StringBuilder out = new StringBuilder();
+        int index = 0;
+        for (Object item : iterable) {
+            Map<String, Object> itemScope = new HashMap<>(parentParams);
+            itemScope.put("this", item);
+            itemScope.put("@index", index);
+            String rendered = body;
+            // 递归处理嵌套 each（内层先于外层变量替换）
+            rendered = processEach(rendered, itemScope);
+            rendered = processIf(rendered, itemScope);
+            rendered = processVars(rendered, itemScope);
+            out.append(rendered);
+            index++;
+        }
+        return out.toString();
+    }
+
+    /**
+     * 处理 {@code {{#if var}}...{{else}}...{{/if}}} 与 {@code {{#if var}}...{{/if}}} 块。
+     * 先处理 if-else，再处理纯 if，避免误匹配。
+     *
+     * @param template 模板内容
+     * @param params   参数映射
+     * @return 处理后的内容
+     */
+    private String processIf(String template, Map<String, Object> params) {
+        // ① 先处理含 else 的 if 块
+        Matcher elseMatcher = IF_ELSE_PATTERN.matcher(template);
+        StringBuffer sb = new StringBuffer();
+        while (elseMatcher.find()) {
+            String key = elseMatcher.group(1);
+            String truePart = elseMatcher.group(2);
+            String falsePart = elseMatcher.group(3);
+            Object value = resolve(params, key);
+            String replacement = isTruthy(value) ? truePart : falsePart;
+            elseMatcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        }
+        elseMatcher.appendTail(sb);
+        // ② 再处理纯 if 块（无 else）
+        Matcher ifMatcher = IF_PATTERN.matcher(sb.toString());
+        StringBuffer sb2 = new StringBuffer();
+        while (ifMatcher.find()) {
+            String key = ifMatcher.group(1);
+            String truePart = ifMatcher.group(2);
+            Object value = resolve(params, key);
+            String replacement = isTruthy(value) ? truePart : "";
+            ifMatcher.appendReplacement(sb2, Matcher.quoteReplacement(replacement));
+        }
+        ifMatcher.appendTail(sb2);
+        return sb2.toString();
+    }
+
+    /**
+     * 处理 {@code ${var}} 变量替换，未命中替换为空串。
+     *
+     * @param template 模板内容
+     * @param params   参数映射
+     * @return 处理后的内容
+     */
+    private String processVars(String template, Map<String, Object> params) {
+        Matcher m = VAR_PATTERN.matcher(template);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String key = m.group(1);
+            Object value = resolve(params, key);
+            String replacement = value == null ? "" : String.valueOf(value);
+            m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    /**
+     * truthy 判定：null→false / Boolean→自身 / String→非空白 / Number→非 0 /
+     * Collection→非空 / Map→非空 / 其他→true。
+     *
+     * @param value 值
+     * @return 是否为真
+     */
+    private boolean isTruthy(Object value) {
+        if (value == null) {
+            return false;
+        }
+        if (value instanceof Boolean b) {
+            return b;
+        }
+        if (value instanceof String s) {
+            return !s.isBlank();
+        }
+        if (value instanceof Number n) {
+            return n.doubleValue() != 0d;
+        }
+        if (value instanceof Collection<?> c) {
+            return !c.isEmpty();
+        }
+        if (value instanceof Map<?, ?> mp) {
+            return !mp.isEmpty();
+        }
+        return true;
+    }
+
+    /**
+     * 解析占位符 key 对应的值，支持 {@code a.b.c} 形式嵌套 Map 取值。
      *
      * @param params 参数映射
-     * @param key    占位符 key
+     * @param key    占位符 key（如 {@code user.name} / {@code this} / {@code @index}）
      * @return 解析到的值，未命中返回 null
      */
     @SuppressWarnings("unchecked")

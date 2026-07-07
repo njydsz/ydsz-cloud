@@ -32,6 +32,12 @@ public class AgentContext {
     private String traceId;
     /** 第三方大模型 provider trace ID（用于审计/账单核对） */
     private String providerTraceId;
+    /**
+     * 会话 ID（P1-1 多轮对话记忆标识）。
+     * <p>非空时 ReActLoop 会读写 {@code ChatMemory} 中该会话的历史，
+     * 实现多轮对话上下文；为空时表示无状态单轮调用。
+     */
+    private String sessionId;
 
     /** 7 参构造器（兼容历史调用方） */
     public AgentContext(String bizType, String bizId, String bizRef,

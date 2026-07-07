@@ -5,6 +5,8 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.dispatch.TaskDispatcher;
+import com.njydsz.pmis.cronjob.core.scheduler.ScheduleType;
+import com.njydsz.pmis.cronjob.core.scheduler.SecondLevelScheduler;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
@@ -103,6 +105,28 @@ class JobServiceImplTest {
             f.set(jobService, emptyProvider);
         } catch (Exception e) {
             throw new IllegalStateException("注入 taskDispatcherProvider 失败", e);
+        }
+        // P0-3: 注入 secondLevelSchedulerProvider（可选注入；测试场景默认无 SecondLevelScheduler）
+        try {
+            java.lang.reflect.Field f = JobServiceImpl.class.getDeclaredField("secondLevelSchedulerProvider");
+            f.setAccessible(true);
+            ObjectProvider<SecondLevelScheduler> emptyProvider =
+                    (ObjectProvider<SecondLevelScheduler>) org.mockito.Mockito.mock(ObjectProvider.class);
+            org.mockito.Mockito.when(emptyProvider.getIfAvailable()).thenReturn(null);
+            f.set(jobService, emptyProvider);
+        } catch (Exception e) {
+            throw new IllegalStateException("注入 secondLevelSchedulerProvider 失败", e);
+        }
+        // P1-6: 注入 jobHistoryServiceProvider（可选注入；测试场景默认无 JobHistoryService）
+        try {
+            java.lang.reflect.Field f = JobServiceImpl.class.getDeclaredField("jobHistoryServiceProvider");
+            f.setAccessible(true);
+            ObjectProvider<com.njydsz.pmis.cronjob.service.JobHistoryService> emptyProvider =
+                    (ObjectProvider<com.njydsz.pmis.cronjob.service.JobHistoryService>) org.mockito.Mockito.mock(ObjectProvider.class);
+            org.mockito.Mockito.when(emptyProvider.getIfAvailable()).thenReturn(null);
+            f.set(jobService, emptyProvider);
+        } catch (Exception e) {
+            throw new IllegalStateException("注入 jobHistoryServiceProvider 失败", e);
         }
 
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);
@@ -488,5 +512,113 @@ class JobServiceImplTest {
         job.setStatus("NORMAL");
         job.setLockTtlMs(lockTtlMs);
         return job;
+    }
+
+    // ==================== P0-3: 调度类型扩展测试 ====================
+
+    @Test
+    @DisplayName("P0-3: create 时 scheduleType=null 应默认设为 CRON")
+    void create_nullScheduleType_defaultsToCron() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO job = buildJob("create-default-type", "0 0 8 * * ?", null);
+        job.setScheduleType(null);
+        when(jobMapper.selectByJobKey("create-default-type")).thenReturn(null);
+
+        jobService.create(job);
+
+        assertEquals("CRON", job.getScheduleType(), "scheduleType 应默认为 CRON");
+    }
+
+    @Test
+    @DisplayName("P0-3: create FIXED_RATE 任务时不计算 nextFireTime")
+    void create_fixedRate_noNextFireTime() {
+        // Leader 模式: SecondLevelScheduler 未注入时 register 返回 false, 不会 NPE
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO job = buildJob("create-fixed-rate", null, null);
+        job.setScheduleType("FIXED_RATE");
+        job.setFixedRateMs(30000L);
+        when(jobMapper.selectByJobKey("create-fixed-rate")).thenReturn(null);
+
+        jobService.create(job);
+
+        assertNull(job.getNextFireTime(), "FIXED_RATE 类型不应计算 nextFireTime");
+        assertEquals("FIXED_RATE", job.getScheduleType());
+    }
+
+    @Test
+    @DisplayName("P0-3: create FIXED_DELAY 任务时不计算 nextFireTime")
+    void create_fixedDelay_noNextFireTime() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO job = buildJob("create-fixed-delay", null, null);
+        job.setScheduleType("FIXED_DELAY");
+        job.setFixedDelayMs(60000L);
+        when(jobMapper.selectByJobKey("create-fixed-delay")).thenReturn(null);
+
+        jobService.create(job);
+
+        assertNull(job.getNextFireTime(), "FIXED_DELAY 类型不应计算 nextFireTime");
+        assertEquals("FIXED_DELAY", job.getScheduleType());
+    }
+
+    @Test
+    @DisplayName("P0-3: create API 类型任务不注册任何调度")
+    void create_apiType_noScheduleRegistered() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO job = buildJob("create-api", null, null);
+        job.setScheduleType("API");
+        when(jobMapper.selectByJobKey("create-api")).thenReturn(null);
+
+        jobService.create(job);
+
+        assertEquals("API", job.getScheduleType());
+        assertNull(job.getNextFireTime(), "API 类型不应计算 nextFireTime");
+    }
+
+    @Test
+    @DisplayName("P0-3: create FIXED_RATE 缺少 fixedRateMs 时抛 BizException")
+    void create_fixedRateWithoutInterval_throwsBizException() {
+        JobDO job = buildJob("create-fixed-rate-no-interval", null, null);
+        job.setScheduleType("FIXED_RATE");
+        job.setFixedRateMs(null);
+        when(jobMapper.selectByJobKey("create-fixed-rate-no-interval")).thenReturn(null);
+
+        BizException ex = assertThrows(BizException.class, () -> jobService.create(job));
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+    }
+
+    @Test
+    @DisplayName("P0-3: create FIXED_DELAY 缺少 fixedDelayMs 时抛 BizException")
+    void create_fixedDelayWithoutInterval_throwsBizException() {
+        JobDO job = buildJob("create-fixed-delay-no-interval", null, null);
+        job.setScheduleType("FIXED_DELAY");
+        job.setFixedDelayMs(null);
+        when(jobMapper.selectByJobKey("create-fixed-delay-no-interval")).thenReturn(null);
+
+        BizException ex = assertThrows(BizException.class, () -> jobService.create(job));
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+    }
+
+    @Test
+    @DisplayName("P0-3: ScheduleType.parse(null) 返回 CRON")
+    void scheduleType_parseNull_returnsCron() {
+        assertEquals(ScheduleType.CRON, ScheduleType.parse(null));
+        assertEquals(ScheduleType.CRON, ScheduleType.parse(""));
+        assertEquals(ScheduleType.CRON, ScheduleType.parse("  "));
+    }
+
+    @Test
+    @DisplayName("P0-3: ScheduleType.parse 非法值返回 CRON")
+    void scheduleType_parseInvalid_returnsCron() {
+        assertEquals(ScheduleType.CRON, ScheduleType.parse("INVALID"));
+        assertEquals(ScheduleType.CRON, ScheduleType.parse("unknown"));
+    }
+
+    @Test
+    @DisplayName("P0-3: ScheduleType.parse 大小写不敏感")
+    void scheduleType_parseCaseInsensitive() {
+        assertEquals(ScheduleType.FIXED_RATE, ScheduleType.parse("fixed_rate"));
+        assertEquals(ScheduleType.FIXED_DELAY, ScheduleType.parse("Fixed_Delay"));
+        assertEquals(ScheduleType.API, ScheduleType.parse("api"));
+        assertEquals(ScheduleType.CRON, ScheduleType.parse("cron"));
     }
 }

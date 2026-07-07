@@ -230,23 +230,24 @@ class AbstractHttpLlmProviderTest {
         }
 
         @Test
-        @DisplayName("MDC 在调用后正确恢复")
+        @DisplayName("MDC 在调用后正确恢复（P2-1：全部 key 恢复旧值，支持嵌套调用）")
         void shouldRestoreMdcAfterCall() {
             Callable<String> call = () -> "ok";
             TestableHttpLlmProvider provider = new TestableHttpLlmProvider(call,
                     5000, 0, true);
 
-            // 主线程预先设置 traceId
+            // 主线程预先设置 traceId + provider（模拟嵌套调用场景）
             MDC.put("traceId", "previous-trace");
             MDC.put("provider", "previous-provider");
 
             AgentContext ctx = ctxWithTrace("new-trace", "new-provider-trace");
             provider.chat("", "", ctx);
 
-            // 调用结束后，主线程 MDC 应恢复到调用前的状态
+            // P2-1：调用结束后，主线程 MDC 应恢复到调用前的状态（全部 key 恢复旧值）
             assertThat(MDC.get("traceId")).isEqualTo("previous-trace");
-            // provider/providerTraceId 被 remove
-            assertThat(MDC.get("provider")).isNull();
+            // P2-1：provider 恢复为旧值（而非 remove），保证嵌套调用安全
+            assertThat(MDC.get("provider")).isEqualTo("previous-provider");
+            // providerTraceId 调用前未设置，恢复时 remove
             assertThat(MDC.get("providerTraceId")).isNull();
 
             MDC.clear();
@@ -304,6 +305,98 @@ class AbstractHttpLlmProviderTest {
             provider.chat("", "", ctx);
 
             assertThat(providerTraceIdRef.get()).isEqualTo("");
+        }
+    }
+
+    // ==================== P0-4 线程池复用测试 ====================
+
+    @Nested
+    @DisplayName("P0-4: 线程池复用与生命周期测试")
+    class ExecutorPoolTest {
+
+        @Test
+        @DisplayName("多次调用复用同一 sharedExecutor 实例（不每次创建新线程池）")
+        void shouldReuseExecutorAcrossCalls() throws Exception {
+            Callable<String> call = () -> "ok";
+            TestableHttpLlmProvider provider = new TestableHttpLlmProvider(call,
+                    5000, 0, true);
+            try {
+                java.lang.reflect.Field field =
+                        AbstractHttpLlmProvider.class.getDeclaredField("sharedExecutor");
+                field.setAccessible(true);
+                Object executorBefore = field.get(provider);
+
+                // 多次调用 chat()
+                for (int i = 0; i < 3; i++) {
+                    assertThat(provider.chat("", "", new AgentContext())).isEqualTo("ok");
+                }
+
+                // 验证 sharedExecutor 引用未变（即未每次创建新线程池）
+                Object executorAfter = field.get(provider);
+                assertThat(executorAfter).isSameAs(executorBefore);
+            } finally {
+                provider.destroy();
+            }
+        }
+
+        @Test
+        @DisplayName("destroy() 后再次调用应抛异常（线程池已关闭）")
+        void shouldRejectAfterDestroy() {
+            AtomicInteger count = new AtomicInteger(0);
+            Callable<String> call = () -> {
+                count.incrementAndGet();
+                return "ok";
+            };
+            // fallback=false, maxRetries=0：销毁后再调用直接抛 RuntimeException
+            TestableHttpLlmProvider provider = new TestableHttpLlmProvider(call,
+                    5000, 0, false);
+
+            // 销毁前正常调用成功
+            assertThat(provider.chat("", "", new AgentContext())).isEqualTo("ok");
+            assertThat(count.get()).isEqualTo(1);
+
+            // 销毁线程池
+            provider.destroy();
+
+            // 再次调用应抛 RuntimeException（线程池已关闭，submit 抛 RejectedExecutionException
+            // 被 executeWithGuard 捕获后包装为 RuntimeException）
+            assertThatThrownBy(() -> provider.chat("", "", new AgentContext()))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("testable-http")
+                    .hasMessageContaining("failed");
+        }
+
+        @Test
+        @DisplayName("多次 destroy() 不抛异常（幂等）")
+        void shouldBeIdempotentDestroy() {
+            Callable<String> call = () -> "ok";
+            TestableHttpLlmProvider provider = new TestableHttpLlmProvider(call,
+                    5000, 0, true);
+
+            provider.destroy();
+            // 再次 destroy 不抛异常
+            provider.destroy();
+            provider.destroy();
+        }
+
+        @Test
+        @DisplayName("共享线程池下多次调用都能成功执行")
+        void shouldExecuteAllTasksWithSharedExecutor() {
+            AtomicInteger count = new AtomicInteger(0);
+            Callable<String> call = () -> {
+                count.incrementAndGet();
+                return "ok";
+            };
+            TestableHttpLlmProvider provider = new TestableHttpLlmProvider(call,
+                    5000, 0, true);
+            try {
+                for (int i = 0; i < 5; i++) {
+                    assertThat(provider.chat("", "", new AgentContext())).isEqualTo("ok");
+                }
+                assertThat(count.get()).isEqualTo(5);
+            } finally {
+                provider.destroy();
+            }
         }
     }
 }

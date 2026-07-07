@@ -2,6 +2,7 @@ package com.njydsz.pmis.cronjob.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -129,6 +130,18 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
                                  @Param("now") LocalDateTime now);
 
     /**
+     * P1-4: 查询所有 RUNNING 状态日志的执行节点 ID（去重，故障转移扫描用）。
+     *
+     * <p>用于 {@link com.njydsz.pmis.cronjob.core.dispatch.FailoverScanner} 扫描
+     * 有 RUNNING 任务但可能已下线的节点。对比在线节点列表后找出下线节点。
+     *
+     * @return 有 RUNNING 任务的节点 ID 列表（去重）；无记录时返回空列表
+     */
+    @Select("SELECT DISTINCT exec_node_id FROM pmis_job_log "
+            + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id IS NOT NULL")
+    List<String> selectRunningNodeIds();
+
+    /**
      * P3-2: 统计指定任务在时间窗口内的执行次数和失败次数。
      *
      * <p>用于 FAIL_RATE 告警计算：失败率 = failed / total * 100。
@@ -164,4 +177,23 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
             + "AND status = 'SUCCESS' AND deleted = 0")
     Long selectDurationP95(@Param("jobId") String jobId,
                             @Param("since") LocalDateTime since);
+
+    /**
+     * P2-2: 批量清理过期任务日志（硬删除，释放磁盘空间）。
+     *
+     * <p>按 {@code created_at < before} 筛选过期记录，单批最多删除 {@code limit} 条，
+     * 避免大事务锁表。由 {@link com.njydsz.pmis.cronjob.core.cleaner.LogCleaner} 循环调用直至无数据。
+     *
+     * @param before 过期分界时间（此时间之前的记录将被删除）
+     * @param limit  单批最多删除条数
+     * @return 实际删除条数
+     */
+    @Delete("DELETE FROM pmis_job_log "
+            + "WHERE id IN ("
+            + "  SELECT id FROM pmis_job_log "
+            + "  WHERE created_at < #{before} "
+            + "  LIMIT #{limit}"
+            + ")")
+    int cleanExpiredLogs(@Param("before") LocalDateTime before,
+                         @Param("limit") int limit);
 }

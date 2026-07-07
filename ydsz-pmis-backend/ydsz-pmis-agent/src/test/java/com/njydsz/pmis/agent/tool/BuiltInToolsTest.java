@@ -258,7 +258,7 @@ class BuiltInToolsTest {
     @DisplayName("BpmnValidatorTool BPMN XML 校验工具测试")
     class BpmnValidatorToolTest {
 
-        /** 完整的 BPMN XML（含 definitions/process/startEvent/endEvent 全部必须标签） */
+        /** 完整的 BPMN XML（bpmn: 前缀，含 definitions/process/startEvent/endEvent 全部必须标签） */
         private static final String VALID_BPMN_XML =
                 "<bpmn:definitions>"
                         + "<bpmn:process id=\"p1\">"
@@ -266,6 +266,24 @@ class BuiltInToolsTest {
                         + "<bpmn:endEvent id=\"e1\"/>"
                         + "</bpmn:process>"
                         + "</bpmn:definitions>";
+
+        /** 完整的 BPMN XML（bpmn2: 前缀，验证命名空间前缀变化兼容性） */
+        private static final String VALID_BPMN_XML_BPMN2_PREFIX =
+                "<bpmn2:definitions>"
+                        + "<bpmn2:process id=\"p1\">"
+                        + "<bpmn2:startEvent id=\"s1\"/>"
+                        + "<bpmn2:endEvent id=\"e1\"/>"
+                        + "</bpmn2:process>"
+                        + "</bpmn2:definitions>";
+
+        /** 无命名空间前缀的完整 BPMN XML */
+        private static final String VALID_BPMN_XML_NO_PREFIX =
+                "<definitions>"
+                        + "<process id=\"p1\">"
+                        + "<startEvent id=\"s1\"/>"
+                        + "<endEvent id=\"e1\"/>"
+                        + "</process>"
+                        + "</definitions>";
 
         @Test
         @DisplayName("name() 返回 bpmn_validate")
@@ -282,7 +300,7 @@ class BuiltInToolsTest {
         }
 
         @Test
-        @DisplayName("完整 BPMN XML 返回 valid=true")
+        @DisplayName("完整 BPMN XML（bpmn: 前缀）返回 valid=true")
         void shouldReturnValidWhenXmlComplete() {
             BpmnValidatorTool tool = new BpmnValidatorTool();
             Map<String, Object> params = new HashMap<>();
@@ -298,10 +316,39 @@ class BuiltInToolsTest {
         }
 
         @Test
-        @DisplayName("缺少结束标签返回 valid=false，missingElements 包含对应元素")
-        void shouldReturnInvalidWhenClosingTagMissing() {
+        @DisplayName("命名空间前缀为 bpmn2: 时仍返回 valid=true（P1-6：兼容前缀变化）")
+        void shouldReturnValidWhenNamespacePrefixIsBpmn2() {
             BpmnValidatorTool tool = new BpmnValidatorTool();
-            // 缺少 </bpmn:definitions> 结束标签
+            Map<String, Object> params = new HashMap<>();
+            params.put("bpmnXml", VALID_BPMN_XML_BPMN2_PREFIX);
+
+            ToolResult result = tool.execute(params, ctx("PRJ-001"));
+
+            assertThat(result.isSuccess()).isTrue();
+            assertThat(result.getData().get("valid")).isEqualTo(Boolean.TRUE);
+            @SuppressWarnings("unchecked")
+            List<String> missing = (List<String>) result.getData().get("missingElements");
+            assertThat(missing).isEmpty();
+        }
+
+        @Test
+        @DisplayName("无命名空间前缀时仍返回 valid=true")
+        void shouldReturnValidWhenNoNamespacePrefix() {
+            BpmnValidatorTool tool = new BpmnValidatorTool();
+            Map<String, Object> params = new HashMap<>();
+            params.put("bpmnXml", VALID_BPMN_XML_NO_PREFIX);
+
+            ToolResult result = tool.execute(params, ctx("PRJ-001"));
+
+            assertThat(result.isSuccess()).isTrue();
+            assertThat(result.getData().get("valid")).isEqualTo(Boolean.TRUE);
+        }
+
+        @Test
+        @DisplayName("缺少结束标签（XML 格式非法）返回 failure（P1-6：严格解析）")
+        void shouldReturnFailureWhenClosingTagMissing() {
+            BpmnValidatorTool tool = new BpmnValidatorTool();
+            // 缺少 </bpmn:definitions> 结束标签 → XML 解析失败
             String invalidXml = "<bpmn:definitions>"
                     + "<bpmn:process id=\"p1\">"
                     + "<bpmn:startEvent id=\"s1\"/>"
@@ -312,11 +359,107 @@ class BuiltInToolsTest {
 
             ToolResult result = tool.execute(params, ctx("PRJ-001"));
 
+            // XML 格式非法应返回 failure（而非 success + valid=false）
+            assertThat(result.isSuccess()).isFalse();
+            assertThat(result.getError()).contains("解析失败");
+        }
+
+        @Test
+        @DisplayName("非 XML 输入返回 failure（P1-6：严格解析）")
+        void shouldReturnFailureWhenInputIsNotXml() {
+            BpmnValidatorTool tool = new BpmnValidatorTool();
+            Map<String, Object> params = new HashMap<>();
+            params.put("bpmnXml", "这不是一段 XML，只是普通文本");
+
+            ToolResult result = tool.execute(params, ctx("PRJ-001"));
+
+            assertThat(result.isSuccess()).isFalse();
+            assertThat(result.getError()).contains("解析失败");
+        }
+
+        @Test
+        @DisplayName("标签嵌套错误返回 failure（P1-6：严格解析）")
+        void shouldReturnFailureWhenTagsImproperlyNested() {
+            BpmnValidatorTool tool = new BpmnValidatorTool();
+            // 标签嵌套错误：process 在 definitions 关闭后才关闭
+            String invalidXml = "<bpmn:definitions>"
+                    + "<bpmn:process id=\"p1\">"
+                    + "<bpmn:startEvent id=\"s1\"/>"
+                    + "</bpmn:definitions>"
+                    + "</bpmn:process>";
+            Map<String, Object> params = new HashMap<>();
+            params.put("bpmnXml", invalidXml);
+
+            ToolResult result = tool.execute(params, ctx("PRJ-001"));
+
+            assertThat(result.isSuccess()).isFalse();
+            assertThat(result.getError()).contains("解析失败");
+        }
+
+        @Test
+        @DisplayName("缺少 process 元素返回 valid=false，missingElements 包含 process")
+        void shouldReturnInvalidWhenProcessMissing() {
+            BpmnValidatorTool tool = new BpmnValidatorTool();
+            String xml = "<bpmn:definitions>"
+                    + "<bpmn:startEvent id=\"s1\"/>"
+                    + "<bpmn:endEvent id=\"e1\"/>"
+                    + "</bpmn:definitions>";
+            Map<String, Object> params = new HashMap<>();
+            params.put("bpmnXml", xml);
+
+            ToolResult result = tool.execute(params, ctx("PRJ-001"));
+
             assertThat(result.isSuccess()).isTrue();
             assertThat(result.getData().get("valid")).isEqualTo(Boolean.FALSE);
             @SuppressWarnings("unchecked")
             List<String> missing = (List<String>) result.getData().get("missingElements");
-            assertThat(missing).contains("</bpmn:definitions>");
+            assertThat(missing).contains("process");
+        }
+
+        @Test
+        @DisplayName("根元素不是 definitions 返回 valid=false，missingElements 包含 definitions")
+        void shouldReturnInvalidWhenRootNotDefinitions() {
+            BpmnValidatorTool tool = new BpmnValidatorTool();
+            String xml = "<root>"
+                    + "<process id=\"p1\">"
+                    + "<startEvent id=\"s1\"/>"
+                    + "<endEvent id=\"e1\"/>"
+                    + "</process>"
+                    + "</root>";
+            Map<String, Object> params = new HashMap<>();
+            params.put("bpmnXml", xml);
+
+            ToolResult result = tool.execute(params, ctx("PRJ-001"));
+
+            assertThat(result.isSuccess()).isTrue();
+            assertThat(result.getData().get("valid")).isEqualTo(Boolean.FALSE);
+            @SuppressWarnings("unchecked")
+            List<String> missing = (List<String>) result.getData().get("missingElements");
+            assertThat(missing).contains("definitions");
+        }
+
+        @Test
+        @DisplayName("注释内包含伪 process 标签不误判（P1-6：避免注释误匹配）")
+        void shouldNotMatchProcessTagInsideComment() {
+            BpmnValidatorTool tool = new BpmnValidatorTool();
+            // 注释中含 <bpmn:process> 但实际无 process 元素
+            // 旧字符串匹配会误判 process 存在；新 XML 解析只识别真实元素
+            String xml = "<bpmn:definitions>"
+                    + "<!-- <bpmn:process id=\"fake\">这是注释</bpmn:process> -->"
+                    + "<bpmn:startEvent id=\"s1\"/>"
+                    + "<bpmn:endEvent id=\"e1\"/>"
+                    + "</bpmn:definitions>";
+            Map<String, Object> params = new HashMap<>();
+            params.put("bpmnXml", xml);
+
+            ToolResult result = tool.execute(params, ctx("PRJ-001"));
+
+            assertThat(result.isSuccess()).isTrue();
+            assertThat(result.getData().get("valid")).isEqualTo(Boolean.FALSE);
+            @SuppressWarnings("unchecked")
+            List<String> missing = (List<String>) result.getData().get("missingElements");
+            // 注释里的伪 process 不应被识别 → process 仍缺失
+            assertThat(missing).contains("process");
         }
 
         @Test

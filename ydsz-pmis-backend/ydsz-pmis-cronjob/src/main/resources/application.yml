@@ -126,6 +126,28 @@ management:
 # =====================================================================
 pmis:
   cronjob:
+    # -----------------------------------------------------------------
+    # P1-1: 节点发现策略配置
+    # -----------------------------------------------------------------
+    # nacos(Nacos服务发现, 默认) / db(心跳表)
+    # - nacos: 复用 Nacos 注册能力，无需维护 pmis_job_node 心跳表
+    # - db:    基于 pmis_job_node 心跳表（向后兼容，需配合 JobNodeHeartbeat + JobNodeReaper）
+    node-discovery:
+      type: nacos
+    # -----------------------------------------------------------------
+    # P1-4: 失败自动转移（FailoverScanner）配置
+    # -----------------------------------------------------------------
+    # 执行器节点宕机后，Leader 节点定时扫描该节点上 RUNNING 状态的任务日志，
+    # 标记为 FAILED 后以 triggerType=FAILOVER 重新派发任务。
+    failover:
+      # 是否启用故障转移扫描
+      enabled: true
+      # 扫描间隔（秒）
+      scan-interval-seconds: 30
+      # 单批最多扫描节点数
+      scan-node-limit: 10
+      # 单节点最多转移任务数
+      failover-task-limit: 50
     # 全局分布式锁 TTL（任务级未配置 lock_ttl_ms 时使用）
     job-lock-ttl: 5m
     # 任务级 TTL 上下限：防止误配置为过短(< 30s)或过长(> 24h)
@@ -160,6 +182,13 @@ pmis:
       drain-on-shutdown: true
       drain-timeout-seconds: 60
       max-concurrent: 16
+      # P2-5: 线程池租户隔离策略
+      # none(共享, 默认) / tenant(按租户隔离) / job_group(按分组隔离)
+      isolation-strategy: none
+      # 每个租户/分组独立线程池大小
+      tenant-pool-size: 10
+      # 每个租户/分组独立线程池队列容量
+      tenant-pool-queue-capacity: 200
     # -----------------------------------------------------------------
     # 超时监控配置
     # -----------------------------------------------------------------
@@ -180,3 +209,30 @@ pmis:
       default-max-concurrent: null
       # 默认日执行量上限（null=unlimited）
       default-max-daily-executions: null
+    # -----------------------------------------------------------------
+    # P1-5: 告警通道配置（飞书 + 短信）
+    # 飞书/短信通道默认禁用，需配置 webhook-url 并设置 enabled=true 后启用
+    # -----------------------------------------------------------------
+    alert:
+      # 飞书群机器人
+      feishu:
+        enabled: false
+        webhook-url: ""
+      # 短信通知（通过 HTTP Webhook 转发到 message-service 等短信网关）
+      sms:
+        enabled: false
+        webhook-url: ""
+        phone-numbers: ""
+    # -----------------------------------------------------------------
+    # P2-2: 日志归档清理配置
+    # -----------------------------------------------------------------
+    # 每天凌晨 3 点由 Leader 节点清理超过保留天数的日志记录（硬删除，释放磁盘空间）
+    # 清理范围：pmis_job_log / pmis_job_log_content / pmis_job_slow_log /
+    #           pmis_job_alert_log / pmis_job_task / pmis_job_history
+    log-retention:
+      # 日志保留天数（超过此天数的日志将被清理）
+      retention-days: 30
+      # 单批删除条数（避免大事务锁表）
+      batch-size: 1000
+      # 定时清理 cron 表达式（默认每天凌晨 3 点）
+      cron: "0 0 3 * * ?"

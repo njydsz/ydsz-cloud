@@ -54,6 +54,8 @@ import com.njydsz.pmis.literule.ai.RuleHealthScore;
 import com.njydsz.pmis.literule.ai.RuleHealthScoreService;
 import com.njydsz.pmis.literule.ai.RuleRecommendation;
 import com.njydsz.pmis.literule.ai.RuleRecommendationService;
+import com.njydsz.pmis.literule.adaptive.AdaptiveThresholdService;
+import com.njydsz.pmis.literule.adaptive.ThresholdAnalysis;
 import com.njydsz.pmis.literule.ai.RuleAttributionService;
 import com.njydsz.pmis.literule.ai.AttributionReport;
 import com.njydsz.pmis.literule.spi.RuleVersion;
@@ -142,6 +144,10 @@ public class RuleAdminController {
     private final org.springframework.beans.factory.ObjectProvider<RuleAttributionService> ruleAttributionServiceProvider;
     // 多级审批流服务（P1-3）：可选注入，未配置 RuleConfigProvider 时为空
     private final org.springframework.beans.factory.ObjectProvider<RuleApprovalService> ruleApprovalServiceProvider;
+    // ReAct Agent 执行器（P3-5）：可选注入，未启用 AI 时为空
+    private final org.springframework.beans.factory.ObjectProvider<com.njydsz.pmis.literule.agent.ReActAgentExecutor> reActAgentExecutorProvider;
+    // 自适应阈值分析服务（P3-4）：可选注入，未配置 TraceDataProvider 时为空
+    private final org.springframework.beans.factory.ObjectProvider<AdaptiveThresholdService> adaptiveThresholdServiceProvider;
 
     /**
      * 查询全部规则定义
@@ -2334,6 +2340,169 @@ public class RuleAdminController {
             reports.add(report);
         }
         return Result.ok(reports);
+    }
+
+    // ==================================================================
+    // P3-4 自适应智能风控（自适应阈值分析）
+    // ==================================================================
+
+    /**
+     * 分析指定规则的阈值
+     *
+     * <p>基于规则最近 N 天的执行轨迹，自动计算最优阈值并生成调整建议。
+     * 支持的调整策略：PERCENTILE / FALSE_RATE / MISS_RATE / BALANCED。
+     *
+     * @param ruleCode 规则编码
+     * @param days     分析最近 N 天的数据（默认 30）
+     * @return 阈值分析结果列表（一条规则可能含多个阈值比较项）
+     */
+    @PostMapping("/{ruleCode}/threshold-analysis")
+    @Operation(summary = "规则阈值自适应分析", description = "基于历史触发数据自动计算最优阈值，生成阈值调整建议")
+    public Result<List<ThresholdAnalysis>> analyzeThreshold(
+            @PathVariable String ruleCode,
+            @RequestParam(value = "days", defaultValue = "30") int days) {
+        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("自适应阈值分析服务未启用（需提供 TraceDataProvider SPI 实现）");
+        }
+        return Result.ok(svc.analyzeRule(ruleCode, days));
+    }
+
+    /**
+     * 分析所有规则的阈值
+     *
+     * @param days 分析最近 N 天的数据（默认 30）
+     * @return 全部规则的分析结果列表
+     */
+    @PostMapping("/threshold-analysis/all")
+    @Operation(summary = "全部规则阈值自适应分析", description = "批量分析所有规则的阈值，生成调整建议")
+    public Result<List<ThresholdAnalysis>> analyzeAllThresholds(
+            @RequestParam(value = "days", defaultValue = "30") int days) {
+        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("自适应阈值分析服务未启用");
+        }
+        return Result.ok(svc.analyzeAllRules(days));
+    }
+
+    /**
+     * 应用阈值调整
+     *
+     * <p>将建议阈值写入规则的条件表达式并持久化，触发热刷新。
+     *
+     * @param ruleCode 规则编码
+     * @param analysis 阈值分析结果（含 suggestedThreshold）
+     * @param operator 操作人
+     * @return 操作结果（true=应用成功）
+     */
+    @PostMapping("/{ruleCode}/apply-threshold")
+    @OperationLog(module = "规则引擎", action = "应用自适应阈值调整", bizType = "RULE")
+    @Operation(summary = "应用阈值调整", description = "将建议阈值写入规则条件表达式并持久化")
+    public Result<Boolean> applyThreshold(
+            @PathVariable String ruleCode,
+            @RequestBody ThresholdAnalysis analysis,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("自适应阈值分析服务未启用");
+        }
+        boolean success = svc.applyThreshold(ruleCode, analysis, operator);
+        return success ? Result.ok(true) : Result.fail("应用阈值调整失败，请检查规则表达式或日志");
+    }
+
+    /**
+     * 获取待处理的阈值调整建议
+     *
+     * @param ruleCode 规则编码
+     * @return 待处理建议列表
+     */
+    @GetMapping("/{ruleCode}/threshold-suggestions")
+    @Operation(summary = "获取阈值调整建议", description = "返回最近一次分析生成的待处理阈值调整建议")
+    public Result<List<ThresholdAnalysis>> thresholdSuggestions(@PathVariable String ruleCode) {
+        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.ok(List.of());
+        }
+        return Result.ok(svc.getPendingSuggestions(ruleCode));
+    }
+
+    // ==================================================================
+    // P3-5 AI Agent 规则编排
+    // ==================================================================
+
+    /**
+     * 执行 Agent 节点（独立执行，不嵌入链）
+     *
+     * <p>调用 ReAct Agent 执行器，在"思考-行动-观察"循环中逐步推理，
+     * 返回最终答案、迭代次数、思考过程和耗时。Agent 可调用其他规则作为工具。
+     *
+     * <p>请求体示例：
+     * <pre>
+     * POST /execution/rules/agent/execute
+     * {
+     *   "systemPrompt": "你是项目风险分析专家",
+     *   "userPrompt": "分析项目 budgetUsedRatio=0.95 的风险",
+     *   "maxIterations": 3,
+     *   "tools": ["EVM_RED_ALERT", "BUDGET_CHECK"],
+     *   "facts": {"budgetUsedRatio": 0.95}
+     * }
+     * </pre>
+     *
+     * @param request 请求体
+     * @return Agent 执行结果（output / iterations / thoughts / elapsedMs）
+     */
+    @PostMapping("/agent/execute")
+    @Operation(summary = "执行 AI Agent 节点", description = "调用 ReAct Agent 执行器，在思考-行动-观察循环中逐步推理；Agent 可调用其他规则作为工具")
+    public Result<Map<String, Object>> executeAgent(@RequestBody Map<String, Object> request) {
+        com.njydsz.pmis.literule.agent.ReActAgentExecutor executor = reActAgentExecutorProvider.getIfAvailable();
+        if (executor == null) {
+            return Result.fail("AI Agent 执行器未启用（需开启 pmis.literule.ai.enabled=true）");
+        }
+
+        String systemPrompt = (String) request.get("systemPrompt");
+        String userPrompt = (String) request.get("userPrompt");
+        int maxIterations = toInt(request.get("maxIterations"), 3);
+        @SuppressWarnings("unchecked")
+        List<String> tools = (List<String>) request.get("tools");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> facts = (Map<String, Object>) request.get("facts");
+
+        if (userPrompt == null || userPrompt.isBlank()) {
+            return Result.fail("userPrompt 不能为空");
+        }
+        // 使用 final 变量供 lambda 引用（避免重新赋值导致非 effectively final）
+        final Map<String, Object> factsSnapshot = facts != null ? facts : new HashMap<>();
+
+        // 构建工具执行回调：通过 dryRun 评估规则作为工具
+        java.util.function.Function<String, String> toolExecutor = ruleCode -> {
+            try {
+                List<RuleResult> results = ruleAdminService.dryRun(ruleCode, factsSnapshot);
+                if (results == null || results.isEmpty()) {
+                    return "规则 " + ruleCode + " 未触发";
+                }
+                return results.stream()
+                        .filter(r -> ruleCode.equals(r.getRuleCode()) && r.isTriggered())
+                        .findFirst()
+                        .map(r -> "规则触发: " + r.getTitle() + " | " + r.getDescription())
+                        .orElse("规则 " + ruleCode + " 未触发");
+            } catch (Exception e) {
+                return "工具执行异常: " + e.getMessage();
+            }
+        };
+
+        long timeoutMs = request.containsKey("timeoutMs")
+                ? ((Number) request.get("timeoutMs")).longValue() : 5000L;
+
+        com.njydsz.pmis.literule.agent.ReActAgentExecutor.AgentExecutionResult agentResult =
+                executor.execute(systemPrompt, userPrompt, tools, toolExecutor, maxIterations, timeoutMs);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("output", agentResult.getOutput());
+        response.put("iterations", agentResult.getIterations());
+        response.put("thoughts", agentResult.getThoughts());
+        response.put("elapsedMs", agentResult.getElapsedMs());
+        response.put("degraded", agentResult.isDegraded());
+        return Result.ok(response);
     }
 
     // ==================================================================

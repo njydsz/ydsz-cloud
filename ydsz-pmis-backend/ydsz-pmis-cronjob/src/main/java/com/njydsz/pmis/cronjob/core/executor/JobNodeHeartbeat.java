@@ -8,6 +8,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -35,12 +36,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * <p>仅在 {@code pmis.cronjob.leader.enabled=true} 时启用，避免 Leaderless 模式下产生无用记录。
  *
+ * <p>P1-1: 仅在 {@code pmis.cronjob.node-discovery.type=db} 时注册。
+ * 当 {@code type=nacos}（默认）时由 Nacos 服务发现自动管理节点上下线，无需心跳。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "pmis.cronjob.node-discovery.type", havingValue = "db")
 public class JobNodeHeartbeat {
 
     private final JobNodeMapper jobNodeMapper;

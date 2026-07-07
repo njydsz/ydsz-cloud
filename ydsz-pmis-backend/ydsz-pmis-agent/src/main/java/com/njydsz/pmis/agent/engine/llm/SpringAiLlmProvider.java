@@ -164,7 +164,7 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
             log.warn("[SpringAiLlm] API Key 未配置, 降级到 mock");
             return new MockLlmProvider().chat(systemPrompt, userPrompt, context);
         }
-        Callable<String> call = () -> doChat(systemPrompt, userPrompt);
+        Callable<String> call = () -> doChat(systemPrompt, userPrompt, context);
         return executeWithGuard(call, context);
     }
 
@@ -173,12 +173,16 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
      *
      * <p>本方法为 protected，便于子类或测试通过覆盖来注入 mock 响应。
      *
+     * <p>P1-4 增强：从响应体中提取 {@code id} 字段（OpenAI 兼容协议的请求 ID），
+     * 写入 {@link AgentContext#setProviderTraceId}，用于审计/账单核对。
+     *
      * @param systemPrompt 系统提示词
      * @param userPrompt   用户提示词
+     * @param context      Agent 上下文（用于写入 providerTraceId；可为 null）
      * @return LLM 返回的文本内容
      * @throws Exception 网络/HTTP/解析异常
      */
-    protected String doChat(String systemPrompt, String userPrompt) throws Exception {
+    protected String doChat(String systemPrompt, String userPrompt, AgentContext context) throws Exception {
         JSONObject body = new JSONObject();
         body.put("model", model);
         body.put("temperature", temperature);
@@ -206,7 +210,21 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
             log.warn("[SpringAiLlm] HTTP {}: {}", status, snippet);
             throw new RuntimeException("LLM HTTP " + status + ": " + snippet);
         }
-        return extractContent(response.body());
+        String responseBody = response.body();
+        // P1-4: 提取 OpenAI 兼容协议的 id 字段写入 AgentContext，用于审计/账单核对
+        if (context != null && responseBody != null && !responseBody.isEmpty()) {
+            try {
+                JSONObject root = JSON.parseObject(responseBody);
+                String id = root == null ? null : root.getString("id");
+                if (id != null && !id.isEmpty()) {
+                    context.setProviderTraceId(id);
+                }
+            } catch (Exception parseEx) {
+                // 响应体非 JSON，忽略（extractContent 会兜底处理）
+                log.debug("[SpringAiLlm] 解析响应 id 失败: {}", parseEx.getMessage());
+            }
+        }
+        return extractContent(responseBody);
     }
 
     /**

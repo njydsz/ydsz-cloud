@@ -102,4 +102,50 @@ public interface FlowAiAssistService {
      *         </ul>
      */
     Map<String, Object> predictSla(Map<String, Object> params);
+
+    // ============================== P3-3: 推荐审批人反馈闭环 ==============================
+
+    /**
+     * P3-3: 记录用户对 AI 推荐审批人的反馈。
+     *
+     * <p>用户在前端选择审批人后调用此接口，记录反馈行为（接受/拒绝/选择其他人），
+     * 形成"推荐 → 反馈 → 优化"闭环。反馈数据将用于：
+     * <ul>
+     *   <li>统计 AI 推荐准确率（接受率/拒绝率）</li>
+     *   <li>作为后续推荐的历史上下文，提升推荐准确度</li>
+     * </ul>
+     *
+     * @param feedback 反馈数据，需包含：
+     *                 <ul>
+     *                   <li>traceId: 推荐调用追踪 ID（必填，来自 recommendApprovers 返回）</li>
+     *                   <li>recommendedUserId: AI 推荐的审批人 ID（必填）</li>
+     *                   <li>action: 反馈动作 ACCEPTED/REJECTED/CHOSEN_OTHER（必填）</li>
+     *                   <li>taskId / flowCode / nodeCode: 业务上下文（可选）</li>
+     *                   <li>actualUserId: 实际选择的审批人 ID（action=CHOSEN_OTHER 时必填）</li>
+     *                   <li>remark: 备注（可选）</li>
+     *                 </ul>
+     * @return 记录后的反馈 ID
+     */
+    String recordApproverFeedback(Map<String, Object> feedback);
+
+    /**
+     * P3-3: 获取 AI 推荐审批人反馈统计。
+     *
+     * <p>统计指定范围（全部或某推荐人）的反馈分布，用于评估 AI 推荐准确率。
+     *
+     * @param params 查询参数，可选：
+     *               <ul>
+     *                 <li>recommendedUserId: 按推荐人过滤（可选，空则统计全部）</li>
+     *                 <li>tenantId: 租户 ID（可选，默认 '1'）</li>
+     *               </ul>
+     * @return Map(total, accepted, rejected, chosenOther, acceptanceRate)
+     *         <ul>
+     *           <li>total: 反馈总数</li>
+     *           <li>accepted: 接受次数</li>
+     *           <li>rejected: 拒绝次数</li>
+     *           <li>chosenOther: 选择其他人次数</li>
+     *           <li>acceptanceRate: 接受率 0.0~1.0</li>
+     *         </ul>
+     */
+    Map<String, Object> getApproverFeedbackStats(Map<String, Object> params);
 }

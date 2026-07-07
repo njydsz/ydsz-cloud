@@ -51,6 +51,9 @@ public class MsgRouteRuleDO extends BaseDO {
     /** 目标通道发送失败时降级通道 */
     private String fallbackChannel;
 
+    /** P1-8: 多级降级链(逗号分隔通道列表,如 "SMS,EMAIL,IN_APP"),按顺序逐个尝试,优先于 fallbackChannel */
+    private String fallbackChain;
+
     /** 状态: ENABLED 启用 / DISABLED 禁用 */
     private String status;
 

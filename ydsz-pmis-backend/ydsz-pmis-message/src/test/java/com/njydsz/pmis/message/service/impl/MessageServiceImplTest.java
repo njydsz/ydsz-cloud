@@ -5,7 +5,9 @@ import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.channel.ChannelRouter;
 import com.njydsz.pmis.message.config.MessageProperties;
+import com.njydsz.pmis.message.config.RetryStrategyResolver;
 import com.njydsz.pmis.message.entity.MsgLogDO;
+import com.njydsz.pmis.message.entity.MsgRouteRuleDO;
 import com.njydsz.pmis.message.entity.MsgTemplateDO;
 import com.njydsz.pmis.message.filter.SensitiveWordFilter;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
@@ -85,6 +87,8 @@ class MessageServiceImplTest {
     private AggregateService aggregateService;
     @Mock
     private SensitiveWordFilter sensitiveWordFilter;
+    @Mock
+    private RetryStrategyResolver retryStrategyResolver;
 
     @InjectMocks
     private MessageServiceImpl messageService;
@@ -359,5 +363,151 @@ class MessageServiceImplTest {
 
         assertTrue(result.isSuccess());
         verify(msgLogMapper, times(1)).insert(any(MsgLogDO.class));
+    }
+
+    // ============ P1-8: 多级降级链测试 ============
+
+    /**
+     * 构造带降级链的路由规则。
+     */
+    private MsgRouteRuleDO buildRuleWithFallbackChain(String targetChannel, String fallbackChain) {
+        MsgRouteRuleDO rule = new MsgRouteRuleDO();
+        rule.setTargetChannel(targetChannel);
+        rule.setFallbackChain(fallbackChain);
+        rule.setStatus("ENABLED");
+        return rule;
+    }
+
+    @Test
+    @DisplayName("P1-8: 降级链首个通道成功 → 返回成功")
+    void fallbackChainShouldSucceedOnFirstFallback() {
+        MessageRequest req = buildRequest();
+        // 路由命中,目标通道 EMAIL,降级链 SMS,PUSH,IN_APP
+        MsgRouteRuleDO rule = buildRuleWithFallbackChain("EMAIL", "SMS,PUSH,IN_APP");
+        when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
+        when(routeRuleService.match(any())).thenReturn(rule);
+        when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);
+        when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
+        MsgTemplateDO tpl = new MsgTemplateDO();
+        tpl.setContent("c");
+        when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(tpl);
+        when(templateEngine.render(anyString(), any())).thenReturn("c");
+        // 首次 EMAIL 失败,SMS 成功
+        when(channelRouter.dispatch(any(MsgLogDO.class)))
+                .thenThrow(new RuntimeException("email down"))
+                .thenReturn("trace-sms");
+
+        MessageResult result = messageService.send(req);
+
+        assertTrue(result.isSuccess());
+        assertEquals("SMS", result.getChannel());
+    }
+
+    @Test
+    @DisplayName("P1-8: 降级链首个失败、第二个成功 → 返回成功")
+    void fallbackChainShouldSucceedOnSecondFallback() {
+        MessageRequest req = buildRequest();
+        MsgRouteRuleDO rule = buildRuleWithFallbackChain("EMAIL", "SMS,PUSH,IN_APP");
+        when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
+        when(routeRuleService.match(any())).thenReturn(rule);
+        when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);
+        when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
+        MsgTemplateDO tpl = new MsgTemplateDO();
+        tpl.setContent("c");
+        when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(tpl);
+        when(templateEngine.render(anyString(), any())).thenReturn("c");
+        // EMAIL 失败,SMS 失败,PUSH 成功
+        when(channelRouter.dispatch(any(MsgLogDO.class)))
+                .thenThrow(new RuntimeException("email down"))
+                .thenThrow(new RuntimeException("sms down"))
+                .thenReturn("trace-push");
+
+        MessageResult result = messageService.send(req);
+
+        assertTrue(result.isSuccess());
+        assertEquals("PUSH", result.getChannel());
+    }
+
+    @Test
+    @DisplayName("P1-8: 降级链全部失败 → 转重试")
+    void fallbackChainAllFailShouldGoRetry() {
+        MessageRequest req = buildRequest();
+        MsgRouteRuleDO rule = buildRuleWithFallbackChain("EMAIL", "SMS,PUSH");
+        when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
+        when(routeRuleService.match(any())).thenReturn(rule);
+        when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);
+        when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
+        MsgTemplateDO tpl = new MsgTemplateDO();
+        tpl.setContent("c");
+        when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(tpl);
+        when(templateEngine.render(anyString(), any())).thenReturn("c");
+        // 全部失败
+        when(channelRouter.dispatch(any(MsgLogDO.class)))
+                .thenThrow(new RuntimeException("email down"))
+                .thenThrow(new RuntimeException("sms down"))
+                .thenThrow(new RuntimeException("push down"));
+        // 重试策略未达上限
+        when(retryStrategyResolver.isMaxRetriesReached(anyInt(), anyString())).thenReturn(false);
+        when(retryStrategyResolver.calcNextRetryAt(anyInt(), anyString()))
+                .thenReturn(java.time.LocalDateTime.now().plusSeconds(2));
+
+        MessageResult result = messageService.send(req);
+
+        assertFalse(result.isSuccess());
+        // 验证调用了 3 次 dispatch(EMAIL + SMS + PUSH)
+        verify(channelRouter, times(3)).dispatch(any(MsgLogDO.class));
+    }
+
+    @Test
+    @DisplayName("P1-8: fallbackChain 为空时回退到 fallbackChannel（兼容）")
+    void fallbackChainShouldFallbackToSingleChannel() {
+        MessageRequest req = buildRequest();
+        MsgRouteRuleDO rule = new MsgRouteRuleDO();
+        rule.setTargetChannel("EMAIL");
+        rule.setFallbackChannel("SMS");
+        rule.setStatus("ENABLED");
+        when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
+        when(routeRuleService.match(any())).thenReturn(rule);
+        when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);
+        when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
+        MsgTemplateDO tpl = new MsgTemplateDO();
+        tpl.setContent("c");
+        when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(tpl);
+        when(templateEngine.render(anyString(), any())).thenReturn("c");
+        when(channelRouter.dispatch(any(MsgLogDO.class)))
+                .thenThrow(new RuntimeException("email down"))
+                .thenReturn("trace-sms");
+
+        MessageResult result = messageService.send(req);
+
+        assertTrue(result.isSuccess());
+        assertEquals("SMS", result.getChannel());
+    }
+
+    @Test
+    @DisplayName("P1-8: 降级链排除当前通道避免循环")
+    void fallbackChainShouldExcludeCurrentChannel() {
+        MessageRequest req = buildRequest();
+        // 降级链包含当前通道 EMAIL,应被过滤
+        MsgRouteRuleDO rule = buildRuleWithFallbackChain("EMAIL", "EMAIL,SMS");
+        when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
+        when(routeRuleService.match(any())).thenReturn(rule);
+        when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);
+        when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
+        MsgTemplateDO tpl = new MsgTemplateDO();
+        tpl.setContent("c");
+        when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(tpl);
+        when(templateEngine.render(anyString(), any())).thenReturn("c");
+        // EMAIL 失败,SMS 成功(不应再试 EMAIL)
+        when(channelRouter.dispatch(any(MsgLogDO.class)))
+                .thenThrow(new RuntimeException("email down"))
+                .thenReturn("trace-sms");
+
+        MessageResult result = messageService.send(req);
+
+        assertTrue(result.isSuccess());
+        assertEquals("SMS", result.getChannel());
+        // 只调用 2 次:EMAIL(原始) + SMS(降级),不重复 EMAIL
+        verify(channelRouter, times(2)).dispatch(any(MsgLogDO.class));
     }
 }

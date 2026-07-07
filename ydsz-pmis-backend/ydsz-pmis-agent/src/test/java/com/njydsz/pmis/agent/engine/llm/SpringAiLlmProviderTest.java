@@ -92,6 +92,11 @@ class SpringAiLlmProviderTest {
 
     /** 标准 OpenAI 响应体（使用 fastjson2 构造，自动转义特殊字符） */
     private String openAiResponse(String content) {
+        return openAiResponse(content, null);
+    }
+
+    /** 带 id 的 OpenAI 响应体（P1-4: providerTraceId 提取测试用） */
+    private String openAiResponse(String content, String id) {
         JSONObject msg = new JSONObject();
         msg.put("role", "assistant");
         msg.put("content", content);
@@ -101,6 +106,9 @@ class SpringAiLlmProviderTest {
         choices.add(choice);
         JSONObject root = new JSONObject();
         root.put("choices", choices);
+        if (id != null) {
+            root.put("id", id);
+        }
         return root.toJSONString();
     }
 
@@ -422,6 +430,50 @@ class SpringAiLlmProviderTest {
                     5000, 0, true, HttpClient.newHttpClient());
 
             assertThat(provider.name()).isEqualTo("spring-ai-openai");
+        }
+    }
+
+    // ==================== P1-4: providerTraceId 提取测试 ====================
+
+    @Nested
+    @DisplayName("P1-4: providerTraceId 提取测试")
+    class ProviderTraceIdTest {
+
+        @Test
+        @DisplayName("响应包含 id 时写入 AgentContext.providerTraceId")
+        void shouldExtractIdToContext() throws Exception {
+            String chatId = "chatcmpl-abc123";
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    openAiResponse("hello openai", chatId), 5000, 0, true);
+
+            AgentContext ctx = new AgentContext();
+            String result = provider.chat("sys", "user", ctx);
+
+            assertThat(result).isEqualTo("hello openai");
+            assertThat(ctx.getProviderTraceId()).isEqualTo(chatId);
+        }
+
+        @Test
+        @DisplayName("响应不含 id 时 providerTraceId 保持为 null")
+        void shouldKeepNullWhenNoId() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    openAiResponse("hello"), 5000, 0, true);
+
+            AgentContext ctx = new AgentContext();
+            provider.chat("sys", "user", ctx);
+
+            assertThat(ctx.getProviderTraceId()).isNull();
+        }
+
+        @Test
+        @DisplayName("context 为 null 时不抛异常")
+        void shouldNotThrowWhenContextNull() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    openAiResponse("hello", "chatcmpl-xxx"), 5000, 0, true);
+
+            // context 为 null 不抛异常
+            String result = provider.chat("sys", "user", null);
+            assertThat(result).isEqualTo("hello");
         }
     }
 

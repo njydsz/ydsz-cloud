@@ -1244,7 +1244,13 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     job_group       VARCHAR(64)    NOT NULL DEFAULT 'DEFAULT',
     job_key         VARCHAR(128)   NOT NULL,
     handler         VARCHAR(256)   NOT NULL,
-    cron_expression VARCHAR(128)   NOT NULL,
+    cron_expression VARCHAR(128),
+    -- [P0-3] 调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)
+    schedule_type   VARCHAR(32)    NOT NULL DEFAULT 'CRON',
+    -- [P0-3] 固定频率间隔(毫秒): schedule_type=FIXED_RATE 时生效
+    fixed_rate_ms   BIGINT,
+    -- [P0-3] 固定延迟间隔(毫秒): schedule_type=FIXED_DELAY 时生效
+    fixed_delay_ms  BIGINT,
     params_json     TEXT,
     status          VARCHAR(32)    NOT NULL DEFAULT 'NORMAL',
     remark          VARCHAR(512),
@@ -1278,6 +1284,8 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     priority        INTEGER        NOT NULL DEFAULT 5,
     -- [P4-8] 版本号: 每次修改 +1, 用于乐观锁和版本追溯
     version         INTEGER        NOT NULL DEFAULT 1,
+    -- [P2-8] 任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区
+    timezone        VARCHAR(64),
     created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
@@ -1290,12 +1298,16 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     CONSTRAINT ck_pj_status_enum    CHECK (status IN ('NORMAL', 'PAUSED', 'ERROR', 'COMPLETE', 'AUTO_PAUSED')),
     CONSTRAINT ck_pj_counts_nonneg  CHECK (fire_count >= 0 AND success_count >= 0 AND fail_count >= 0),
     CONSTRAINT ck_pj_success_le     CHECK (success_count <= fire_count),
+    -- [P0-3] 调度类型与固定间隔校验
+    CONSTRAINT ck_pj_schedule_type_enum CHECK (schedule_type IN ('CRON', 'FIXED_RATE', 'FIXED_DELAY', 'API')),
+    CONSTRAINT ck_pj_fixed_rate_pos CHECK (fixed_rate_ms IS NULL OR fixed_rate_ms > 0),
+    CONSTRAINT ck_pj_fixed_delay_pos CHECK (fixed_delay_ms IS NULL OR fixed_delay_ms > 0),
     CONSTRAINT ck_pj_lock_ttl_nonneg CHECK (lock_ttl_ms IS NULL OR lock_ttl_ms > 0),
     CONSTRAINT ck_pj_timeout_nonneg  CHECK (timeout_ms IS NULL OR timeout_ms > 0),
     CONSTRAINT ck_pj_slow_threshold_nonneg CHECK (slow_threshold_ms IS NULL OR slow_threshold_ms > 0),
     CONSTRAINT ck_pj_misfire_enum   CHECK (misfire_policy IN ('FIRE_NOW', 'SKIP', 'COALESCE')),
     CONSTRAINT ck_pj_shard_total_pos CHECK (shard_total >= 1),
-    CONSTRAINT ck_pj_job_type_enum  CHECK (job_type IN ('BEAN', 'HTTP', 'SHELL', 'GLUE')),
+    CONSTRAINT ck_pj_job_type_enum  CHECK (job_type IN ('BEAN', 'HTTP', 'SHELL', 'GLUE', 'MAP', 'MAP_REDUCE')),
     CONSTRAINT ck_pj_max_retries_nonneg CHECK (max_retries >= 0),
     CONSTRAINT ck_pj_retry_backoff_enum CHECK (retry_backoff IN ('FIXED', 'EXPONENTIAL')),
     CONSTRAINT ck_pj_block_strategy_enum CHECK (block_strategy IN ('SERIAL', 'COVER', 'DISCARD', 'CONCURRENT')),
@@ -1314,6 +1326,9 @@ COMMENT ON COLUMN pmis_job.job_group IS '任务分组(如 DEFAULT/RECONCILE/ALER
 COMMENT ON COLUMN pmis_job.job_key IS '任务唯一 KEY(调度器使用)';
 COMMENT ON COLUMN pmis_job.handler IS '任务处理器 Bean 名称(Spring Bean)';
 COMMENT ON COLUMN pmis_job.cron_expression IS 'Cron 表达式(如 0 0 2 * * ? = 每日 02:00)';
+COMMENT ON COLUMN pmis_job.schedule_type IS '调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)';
+COMMENT ON COLUMN pmis_job.fixed_rate_ms IS '固定频率间隔(毫秒): schedule_type=FIXED_RATE 时生效';
+COMMENT ON COLUMN pmis_job.fixed_delay_ms IS '固定延迟间隔(毫秒): schedule_type=FIXED_DELAY 时生效';
 COMMENT ON COLUMN pmis_job.params_json IS '任务参数 JSON';
 COMMENT ON COLUMN pmis_job.status IS '任务状态: NORMAL 正常 / PAUSED 暂停 / ERROR 异常 / COMPLETE 一次性任务完成';
 COMMENT ON COLUMN pmis_job.remark IS '任务说明';
@@ -1327,7 +1342,7 @@ COMMENT ON COLUMN pmis_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示
 COMMENT ON COLUMN pmis_job.slow_threshold_ms IS '慢任务阈值(毫秒, NULL 不检测慢任务; 执行耗时超过此值记入 pmis_job_slow_log)';
 COMMENT ON COLUMN pmis_job.misfire_policy IS 'Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过推进 next_fire_time / COALESCE 合并执行并日志标记 MISFIRED';
 COMMENT ON COLUMN pmis_job.shard_total IS '分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行';
-COMMENT ON COLUMN pmis_job.job_type IS '任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码)';
+COMMENT ON COLUMN pmis_job.job_type IS '任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码) / MAP(Map 动态子任务) / MAP_REDUCE(MapReduce 动态子任务+汇总)';
 COMMENT ON COLUMN pmis_job.max_retries IS '最大重试次数: 0=不重试(默认), >0 时失败后自动重试';
 COMMENT ON COLUMN pmis_job.retry_interval_ms IS '重试间隔(毫秒): NULL=立即重试, >0 时按 retry_backoff 策略计算间隔';
 COMMENT ON COLUMN pmis_job.retry_backoff IS '重试退避策略: FIXED 固定间隔(默认) / EXPONENTIAL 指数退避(间隔*2^retryCount)';
@@ -1337,6 +1352,7 @@ COMMENT ON COLUMN pmis_job.max_consecutive_fails IS '最大连续失败次数: N
 COMMENT ON COLUMN pmis_job.auto_resume_after_minutes IS '自动恢复时间(分钟): NULL=不自动恢复, >0 时 AUTO_PAUSED 后定时检查恢复';
 COMMENT ON COLUMN pmis_job.priority IS '优先级: 1-10, 越小越高(默认 5), 扫描器按优先级排序派发';
 COMMENT ON COLUMN pmis_job.version IS '版本号: 每次修改 +1, 用于乐观锁和版本追溯';
+COMMENT ON COLUMN pmis_job.timezone IS '任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区';
 COMMENT ON COLUMN pmis_job.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_job.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_job.updated_by IS '最后修改人 ID';
@@ -1410,7 +1426,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     params_json     TEXT,
     result_json     TEXT,
     trace_id        VARCHAR(20),
-    -- [P2-2] 触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发
+    -- [P2-2] 触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发 / API 接口触发 / FAILOVER 故障转移
     trigger_type    VARCHAR(32)    NOT NULL DEFAULT 'CRON',
     -- [P0-1] 持锁者标识(hostname:pid): 任务派发抢占分布式锁时记录锁的 value,
     --        供 TimeoutMonitor 超时后通过 Lua 脚本安全释放锁(仅当 value 匹配时才 delete)
@@ -1437,7 +1453,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     CONSTRAINT ck_pjl_duration_nonneg CHECK (duration_ms IS NULL OR duration_ms >= 0),
     CONSTRAINT ck_pjl_times_valid   CHECK (end_time IS NULL OR end_time >= start_time),
     CONSTRAINT ck_pjl_reconsume_nonneg CHECK (reconsume_times >= 0),
-    CONSTRAINT ck_pjl_trigger_type_enum CHECK (trigger_type IN ('CRON', 'MANUAL', 'RETRY', 'MISFIRED', 'DEPENDENT')),
+    CONSTRAINT ck_pjl_trigger_type_enum CHECK (trigger_type IN ('CRON', 'MANUAL', 'RETRY', 'MISFIRED', 'DEPENDENT', 'API', 'FAILOVER')),
     CONSTRAINT ck_pjl_deleted_enum  CHECK (deleted IN (0, 1))
 );
 -- [INLINE-OPT] 任务日志不需要 tenant_id 维度(系统全局资源)
@@ -1455,7 +1471,7 @@ COMMENT ON COLUMN pmis_job_log.error_message IS '异常堆栈(失败时填充)';
 COMMENT ON COLUMN pmis_job_log.params_json IS '执行参数 JSON';
 COMMENT ON COLUMN pmis_job_log.result_json IS '执行结果 JSON';
 COMMENT ON COLUMN pmis_job_log.trace_id IS '链路追踪 ID(SkyWalking/TLog)';
-COMMENT ON COLUMN pmis_job_log.trigger_type IS '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发';
+COMMENT ON COLUMN pmis_job_log.trigger_type IS '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发 / API 接口触发 / FAILOVER 故障转移';
 COMMENT ON COLUMN pmis_job_log.lock_holder IS '持锁者标识(hostname:pid): 分布式锁的 value,超时后通过 Lua 脚本安全释放锁';
 COMMENT ON COLUMN pmis_job_log.exec_node_id IS '执行节点 ID(hostname:port): 用于故障转移时定位任务所在节点';
 COMMENT ON COLUMN pmis_job_log.exec_thread_id IS '执行线程 ID: 用于超时强制中断时定位执行线程';
@@ -1480,6 +1496,161 @@ CREATE INDEX IF NOT EXISTS idx_pjl_job_start
 -- [INLINE-OPT] 链路追踪 ID 索引(分布式排障)
 CREATE INDEX IF NOT EXISTS idx_pjl_trace_id
     ON pmis_job_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
+
+-- ============================================================================
+-- [P0-2] 任务执行日志明细表 pmis_job_log_content
+-- ----------------------------------------------------------------------------
+-- 存储任务执行过程中业务侧通过 JobLogger 写入的逐行日志，
+-- 供前端 SSE 实时滚动展示（在线日志白屏化）。
+-- 与 pmis_job_log（执行级汇总）互补，本表为行级明细。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_log_content(
+    id              VARCHAR(20)      PRIMARY KEY,
+    log_id          VARCHAR(20)         NOT NULL,
+    job_key         VARCHAR(128)   NOT NULL,
+    line_no         INTEGER        NOT NULL,
+    log_level       VARCHAR(16)    NOT NULL DEFAULT 'INFO',
+    content         VARCHAR(4000)  NOT NULL,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pjlc_level_enum CHECK (log_level IN ('DEBUG', 'INFO', 'WARN', 'ERROR')),
+    CONSTRAINT ck_pjlc_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_log_content IS '任务执行日志明细: 业务侧通过 JobLogger 写入的逐行日志, 供前端 SSE 实时滚动展示';
+COMMENT ON COLUMN pmis_job_log_content.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_log_content.log_id IS '执行日志 ID(关联 pmis_job_log.id)';
+COMMENT ON COLUMN pmis_job_log_content.job_key IS '任务 KEY(冗余, 避免连表)';
+COMMENT ON COLUMN pmis_job_log_content.line_no IS '行号(从 1 递增)';
+COMMENT ON COLUMN pmis_job_log_content.log_level IS '日志级别: DEBUG / INFO / WARN / ERROR';
+COMMENT ON COLUMN pmis_job_log_content.content IS '日志内容(单行, 最长 4000 字符)';
+COMMENT ON COLUMN pmis_job_log_content.created_at IS '写入时间';
+COMMENT ON COLUMN pmis_job_log_content.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+CREATE INDEX IF NOT EXISTS idx_pjlc_log_id
+    ON pmis_job_log_content (log_id, line_no) WHERE deleted = 0;
+
+-- ============================================================================
+-- [P0-4] MapReduce 子任务表 pmis_job_task
+-- ----------------------------------------------------------------------------
+-- 存储动态产生的子任务，一个 JobInstance（logId）对应多个子任务。
+-- 由 MapTaskExecutor 管理：root task 调用 map() 产生子任务，框架执行后记录结果。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_task(
+    id              VARCHAR(20)      PRIMARY KEY,
+    job_id          VARCHAR(20)         NOT NULL,
+    log_id          VARCHAR(20)         NOT NULL,
+    job_key         VARCHAR(128)   NOT NULL,
+    task_name       VARCHAR(128)   NOT NULL,
+    task_params     TEXT,
+    task_type       VARCHAR(16)    NOT NULL DEFAULT 'SUB_TASK',
+    status          VARCHAR(32)    NOT NULL DEFAULT 'PENDING',
+    result          TEXT,
+    error_message   TEXT,
+    exec_node_id    VARCHAR(64),
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pjt_type_enum CHECK (task_type IN ('ROOT', 'SUB_TASK')),
+    CONSTRAINT ck_pjt_status_enum CHECK (status IN ('PENDING', 'RUNNING', 'SUCCESS', 'FAILED')),
+    CONSTRAINT ck_pjt_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_task IS 'MapReduce 子任务表: 动态产生的子任务及其执行结果';
+COMMENT ON COLUMN pmis_job_task.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_task.job_id IS '任务 ID';
+COMMENT ON COLUMN pmis_job_task.log_id IS '执行日志 ID(关联 pmis_job_log.id)';
+COMMENT ON COLUMN pmis_job_task.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN pmis_job_task.task_name IS '子任务名称';
+COMMENT ON COLUMN pmis_job_task.task_params IS '子任务参数 JSON';
+COMMENT ON COLUMN pmis_job_task.task_type IS '子任务类型: ROOT 根任务 / SUB_TASK 子任务';
+COMMENT ON COLUMN pmis_job_task.status IS '执行状态: PENDING / RUNNING / SUCCESS / FAILED';
+COMMENT ON COLUMN pmis_job_task.result IS '执行结果 JSON';
+COMMENT ON COLUMN pmis_job_task.error_message IS '错误信息';
+COMMENT ON COLUMN pmis_job_task.exec_node_id IS '执行节点 ID';
+COMMENT ON COLUMN pmis_job_task.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_task.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_job_task.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+CREATE INDEX IF NOT EXISTS idx_pjt_log_id
+    ON pmis_job_task (log_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pjt_status
+    ON pmis_job_task (status) WHERE deleted = 0;
+
+-- ============================================================================
+-- [P1-2] GLUE 在线编码表 pmis_job_glue
+-- ----------------------------------------------------------------------------
+-- 存储 GLUE 类型任务的在线代码，支持版本管理和回滚。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_glue(
+    id              VARCHAR(20)      PRIMARY KEY,
+    job_id          VARCHAR(20)         NOT NULL,
+    source_code     TEXT           NOT NULL,
+    language        VARCHAR(16)    NOT NULL DEFAULT 'GROOVY',
+    version         INTEGER        NOT NULL DEFAULT 1,
+    remark          VARCHAR(512),
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pjg_language_enum CHECK (language IN ('GROOVY', 'JAVA')),
+    CONSTRAINT ck_pjg_version_pos CHECK (version >= 1),
+    CONSTRAINT ck_pjg_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_glue IS 'GLUE 在线编码表: 存储在线编辑的代码及版本历史';
+COMMENT ON COLUMN pmis_job_glue.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_glue.job_id IS '任务 ID';
+COMMENT ON COLUMN pmis_job_glue.source_code IS '源代码';
+COMMENT ON COLUMN pmis_job_glue.language IS '语言: GROOVY(默认) / JAVA';
+COMMENT ON COLUMN pmis_job_glue.version IS '版本号(从 1 递增)';
+COMMENT ON COLUMN pmis_job_glue.remark IS '版本备注';
+COMMENT ON COLUMN pmis_job_glue.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job_glue.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_glue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+CREATE INDEX IF NOT EXISTS idx_pjg_job_id
+    ON pmis_job_glue (job_id, version DESC) WHERE deleted = 0;
+
+-- ============================================================================
+-- [P1-6] 任务配置历史版本表 pmis_job_history
+-- ----------------------------------------------------------------------------
+-- 每次任务配置更新时自动保存历史快照，支持版本对比和一键回滚。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_history(
+    id              VARCHAR(20)      PRIMARY KEY,
+    job_id          VARCHAR(20)         NOT NULL,
+    version         INTEGER        NOT NULL,
+    snapshot        TEXT           NOT NULL,
+    job_name        VARCHAR(128),
+    job_key         VARCHAR(128)   NOT NULL,
+    handler         VARCHAR(256),
+    cron_expression VARCHAR(128),
+    params_json     TEXT,
+    remark          VARCHAR(512),
+    changed_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    changed_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pjh_version_pos CHECK (version >= 1),
+    CONSTRAINT ck_pjh_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_history IS '任务配置历史版本表: 每次更新自动保存快照, 支持回滚';
+COMMENT ON COLUMN pmis_job_history.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_history.job_id IS '任务 ID';
+COMMENT ON COLUMN pmis_job_history.version IS '版本号(对应更新前的 job.version)';
+COMMENT ON COLUMN pmis_job_history.snapshot IS '完整 JobDO JSON 快照';
+COMMENT ON COLUMN pmis_job_history.job_name IS '任务名称(冗余, 便于列表展示)';
+COMMENT ON COLUMN pmis_job_history.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN pmis_job_history.handler IS '处理器(冗余)';
+COMMENT ON COLUMN pmis_job_history.cron_expression IS 'Cron 表达式(冗余)';
+COMMENT ON COLUMN pmis_job_history.params_json IS '参数 JSON(冗余)';
+COMMENT ON COLUMN pmis_job_history.remark IS '备注(冗余)';
+COMMENT ON COLUMN pmis_job_history.changed_by IS '修改人 ID';
+COMMENT ON COLUMN pmis_job_history.changed_at IS '修改时间';
+COMMENT ON COLUMN pmis_job_history.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+CREATE INDEX IF NOT EXISTS idx_pjh_job_id
+    ON pmis_job_history (job_id, version DESC) WHERE deleted = 0;
 
 -- ============================================================================
 -- [P6-3] 慢任务诊断日志表 pmis_job_slow_log
@@ -1648,6 +1819,38 @@ COMMENT ON COLUMN pmis_job_dag.success_count IS '成功次数';
 COMMENT ON COLUMN pmis_job_dag.fail_count IS '失败次数';
 COMMENT ON COLUMN pmis_job_dag.version IS '版本号(乐观锁)';
 COMMENT ON COLUMN pmis_job_dag.tenant_id IS '租户 ID';
+
+-- ----------------------------------------------------------------------------
+-- [P2-1] DAG 节点类型扩展（CONDITION / LOOP / PARALLEL_GATEWAY）
+-- ----------------------------------------------------------------------------
+-- DAG 节点定义存储在 pmis_job_dag.dag_definition JSON 字段中（非独立表），
+-- 节点类型扩展字段（nodeType / conditionExpression / loopCount / parallelBranches）
+-- 直接在 JSON 中管理，无需 ALTER TABLE。
+--
+-- JSON 节点格式（P2-1 增强后）：
+-- {
+--   "jobKey": "nodeA",
+--   "jobId": "1",
+--   "label": "条件判断",
+--   "x": 100, "y": 200,
+--   "paramsJson": "{}",
+--   "nodeType": "CONDITION",            -- TASK(默认) / CONDITION / LOOP / PARALLEL_GATEWAY
+--   "conditionExpression": "${nodeA.result=='success'}",  -- CONDITION 节点
+--   "loopCount": 3,                     -- LOOP 节点循环次数
+--   "parallelBranches": 2               -- PARALLEL_GATEWAY 并行分支数
+-- }
+--
+-- 以下 ALTER 语句用于兼容性（若未来引入独立的 pmis_job_dag_node 表），
+-- 当前为 no-op（表不存在时跳过）。
+ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS node_type VARCHAR(32) NOT NULL DEFAULT 'TASK';
+ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS condition_expression VARCHAR(512);
+ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS loop_count INTEGER;
+ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS parallel_branches INTEGER;
+
+COMMENT ON COLUMN IF EXISTS pmis_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
+COMMENT ON COLUMN IF EXISTS pmis_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';
+COMMENT ON COLUMN IF EXISTS pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
+COMMENT ON COLUMN IF EXISTS pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
 
 CREATE INDEX IF NOT EXISTS idx_pjd_status
     ON pmis_job_dag (status) WHERE deleted = 0;
@@ -1995,6 +2198,94 @@ INSERT INTO pmis_tenant_quota (id, tenant_id, max_jobs, max_concurrent, max_dail
 VALUES ('1', '1', NULL, NULL, NULL, 1)
 ON CONFLICT (tenant_id) DO NOTHING;
 
+-- ============================================================================
+-- [P2-3] 任务执行每日统计表 pmis_job_daily_stats
+-- ----------------------------------------------------------------------------
+-- 每天凌晨聚合 pmis_job_log 的执行统计，供前端趋势图展示。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_daily_stats(
+    id              VARCHAR(20)      PRIMARY KEY,
+    job_id          VARCHAR(20)         NOT NULL,
+    job_key         VARCHAR(128)   NOT NULL,
+    stats_date      DATE           NOT NULL,
+    fire_count      BIGINT         NOT NULL DEFAULT 0,
+    success_count   BIGINT         NOT NULL DEFAULT 0,
+    fail_count      BIGINT         NOT NULL DEFAULT 0,
+    timeout_count   BIGINT         NOT NULL DEFAULT 0,
+    avg_duration_ms BIGINT,
+    max_duration_ms BIGINT,
+    min_duration_ms BIGINT,
+    p95_duration_ms BIGINT,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pjds_counts_nonneg CHECK (fire_count >= 0 AND success_count >= 0 AND fail_count >= 0 AND timeout_count >= 0),
+    CONSTRAINT ck_pjds_deleted_enum CHECK (deleted IN (0, 1)),
+    CONSTRAINT uk_pjds_job_date UNIQUE (job_id, stats_date, deleted)
+);
+
+COMMENT ON TABLE pmis_job_daily_stats IS '任务执行每日统计: 聚合 pmis_job_log 按日统计, 供趋势图展示';
+COMMENT ON COLUMN pmis_job_daily_stats.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_daily_stats.job_id IS '任务 ID';
+COMMENT ON COLUMN pmis_job_daily_stats.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN pmis_job_daily_stats.stats_date IS '统计日期';
+COMMENT ON COLUMN pmis_job_daily_stats.fire_count IS '当日触发次数';
+COMMENT ON COLUMN pmis_job_daily_stats.success_count IS '当日成功次数';
+COMMENT ON COLUMN pmis_job_daily_stats.fail_count IS '当日失败次数';
+COMMENT ON COLUMN pmis_job_daily_stats.timeout_count IS '当日超时次数';
+COMMENT ON COLUMN pmis_job_daily_stats.avg_duration_ms IS '平均耗时(毫秒)';
+COMMENT ON COLUMN pmis_job_daily_stats.max_duration_ms IS '最大耗时(毫秒)';
+COMMENT ON COLUMN pmis_job_daily_stats.min_duration_ms IS '最小耗时(毫秒)';
+COMMENT ON COLUMN pmis_job_daily_stats.p95_duration_ms IS 'P95 耗时(毫秒)';
+COMMENT ON COLUMN pmis_job_daily_stats.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_daily_stats.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+CREATE INDEX IF NOT EXISTS idx_pjds_job_date
+    ON pmis_job_daily_stats (job_id, stats_date DESC) WHERE deleted = 0;
+
+-- ============================================================================
+-- [P2-7] 任务 SLA 管理表 pmis_job_sla
+-- ----------------------------------------------------------------------------
+-- 定义任务的 SLA 约束（最大执行时长/最大失败率/最小成功率），
+-- 由 AlertScanner 定期检查，违约时触发告警。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_sla(
+    id              VARCHAR(20)      PRIMARY KEY,
+    job_id          VARCHAR(20)         NOT NULL,
+    job_key         VARCHAR(128)   NOT NULL,
+    max_duration_ms BIGINT,
+    max_fail_rate   DECIMAL(5,2),
+    min_success_rate DECIMAL(5,2),
+    alert_level     VARCHAR(16)    NOT NULL DEFAULT 'WARNING',
+    enabled         SMALLINT       NOT NULL DEFAULT 1,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pjs_max_duration_pos CHECK (max_duration_ms IS NULL OR max_duration_ms > 0),
+    CONSTRAINT ck_pjs_fail_rate_range CHECK (max_fail_rate IS NULL OR (max_fail_rate >= 0 AND max_fail_rate <= 100)),
+    CONSTRAINT ck_pjs_success_rate_range CHECK (min_success_rate IS NULL OR (min_success_rate >= 0 AND min_success_rate <= 100)),
+    CONSTRAINT ck_pjs_alert_level_enum CHECK (alert_level IN ('INFO', 'WARNING', 'CRITICAL')),
+    CONSTRAINT ck_pjs_enabled_enum CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_pjs_deleted_enum CHECK (deleted IN (0, 1)),
+    CONSTRAINT uk_pjs_job_id UNIQUE (job_id, deleted)
+);
+
+COMMENT ON TABLE pmis_job_sla IS '任务 SLA 管理表: 定义最大执行时长/失败率/成功率约束, 违约时告警';
+COMMENT ON COLUMN pmis_job_sla.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_sla.job_id IS '任务 ID';
+COMMENT ON COLUMN pmis_job_sla.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN pmis_job_sla.max_duration_ms IS '最大执行时长(毫秒), 超过则违约';
+COMMENT ON COLUMN pmis_job_sla.max_fail_rate IS '最大失败率(%), 超过则违约';
+COMMENT ON COLUMN pmis_job_sla.min_success_rate IS '最小成功率(%), 低于则违约';
+COMMENT ON COLUMN pmis_job_sla.alert_level IS '告警级别: INFO / WARNING / CRITICAL';
+COMMENT ON COLUMN pmis_job_sla.enabled IS '是否启用: 0 禁用 / 1 启用';
+COMMENT ON COLUMN pmis_job_sla.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job_sla.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_sla.updated_by IS '修改人 ID';
+COMMENT ON COLUMN pmis_job_sla.updated_at IS '修改时间';
+COMMENT ON COLUMN pmis_job_sla.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
 -- --------------------------------------------------------------------
 
 -- ============================ [007] init pmis message schema ============================
@@ -2211,6 +2502,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
     condition_expr    TEXT          NOT NULL,
     target_channel    VARCHAR(32)   NOT NULL,
     fallback_channel  VARCHAR(32),
+    fallback_chain    VARCHAR(255),
     status            VARCHAR(16)   NOT NULL DEFAULT 'ENABLED',
     description       VARCHAR(512),
     sort_order        INTEGER       NOT NULL DEFAULT 0,
@@ -2231,7 +2523,8 @@ CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
 COMMENT ON TABLE pmis_msg_route_rule IS '消息路由规则表: 按 biz_type/channel/条件表达式路由到目标通道,支持降级';
 COMMENT ON COLUMN pmis_msg_route_rule.condition_expr IS '路由条件(SpEL 表达式,如 #request.bizType==''ALERT'' and #request.priority==''URGENT'')';
 COMMENT ON COLUMN pmis_msg_route_rule.target_channel IS '命中后目标通道';
-COMMENT ON COLUMN pmis_msg_route_rule.fallback_channel IS '目标通道发送失败时降级通道';
+COMMENT ON COLUMN pmis_msg_route_rule.fallback_channel IS '目标通道发送失败时降级通道(单通道,兼容旧版)';
+COMMENT ON COLUMN pmis_msg_route_rule.fallback_chain IS 'P1-8: 多级降级链(逗号分隔通道列表,如 SMS,EMAIL,IN_APP),按顺序逐个尝试,优先于 fallback_channel';
 
 CREATE INDEX IF NOT EXISTS idx_pmrt_biz ON pmis_msg_route_rule(biz_type) WHERE deleted = 0 AND status = 'ENABLED';
 CREATE INDEX IF NOT EXISTS idx_pmrt_sort ON pmis_msg_route_rule(status, sort_order) WHERE deleted = 0;
@@ -4142,6 +4435,139 @@ VALUES
      E'请根据以下描述生成 BPMN 2.0 流程定义 XML：\n\n${description}',
      '1.0.0', true, 'FlowGeneratorAgent 用户提示词模板，支持 ${description} 变量', '1')
 ON CONFLICT DO NOTHING;
+
+-- =====================================================
+-- 6.2 Agent 全链路 Tracing 表 pmis_agent_trace（P2-3）
+--    每个 Agent 执行的关键节点（AGENT_START/LLM_CALL/TOOL_CALL/STEP/AGENT_END）
+--    都落一行 span，按 trace_id 串联完整链路，便于查询/审计/性能分析。
+-- =====================================================
+CREATE TABLE IF NOT EXISTS pmis_agent_trace(
+    id                VARCHAR(20)   PRIMARY KEY,
+    trace_id          VARCHAR(64)   NOT NULL,                  -- 链路 ID（与 AgentContext.traceId / Brave traceId 对齐）
+    span_id           VARCHAR(20)   NOT NULL,                  -- 本 span ID（雪花算法）
+    parent_span_id    VARCHAR(20),                             -- 父 span ID（树形结构，AGENT_START 为根）
+    agent_type        VARCHAR(32)  NOT NULL,                  -- RISK_WARNING/RESOURCE_RECOMMEND/PROFIT_FORECAST/WIN_RATE_PREDICT/TIMESHEET_ANOMALY/FLOW_GENERATOR
+    biz_type          VARCHAR(32),                             -- PROJECT/OPPORTUNITY/TIMESHEET/STAFF
+    biz_id            VARCHAR(20),
+    biz_ref           VARCHAR(256),
+    span_name         VARCHAR(64)   NOT NULL,                  -- AGENT_START/STEP_START/LLM_THOUGHT/LLM_ACTION/TOOL_OBSERVATION/FINAL_ANSWER/STEP_END/AGENT_END/AGENT_ERROR
+    step_index        SMALLINT      NOT NULL DEFAULT 0,        -- ReAct 步骤序号（1-based，非 ReAct 节点为 0）
+    status            VARCHAR(16)   NOT NULL DEFAULT 'SUCCESS', -- SUCCESS/FAILED
+    input_data        TEXT,                                    -- 输入数据 JSON
+    output_data       TEXT,                                    -- 输出数据 JSON
+    error_msg         TEXT,                                    -- 错误信息（status=FAILED 时填）
+    cost_ms           BIGINT       NOT NULL DEFAULT 0,         -- 本 span 耗时（毫秒）
+    provider_trace_id VARCHAR(64)   NOT NULL DEFAULT '',       -- 第三方大模型 provider trace ID
+    tenant_id         VARCHAR(20)   NOT NULL DEFAULT '1',
+    created_by        VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at        TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT      NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pat_span_status   CHECK (status IN ('SUCCESS','FAILED')),
+    CONSTRAINT ck_pat_step_nonneg   CHECK (step_index >= 0),
+    CONSTRAINT ck_pat_cost_nonneg   CHECK (cost_ms >= 0),
+    CONSTRAINT ck_pat_deleted_enum  CHECK (deleted IN (0, 1))
+);
+COMMENT ON TABLE  pmis_agent_trace IS 'Agent 全链路 Tracing 表: 记录每个 Agent 执行的关键节点 span，按 trace_id 串联完整链路';
+COMMENT ON COLUMN pmis_agent_trace.trace_id IS '链路 ID: 与 AgentContext.traceId / Brave traceId 对齐，便于跨模块查询';
+COMMENT ON COLUMN pmis_agent_trace.span_id IS 'Span ID: 本 span 唯一标识（雪花算法）';
+COMMENT ON COLUMN pmis_agent_trace.parent_span_id IS '父 Span ID: 树形结构，AGENT_START 为根 span（null）';
+COMMENT ON COLUMN pmis_agent_trace.agent_type IS 'Agent 类型: RISK_WARNING/RESOURCE_RECOMMEND/PROFIT_FORECAST/WIN_RATE_PREDICT/TIMESHEET_ANOMALY/FLOW_GENERATOR';
+COMMENT ON COLUMN pmis_agent_trace.biz_type IS '业务类型: PROJECT/OPPORTUNITY/TIMESHEET/STAFF';
+COMMENT ON COLUMN pmis_agent_trace.biz_id IS '业务对象 ID';
+COMMENT ON COLUMN pmis_agent_trace.biz_ref IS '业务对象引用';
+COMMENT ON COLUMN pmis_agent_trace.span_name IS 'Span 名称: AGENT_START/STEP_START/LLM_THOUGHT/LLM_ACTION/TOOL_OBSERVATION/FINAL_ANSWER/STEP_END/AGENT_END/AGENT_ERROR';
+COMMENT ON COLUMN pmis_agent_trace.step_index IS 'ReAct 步骤序号: 1-based，非 ReAct 节点（如 AGENT_START/AGENT_END）为 0';
+COMMENT ON COLUMN pmis_agent_trace.status IS 'Span 状态: SUCCESS 成功 / FAILED 失败';
+COMMENT ON COLUMN pmis_agent_trace.input_data IS '输入数据 JSON: 本 span 的输入快照';
+COMMENT ON COLUMN pmis_agent_trace.output_data IS '输出数据 JSON: 本 span 的输出快照';
+COMMENT ON COLUMN pmis_agent_trace.error_msg IS '错误信息: status=FAILED 时填异常 message';
+COMMENT ON COLUMN pmis_agent_trace.cost_ms IS 'Span 耗时(毫秒)';
+COMMENT ON COLUMN pmis_agent_trace.provider_trace_id IS '第三方大模型 provider trace ID: 用于与 LLM 厂商账单核对';
+COMMENT ON COLUMN pmis_agent_trace.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_agent_trace.deleted IS '逻辑删除: 0=未删除,1=已删除';
+CREATE INDEX IF NOT EXISTS idx_pat_trace_id
+    ON pmis_agent_trace(trace_id, step_index)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pat_tenant_biz
+    ON pmis_agent_trace(tenant_id, biz_type, biz_id, created_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pat_agent_created
+    ON pmis_agent_trace(agent_type, created_at DESC)
+    WHERE deleted = 0;
+
+-- =====================================================
+-- 6.3 Agent 租户级 Token 限额与计费表（P2-4）
+--    pmis_agent_token_quota   : 租户月度配额（一行 = 一个租户一个月）
+--    pmis_agent_token_usage_log: 每次大模型调用的 token 使用明细
+-- =====================================================
+CREATE TABLE IF NOT EXISTS pmis_agent_token_quota(
+    id                  VARCHAR(20)   PRIMARY KEY,
+    tenant_id           VARCHAR(20)   NOT NULL,                  -- 租户 ID
+    quota_month         VARCHAR(6)    NOT NULL,                  -- 配额月份 YYYYMM（如 202607）
+    total_quota         BIGINT        NOT NULL DEFAULT 1000000,  -- 月度配额上限（token 数）
+    used_tokens         BIGINT        NOT NULL DEFAULT 0,        -- 已使用 token 数
+    status              VARCHAR(16)   NOT NULL DEFAULT 'ACTIVE', -- ACTIVE/RUNOUT/RESET
+    reset_at            TIMESTAMPTZ,                             -- 上次重置时间
+    created_by          VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT      NOT NULL DEFAULT 0,
+    CONSTRAINT uk_patq_tenant_month   UNIQUE (tenant_id, quota_month, deleted),
+    CONSTRAINT ck_patq_status_enum    CHECK (status IN ('ACTIVE','RUNOUT','RESET')),
+    CONSTRAINT ck_patq_quota_nonneg   CHECK (total_quota >= 0),
+    CONSTRAINT ck_patq_used_nonneg    CHECK (used_tokens >= 0),
+    CONSTRAINT ck_patq_deleted_enum   CHECK (deleted IN (0, 1))
+);
+COMMENT ON TABLE  pmis_agent_token_quota IS 'Agent 租户级 Token 配额表: 按月统计每个租户的 LLM token 消耗';
+COMMENT ON COLUMN pmis_agent_token_quota.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_agent_token_quota.quota_month IS '配额月份 YYYYMM: 202607 表示 2026 年 7 月';
+COMMENT ON COLUMN pmis_agent_token_quota.total_quota IS '月度配额上限: token 数，默认 100 万';
+COMMENT ON COLUMN pmis_agent_token_quota.used_tokens IS '已使用 token 数: 累计值，重置时归零';
+COMMENT ON COLUMN pmis_agent_token_quota.status IS '配额状态: ACTIVE 正常 / RUNOUT 已耗尽 / RESET 已重置';
+COMMENT ON COLUMN pmis_agent_token_quota.reset_at IS '上次重置时间: 手动或月初自动重置时记录';
+CREATE INDEX IF NOT EXISTS idx_patq_tenant_month
+    ON pmis_agent_token_quota(tenant_id, quota_month)
+    WHERE deleted = 0;
+
+CREATE TABLE IF NOT EXISTS pmis_agent_token_usage_log(
+    id                  VARCHAR(20)   PRIMARY KEY,
+    tenant_id           VARCHAR(20)   NOT NULL,                  -- 租户 ID
+    trace_id            VARCHAR(64)   NOT NULL,                  -- 链路 ID（与 pmis_agent_trace 对齐）
+    agent_type          VARCHAR(32),                             -- Agent 类型
+    provider            VARCHAR(64)   NOT NULL,                  -- LLM Provider 名称
+    model               VARCHAR(64),                             -- 模型名称（如 gpt-4o / qwen-max）
+    biz_ref             VARCHAR(256),                            -- 业务引用
+    prompt_tokens       INTEGER       NOT NULL DEFAULT 0,       -- 输入 token 数
+    completion_tokens   INTEGER       NOT NULL DEFAULT 0,        -- 输出 token 数
+    total_tokens        INTEGER       NOT NULL DEFAULT 0,        -- 总 token 数
+    cost_ms             BIGINT        NOT NULL DEFAULT 0,        -- 调用耗时（毫秒）
+    caller_id           VARCHAR(20),                             -- 调用人 ID
+    caller_name         VARCHAR(64),                             -- 调用人姓名
+    created_by          VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT      NOT NULL DEFAULT 0,
+    CONSTRAINT ck_patul_tokens_nonneg CHECK (prompt_tokens >= 0 AND completion_tokens >= 0 AND total_tokens >= 0),
+    CONSTRAINT ck_patul_cost_nonneg   CHECK (cost_ms >= 0),
+    CONSTRAINT ck_patul_deleted_enum  CHECK (deleted IN (0, 1))
+);
+COMMENT ON TABLE  pmis_agent_token_usage_log IS 'Agent Token 使用明细表: 每次大模型调用的 token 消耗记录';
+COMMENT ON COLUMN pmis_agent_token_usage_log.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_agent_token_usage_log.trace_id IS '链路 ID: 与 pmis_agent_trace.trace_id 对齐';
+COMMENT ON COLUMN pmis_agent_token_usage_log.provider IS 'LLM Provider 名称: mock/spring-ai-openai/dashscope/qianfan';
+COMMENT ON COLUMN pmis_agent_token_usage_log.prompt_tokens IS '输入 token 数: 通过 TokenCounter 估算';
+COMMENT ON COLUMN pmis_agent_token_usage_log.completion_tokens IS '输出 token 数: 通过 TokenCounter 估算';
+COMMENT ON COLUMN pmis_agent_token_usage_log.total_tokens IS '总 token 数: prompt + completion';
+CREATE INDEX IF NOT EXISTS idx_patul_tenant_created
+    ON pmis_agent_token_usage_log(tenant_id, created_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_patul_trace
+    ON pmis_agent_token_usage_log(trace_id)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 7. 初始化 8 类项目类型的默认交付物标准（CD1-CD5）
@@ -11589,6 +12015,61 @@ CREATE INDEX IF NOT EXISTS idx_pfc_task
     ON pmis_flow_comment (task_id, created_at) WHERE task_id IS NOT NULL AND deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pfc_trace
     ON pmis_flow_comment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
+
+-- ====================================================================
+-- ============================ [071] P3-3 AI 推荐审批人反馈记录表 ============================
+-- ====================================================================
+-- P3-3: 推荐审批人反馈闭环 — 记录用户对 AI 推荐审批人的反馈行为
+-- 用于统计 AI 推荐准确率（接受率/拒绝率），并为后续推荐提供历史反馈数据
+-- 反馈动作：
+--   ACCEPTED     — 用户接受了 AI 推荐的审批人
+--   REJECTED     — 用户拒绝了 AI 推荐的审批人
+--   CHOSEN_OTHER — 用户选择了非推荐列表中的其他人
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS pmis_flow_ai_feedback (
+    id                      VARCHAR(20)       PRIMARY KEY,
+    tenant_id               VARCHAR(20)          NOT NULL DEFAULT '1',
+    trace_id                VARCHAR(64)      NOT NULL,               -- 推荐调用追踪 ID（关联一次 recommendApprovers 调用）
+    task_id                 VARCHAR(20),                             -- 任务 ID（可空，草稿态无任务）
+    instance_id             VARCHAR(20),                             -- 流程实例 ID
+    flow_code               VARCHAR(64),                             -- 流程编码
+    node_code               VARCHAR(64),                             -- 节点编码
+    recommended_user_id     VARCHAR(20)      NOT NULL,               -- AI 推荐的审批人 ID
+    recommended_user_name   VARCHAR(128),                             -- AI 推荐的审批人姓名
+    recommended_score       DECIMAL(5,4),                             -- 推荐得分 0.0000~1.0000
+    recommended_rank        SMALLINT,                                 -- 推荐排名（1=第一推荐）
+    action                  VARCHAR(16)      NOT NULL,               -- 反馈动作：ACCEPTED/REJECTED/CHOSEN_OTHER
+    actual_user_id          VARCHAR(20),                             -- 实际选择的审批人 ID（CHOSEN_OTHER 时有值）
+    actual_user_name        VARCHAR(128),                             -- 实际选择的审批人姓名
+    feedback_source         VARCHAR(16)      NOT NULL DEFAULT 'USER_EXPLICIT', -- USER_EXPLICIT/SYSTEM_INFERRED
+    remark                  VARCHAR(512),                             -- 备注
+    provider_trace_id       VARCHAR(64),                             -- 链路追踪 ID
+    created_by              VARCHAR(20)          NOT NULL DEFAULT 'SYSTEM',
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by              VARCHAR(20)          NOT NULL DEFAULT 'SYSTEM',
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                 SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfaf_action          CHECK (action IN ('ACCEPTED','REJECTED','CHOSEN_OTHER')),
+    CONSTRAINT ck_pfaf_source          CHECK (feedback_source IN ('USER_EXPLICIT','SYSTEM_INFERRED')),
+    CONSTRAINT ck_pfaf_deleted         CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_flow_ai_feedback IS 'P3-3: AI 推荐审批人反馈记录表 — 记录用户对 AI 推荐的反馈，形成推荐-反馈闭环';
+COMMENT ON COLUMN pmis_flow_ai_feedback.trace_id IS '推荐调用追踪 ID（关联一次 recommendApprovers 调用，所有推荐项共享）';
+COMMENT ON COLUMN pmis_flow_ai_feedback.recommended_score IS '推荐得分 0.0000~1.0000（来自 Agent 返回）';
+COMMENT ON COLUMN pmis_flow_ai_feedback.recommended_rank IS '推荐排名（1=第一推荐，来自 recommendApprovers 返回）';
+COMMENT ON COLUMN pmis_flow_ai_feedback.action IS '反馈动作: ACCEPTED=接受 / REJECTED=拒绝 / CHOSEN_OTHER=选择其他人';
+COMMENT ON COLUMN pmis_flow_ai_feedback.actual_user_id IS '实际选择的审批人 ID（action=CHOSEN_OTHER 时有值）';
+COMMENT ON COLUMN pmis_flow_ai_feedback.feedback_source IS '反馈来源: USER_EXPLICIT=用户显式反馈 / SYSTEM_INFERRED=系统推断';
+
+CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_trace
+    ON pmis_flow_ai_feedback (tenant_id, trace_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_task_created
+    ON pmis_flow_ai_feedback (tenant_id, task_id, created_at) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_user_action
+    ON pmis_flow_ai_feedback (tenant_id, recommended_user_id, action) WHERE deleted = 0;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT

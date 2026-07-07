@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.agent.mapper.AgentTraceMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.agent.entity.AgentTraceDO">
+        <id column="id" property="id"/>
+        <result column="trace_id" property="traceId"/>
+        <result column="span_id" property="spanId"/>
+        <result column="parent_span_id" property="parentSpanId"/>
+        <result column="agent_type" property="agentType"/>
+        <result column="biz_type" property="bizType"/>
+        <result column="biz_id" property="bizId"/>
+        <result column="biz_ref" property="bizRef"/>
+        <result column="span_name" property="spanName"/>
+        <result column="step_index" property="stepIndex"/>
+        <result column="status" property="status"/>
+        <result column="input_data" property="inputData"/>
+        <result column="output_data" property="outputData"/>
+        <result column="error_msg" property="errorMsg"/>
+        <result column="cost_ms" property="costMs"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, trace_id, span_id, parent_span_id, agent_type, biz_type, biz_id, biz_ref,
+        span_name, step_index, status, input_data, output_data, error_msg,
+        cost_ms, provider_trace_id, tenant_id,
+        created_by, created_at, updated_by, updated_at, deleted
+    </sql>
+
+    <!-- 按 trace_id 查询完整链路（按 step_index / created_at 升序） -->
+    <select id="selectByTraceId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_agent_trace
+        WHERE trace_id = #{traceId}
+          AND deleted = 0
+        ORDER BY step_index ASC, created_at ASC
+    </select>
+
+    <!-- 按业务维度查询最近 N 条 trace span -->
+    <select id="selectByBiz" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_agent_trace
+        WHERE deleted = 0
+        <if test="bizType != null and bizType != ''">
+            AND biz_type = #{bizType}
+        </if>
+        <if test="bizId != null and bizId != ''">
+            AND biz_id = #{bizId}
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

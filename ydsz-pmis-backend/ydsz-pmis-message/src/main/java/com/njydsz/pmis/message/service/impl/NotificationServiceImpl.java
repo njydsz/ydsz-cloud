@@ -52,8 +52,8 @@ public class NotificationServiceImpl implements NotificationService {
         for (String rid : receiverIds) {
             MsgNotificationDO entity = buildEntity(dto, rid);
             msgNotificationMapper.insert(entity);
-            // 实时推送（失败由 RealtimePushService 内部降级）
-            realtimePushService.pushToUser(rid, "NOTIFICATION", entity);
+            // 实时推送（P0-4: 离线时自动缓存到 Redis，上线时补偿）
+            realtimePushService.pushToUserWithOffline(rid, "NOTIFICATION", entity);
             count++;
         }
         log.info("[Notification] 发送通知: title={} count={} bizType={}", dto.getTitle(), count, dto.getBizType());

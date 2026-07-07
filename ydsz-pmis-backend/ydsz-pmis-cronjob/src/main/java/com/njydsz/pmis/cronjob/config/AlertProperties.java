@@ -17,6 +17,8 @@ import java.time.Duration;
  *   <li>{@link #getDingtalk()} 钉钉群机器人</li>
  *   <li>{@link #getWecom()} 企业微信群机器人</li>
  *   <li>{@link #getWebhook()} 通用 Webhook</li>
+ *   <li>{@link #getFeishu()} 飞书群机器人（P1-5 新增）</li>
+ *   <li>{@link #getSms()} 短信通知（P1-5 新增）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -44,6 +46,12 @@ public class AlertProperties {
 
     /** 通用 Webhook 通道配置 */
     private Webhook webhook = new Webhook();
+
+    /** 飞书通道配置（P1-5 新增） */
+    private Feishu feishu = new Feishu();
+
+    /** 短信通道配置（P1-5 新增） */
+    private Sms sms = new Sms();
 
     /**
      * 邮件通道配置。
@@ -103,5 +111,39 @@ public class AlertProperties {
 
         /** 自定义请求头（JSON，如 {"Authorization":"Bearer xxx"}） */
         private String headers;
+    }
+
+    /**
+     * 飞书群机器人配置（P1-5 新增）。
+     *
+     * <p>通过飞书自定义机器人 Webhook 推送 interactive card 消息。
+     * 默认禁用，需显式设置 {@code enabled=true} 并配置 webhook-url 后启用。
+     */
+    @Data
+    public static class Feishu {
+        /** 是否启用飞书通道（默认禁用） */
+        private boolean enabled = false;
+
+        /** 飞书机器人 Webhook URL（如 https://open.feishu.cn/open-apis/bot/v2/hook/xxx） */
+        private String webhookUrl;
+    }
+
+    /**
+     * 短信通道配置（P1-5 新增）。
+     *
+     * <p>简化实现：通过 HTTP Webhook URL 转发短信通知，由业务侧（如 message-service）
+     * 调用阿里云/腾讯云短信 API 实际发送，避免 cronjob 模块直接依赖短信 SDK。
+     * 默认禁用，需显式设置 {@code enabled=true} 并配置 webhook-url 后启用。
+     */
+    @Data
+    public static class Sms {
+        /** 是否启用短信通道（默认禁用） */
+        private boolean enabled = false;
+
+        /** 短信转发 Webhook URL（由 message-service 或第三方短信网关提供） */
+        private String webhookUrl;
+
+        /** 默认接收手机号列表（逗号分隔，如 13800000000,13900000000） */
+        private String phoneNumbers;
     }
 }

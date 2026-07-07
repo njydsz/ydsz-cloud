@@ -5,6 +5,7 @@ import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.engine.StreamableAgent;
 import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
+import com.njydsz.pmis.agent.engine.trace.AgentTracer;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
 import com.njydsz.pmis.agent.enums.AgentType;
 import com.njydsz.pmis.agent.mapper.AgentPredictionMapper;
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -60,7 +62,8 @@ class AgentServiceImplStreamTest {
 
     @BeforeEach
     void setUp() {
-        service = new AgentServiceImpl(List.of(), predictionMapper);
+        // P2-3: 使用 NoOp tracer 避免对 tracing 行为产生依赖
+        service = new AgentServiceImpl(List.of(), predictionMapper, AgentTracer.noOp(), mock(ThreadPoolTaskExecutor.class));
     }
 
     private AgentContext ctx() {
@@ -102,7 +105,7 @@ class AgentServiceImplStreamTest {
                     AgentAlertLevel.RECOMMEND, BigDecimal.valueOf(0.8),
                     BigDecimal.valueOf(0.75), "ok", List.of(), Map.of());
             StreamableAgent agent = mockStreamable(AgentType.FLOW_GENERATOR, expected);
-            service = new AgentServiceImpl(List.of(agent), predictionMapper);
+            service = new AgentServiceImpl(List.of(agent), predictionMapper, AgentTracer.noOp(), mock(ThreadPoolTaskExecutor.class));
 
             ReActEventListener listener = mock(ReActEventListener.class);
             AgentContext context = ctx();
@@ -111,7 +114,8 @@ class AgentServiceImplStreamTest {
                     AgentType.FLOW_GENERATOR.getCode(), context, listener);
 
             assertThat(result).isSameAs(expected);
-            verify(agent, times(1)).executeStream(eq(context), eq(listener));
+            // P2-3: 传入的是 composite（业务 + tracing），不是原始 listener
+            verify(agent, times(1)).executeStream(eq(context), any(ReActEventListener.class));
             verify(agent, never()).execute(any());
         }
 
@@ -122,7 +126,7 @@ class AgentServiceImplStreamTest {
             when(agent.type()).thenReturn(AgentType.FLOW_GENERATOR);
             when(agent.executeStream(any(), any()))
                     .thenThrow(new RuntimeException("ReAct 故障"));
-            service = new AgentServiceImpl(List.of(agent), predictionMapper);
+            service = new AgentServiceImpl(List.of(agent), predictionMapper, AgentTracer.noOp(), mock(ThreadPoolTaskExecutor.class));
 
             ReActEventListener listener = mock(ReActEventListener.class);
 
@@ -147,7 +151,7 @@ class AgentServiceImplStreamTest {
                     AgentAlertLevel.RED, BigDecimal.valueOf(0.9),
                     BigDecimal.valueOf(0.8), "风险很高", List.of(), Map.of());
             Agent agent = mockPlainAgent(AgentType.RISK_WARNING, result);
-            service = new AgentServiceImpl(List.of(agent), predictionMapper);
+            service = new AgentServiceImpl(List.of(agent), predictionMapper, AgentTracer.noOp(), mock(ThreadPoolTaskExecutor.class));
 
             ReActEventListener listener = mock(ReActEventListener.class);
 
@@ -166,7 +170,7 @@ class AgentServiceImplStreamTest {
             AgentResult result = new AgentResult(AgentType.RISK_WARNING,
                     AgentAlertLevel.NORMAL, null, null, null, null, null);
             Agent agent = mockPlainAgent(AgentType.RISK_WARNING, result);
-            service = new AgentServiceImpl(List.of(agent), predictionMapper);
+            service = new AgentServiceImpl(List.of(agent), predictionMapper, AgentTracer.noOp(), mock(ThreadPoolTaskExecutor.class));
 
             ReActEventListener listener = mock(ReActEventListener.class);
 
@@ -211,7 +215,7 @@ class AgentServiceImplStreamTest {
             AgentResult result = new AgentResult(AgentType.RISK_WARNING,
                     AgentAlertLevel.NORMAL, null, null, "ok", null, null);
             Agent agent = mockPlainAgent(AgentType.RISK_WARNING, result);
-            service = new AgentServiceImpl(List.of(agent), predictionMapper);
+            service = new AgentServiceImpl(List.of(agent), predictionMapper, AgentTracer.noOp(), mock(ThreadPoolTaskExecutor.class));
 
             AgentResult returned = service.executeStream(
                     AgentType.RISK_WARNING.getCode(), ctx(), null);

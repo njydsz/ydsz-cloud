@@ -6,6 +6,8 @@ import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
 
 import java.math.BigDecimal;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * LLM 接入抽象接口
@@ -77,7 +79,36 @@ public interface LlmProvider {
     }
 
     /**
+     * 匹配 markdown 代码块的正则（P2-3）。
+     *
+     * <p>支持以下格式（DOTALL 模式，跨行匹配）：
+     * <ul>
+     *   <li>{@code ```json\n...\n```}（带语言标识）</li>
+     *   <li>{@code ```\n...\n```}（不带语言标识）</li>
+     *   <li>{@code ```{...}```}（单行，无换行）</li>
+     *   <li>首尾可能有空白字符</li>
+     * </ul>
+     *
+     * <p>分组 1 捕获代码块内容。
+     */
+    Pattern CODE_FENCE_PATTERN = Pattern.compile(
+            "^```[^\\n\\r]*\\s*\\n?(.*?)\\n?```\\s*$",
+            Pattern.DOTALL | Pattern.MULTILINE);
+
+    /**
      * 剥离 LLM 输出中可能包裹的 markdown 代码块（```json ... ``` 或 ``` ... ```）。
+     *
+     * <p><b>P2-3 修复</b>：原实现使用 {@code indexOf('\n')} + {@code lastIndexOf("```")}
+     * 字符串截取，存在多个边界缺陷：
+     * <ul>
+     *   <li>单行代码块 {@code ```{...}```} 无换行符时无法剥离</li>
+     *   <li>{@code ```json} 后无换行直接跟内容时 {@code firstNewline > 0} 判断错误</li>
+     *   <li>代码块内部包含 {@code ```} 字符串时会错误截断</li>
+     *   <li>只有开头 ``` 无结尾 ``` 时会错误截断</li>
+     * </ul>
+     *
+     * <p>现改用正则 {@link #CODE_FENCE_PATTERN} 精确匹配整段代码块，
+     * 提取分组 1 作为 JSON 内容，覆盖所有边界场景。
      *
      * @param raw LLM 原始输出
      * @return 去除代码块后的 JSON 字符串
@@ -85,18 +116,10 @@ public interface LlmProvider {
     static String stripMarkdownCodeFence(String raw) {
         if (raw == null) return "";
         String s = raw.trim();
-        // 去除开头的 ```json 或 ```
-        if (s.startsWith("```")) {
-            int firstNewline = s.indexOf('\n');
-            if (firstNewline > 0) {
-                s = s.substring(firstNewline + 1);
-            }
-            // 去除结尾的 ```
-            int lastFence = s.lastIndexOf("```");
-            if (lastFence >= 0) {
-                s = s.substring(0, lastFence);
-            }
-            s = s.trim();
+        // P2-3：正则精确匹配整段代码块，提取内容
+        Matcher matcher = CODE_FENCE_PATTERN.matcher(s);
+        if (matcher.matches()) {
+            return matcher.group(1).trim();
         }
         return s;
     }

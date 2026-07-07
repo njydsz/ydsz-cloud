@@ -75,9 +75,12 @@ public final class BuiltInPromptTemplates {
      * 获取内置模板内容。
      *
      * @param code 模板编码
-     * @return 模板内容；不存在返回 null
+     * @return 模板内容；不存在或 code 为 null/空 返回 null
      */
     public static String get(String code) {
+        if (code == null || code.isEmpty()) {
+            return null;
+        }
         return TEMPLATES.get(code);
     }
 
@@ -85,9 +88,12 @@ public final class BuiltInPromptTemplates {
      * 判断是否存在内置模板。
      *
      * @param code 模板编码
-     * @return true=存在
+     * @return true=存在；code 为 null/空 返回 false
      */
     public static boolean contains(String code) {
+        if (code == null || code.isEmpty()) {
+            return false;
+        }
         return TEMPLATES.containsKey(code);
     }
 }

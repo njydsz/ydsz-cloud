@@ -47,6 +47,11 @@ public class DagDefinitionCodec {
             n.put("x", node.x());
             n.put("y", node.y());
             n.put("paramsJson", node.paramsJson());
+            // P2-1: 节点类型扩展字段
+            n.put("nodeType", node.nodeType());
+            n.put("conditionExpression", node.conditionExpression());
+            n.put("loopCount", node.loopCount());
+            n.put("parallelBranches", node.parallelBranches());
             nodesArr.add(n);
         }
         JSONArray edgesArr = new JSONArray();
@@ -102,7 +107,12 @@ public class DagDefinitionCodec {
                     n.getString("label"),
                     n.getIntValue("x", 0),
                     n.getIntValue("y", 0),
-                    n.getString("paramsJson")));
+                    n.getString("paramsJson"),
+                    // P2-1: 节点类型扩展字段（缺失时默认 TASK）
+                    n.getString("nodeType"),
+                    n.getString("conditionExpression"),
+                    n.getInteger("loopCount"),
+                    n.getInteger("parallelBranches")));
         }
 
         // 校验节点 jobKey 唯一

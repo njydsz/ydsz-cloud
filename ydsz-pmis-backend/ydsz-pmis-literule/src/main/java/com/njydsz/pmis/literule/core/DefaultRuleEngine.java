@@ -395,6 +395,74 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         return def;
     }
 
+    /**
+     * P3-1 规则+模型融合：评估前注入模型输出
+     *
+     * <p>当 {@link #modelInputRegistry} 非 null 且已注册 provider 时：
+     * <ol>
+     *   <li>调用 {@link ModelInputRegistry#collectAllModelOutputs} 获取模型输出
+     *       （key 带 "model." 前缀，如 "model.riskScore"）</li>
+     *   <li>将扁平 key 转换为嵌套结构 {@code {"model": {"riskScore": ..., ...}}}，
+     *       以兼容 Aviator 表达式 {@code model.riskScore} 的属性访问语法</li>
+     *   <li>合并到 facts 中，构建新的 {@link RuleContext}（保留原 scenario/source/traceId/tenantId/environment）</li>
+     * </ol>
+     *
+     * <p>降级策略：
+     * <ul>
+     *   <li>注册表为空：返回原 context，不影响评估</li>
+     *   <li>模型输出为空：返回原 context（规则中引用 model.xxx 的表达式将返回 false）</li>
+     *   <li>抛出 {@link ModelInvocationException}（fallbackOnError=false）：异常向上传播中断评估</li>
+     * </ul>
+     *
+     * @param context 原始上下文
+     * @return 包含模型输出的新上下文；无需注入时返回原 context
+     * @since 1.8.0
+     */
+    private RuleContext injectModelOutputsIfNeeded(RuleContext context) {
+        ModelInputRegistry registry = this.modelInputRegistry;
+        if (registry == null || !registry.hasProviders()) {
+            return context;
+        }
+        Map<String, Object> modelOutputs;
+        try {
+            modelOutputs = registry.collectAllModelOutputs(context);
+        } catch (ModelInvocationException e) {
+            // fallbackOnError=false 时由注册表抛出，直接传播中断评估
+            log.warn("[LiteRule-Model] 模型调用失败（fallbackOnError=false），中断评估: {}", e.getMessage());
+            throw e;
+        }
+        if (modelOutputs == null || modelOutputs.isEmpty()) {
+            // 模型输出为空（所有 provider 失败或无输出），降级使用原 context
+            if (log.isDebugEnabled()) {
+                log.debug("[LiteRule-Model] 模型输出为空，降级为纯规则评估");
+            }
+            return context;
+        }
+        // 扁平 key（"model.riskScore"）转换为嵌套结构（{"model": {"riskScore": ...}}）
+        Map<String, Object> nestedModel = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : modelOutputs.entrySet()) {
+            String key = entry.getKey();
+            if (key.startsWith(ModelInputRegistry.MODEL_KEY_PREFIX)) {
+                nestedModel.put(key.substring(ModelInputRegistry.MODEL_KEY_PREFIX.length()), entry.getValue());
+            } else {
+                // 非 "model." 前缀的 key 直接保留（兼容扩展场景）
+                nestedModel.put(key, entry.getValue());
+            }
+        }
+        if (nestedModel.isEmpty()) {
+            return context;
+        }
+        // 合并到新 facts（保留原 facts + 添加 model 嵌套 Map）
+        Map<String, Object> mergedFacts = new LinkedHashMap<>(context.getFacts());
+        mergedFacts.put("model", nestedModel);
+        RuleContext enriched = RuleContext.of(mergedFacts, context.getScenario(), context.getSource(),
+                context.getTraceId(), context.getTenantId(), context.getEnvironment());
+        if (log.isDebugEnabled()) {
+            log.debug("[LiteRule-Model] 模型输出已注入: fields={}", nestedModel.keySet());
+        }
+        return enriched;
+    }
+
     @Override
     public RuleResult topResult(RuleContext context) {
         List<RuleResult> all = evaluate(context);
@@ -403,6 +471,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
 
     @Override
     public List<RuleResult> dryRun(RuleContext context) {
+        // P3-1 规则+模型融合：dry-run 同样注入模型输出
+        context = injectModelOutputsIfNeeded(context);
         List<RuleResult> all = new ArrayList<>();
         String contextTenantId = context.getTenantId();
         String contextEnvironment = context.getEnvironment();
@@ -642,6 +712,34 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     /**
+     * 设置模型输入注册表（P3-1 规则+模型融合）
+     *
+     * <p>注入后，引擎在 {@link #evaluate} 前会调用注册表获取模型输出，
+     * 合并到 {@link RuleContext} 的 facts 中。null 表示禁用模型融合（向后兼容）。
+     *
+     * @param modelInputRegistry 模型输入注册表；null 表示禁用
+     * @since 1.8.0
+     */
+    public void setModelInputRegistry(ModelInputRegistry modelInputRegistry) {
+        this.modelInputRegistry = modelInputRegistry;
+        if (modelInputRegistry != null) {
+            log.info("[LiteRule-Model] 模型输入注册表已注入 (providers={}, timeoutMs={}, fallbackOnError={})",
+                    modelInputRegistry.size(), modelInputRegistry.getTimeoutMs(),
+                    modelInputRegistry.isFallbackOnError());
+        }
+    }
+
+    /**
+     * 获取模型输入注册表（P3-1）
+     *
+     * @return 模型输入注册表；未配置返回 null
+     * @since 1.8.0
+     */
+    public ModelInputRegistry getModelInputRegistry() {
+        return modelInputRegistry;
+    }
+
+    /**
      * 构建执行轨迹记录
      *
      * @param context   规则上下文
@@ -683,7 +781,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     /**
-     * 优雅关闭：释放 TraceRecorder 与超时执行器资源
+     * 优雅关闭：释放 TraceRecorder、超时执行器与模型注册表资源
      *
      * @since 1.4.0
      */
@@ -695,6 +793,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         }
         if (timeoutExecutor != null) {
             timeoutExecutor.shutdown();
+        }
+        if (modelInputRegistry != null) {
+            modelInputRegistry.destroy();
         }
     }
 

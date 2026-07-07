@@ -1,6 +1,8 @@
 package com.njydsz.pmis.message.config;
 
 import com.njydsz.pmis.message.channel.ChannelRouter;
+import com.njydsz.pmis.message.realtime.OfflineMessageService;
+import com.njydsz.pmis.message.realtime.OnlineUserService;
 import com.njydsz.pmis.message.realtime.RealtimePushService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
@@ -64,12 +66,16 @@ public class MessageAutoConfiguration {
     /**
      * 兜底注册实时推送服务。
      *
-     * @param messagingTemplate STOMP 消息模板
+     * @param messagingTemplate    STOMP 消息模板
+     * @param onlineUserService    在线用户状态服务
+     * @param offlineMessageService 离线消息补偿服务
      * @return RealtimePushService
      */
     @Bean
     @ConditionalOnMissingBean(RealtimePushService.class)
-    public RealtimePushService realtimePushService(SimpMessagingTemplate messagingTemplate) {
-        return new RealtimePushService(messagingTemplate);
+    public RealtimePushService realtimePushService(SimpMessagingTemplate messagingTemplate,
+                                                   OnlineUserService onlineUserService,
+                                                   OfflineMessageService offlineMessageService) {
+        return new RealtimePushService(messagingTemplate, onlineUserService, offlineMessageService);
     }
 }

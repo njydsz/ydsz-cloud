@@ -9,6 +9,7 @@ import com.njydsz.pmis.message.entity.MsgReceiptDO;
 import com.njydsz.pmis.message.mapper.MsgReceiptMapper;
 import com.njydsz.pmis.message.service.MessageLogService;
 import com.njydsz.pmis.message.service.ReceiptService;
+import com.njydsz.pmis.message.tracing.MessageTraceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,24 +39,27 @@ public class ReceiptServiceImpl implements ReceiptService {
         if (dto == null || !StringUtils.hasText(dto.getLogId())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "回执关联日志 ID 不能为空");
         }
-        MsgReceiptDO entity = new MsgReceiptDO();
-        entity.setLogId(dto.getLogId());
-        entity.setProviderTraceId(dto.getProviderTraceId());
-        entity.setReceiptType(dto.getReceiptType());
-        entity.setReceiptTime(LocalDateTime.now());
-        entity.setProviderCode(dto.getProviderCode());
-        entity.setProviderMsg(dto.getProviderMsg());
-        entity.setRawResponse(dto.getRawResponse());
-        entity.setTenantId(TenantContext.getTenantId());
-        msgReceiptMapper.insert(entity);
-        // 联动更新日志回执状态
-        try {
-            messageLogService.updateReceipt(dto.getLogId(), dto.getReceiptType(), entity.getReceiptTime());
-        } catch (Exception e) {
-            // 日志不存在时仅记录，不影响回执落库
-            log.warn("[Receipt] 更新日志回执失败: logId={} err={}", dto.getLogId(), e.getMessage());
+        // P1-3: 回执回调进入追踪上下文（外部回调无原始 traceId，自动生成）
+        try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
+            MsgReceiptDO entity = new MsgReceiptDO();
+            entity.setLogId(dto.getLogId());
+            entity.setProviderTraceId(dto.getProviderTraceId());
+            entity.setReceiptType(dto.getReceiptType());
+            entity.setReceiptTime(LocalDateTime.now());
+            entity.setProviderCode(dto.getProviderCode());
+            entity.setProviderMsg(dto.getProviderMsg());
+            entity.setRawResponse(dto.getRawResponse());
+            entity.setTenantId(TenantContext.getTenantId());
+            msgReceiptMapper.insert(entity);
+            // 联动更新日志回执状态
+            try {
+                messageLogService.updateReceipt(dto.getLogId(), dto.getReceiptType(), entity.getReceiptTime());
+            } catch (Exception e) {
+                // 日志不存在时仅记录，不影响回执落库
+                log.warn("[Receipt] 更新日志回执失败: logId={} err={}", dto.getLogId(), e.getMessage());
+            }
+            log.info("[Receipt] 回执落库: logId={} type={}", dto.getLogId(), dto.getReceiptType());
         }
-        log.info("[Receipt] 回执落库: logId={} type={}", dto.getLogId(), dto.getReceiptType());
     }
 
     @Override

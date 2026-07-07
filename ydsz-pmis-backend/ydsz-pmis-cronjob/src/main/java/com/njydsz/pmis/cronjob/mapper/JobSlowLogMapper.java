@@ -2,6 +2,7 @@ package com.njydsz.pmis.cronjob.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.cronjob.entity.JobSlowLogDO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -50,4 +51,20 @@ public interface JobSlowLogMapper extends BaseMapper<JobSlowLogDO> {
             + "ORDER BY duration_ms DESC")
     List<JobSlowLogDO> selectByJobIdSince(@Param("jobId") String jobId,
                                            @Param("since") LocalDateTime since);
+
+    /**
+     * P2-2: 批量清理过期慢任务日志（硬删除）。
+     *
+     * @param before 过期分界时间
+     * @param limit  单批最多删除条数
+     * @return 实际删除条数
+     */
+    @Delete("DELETE FROM pmis_job_slow_log "
+            + "WHERE id IN ("
+            + "  SELECT id FROM pmis_job_slow_log "
+            + "  WHERE created_at < #{before} "
+            + "  LIMIT #{limit}"
+            + ")")
+    int cleanExpiredLogs(@Param("before") LocalDateTime before,
+                         @Param("limit") int limit);
 }

@@ -1,12 +1,18 @@
 package com.njydsz.pmis.agent.engine.llm;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +37,12 @@ import java.util.concurrent.Callable;
  *
  * <p>鉴权: 使用 API Key 直接放 Authorization 头 (Bearer), 千帆 v2 API 简化了鉴权流程.
  *
+ * <p><b>P0-5 修复</b>：原实现 {@code http.post().retrieve().body(...)} 未处理 4xx/5xx
+ * 响应体，{@code RestClient.retrieve()} 默认抛出的 {@code HttpClientErrorException}/
+ * {@code HttpServerErrorException} 消息只含状态码不含响应体（如千帆的
+ * {@code {"error_code":110,"error_msg":"..."}}）。现通过 {@code .onStatus()}
+ * 显式解析错误响应体并抛出带语义的异常。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0 (批次22)
  */
@@ -53,12 +65,31 @@ public class QianfanLlmProvider extends AbstractHttpLlmProvider {
             @Value("${pmis.agent.llm.timeout-millis:10000}") long timeoutMillis,
             @Value("${pmis.agent.llm.max-retries:2}") int maxRetries,
             @Value("${pmis.agent.llm.fallback-to-mock:true}") boolean fallback) {
+        this(apiKey, model, timeoutMillis, maxRetries, fallback,
+                RestClient.builder().baseUrl(baseUrl).build());
+    }
+
+    /**
+     * 测试用构造函数（注入 RestClient，便于单测 mock 网络层）。
+     *
+     * <p>仅用于单元测试，生产环境应使用
+     * {@link #QianfanLlmProvider(String, String, String, long, int, boolean)}。
+     *
+     * @param apiKey        API Key
+     * @param model         模型名称
+     * @param timeoutMillis 调用超时
+     * @param maxRetries    最大重试次数
+     * @param fallback      是否降级到 mock
+     * @param http          注入的 RestClient 实例
+     */
+    QianfanLlmProvider(String apiKey, String model, long timeoutMillis,
+                        int maxRetries, boolean fallback, RestClient http) {
         this.apiKey = apiKey;
         this.model = model;
         this.timeoutMillis = timeoutMillis;
         this.maxRetries = maxRetries;
         this.fallbackToMockOnError = fallback;
-        this.http = RestClient.builder().baseUrl(baseUrl).build();
+        this.http = http;
     }
 
     @Override
@@ -78,6 +109,10 @@ public class QianfanLlmProvider extends AbstractHttpLlmProvider {
 
     /**
      * 调用千帆 v2 chat/completions API 进行推理。
+     *
+     * <p>P0-5 修复：通过 {@code .onStatus()} 显式处理 4xx/5xx 错误响应，
+     * 解析千帆标准错误结构 {@code {"error_code":...,"error_msg":"..."}}，
+     * 抛出带错误码的语义异常，便于上层重试/降级决策。
      *
      * @param systemPrompt 系统提示词
      * @param userPrompt   用户提示词
@@ -101,6 +136,9 @@ public class QianfanLlmProvider extends AbstractHttpLlmProvider {
                 .header("Content-Type", "application/json")
                 .body(body)
                 .retrieve()
+                // P0-5 修复：显式处理 4xx/5xx 错误响应，解析千帆错误码并抛出带语义的异常
+                .onStatus(HttpStatusCode::is4xxClientError, this::handleErrorResponse)
+                .onStatus(HttpStatusCode::is5xxServerError, this::handleErrorResponse)
                 .body(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {});
         if (response == null) return "";
         Object choices = response.get("choices");
@@ -111,5 +149,69 @@ public class QianfanLlmProvider extends AbstractHttpLlmProvider {
         if (!(message instanceof Map<?, ?> m)) return "";
         Object content = m.get("content");
         return content == null ? "" : content.toString();
+    }
+
+    /**
+     * 解析千帆错误响应体并抛出带语义的异常（P0-5 修复）。
+     *
+     * <p>千帆错误响应结构：
+     * <pre>
+     * {
+     *   "error_code": 110,
+     *   "error_msg": "Access token invalid"
+     * }
+     * </pre>
+     *
+     * <p>抛出的 RuntimeException message 格式：
+     * {@code Qianfan HTTP <status> [<error_code>]: <error_msg>}
+     *
+     * @param req  HTTP 请求
+     * @param resp HTTP 响应
+     * @throws IOException 读取响应体失败时抛出
+     */
+    private void handleErrorResponse(org.springframework.http.HttpRequest req,
+                                      ClientHttpResponse resp) throws IOException {
+        String respBody = readResponseBody(resp);
+        HttpStatusCode status = resp.getStatusCode();
+        String snippet = respBody.length() > 200 ? respBody.substring(0, 200) : respBody;
+        log.warn("[Qianfan] HTTP {}: {}", status.value(), snippet);
+
+        // 解析千帆标准错误结构
+        String errCode = "UNKNOWN";
+        String errMsg = respBody;
+        try {
+            JSONObject err = JSON.parseObject(respBody);
+            if (err != null) {
+                Integer code = err.getInteger("error_code");
+                if (code != null) {
+                    errCode = String.valueOf(code);
+                }
+                String message = err.getString("error_msg");
+                if (message != null && !message.isEmpty()) {
+                    errMsg = message;
+                }
+            }
+        } catch (Exception parseEx) {
+            // 非 JSON 响应，保留原始 respBody 作为 errMsg
+            log.debug("[Qianfan] 响应体非 JSON 格式, 保留原始内容");
+        }
+        throw new RuntimeException(
+                "Qianfan HTTP " + status.value() + " [" + errCode + "]: " + errMsg);
+    }
+
+    /**
+     * 读取 HTTP 响应体为 UTF-8 字符串。
+     *
+     * @param resp HTTP 响应
+     * @return 响应体字符串；读取失败返回空字符串
+     */
+    private String readResponseBody(ClientHttpResponse resp) {
+        try {
+            byte[] bytes = resp.getBody().readAllBytes();
+            return new String(bytes, StandardCharsets.UTF_8);
+        } catch (Exception ex) {
+            log.warn("[Qianfan] 读取错误响应体失败: {}", ex.getMessage());
+            return "";
+        }
     }
 }

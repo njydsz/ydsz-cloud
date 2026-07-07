@@ -1,0 +1,147 @@
+package com.njydsz.pmis.message.channel.sms;
+
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.message.config.MessageProperties;
+import com.njydsz.pmis.message.entity.MsgTemplateDO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * 阿里云短信服务商实现。
+ *
+ * <p>通过阿里云 SMS Common RPC API（{@code SendSms}）发送短信，签名使用
+ * {@link AliyunSmsSigner} 自实现 HmacSHA1，零外部 SDK 依赖。
+ *
+ * <p>仅当 {@code pmis.message.sms.provider=aliyun} 时装配；凭证缺失时返回 fail
+ * （由 {@link com.njydsz.pmis.message.channel.impl.SmsChannel} 自动降级到 Mock）。
+ *
+ * <p>参数来源：
+ * <ul>
+ *   <li>PhoneNumbers = {@code request.getReceiver()}</li>
+ *   <li>SignName = {@code template.signName}（回退配置默认签名）</li>
+ *   <li>TemplateCode = {@code template.providerKey}（阿里云侧模板 ID）</li>
+ *   <li>TemplateParam = {@code request.getParams()} 的 JSON</li>
+ * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.1.0
+ */
+@Slf4j
+@Component
+@ConditionalOnProperty(prefix = "pmis.message.sms", name = "provider", havingValue = "aliyun")
+public class AliyunSmsProvider implements SmsProvider {
+
+    private static final DateTimeFormatter ISO_FMT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+    private final MessageProperties.AliyunSmsConfig config;
+    private final RestTemplate restTemplate;
+
+    /**
+     * 生产构造：从 {@link MessageProperties} 读取阿里云配置并构建 RestTemplate。
+     *
+     * @param messageProperties 消息配置
+     */
+    public AliyunSmsProvider(MessageProperties messageProperties) {
+        this.config = messageProperties.getSms().getAliyun();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(config.getConnectTimeout());
+        factory.setReadTimeout(config.getReadTimeout());
+        this.restTemplate = new RestTemplate(factory);
+    }
+
+    /**
+     * 测试构造：注入自定义 config 与 RestTemplate（便于 mock）。
+     *
+     * @param config       阿里云配置
+     * @param restTemplate RestTemplate（测试可 mock）
+     */
+    AliyunSmsProvider(MessageProperties.AliyunSmsConfig config, RestTemplate restTemplate) {
+        this.config = config;
+        this.restTemplate = restTemplate;
+    }
+
+    @Override
+    public String providerType() {
+        return "aliyun";
+    }
+
+    @Override
+    public MessageResult send(MessageRequest request, MsgTemplateDO template) {
+        String phone = request.getReceiver();
+        if (!StringUtils.hasText(phone)) {
+            return MessageResult.fail("SMS", "手机号不能为空");
+        }
+        if (!StringUtils.hasText(config.getAccessKeyId())
+                || !StringUtils.hasText(config.getAccessKeySecret())) {
+            log.warn("[AliyunSms] 凭证未配置,发送失败: phone={}", phone);
+            return MessageResult.fail("SMS", "阿里云 SMS 凭证未配置");
+        }
+        String signName = template != null && StringUtils.hasText(template.getSignName())
+                ? template.getSignName() : config.getSignName();
+        String templateCode = template != null ? template.getProviderKey() : null;
+        if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
+            return MessageResult.fail("SMS", "短信签名或模板 Code 缺失");
+        }
+        try {
+            Map<String, String> params = buildCommonParams();
+            params.put("PhoneNumbers", phone);
+            params.put("SignName", signName);
+            params.put("TemplateCode", templateCode);
+            params.put("TemplateParam", JsonUtils.toJson(request.getParams()));
+            String signature = AliyunSmsSigner.sign(params, config.getAccessKeySecret());
+            params.put("Signature", signature);
+            String url = "https://" + config.getEndpoint() + "/?"
+                    + AliyunSmsSigner.buildQuery(params);
+            ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
+            JSONObject json = JSON.parseObject(resp.getBody());
+            String code = json.getString("Code");
+            if ("OK".equals(code)) {
+                String bizId = json.getString("BizId");
+                log.info("[AliyunSms] 发送成功: phone={} bizId={}", phone, bizId);
+                return MessageResult.ok("SMS", "ALIYUN-" + bizId);
+            }
+            log.warn("[AliyunSms] 发送失败: phone={} code={} msg={}",
+                    phone, code, json.getString("Message"));
+            return MessageResult.fail("SMS", code + ": " + json.getString("Message"));
+        } catch (Exception e) {
+            log.error("[AliyunSms] 发送异常: phone={} err={}", phone, e.getMessage());
+            return MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * 构造阿里云 RPC 公共参数。
+     *
+     * @return 公共参数 Map
+     */
+    private Map<String, String> buildCommonParams() {
+        Map<String, String> p = new HashMap<>();
+        p.put("AccessKeyId", config.getAccessKeyId());
+        p.put("Action", "SendSms");
+        p.put("Format", "JSON");
+        p.put("RegionId", "cn-hangzhou");
+        p.put("SignatureMethod", "HMAC-SHA1");
+        p.put("SignatureNonce", UUID.randomUUID().toString());
+        p.put("SignatureVersion", "1.0");
+        p.put("Timestamp", LocalDateTime.now(ZoneOffset.UTC).format(ISO_FMT));
+        p.put("Version", "2017-05-25");
+        return p;
+    }
+}
