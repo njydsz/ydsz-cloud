@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-cronjob</artifactId>
     <name>ydsz-pmis-cronjob</name>
-    <description>定时任务调度服务：基于 XXL-Job 的分布式定时任务</description>
+    <description>定时任务调度服务：自研分布式任务调度引擎（Spring TaskScheduler + Redis 分布式锁 + DB 行锁选主）</description>
 
     <dependencies>
         <dependency>

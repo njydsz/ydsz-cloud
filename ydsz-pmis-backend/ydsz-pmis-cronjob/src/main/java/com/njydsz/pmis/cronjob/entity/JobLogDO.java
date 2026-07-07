@@ -50,8 +50,8 @@ public class JobLogDO implements Serializable {
     private String resultJson;
     /** 链路追踪 ID */
     private String traceId;
-    /** 创建时间 */
-    private LocalDateTime createTime;
+    /** 创建时间（与 SQL 字段 created_at 对齐） */
+    private LocalDateTime createdAt;
     /** 逻辑删除标识：0 未删除 / 1 已删除 */
     private Integer deleted;
 }

@@ -74,6 +74,12 @@ public class JobDO extends BaseDO {
     /** 失败次数 */
     private Long failCount;
 
+    /** 任务级锁 TTL（毫秒，null 使用全局默认值） */
+    private Long lockTtlMs;
+
+    /** 任务超时时间（毫秒，null 表示不限超时） */
+    private Long timeoutMs;
+
     /** 租户 ID */
     private String tenantId;
 }

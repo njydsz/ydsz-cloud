@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.common.job.JobHandler;
@@ -59,6 +60,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     private final ApplicationContext applicationContext;
     /** Redis 模板（用于分布式锁） */
     private final StringRedisTemplate redisTemplate;
+    /** 调度配置属性（P0-4: 锁 TTL 等可配置项） */
+    private final CronjobProperties cronjobProperties;
 
     /** 调度器 */
     private TaskScheduler taskScheduler;
@@ -71,8 +74,18 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
 
-    /** 任务锁默认 TTL: 5 分钟（防止节点宕机导致锁不释放） */
-    private static final Duration JOB_LOCK_TTL = Duration.ofMinutes(5);
+    /**
+     * 任务锁默认 TTL: 5 分钟（防止节点宕机导致锁不释放）
+     *
+     * <p>P0-4: 此常量已被 {@link CronjobProperties#getJobLockTtl()} 取代，
+     * 保留为文档参考；实际 TTL 通过 {@link #resolveLockTtl(JobDO)} 解析。
+     */
+    @SuppressWarnings("unused")
+    private static final Duration JOB_LOCK_TTL_DEFAULT = Duration.ofMinutes(5);
+
+    /** 调度时区（多时区部署时统一为 Asia/Shanghai，避免触发时间漂移） */
+    private static final TimeZone SCHEDULE_TIMEZONE =
+            TimeZone.getTimeZone("Asia/Shanghai");
 
     /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
     private static final String INSTANCE_ID = initInstanceId();
@@ -103,18 +116,18 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     }
 
     /**
-     * 初始化任务调度器（线程池大小 8，关闭时等待任务完成）
+     * 初始化任务调度器（线程池大小可配置，关闭时等待任务完成）
      */
     @PostConstruct
     public void initScheduler() {
         ThreadPoolTaskScheduler s = new ThreadPoolTaskScheduler();
-        s.setPoolSize(8);
+        s.setPoolSize(cronjobProperties.getSchedulerPoolSize());
         s.setThreadNamePrefix("pmis-job-");
         s.setWaitForTasksToCompleteOnShutdown(true);
-        s.setAwaitTerminationSeconds(30);
+        s.setAwaitTerminationSeconds(cronjobProperties.getSchedulerAwaitTerminationSeconds());
         s.initialize();
         this.taskScheduler = s;
-        log.info("[Cronjob] 任务调度器初始化完成, poolSize=8");
+        log.info("[Cronjob] 任务调度器初始化完成, poolSize={}", cronjobProperties.getSchedulerPoolSize());
     }
 
     /**
@@ -287,14 +300,31 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     /**
      * 立即执行一次
      *
+     * <p>P0-5: 默认不抢占锁（与历史行为兼容）。
+     *
      * @param id 任务 ID
      * @return 执行日志 ID
      * @throws BizException 当任务不存在时抛出
      */
     @Override
     public String trigger(String id) {
+        return trigger(id, false);
+    }
+
+    /**
+     * 立即执行一次（可选是否抢占分布式锁）。
+     *
+     * <p>P0-5: 修复手动触发绕过锁的问题。
+     *
+     * @param id       任务 ID
+     * @param holdLock 是否抢占分布式锁
+     * @return 执行日志 ID；当 holdLock=true 且锁被持有时返回 null
+     * @throws BizException 当任务不存在时抛出
+     */
+    @Override
+    public String trigger(String id, boolean holdLock) {
         JobDO j = getById(id);
-        return executeJob(j, true);
+        return executeJob(j, !holdLock);
     }
 
     /**
@@ -444,16 +474,19 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     private String executeJob(JobDO job, boolean manual) {
         // 定时触发（非手动）时获取分布式锁，防止多实例重复执行
+        // P0-4: TTL 支持任务级 override + 全局配置 + 上下限规整
         String lockKey = null;
         if (!manual) {
             lockKey = JOB_LOCK_PREFIX + job.getJobKey();
+            Duration ttl = resolveLockTtl(job);
             Boolean acquired = redisTemplate.opsForValue()
-                    .setIfAbsent(lockKey, INSTANCE_ID, JOB_LOCK_TTL);
+                    .setIfAbsent(lockKey, INSTANCE_ID, ttl);
             if (!Boolean.TRUE.equals(acquired)) {
                 log.info("[Cronjob] 任务已被其他实例持有锁, 跳过本次执行: key={}", job.getJobKey());
                 return null;
             }
-            log.debug("[Cronjob] 获取分布式锁成功: key={} holder={}", lockKey, INSTANCE_ID);
+            log.debug("[Cronjob] 获取分布式锁成功: key={} holder={} ttl={}ms",
+                    lockKey, INSTANCE_ID, ttl.toMillis());
         }
 
         // 写开始日志
@@ -464,7 +497,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log0.setStatus("RUNNING");
         log0.setParamsJson(job.getParamsJson());
         log0.setTraceId(TraceIdUtil.get());
-        log0.setCreateTime(LocalDateTime.now());
+        log0.setCreatedAt(LocalDateTime.now());
         log0.setDeleted(0);
         jobLogMapper.insert(log0);
 
@@ -513,6 +546,24 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     }
 
     /**
+     * 解析任务实际使用的锁 TTL。
+     *
+     * <p>P0-4: 优先使用任务级 {@code lockTtlMs}（如果配置且合法），
+     * 否则回退到全局 {@link CronjobProperties#getJobLockTtl()}。
+     * 最终经 {@link CronjobProperties#normalizeTtl(Duration)} 规整到 [min, max] 区间。
+     *
+     * @param job 任务定义
+     * @return 规整化后的锁 TTL
+     */
+    private Duration resolveLockTtl(JobDO job) {
+        Duration taskLevel = null;
+        if (job.getLockTtlMs() != null && job.getLockTtlMs() > 0) {
+            taskLevel = Duration.ofMillis(job.getLockTtlMs());
+        }
+        return cronjobProperties.normalizeTtl(taskLevel);
+    }
+
+    /**
      * 校验任务必填字段
      *
      * @param job 任务定义
@@ -546,13 +597,15 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     }
 
     /**
-     * 构造 CronTrigger（使用系统默认时区）
+     * 构造 CronTrigger（使用统一调度时区 Asia/Shanghai）
+     *
+     * <p>P0-3 修复: 不再使用系统默认时区，避免多时区部署时触发时间漂移。
      *
      * @param cron cron 表达式
      * @return CronTrigger 实例
      */
     private CronTrigger buildTrigger(String cron) {
-        return new CronTrigger(cron, TimeZone.getDefault());
+        return new CronTrigger(cron, SCHEDULE_TIMEZONE);
     }
 
     /**

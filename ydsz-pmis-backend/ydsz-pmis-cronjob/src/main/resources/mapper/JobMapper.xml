@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.pmis.cronjob.mapper.JobMapper">
 
@@ -17,18 +17,21 @@
         <result column="fire_count" property="fireCount"/>
         <result column="success_count" property="successCount"/>
         <result column="fail_count" property="failCount"/>
+        <result column="lock_ttl_ms" property="lockTtlMs"/>
+        <result column="timeout_ms" property="timeoutMs"/>
         <result column="tenant_id" property="tenantId"/>
-        <result column="create_by" property="createdBy"/>
-        <result column="create_time" property="createdAt"/>
-        <result column="update_by" property="updatedBy"/>
-        <result column="update_time" property="updatedAt"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
         <result column="deleted" property="deleted"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, job_name, job_group, job_key, handler, cron_expression, params_json,
-        status, remark, next_fire_time, last_fire_time, fire_count, success_count, fail_count, tenant_id,
-        create_by, create_time, update_by, update_time, deleted
+        status, remark, next_fire_time, last_fire_time, fire_count, success_count, fail_count,
+        lock_ttl_ms, timeout_ms, tenant_id,
+        created_by, created_at, updated_by, updated_at, deleted
     </sql>
 
     <select id="selectByJobKey" resultMap="BaseResultMap">
@@ -52,7 +55,7 @@
             <if test="successCount != null">success_count = success_count + #{successCount},</if>
             <if test="failCount != null">fail_count = fail_count + #{failCount},</if>
             <if test="status != null and status != ''">status = #{status},</if>
-            update_time = CURRENT_TIMESTAMP
+            updated_at = CURRENT_TIMESTAMP
         </set>
         WHERE id = #{id} AND deleted = 0
     </update>

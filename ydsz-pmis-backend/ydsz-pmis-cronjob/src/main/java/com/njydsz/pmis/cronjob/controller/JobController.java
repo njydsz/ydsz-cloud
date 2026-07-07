@@ -117,13 +117,16 @@ public class JobController {
      * 立即执行一次
      *
      * @param id 任务 ID
+     * @param holdLock 是否抢占分布式锁（默认 false，与历史行为兼容；
+     *                 多实例部署下建议传 true 避免与定时触发并发执行）
      * @return 统一响应结果，包含执行日志 ID
      */
     @Operation(summary = "立即执行一次")
     @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
     @PostMapping("/{id}/trigger")
-    public Result<String> trigger(@PathVariable String id) {
-        return Result.ok(jobService.trigger(id));
+    public Result<String> trigger(@PathVariable String id,
+                                   @RequestParam(defaultValue = "false") boolean holdLock) {
+        return Result.ok(jobService.trigger(id, holdLock));
     }
 
     /**

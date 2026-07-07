@@ -58,11 +58,27 @@ public interface JobService {
     /**
      * 立即执行一次
      *
+     * <p>默认不抢占分布式锁（与历史行为兼容）。如需测试真实分布式路径，
+     * 使用 {@link #trigger(String, boolean)} 并传 {@code holdLock=true}。
+     *
      * @param id 任务 ID
      * @return 执行日志 ID
      * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
      */
     String trigger(String id);
+
+    /**
+     * 立即执行一次（可选是否抢占分布式锁）。
+     *
+     * <p>P0-5: 修复手动触发绕过锁的问题。在多实例部署场景下，建议传入
+     * {@code holdLock=true} 走锁路径，避免与定时触发并发执行。
+     *
+     * @param id       任务 ID
+     * @param holdLock 是否抢占分布式锁（true 时与其他实例互斥执行）
+     * @return 执行日志 ID；当 holdLock=true 且锁被持有时返回 null
+     * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
+     */
+    String trigger(String id, boolean holdLock);
 
     /**
      * 注册到调度器（从 DB 加载/动态新增）
