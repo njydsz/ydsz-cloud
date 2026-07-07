@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -339,7 +340,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         }
         Object receiverIds = payload.get("receiverIds");
         if (receiverIds instanceof List<?> list) {
-            List<Long> ids = new java.util.ArrayList<>(list.size());
+            List<Long> ids = new ArrayList<>(list.size());
             for (Object o : list) {
                 Long id = asLong(o);
                 if (id != null) {

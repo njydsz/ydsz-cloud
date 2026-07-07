@@ -58,7 +58,7 @@ public interface FlowNotifyOutboxMapper extends BaseMapper<FlowNotifyOutboxDO> {
                 updated_at = NOW()
             WHERE id = #{id} AND deleted = 0
             """)
-    int markSent(@Param("id") Long id, @Param("sentAt") LocalDateTime sentAt);
+    int markSent(@Param("id") String id, @Param("sentAt") LocalDateTime sentAt);
 
     /**
      * 标记事件投递失败，增加重试计数
@@ -76,7 +76,7 @@ public interface FlowNotifyOutboxMapper extends BaseMapper<FlowNotifyOutboxDO> {
                 updated_at = NOW()
             WHERE id = #{id} AND deleted = 0
             """)
-    int markRetry(@Param("id") Long id,
+    int markRetry(@Param("id") String id,
                   @Param("errorMsg") String errorMsg,
                   @Param("nextRetryAt") LocalDateTime nextRetryAt);
 
@@ -94,5 +94,5 @@ public interface FlowNotifyOutboxMapper extends BaseMapper<FlowNotifyOutboxDO> {
                 updated_at = NOW()
             WHERE id = #{id} AND deleted = 0
             """)
-    int markDead(@Param("id") Long id, @Param("errorMsg") String errorMsg);
+    int markDead(@Param("id") String id, @Param("errorMsg") String errorMsg);
 }

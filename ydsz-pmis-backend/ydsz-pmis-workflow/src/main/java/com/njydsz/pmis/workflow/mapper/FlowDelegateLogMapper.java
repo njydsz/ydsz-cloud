@@ -21,19 +21,19 @@ public interface FlowDelegateLogMapper extends BaseMapper<FlowDelegateLogDO> {
     /**
      * 按任务 ID 查日志
      */
-    List<FlowDelegateLogDO> selectByTaskId(@Param("taskId") Long taskId);
+    List<FlowDelegateLogDO> selectByTaskId(@Param("taskId") String taskId);
 
     /**
      * 按代理人查日志（"我代理处理了哪些任务"）
      */
-    List<FlowDelegateLogDO> selectByDelegateUser(@Param("delegateUserId") Long delegateUserId,
+    List<FlowDelegateLogDO> selectByDelegateUser(@Param("delegateUserId") String delegateUserId,
                                                  @Param("offset") int offset,
                                                  @Param("limit") int limit);
 
     /**
      * 按授权人查日志（"我的哪些任务被代理了"）
      */
-    List<FlowDelegateLogDO> selectByOwnerUser(@Param("ownerUserId") Long ownerUserId,
+    List<FlowDelegateLogDO> selectByOwnerUser(@Param("ownerUserId") String ownerUserId,
                                               @Param("offset") int offset,
                                               @Param("limit") int limit);
 }

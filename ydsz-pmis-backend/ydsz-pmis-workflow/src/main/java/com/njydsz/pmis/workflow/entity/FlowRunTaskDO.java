@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -95,7 +96,7 @@ public class FlowRunTaskDO extends BaseDO {
     private Integer approveFinished;
 
     /** P1-5: VOTE 模式通过率阈值（0~1，默认 0.5 表示过半数） */
-    private java.math.BigDecimal votePassRate;
+    private BigDecimal votePassRate;
 
     /** 任务状态（FlowTaskStatus.name） */
     private String taskStatus;

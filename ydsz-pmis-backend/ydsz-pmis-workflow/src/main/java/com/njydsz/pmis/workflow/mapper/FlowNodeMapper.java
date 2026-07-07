@@ -21,26 +21,26 @@ public interface FlowNodeMapper extends BaseMapper<FlowNodeDO> {
     /**
      * 根据定义 ID 查全部节点
      */
-    List<FlowNodeDO> selectByDefinitionId(@Param("definitionId") Long definitionId);
+    List<FlowNodeDO> selectByDefinitionId(@Param("definitionId") String definitionId);
 
     /**
      * 根据 definitionId + nodeCode 查单节点
      */
-    FlowNodeDO selectByCode(@Param("definitionId") Long definitionId,
+    FlowNodeDO selectByCode(@Param("definitionId") String definitionId,
                             @Param("nodeCode") String nodeCode);
 
     /**
      * 查开始节点
      */
-    FlowNodeDO selectStartNode(@Param("definitionId") Long definitionId);
+    FlowNodeDO selectStartNode(@Param("definitionId") String definitionId);
 
     /**
      * 查结束节点列表
      */
-    List<FlowNodeDO> selectEndNodes(@Param("definitionId") Long definitionId);
+    List<FlowNodeDO> selectEndNodes(@Param("definitionId") String definitionId);
 
     /**
      * 删除某定义的全部节点（重定义时用）
      */
-    int deleteByDefinitionId(@Param("definitionId") Long definitionId);
+    int deleteByDefinitionId(@Param("definitionId") String definitionId);
 }

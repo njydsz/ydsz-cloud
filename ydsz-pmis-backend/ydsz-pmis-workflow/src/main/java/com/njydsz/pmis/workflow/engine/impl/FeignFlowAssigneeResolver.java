@@ -9,9 +9,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -170,7 +172,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         int maxLevels = Math.min(levels, 15);  // 防御性限制
         List<Long> result = new ArrayList<>(maxLevels);
         Long currentUserId = userId;
-        java.util.Set<Long> visited = new java.util.HashSet<>();
+        Set<Long> visited = new HashSet<>();
         visited.add(userId);  // 防止自环
         for (int i = 0; i < maxLevels; i++) {
             try {

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -224,7 +225,7 @@ public class FlowNotifyOutboxServiceImpl implements FlowNotifyOutboxService {
         // 批量接收人
         if (event.getTargetUserIds() != null && !event.getTargetUserIds().isBlank()) {
             try {
-                List<Long> ids = new java.util.ArrayList<>();
+                List<Long> ids = new ArrayList<>();
                 for (String s : event.getTargetUserIds().split(",")) {
                     ids.add(Long.parseLong(s.trim()));
                 }

@@ -42,7 +42,7 @@ public interface ContractMapper extends BaseMapper<ContractDO> {
      * @param delta 变更金额（正=增加，负=减少）
      * @return 受影响行数
      */
-    int adjustTotalAmount(@Param("id") Long id, @Param("delta") BigDecimal delta);
+    int adjustTotalAmount(@Param("id") String id, @Param("delta") BigDecimal delta);
 
     /**
      * 按状态聚合计数（用于看板）。

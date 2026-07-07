@@ -24,7 +24,7 @@ public interface FlowThirdPartyLogMapper extends BaseMapper<FlowThirdPartyLogDO>
      * @param errorMsg 失败原因（成功时为 null）
      * @return 影响行数
      */
-    int updateStatus(@Param("id") Long id,
+    int updateStatus(@Param("id") String id,
                      @Param("status") String status,
                      @Param("errorMsg") String errorMsg);
 }

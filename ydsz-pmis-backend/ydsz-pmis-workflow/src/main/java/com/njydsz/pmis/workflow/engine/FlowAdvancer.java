@@ -62,7 +62,7 @@ public interface FlowAdvancer {
     default List<FlowNodeDO> advanceMulti(FlowInstanceDO currentInstance,
                                            String currentNodeCode,
                                            String skipType,
-                                           java.util.List<String> targetNodeCodes,
+                                           List<String> targetNodeCodes,
                                            Map<String, Object> variables) {
         // 默认实现：降级到单节点退回（取第一个或 null）
         String single = (targetNodeCodes == null || targetNodeCodes.isEmpty())

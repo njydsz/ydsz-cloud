@@ -21,10 +21,10 @@ public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
     /**
      * 查某实例的全部审计日志（按时间正序）
      */
-    List<FlowAuditLogDO> selectByInstanceId(@Param("instanceId") Long instanceId);
+    List<FlowAuditLogDO> selectByInstanceId(@Param("instanceId") String instanceId);
 
     /**
      * 查某任务的操作记录
      */
-    List<FlowAuditLogDO> selectByTaskId(@Param("taskId") Long taskId);
+    List<FlowAuditLogDO> selectByTaskId(@Param("taskId") String taskId);
 }

@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1047,7 +1048,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     /** 读取 ZipInputStream 当前 entry 的全部字节（不关闭流） */
     private byte[] readAllBytes(ZipInputStream zis) throws Exception {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] buffer = new byte[4096];
         int len;
         while ((len = zis.read(buffer)) > 0) {

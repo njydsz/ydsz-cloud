@@ -51,7 +51,7 @@ public class ContractChangeController {
     @PrePermission("project:contract-change:create")
     @Idempotent(key = "contract-change:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> apply(@Valid @RequestBody ContractChangeDTO dto) {
+    public Result<String> apply(@Valid @RequestBody ContractChangeDTO dto) {
         return Result.ok(service.apply(dto));
     }
 
@@ -82,7 +82,7 @@ public class ContractChangeController {
     @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/approve")
     public Result<Void> approve(@PathVariable String id,
-                           @RequestParam Long approverId,
+                           @RequestParam String approverId,
                            @RequestParam String approverName) {
         service.approve(id, approverId, approverName);
         return Result.ok();
@@ -101,7 +101,7 @@ public class ContractChangeController {
     @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/reject")
     public Result<Void> reject(@PathVariable String id,
-                          @RequestParam Long approverId,
+                          @RequestParam String approverId,
                           @RequestParam String approverName,
                           @RequestParam(required = false) String reason) {
         service.reject(id, approverId, approverName, reason);
@@ -136,7 +136,7 @@ public class ContractChangeController {
     public Result<Page<ContractChangeDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) Long contractId,
+            @RequestParam(required = false) String contractId,
             @RequestParam(required = false) String status) {
         return Result.ok(service.page(page, size, contractId, status));
     }
@@ -150,7 +150,7 @@ public class ContractChangeController {
     @Operation(summary = "按合同列出")
     @PrePermission("project:contract-change:list")
     @GetMapping("/list")
-    public Result<List<ContractChangeDO>> listByContract(@RequestParam Long contractId) {
+    public Result<List<ContractChangeDO>> listByContract(@RequestParam String contractId) {
         return Result.ok(service.listByContract(contractId));
     }
 }

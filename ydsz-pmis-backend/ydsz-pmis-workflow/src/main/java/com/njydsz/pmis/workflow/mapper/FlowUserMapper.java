@@ -22,12 +22,12 @@ public interface FlowUserMapper extends BaseMapper<FlowUserDO> {
     /**
      * 查某 task 的所有用户
      */
-    List<FlowUserDO> selectByTaskId(@Param("taskId") Long taskId);
+    List<FlowUserDO> selectByTaskId(@Param("taskId") String taskId);
 
     /**
      * 标记用户已处理
      */
-    int markProcessed(@Param("taskId") Long taskId,
+    int markProcessed(@Param("taskId") String taskId,
                       @Param("userId") String userId,
                       @Param("comment") String comment,
                       @Param("processAt") LocalDateTime processAt);
@@ -35,14 +35,14 @@ public interface FlowUserMapper extends BaseMapper<FlowUserDO> {
     /**
      * 查某实例某节点未处理的用户（会签场景）
      */
-    List<FlowUserDO> selectUnprocessedByInstanceAndNode(@Param("instanceId") Long instanceId,
+    List<FlowUserDO> selectUnprocessedByInstanceAndNode(@Param("instanceId") String instanceId,
                                                          @Param("nodeCode") String nodeCode);
 
     /**
      * 查某用户待办关联的任务 ID（通过 pmis_flow_user 表）
      */
     List<Long> selectTaskIdsByUser(@Param("userId") String userId,
-                                   @Param("tenantId") Long tenantId);
+                                   @Param("tenantId") String tenantId);
 
     /**
      * 批量插入

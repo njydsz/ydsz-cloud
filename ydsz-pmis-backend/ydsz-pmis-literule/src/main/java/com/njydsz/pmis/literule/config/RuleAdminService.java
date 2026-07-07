@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 规则管理服务
@@ -74,7 +75,7 @@ public class RuleAdminService {
         this.configProvider = configProvider;
         this.versionRepository = versionRepository;
         this.eventPublisher = eventPublisher;
-        this.nodeId = java.util.UUID.randomUUID().toString().substring(0, 8);
+        this.nodeId = UUID.randomUUID().toString().substring(0, 8);
     }
 
     /**

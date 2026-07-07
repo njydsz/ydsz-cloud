@@ -134,7 +134,7 @@ public class FlowDesignerController {
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<Void> saveSlaConfig(@PathVariable @Min(1) Long id,
                                         @PathVariable String nodeCode,
-                                        @RequestBody java.util.Map<String, Object> slaConfig) {
+                                        @RequestBody Map<String, Object> slaConfig) {
         String json = slaConfig == null ? null : JSON.toJSONString(slaConfig);
         definitionService.saveSlaConfig(id, nodeCode, json);
         return Result.ok();

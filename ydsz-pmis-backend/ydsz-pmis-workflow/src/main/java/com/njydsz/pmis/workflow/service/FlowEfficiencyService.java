@@ -30,7 +30,7 @@ public interface FlowEfficiencyService {
      * @param endTime   结束时间（格式 yyyy-MM-dd HH:mm:ss，可空）
      * @return 统计结果 Map，包含 totalCount / avgDurationMs / proxyRate / overdueRate
      */
-    Map<String, Object> efficiencyStats(Long tenantId, String startTime, String endTime);
+    Map<String, Object> efficiencyStats(String tenantId, String startTime, String endTime);
 
     /**
      * 节点瓶颈排名 — 按平均耗时降序
@@ -40,7 +40,7 @@ public interface FlowEfficiencyService {
      * @param limit    返回条数上限
      * @return 瓶颈节点列表，每行含 nodeCode / nodeName / avgDurationMs / count
      */
-    List<Map<String, Object>> bottleneckRanking(Long tenantId, String flowCode, int limit);
+    List<Map<String, Object>> bottleneckRanking(String tenantId, String flowCode, int limit);
 
     /**
      * 审批人效率排名 — 按处理量/平均耗时
@@ -51,7 +51,7 @@ public interface FlowEfficiencyService {
      * @param limit     返回条数上限
      * @return 审批人排名列表，每行含 assigneeId / assigneeName / handleCount / avgDurationMs
      */
-    List<Map<String, Object>> approverRanking(Long tenantId, String startTime, String endTime, int limit);
+    List<Map<String, Object>> approverRanking(String tenantId, String startTime, String endTime, int limit);
 
     /**
      * 审批趋势 — 按日/周/月聚合
@@ -62,7 +62,7 @@ public interface FlowEfficiencyService {
      * @param endTime   结束时间（可空）
      * @return 趋势列表，每行含 timeLabel / count / avgDurationMs
      */
-    List<Map<String, Object>> approvalTrend(Long tenantId, String interval, String startTime, String endTime);
+    List<Map<String, Object>> approvalTrend(String tenantId, String interval, String startTime, String endTime);
 
     /**
      * 综合异常检测 — 检测卡单任务、高驳回率节点、长期运行实例
@@ -80,7 +80,7 @@ public interface FlowEfficiencyService {
      * @param longRunningDays 长期运行阈值（天），默认 7
      * @return 异常记录列表，每行含 type / 描述字段
      */
-    List<Map<String, Object>> detectAnomalies(Long tenantId, int limit, int stuckHours, int longRunningDays);
+    List<Map<String, Object>> detectAnomalies(String tenantId, int limit, int stuckHours, int longRunningDays);
 
     /**
      * 检测卡单任务 — 同一节点停留超过阈值时间的未完成任务
@@ -90,7 +90,7 @@ public interface FlowEfficiencyService {
      * @param stuckHours 卡单阈值（小时）
      * @return 卡单任务列表，每行含 type=STUCK / taskId / nodeCode / nodeName / stuckHours / createdAt
      */
-    List<Map<String, Object>> detectStuckTasks(Long tenantId, int limit, int stuckHours);
+    List<Map<String, Object>> detectStuckTasks(String tenantId, int limit, int stuckHours);
 
     /**
      * 检测高驳回率节点 — 最近 100 个任务中驳回率超过 50% 的节点
@@ -98,7 +98,7 @@ public interface FlowEfficiencyService {
      * @param tenantId 租户 ID
      * @return 高驳回率节点列表，每行含 type=HIGH_REJECTION / nodeCode / nodeName / totalCount / rejectedCount / rejectionRate
      */
-    List<Map<String, Object>> detectHighRejectionNodes(Long tenantId);
+    List<Map<String, Object>> detectHighRejectionNodes(String tenantId);
 
     /**
      * 检测长期运行实例 — 运行时间超过阈值天数的实例
@@ -108,7 +108,7 @@ public interface FlowEfficiencyService {
      * @param longRunningDays 长期运行阈值（天）
      * @return 长期运行实例列表，每行含 type=LONG_RUNNING / instanceId / flowCode / flowName / startAt / runningDays
      */
-    List<Map<String, Object>> detectLongRunningInstances(Long tenantId, int limit, int longRunningDays);
+    List<Map<String, Object>> detectLongRunningInstances(String tenantId, int limit, int longRunningDays);
 
     /**
      * P1: 流程健康度综合评分（0-100 分）
@@ -135,5 +135,5 @@ public interface FlowEfficiencyService {
      * @param endTime   结束时间（可空）
      * @return 评分结果，含 score(0-100) / level(EXCELLENT/GOOD/FAIR/POOR) / deductions(扣分明细)
      */
-    Map<String, Object> healthScore(Long tenantId, String startTime, String endTime);
+    Map<String, Object> healthScore(String tenantId, String startTime, String endTime);
 }

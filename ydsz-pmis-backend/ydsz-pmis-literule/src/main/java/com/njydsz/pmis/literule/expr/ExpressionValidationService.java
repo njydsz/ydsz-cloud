@@ -3,7 +3,9 @@ package com.njydsz.pmis.literule.expr;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -188,8 +190,8 @@ public class ExpressionValidationService {
      * @param expressions 表达式列表（key=标签，value=表达式文本）
      * @return 校验结果列表（与输入顺序一致）
      */
-    public java.util.Map<String, ExpressionValidationResult> validateBatch(java.util.Map<String, String> expressions) {
-        java.util.Map<String, ExpressionValidationResult> results = new java.util.LinkedHashMap<>();
+    public Map<String, ExpressionValidationResult> validateBatch(Map<String, String> expressions) {
+        Map<String, ExpressionValidationResult> results = new LinkedHashMap<>();
         if (expressions == null) {
             return results;
         }

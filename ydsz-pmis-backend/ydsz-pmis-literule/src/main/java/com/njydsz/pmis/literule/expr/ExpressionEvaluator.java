@@ -60,7 +60,7 @@ public interface ExpressionEvaluator {
         boolean ok = validate(expression);
         long elapsed = (System.nanoTime() - start) / 1_000_000L;
         if (ok) {
-            return ExpressionValidationResult.ok(expression, elapsed, java.util.List.of());
+            return ExpressionValidationResult.ok(expression, elapsed, List.of());
         }
         return ExpressionValidationResult.fail(expression,
                 ExpressionValidationResult.ErrorType.UNKNOWN,

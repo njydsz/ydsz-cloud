@@ -33,23 +33,23 @@ public interface FlowTimerMapper extends BaseMapper<FlowTimerDO> {
      * @param reason 取消原因
      * @return 受影响行数
      */
-    int cancelByTask(@Param("boundaryTaskId") Long boundaryTaskId,
+    int cancelByTask(@Param("boundaryTaskId") String boundaryTaskId,
                      @Param("reason") String reason);
 
     /**
      * 标记定时器已触发
      */
-    int markFired(@Param("id") Long id,
+    int markFired(@Param("id") String id,
                   @Param("firedAt") LocalDateTime firedAt);
 
     /**
      * 关闭某实例所有 PENDING 定时器（实例终止/驳回时使用）
      */
-    int cancelByInstance(@Param("instanceId") Long instanceId,
+    int cancelByInstance(@Param("instanceId") String instanceId,
                          @Param("reason") String reason);
 
     /**
      * 统计实例的 PENDING 定时器数（用于检查流程是否被定时器阻塞）
      */
-    long countPendingByInstance(@Param("instanceId") Long instanceId);
+    long countPendingByInstance(@Param("instanceId") String instanceId);
 }

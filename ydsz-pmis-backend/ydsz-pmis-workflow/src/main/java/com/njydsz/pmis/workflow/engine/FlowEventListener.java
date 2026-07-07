@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.engine;
 
+import java.util.Map;
+
 /**
  * 流程事件监听器
  *
@@ -15,13 +17,13 @@ package com.njydsz.pmis.workflow.engine;
 public interface FlowEventListener {
 
     /** 实例启动前 */
-    default void onInstanceStart(Long instanceId, java.util.Map<String, Object> variables) {}
+    default void onInstanceStart(Long instanceId, Map<String, Object> variables) {}
 
     /** 任务创建后 */
     default void onTaskCreated(Long taskId) {}
 
     /** 任务完成后（业务侧可在此做状态联动） */
-    default void onTaskCompleted(Long taskId, String action, java.util.Map<String, Object> variables) {}
+    default void onTaskCompleted(Long taskId, String action, Map<String, Object> variables) {}
 
     /** 实例完成时 */
     default void onInstanceCompleted(Long instanceId) {}

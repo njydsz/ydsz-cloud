@@ -10,7 +10,10 @@ import com.njydsz.pmis.literule.spi.RuleConfigBroadcaster;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * 决策表管理服务
@@ -36,7 +39,7 @@ public class DecisionTableAdminService {
         this.ruleEngine = ruleEngine;
         this.configProvider = configProvider;
         this.eventPublisher = eventPublisher;
-        this.nodeId = java.util.UUID.randomUUID().toString().substring(0, 8);
+        this.nodeId = UUID.randomUUID().toString().substring(0, 8);
     }
 
     public void setBroadcaster(RuleConfigBroadcaster broadcaster) {
@@ -100,7 +103,7 @@ public class DecisionTableAdminService {
      * dry-run：构建临时 DecisionTableRule 评估（不注册到引擎）
      */
     public com.njydsz.pmis.literule.api.RuleResult dryRun(String tableCode,
-                                                           java.util.Map<String, Object> facts) {
+                                                           Map<String, Object> facts) {
         DecisionTableDefinition def = configProvider.findByCode(tableCode);
         if (def == null) {
             return null;
@@ -125,7 +128,7 @@ public class DecisionTableAdminService {
             throw new IllegalArgumentException("决策表动作列 actionColumns 不能为空");
         }
         if (def.getRows() == null) {
-            def.setRows(java.util.Collections.emptyList());
+            def.setRows(Collections.emptyList());
         }
         if (def.getHitPolicy() == null) {
             def.setHitPolicy(HitPolicy.FIRST);

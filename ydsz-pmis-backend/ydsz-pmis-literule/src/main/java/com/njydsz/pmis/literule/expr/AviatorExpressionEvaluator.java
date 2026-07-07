@@ -8,7 +8,13 @@ import com.googlecode.aviator.Options;
 import com.njydsz.pmis.literule.api.RuleContext;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Aviator 表达式求值器实现
@@ -207,18 +213,18 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
                     .errorColumn(column)
                     .expression(expression)
                     .parseTimeMs(elapsed)
-                    .referencedVariables(new java.util.ArrayList<>())
+                    .referencedVariables(new ArrayList<>())
                     .build();
         }
 
         // 4. 编译通过，提取引用变量
         elapsed = (System.nanoTime() - start) / 1_000_000L;
-        java.util.List<String> vars = extractVariables(expression);
+        List<String> vars = extractVariables(expression);
         return ExpressionValidationResult.ok(expression, elapsed, vars);
     }
 
     /** Aviator 关键字与内置函数，不应作为变量返回 */
-    private static final java.util.Set<String> AVIATOR_KEYWORDS = java.util.Set.of(
+    private static final Set<String> AVIATOR_KEYWORDS = Set.of(
             "true", "false", "nil", "null",
             "RED", "YELLOW", "INFO", "GREEN",
             "if", "else", "return", "seq", "lambda", "fn",
@@ -240,13 +246,13 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
      * @param expression 表达式
      * @return 变量名列表（去重，保留出现顺序）
      */
-    private java.util.List<String> extractVariables(String expression) {
+    private List<String> extractVariables(String expression) {
         if (expression == null || expression.isBlank()) {
-            return java.util.List.of();
+            return List.of();
         }
-        java.util.regex.Matcher m = java.util.regex.Pattern
+        Matcher m = Pattern
                 .compile("\\b([a-zA-Z_]\\w*)\\b").matcher(expression);
-        java.util.LinkedHashSet<String> vars = new java.util.LinkedHashSet<>();
+        LinkedHashSet<String> vars = new LinkedHashSet<>();
         while (m.find()) {
             String word = m.group(1);
             if (AVIATOR_KEYWORDS.contains(word)) continue;
@@ -256,7 +262,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
                 vars.add(word);
             }
         }
-        return new java.util.ArrayList<>(vars);
+        return new ArrayList<>(vars);
     }
 
     /**

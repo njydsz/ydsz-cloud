@@ -108,7 +108,7 @@ public class RedisNodeRegistry implements NodeRegistry {
             List<ClusterNode> alive = new ArrayList<>();
             List<String> deadNodeIds = new ArrayList<>();
 
-            for (java.util.Map.Entry<String, String> entry : map.entrySet()) {
+            for (Map.Entry<String, String> entry : map.entrySet()) {
                 try {
                     ClusterNode node = JSON.parseObject(entry.getValue(), ClusterNode.class);
                     if (node == null || node.getNodeId() == null) {
@@ -162,7 +162,7 @@ public class RedisNodeRegistry implements NodeRegistry {
             long now = System.currentTimeMillis();
             List<String> deadNodeIds = new ArrayList<>();
 
-            for (java.util.Map.Entry<String, String> entry : map.entrySet()) {
+            for (Map.Entry<String, String> entry : map.entrySet()) {
                 try {
                     ClusterNode node = JSON.parseObject(entry.getValue(), ClusterNode.class);
                     if (node == null || !node.isAlive(now, heartbeatTimeoutMs)) {

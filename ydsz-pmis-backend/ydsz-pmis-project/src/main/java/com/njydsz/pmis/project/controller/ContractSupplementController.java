@@ -50,7 +50,7 @@ public class ContractSupplementController {
     @Operation(summary = "创建补充协议")
     @Idempotent(key = "contract-supplement:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody ContractSupplementDTO dto) {
+    public Result<String> create(@Valid @RequestBody ContractSupplementDTO dto) {
         return Result.ok(service.create(dto));
     }
 
@@ -88,7 +88,7 @@ public class ContractSupplementController {
      */
     @Operation(summary = "按合同列出")
     @GetMapping("/list")
-    public Result<List<ContractSupplementDO>> listByContract(@RequestParam Long contractId) {
+    public Result<List<ContractSupplementDO>> listByContract(@RequestParam String contractId) {
         return Result.ok(service.listByContract(contractId));
     }
 
@@ -105,7 +105,7 @@ public class ContractSupplementController {
     public Result<Page<ContractSupplementDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) Long contractId) {
+            @RequestParam(required = false) String contractId) {
         return Result.ok(service.page(page, size, contractId));
     }
 }

@@ -24,5 +24,5 @@ public interface FlowHisVariableMapper extends BaseMapper<FlowHisVariableDO> {
     /**
      * 查询实例的归档变量
      */
-    List<FlowHisVariableDO> selectByInstanceId(@Param("instanceId") Long instanceId);
+    List<FlowHisVariableDO> selectByInstanceId(@Param("instanceId") String instanceId);
 }

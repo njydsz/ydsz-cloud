@@ -158,7 +158,7 @@ public class ExpressionSandbox {
     /**
      * 同步 RuleContext 的 facts 到白名单
      */
-    public void syncFacts(java.util.Map<String, Object> facts) {
+    public void syncFacts(Map<String, Object> facts) {
         if (facts == null) return;
         factsKeys.addAll(facts.keySet());
         variableWhitelist.addAll(facts.keySet());

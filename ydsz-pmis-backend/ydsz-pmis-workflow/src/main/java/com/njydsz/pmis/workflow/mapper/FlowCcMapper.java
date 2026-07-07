@@ -29,8 +29,8 @@ public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
      * @param offset     分页偏移
      * @param limit      每页大小
      */
-    List<FlowCcDO> selectCcByUserPage(@Param("tenantId") Long tenantId,
-                                     @Param("ccUserId") Long ccUserId,
+    List<FlowCcDO> selectCcByUserPage(@Param("tenantId") String tenantId,
+                                     @Param("ccUserId") String ccUserId,
                                      @Param("readStatus") String readStatus,
                                      @Param("flowCode") String flowCode,
                                      @Param("offset") int offset,
@@ -39,16 +39,16 @@ public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
     /**
      * 统计"抄送我的"总数
      */
-    long countCcByUser(@Param("tenantId") Long tenantId,
-                       @Param("ccUserId") Long ccUserId,
+    long countCcByUser(@Param("tenantId") String tenantId,
+                       @Param("ccUserId") String ccUserId,
                        @Param("readStatus") String readStatus,
                        @Param("flowCode") String flowCode);
 
     /**
      * 统计"抄送我的"未读数
      */
-    long countCcUnreadByUser(@Param("tenantId") Long tenantId,
-                             @Param("ccUserId") Long ccUserId);
+    long countCcUnreadByUser(@Param("tenantId") String tenantId,
+                             @Param("ccUserId") String ccUserId);
 
     /**
      * P2-3: 统计全局未读抄送数（Prometheus Gauge 监控指标）
@@ -60,20 +60,20 @@ public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
     /**
      * 标记抄送为已读
      */
-    int markRead(@Param("id") Long id,
-                 @Param("ccUserId") Long ccUserId,
+    int markRead(@Param("id") String id,
+                 @Param("ccUserId") String ccUserId,
                  @Param("readAt") LocalDateTime readAt);
 
     /**
      * 全部标记为已读
      */
-    int markAllRead(@Param("tenantId") Long tenantId,
-                    @Param("ccUserId") Long ccUserId,
+    int markAllRead(@Param("tenantId") String tenantId,
+                    @Param("ccUserId") String ccUserId,
                     @Param("readAt") LocalDateTime readAt);
 
     /**
      * 查实例的抄送列表
      */
-    List<FlowCcDO> selectByInstanceId(@Param("tenantId") Long tenantId,
-                                      @Param("instanceId") Long instanceId);
+    List<FlowCcDO> selectByInstanceId(@Param("tenantId") String tenantId,
+                                      @Param("instanceId") String instanceId);
 }

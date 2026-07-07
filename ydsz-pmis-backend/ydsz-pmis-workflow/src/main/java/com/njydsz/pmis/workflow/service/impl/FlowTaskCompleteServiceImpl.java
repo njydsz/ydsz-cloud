@@ -1060,7 +1060,7 @@ public class FlowTaskCompleteServiceImpl {
     private boolean evaluateCompletionCondition(String condition, int finished, int required,
                                                   Map<String, Object> vars) {
         try {
-            Map<String, Object> evalVars = new java.util.HashMap<>(vars != null ? vars : Collections.emptyMap());
+            Map<String, Object> evalVars = new HashMap<>(vars != null ? vars : Collections.emptyMap());
             evalVars.put("nrOfInstances", required);
             evalVars.put("nrOfCompletedInstances", finished);
             evalVars.put("nrOfActiveInstances", Math.max(0, required - finished));
@@ -1678,7 +1678,7 @@ public class FlowTaskCompleteServiceImpl {
             return Collections.emptyList();
         }
         List<String> result = new ArrayList<>();
-        java.util.Set<String> seen = new java.util.HashSet<>();
+        Set<String> seen = new HashSet<>();
         for (String token : resolved.split(",")) {
             String t = token.trim();
             if (t.isEmpty()) continue;
@@ -1758,7 +1758,7 @@ public class FlowTaskCompleteServiceImpl {
             return Collections.emptyList();
         }
         List<String> result = new ArrayList<>();
-        if (value instanceof java.util.List<?> list) {
+        if (value instanceof List<?> list) {
             for (Object item : list) {
                 if (item == null) continue;
                 String s = String.valueOf(item).trim();

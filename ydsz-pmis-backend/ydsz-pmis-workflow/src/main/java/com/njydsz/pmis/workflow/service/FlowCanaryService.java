@@ -37,8 +37,8 @@ public interface FlowCanaryService {
      * @param operatorName   操作人姓名
      * @param note           备注
      */
-    void publishCanary(Long definitionId, int initialPercent, String strategy,
-                       Long operatorId, String operatorName, String note);
+    void publishCanary(String definitionId, int initialPercent, String strategy,
+                       String operatorId, String operatorName, String note);
 
     /**
      * 调整灰度比例：在 1-99 范围内逐步放量或缩量。
@@ -51,8 +51,8 @@ public interface FlowCanaryService {
      * @param operatorName 操作人姓名
      * @param note         备注
      */
-    void adjustCanaryPercent(Long definitionId, int newPercent,
-                             Long operatorId, String operatorName, String note);
+    void adjustCanaryPercent(String definitionId, int newPercent,
+                             String operatorId, String operatorName, String note);
 
     /**
      * 全量发布：灰度版晋升为稳定版
@@ -65,7 +65,7 @@ public interface FlowCanaryService {
      * @param operatorName 操作人姓名
      * @param note         备注
      */
-    void promoteCanary(Long definitionId, Long operatorId, String operatorName, String note);
+    void promoteCanary(String definitionId, String operatorId, String operatorName, String note);
 
     /**
      * 回滚：灰度版失效
@@ -78,7 +78,7 @@ public interface FlowCanaryService {
      * @param operatorName 操作人姓名
      * @param note         备注（含回滚原因）
      */
-    void rollbackCanary(Long definitionId, Long operatorId, String operatorName, String note);
+    void rollbackCanary(String definitionId, String operatorId, String operatorName, String note);
 
     /**
      * 解析流程启动时实际生效的版本
@@ -93,7 +93,7 @@ public interface FlowCanaryService {
      * @return 实际生效的定义（含切流结果），无灰度时返回原稳定版
      */
     FlowDefinitionDO resolveEffectiveDefinition(String flowCode, String version,
-                                                Long tenantId, Long initiatorId);
+                                                String tenantId, String initiatorId);
 
     /**
      * 查询某 flowCode 的灰度发布历史
@@ -102,5 +102,5 @@ public interface FlowCanaryService {
      * @param tenantId 租户 ID
      * @return rollout 日志列表（按 operateAt 升序）
      */
-    List<Map<String, Object>> listCanaryRolloutLog(String flowCode, Long tenantId);
+    List<Map<String, Object>> listCanaryRolloutLog(String flowCode, String tenantId);
 }

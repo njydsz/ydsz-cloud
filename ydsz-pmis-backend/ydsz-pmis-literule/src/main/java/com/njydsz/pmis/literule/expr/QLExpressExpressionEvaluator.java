@@ -6,10 +6,15 @@ import com.ql.util.express.IExpressContext;
 import com.njydsz.pmis.literule.api.RuleContext;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * QLExpress 表达式评估器（P0-3 真正实现）
@@ -40,7 +45,7 @@ public class QLExpressExpressionEvaluator implements ExpressionEvaluator {
     // 沙箱拦截由 ExpressionSandbox 负责（P1-11 AST 级别检查替代正则黑名单）
 
     /** QLExpress 关键字（用于 validateDetailed 排除） */
-    private static final java.util.Set<String> QL_KEYWORDS = java.util.Set.of(
+    private static final Set<String> QL_KEYWORDS = Set.of(
             "true", "false", "nil", "null",
             "if", "else", "for", "while", "break", "continue", "return",
             "and", "or", "not", "in", "instanceof",
@@ -189,9 +194,9 @@ public class QLExpressExpressionEvaluator implements ExpressionEvaluator {
         if (expression == null || expression.isBlank()) {
             return List.of();
         }
-        java.util.regex.Matcher m = java.util.regex.Pattern
+        Matcher m = Pattern
                 .compile("\\b([a-zA-Z_]\\w*)\\b").matcher(expression);
-        java.util.LinkedHashSet<String> vars = new java.util.LinkedHashSet<>();
+        LinkedHashSet<String> vars = new LinkedHashSet<>();
         while (m.find()) {
             String word = m.group(1);
             if (QL_KEYWORDS.contains(word)) continue;
@@ -200,6 +205,6 @@ public class QLExpressExpressionEvaluator implements ExpressionEvaluator {
                 vars.add(word);
             }
         }
-        return new java.util.ArrayList<>(vars);
+        return new ArrayList<>(vars);
     }
 }

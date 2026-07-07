@@ -21,7 +21,7 @@ public interface FlowNotifyChannelService {
      * @param tenantId 租户 ID
      * @return 通道配置列表
      */
-    List<FlowNotifyChannelDO> listChannels(Long tenantId);
+    List<FlowNotifyChannelDO> listChannels(String tenantId);
 
     /**
      * 查询租户下所有启用的通知通道配置
@@ -29,7 +29,7 @@ public interface FlowNotifyChannelService {
      * @param tenantId 租户 ID
      * @return 启用的通道配置列表
      */
-    List<FlowNotifyChannelDO> listEnabledChannels(Long tenantId);
+    List<FlowNotifyChannelDO> listEnabledChannels(String tenantId);
 
     /**
      * 新增或更新通知通道配置
@@ -45,14 +45,14 @@ public interface FlowNotifyChannelService {
      * @param id      通道配置 ID
      * @param enabled 是否启用
      */
-    void toggleChannel(Long id, Boolean enabled);
+    void toggleChannel(String id, Boolean enabled);
 
     /**
      * 删除通知通道配置（逻辑删除）
      *
      * @param id 通道配置 ID
      */
-    void deleteChannel(Long id);
+    void deleteChannel(String id);
 
     /**
      * 按通道类型查询配置 JSON 字符串
@@ -61,5 +61,5 @@ public interface FlowNotifyChannelService {
      * @param tenantId    租户 ID
      * @return 配置 JSON 字符串，未配置时返回 null
      */
-    String getConfig(String channelType, Long tenantId);
+    String getConfig(String channelType, String tenantId);
 }

@@ -5,6 +5,8 @@ import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 流程定义 Mapper
  *
@@ -21,18 +23,18 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      */
     FlowDefinitionDO selectPublished(@Param("flowCode") String flowCode,
                                      @Param("version") String version,
-                                     @Param("tenantId") Long tenantId);
+                                     @Param("tenantId") String tenantId);
 
     /**
      * 根据 flowCode 查最新版本（不区分发布状态）
      */
     FlowDefinitionDO selectLatestByCode(@Param("flowCode") String flowCode,
-                                        @Param("tenantId") Long tenantId);
+                                        @Param("tenantId") String tenantId);
 
     /**
      * 发布（更新 is_publish）
      */
-    int publish(@Param("id") Long id, @Param("isPublish") Integer isPublish);
+    int publish(@Param("id") String id, @Param("isPublish") Integer isPublish);
 
     /**
      * P2-27: 失效同 flowCode 的其他已发布版本（is_publish 置 9）
@@ -43,8 +45,8 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      * @return 受影响行数
      */
     int deactivateByFlowCode(@Param("flowCode") String flowCode,
-                             @Param("exceptId") Long exceptId,
-                             @Param("tenantId") Long tenantId);
+                             @Param("exceptId") String exceptId,
+                             @Param("tenantId") String tenantId);
 
     /**
      * P2-28: 更新流程定义激活状态（0 挂起 / 1 激活）
@@ -53,7 +55,7 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      * @param activityStatus 激活状态
      * @return 受影响行数
      */
-    int updateActivityStatus(@Param("id") Long id,
+    int updateActivityStatus(@Param("id") String id,
                              @Param("activityStatus") Integer activityStatus);
 
     /**
@@ -63,8 +65,8 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      * @param tenantId 租户 ID
      * @return 灰度中定义列表（按 version desc）
      */
-    java.util.List<FlowDefinitionDO> selectCanaryingByCode(@Param("flowCode") String flowCode,
-                                                           @Param("tenantId") Long tenantId);
+    List<FlowDefinitionDO> selectCanaryingByCode(@Param("flowCode") String flowCode,
+                                                           @Param("tenantId") String tenantId);
 
     /**
      * P3-1: 查询同 flowCode + tenant 下的所有定义（含历史版本），按 version 倒序
@@ -73,6 +75,6 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      * @param tenantId 租户 ID
      * @return 所有定义列表
      */
-    java.util.List<FlowDefinitionDO> selectByFlowCode(@Param("flowCode") String flowCode,
-                                                      @Param("tenantId") Long tenantId);
+    List<FlowDefinitionDO> selectByFlowCode(@Param("flowCode") String flowCode,
+                                                      @Param("tenantId") String tenantId);
 }

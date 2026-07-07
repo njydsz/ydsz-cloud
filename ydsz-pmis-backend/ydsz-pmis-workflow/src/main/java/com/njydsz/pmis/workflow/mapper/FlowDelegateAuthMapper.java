@@ -26,15 +26,15 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuthDO> {
      * @param ownerUserId 授权人 ID
      * @param status    状态过滤（可空）
      */
-    List<FlowDelegateAuthDO> selectByOwner(@Param("tenantId") Long tenantId,
-                                           @Param("ownerUserId") Long ownerUserId,
+    List<FlowDelegateAuthDO> selectByOwner(@Param("tenantId") String tenantId,
+                                           @Param("ownerUserId") String ownerUserId,
                                            @Param("status") String status);
 
     /**
      * 按被授权人查询授权列表
      */
-    List<FlowDelegateAuthDO> selectByDelegate(@Param("tenantId") Long tenantId,
-                                              @Param("delegateUserId") Long delegateUserId,
+    List<FlowDelegateAuthDO> selectByDelegate(@Param("tenantId") String tenantId,
+                                              @Param("delegateUserId") String delegateUserId,
                                               @Param("status") String status);
 
     /**
@@ -54,8 +54,8 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuthDO> {
      * @param now       当前时间（用于区间校验）
      * @return 命中的代理规则（无则 null）
      */
-    FlowDelegateAuthDO matchAuth(@Param("tenantId") Long tenantId,
-                                 @Param("ownerUserId") Long ownerUserId,
+    FlowDelegateAuthDO matchAuth(@Param("tenantId") String tenantId,
+                                 @Param("ownerUserId") String ownerUserId,
                                  @Param("flowCode") String flowCode,
                                  @Param("nodeCode") String nodeCode,
                                  @Param("now") LocalDateTime now);
@@ -75,7 +75,7 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuthDO> {
     /**
      * 启用/停用
      */
-    int updateStatus(@Param("id") Long id,
+    int updateStatus(@Param("id") String id,
                      @Param("status") String status,
                      @Param("updatedAt") LocalDateTime updatedAt);
 }

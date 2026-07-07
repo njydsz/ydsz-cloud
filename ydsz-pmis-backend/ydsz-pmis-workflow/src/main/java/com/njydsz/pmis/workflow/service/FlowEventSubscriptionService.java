@@ -25,8 +25,8 @@ public interface FlowEventSubscriptionService {
      * @param boundaryTaskId  边界事件关联的 userTask ID（中间事件传 null）
      * @return 订阅 ID
      */
-    Long createSubscription(Long instanceId, FlowNodeDO node,
-                             Map<String, Object> variables, Long boundaryTaskId);
+    String createSubscription(String instanceId, FlowNodeDO node,
+                             Map<String, Object> variables, String boundaryTaskId);
 
     /**
      * 关联消息 — 匹配 WAITING 的 MESSAGE 订阅并触发
@@ -37,7 +37,7 @@ public interface FlowEventSubscriptionService {
      * @param payload         消息载荷 JSON
      * @return 触发的订阅数量
      */
-    int correlateMessage(Long tenantId, String messageName,
+    int correlateMessage(String tenantId, String messageName,
                           String correlationKey, String payload);
 
     /**
@@ -49,22 +49,22 @@ public interface FlowEventSubscriptionService {
      * @param payload     错误载荷 JSON
      * @return 触发的订阅数量
      */
-    int throwError(Long tenantId, Long instanceId, String errorCode, String payload);
+    int throwError(String tenantId, String instanceId, String errorCode, String payload);
 
     /**
      * 取消某 userTask 关联的所有边界事件订阅（userTask 完成时调用）
      */
-    int cancelByTask(Long boundaryTaskId, String reason);
+    int cancelByTask(String boundaryTaskId, String reason);
 
     /**
      * 取消某实例所有 WAITING 订阅（实例终止/驳回时调用）
      */
-    int cancelByInstance(Long instanceId, String reason);
+    int cancelByInstance(String instanceId, String reason);
 
     /**
      * 查询实例的事件订阅列表
      */
-    List<FlowEventSubscriptionDO> listByInstance(Long instanceId);
+    List<FlowEventSubscriptionDO> listByInstance(String instanceId);
 
     /**
      * 判断节点是否为事件捕获节点（ext JSON 中包含 eventCatch: true）

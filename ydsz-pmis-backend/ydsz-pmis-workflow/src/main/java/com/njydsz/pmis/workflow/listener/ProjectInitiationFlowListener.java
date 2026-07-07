@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -221,7 +222,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
         List<Long> receivers = pending == null ? Collections.emptyList() : pending.stream()
                 .map(t -> parseUserId(t.getAssigneeId()))
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
@@ -259,7 +260,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
         List<Long> receivers = pending == null ? Collections.emptyList() : pending.stream()
                 .map(t -> parseUserId(t.getAssigneeId()))
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);

@@ -24,7 +24,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * 查用户已办（历史）
      */
     List<FlowHisTaskDO> selectDoneByAssignee(@Param("assigneeId") String assigneeId,
-                                             @Param("tenantId") Long tenantId);
+                                             @Param("tenantId") String tenantId);
 
     /**
      * 查用户已办（历史，真分页：LIMIT/OFFSET）
@@ -35,7 +35,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * @param limit      每页大小
      */
     List<FlowHisTaskDO> selectDoneByAssigneePage(@Param("assigneeId") String assigneeId,
-                                                 @Param("tenantId") Long tenantId,
+                                                 @Param("tenantId") String tenantId,
                                                  @Param("offset") int offset,
                                                  @Param("limit") int limit);
 
@@ -43,12 +43,12 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * 统计用户已办总数（用于分页计算总页数）
      */
     long countDoneByAssignee(@Param("assigneeId") String assigneeId,
-                             @Param("tenantId") Long tenantId);
+                             @Param("tenantId") String tenantId);
 
     /**
      * 查某实例的所有历史
      */
-    List<FlowHisTaskDO> selectByInstanceId(@Param("instanceId") Long instanceId);
+    List<FlowHisTaskDO> selectByInstanceId(@Param("instanceId") String instanceId);
 
     /**
      * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）
@@ -58,7 +58,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * @return 每个节点一行统计：nodeCode, nodeName, avgDurationMs, count
      */
     List<Map<String, Object>> nodeDurationStats(@Param("flowCode") String flowCode,
-                                                 @Param("tenantId") Long tenantId);
+                                                 @Param("tenantId") String tenantId);
 
     /**
      * P2-33: 多维筛选已办分页查询（真分页：LIMIT/OFFSET）
@@ -77,7 +77,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
                                        @Param("flowCode") String flowCode,
                                        @Param("startTime") LocalDateTime startTime,
                                        @Param("endTime") LocalDateTime endTime,
-                                       @Param("tenantId") Long tenantId,
+                                       @Param("tenantId") String tenantId,
                                        @Param("offset") int offset,
                                        @Param("limit") int limit);
 
@@ -89,7 +89,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
                    @Param("flowCode") String flowCode,
                    @Param("startTime") LocalDateTime startTime,
                    @Param("endTime") LocalDateTime endTime,
-                   @Param("tenantId") Long tenantId);
+                   @Param("tenantId") String tenantId);
 
     /**
      * P1-1: 查询实例经过的历史节点（去重，按首次完成时间排序），
@@ -98,7 +98,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * @param instanceId 流程实例 ID
      * @return 节点列表：nodeCode / nodeName / firstFinishAt / assigneeName
      */
-    List<Map<String, Object>> listPassedNodes(@Param("instanceId") Long instanceId);
+    List<Map<String, Object>> listPassedNodes(@Param("instanceId") String instanceId);
 
     /**
      * P1-5: 查询同实例下已审批过（task_status=COMPLETED）的办理人 ID 列表（去重）。
@@ -109,7 +109,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * @param instanceId 流程实例 ID
      * @return 已审批过的办理人 ID 列表（去重）
      */
-    List<String> selectCompletedAssigneeIds(@Param("instanceId") Long instanceId);
+    List<String> selectCompletedAssigneeIds(@Param("instanceId") String instanceId);
 
     /**
      * P2-4: 按办理人分组聚合效率统计（SQL 层 GROUP BY，避免 Java 层全表加载）
@@ -120,7 +120,7 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * @param limit     返回条数
      * @return 每个办理人一行：assigneeId / assigneeName / completedCount / avgDurationMs / totalDurationMs
      */
-    List<Map<String, Object>> selectApproverEfficiency(@Param("tenantId") Long tenantId,
+    List<Map<String, Object>> selectApproverEfficiency(@Param("tenantId") String tenantId,
                                                         @Param("startTime") LocalDateTime startTime,
                                                         @Param("endTime") LocalDateTime endTime,
                                                         @Param("limit") int limit);

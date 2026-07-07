@@ -4,6 +4,7 @@ import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,7 +63,7 @@ public interface FlowSubProcessService {
      * @param parentInstanceId 父流程实例 ID
      * @return 子流程实例列表
      */
-    java.util.List<FlowInstanceDO> listChildren(Long parentInstanceId);
+    List<FlowInstanceDO> listChildren(Long parentInstanceId);
 
     /** DTO 构造工具：把子流程启动所需参数封装 */
     FlowStartProcessDTO buildSubProcessStartDTO(FlowInstanceDO parentInstance,
@@ -83,5 +84,5 @@ public interface FlowSubProcessService {
      * @param parentInstanceId 父流程实例 ID
      * @return 子流程树列表，格式 [{instanceId, instanceName, flowCode, status, subProcesses: [...]}]
      */
-    java.util.List<Map<String, Object>> listSubProcessTree(Long parentInstanceId);
+    List<Map<String, Object>> listSubProcessTree(Long parentInstanceId);
 }

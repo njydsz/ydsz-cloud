@@ -25,7 +25,7 @@ public interface FlowEmbeddedApprovalService {
      * @param userId       当前用户 ID（用于判定 myRole / mine / actions）
      * @return 嵌入式审批面板视图（流程未启动时仍返回 DTO，instance 为空）
      */
-    EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, Long userId);
+    EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, String userId);
 
     /**
      * 嵌入式快捷操作（业务页不需要关心 taskId）

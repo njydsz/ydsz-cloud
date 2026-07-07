@@ -63,7 +63,7 @@ public class CEPEngine implements Serializable {
     private final Map<String, Map<String, SequenceState>> sequenceStates = new ConcurrentHashMap<>();
 
     /** 已注册模式数 */
-    private final java.util.concurrent.atomic.AtomicLong totalHits = new java.util.concurrent.atomic.AtomicLong();
+    private final AtomicLong totalHits = new AtomicLong();
 
     /**
      * 注册模式

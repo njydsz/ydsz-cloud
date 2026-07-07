@@ -29,7 +29,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
     /**
      * 状态更新
      */
-    int updateStatus(@Param("id") Long id,
+    int updateStatus(@Param("id") String id,
                      @Param("flowStatus") String flowStatus,
                      @Param("currentNodeCode") String currentNodeCode,
                      @Param("currentNodeName") String currentNodeName,
@@ -42,13 +42,13 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param id       实例 ID
      * @param variable 流程变量 JSON
      */
-    int updateVariable(@Param("id") Long id,
+    int updateVariable(@Param("id") String id,
                        @Param("variable") String variable);
 
     /**
      * 发起人维度查询
      */
-    List<FlowInstanceDO> selectByInitiator(@Param("initiatorId") Long initiatorId,
+    List<FlowInstanceDO> selectByInitiator(@Param("initiatorId") String initiatorId,
                                            @Param("flowStatus") String flowStatus);
 
     /**
@@ -65,11 +65,11 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @return 实例列表
      */
     List<FlowInstanceDO> selectPage(@Param("businessType") String businessType,
-                                    @Param("initiatorId") Long initiatorId,
+                                    @Param("initiatorId") String initiatorId,
                                     @Param("flowStatus") String flowStatus,
                                     @Param("startTime") LocalDateTime startTime,
                                     @Param("endTime") LocalDateTime endTime,
-                                    @Param("tenantId") Long tenantId,
+                                    @Param("tenantId") String tenantId,
                                     @Param("offset") int offset,
                                     @Param("limit") int limit);
 
@@ -85,11 +85,11 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @return 总数
      */
     long countPage(@Param("businessType") String businessType,
-                   @Param("initiatorId") Long initiatorId,
+                   @Param("initiatorId") String initiatorId,
                    @Param("flowStatus") String flowStatus,
                    @Param("startTime") LocalDateTime startTime,
                    @Param("endTime") LocalDateTime endTime,
-                   @Param("tenantId") Long tenantId);
+                   @Param("tenantId") String tenantId);
 
     /**
      * 更新实例的 dueAt 字段（子流程超时用）
@@ -97,7 +97,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param id    实例 ID
      * @param dueAt 超时时间
      */
-    int updateDueAt(@Param("id") Long id,
+    int updateDueAt(@Param("id") String id,
                     @Param("dueAt") LocalDateTime dueAt);
 
     /**
@@ -106,7 +106,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param tenantId 租户 ID（可空）
      * @return 超期子流程实例列表
      */
-    List<FlowInstanceDO> selectOverdueInstances(@Param("tenantId") Long tenantId);
+    List<FlowInstanceDO> selectOverdueInstances(@Param("tenantId") String tenantId);
 
     /**
      * P2-4: 按 flow_status 分组计数（监控概览用，避免多次 count 查询）
@@ -114,7 +114,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param tenantId 租户 ID（可空）
      * @return 每种状态一行：flowStatus / cnt
      */
-    List<Map<String, Object>> selectCountGroupByStatus(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> selectCountGroupByStatus(@Param("tenantId") String tenantId);
 
     /**
      * P2-4: 统计今日新增/完成实例数
@@ -125,7 +125,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param tenantId 租户 ID（可空）
      * @return 单行：todayNewCount / todayCompletedCount
      */
-    Map<String, Object> selectTodayCount(@Param("tenantId") Long tenantId);
+    Map<String, Object> selectTodayCount(@Param("tenantId") String tenantId);
 
     /**
      * P2-4: 按流程编码分组统计实例数（监控分布图用）
@@ -135,7 +135,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param endTime   start_at 上界（可空）
      * @return 每个流程一行：flowCode / flowName / cnt
      */
-    List<Map<String, Object>> selectFlowTypeDistribution(@Param("tenantId") Long tenantId,
+    List<Map<String, Object>> selectFlowTypeDistribution(@Param("tenantId") String tenantId,
                                                           @Param("startTime") LocalDateTime startTime,
                                                           @Param("endTime") LocalDateTime endTime);
 
@@ -150,7 +150,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param endTime   start_at 上界
      * @return 每天一行：date / newCount
      */
-    List<Map<String, Object>> selectDailyNewCount(@Param("tenantId") Long tenantId,
+    List<Map<String, Object>> selectDailyNewCount(@Param("tenantId") String tenantId,
                                                    @Param("startTime") LocalDateTime startTime,
                                                    @Param("endTime") LocalDateTime endTime);
 
@@ -162,7 +162,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @param endTime   end_at 上界
      * @return 每天一行：date / completedCount
      */
-    List<Map<String, Object>> selectDailyCompletedCount(@Param("tenantId") Long tenantId,
+    List<Map<String, Object>> selectDailyCompletedCount(@Param("tenantId") String tenantId,
                                                          @Param("startTime") LocalDateTime startTime,
                                                          @Param("endTime") LocalDateTime endTime);
 }

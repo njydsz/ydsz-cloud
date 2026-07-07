@@ -30,7 +30,7 @@ public interface FlowDelegateAuthService {
      * @param auth 授权信息
      * @return 授权 ID
      */
-    Long create(FlowDelegateAuthDO auth);
+    String create(FlowDelegateAuthDO auth);
 
     /**
      * 撤回授权
@@ -38,22 +38,22 @@ public interface FlowDelegateAuthService {
      * @param authId   授权 ID
      * @param ownerUserId 授权人 ID（用于权限校验）
      */
-    void revoke(Long authId, Long ownerUserId);
+    void revoke(String authId, String ownerUserId);
 
     /**
      * 启用/停用
      */
-    void updateStatus(Long authId, String status, Long operatorId);
+    void updateStatus(String authId, String status, String operatorId);
 
     /**
      * 查"我设置的"授权列表
      */
-    List<FlowDelegateAuthDO> listMine(Long ownerUserId, Long tenantId, String status);
+    List<FlowDelegateAuthDO> listMine(String ownerUserId, String tenantId, String status);
 
     /**
      * 查"代理给我的"授权列表
      */
-    List<FlowDelegateAuthDO> listAsDelegate(Long delegateUserId, Long tenantId, String status);
+    List<FlowDelegateAuthDO> listAsDelegate(String delegateUserId, String tenantId, String status);
 
     /**
      * 匹配代理规则 — 创建任务前调用
@@ -67,7 +67,7 @@ public interface FlowDelegateAuthService {
      * @param nodeCode  节点编码
      * @return 命中的代理规则（无则返回 null）
      */
-    FlowDelegateAuthDO matchAuth(Long tenantId, Long ownerUserId, String flowCode, String nodeCode);
+    FlowDelegateAuthDO matchAuth(String tenantId, String ownerUserId, String flowCode, String nodeCode);
 
     /**
      * 扫描并标记过期授权（每 5 分钟一次）
@@ -79,10 +79,10 @@ public interface FlowDelegateAuthService {
     /**
      * 分页查询"我代理处理的日志"
      */
-    PageResult<?> listDelegateLog(Long delegateUserId, int page, int size);
+    PageResult<?> listDelegateLog(String delegateUserId, int page, int size);
 
     /**
      * 分页查询"我的被代理日志"
      */
-    PageResult<?> listOwnerLog(Long ownerUserId, int page, int size);
+    PageResult<?> listOwnerLog(String ownerUserId, int page, int size);
 }

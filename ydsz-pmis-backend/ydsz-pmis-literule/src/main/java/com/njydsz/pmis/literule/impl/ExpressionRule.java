@@ -9,6 +9,7 @@ import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -182,7 +183,7 @@ public class ExpressionRule implements Rule {
                     replacement = "";
                 } else if (formatPattern != null) {
                     replacement = formatValue(value, formatPattern);
-                } else if (value instanceof java.math.BigDecimal bd) {
+                } else if (value instanceof BigDecimal bd) {
                     // 整数去除小数点（100.0 → 100），非整数保留原值
                     double d = bd.doubleValue();
                     if (d == Math.floor(d) && !Double.isInfinite(d)) {

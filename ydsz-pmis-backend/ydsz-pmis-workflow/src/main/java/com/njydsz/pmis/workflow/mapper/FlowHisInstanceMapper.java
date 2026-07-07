@@ -37,7 +37,7 @@ public interface FlowHisInstanceMapper extends BaseMapper<FlowHisInstanceDO> {
     /**
      * 按租户聚合归档统计
      */
-    List<Map<String, Object>> aggregateByTenant(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByTenant(@Param("tenantId") String tenantId);
 
     /**
      * 查询指定时间范围前的归档记录
