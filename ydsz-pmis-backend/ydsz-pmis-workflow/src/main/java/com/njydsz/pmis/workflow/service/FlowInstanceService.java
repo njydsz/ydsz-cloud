@@ -244,4 +244,34 @@ public interface FlowInstanceService {
      */
     String resubmit(String instanceId, String initiatorId,
                     Map<String, Object> variables, String comment);
+
+    /**
+     * P1-8: 流程重做 — 支持 redoMode 指定重做策略。
+     *
+     * <p>redoMode 取值：
+     * <ul>
+     *   <li>{@code RESTART}（默认，向后兼容）：仅 REJECTED 实例可重做，在原实例上重置状态并从开始节点重新推进。
+     *       等价于 {@link #resubmit(String, String, Map, String)}。</li>
+     *   <li>{@code NEW_INSTANCE}：任意终态（COMPLETED / REJECTED / TERMINATED / ROLLED_BACK）均可重做，
+     *       创建全新实例（新 instanceId），复用原实例的 flowCode / businessType / businessId / initiator，
+     *       合并原变量与传入变量。原实例保持不变，仅追加一条 REDO 审计日志。</li>
+     * </ul>
+     *
+     * <p>校验规则：
+     * <ul>
+     *   <li>RESTART 模式：仅 REJECTED 可重做（与原 resubmit 一致）；</li>
+     *   <li>NEW_INSTANCE 模式：仅终态可重做（非 RUNNING / SUSPENDED）；</li>
+     *   <li>两种模式均要求仅发起人可操作。</li>
+     * </ul>
+     *
+     * @param instanceId  原实例 ID
+     * @param initiatorId 发起人 ID（校验一致性）
+     * @param variables   重做时新增/覆盖的变量（可空）
+     * @param comment     重做说明（可选）
+     * @param redoMode    重做模式：RESTART / NEW_INSTANCE（null/空时默认 RESTART）
+     * @return 实例 ID（RESTART 返回原 instanceId，NEW_INSTANCE 返回新 instanceId）
+     * @since 1.6.0
+     */
+    String resubmit(String instanceId, String initiatorId,
+                    Map<String, Object> variables, String comment, String redoMode);
 }

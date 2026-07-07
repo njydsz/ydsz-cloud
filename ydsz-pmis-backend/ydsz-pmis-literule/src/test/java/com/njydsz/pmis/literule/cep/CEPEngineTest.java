@@ -291,9 +291,9 @@ class CEPEngineTest {
 
             // 早期事件会被后续事件的窗口裁剪掉
             engine.feed(event("E", T0));
-            engine.feed(event("E", T0.plusMinutes(1)));
+            engine.feed(event("E", T0.plus(Duration.ofMinutes(1))));
             // T+10m 的窗口起点为 T+7m，T0 和 T+1m 都在窗口外被移除
-            engine.feed(event("E", T0.plusMinutes(10)));
+            engine.feed(event("E", T0.plus(Duration.ofMinutes(10))));
 
             assertThat(hits).isEmpty();
         }
@@ -908,7 +908,7 @@ class CEPEngineTest {
             // T+10m 窗口起点为 T+7m，T0 的事件被裁剪
             Map<String, Object> a2 = new HashMap<>();
             a2.put("amount", 60);
-            engine.feed(event("E", T0.plusMinutes(10), a2));
+            engine.feed(event("E", T0.plus(Duration.ofMinutes(10)), a2));
 
             // 仅 60 在窗口内，60 < 100 → 不命中
             assertThat(hits).isEmpty();
@@ -975,9 +975,9 @@ class CEPEngineTest {
                     Duration.ofMinutes(2), 3));
 
             engine.feed(event("OTHER", T0));
-            engine.feed(event("OTHER", T0.plusMinutes(1)));
+            engine.feed(event("OTHER", T0.plus(Duration.ofMinutes(1))));
             // T+10m 窗口起点为 T+8m，旧事件被裁剪
-            engine.feed(event("OTHER", T0.plusMinutes(10)));
+            engine.feed(event("OTHER", T0.plus(Duration.ofMinutes(10))));
 
             assertThat(hits).isEmpty();
         }

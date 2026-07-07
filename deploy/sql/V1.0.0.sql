@@ -1808,8 +1808,12 @@ ON CONFLICT (tenant_id) DO NOTHING;
 -- =====================================================
 
 -- 消息发送日志表 pmis_msg_log（由原 pmis_message_log 重构升级，新增优先级/聚合/撤回/回执/路由/灰度/重试调度字段）
+-- P2-3: 改为 PostgreSQL 月度 RANGE 分区表，按 created_at 分区，便于按时间范围查询与冷数据归档。
+-- 分区表主键必须包含分区键 created_at，故采用 (id, created_at) 复合主键。
+-- 业务代码通过 MyBatis-Plus BaseMapper 以 id 单字段查询时，PostgreSQL 会扫描所有分区上的本地索引，
+-- 配合 partition pruning（带 created_at 范围条件时）能保证查询性能。
 CREATE TABLE IF NOT EXISTS pmis_msg_log(
-    id                VARCHAR(20)      PRIMARY KEY,
+    id                VARCHAR(20)    NOT NULL,
     channel           VARCHAR(32)    NOT NULL,
     biz_type          VARCHAR(64),
     biz_id            VARCHAR(20),
@@ -1847,6 +1851,8 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT       NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
+    -- 复合主键(分区表要求分区键 created_at 必须在主键中)
+    CONSTRAINT pk_pml PRIMARY KEY (id, created_at),
     -- 数据完整性约束
     CONSTRAINT ck_pml_channel_enum      CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pml_status_enum       CHECK (status IN ('PENDING', 'SENDING', 'SUCCESS', 'FAILED', 'RETRY', 'DEAD', 'RECALLED')),
@@ -1858,7 +1864,25 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     CONSTRAINT ck_pml_reconsume_nonneg  CHECK (reconsume_times >= 0),
     CONSTRAINT ck_pml_retry_nonneg      CHECK (retry_count >= 0),
     CONSTRAINT ck_pml_deleted_enum      CHECK (deleted IN (0, 1))
-);
+) PARTITION BY RANGE (created_at);
+
+-- 月度分区: 预创建 2026 全年 12 个分区 + DEFAULT 兜底分区。
+-- 归档策略: 由 MsgLogArchiveService 在每月 1 号 DETACH 90 天前分区并重命名为 pmis_msg_log_archive_yyyymm。
+-- 后续新增分区也由该服务动态 CREATE,避免人为遗漏。
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m01 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m02 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m03 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m04 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-04-01') TO ('2026-05-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m05 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-05-01') TO ('2026-06-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m06 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m07 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-07-01') TO ('2026-08-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m08 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-08-01') TO ('2026-09-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m09 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m10 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m11 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-11-01') TO ('2026-12-01');
+CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m12 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-12-01') TO ('2027-01-01');
+-- DEFAULT 分区: 兜底不在预创建范围内的数据,避免插入失败;运维应监控该分区并补建新分区。
+CREATE TABLE IF NOT EXISTS pmis_msg_log_default PARTITION OF pmis_msg_log DEFAULT;
 
 COMMENT ON TABLE pmis_msg_log IS '消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度';
 COMMENT ON COLUMN pmis_msg_log.channel IS '发送通道: SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU';

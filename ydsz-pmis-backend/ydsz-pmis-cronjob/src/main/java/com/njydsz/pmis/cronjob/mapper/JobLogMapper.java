@@ -34,6 +34,7 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
     @Select("SELECT l.id, l.job_id, l.job_key, l.start_time, l.end_time, l.duration_ms, "
             + "       l.status, l.error_message, l.params_json, l.result_json, l.trace_id, "
             + "       l.trigger_type, l.lock_holder, l.exec_node_id, l.exec_thread_id, "
+            + "       l.shard_index, l.shard_total, "
             + "       l.created_at, l.deleted "
             + "FROM pmis_job_log l "
             + "INNER JOIN pmis_job j ON j.id = l.job_id AND j.deleted = 0 "
@@ -85,6 +86,7 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
     @Select("SELECT l.id, l.job_id, l.job_key, l.start_time, l.end_time, l.duration_ms, "
             + "       l.status, l.error_message, l.params_json, l.result_json, l.trace_id, "
             + "       l.trigger_type, l.lock_holder, l.exec_node_id, l.exec_thread_id, "
+            + "       l.shard_index, l.shard_total, "
             + "       l.created_at, l.deleted "
             + "FROM pmis_job_log l "
             + "INNER JOIN pmis_job j ON j.id = l.job_id AND j.deleted = 0 "
@@ -108,6 +110,7 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
     @Select("SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
             + "       status, error_message, params_json, result_json, trace_id, "
             + "       trigger_type, lock_holder, exec_node_id, exec_thread_id, "
+            + "       shard_index, shard_total, "
             + "       created_at, deleted "
             + "FROM pmis_job_log "
             + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id = #{nodeId}")

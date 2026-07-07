@@ -168,13 +168,22 @@ public class FlowInstanceController {
      * P2-2 (GAP-10): 驳回后快速重审 — 基于被驳回的原实例重新提交
      *
      * <p>仅发起人或拥有 workflow:instance:resubmit 权限的管理员可操作。
+     *
+     * <p>P1-8: 支持 redoMode 参数：
+     * <ul>
+     *   <li>RESTART（默认）：仅 REJECTED 实例可重做，在原实例上重置状态并从开始节点重新推进；</li>
+     *   <li>NEW_INSTANCE：任意终态（COMPLETED/REJECTED/TERMINATED/ROLLED_BACK）均可重做，
+     *       创建全新实例，复用原实例的 flowCode/businessType/businessId/initiator，合并变量。</li>
+     * </ul>
      */
     @PostMapping("/instance/{id}/resubmit")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
     public Result<String> resubmit(@PathVariable String id,
                                     @RequestParam(required = false) String comment,
+                                    @RequestParam(required = false, defaultValue = "RESTART") String redoMode,
                                     @RequestBody(required = false) java.util.Map<String, Object> variables) {
-        return Result.ok(workflowFacade.resubmitProcess(id, SecurityContext.getUserId(), variables, comment));
+        return Result.ok(workflowFacade.resubmitProcess(id, SecurityContext.getUserId(),
+                variables, comment, redoMode));
     }
 
     /**

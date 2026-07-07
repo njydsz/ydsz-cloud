@@ -1,13 +1,18 @@
 package com.njydsz.pmis.message.service.impl;
 
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.message.entity.MsgLogDO;
 import com.njydsz.pmis.message.entity.MsgNotificationDO;
 import com.njydsz.pmis.message.enums.RecallStatusEnum;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
 import com.njydsz.pmis.message.mapper.MsgNotificationMapper;
 import com.njydsz.pmis.message.realtime.RealtimePushService;
 import com.njydsz.pmis.message.service.MessageLogService;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +39,22 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
 class RecallServiceImplTest {
+
+    /**
+     * 手动初始化 MyBatis-Plus TableInfo 缓存。
+     *
+     * <p>纯 Mock 测试未启动 Spring 上下文,MsgNotificationDO / MsgLogDO 的 lambda
+     * 引用(如 {@code MsgNotificationDO::getRecallStatus})会因 lambda cache 未初始化
+     * 抛 {@code MybatisPlusException}。此处用 {@link TableInfoHelper#initTableInfo}
+     * 手动注册,使 {@link LambdaUpdateWrapper} 的方法引用可解析。
+     */
+    @BeforeAll
+    static void initTableInfo() {
+        MybatisConfiguration configuration = new MybatisConfiguration();
+        MapperBuilderAssistant assistant = new MapperBuilderAssistant(configuration, "");
+        TableInfoHelper.initTableInfo(assistant, MsgNotificationDO.class);
+        TableInfoHelper.initTableInfo(assistant, MsgLogDO.class);
+    }
 
     @Mock
     private MsgNotificationMapper msgNotificationMapper;

@@ -427,6 +427,132 @@ class DefaultTaskDispatcherTest {
         verify(jobHandler, times(2)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
     }
 
+    // ==================== P1-4 远程派发测试 ====================
+
+    @Test
+    @DisplayName("P1-4: 远程派发成功时远程分片通过 HTTP 执行")
+    void dispatch_shardedRemoteDispatch_remoteShardExecutedViaHttp() throws Exception {
+        JobDO job = buildJob("shard-remote", null);
+        job.setShardTotal(2);
+        when(shardingStrategyProvider.getIfAvailable())
+                .thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        // 2 个在线节点：local + remote（按 nodeId 升序，local-node < remote-node）
+        JobNodeDO localNode = buildNode("local-node", "127.0.0.1", 8080);
+        JobNodeDO remoteNode = buildNode("remote-node", "10.0.0.2", 8080);
+        when(jobNodeMapper.selectList(any())).thenReturn(java.util.List.of(localNode, remoteNode));
+        when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        // Mock RemoteTaskClient
+        RemoteTaskClient mockClient = mock(RemoteTaskClient.class);
+        when(remoteTaskClientProvider.getIfAvailable()).thenReturn(mockClient);
+        when(mockClient.dispatch(any(JobNodeDO.class), any(RemoteTaskRequest.class))).thenReturn("remote-log-1");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        assertNotNull(logId);
+        // 本地分片执行 1 次，远程分片通过 HTTP 派发 1 次
+        verify(jobHandler, times(1)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(mockClient, times(1)).dispatch(any(JobNodeDO.class), any(RemoteTaskRequest.class));
+    }
+
+    @Test
+    @DisplayName("P1-4: 远程派发失败时降级本地执行")
+    void dispatch_shardedRemoteDispatchFails_fallsBackToLocal() throws Exception {
+        JobDO job = buildJob("shard-remote-fail", null);
+        job.setShardTotal(2);
+        when(shardingStrategyProvider.getIfAvailable())
+                .thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        JobNodeDO localNode = buildNode("local-node", "127.0.0.1", 8080);
+        JobNodeDO remoteNode = buildNode("remote-node", "10.0.0.2", 8080);
+        when(jobNodeMapper.selectList(any())).thenReturn(java.util.List.of(localNode, remoteNode));
+        when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        RemoteTaskClient mockClient = mock(RemoteTaskClient.class);
+        when(remoteTaskClientProvider.getIfAvailable()).thenReturn(mockClient);
+        // 远程派发返回 null（失败），fallbackToLocal 默认 true
+        when(mockClient.dispatch(any(JobNodeDO.class), any(RemoteTaskRequest.class))).thenReturn(null);
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        assertNotNull(logId);
+        // 远程派发失败后降级本地执行，所以本地 handler 执行 2 次（本地分片 + 降级的远程分片）
+        verify(jobHandler, times(2)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(mockClient, times(1)).dispatch(any(JobNodeDO.class), any(RemoteTaskRequest.class));
+    }
+
+    @Test
+    @DisplayName("P1-4: remote.enabled=false 时所有分片本地执行")
+    void dispatch_shardedRemoteDisabled_allShardsLocal() throws Exception {
+        cronjobProperties.getRemote().setEnabled(false);
+        JobDO job = buildJob("shard-remote-disabled", null);
+        job.setShardTotal(2);
+        when(shardingStrategyProvider.getIfAvailable())
+                .thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        JobNodeDO localNode = buildNode("local-node", "127.0.0.1", 8080);
+        JobNodeDO remoteNode = buildNode("remote-node", "10.0.0.2", 8080);
+        when(jobNodeMapper.selectList(any())).thenReturn(java.util.List.of(localNode, remoteNode));
+        when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+
+        dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        // 所有分片本地执行，不调用 RemoteTaskClient
+        verify(jobHandler, times(2)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+    }
+
+    @Test
+    @DisplayName("P1-4: executeLocally 非分片任务直接执行")
+    void executeLocally_nonSharded_executesDirectly() throws Exception {
+        JobDO job = buildJob("exec-locally-non-shard", null);
+        when(jobHandler.execute(any())).thenReturn("ok");
+
+        String logId = dispatcher.executeLocally(job, DefaultTaskDispatcher.TRIGGER_MANUAL, -1, 1);
+
+        assertNotNull(logId);
+        verify(jobHandler, times(1)).execute(any());
+    }
+
+    @Test
+    @DisplayName("P1-4: executeLocally 分片任务执行指定分片")
+    void executeLocally_sharded_executesSpecifiedShard() throws Exception {
+        JobDO job = buildJob("exec-locally-shard", null);
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+
+        String logId = dispatcher.executeLocally(job, DefaultTaskDispatcher.TRIGGER_MANUAL, 0, 3);
+
+        assertNotNull(logId);
+        verify(jobHandler, times(1)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+    }
+
+    @Test
+    @DisplayName("P1-4: 远程派发时 traceId 传递到 RemoteTaskRequest")
+    void dispatch_shardedRemoteDispatch_traceIdPassedInRequest() throws Exception {
+        JobDO job = buildJob("shard-trace", null);
+        job.setShardTotal(2);
+        when(shardingStrategyProvider.getIfAvailable())
+                .thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        JobNodeDO localNode = buildNode("local-node", "127.0.0.1", 8080);
+        JobNodeDO remoteNode = buildNode("remote-node", "10.0.0.2", 8080);
+        when(jobNodeMapper.selectList(any())).thenReturn(java.util.List.of(localNode, remoteNode));
+        when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        RemoteTaskClient mockClient = mock(RemoteTaskClient.class);
+        when(remoteTaskClientProvider.getIfAvailable()).thenReturn(mockClient);
+        when(mockClient.dispatch(any(JobNodeDO.class), any(RemoteTaskRequest.class))).thenReturn("remote-log-1");
+
+        dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        // 验证 RemoteTaskRequest 中包含 job 和 triggerType
+        org.mockito.ArgumentCaptor<RemoteTaskRequest> captor =
+                org.mockito.ArgumentCaptor.forClass(RemoteTaskRequest.class);
+        verify(mockClient).dispatch(any(JobNodeDO.class), captor.capture());
+        RemoteTaskRequest request = captor.getValue();
+        assertEquals("shard-trace", request.getJob().getJobKey());
+        assertEquals(DefaultTaskDispatcher.TRIGGER_MANUAL, request.getTriggerType());
+        assertEquals(1, request.getShardIndex()); // 远程分片索引
+        assertEquals(2, request.getShardTotal());
+    }
+
     // ==================== P7-3 租户级配额集成测试 ====================
 
     @Test
@@ -559,5 +685,15 @@ class DefaultTaskDispatcherTest {
         // P7-3: 默认设置 tenantId，便于配额检查测试
         job.setTenantId("tenant-test");
         return job;
+    }
+
+    /** P1-4: 构建测试用节点 */
+    private JobNodeDO buildNode(String nodeId, String host, int port) {
+        JobNodeDO node = new JobNodeDO();
+        node.setNodeId(nodeId);
+        node.setHost(host);
+        node.setPort(port);
+        node.setStatus("ONLINE");
+        return node;
     }
 }

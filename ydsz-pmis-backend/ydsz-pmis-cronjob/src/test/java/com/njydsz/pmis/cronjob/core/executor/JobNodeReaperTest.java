@@ -223,4 +223,82 @@ class JobNodeReaperTest {
 
         verify(jobNodeMapper, times(1)).deleteStaleOfflineNodes(any());
     }
+
+    @Test
+    @DisplayName("P1-4: 分片任务故障转移时释放分片级锁（lockKey 含 shard 索引）")
+    void reap_shardedTask_releasesShardLevelLock() {
+        String nodeId = "host1:8080";
+        JobLogDO shardLog = new JobLogDO();
+        shardLog.setId("log-shard-1");
+        shardLog.setJobId("job-1");
+        shardLog.setJobKey("sharded-key");
+        shardLog.setStatus("RUNNING");
+        shardLog.setLockHolder("instance-1");
+        shardLog.setShardIndex(2);
+        shardLog.setShardTotal(4);
+
+        when(jobNodeMapper.selectStaleOnlineNodeIds(any())).thenReturn(List.of(nodeId));
+        when(jobLogMapper.selectRunningByNode(nodeId)).thenReturn(List.of(shardLog));
+        when(jobLogMapper.markFailedByNodeOffline(eq(nodeId), any())).thenReturn(1);
+
+        reaper.reap();
+
+        // 释放分片级锁: pmis:job:lock:{jobKey}:shard:{shardIndex}
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class),
+                eq(Collections.singletonList("pmis:job:lock:sharded-key:shard:2")), eq("instance-1"));
+        verify(jobLogMapper, times(1)).markFailedByNodeOffline(eq(nodeId), any());
+    }
+
+    @Test
+    @DisplayName("P1-4: 非分片任务故障转移时释放普通锁（shardIndex=null）")
+    void reap_nonShardedTask_releasesNormalLock() {
+        String nodeId = "host1:8080";
+        JobLogDO normalLog = new JobLogDO();
+        normalLog.setId("log-normal-1");
+        normalLog.setJobId("job-2");
+        normalLog.setJobKey("normal-key");
+        normalLog.setStatus("RUNNING");
+        normalLog.setLockHolder("instance-2");
+        normalLog.setShardIndex(null);
+        normalLog.setShardTotal(null);
+
+        when(jobNodeMapper.selectStaleOnlineNodeIds(any())).thenReturn(List.of(nodeId));
+        when(jobLogMapper.selectRunningByNode(nodeId)).thenReturn(List.of(normalLog));
+        when(jobLogMapper.markFailedByNodeOffline(eq(nodeId), any())).thenReturn(1);
+
+        reaper.reap();
+
+        // 释放普通锁: pmis:job:lock:{jobKey}（无 shard 后缀）
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class),
+                eq(Collections.singletonList("pmis:job:lock:normal-key")), eq("instance-2"));
+    }
+
+    @Test
+    @DisplayName("P1-4: 分片和非分片任务混合时分别释放对应锁")
+    void reap_mixedShardedAndNonSharded_releasesCorrectLocks() {
+        String nodeId = "host1:8080";
+        JobLogDO normalLog = new JobLogDO();
+        normalLog.setId("log-mix-1");
+        normalLog.setJobKey("normal-key");
+        normalLog.setLockHolder("instance-1");
+        normalLog.setShardIndex(null);
+
+        JobLogDO shardLog = new JobLogDO();
+        shardLog.setId("log-mix-2");
+        shardLog.setJobKey("sharded-key");
+        shardLog.setLockHolder("instance-2");
+        shardLog.setShardIndex(3);
+
+        when(jobNodeMapper.selectStaleOnlineNodeIds(any())).thenReturn(List.of(nodeId));
+        when(jobLogMapper.selectRunningByNode(nodeId)).thenReturn(List.of(normalLog, shardLog));
+        when(jobLogMapper.markFailedByNodeOffline(eq(nodeId), any())).thenReturn(2);
+
+        reaper.reap();
+
+        // 两个锁都被释放（不同 key）
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class),
+                eq(Collections.singletonList("pmis:job:lock:normal-key")), eq("instance-1"));
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class),
+                eq(Collections.singletonList("pmis:job:lock:sharded-key:shard:3")), eq("instance-2"));
+    }
 }

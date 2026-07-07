@@ -1,5 +1,7 @@
 package com.njydsz.pmis.agent.engine.llm;
 
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -7,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,39 +49,72 @@ class SpringAiLlmProviderTest {
         HttpResponse<String> resp = mock(HttpResponse.class);
         when(resp.statusCode()).thenReturn(status);
         when(resp.body()).thenReturn(body);
-        when(client.send(any(), any())).thenReturn(resp);
+        when(client.send(any(), any())).thenAnswer(invocation -> resp);
         return client;
     }
 
-    /** 构造一个 mock HttpClient，第 N 次调用返回不同 status + body */
+    /**
+     * 构造一个 mock HttpClient，第 N 次调用返回不同 status + body。
+     *
+     * <p>使用 {@code thenReturn(T first, T... rest)} 语法实现顺序响应：
+     * 第 1 次调用返回第 1 组 status/body，第 2 次返回第 2 组，以此类推。
+     * 超出指定次数的调用返回最后一组值。
+     *
+     * @param statusBodyPairs 交替的 status(Integer) / body(String) 对，必须成对出现
+     */
     @SuppressWarnings("unchecked")
     private HttpClient mockHttpClientSeq(Object... statusBodyPairs) throws Exception {
         HttpClient client = mock(HttpClient.class);
         HttpResponse<String> resp = mock(HttpResponse.class);
-        // 用 thenReturn 多个值
-        if (statusBodyPairs.length >= 2 && statusBodyPairs[0] instanceof Integer firstStatus) {
-            when(resp.statusCode()).thenReturn(firstStatus);
-            when(resp.body()).thenReturn((String) statusBodyPairs[1]);
-            // 后续状态
-            for (int i = 2; i < statusBodyPairs.length; i += 2) {
-                Integer s = (Integer) statusBodyPairs[i];
-                String b = (String) statusBodyPairs[i + 1];
-                when(resp.statusCode()).thenReturn(s);
-                when(resp.body()).thenReturn(b);
+        int n = statusBodyPairs.length / 2;
+        if (n > 0) {
+            Integer[] statuses = new Integer[n];
+            String[] bodies = new String[n];
+            for (int i = 0; i < n; i++) {
+                statuses[i] = (Integer) statusBodyPairs[i * 2];
+                bodies[i] = (String) statusBodyPairs[i * 2 + 1];
+            }
+            // thenReturn(T first, T... rest) 支持顺序返回不同值
+            if (n == 1) {
+                when(resp.statusCode()).thenReturn(statuses[0]);
+                when(resp.body()).thenReturn(bodies[0]);
+            } else {
+                when(resp.statusCode()).thenReturn(statuses[0],
+                        Arrays.copyOfRange(statuses, 1, n));
+                when(resp.body()).thenReturn(bodies[0],
+                        Arrays.copyOfRange(bodies, 1, n));
             }
         }
-        when(client.send(any(), any())).thenReturn(resp);
+        // 使用 thenAnswer 绕过 HttpClient.send 的泛型类型推断问题
+        when(client.send(any(), any())).thenAnswer(invocation -> resp);
         return client;
     }
 
-    /** 标准 OpenAI 响应体 */
+    /** 标准 OpenAI 响应体（使用 fastjson2 构造，自动转义特殊字符） */
     private String openAiResponse(String content) {
-        return "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + content + "\"}}]}";
+        JSONObject msg = new JSONObject();
+        msg.put("role", "assistant");
+        msg.put("content", content);
+        JSONArray choices = new JSONArray();
+        JSONObject choice = new JSONObject();
+        choice.put("message", msg);
+        choices.add(choice);
+        JSONObject root = new JSONObject();
+        root.put("choices", choices);
+        return root.toJSONString();
     }
 
-    /** 流式 delta 响应体 */
+    /** 流式 delta 响应体（使用 fastjson2 构造） */
     private String deltaResponse(String content) {
-        return "{\"choices\":[{\"delta\":{\"content\":\"" + content + "\"}}]}";
+        JSONObject delta = new JSONObject();
+        delta.put("content", content);
+        JSONArray choices = new JSONArray();
+        JSONObject choice = new JSONObject();
+        choice.put("delta", delta);
+        choices.add(choice);
+        JSONObject root = new JSONObject();
+        root.put("choices", choices);
+        return root.toJSONString();
     }
 
     /** 构造 SpringAiLlmProvider，注入 mock HttpClient */
@@ -336,9 +371,10 @@ class SpringAiLlmProviderTest {
         @Test
         @DisplayName("LLM 返回纯 JSON → 直接反序列化")
         void shouldParsePlainJson() throws Exception {
+            // LLM content 字段为 JSON 文本，需用 openAiResponse 包装以符合 extractContent 解析格式
             String json = "{\"name\":\"风险预警\",\"score\":85}";
             SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
-                    json, 5000, 0, true);
+                    openAiResponse(json), 5000, 0, true);
 
             TestDto dto = provider.chatForJson("sys", "user", TestDto.class, new AgentContext());
 
@@ -351,7 +387,7 @@ class SpringAiLlmProviderTest {
         void shouldParseMarkdownJsonFence() throws Exception {
             String json = "```json\n{\"name\":\"wrapped\",\"score\":50}\n```";
             SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
-                    json, 5000, 0, true);
+                    openAiResponse(json), 5000, 0, true);
 
             TestDto dto = provider.chatForJson("sys", "user", TestDto.class, new AgentContext());
 
@@ -363,7 +399,7 @@ class SpringAiLlmProviderTest {
         @DisplayName("LLM 返回非 JSON → 抛 RuntimeException")
         void shouldThrowOnInvalidJson() throws Exception {
             SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
-                    "not a json", 5000, 0, true);
+                    openAiResponse("not a json"), 5000, 0, true);
 
             assertThatThrownBy(() ->
                     provider.chatForJson("sys", "user", TestDto.class, new AgentContext()))

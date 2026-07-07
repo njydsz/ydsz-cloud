@@ -304,7 +304,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 logId = executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
             } else {
                 // P1-4: 远程分片：通过 HTTP 派发到执行器节点
-                logId = dispatchShardRemotely(job, assignment, shardTotal, triggerType, nodeMap);
+                logId = dispatchShardRemotely(job, assignment, shardTotal, holdLock, triggerType, nodeMap);
             }
             if (firstLogId == null && logId != null) {
                 firstLogId = logId;
@@ -326,28 +326,30 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @param job        任务定义
      * @param assignment 分片分配结果
      * @param shardTotal 分片总数
+     * @param holdLock   是否需要抢占分布式锁（MANUAL 触发为 false，其他触发为 true）
      * @param triggerType 触发类型
      * @param nodeMap    在线节点映射（nodeId → JobNodeDO）
      * @return 执行日志 ID；派发失败且未降级返回 null
      */
     private String dispatchShardRemotely(JobDO job, ShardAssignment assignment, int shardTotal,
-                                          String triggerType, Map<String, JobNodeDO> nodeMap) {
+                                          boolean holdLock, String triggerType,
+                                          Map<String, JobNodeDO> nodeMap) {
         CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
         if (!remoteConfig.isEnabled()) {
             // 远程派发未启用：本地执行该分片（兼容旧行为）
-            return executeShard(job, assignment.shardIndex(), shardTotal, true, triggerType);
+            return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
         }
         RemoteTaskClient client = remoteTaskClientProvider.getIfAvailable();
         if (client == null) {
             log.debug("[Dispatcher] RemoteTaskClient 不可用, 本地执行: key={} shard={}",
                     job.getJobKey(), assignment.shardIndex());
-            return executeShard(job, assignment.shardIndex(), shardTotal, true, triggerType);
+            return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
         }
         JobNodeDO node = nodeMap.get(assignment.nodeId());
         if (node == null || node.getHost() == null || node.getPort() == null) {
             log.warn("[Dispatcher] 节点信息缺失, 降级本地执行: key={} shard={} nodeId={}",
                     job.getJobKey(), assignment.shardIndex(), assignment.nodeId());
-            return executeShard(job, assignment.shardIndex(), shardTotal, true, triggerType);
+            return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
         }
         RemoteTaskRequest request = new RemoteTaskRequest(
                 job, triggerType, assignment.shardIndex(), shardTotal, TraceIdUtil.get());
@@ -355,7 +357,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (logId == null && remoteConfig.isFallbackToLocal()) {
             log.info("[Dispatcher] 远程派发失败, 降级本地执行: key={} shard={} nodeId={}",
                     job.getJobKey(), assignment.shardIndex(), assignment.nodeId());
-            return executeShard(job, assignment.shardIndex(), shardTotal, true, triggerType);
+            return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
         }
         if (logId != null) {
             log.debug("[Dispatcher] 远程分片派发成功: key={} shard={} nodeId={} logId={}",

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.agent.engine;
 
+import com.njydsz.pmis.agent.dto.FlowGenerationResult;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
@@ -21,20 +22,21 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
- * AI 一句话生成流程 Agent 单元测试
+ * AI 一句话生成流程 Agent 单元测试（P1-5 重构版）
  *
  * <p>覆盖：
  * <ul>
  *   <li>description 为空时返回 INFO + "未提供流程描述"</li>
- *   <li>LLM 调用抛异常时返回 RED + "LLM 调用失败"</li>
- *   <li>LLM 返回空字符串时返回 YELLOW + "LLM 返回为空"</li>
- *   <li>LLM 返回 ```xml ... ``` 代码块时被正确提取</li>
- *   <li>LLM 返回裸 XML（含 <?xml 或 <bpmn:definitions）时被正确截取</li>
- *   <li>LLM 返回不含 bpmn:definitions 时 valid=false / level=YELLOW</li>
+ *   <li>LLM chatForJson 抛异常时返回 RED + "LLM 调用失败"</li>
+ *   <li>LLM 返回 null / 空 bpmnXml 时返回 YELLOW + "LLM 返回为空"</li>
  *   <li>LLM 返回完整 bpmn:definitions 时 valid=true / level=RECOMMEND</li>
+ *   <li>LLM 返回不含 bpmn:definitions 时 valid=false / level=YELLOW</li>
+ *   <li>LLM 返回缺少结束标签时 valid=false</li>
+ *   <li>payload 包含 summary 字段</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -77,10 +79,30 @@ class FlowGeneratorAgentTest {
         return ctx;
     }
 
-    /** 设置 LLM 返回值 */
-    private void mockLlmResponse(String response) {
+    /** 构造 BPMN XML */
+    private String buildBpmnXml() {
+        return "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">"
+                + "<bpmn:process id=\"process1\">"
+                + "<bpmn:startEvent id=\"start\"/>"
+                + "<bpmn:userTask id=\"approve\" name=\"审批\"/>"
+                + "<bpmn:endEvent id=\"end\"/>"
+                + "</bpmn:process>"
+                + "</bpmn:definitions>";
+    }
+
+    /** mock chatForJson 返回指定结果 */
+    private void mockLlmResult(FlowGenerationResult result) {
         when(llmProviderRouter.active()).thenReturn(llmProvider);
-        when(llmProvider.chat(anyString(), anyString(), any())).thenReturn(response);
+        when(llmProvider.chatForJson(anyString(), anyString(),
+                eq(FlowGenerationResult.class), any())).thenReturn(result);
+        when(llmProviderRouter.getActiveProviderName()).thenReturn("mock");
+    }
+
+    /** mock chatForJson 抛指定异常 */
+    private void mockLlmException(Exception ex) {
+        when(llmProviderRouter.active()).thenReturn(llmProvider);
+        when(llmProvider.chatForJson(anyString(), anyString(),
+                eq(FlowGenerationResult.class), any())).thenThrow(ex);
         when(llmProviderRouter.getActiveProviderName()).thenReturn("mock");
     }
 
@@ -153,12 +175,9 @@ class FlowGeneratorAgentTest {
     class LlmExceptionTest {
 
         @Test
-        @DisplayName("LLM 调用抛异常时返回 RED + 'LLM 调用失败'")
+        @DisplayName("chatForJson 抛异常时返回 RED + 'LLM 调用失败'")
         void shouldReturnRedWhenLlmThrowsException() {
-            when(llmProviderRouter.active()).thenReturn(llmProvider);
-            when(llmProvider.chat(anyString(), anyString(), any()))
-                    .thenThrow(new RuntimeException("LLM 服务不可用"));
-            when(llmProviderRouter.getActiveProviderName()).thenReturn("mock");
+            mockLlmException(new RuntimeException("LLM 服务不可用"));
 
             AgentResult r = agent.execute(ctx("请假审批流程"));
 
@@ -171,9 +190,22 @@ class FlowGeneratorAgentTest {
         }
 
         @Test
-        @DisplayName("LLM 返回 null 时返回 YELLOW + 'LLM 返回为空'")
+        @DisplayName("chatForJson 抛 JSON 解析异常时返回 RED + 'LLM 调用失败'")
+        void shouldReturnRedWhenJsonParseFails() {
+            // 模拟 LLM 返回非 JSON 文本导致 chatForJson 抛 RuntimeException
+            mockLlmException(new RuntimeException("LLM 输出非合法 JSON: not a json"));
+
+            AgentResult r = agent.execute(ctx("请假审批流程"));
+
+            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RED);
+            assertThat(r.getSuggestion()).contains("LLM 调用失败");
+            assertThat(r.getMatchedRules()).contains("LLM_ERROR");
+        }
+
+        @Test
+        @DisplayName("chatForJson 返回 null 时返回 YELLOW + 'LLM 返回为空'")
         void shouldReturnYellowWhenLlmReturnsNull() {
-            mockLlmResponse(null);
+            mockLlmResult(null);
 
             AgentResult r = agent.execute(ctx("请假审批流程"));
 
@@ -184,9 +216,11 @@ class FlowGeneratorAgentTest {
         }
 
         @Test
-        @DisplayName("LLM 返回空字符串时返回 YELLOW + 'LLM 返回为空'")
-        void shouldReturnYellowWhenLlmReturnsEmpty() {
-            mockLlmResponse("");
+        @DisplayName("chatForJson 返回 bpmnXml 为空字符串时返回 YELLOW + 'LLM 返回为空'")
+        void shouldReturnYellowWhenBpmnXmlEmpty() {
+            FlowGenerationResult result = new FlowGenerationResult();
+            result.setBpmnXml("");
+            mockLlmResult(result);
 
             AgentResult r = agent.execute(ctx("请假审批流程"));
 
@@ -195,9 +229,24 @@ class FlowGeneratorAgentTest {
         }
 
         @Test
-        @DisplayName("LLM 返回纯空白时返回 YELLOW + 'LLM 返回为空'")
-        void shouldReturnYellowWhenLlmReturnsBlank() {
-            mockLlmResponse("   ");
+        @DisplayName("chatForJson 返回 bpmnXml 为空白字符时返回 YELLOW + 'LLM 返回为空'")
+        void shouldReturnYellowWhenBpmnXmlBlank() {
+            FlowGenerationResult result = new FlowGenerationResult();
+            result.setBpmnXml("   ");
+            mockLlmResult(result);
+
+            AgentResult r = agent.execute(ctx("请假审批流程"));
+
+            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.YELLOW);
+            assertThat(r.getSuggestion()).isEqualTo("LLM 返回为空");
+        }
+
+        @Test
+        @DisplayName("chatForJson 返回 bpmnXml 为 null 时返回 YELLOW + 'LLM 返回为空'")
+        void shouldReturnYellowWhenBpmnXmlNull() {
+            FlowGenerationResult result = new FlowGenerationResult();
+            result.setBpmnXml(null);
+            mockLlmResult(result);
 
             AgentResult r = agent.execute(ctx("请假审批流程"));
 
@@ -206,81 +255,40 @@ class FlowGeneratorAgentTest {
         }
     }
 
-    // ==================== XML 提取测试 ====================
+    // ==================== 结构化输出验证测试 ====================
 
     @Nested
-    @DisplayName("XML 提取测试")
-    class XmlExtractionTest {
+    @DisplayName("结构化输出验证测试")
+    class StructuredOutputTest {
 
         @Test
-        @DisplayName("LLM 返回 ```xml ... ``` 代码块时被正确提取")
-        void shouldExtractXmlCodeBlock() {
-            String bpmnXml = "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">"
-                    + "<bpmn:process id=\"process1\">"
-                    + "<bpmn:startEvent id=\"start\"/>"
-                    + "<bpmn:userTask id=\"approve\" name=\"审批\"/>"
-                    + "<bpmn:endEvent id=\"end\"/>"
-                    + "</bpmn:process>"
-                    + "</bpmn:definitions>";
-            String llmOutput = "这是生成的流程：\n```xml\n" + bpmnXml + "\n```";
-            mockLlmResponse(llmOutput);
+        @DisplayName("LLM 返回完整 bpmn:definitions 时 valid=true / level=RECOMMEND")
+        void shouldReturnValidWhenCompleteBpmnDefinitions() {
+            String bpmnXml = buildBpmnXml();
+            FlowGenerationResult result = new FlowGenerationResult();
+            result.setBpmnXml(bpmnXml);
+            result.setSummary("请假审批流程");
+            mockLlmResult(result);
 
-            AgentResult r = agent.execute(ctx("请假审批流程"));
+            AgentResult r = agent.execute(ctx("请假审批：直属领导审批 → 部门经理审批"));
 
             assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RECOMMEND);
             assertThat(r.getScore()).isEqualByComparingTo(BigDecimal.valueOf(0.8));
             assertThat(r.getConfidence()).isEqualByComparingTo(BigDecimal.valueOf(0.75));
             assertThat(r.getPayload().get("bpmnXml")).isEqualTo(bpmnXml);
             assertThat(r.getPayload().get("valid")).isEqualTo(true);
+            assertThat(r.getPayload().get("summary")).isEqualTo("请假审批流程");
             assertThat(r.getMatchedRules()).contains("VALID_BPMN");
             assertThat(r.getSuggestion()).contains("已根据描述生成");
         }
 
         @Test
-        @DisplayName("LLM 返回裸 XML（以 <?xml 开头）时被正确截取")
-        void shouldExtractBareXmlWithDeclaration() {
-            String bpmnXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                    + "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">"
-                    + "<bpmn:process id=\"process1\">"
-                    + "<bpmn:startEvent id=\"start\"/>"
-                    + "<bpmn:endEvent id=\"end\"/>"
-                    + "</bpmn:process>"
-                    + "</bpmn:definitions>";
-            String llmOutput = "好的，这是流程：\n" + bpmnXml + "\n如需修改请告知。";
-            mockLlmResponse(llmOutput);
-
-            AgentResult r = agent.execute(ctx("请假审批流程"));
-
-            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RECOMMEND);
-            assertThat((String) r.getPayload().get("bpmnXml")).startsWith("<?xml");
-            assertThat((String) r.getPayload().get("bpmnXml")).endsWith("</bpmn:definitions>");
-            assertThat(r.getPayload().get("valid")).isEqualTo(true);
-        }
-
-        @Test
-        @DisplayName("LLM 返回裸 XML（以 <bpmn:definitions 开头）时被正确截取")
-        void shouldExtractBareXmlStartingWithDefinitions() {
-            String bpmnXml = "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">"
-                    + "<bpmn:process id=\"process1\">"
-                    + "<bpmn:startEvent id=\"start\"/>"
-                    + "<bpmn:endEvent id=\"end\"/>"
-                    + "</bpmn:process>"
-                    + "</bpmn:definitions>";
-            mockLlmResponse(bpmnXml);
-
-            AgentResult r = agent.execute(ctx("请假审批流程"));
-
-            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RECOMMEND);
-            assertThat((String) r.getPayload().get("bpmnXml")).startsWith("<bpmn:definitions");
-            assertThat((String) r.getPayload().get("bpmnXml")).endsWith("</bpmn:definitions>");
-            assertThat(r.getPayload().get("valid")).isEqualTo(true);
-        }
-
-        @Test
         @DisplayName("LLM 返回不含 bpmn:definitions 时 valid=false / level=YELLOW")
         void shouldReturnInvalidWhenNoBpmnDefinitions() {
-            String llmOutput = "这是一个普通文本，没有 BPMN 内容";
-            mockLlmResponse(llmOutput);
+            FlowGenerationResult result = new FlowGenerationResult();
+            result.setBpmnXml("这是一个普通文本，没有 BPMN 内容");
+            result.setSummary("无效输出");
+            mockLlmResult(result);
 
             AgentResult r = agent.execute(ctx("请假审批流程"));
 
@@ -293,39 +301,36 @@ class FlowGeneratorAgentTest {
         }
 
         @Test
-        @DisplayName("LLM 返回完整 bpmn:definitions 时 valid=true / level=RECOMMEND")
-        void shouldReturnValidWhenCompleteBpmnDefinitions() {
-            String bpmnXml = "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">"
-                    + "<bpmn:process id=\"proc1\">"
-                    + "<bpmn:startEvent id=\"start\"/>"
-                    + "<bpmn:userTask id=\"task1\" name=\"部门经理审批\"/>"
-                    + "<bpmn:endEvent id=\"end\"/>"
-                    + "</bpmn:process>"
-                    + "</bpmn:definitions>";
-            mockLlmResponse(bpmnXml);
-
-            AgentResult r = agent.execute(ctx("请假审批：直属领导审批 → 部门经理审批"));
-
-            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RECOMMEND);
-            assertThat(r.getScore()).isEqualByComparingTo(BigDecimal.valueOf(0.8));
-            assertThat(r.getPayload().get("valid")).isEqualTo(true);
-            assertThat(r.getPayload().get("bpmnXml")).isEqualTo(bpmnXml);
-        }
-
-        @Test
         @DisplayName("LLM 返回只有开始标签没有结束标签时 valid=false")
         void shouldReturnInvalidWhenMissingCloseTag() {
-            String llmOutput = "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">"
+            String incompleteXml = "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">"
                     + "<bpmn:process id=\"proc1\">"
                     + "<bpmn:startEvent id=\"start\"/>"
                     + "</bpmn:process>";
             // 缺少 </bpmn:definitions>
-            mockLlmResponse(llmOutput);
+            FlowGenerationResult result = new FlowGenerationResult();
+            result.setBpmnXml(incompleteXml);
+            mockLlmResult(result);
 
             AgentResult r = agent.execute(ctx("请假审批流程"));
 
             assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.YELLOW);
             assertThat(r.getPayload().get("valid")).isEqualTo(false);
+        }
+
+        @Test
+        @DisplayName("summary 为 null 时 payload 不包含 summary 字段")
+        void shouldNotIncludeSummaryWhenNull() {
+            String bpmnXml = buildBpmnXml();
+            FlowGenerationResult result = new FlowGenerationResult();
+            result.setBpmnXml(bpmnXml);
+            result.setSummary(null);
+            mockLlmResult(result);
+
+            AgentResult r = agent.execute(ctx("请假审批流程"));
+
+            assertThat(r.getPayload().get("valid")).isEqualTo(true);
+            assertThat(r.getPayload()).doesNotContainKey("summary");
         }
     }
 
@@ -338,13 +343,9 @@ class FlowGeneratorAgentTest {
         @Test
         @DisplayName("matchedRules 包含 description.length")
         void shouldIncludeDescriptionLength() {
-            String bpmnXml = "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">"
-                    + "<bpmn:process id=\"proc1\">"
-                    + "<bpmn:startEvent id=\"start\"/>"
-                    + "<bpmn:endEvent id=\"end\"/>"
-                    + "</bpmn:process>"
-                    + "</bpmn:definitions>";
-            mockLlmResponse(bpmnXml);
+            FlowGenerationResult result = new FlowGenerationResult();
+            result.setBpmnXml(buildBpmnXml());
+            mockLlmResult(result);
 
             String desc = "请假审批";
             AgentResult r = agent.execute(ctx(desc));

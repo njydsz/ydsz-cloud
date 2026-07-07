@@ -3,6 +3,8 @@ package com.njydsz.pmis.message.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.security.LoginUser;
+import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.message.dto.CanaryUpsertDTO;
 import com.njydsz.pmis.message.dto.MessageSendDTO;
 import com.njydsz.pmis.message.dto.NotificationSendDTO;
@@ -117,13 +119,21 @@ class ControllerSmokeTest {
             when(notif.inbox(any(), any())).thenReturn(new Page<>());
             when(notif.countUnread(any())).thenReturn(0L);
             when(notif.send(any())).thenReturn(1);
-            MockMvc m = build(new NotificationController(notif, recall, push));
-            m.perform(get("/notifications/inbox")).andExpect(status().isOk());
-            m.perform(get("/notifications/unread-count")).andExpect(status().isOk());
-            m.perform(post("/notifications/send").contentType("application/json")
-                    .content(MAPPER.writeValueAsString(new NotificationSendDTO()))).andExpect(status().isOk());
-            m.perform(post("/notifications/broadcast").contentType("application/json").content("{}"))
-                    .andExpect(status().isOk());
+            // NotificationController 部分端点依赖 SecurityContext(获取登录用户 ID),
+            // standalone MockMvc 不走拦截器,需手动设置 ThreadLocal 上下文
+            SecurityContext.setCurrent(LoginUser.builder().userId("u1").username("tester").build());
+            try {
+                MockMvc m = build(new NotificationController(notif, recall, push));
+                m.perform(get("/notifications/inbox")).andExpect(status().isOk());
+                m.perform(get("/notifications/unread-count")).andExpect(status().isOk());
+                m.perform(post("/notifications/send").contentType("application/json")
+                        .content(MAPPER.writeValueAsString(new NotificationSendDTO()))).andExpect(status().isOk());
+                m.perform(post("/notifications/broadcast").param("type", "BROADCAST")
+                        .contentType("application/json").content("{}"))
+                        .andExpect(status().isOk());
+            } finally {
+                SecurityContext.clear();
+            }
         }
     }
 

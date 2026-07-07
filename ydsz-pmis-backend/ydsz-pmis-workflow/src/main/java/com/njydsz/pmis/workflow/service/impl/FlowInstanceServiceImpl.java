@@ -1411,4 +1411,83 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         log.info("[Flow] 驳回后快速重审: instanceId={} initiatorId={}", instanceId, initiatorId);
         return instanceId;
     }
+
+    // ============================== P1-8: 流程重做（redoMode） ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @DistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    public String resubmit(String instanceId, String initiatorId,
+                           Map<String, Object> variables, String comment, String redoMode) {
+        String mode = (redoMode == null || redoMode.isBlank()) ? "RESTART" : redoMode.toUpperCase();
+        if ("NEW_INSTANCE".equals(mode)) {
+            return resubmitAsNewInstance(instanceId, initiatorId, variables, comment);
+        }
+        // 默认 RESTART 模式：委托到现有 resubmit（向后兼容）
+        return resubmit(instanceId, initiatorId, variables, comment);
+    }
+
+    /**
+     * NEW_INSTANCE 模式：创建全新实例，复用原实例的 flowCode / businessType / businessId / initiator，
+     * 合并原变量与传入变量。原实例保持不变，仅追加一条 REDO_NEW_INSTANCE 审计日志。
+     */
+    private String resubmitAsNewInstance(String instanceId, String initiatorId,
+                                          Map<String, Object> variables, String comment) {
+        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        // 1. 状态校验：仅非运行态可重做（RUNNING / SUSPENDED 不可）
+        FlowInstanceStatus status = FlowInstanceStatus.valueOf(instance.getFlowStatus());
+        if (status == FlowInstanceStatus.RUNNING || status == FlowInstanceStatus.SUSPENDED) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c9d0e1f2",
+                    "运行中/挂起的实例不可重做，当前状态=" + instance.getFlowStatus());
+        }
+        // 2. 发起人校验
+        if (instance.getInitiatorId() != null
+                && !String.valueOf(instance.getInitiatorId()).equals(initiatorId)) {
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.workflow.msg_d65b2814",
+                    "仅发起人可重做");
+        }
+        // 3. 合并变量（保留原实例变量，覆盖新增）
+        Map<String, Object> merged = getVariables(instanceId);
+        if (merged == null) {
+            merged = new HashMap<>();
+        }
+        if (variables != null && !variables.isEmpty()) {
+            merged.putAll(variables);
+        }
+        // 4. 构建新实例启动 DTO
+        FlowStartProcessDTO dto = new FlowStartProcessDTO();
+        dto.setFlowCode(instance.getFlowCode());
+        dto.setVersion(instance.getFlowVersion());
+        dto.setBusinessType(instance.getBusinessType());
+        dto.setBusinessId(instance.getBusinessId());
+        dto.setBusinessNo(instance.getBusinessNo());
+        dto.setTitle(instance.getTitle());
+        dto.setInitiatorId(initiatorId);
+        dto.setInitiatorName(instance.getInitiatorName());
+        dto.setVariables(merged.isEmpty() ? null : merged);
+        dto.setTenantId(instance.getTenantId());
+        dto.setProviderTraceId(instance.getProviderTraceId());
+        // 5. 启动新实例
+        String newInstanceId = start(dto);
+        // 6. 在原实例上追加 REDO 审计日志（保留原轨迹，仅追加）
+        FlowAuditLogDO audit = new FlowAuditLogDO();
+        audit.setInstanceId(instanceId);
+        audit.setFlowCode(instance.getFlowCode());
+        audit.setBusinessType(instance.getBusinessType());
+        audit.setBusinessId(instance.getBusinessId());
+        audit.setAction("REDO_NEW_INSTANCE");
+        audit.setOperatorId(initiatorId);
+        audit.setOperatorName(instance.getInitiatorName());
+        String redoComment = comment != null && !comment.isBlank()
+                ? comment + " → 新实例[" + newInstanceId + "]"
+                : "重做为新实例[" + newInstanceId + "]";
+        audit.setComment(redoComment);
+        audit.setTenantId(instance.getTenantId());
+        audit.setProviderTraceId(instance.getProviderTraceId());
+        audit.setOperatedAt(LocalDateTime.now());
+        auditLogMapper.insert(audit);
+        log.info("[Flow] 重做为新实例: 原实例={} 新实例={} initiatorId={}",
+                instanceId, newInstanceId, initiatorId);
+        return newInstanceId;
+    }
 }

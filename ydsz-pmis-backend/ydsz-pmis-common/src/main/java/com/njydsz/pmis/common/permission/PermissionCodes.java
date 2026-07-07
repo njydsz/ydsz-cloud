@@ -150,6 +150,11 @@ public final class PermissionCodes {
     /** 回执查询 */
     public static final String MESSAGE_RECEIPT_VIEW = "message:receipt:view";
 
+    // ==================== 消息发送日志 ====================
+
+    /** 发送日志查询 / 批次进度查询 (运营/管理视角,区别于收件箱 NOTIF_MESSAGE_LIST) */
+    public static final String MESSAGE_LOG_VIEW = "message:log:view";
+
     // ==================== 消息撤回 ====================
 
     /** 撤回站内通知/已发送消息/批量撤回 */

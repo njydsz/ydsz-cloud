@@ -1,10 +1,12 @@
 package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.dto.BatchSendResult;
 import com.njydsz.pmis.message.dto.MessageLogQueryDTO;
 import com.njydsz.pmis.message.dto.MessageSendDTO;
@@ -50,12 +52,14 @@ public class MessageController {
     private final ObjectProvider<RocketMQMessageProducer> producerProvider;
 
     @Operation(summary = "发送消息(基于共享请求)")
+    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/send")
     public Result<MessageResult> send(@RequestBody MessageRequest request) {
         return Result.ok(messageService.send(request));
     }
 
     @Operation(summary = "直接发送消息(本模块 DTO)")
+    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/send-direct")
     public Result<MessageResult> sendDirect(@RequestBody MessageSendDTO dto) {
         return Result.ok(messageService.sendDirect(dto));
@@ -69,6 +73,7 @@ public class MessageController {
      * @return 含 messageId 的发送结果
      */
     @Operation(summary = "异步发送消息(投递 RocketMQ)")
+    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/send-async")
     public Result<MessageResult> sendAsync(@RequestBody MessageRequest request) {
         if (request == null) {
@@ -93,6 +98,7 @@ public class MessageController {
     }
 
     @Operation(summary = "发送日志分页")
+    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")
     public Result<Page<MsgLogDO>> pageLog(MessageLogQueryDTO query) {
         return Result.ok(messageService.pageLog(query));
@@ -106,6 +112,7 @@ public class MessageController {
      * @return 批量发送结果
      */
     @Operation(summary = "批量发送消息(限制 100 条/批)")
+    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/batch-send")
     public Result<BatchSendResult> batchSend(@RequestBody List<MessageRequest> requests,
                                              @RequestParam String batchId) {
@@ -124,6 +131,7 @@ public class MessageController {
      * @return 分页日志
      */
     @Operation(summary = "查询批次发送进度")
+    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/batch/{batchId}/progress")
     public Result<Page<MsgLogDO>> batchProgress(@PathVariable String batchId,
                                                 @RequestParam(defaultValue = "1") int page,

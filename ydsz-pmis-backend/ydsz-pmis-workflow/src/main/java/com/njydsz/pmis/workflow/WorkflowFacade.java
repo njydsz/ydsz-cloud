@@ -247,4 +247,17 @@ public interface WorkflowFacade {
      */
     String resubmitProcess(String instanceId, String initiatorId,
                            Map<String, Object> variables, String comment);
+
+    /**
+     * P1-8: 流程重做 — 支持 redoMode 指定重做策略（RESTART / NEW_INSTANCE）。
+     *
+     * @param instanceId  原实例 ID
+     * @param initiatorId 发起人 ID
+     * @param variables   重做时新增/覆盖的变量（可空）
+     * @param comment     重做说明（可选）
+     * @param redoMode    重做模式：RESTART / NEW_INSTANCE（null/空时默认 RESTART）
+     * @return 实例 ID（RESTART 返回原 instanceId，NEW_INSTANCE 返回新 instanceId）
+     */
+    String resubmitProcess(String instanceId, String initiatorId,
+                           Map<String, Object> variables, String comment, String redoMode);
 }

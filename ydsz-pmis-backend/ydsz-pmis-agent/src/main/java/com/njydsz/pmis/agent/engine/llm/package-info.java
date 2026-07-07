@@ -3,14 +3,14 @@
  *
  * <p>封装不同 LLM 服务提供方，统一 PMIS 内部调用 API：
  * <ul>
- *   <li>{@code SpringAiLlmProvider}   - Spring AI 适配（OpenAI 兼容协议）</li>
- *   <li>{@code DashScopeLlmProvider}  - 阿里云通义千问（DashScope）</li>
- *   <li>{@code QianfanLlmProvider}    - 百度千帆</li>
+ *   <li>{@code SpringAiLlmProvider}   - OpenAI 兼容协议适配（P1-4 重构后基于 java.net.http.HttpClient，不依赖 spring-ai）</li>
+ *   <li>{@code DashScopeLlmProvider}  - 阿里云通义千问（DashScope，基于 RestClient）</li>
+ *   <li>{@code QianfanLlmProvider}    - 百度千帆（基于 RestClient）</li>
  *   <li>{@code MockLlmProvider}       - Mock 实现（单元测试 / 本地开发）</li>
- *   <li>{@code LlmProvider}           - Provider SPI 接口</li>
+ *   <li>{@code LlmProvider}           - Provider SPI 接口（含 chatForJson 默认方法，支持结构化输出）</li>
  *   <li>{@code LlmProviderRouter}     - 多 Provider 路由（按租户 / 按场景选择）</li>
  *   <li>{@code LlmHealthIndicator}    - LLM 健康检查（Actuator）</li>
- *   <li>{@code AbstractHttpLlmProvider} - HTTP 通用基类</li>
+ *   <li>{@code AbstractHttpLlmProvider} - HTTP 通用基类（超时/重试/降级/MDC 透传）</li>
  * </ul>
  *
  * <h3>使用规范</h3>

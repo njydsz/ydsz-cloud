@@ -15,7 +15,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +45,7 @@ class RateLimitServiceImplTest {
     @DisplayName("tryAcquire 获取令牌成功返回 true")
     void tryAcquireShouldReturnTrueWhenAcquired() {
         when(redissonClient.getRateLimiter(anyString())).thenReturn(rateLimiter);
-        when(rateLimiter.tryAcquire(anyInt())).thenReturn(true);
+        when(rateLimiter.tryAcquire(anyLong())).thenReturn(true);
 
         assertTrue(rateLimitService.tryAcquire("sms:alert", 1));
     }
@@ -54,7 +54,7 @@ class RateLimitServiceImplTest {
     @DisplayName("tryAcquire 令牌不足返回 false")
     void tryAcquireShouldReturnFalseWhenNoToken() {
         when(redissonClient.getRateLimiter(anyString())).thenReturn(rateLimiter);
-        when(rateLimiter.tryAcquire(anyInt())).thenReturn(false);
+        when(rateLimiter.tryAcquire(anyLong())).thenReturn(false);
 
         assertFalse(rateLimitService.tryAcquire("sms:alert", 1));
     }
