@@ -93,7 +93,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
      * @return 实例响应 Mono
      */
     @Override
-    public Mono<Response<ServiceInstance>> choose(Request<?> request) {
+    public Mono<Response<ServiceInstance>> choose(Request request) {
         String grayTag = resolveGrayTag(request);
 
         ServiceInstanceListSupplier supplier = supplierProvider.getIfAvailable();

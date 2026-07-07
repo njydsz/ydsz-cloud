@@ -142,7 +142,8 @@ class FileEnhanceServiceImplTest {
             String url = fileEnhanceService.generatePreviewUrl("file-key");
 
             assertThat(url).isNotNull();
-            assertThat(url).startsWith("/api/");
+            assertThat(url).startsWith("/file/preview/");
+            assertThat(url).contains("file-key");
         }
     }
 }
