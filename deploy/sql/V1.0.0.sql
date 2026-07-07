@@ -85,12 +85,12 @@ CREATE TABLE IF NOT EXISTS pmis_dict_type(
     type_name       VARCHAR(128)   NOT NULL,
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
     CONSTRAINT uk_pmis_dict_type_code UNIQUE (type_code, deleted),
     CONSTRAINT ck_pdt_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
@@ -120,16 +120,16 @@ CREATE TABLE IF NOT EXISTS pmis_dict_item(
     item_code       VARCHAR(64)    NOT NULL,
     item_value      VARCHAR(255)   NOT NULL,
     sort_order      INTEGER        NOT NULL DEFAULT 0,
-    parent_id       VARCHAR(20)         ${4} DEFAULT 0,
+    parent_id       VARCHAR(20)         NOT NULL DEFAULT 0,
     description     TEXT,
     ext_json        JSONB,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
     CONSTRAINT uk_pmis_dict_item UNIQUE (type_code, item_code, deleted),
     CONSTRAINT ck_pdi_status_enum   CHECK (status IN ('ENABLED', 'DISABLED')),
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS pmis_dict_version(
     version         VARCHAR(32)    NOT NULL,
     change_log      TEXT,
     effective_date  TIMESTAMP      NOT NULL,
-    created_by      VARCHAR(20)         ${4},
+    created_by      VARCHAR(20)         NOT NULL,
     created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0
 );
@@ -189,12 +189,12 @@ CREATE TABLE IF NOT EXISTS pmis_role(
     sort_order      INTEGER        NOT NULL DEFAULT 0,
     data_scope      VARCHAR(16)    NOT NULL DEFAULT 'SELF',
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_role_code UNIQUE (role_code, deleted),
     CONSTRAINT ck_pr_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pr_data_scope     CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_CHILD', 'SELF', 'CUSTOM')),
@@ -222,7 +222,7 @@ CREATE INDEX IF NOT EXISTS idx_role_tenant_created
 -- 权限/菜单表
 CREATE TABLE IF NOT EXISTS pmis_permission(
     id              VARCHAR(20)      PRIMARY KEY,
-    parent_id       VARCHAR(20)         ${4} DEFAULT 0,
+    parent_id       VARCHAR(20)         NOT NULL DEFAULT 0,
     perm_code       VARCHAR(128)   NOT NULL,
     perm_name       VARCHAR(64)    NOT NULL,
     perm_type       VARCHAR(16)    NOT NULL,
@@ -232,12 +232,12 @@ CREATE TABLE IF NOT EXISTS pmis_permission(
     sort_order      INTEGER        NOT NULL DEFAULT 0,
     visible         SMALLINT       NOT NULL DEFAULT 1,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_permission_code UNIQUE (perm_code, deleted),
     CONSTRAINT ck_pp_perm_type    CHECK (perm_type IN ('MENU', 'BUTTON', 'API')),
     CONSTRAINT ck_pp_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
@@ -270,12 +270,12 @@ CREATE INDEX IF NOT EXISTS idx_permission_tenant ON pmis_permission(tenant_id);
 -- 用户-角色关联表
 CREATE TABLE IF NOT EXISTS pmis_user_role(
     id              VARCHAR(20)      PRIMARY KEY,
-    user_id         VARCHAR(20)         ${4},
-    role_id         VARCHAR(20)         ${4},
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    user_id         VARCHAR(20)         NOT NULL,
+    role_id         VARCHAR(20)         NOT NULL,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_user_role UNIQUE (user_id, role_id, deleted),
     CONSTRAINT ck_pur_deleted_enum CHECK (deleted IN (0, 1))
 );
@@ -295,11 +295,11 @@ CREATE INDEX IF NOT EXISTS idx_user_role_tenant ON pmis_user_role(tenant_id);
 -- 角色-权限关联表
 CREATE TABLE IF NOT EXISTS pmis_role_permission(
     id              VARCHAR(20)      PRIMARY KEY,
-    role_id         VARCHAR(20)         ${4},
-    permission_id   BIGINT         NOT NULL,
+    role_id         VARCHAR(20)         NOT NULL,
+    permission_id   VARCHAR(20)         NOT NULL,
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_role_permission UNIQUE (role_id, permission_id, deleted),
     CONSTRAINT ck_prp_deleted_enum CHECK (deleted IN (0, 1))
 );
@@ -325,20 +325,20 @@ CREATE TABLE IF NOT EXISTS pmis_department(
     id              VARCHAR(20)      PRIMARY KEY,
     dept_code       VARCHAR(64)    NOT NULL,
     dept_name       VARCHAR(128)   NOT NULL,
-    parent_id       VARCHAR(20)         ${4} DEFAULT 0,
+    parent_id       VARCHAR(20)         NOT NULL DEFAULT 0,
     dept_path       VARCHAR(512),
     sort_order      INTEGER        NOT NULL DEFAULT 0,
-    leader_id       VARCHAR(20)${4}
+    leader_id       VARCHAR(20),
     phone           VARCHAR(32),
     email           VARCHAR(128),
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_department_code UNIQUE (dept_code, deleted),
     CONSTRAINT ck_pd_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pd_deleted_enum CHECK (deleted IN (0, 1))
@@ -375,16 +375,16 @@ CREATE TABLE IF NOT EXISTS pmis_position(
     id              VARCHAR(20)      PRIMARY KEY,
     position_code   VARCHAR(64)    NOT NULL,
     position_name   VARCHAR(128)   NOT NULL,
-    department_id   VARCHAR(20)         ${4},
+    department_id   VARCHAR(20)         NOT NULL,
     level_code      VARCHAR(8)     NOT NULL,
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_position_code UNIQUE (position_code, deleted),
     CONSTRAINT ck_pp_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pp_deleted_enum CHECK (deleted IN (0, 1))
@@ -418,12 +418,12 @@ CREATE TABLE IF NOT EXISTS pmis_job_level(
     sort_order      INTEGER        NOT NULL,
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_job_level_code UNIQUE (level_code, deleted),
     CONSTRAINT ck_pjl_segment     CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
     CONSTRAINT ck_pjl_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
@@ -466,12 +466,12 @@ CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
     expire_date         DATE,
     version             INTEGER        NOT NULL DEFAULT 1,
     description         TEXT,
-    created_by          VARCHAR(20)         ${4} DEFAULT 0,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_job_level_rate UNIQUE (level_code, version, deleted),
     CONSTRAINT ck_pjlr_external_nonneg CHECK (external_daily >= 0 AND internal_daily >= 0),
     CONSTRAINT ck_pjlr_billable_range  CHECK (billable_target >= 0 AND billable_target <= 1),
@@ -509,7 +509,7 @@ CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tena
 -- 员工表
 CREATE TABLE IF NOT EXISTS pmis_employee(
     id              VARCHAR(20)      PRIMARY KEY,
-    user_id         VARCHAR(20)         ${4},
+    user_id         VARCHAR(20)         NOT NULL,
     emp_code        VARCHAR(64)    NOT NULL,
     emp_name        VARCHAR(64)    NOT NULL,
     id_card         VARCHAR(32),
@@ -519,8 +519,8 @@ CREATE TABLE IF NOT EXISTS pmis_employee(
     phone           VARCHAR(32),
     phone_enc       VARCHAR(255),
     email           VARCHAR(128),
-    department_id   VARCHAR(20)         ${4},
-    position_id     VARCHAR(20)${4}
+    department_id   VARCHAR(20)         NOT NULL,
+    position_id     VARCHAR(20),
     level_code      VARCHAR(8)     NOT NULL,
     hire_date       DATE           NOT NULL,
     leave_date      DATE,
@@ -532,12 +532,12 @@ CREATE TABLE IF NOT EXISTS pmis_employee(
     emergency_contact VARCHAR(64),
     emergency_phone VARCHAR(32),
     description     TEXT,
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_emp_code UNIQUE (emp_code, deleted),
     CONSTRAINT ck_pe_gender_enum      CHECK (gender IN ('M', 'F', 'U')),
     CONSTRAINT ck_pe_work_status     CHECK (work_status IN ('ACTIVE', 'LEAVE', 'SUSPEND', 'PROBATION')),
@@ -590,13 +590,13 @@ CREATE INDEX IF NOT EXISTS idx_pmis_emp_position
 -- 员工标签表
 CREATE TABLE IF NOT EXISTS pmis_employee_tag(
     id              VARCHAR(20)      PRIMARY KEY,
-    employee_id     VARCHAR(20)         ${4},
+    employee_id     VARCHAR(20)         NOT NULL,
     tag_type        VARCHAR(32)    NOT NULL,
     tag_code        VARCHAR(64)    NOT NULL,
     tag_value       VARCHAR(255),
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT ck_pet_tag_type CHECK (tag_type IN ('TECH_STACK', 'INDUSTRY', 'DOMAIN', 'CERTIFICATE', 'SKILL')),
     CONSTRAINT ck_pet_deleted_enum CHECK (deleted IN (0, 1))
 );
@@ -625,10 +625,10 @@ CREATE TABLE IF NOT EXISTS pmis_user_account(
     username           VARCHAR(64)    NOT NULL,
     password           VARCHAR(128)   NOT NULL,
     salt               VARCHAR(32)    NOT NULL,
-    employee_id        VARCHAR(20)${4}
+    employee_id        VARCHAR(20),
     -- V1.0.0_054 内联: 组织关系字段(支持 dept:/leader:/position: 审批人展开)
-    dept_id            VARCHAR(20)${4}
-    leader_id          VARCHAR(20)${4}
+    dept_id            VARCHAR(20),
+    leader_id          VARCHAR(20),
     position_code      VARCHAR(64),
     -- V1.0.0_016 内联: 数据权限 + MFA + 密码策略字段
     data_scope         VARCHAR(16)    NOT NULL DEFAULT 'SELF',
@@ -642,12 +642,12 @@ CREATE TABLE IF NOT EXISTS pmis_user_account(
     last_login_ip      VARCHAR(64),
     login_fail_count   INTEGER        NOT NULL DEFAULT 0,
     locked_until       TIMESTAMPTZ,
-    created_by         VARCHAR(20)         ${4} DEFAULT 0,
+    created_by         VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id          VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_user_username UNIQUE (username, deleted),
     CONSTRAINT ck_pua_status_enum   CHECK (status IN ('ENABLED', 'DISABLED', 'LOCKED')),
     CONSTRAINT ck_pua_data_scope    CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_CHILD', 'SELF', 'CUSTOM')),
@@ -705,19 +705,19 @@ CREATE TABLE IF NOT EXISTS pmis_notification(
     content         TEXT,
     level           VARCHAR(16)    NOT NULL DEFAULT 'INFO',
     category        VARCHAR(32)    NOT NULL,
-    sender_id       BIGINT,
-    receiver_id     BIGINT         NOT NULL,
+    sender_id       VARCHAR(20),
+    receiver_id     VARCHAR(20)         NOT NULL,
     biz_type        VARCHAR(64),
-    biz_id          VARCHAR(20)${4}
+    biz_id          VARCHAR(20),
     read_status     SMALLINT       NOT NULL DEFAULT 0,
     read_time       TIMESTAMPTZ,
     expired_at      TIMESTAMPTZ,
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT ck_pn_level_enum     CHECK (level IN ('INFO', 'WARN', 'ERROR', 'URGENT')),
     CONSTRAINT ck_pn_category_enum  CHECK (category IN ('SYSTEM', 'WORKFLOW', 'ALERT', 'TODO', 'ANNOUNCE')),
     CONSTRAINT ck_pn_read_enum      CHECK (read_status IN (0, 1)),
@@ -766,12 +766,12 @@ CREATE TABLE IF NOT EXISTS pmis_config(
     is_public       SMALLINT       NOT NULL DEFAULT 0,
     sort_order      INTEGER        NOT NULL DEFAULT 0,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_config_key UNIQUE (config_group, config_key, deleted),
     CONSTRAINT ck_pc_value_type    CHECK (value_type IN ('STRING', 'NUMBER', 'BOOLEAN', 'JSON')),
     CONSTRAINT ck_pc_status_enum   CHECK (status IN ('ENABLED', 'DISABLED')),
@@ -809,13 +809,13 @@ CREATE INDEX IF NOT EXISTS idx_config_tenant_created
 --   (主键必须包含分区键;BRIN 索引对父表定义,自动传播到所有分区)
 DROP TABLE IF EXISTS pmis_operation_log CASCADE;
 CREATE TABLE IF NOT EXISTS pmis_operation_log(
-    id                BIGSERIAL      NOT NULL,
-    user_id           VARCHAR(20)${4}
+    id                VARCHAR(20)      NOT NULL,
+    user_id           VARCHAR(20),
     username          VARCHAR(64),
     module            VARCHAR(64)    NOT NULL,
     action            VARCHAR(128)   NOT NULL,
     biz_type          VARCHAR(64),
-    biz_id            VARCHAR(20)${4}
+    biz_id            VARCHAR(20),
     request_url       VARCHAR(512),
     -- V1.0.0_008 内联: 字段重命名后的规范名称
     http_method       VARCHAR(16),
@@ -830,9 +830,9 @@ CREATE TABLE IF NOT EXISTS pmis_operation_log(
     cost_ms           BIGINT,
     status            VARCHAR(16)    NOT NULL DEFAULT 'SUCCESS',
     error_message     TEXT,
-    trace_id          VARCHAR(20)${4}
+    trace_id          VARCHAR(20),
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tenant_id         VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT ck_pol_status_enum  CHECK (status IN ('SUCCESS', 'FAILED')),
     CONSTRAINT ck_pol_cost_nonneg  CHECK (cost_ms IS NULL OR cost_ms >= 0),
     -- 分区表主键必须包含分区键
@@ -1051,19 +1051,19 @@ CREATE TABLE IF NOT EXISTS pmis_file (
     file_size       BIGINT         NOT NULL DEFAULT 0,
     file_hash       VARCHAR(128),
     biz_type        VARCHAR(64),
-    biz_id          VARCHAR(20)${4}
+    biz_id          VARCHAR(20),
     storage_type    VARCHAR(32)    NOT NULL DEFAULT 'MINIO',
     access_url      VARCHAR(1024),
     url_expire_at   TIMESTAMPTZ,
-    uploader_id     VARCHAR(20)${4}
+    uploader_id     VARCHAR(20),
     uploader_name   VARCHAR(64),
     description     VARCHAR(512),
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
     CONSTRAINT ck_pf_storage_type  CHECK (storage_type IN ('MINIO', 'LOCAL', 'OSS', 'COS')),
     CONSTRAINT ck_pf_size_nonneg   CHECK (file_size >= 0),
@@ -1144,12 +1144,12 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     fire_count      BIGINT         NOT NULL DEFAULT 0,
     success_count   BIGINT         NOT NULL DEFAULT 0,
     fail_count      BIGINT         NOT NULL DEFAULT 0,
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
     CONSTRAINT uk_pmis_job_key UNIQUE (job_key, deleted),
     CONSTRAINT ck_pj_status_enum    CHECK (status IN ('NORMAL', 'PAUSED', 'ERROR', 'COMPLETE')),
@@ -1196,7 +1196,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_job_next_fire
 -- 任务执行日志表 pmis_job_log
 CREATE TABLE IF NOT EXISTS pmis_job_log(
     id              VARCHAR(20)      PRIMARY KEY,
-    job_id          BIGINT         NOT NULL,
+    job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
     start_time      TIMESTAMPTZ    NOT NULL,
     end_time        TIMESTAMPTZ,
@@ -1205,9 +1205,9 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     error_message   TEXT,
     params_json     TEXT,
     result_json     TEXT,
-    trace_id        VARCHAR(20)${4}
+    trace_id        VARCHAR(20),
     -- [INLINE-OPT] P0-D3 内联:MQ 投递元信息字段
-    msg_id          VARCHAR(20)${4}
+    msg_id          VARCHAR(20),
     topic           VARCHAR(128),
     reconsume_times INTEGER        NOT NULL DEFAULT 0,
     -- [INLINE-OPT] 审计字段统一为 created_at,deleted 字段保留以便系统级清理
@@ -1277,7 +1277,7 @@ CREATE TABLE IF NOT EXISTS pmis_message_log(
     id              VARCHAR(20)      PRIMARY KEY,
     channel         VARCHAR(32)    NOT NULL,
     biz_type        VARCHAR(64),
-    biz_id          VARCHAR(20)${4}
+    biz_id          VARCHAR(20),
     receiver        VARCHAR(256)   NOT NULL,
     template_code   VARCHAR(128),
     template_params TEXT,
@@ -1287,18 +1287,18 @@ CREATE TABLE IF NOT EXISTS pmis_message_log(
     -- [INLINE-OPT] P0-D3 内联:三方服务商回执 + 链路追踪
     provider_trace_id VARCHAR(128),
     cost_ms         BIGINT,
-    trace_id        VARCHAR(20)${4}
+    trace_id        VARCHAR(20),
     -- [INLINE-OPT] P0-D3 内联:MQ 投递元信息
-    msg_id          VARCHAR(20)${4}
+    msg_id          VARCHAR(20),
     topic           VARCHAR(128),
     reconsume_times INTEGER        NOT NULL DEFAULT 0,
     -- [INLINE-OPT] 审计字段统一
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
     CONSTRAINT ck_pml_channel_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pml_status_enum    CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED', 'RETRY')),
@@ -1363,12 +1363,12 @@ CREATE TABLE IF NOT EXISTS pmis_message_template(
     sign_name       VARCHAR(64),
     status          VARCHAR(32)    NOT NULL DEFAULT 'ENABLED',
     description     VARCHAR(512),
-    created_by      VARCHAR(20)         ${4} DEFAULT 0,
+    created_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
     -- [INLINE-OPT] UNIQUE 约束升级:同租户下 template_code + channel 全局唯一
     CONSTRAINT uk_pmt_code_channel_tenant UNIQUE (template_code, channel, tenant_id, deleted),
@@ -1433,10 +1433,10 @@ CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
     id                VARCHAR(20)      PRIMARY KEY,
     opportunity_code  VARCHAR(64)    NOT NULL,
     opportunity_name  VARCHAR(256)   NOT NULL,
-    customer_id       VARCHAR(20)         ${4},
+    customer_id       VARCHAR(20)         NOT NULL,
     customer_name     VARCHAR(256),
-    business_dept_id  VARCHAR(20)${4}
-    owner_id          VARCHAR(20)         ${4},
+    business_dept_id  VARCHAR(20),
+    owner_id          VARCHAR(20)         NOT NULL,
     owner_name        VARCHAR(64),
     level             VARCHAR(8)     NOT NULL DEFAULT 'C',
     source            VARCHAR(64),
@@ -1451,12 +1451,12 @@ CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
     competitor        VARCHAR(256),
     remark            TEXT,
     tags              VARCHAR(512),
-    created_by        VARCHAR(20)         ${4} DEFAULT 0,
+    created_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_ppo_code           UNIQUE (opportunity_code, deleted),
@@ -1520,20 +1520,20 @@ CREATE INDEX IF NOT EXISTS idx_ppo_expected_sign
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_opportunity_follow(
     id                VARCHAR(20)      PRIMARY KEY,
-    opportunity_id    VARCHAR(20)         ${4},
+    opportunity_id    VARCHAR(20)         NOT NULL,
     follow_type       VARCHAR(32)    NOT NULL,
     follow_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    follower_id       BIGINT         NOT NULL,
+    follower_id       VARCHAR(20)         NOT NULL,
     follower_name     VARCHAR(64),
     content           TEXT,
     next_step         TEXT,
     next_follow_date  DATE,
-    created_by        VARCHAR(20)         ${4} DEFAULT 0,
+    created_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT ck_ppof_type_enum     CHECK (follow_type IN ('VISIT', 'CALL', 'QUOTE', 'NEGOTIATE', 'OTHER')),
@@ -1575,15 +1575,15 @@ CREATE TABLE IF NOT EXISTS pmis_project_initiation(
     id                VARCHAR(20)      PRIMARY KEY,
     project_code      VARCHAR(64)    NOT NULL,
     project_name      VARCHAR(256)   NOT NULL,
-    opportunity_id    VARCHAR(20)${4}
-    customer_id       VARCHAR(20)         ${4},
+    opportunity_id    VARCHAR(20),
+    customer_id       VARCHAR(20)         NOT NULL,
     customer_name     VARCHAR(256),
-    business_dept_id  VARCHAR(20)${4}
+    business_dept_id  VARCHAR(20),
     project_type      VARCHAR(32)    NOT NULL,
     project_level     VARCHAR(16)    NOT NULL DEFAULT 'C',
-    pm_id             VARCHAR(20)${4}
+    pm_id             VARCHAR(20),
     pm_name           VARCHAR(64),
-    sponsor_id        BIGINT,
+    sponsor_id        VARCHAR(20),
     sponsor_name      VARCHAR(64),
     estimated_amount  NUMERIC(18,2)  NOT NULL DEFAULT 0,
     budget_amount     NUMERIC(18,2)  NOT NULL DEFAULT 0,
@@ -1595,13 +1595,13 @@ CREATE TABLE IF NOT EXISTS pmis_project_initiation(
     description       TEXT,
     business_case     TEXT,
     risk_assessment   TEXT,
-    workflow_id       VARCHAR(20)${4}
-    created_by        VARCHAR(20)         ${4} DEFAULT 0,
+    workflow_id       VARCHAR(20),
+    created_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_ppi_code           UNIQUE (project_code, deleted),
@@ -1670,7 +1670,7 @@ CREATE INDEX IF NOT EXISTS idx_ppi_current_gate
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_budget_item(
     id                VARCHAR(20)      PRIMARY KEY,
-    initiation_id     VARCHAR(20)         ${4},
+    initiation_id     VARCHAR(20)         NOT NULL,
     category          VARCHAR(32)    NOT NULL,
     sub_category      VARCHAR(64),
     description       VARCHAR(256),
@@ -1680,12 +1680,12 @@ CREATE TABLE IF NOT EXISTS pmis_project_budget_item(
     amount            NUMERIC(18,2)  NOT NULL DEFAULT 0,
     remark            VARCHAR(512),
     sort_order        INTEGER        NOT NULL DEFAULT 0,
-    created_by        VARCHAR(20)         ${4} DEFAULT 0,
+    created_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT ck_ppbi_category_enum CHECK (category IN ('LABOR', 'PURCHASE', 'EXPENSE', 'OUTSOURCE', 'OTHER')),
@@ -1726,22 +1726,22 @@ CREATE INDEX IF NOT EXISTS idx_ppbi_tenant_init
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_gate_review(
     id                VARCHAR(20)      PRIMARY KEY,
-    initiation_id     VARCHAR(20)         ${4},
+    initiation_id     VARCHAR(20)         NOT NULL,
     gate_code         VARCHAR(16)    NOT NULL,
     gate_name         VARCHAR(64),
     review_result     VARCHAR(16)    NOT NULL DEFAULT 'PENDING',
-    reviewer_id       VARCHAR(20)${4}
+    reviewer_id       VARCHAR(20),
     reviewer_name     VARCHAR(64),
     review_at         TIMESTAMPTZ,
     decision_basis    TEXT,
     conditions        TEXT,
     next_gate         VARCHAR(16),
-    created_by        VARCHAR(20)         ${4} DEFAULT 0,
+    created_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT ck_ppgr_gate_enum      CHECK (gate_code IN ('CD1', 'CD2', 'CD3', 'CD4', 'CD5')),
@@ -1787,8 +1787,8 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract(
     id                VARCHAR(20)      PRIMARY KEY,
     contract_code     VARCHAR(64)    NOT NULL,
     contract_name     VARCHAR(256)   NOT NULL,
-    initiation_id     VARCHAR(20)${4}
-    customer_id       VARCHAR(20)         ${4},
+    initiation_id     VARCHAR(20),
+    customer_id       VARCHAR(20)         NOT NULL,
     customer_name     VARCHAR(256),
     contract_type     VARCHAR(32)    NOT NULL,
     sign_date         DATE,
@@ -1802,17 +1802,17 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract(
     status            VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
     risk_level        VARCHAR(8)     NOT NULL DEFAULT 'LOW',
     risk_notes        TEXT,
-    owner_id          VARCHAR(20)         ${4},
+    owner_id          VARCHAR(20)         NOT NULL,
     owner_name        VARCHAR(64),
-    contract_file_id  VARCHAR(20)${4}
-    workflow_id       VARCHAR(20)${4}
+    contract_file_id  VARCHAR(20),
+    workflow_id       VARCHAR(20),
     remark            TEXT,
-    created_by        VARCHAR(20)         ${4} DEFAULT 0,
+    created_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_ppc_code           UNIQUE (contract_code, deleted),
@@ -1883,7 +1883,7 @@ CREATE INDEX IF NOT EXISTS idx_ppc_tenant_created
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
     id                VARCHAR(20)      PRIMARY KEY,
-    contract_id       VARCHAR(20)         ${4},
+    contract_id       VARCHAR(20)         NOT NULL,
     supplement_code   VARCHAR(64)    NOT NULL,
     supplement_name   VARCHAR(256)   NOT NULL,
     supplement_type   VARCHAR(32)    NOT NULL,
@@ -1892,14 +1892,14 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
     effective_date    DATE,
     expire_date       DATE,
     content           TEXT,
-    file_id           VARCHAR(20)${4}
+    file_id           VARCHAR(20),
     status            VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
-    created_by        VARCHAR(20)         ${4} DEFAULT 0,
+    created_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_ppcs_code          UNIQUE (supplement_code, deleted),
@@ -1942,7 +1942,7 @@ CREATE INDEX IF NOT EXISTS idx_ppcs_tenant_status
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
     id                VARCHAR(20)      PRIMARY KEY,
-    contract_id       VARCHAR(20)         ${4},
+    contract_id       VARCHAR(20)         NOT NULL,
     change_code       VARCHAR(64)    NOT NULL,
     change_type       VARCHAR(32)    NOT NULL,
     change_reason     TEXT,
@@ -1951,18 +1951,18 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
     amount_delta      NUMERIC(18,2)  NOT NULL DEFAULT 0,
     impact_analysis   TEXT,
     status            VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
-    applicant_id      VARCHAR(20)${4}
+    applicant_id      VARCHAR(20),
     applicant_name    VARCHAR(64),
-    approver_id       VARCHAR(20)${4}
+    approver_id       VARCHAR(20),
     approver_name     VARCHAR(64),
     approved_at       TIMESTAMPTZ,
-    workflow_id       VARCHAR(20)${4}
-    created_by        VARCHAR(20)         ${4} DEFAULT 0,
+    workflow_id       VARCHAR(20),
+    created_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_ppcc_code          UNIQUE (change_code, deleted),
@@ -2033,8 +2033,8 @@ CREATE TABLE IF NOT EXISTS pmis_execution_wbs_task(
     id                  VARCHAR(20)      PRIMARY KEY,
     task_code           VARCHAR(64)    NOT NULL,
     task_name           VARCHAR(256)   NOT NULL,
-    initiation_id       VARCHAR(20)         ${4},
-    parent_id           VARCHAR(20)         ${4} DEFAULT 0,
+    initiation_id       VARCHAR(20)         NOT NULL,
+    parent_id           VARCHAR(20)         NOT NULL DEFAULT 0,
     task_level          INTEGER        NOT NULL DEFAULT 1,
     wbs_path            VARCHAR(512),
     sort_order          INTEGER        NOT NULL DEFAULT 0,
@@ -2047,7 +2047,7 @@ CREATE TABLE IF NOT EXISTS pmis_execution_wbs_task(
     planned_effort      NUMERIC(10,2)  NOT NULL DEFAULT 0,
     actual_effort       NUMERIC(10,2)  NOT NULL DEFAULT 0,
     progress_pct        NUMERIC(5,2)   NOT NULL DEFAULT 0,
-    owner_id            VARCHAR(20)         ${4},
+    owner_id            VARCHAR(20)         NOT NULL,
     owner_name          VARCHAR(64),
     assignee_ids        VARCHAR(512),
     priority            VARCHAR(16)    NOT NULL DEFAULT 'NORMAL',
@@ -2058,12 +2058,12 @@ CREATE TABLE IF NOT EXISTS pmis_execution_wbs_task(
     deliverable         TEXT,
     risk_level          VARCHAR(16)    NOT NULL DEFAULT 'LOW',
     provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)         ${4} DEFAULT 0,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_pewt_code           UNIQUE (task_code, deleted),
@@ -2141,12 +2141,12 @@ CREATE INDEX IF NOT EXISTS idx_pewt_trace
 CREATE TABLE IF NOT EXISTS pmis_execution_time_entry(
     id                  VARCHAR(20)      PRIMARY KEY,
     entry_date          DATE           NOT NULL,
-    employee_id         VARCHAR(20)         ${4},
+    employee_id         VARCHAR(20)         NOT NULL,
     employee_name       VARCHAR(64),
     level_code          VARCHAR(8)     NOT NULL,
-    initiation_id       VARCHAR(20)         ${4},
+    initiation_id       VARCHAR(20)         NOT NULL,
     initiation_name     VARCHAR(256),
-    task_id             VARCHAR(20)${4}
+    task_id             VARCHAR(20),
     task_name           VARCHAR(256),
     hours               NUMERIC(5,2)   NOT NULL,
     days                NUMERIC(5,2)   NOT NULL DEFAULT 0,
@@ -2154,20 +2154,20 @@ CREATE TABLE IF NOT EXISTS pmis_execution_time_entry(
     work_type           VARCHAR(32)    NOT NULL DEFAULT 'REGULAR',
     billable            SMALLINT       NOT NULL DEFAULT 1,
     description         TEXT,
-    rate_id             BIGINT,
+    rate_id             VARCHAR(20),
     rate                NUMERIC(10,2),
     status              VARCHAR(16)    NOT NULL DEFAULT 'DRAFT',
-    approver_id         VARCHAR(20)${4}
+    approver_id         VARCHAR(20),
     approver_name       VARCHAR(64),
     approved_at         TIMESTAMPTZ,
     reject_reason       VARCHAR(512),
     provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)         ${4} DEFAULT 0,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT ck_pete_hours_nonneg    CHECK (hours    >= 0),
@@ -2242,25 +2242,25 @@ CREATE INDEX IF NOT EXISTS idx_pete_trace
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_cost_allocation(
     id                  VARCHAR(20)      PRIMARY KEY,
-    initiation_id       VARCHAR(20)         ${4},
+    initiation_id       VARCHAR(20)         NOT NULL,
     period              VARCHAR(7)     NOT NULL,
     cost_type           VARCHAR(32)    NOT NULL,
-    source_id           VARCHAR(20)${4}
+    source_id           VARCHAR(20),
     source_type         VARCHAR(32),
     description         VARCHAR(512),
     amount              NUMERIC(18,2)  NOT NULL DEFAULT 0,
     billable            SMALLINT       NOT NULL DEFAULT 1,
     allocated           SMALLINT       NOT NULL DEFAULT 0,
-    employee_id         VARCHAR(20)${4}
+    employee_id         VARCHAR(20),
     employee_name       VARCHAR(64),
     level_code          VARCHAR(8),
     provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)         ${4} DEFAULT 0,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT ck_pca_type_enum         CHECK (cost_type IN ('LABOR', 'PURCHASE', 'EXPENSE', 'OUTSOURCE', 'ALLOCATION', 'OTHER')),
@@ -2319,7 +2319,7 @@ CREATE INDEX IF NOT EXISTS idx_pca_trace
 CREATE TABLE IF NOT EXISTS pmis_cost_purchase(
     id                  VARCHAR(20)      PRIMARY KEY,
     purchase_code       VARCHAR(64)    NOT NULL,
-    initiation_id       VARCHAR(20)         ${4},
+    initiation_id       VARCHAR(20)         NOT NULL,
     vendor              VARCHAR(256),
     item_name           VARCHAR(256)   NOT NULL,
     quantity            NUMERIC(10,2)  NOT NULL DEFAULT 1,
@@ -2327,19 +2327,19 @@ CREATE TABLE IF NOT EXISTS pmis_cost_purchase(
     amount              NUMERIC(18,2)  NOT NULL DEFAULT 0,
     purchase_date       DATE,
     status              VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
-    applicant_id        VARCHAR(20)         ${4},
+    applicant_id        VARCHAR(20)         NOT NULL,
     applicant_name      VARCHAR(64),
-    approver_id         VARCHAR(20)${4}
+    approver_id         VARCHAR(20),
     approver_name       VARCHAR(64),
     approved_at         TIMESTAMPTZ,
     description         TEXT,
     provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)         ${4} DEFAULT 0,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_pcp_code           UNIQUE (purchase_code, deleted),
@@ -2396,8 +2396,8 @@ CREATE INDEX IF NOT EXISTS idx_pcp_trace
 CREATE TABLE IF NOT EXISTS pmis_cost_expense(
     id                  VARCHAR(20)      PRIMARY KEY,
     expense_code        VARCHAR(64)    NOT NULL,
-    initiation_id       VARCHAR(20)${4}
-    employee_id         VARCHAR(20)         ${4},
+    initiation_id       VARCHAR(20),
+    employee_id         VARCHAR(20)         NOT NULL,
     employee_name       VARCHAR(64),
     expense_type        VARCHAR(32)    NOT NULL,
     amount              NUMERIC(18,2)  NOT NULL DEFAULT 0,
@@ -2405,16 +2405,16 @@ CREATE TABLE IF NOT EXISTS pmis_cost_expense(
     description         TEXT,
     receipt_url         VARCHAR(512),
     status              VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
-    approver_id         VARCHAR(20)${4}
+    approver_id         VARCHAR(20),
     approver_name       VARCHAR(64),
     approved_at         TIMESTAMPTZ,
     provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)         ${4} DEFAULT 0,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_pce_code           UNIQUE (expense_code, deleted),
@@ -2469,8 +2469,8 @@ CREATE INDEX IF NOT EXISTS idx_pce_trace
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
     id                  VARCHAR(20)      PRIMARY KEY,
-    contract_id         VARCHAR(20)         ${4},
-    initiation_id       VARCHAR(20)         ${4},
+    contract_id         VARCHAR(20)         NOT NULL,
+    initiation_id       VARCHAR(20)         NOT NULL,
     revenue_code        VARCHAR(64)    NOT NULL,
     recognition_method  VARCHAR(32)    NOT NULL,
     period              VARCHAR(7)     NOT NULL,
@@ -2478,18 +2478,18 @@ CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
     recognition_date    DATE           NOT NULL,
     milestone           VARCHAR(128),
     percent_complete    NUMERIC(5,2),
-    invoice_id          VARCHAR(20)${4}
+    invoice_id          VARCHAR(20),
     status              VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
     confirmed_by        BIGINT,
     confirmed_at        TIMESTAMPTZ,
     description         TEXT,
     provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)         ${4} DEFAULT 0,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_ppr_code              UNIQUE (revenue_code, deleted),
@@ -2547,7 +2547,7 @@ CREATE INDEX IF NOT EXISTS idx_ppr_trace
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
     id                  VARCHAR(20)      PRIMARY KEY,
-    initiation_id       VARCHAR(20)         ${4},
+    initiation_id       VARCHAR(20)         NOT NULL,
     period              VARCHAR(7)     NOT NULL,
     contract_amount     NUMERIC(18,2)  NOT NULL DEFAULT 0,
     recognized_revenue  NUMERIC(18,2)  NOT NULL DEFAULT 0,
@@ -2567,7 +2567,7 @@ CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
     snapshot_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_pps_init_period     UNIQUE (initiation_id, period, deleted),
@@ -2622,7 +2622,7 @@ CREATE INDEX IF NOT EXISTS idx_pps_trace
 CREATE TABLE IF NOT EXISTS pmis_execution_risk(
     id                  VARCHAR(20)      PRIMARY KEY,
     risk_code           VARCHAR(64)    NOT NULL,
-    initiation_id       VARCHAR(20)         ${4},
+    initiation_id       VARCHAR(20)         NOT NULL,
     risk_title          VARCHAR(256)   NOT NULL,
     risk_type           VARCHAR(32)    NOT NULL DEFAULT 'OTHER',
     description         TEXT,
@@ -2631,18 +2631,18 @@ CREATE TABLE IF NOT EXISTS pmis_execution_risk(
     risk_level          VARCHAR(16)    NOT NULL DEFAULT 'MEDIUM',
     mitigation          TEXT,
     contingency         TEXT,
-    owner_id            VARCHAR(20)         ${4},
+    owner_id            VARCHAR(20)         NOT NULL,
     owner_name          VARCHAR(64),
     status              VARCHAR(32)    NOT NULL DEFAULT 'OPEN',
     occurred_at         TIMESTAMPTZ,
     closed_at           TIMESTAMPTZ,
     provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)         ${4} DEFAULT 0,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_per_code           UNIQUE (risk_code, deleted),
@@ -2724,13 +2724,13 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_template(
     customer_level         VARCHAR(16),                      -- A/B/C/D
     project_level          VARCHAR(16),                      -- L1-L18
     status                 VARCHAR(32)  NOT NULL DEFAULT 'DRAFT', -- DRAFT/PUBLISHED/DEPRECATED
-    author_id              VARCHAR(20)${4}
+    author_id              VARCHAR(20),
     author_name            VARCHAR(64),
     remark                 TEXT,
-    tenant_id              VARCHAR(20)       ${4} DEFAULT 1,
-    created_by             VARCHAR(20)       ${4} DEFAULT 0,
+    tenant_id              VARCHAR(20)       NOT NULL DEFAULT '1',
+    created_by             VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at             TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by             VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by             VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at             TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                SMALLINT     NOT NULL DEFAULT 0,
     -- 业务唯一性: 同租户下 template_code + 软删除位 唯一
@@ -2777,7 +2777,7 @@ CREATE INDEX IF NOT EXISTS idx_ppct_tenant_created
 CREATE TABLE IF NOT EXISTS pmis_project_change(
     id                       VARCHAR(20) PRIMARY KEY,
     change_code              VARCHAR(64)  NOT NULL,
-    initiation_id            VARCHAR(20)       ${4},
+    initiation_id            VARCHAR(20)       NOT NULL,
     change_type              VARCHAR(32)  NOT NULL,            -- SCOPE/COST/CONTRACT/STAFF/SCHEDULE
     change_title             VARCHAR(256) NOT NULL,
     change_reason            TEXT,
@@ -2792,20 +2792,20 @@ CREATE TABLE IF NOT EXISTS pmis_project_change(
     affected_staff_count     INTEGER      NOT NULL DEFAULT 0,
     major_flag               SMALLINT     NOT NULL DEFAULT 0,        -- 0/1 重大变更
     approver_roles           VARCHAR(256) NOT NULL DEFAULT '[]',     -- JSON
-    applicant_id             VARCHAR(20)       ${4},
+    applicant_id             VARCHAR(20)       NOT NULL,
     applicant_name           VARCHAR(64),
-    contract_id              VARCHAR(20)${4}
-    workflow_id              VARCHAR(20)${4}
+    contract_id              VARCHAR(20),
+    workflow_id              VARCHAR(20),
     status                   VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- ChangeStatus
     submitted_at             TIMESTAMPTZ,
     approved_at              TIMESTAMPTZ,
     executed_at              TIMESTAMPTZ,
     remark                   TEXT,
-    tenant_id                VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id                VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id        VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by               VARCHAR(20)       ${4} DEFAULT 0,
+    created_by               VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by               VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                  SMALLINT     NOT NULL DEFAULT 0,
     -- 业务唯一性
@@ -2875,11 +2875,11 @@ CREATE TABLE IF NOT EXISTS pmis_execution_delivery_standard(
     acceptance_criteria   TEXT,
     template_ref          VARCHAR(256),
     remark                TEXT,
-    tenant_id             VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by            VARCHAR(20)       ${4} DEFAULT 0,
+    created_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     -- 枚举约束
@@ -2918,8 +2918,8 @@ CREATE INDEX IF NOT EXISTS idx_peds_tenant_stage
 CREATE TABLE IF NOT EXISTS pmis_execution_delivery_item(
     id                    VARCHAR(20) PRIMARY KEY,
     item_code             VARCHAR(64)  NOT NULL,
-    initiation_id         VARCHAR(20)       ${4},
-    standard_id           VARCHAR(20)${4}
+    initiation_id         VARCHAR(20)       NOT NULL,
+    standard_id           VARCHAR(20),
     project_type          VARCHAR(32),
     project_level         VARCHAR(16),
     delivery_name         VARCHAR(256) NOT NULL,
@@ -2929,9 +2929,9 @@ CREATE TABLE IF NOT EXISTS pmis_execution_delivery_item(
     planned_submit_date   DATE,
     actual_submit_date    DATE,
     accepted_date         DATE,
-    submitter_id          BIGINT,
+    submitter_id          VARCHAR(20),
     submitter_name        VARCHAR(64),
-    reviewer_id           VARCHAR(20)${4}
+    reviewer_id           VARCHAR(20),
     reviewer_name         VARCHAR(64),
     review_comment        TEXT,
     status                VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- DeliveryItemStatus
@@ -2939,11 +2939,11 @@ CREATE TABLE IF NOT EXISTS pmis_execution_delivery_item(
     tr_completed          SMALLINT     NOT NULL DEFAULT 0,
     file_ids              VARCHAR(2048) NOT NULL DEFAULT '[]',
     remark                TEXT,
-    tenant_id             VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by            VARCHAR(20)       ${4} DEFAULT 0,
+    created_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pedi_code            UNIQUE (item_code, deleted),
@@ -2999,7 +2999,7 @@ CREATE INDEX IF NOT EXISTS idx_pedi_tenant_status
 CREATE TABLE IF NOT EXISTS pmis_execution_closure(
     id                       VARCHAR(20) PRIMARY KEY,
     closure_code             VARCHAR(64)  NOT NULL,
-    initiation_id            VARCHAR(20)       ${4},
+    initiation_id            VARCHAR(20)       NOT NULL,
     closure_type             VARCHAR(32)  NOT NULL,            -- FORMAL/PRE_CLOSURE/FORCED
     closure_reason           TEXT,
     contract_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,
@@ -3019,19 +3019,19 @@ CREATE TABLE IF NOT EXISTS pmis_execution_closure(
     locked                   SMALLINT     NOT NULL DEFAULT 0,
     status                   VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- ClosureStatus
     remark                   TEXT,
-    applicant_id             VARCHAR(20)${4}
+    applicant_id             VARCHAR(20),
     applicant_name           VARCHAR(64),
-    approver_id              VARCHAR(20)${4}
+    approver_id              VARCHAR(20),
     approver_name            VARCHAR(64),
     submitted_at             TIMESTAMPTZ,
     approved_at              TIMESTAMPTZ,
     archived_at              TIMESTAMPTZ,
     approval_comment         TEXT,
-    tenant_id                VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id                VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id        VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by               VARCHAR(20)       ${4} DEFAULT 0,
+    created_by               VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by               VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                  SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pec_code              UNIQUE (closure_code, deleted),
@@ -3095,7 +3095,7 @@ CREATE TABLE IF NOT EXISTS pmis_agent_prediction(
     task_code           VARCHAR(64)  NOT NULL,
     agent_type          VARCHAR(32)  NOT NULL,                  -- RISK_WARNING/RESOURCE_RECOMMEND/PROFIT_FORECAST/WIN_RATE_PREDICT/TIMESHEET_ANOMALY
     biz_type            VARCHAR(32),                            -- PROJECT/OPPORTUNITY/TIMESHEET/STAFF
-    biz_id              VARCHAR(20)${4}
+    biz_id              VARCHAR(20),
     biz_ref             VARCHAR(256),
     input_snapshot      TEXT,                                   -- 输入数据 JSON
     output_result       TEXT,                                   -- 输出数据 JSON
@@ -3108,14 +3108,14 @@ CREATE TABLE IF NOT EXISTS pmis_agent_prediction(
     model_version       VARCHAR(32)  NOT NULL DEFAULT 'v1.0.0',
     status              VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- PENDING/RUNNING/SUCCESS/FAILED
     error_msg           TEXT,
-    caller_id           BIGINT,
+    caller_id           VARCHAR(20),
     caller_name         VARCHAR(64),
     source              VARCHAR(32)  NOT NULL DEFAULT 'MANUAL', -- MANUAL/SCHEDULED/EVENT
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)       ${4} DEFAULT 0,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pap_code              UNIQUE (task_code, deleted),
@@ -3259,9 +3259,9 @@ CREATE TABLE IF NOT EXISTS pmis_finance_invoice(
     invoice_no          VARCHAR(64),                              -- 财务发票号
     invoice_code        VARCHAR(64)  NOT NULL,                    -- 业务编号（系统生成）
     invoice_type        VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',   -- NORMAL/RED_REVERSE
-    contract_id         VARCHAR(20)       ${4},
-    initiation_id       VARCHAR(20)       ${4},
-    customer_id         VARCHAR(20)       ${4},
+    contract_id         VARCHAR(20)       NOT NULL,
+    initiation_id       VARCHAR(20)       NOT NULL,
+    customer_id         VARCHAR(20)       NOT NULL,
     customer_name       VARCHAR(256),
     invoice_basis       VARCHAR(32)  NOT NULL,                    -- MILESTONE/OUTSOURCING/MONTHLY/FINAL/OTHER
     amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 含税金额
@@ -3278,7 +3278,7 @@ CREATE TABLE IF NOT EXISTS pmis_finance_invoice(
     phone               VARCHAR(64),
     remark              TEXT,
     status              VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',     -- InvoiceStatus
-    reversed_by_id      BIGINT,                                   -- 被红冲的发票ID
+    reversed_by_id      VARCHAR(20),                                   -- 被红冲的发票ID
     attachment_id       VARCHAR(64),                              -- 发票扫描件
     approval_comment    TEXT,
     applied_by          BIGINT,
@@ -3286,11 +3286,11 @@ CREATE TABLE IF NOT EXISTS pmis_finance_invoice(
     approved_at         TIMESTAMPTZ,
     issued_by           BIGINT,
     issued_at           TIMESTAMPTZ,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)       ${4} DEFAULT 0,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pfi_code              UNIQUE (invoice_code, deleted),
@@ -3364,9 +3364,9 @@ CREATE TABLE IF NOT EXISTS pmis_finance_payment(
     id                  VARCHAR(20) PRIMARY KEY,
     payment_no          VARCHAR(64),                              -- 银行流水号/系统流水
     payment_code        VARCHAR(64)  NOT NULL,                    -- 业务编号
-    contract_id         VARCHAR(20)       ${4},
-    initiation_id       VARCHAR(20)       ${4},
-    customer_id         VARCHAR(20)       ${4},
+    contract_id         VARCHAR(20)       NOT NULL,
+    initiation_id       VARCHAR(20)       NOT NULL,
+    customer_id         VARCHAR(20)       NOT NULL,
     customer_name       VARCHAR(256),
     amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 回款总金额
     currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
@@ -3383,11 +3383,11 @@ CREATE TABLE IF NOT EXISTS pmis_finance_payment(
     confirmed_by        BIGINT,
     confirmed_at        TIMESTAMPTZ,
     recorded_by         BIGINT,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)       ${4} DEFAULT 0,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pfp_code              UNIQUE (payment_code, deleted),
@@ -3444,7 +3444,7 @@ CREATE INDEX IF NOT EXISTS idx_pfp_tenant_customer_unalloc
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_finance_customer_credit(
     id                    VARCHAR(20) PRIMARY KEY,
-    customer_id           VARCHAR(20)       ${4},
+    customer_id           VARCHAR(20)       NOT NULL,
     customer_name         VARCHAR(256),
     credit_level          VARCHAR(8)   NOT NULL DEFAULT 'D',       -- A/B/C/D
     credit_score          INTEGER      NOT NULL DEFAULT 0,        -- 0-100
@@ -3457,11 +3457,11 @@ CREATE TABLE IF NOT EXISTS pmis_finance_customer_credit(
     last_evaluation_at    TIMESTAMPTZ,
     evaluator             VARCHAR(64),
     remark                TEXT,
-    tenant_id             VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by            VARCHAR(20)       ${4} DEFAULT 0,
+    created_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pfcc_customer         UNIQUE (customer_id, deleted),
@@ -3519,8 +3519,8 @@ CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_updated
 -- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_evm_measure; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_evm_measure(
     id                  VARCHAR(20) PRIMARY KEY,
-    initiation_id       VARCHAR(20)       ${4},
-    wbs_task_id         VARCHAR(20)${4}                                -- 可空：项目级度量
+    initiation_id       VARCHAR(20)       NOT NULL,
+    wbs_task_id         VARCHAR(20),                                -- 可空：项目级度量
     period              VARCHAR(16)  NOT NULL,                 -- YYYY-MM
     pv                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 计划值
     ev                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 挣值
@@ -3538,11 +3538,11 @@ CREATE TABLE IF NOT EXISTS pmis_evm_measure(
     alert_reason        TEXT,
     measure_date        DATE         NOT NULL,
     remark              TEXT,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)       ${4} DEFAULT 0,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pem_init_period       UNIQUE (initiation_id, wbs_task_id, period, deleted),
@@ -3605,11 +3605,11 @@ CREATE TABLE IF NOT EXISTS pmis_rate_card(
     expiry_date         DATE,
     status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
     remark              TEXT,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)       ${4} DEFAULT 0,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_prc_code              UNIQUE (rate_code, deleted),
@@ -3653,7 +3653,7 @@ CREATE TABLE IF NOT EXISTS pmis_rate_internal(
     id                  VARCHAR(20) PRIMARY KEY,
     rate_code           VARCHAR(64)  NOT NULL,
     level_code          VARCHAR(16)  NOT NULL,
-    department_id       VARCHAR(20)${4}                                -- 事业部/部门
+    department_id       VARCHAR(20),                                -- 事业部/部门
     department_name     VARCHAR(256),
     billing_unit        VARCHAR(16)  NOT NULL DEFAULT 'DAY',
     cost_amount         NUMERIC(15,2) NOT NULL DEFAULT 0,
@@ -3662,11 +3662,11 @@ CREATE TABLE IF NOT EXISTS pmis_rate_internal(
     expiry_date         DATE,
     status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
     remark              TEXT,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)       ${4} DEFAULT 0,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pri_code              UNIQUE (rate_code, deleted),
@@ -3706,7 +3706,7 @@ CREATE TABLE IF NOT EXISTS pmis_profit_simulation(
     id                  VARCHAR(20) PRIMARY KEY,
     simulation_code     VARCHAR(64)  NOT NULL,
     simulation_name     VARCHAR(256) NOT NULL,
-    initiation_id       VARCHAR(20)       ${4},
+    initiation_id       VARCHAR(20)       NOT NULL,
     version             INTEGER      NOT NULL DEFAULT 1,
     scenario_type       VARCHAR(32)  NOT NULL DEFAULT 'BASE',   -- BASE/OPTIMISTIC/PESSIMISTIC/CUSTOM
     contract_amount     NUMERIC(15,2) NOT NULL DEFAULT 0,
@@ -3726,13 +3726,13 @@ CREATE TABLE IF NOT EXISTS pmis_profit_simulation(
     approver_name       VARCHAR(64),
     approved_at         TIMESTAMPTZ,
     remark              TEXT,
-    applicant_id        VARCHAR(20)${4}
+    applicant_id        VARCHAR(20),
     applicant_name      VARCHAR(64),
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)       ${4} DEFAULT 0,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pps_code              UNIQUE (simulation_code, deleted),
@@ -3867,18 +3867,18 @@ CREATE TABLE IF NOT EXISTS pmis_resource_pool(
     pool_code           VARCHAR(64)  NOT NULL,
     pool_name           VARCHAR(256) NOT NULL,
     pool_type           VARCHAR(32)  NOT NULL,                 -- HQ/DIVISION/RESERVE
-    department_id       VARCHAR(20)${4}                                -- 事业部/部门
+    department_id       VARCHAR(20),                                -- 事业部/部门
     department_name     VARCHAR(256),
     level_range         VARCHAR(32),                           -- L1-L3 / L4-L12 / L13+
     headcount           INTEGER      NOT NULL DEFAULT 0,
     billable_target     INTEGER      NOT NULL DEFAULT 0,
     description         TEXT,
     status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)       ${4} DEFAULT 0,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_prp_code              UNIQUE (pool_code, deleted),
@@ -3942,14 +3942,14 @@ CREATE INDEX IF NOT EXISTS idx_pet_tenant_type_code
 CREATE TABLE IF NOT EXISTS pmis_resource_assignment(
     id                    VARCHAR(20) PRIMARY KEY,
     assignment_code       VARCHAR(64)  NOT NULL,
-    employee_id           VARCHAR(20)       ${4},
+    employee_id           VARCHAR(20)       NOT NULL,
     employee_name         VARCHAR(64),
     level_code            VARCHAR(16),
-    pool_id               VARCHAR(20)${4}
+    pool_id               VARCHAR(20),
     pool_type             VARCHAR(32),                         -- 冗余池类型
-    initiation_id         VARCHAR(20)${4}                              -- 关联项目
+    initiation_id         VARCHAR(20),                              -- 关联项目
     initiation_name       VARCHAR(256),
-    opportunity_id        VARCHAR(20)${4}                              -- 关联商机
+    opportunity_id        VARCHAR(20),                              -- 关联商机
     status                VARCHAR(32)  NOT NULL DEFAULT 'RESERVED',
     allocation            NUMERIC(5,4) NOT NULL DEFAULT 1.0,   -- 0-1
     planned_start_date    DATE,
@@ -3958,11 +3958,11 @@ CREATE TABLE IF NOT EXISTS pmis_resource_assignment(
     actual_end_date       DATE,
     billable              SMALLINT     NOT NULL DEFAULT 1,
     daily_hours           NUMERIC(5,2) NOT NULL DEFAULT 8.0,
-    tenant_id             VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by            VARCHAR(20)       ${4} DEFAULT 0,
+    created_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pra_code              UNIQUE (assignment_code, deleted),
@@ -4012,10 +4012,10 @@ CREATE INDEX IF NOT EXISTS idx_pra_tenant_pool_status
 CREATE TABLE IF NOT EXISTS pmis_bench_record(
     id                    VARCHAR(20) PRIMARY KEY,
     bench_code            VARCHAR(64)  NOT NULL,
-    employee_id           VARCHAR(20)       ${4},
+    employee_id           VARCHAR(20)       NOT NULL,
     employee_name         VARCHAR(64),
     level_code            VARCHAR(16),
-    pool_id               VARCHAR(20)${4}
+    pool_id               VARCHAR(20),
     bench_reason          VARCHAR(32)  NOT NULL DEFAULT 'ENTER', -- ENTER/EXIT
     reason_type            VARCHAR(32),                          -- PROJECT_END/RESERVE/TRAINING/LEAVE
     source_assignment     BIGINT,                               -- 触发本次 Bench 的分配记录
@@ -4026,11 +4026,11 @@ CREATE TABLE IF NOT EXISTS pmis_bench_record(
     daily_cost            NUMERIC(15,2) NOT NULL DEFAULT 0,
     total_idle_cost       NUMERIC(15,2) NOT NULL DEFAULT 0,
     remark                TEXT,
-    tenant_id             VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by            VARCHAR(20)       ${4} DEFAULT 0,
+    created_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pbr_code              UNIQUE (bench_code, deleted),
@@ -4361,7 +4361,7 @@ COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按 tenan
 CREATE TABLE IF NOT EXISTS pmis_login_audit (
     id              VARCHAR(20) PRIMARY KEY,
     username        VARCHAR(64)   NOT NULL,
-    user_id         VARCHAR(20)${4}
+    user_id         VARCHAR(20),
     login_at        TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     login_ip        VARCHAR(64),
     user_agent      VARCHAR(512),
@@ -4369,8 +4369,8 @@ CREATE TABLE IF NOT EXISTS pmis_login_audit (
     fail_reason     VARCHAR(64),
     mfa_used        BOOLEAN       NOT NULL DEFAULT FALSE,
     mfa_success     BOOLEAN,
-    trace_id        VARCHAR(20)${4}
-    tenant_id       VARCHAR(20)        ${4} DEFAULT 1,
+    trace_id        VARCHAR(20),
+    tenant_id       VARCHAR(20)        NOT NULL DEFAULT '1',
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT      NOT NULL DEFAULT 0,
@@ -4406,14 +4406,14 @@ CREATE INDEX IF NOT EXISTS idx_login_audit_tenant_status_at
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_user_2fa (
     id              VARCHAR(20) PRIMARY KEY,
-    user_id         VARCHAR(20)        ${4},
+    user_id         VARCHAR(20)        NOT NULL,
     mfa_type        VARCHAR(16)   NOT NULL DEFAULT 'TOTP',
     secret          VARCHAR(128)  NOT NULL,
     binding_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_used_at    TIMESTAMPTZ,
     backup_codes    TEXT,
     enabled         BOOLEAN       NOT NULL DEFAULT TRUE,
-    tenant_id       VARCHAR(20)        ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)        NOT NULL DEFAULT '1',
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT      NOT NULL DEFAULT 0,
@@ -4440,7 +4440,7 @@ CREATE INDEX IF NOT EXISTS idx_user_2fa_tenant_user
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_data_export_audit (
     id              VARCHAR(20) PRIMARY KEY,
-    user_id         VARCHAR(20)        ${4},
+    user_id         VARCHAR(20)        NOT NULL,
     username        VARCHAR(64)   NOT NULL,
     export_module   VARCHAR(64)   NOT NULL,
     export_action   VARCHAR(64)   NOT NULL,
@@ -4450,9 +4450,9 @@ CREATE TABLE IF NOT EXISTS pmis_data_export_audit (
     file_size       BIGINT,
     export_format   VARCHAR(16),
     query_summary   TEXT,
-    trace_id        VARCHAR(20)${4}
+    trace_id        VARCHAR(20),
     client_ip       VARCHAR(64),
-    tenant_id       VARCHAR(20)        ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)        NOT NULL DEFAULT '1',
     exported_at     TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -4492,19 +4492,19 @@ CREATE INDEX IF NOT EXISTS idx_dea_tenant_module_at
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_sensitive_operation (
     id              VARCHAR(20) PRIMARY KEY,
-    user_id         VARCHAR(20)        ${4},
+    user_id         VARCHAR(20)        NOT NULL,
     username        VARCHAR(64)   NOT NULL,
     operation_code  VARCHAR(64)   NOT NULL,
     operation_name  VARCHAR(128)  NOT NULL,
     biz_type        VARCHAR(32),
-    biz_id          VARCHAR(20)${4}
+    biz_id          VARCHAR(20),
     re_auth_method  VARCHAR(16)   NOT NULL,
     re_auth_token   VARCHAR(256),
     verified_at     TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expire_at       TIMESTAMPTZ   NOT NULL,
     client_ip       VARCHAR(64),
-    trace_id        VARCHAR(20)${4}
-    tenant_id       VARCHAR(20)        ${4} DEFAULT 1,
+    trace_id        VARCHAR(20),
+    tenant_id       VARCHAR(20)        NOT NULL DEFAULT '1',
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT      NOT NULL DEFAULT 0,
@@ -4540,7 +4540,7 @@ CREATE INDEX IF NOT EXISTS idx_sensitive_op_tenant_code_at
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_user_session (
     id              VARCHAR(20) PRIMARY KEY,
-    user_id         VARCHAR(20)        ${4},
+    user_id         VARCHAR(20)        NOT NULL,
     session_id      VARCHAR(64)   NOT NULL,
     token_jti       VARCHAR(64),
     login_at        TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -4552,8 +4552,8 @@ CREATE TABLE IF NOT EXISTS pmis_user_session (
     status          VARCHAR(16)   NOT NULL DEFAULT 'ACTIVE',
     logout_at       TIMESTAMPTZ,
     logout_reason   VARCHAR(64),
-    trace_id        VARCHAR(20)${4}
-    tenant_id       VARCHAR(20)        ${4} DEFAULT 1,
+    trace_id        VARCHAR(20),
+    tenant_id       VARCHAR(20)        NOT NULL DEFAULT '1',
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT      NOT NULL DEFAULT 0,
@@ -4606,8 +4606,8 @@ CREATE INDEX IF NOT EXISTS idx_user_session_tenant_expire
 CREATE TABLE IF NOT EXISTS pmis_warranty (
     id                  VARCHAR(20) PRIMARY KEY,
     warranty_code       VARCHAR(64)  NOT NULL,
-    initiation_id       VARCHAR(20)       ${4},
-    contract_id         VARCHAR(20)${4}
+    initiation_id       VARCHAR(20)       NOT NULL,
+    contract_id         VARCHAR(20),
     project_type        VARCHAR(32),
     project_level       VARCHAR(8),
     start_date          DATE         NOT NULL,
@@ -4622,11 +4622,11 @@ CREATE TABLE IF NOT EXISTS pmis_warranty (
     contact_name        VARCHAR(64),
     contact_phone       VARCHAR(32),
     remark              VARCHAR(512),
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64),
-    created_by          VARCHAR(20)${4}
+    created_by          VARCHAR(20),
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)${4}
+    updated_by          VARCHAR(20),
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_warranty_code           UNIQUE (warranty_code, deleted),
@@ -4672,17 +4672,17 @@ CREATE INDEX IF NOT EXISTS idx_warranty_tenant_status_end
 CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     id                  VARCHAR(20) PRIMARY KEY,
     ticket_code         VARCHAR(64)  NOT NULL,
-    initiation_id       VARCHAR(20)       ${4},
-    warranty_id         VARCHAR(20)${4}
+    initiation_id       VARCHAR(20)       NOT NULL,
+    warranty_id         VARCHAR(20),
     title               VARCHAR(128) NOT NULL,
     description         TEXT,
     category            VARCHAR(32)  NOT NULL DEFAULT 'OTHER',
     priority            VARCHAR(8)   NOT NULL DEFAULT 'P3',
     status              VARCHAR(16)  NOT NULL DEFAULT 'OPEN',
-    reporter_id         VARCHAR(20)${4}
+    reporter_id         VARCHAR(20),
     reporter_name       VARCHAR(64),
     reporter_phone      VARCHAR(32),
-    assignee_id         VARCHAR(20)${4}
+    assignee_id         VARCHAR(20),
     assignee_name       VARCHAR(64),
     accepted_at         TIMESTAMPTZ,
     started_at          TIMESTAMPTZ,
@@ -4696,11 +4696,11 @@ CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     customer_score      INT,
     customer_comment    VARCHAR(512),
     file_ids            VARCHAR(1024),
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64),
-    created_by          VARCHAR(20)${4}
+    created_by          VARCHAR(20),
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)${4}
+    updated_by          VARCHAR(20),
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_ops_ticket_code           UNIQUE (ticket_code, deleted),
@@ -4763,9 +4763,9 @@ CREATE INDEX IF NOT EXISTS idx_ops_tenant_priority_status
 CREATE TABLE IF NOT EXISTS pmis_satisfaction (
     id                  VARCHAR(20) PRIMARY KEY,
     survey_code         VARCHAR(64)  NOT NULL,
-    initiation_id       VARCHAR(20)       ${4},
-    ticket_id           VARCHAR(20)${4}
-    warranty_id         VARCHAR(20)${4}
+    initiation_id       VARCHAR(20)       NOT NULL,
+    ticket_id           VARCHAR(20),
+    warranty_id         VARCHAR(20),
     score               INT          NOT NULL,
     level               VARCHAR(16)  NOT NULL,
     professionalism     INT,
@@ -4775,16 +4775,16 @@ CREATE TABLE IF NOT EXISTS pmis_satisfaction (
     comments            VARCHAR(1024),
     suggest             VARCHAR(1024),
     anonymous           BOOLEAN      NOT NULL DEFAULT FALSE,
-    evaluator_id        VARCHAR(20)${4}
+    evaluator_id        VARCHAR(20),
     evaluator_name      VARCHAR(64),
     evaluated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     follow_up           BOOLEAN      NOT NULL DEFAULT FALSE,
     follow_up_note      VARCHAR(512),
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64),
-    created_by          VARCHAR(20)${4}
+    created_by          VARCHAR(20),
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)${4}
+    updated_by          VARCHAR(20),
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_satisfaction_code       UNIQUE (survey_code, deleted),
@@ -4858,7 +4858,7 @@ CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     alert_type          VARCHAR(32)  NOT NULL,
     alert_level         VARCHAR(8)   NOT NULL,
     source_type         VARCHAR(32)  NOT NULL,
-    source_id           VARCHAR(64),
+    source_id           VARCHAR(20),
     title               VARCHAR(256) NOT NULL,
     content             TEXT,
     target_role         VARCHAR(64)  NOT NULL,
@@ -4870,7 +4870,7 @@ CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     sent_at             TIMESTAMPTZ,
     fail_reason         VARCHAR(512),
     retry_count         INT          NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64),
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -4925,14 +4925,14 @@ CREATE TABLE IF NOT EXISTS pmis_reconcile_daily (
     id                  VARCHAR(20) PRIMARY KEY,
     reconcile_date      DATE         NOT NULL,
     reconcile_type      VARCHAR(32)  NOT NULL,
-    initiation_id       VARCHAR(20)${4}
+    initiation_id       VARCHAR(20),
     expected_amount     NUMERIC(18,2) NOT NULL DEFAULT 0,
     actual_amount       NUMERIC(18,2) NOT NULL DEFAULT 0,
     diff_amount         NUMERIC(18,2) NOT NULL DEFAULT 0,
     diff_pct            NUMERIC(8,4) NOT NULL DEFAULT 0,
     status              VARCHAR(16)  NOT NULL DEFAULT 'OK',
     detail              TEXT,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64),
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -5037,7 +5037,7 @@ ON CONFLICT (config_group, config_key, deleted) DO UPDATE
 CREATE TABLE IF NOT EXISTS pmis_billable_utilization_snapshot (
     id               VARCHAR(20) PRIMARY KEY,
     period           VARCHAR(7)  NOT NULL,                          -- yyyy-MM
-    employee_id      VARCHAR(20)      ${4},
+    employee_id      VARCHAR(20)      NOT NULL,
     employee_name    VARCHAR(64) DEFAULT '',
     level_code       VARCHAR(16) DEFAULT '',                        -- L1-L18
     department       VARCHAR(64) DEFAULT '',
@@ -5053,7 +5053,7 @@ CREATE TABLE IF NOT EXISTS pmis_billable_utilization_snapshot (
     range_to         DATE         NOT NULL,
     snapshot_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     source           VARCHAR(16)  NOT NULL DEFAULT 'CRONJOB',    -- CRONJOB / MANUAL / RETRO
-    tenant_id        VARCHAR(20)       ${4} 1,
+    tenant_id        VARCHAR(20)       DEFAULT 1,
     deleted          SMALLINT     NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uq_billable_period_emp UNIQUE (period, employee_id, deleted),
@@ -5272,12 +5272,12 @@ CREATE TABLE IF NOT EXISTS pmis_flow_definition(
     ext                VARCHAR(1024),
     description        VARCHAR(512),
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         VARCHAR(20)       ${4} DEFAULT 0,
+    created_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
     version            INTEGER      NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -5331,7 +5331,7 @@ CREATE INDEX IF NOT EXISTS idx_pfd_tenant_status
 -- P1-6: 已废弃,无需 DROP
 CREATE TABLE IF NOT EXISTS pmis_flow_node(
     id                 VARCHAR(20)    PRIMARY KEY,
-    definition_id      VARCHAR(20)       ${4},
+    definition_id      VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     node_type          SMALLINT     NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
@@ -5342,12 +5342,12 @@ CREATE TABLE IF NOT EXISTS pmis_flow_node(
     skip_list          TEXT,
     ext                VARCHAR(1024),
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         VARCHAR(20)       ${4} DEFAULT 0,
+    created_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
     -- 数据完整性约束
     CONSTRAINT ck_pfn_status_enum       CHECK (status IN ('ENABLED','DISABLED')),
@@ -5387,7 +5387,7 @@ CREATE INDEX IF NOT EXISTS idx_pfn_tenant_code
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_skip(
     id                 VARCHAR(20)    PRIMARY KEY,
-    definition_id      VARCHAR(20)       ${4},
+    definition_id      VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     skip_name          VARCHAR(128),
     skip_type          VARCHAR(16)  NOT NULL,
@@ -5398,12 +5398,12 @@ CREATE TABLE IF NOT EXISTS pmis_flow_skip(
     coordinate_next    VARCHAR(64),
     skip_list          TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         VARCHAR(20)       ${4} DEFAULT 0,
+    created_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
     -- 数据完整性约束
     CONSTRAINT ck_pfs_skip_type         CHECK (skip_type IN ('PASS','REJECT','FORWARD','BACK')),
@@ -5443,13 +5443,13 @@ CREATE TABLE IF NOT EXISTS pmis_flow_instance(
     id                 VARCHAR(20)    PRIMARY KEY,
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128),
-    definition_id      VARCHAR(20)       ${4},
+    definition_id      VARCHAR(20)       NOT NULL,
     flow_version       VARCHAR(20)  NOT NULL DEFAULT '1.0',
     business_type      VARCHAR(64)  NOT NULL,
-    business_id        VARCHAR(20)  ${4},
+    business_id        VARCHAR(20)  NOT NULL,
     business_no        VARCHAR(128),
     title              VARCHAR(256),
-    initiator_id       VARCHAR(20)${4}
+    initiator_id       VARCHAR(20),
     initiator_name     VARCHAR(64),
     current_node_code  VARCHAR(64),
     current_node_name  VARCHAR(128),
@@ -5460,12 +5460,12 @@ CREATE TABLE IF NOT EXISTS pmis_flow_instance(
     end_at             TIMESTAMPTZ,
     duration_ms        BIGINT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         VARCHAR(20)       ${4} DEFAULT 0,
+    created_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
     -- 数据完整性约束
     CONSTRAINT ck_pfi_flow_status       CHECK (flow_status IN ('RUNNING','SUSPENDED','COMPLETED','TERMINATED','REJECTED','DRAFT')),
@@ -5548,21 +5548,21 @@ CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_start
 --      - approve_count / approve_finished 非负
 CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     id                 VARCHAR(20)    PRIMARY KEY,
-    instance_id        VARCHAR(20)       ${4},
+    instance_id        VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
-    definition_id      VARCHAR(20)       ${4},
+    definition_id      VARCHAR(20)       NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
     node_name          VARCHAR(128),
     node_type          SMALLINT     NOT NULL,
     business_type      VARCHAR(64),
-    business_id        VARCHAR(20)${4}
+    business_id        VARCHAR(20),
     business_no        VARCHAR(128),
     flow_name          VARCHAR(128),
     title              VARCHAR(256),
-    assignor_id        VARCHAR(20)${4}
+    assignor_id        VARCHAR(20),
     assignor_name      VARCHAR(64),
     assignee_type      VARCHAR(16)  NOT NULL DEFAULT 'USER',
-    assignee_id        VARCHAR(20)  ${4},
+    assignee_id        VARCHAR(20)  NOT NULL,
     assignee_name      VARCHAR(64),
     permission_flag    VARCHAR(512),
     perform_type       VARCHAR(16)  NOT NULL DEFAULT 'OR',
@@ -5572,9 +5572,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     task_status        VARCHAR(32)  NOT NULL DEFAULT 'PENDING',
     comment            TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         VARCHAR(20)       ${4} DEFAULT 0,
+    created_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     claim_at           TIMESTAMPTZ,
     finish_at          TIMESTAMPTZ,
@@ -5586,7 +5586,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     sla_action         VARCHAR(32),
     sla_escalated      SMALLINT     NOT NULL DEFAULT 0,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
     -- GAP-P2-10: FOREACH 循环节点当前迭代元素值（非循环节点为 NULL）
     iter_var           VARCHAR(255),
@@ -5683,20 +5683,20 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
     id                 VARCHAR(20)    PRIMARY KEY,
-    instance_id        VARCHAR(20)       ${4},
-    task_id            VARCHAR(20)       ${4},
+    instance_id        VARCHAR(20)       NOT NULL,
+    task_id            VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
-    definition_id      VARCHAR(20)       ${4},
+    definition_id      VARCHAR(20)       NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
     node_name          VARCHAR(128),
     node_type          SMALLINT     NOT NULL,
     business_type      VARCHAR(64),
-    business_id        VARCHAR(20)${4}
+    business_id        VARCHAR(20),
     business_no        VARCHAR(128),
     flow_name          VARCHAR(128),
     title              VARCHAR(256),
     assignee_type      VARCHAR(16)  NOT NULL,
-    assignee_id        VARCHAR(20)  ${4},
+    assignee_id        VARCHAR(20)  NOT NULL,
     assignee_name      VARCHAR(64),
     perform_type       VARCHAR(16)  NOT NULL,
     approve_count      INT          NOT NULL DEFAULT 1,
@@ -5705,15 +5705,15 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
     task_status        VARCHAR(32)  NOT NULL,
     comment            TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         VARCHAR(20)       ${4} DEFAULT 0,
+    created_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     claim_at           TIMESTAMPTZ,
     finish_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     duration_ms        BIGINT,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
     -- GAP-P2-10: FOREACH 归档追溯(从 pmis_flow_run_task 复制)
     iter_var           VARCHAR(255),
@@ -5780,22 +5780,22 @@ CREATE INDEX IF NOT EXISTS idx_pfht_tenant_finish
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_user(
     id                 VARCHAR(20)    PRIMARY KEY,
-    task_id            VARCHAR(20)       ${4},
-    instance_id        VARCHAR(20)       ${4},
+    task_id            VARCHAR(20)       NOT NULL,
+    instance_id        VARCHAR(20)       NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
     user_type          VARCHAR(16)  NOT NULL,
-    user_id            VARCHAR(20)  ${4},
+    user_id            VARCHAR(20)  NOT NULL,
     user_name          VARCHAR(64),
     processed          SMALLINT     NOT NULL DEFAULT 0,
     process_at         TIMESTAMPTZ,
     comment            TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         VARCHAR(20)       ${4} DEFAULT 0,
+    created_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
     -- 数据完整性约束
     CONSTRAINT ck_pfu_user_type         CHECK (user_type  IN ('USER','ROLE','DEPT')),
@@ -5947,28 +5947,28 @@ COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），My
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS pmis_flow_audit_log CASCADE;
 CREATE TABLE IF NOT EXISTS pmis_flow_audit_log(
-    id                 BIGSERIAL    NOT NULL,
-    instance_id        VARCHAR(20)       ${4},
-    task_id            VARCHAR(20)${4}
+    id                 VARCHAR(20)    NOT NULL,
+    instance_id        VARCHAR(20)       NOT NULL,
+    task_id            VARCHAR(20),
     flow_code          VARCHAR(64)  NOT NULL,
     business_type      VARCHAR(64),
-    business_id        VARCHAR(20)${4}
+    business_id        VARCHAR(20),
     node_code          VARCHAR(64),
     node_name          VARCHAR(128),
     action             VARCHAR(32)  NOT NULL,
-    operator_id        VARCHAR(20)${4}
+    operator_id        VARCHAR(20),
     operator_name      VARCHAR(64),
-    target_id          VARCHAR(20)${4}
+    target_id          VARCHAR(20),
     target_name        VARCHAR(64),
     comment            TEXT,
     operated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         VARCHAR(20)       ${4} DEFAULT 0,
+    created_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
     -- 数据完整性约束
     CONSTRAINT ck_pfal_status_enum      CHECK (status IN ('ENABLED','DISABLED')),
@@ -6047,18 +6047,18 @@ CREATE INDEX IF NOT EXISTS idx_pfal_provider_trace
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_cc(
     id                 VARCHAR(20) PRIMARY KEY,
-    tenant_id          VARCHAR(20)       ${4},
-    instance_id        VARCHAR(20)       ${4},
-    task_id            VARCHAR(20)${4}
+    tenant_id          VARCHAR(20)       NOT NULL,
+    instance_id        VARCHAR(20)       NOT NULL,
+    task_id            VARCHAR(20),
     node_code          VARCHAR(64)  NOT NULL,
     node_name          VARCHAR(128),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128),
     business_key       VARCHAR(128),
-    cc_user_id         VARCHAR(20)       ${4},
+    cc_user_id         VARCHAR(20)       NOT NULL,
     cc_user_name       VARCHAR(64),
     cc_type            VARCHAR(16)  NOT NULL DEFAULT 'CC_NODE',
-    trigger_user_id    VARCHAR(20)${4}
+    trigger_user_id    VARCHAR(20),
     trigger_user_name  VARCHAR(64),
     title              VARCHAR(255),
     content            TEXT,
@@ -6114,7 +6114,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_created
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_cc_rule(
     id                 VARCHAR(20) PRIMARY KEY,
-    tenant_id          VARCHAR(20)       ${4},
+    tenant_id          VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
     rule_type          VARCHAR(16)  NOT NULL,
@@ -6167,7 +6167,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_tenant
 -- log_modified  最后修改时间
 CREATE TABLE IF NOT EXISTS undo_log (
     id            VARCHAR(20)    PRIMARY KEY,
-    branch_id     VARCHAR(20)       ${4},
+    branch_id     VARCHAR(20)       NOT NULL,
     xid           VARCHAR(100) NOT NULL,
     context       VARCHAR(128) NOT NULL,
     rollback_info BYTEA        NOT NULL,
@@ -6263,16 +6263,16 @@ COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_timer(
     id                 VARCHAR(20) PRIMARY KEY,
-    tenant_id          VARCHAR(20)       ${4},
-    instance_id        VARCHAR(20)       ${4},
-    definition_id      VARCHAR(20)       ${4},
+    tenant_id          VARCHAR(20)       NOT NULL,
+    instance_id        VARCHAR(20)       NOT NULL,
+    definition_id      VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
     node_name          VARCHAR(128),
     -- 中间定时器 INTERMEDIATE / 边界定时器 BOUNDARY
     timer_type         VARCHAR(16)  NOT NULL DEFAULT 'INTERMEDIATE',
     -- 边界定时器关联的 userTask
-    boundary_task_id   VARCHAR(20)${4}
+    boundary_task_id   VARCHAR(20),
     -- 触发时间
     fire_at            TIMESTAMPTZ  NOT NULL,
     -- CRON 表达式（可空，仅用于循环定时器）
@@ -6366,10 +6366,10 @@ VALUES (
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_auth(
     id                    VARCHAR(20)    PRIMARY KEY,
-    tenant_id             VARCHAR(20)       ${4} DEFAULT 1,
-    owner_user_id         VARCHAR(20)       ${4},
+    tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
+    owner_user_id         VARCHAR(20)       NOT NULL,
     owner_user_name       VARCHAR(64),
-    delegate_user_id      VARCHAR(20)       ${4},
+    delegate_user_id      VARCHAR(20)       NOT NULL,
     delegate_user_name    VARCHAR(64),
     -- 匹配模式: ALL/FLOW/FLOW_NODE/ROLE
     scope_type            VARCHAR(16)  NOT NULL,
@@ -6385,9 +6385,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_delegate_auth(
     auth_status           VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     reason                VARCHAR(255),
     provider_trace_id     VARCHAR(64),
-    created_by            VARCHAR(20)       ${4} DEFAULT 0,
+    created_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by            VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -6446,13 +6446,13 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_flow
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_log(
     id                 VARCHAR(20)    PRIMARY KEY,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
-    auth_id            VARCHAR(20)       ${4},
-    instance_id        VARCHAR(20)       ${4},
-    task_id            VARCHAR(20)       ${4},
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
+    auth_id            VARCHAR(20)       NOT NULL,
+    instance_id        VARCHAR(20)       NOT NULL,
+    task_id            VARCHAR(20)       NOT NULL,
     node_code          VARCHAR(64),
-    owner_user_id      VARCHAR(20)       ${4},
-    delegate_user_id   VARCHAR(20)       ${4},
+    owner_user_id      VARCHAR(20)       NOT NULL,
+    delegate_user_id   VARCHAR(20)       NOT NULL,
     -- 操作类型: ACT=代理办理 VIEW=代理查看
     op_type            VARCHAR(16)  NOT NULL,
     -- 实际处理动作：PASS/REJECT/CLAIM/TRANSFER/...
@@ -6499,8 +6499,8 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_delegate
 -- 报表订阅表
 CREATE TABLE IF NOT EXISTS pmis_report_subscription (
     id              VARCHAR(20)    PRIMARY KEY,
-    tenant_id       VARCHAR(20)       ${4} DEFAULT 1,
-    subscriber_id   VARCHAR(20)       ${4},
+    tenant_id       VARCHAR(20)       NOT NULL DEFAULT '1',
+    subscriber_id   VARCHAR(20)       NOT NULL,
     report_type     VARCHAR(50)  NOT NULL,
     frequency       VARCHAR(20)  NOT NULL DEFAULT 'DAILY',
     channels        VARCHAR(200),
@@ -6730,17 +6730,17 @@ VALUES (
 -- 异步导出记录表（同时承担历史 pmis_report_export_record 的角色，P0-3 合并）
 CREATE TABLE IF NOT EXISTS pmis_export_record (
     id              VARCHAR(20)    PRIMARY KEY,
-    tenant_id       VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)       NOT NULL DEFAULT '1',
     -- 来源：MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发（cronjob 模块）
     source          VARCHAR(16)  NOT NULL DEFAULT 'MANUAL',
     -- 发起人：MANUAL 必填；SUBSCRIPTION 取订阅人 subscriber_id
-    user_id         VARCHAR(20)${4}
+    user_id         VARCHAR(20),
     -- 通用导出类型（MANUAL 主用）
     export_type     VARCHAR(50)  NOT NULL,
     -- 报表类型（SUBSCRIPTION 主用，与 export_type 互补）
     report_type     VARCHAR(50),
     -- 关联订阅 ID（仅 SUBSCRIPTION 来源有值）
-    subscription_id VARCHAR(20)${4}
+    subscription_id VARCHAR(20),
     file_name       VARCHAR(500),
     file_key        VARCHAR(500),
     file_url        VARCHAR(1000),
@@ -6826,13 +6826,13 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_instance(
     id                 VARCHAR(20)    PRIMARY KEY,
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128),
-    definition_id      VARCHAR(20)${4}
+    definition_id      VARCHAR(20),
     flow_version       VARCHAR(20),
     business_type      VARCHAR(64),
-    business_id        VARCHAR(20)${4}
+    business_id        VARCHAR(20),
     business_no        VARCHAR(64),
     title              VARCHAR(256),
-    initiator_id       VARCHAR(20)${4}
+    initiator_id       VARCHAR(20),
     initiator_name     VARCHAR(64),
     current_node_code  VARCHAR(64),
     current_node_name  VARCHAR(128),
@@ -6842,12 +6842,12 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_instance(
     start_at           TIMESTAMPTZ,
     end_at             TIMESTAMPTZ,
     duration_ms        BIGINT,
-    created_by         VARCHAR(20)       ${4} DEFAULT 0,
+    created_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ  NOT NULL,
-    updated_by         VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ  NOT NULL,
     archived_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tenant_id          VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
     -- 数据完整性约束
     CONSTRAINT ck_pfhi_flow_status     CHECK (flow_status IN ('RUNNING','COMPLETED','TERMINATED','SUSPENDED')),
@@ -6875,8 +6875,8 @@ CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_archived_at
 -- 归档变量表（用于归档 instance 时同步迁移 variable 字段中的大 JSON）
 CREATE TABLE IF NOT EXISTS pmis_flow_his_variable(
     id            VARCHAR(20)    PRIMARY KEY,
-    tenant_id     VARCHAR(20)       ${4} DEFAULT 1,
-    instance_id   VARCHAR(20)       ${4},
+    tenant_id     VARCHAR(20)       NOT NULL DEFAULT '1',
+    instance_id   VARCHAR(20)       NOT NULL,
     var_key       VARCHAR(128) NOT NULL,
     var_value     TEXT,
     archived_at   TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -6977,7 +6977,7 @@ CREATE INDEX IF NOT EXISTS idx_pfd_canary_status
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_attendance (
     id                  VARCHAR(20) PRIMARY KEY,
-    employee_id         VARCHAR(20)       ${4},
+    employee_id         VARCHAR(20)       NOT NULL,
     employee_name       VARCHAR(64),
     attendance_date     DATE         NOT NULL,
     check_in_time       TIMESTAMPTZ,
@@ -6987,7 +6987,7 @@ CREATE TABLE IF NOT EXISTS pmis_attendance (
     status              VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',  -- NORMAL/LATE/EARLY/ABSENT/LEAVE/OVERTIME
     work_type           VARCHAR(16)  NOT NULL DEFAULT 'WORKDAY',  -- WORKDAY/WEEKEND/HOLIDAY
     remark              TEXT,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -7032,7 +7032,7 @@ CREATE INDEX IF NOT EXISTS idx_pa_tenant_status
 CREATE TABLE IF NOT EXISTS pmis_overtime (
     id                  VARCHAR(20) PRIMARY KEY,
     overtime_code       VARCHAR(64)  NOT NULL,
-    employee_id         VARCHAR(20)       ${4},
+    employee_id         VARCHAR(20)       NOT NULL,
     employee_name       VARCHAR(64),
     overtime_date       DATE         NOT NULL,
     start_time          TIMESTAMPTZ  NOT NULL,
@@ -7041,13 +7041,13 @@ CREATE TABLE IF NOT EXISTS pmis_overtime (
     overtime_type       VARCHAR(32)  NOT NULL,                   -- WORKDAY/WEEKEND/HOLIDAY
     pay_rate            NUMERIC(5,2) NOT NULL DEFAULT 1.5,       -- 1.5/2.0/3.0 倍
     reason              TEXT,
-    approval_id         VARCHAR(20)${4}
+    approval_id         VARCHAR(20),
     approval_status     VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- DRAFT/SUBMITTED/APPROVED/REJECTED/CANCELLED
-    approver_id         VARCHAR(20)${4}
+    approver_id         VARCHAR(20),
     approver_name       VARCHAR(64),
     approval_time       TIMESTAMPTZ,
     approval_remark     TEXT,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -7098,7 +7098,7 @@ CREATE INDEX IF NOT EXISTS idx_pot_tenant_status
 CREATE TABLE IF NOT EXISTS pmis_leave (
     id                  VARCHAR(20) PRIMARY KEY,
     leave_code          VARCHAR(64)  NOT NULL,
-    employee_id         VARCHAR(20)       ${4},
+    employee_id         VARCHAR(20)       NOT NULL,
     employee_name       VARCHAR(64),
     leave_type          VARCHAR(32)  NOT NULL,                   -- ANNUAL/SICK/PERSONAL/MARRIAGE/MATERNITY/BEREAVEMENT/OTHER
     start_date          DATE         NOT NULL,
@@ -7106,13 +7106,13 @@ CREATE TABLE IF NOT EXISTS pmis_leave (
     leave_days          NUMERIC(5,2) NOT NULL,
     reason              TEXT,
     attachment_url      VARCHAR(512),
-    approval_id         VARCHAR(20)${4}
+    approval_id         VARCHAR(20),
     approval_status     VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- DRAFT/SUBMITTED/APPROVED/REJECTED/CANCELLED
-    approver_id         VARCHAR(20)${4}
+    approver_id         VARCHAR(20),
     approver_name       VARCHAR(64),
     approval_time       TIMESTAMPTZ,
     approval_remark     TEXT,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -7177,7 +7177,7 @@ CREATE INDEX IF NOT EXISTS idx_pl_tenant_status
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_def (
     id                    VARCHAR(20)       PRIMARY KEY,
-    tenant_id             VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id             VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code             VARCHAR(128)    NOT NULL,
     rule_name             VARCHAR(256)    NOT NULL,
     category              VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
@@ -7231,7 +7231,7 @@ CREATE INDEX IF NOT EXISTS idx_prd_tenant_mutex_group
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_version_history (
     id              VARCHAR(20)       PRIMARY KEY,
-    tenant_id       VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code       VARCHAR(128)    NOT NULL,
     version         INTEGER         NOT NULL,
     definition_json TEXT            NOT NULL,
@@ -7350,7 +7350,7 @@ WHERE NOT EXISTS (
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_template (
     id                    VARCHAR(20)       PRIMARY KEY,
-    tenant_id             VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id             VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code         VARCHAR(128)    NOT NULL,
     template_name         VARCHAR(256)    NOT NULL,
     category              VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
@@ -7478,7 +7478,7 @@ ON CONFLICT (tenant_id, template_code, deleted) WHERE deleted = 0 DO NOTHING;
 -- 测试用例主表
 CREATE TABLE IF NOT EXISTS pmis_rule_test_case (
     id                 VARCHAR(20)       PRIMARY KEY,
-    tenant_id          VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
     name               VARCHAR(256)    NOT NULL,
     rule_code          VARCHAR(128),
     facts_data         JSONB           NOT NULL,
@@ -7588,8 +7588,8 @@ CREATE INDEX IF NOT EXISTS idx_prd_tenant_status
 -- 2. 执行链路追踪表
 CREATE TABLE IF NOT EXISTS pmis_rule_execution_trace (
     id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          ${4} DEFAULT 1,
-    trace_id          VARCHAR(20)     ${4},
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
+    trace_id          VARCHAR(20)     NOT NULL,
     rule_code         VARCHAR(128)    NOT NULL,
     rule_name         VARCHAR(256),
     scenario          VARCHAR(128),
@@ -7642,7 +7642,7 @@ CREATE INDEX IF NOT EXISTS idx_pret_tenant_scenario
 
 CREATE TABLE IF NOT EXISTS pmis_rule_decision_table (
     id                 VARCHAR(20)       PRIMARY KEY,
-    tenant_id          VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
     table_code         VARCHAR(128)    NOT NULL,
     table_name         VARCHAR(256)    NOT NULL,
     description        TEXT,
@@ -7735,16 +7735,16 @@ COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略：UNIQUE/
 
 CREATE TABLE IF NOT EXISTS pmis_flow_event_subscription (
     id                  VARCHAR(20)       PRIMARY KEY,
-    tenant_id           VARCHAR(20)          ${4} DEFAULT 1,
-    instance_id         VARCHAR(20)          ${4},
-    definition_id       VARCHAR(20)          ${4},
+    tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
+    instance_id         VARCHAR(20)          NOT NULL,
+    definition_id       VARCHAR(20)          NOT NULL,
     flow_code           VARCHAR(64)     NOT NULL,
     node_code           VARCHAR(64)     NOT NULL,
     node_name           VARCHAR(128),
     event_type          VARCHAR(16)     NOT NULL,   -- MESSAGE / ERROR / SIGNAL
     event_ref           VARCHAR(128),               -- messageRef / errorRef / signalRef
     correlation_key     VARCHAR(256),               -- 消息关联键（业务标识，可空）
-    boundary_task_id    VARCHAR(20)${4}                     -- 边界事件关联的 userTask ID
+    boundary_task_id    VARCHAR(20),                     -- 边界事件关联的 userTask ID
     subscription_status VARCHAR(16)     NOT NULL DEFAULT 'WAITING', -- WAITING / COMPLETED / CANCELLED
     payload             TEXT,                       -- 触发时携带的业务数据 JSON
     triggered_at        TIMESTAMPTZ,                -- 实际触发时间
@@ -7752,9 +7752,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_event_subscription (
     cancel_reason       VARCHAR(256),               -- 取消原因
     -- 审计字段
     status              VARCHAR(16)     NOT NULL DEFAULT 'ENABLED',
-    created_by          VARCHAR(20)          ${4} DEFAULT 0,
+    created_by          VARCHAR(20)          NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_by          VARCHAR(20)          ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)          NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     deleted             SMALLINT        NOT NULL DEFAULT 0,
     provider_trace_id   VARCHAR(64),
@@ -7830,7 +7830,7 @@ CREATE INDEX IF NOT EXISTS idx_prd_tenant_canary_ratio
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_canary_bucket (
     id              VARCHAR(20)       PRIMARY KEY,
-    tenant_id       VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code       VARCHAR(128)    NOT NULL,
     bucket_type     VARCHAR(16)     NOT NULL,  -- PRIMARY / CANARY
     bucket_count    BIGINT          NOT NULL DEFAULT 0,
@@ -7923,13 +7923,13 @@ COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
     id                  VARCHAR(20)       PRIMARY KEY,
-    tenant_id           VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     -- 事件标识
     event_type          VARCHAR(64)     NOT NULL,               -- TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等
     biz_type            VARCHAR(64)     NOT NULL,               -- 业务类型: WORKFLOW_TASK / WORKFLOW_INSTANCE / WORKFLOW_CC
-    biz_id              VARCHAR(20)${4}                                 -- 业务 ID（taskId / instanceId）
-    instance_id         VARCHAR(20)${4}                                 -- 流程实例 ID（便于按实例查询）
-    task_id             VARCHAR(20)${4}                                 -- 任务 ID（便于按任务查询）
+    biz_id              VARCHAR(20),                                 -- 业务 ID（taskId / instanceId）
+    instance_id         VARCHAR(20),                                 -- 流程实例 ID（便于按实例查询）
+    task_id             VARCHAR(20),                                 -- 任务 ID（便于按任务查询）
     -- 消息内容
     payload             TEXT            NOT NULL,               -- JSON 载荷（接收方解析）
     target_channels     VARCHAR(128),                           -- 投递通道: IN_APP / IM / EMAIL / SMS（逗号分隔，空表示按 event_type 默认）
@@ -7944,9 +7944,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
     -- 链路追踪
     provider_trace_id   VARCHAR(64),
     -- 审计字段
-    created_by          VARCHAR(20)          ${4} DEFAULT 0,
+    created_by          VARCHAR(20)          NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_by          VARCHAR(20)          ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)          NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     deleted             SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -8002,7 +8002,7 @@ CREATE INDEX IF NOT EXISTS idx_pfno_tenant_trace
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_scorecard (
     id               VARCHAR(20)       PRIMARY KEY,
-    tenant_id        VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id        VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code        VARCHAR(128)    NOT NULL,
     rule_name        VARCHAR(256)    NOT NULL,
     category         VARCHAR(64)     NOT NULL DEFAULT 'RISK',
@@ -8047,7 +8047,7 @@ CREATE INDEX IF NOT EXISTS idx_prs2_tenant_category_enabled
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_decision_tree (
     id              VARCHAR(20)       PRIMARY KEY,
-    tenant_id       VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code       VARCHAR(128)    NOT NULL,
     rule_name       VARCHAR(256)    NOT NULL,
     category        VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
@@ -8084,7 +8084,7 @@ CREATE INDEX IF NOT EXISTS idx_prdt2_tenant_category_enabled
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_script (
     id               VARCHAR(20)       PRIMARY KEY,
-    tenant_id        VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id        VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code        VARCHAR(128)    NOT NULL,
     rule_name        VARCHAR(256)    NOT NULL,
     category         VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
@@ -8338,7 +8338,7 @@ CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON pmis_rule_canary_buc
 
 CREATE TABLE IF NOT EXISTS pmis_rule_variable_def (
     id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     var_name          VARCHAR(128)    NOT NULL,
     var_type          VARCHAR(128)    NOT NULL,
     description       VARCHAR(512),
@@ -8685,8 +8685,8 @@ END $$;
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_third_party_account (
     id                 VARCHAR(20)       PRIMARY KEY,
-    tenant_id          VARCHAR(20)          ${4} DEFAULT 1,
-    user_id            VARCHAR(20)          ${4},
+    tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
+    user_id            VARCHAR(20)          NOT NULL,
     platform           VARCHAR(20)     NOT NULL,
     open_id            VARCHAR(128),
     union_id           VARCHAR(128),
@@ -8697,9 +8697,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_third_party_account (
     token_expire_at    TIMESTAMPTZ,
     status             VARCHAR(20)     NOT NULL DEFAULT 'ACTIVE',
     provider_trace_id  VARCHAR(64),
-    created_by         VARCHAR(20)          ${4} DEFAULT 0,
+    created_by         VARCHAR(20)          NOT NULL DEFAULT '0',
     created_at         TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         VARCHAR(20)          ${4} DEFAULT 0,
+    updated_by         VARCHAR(20)          NOT NULL DEFAULT '0',
     updated_at         TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -8737,7 +8737,7 @@ CREATE INDEX IF NOT EXISTS idx_pftpa_tenant_platform_union
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_third_party_log (
     id                  VARCHAR(20)       PRIMARY KEY,
-    tenant_id           VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     platform            VARCHAR(20)     NOT NULL,
     event_type          VARCHAR(64)     NOT NULL,
     process_instance_id VARCHAR(128),
@@ -8793,7 +8793,7 @@ CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_dmn_table (
     id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     table_key         VARCHAR(128)    NOT NULL,
     table_name        VARCHAR(128)    NOT NULL,
     description       VARCHAR(512),
@@ -8805,9 +8805,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_dmn_table (
     version           INT             NOT NULL DEFAULT 1,
     status            VARCHAR(20)     NOT NULL DEFAULT 'DRAFT',
     provider_trace_id VARCHAR(64),
-    created_by        VARCHAR(20)          ${4} DEFAULT 0,
+    created_by        VARCHAR(20)          NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)          ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)          NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -8858,7 +8858,7 @@ CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_name
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_template (
     id              VARCHAR(20)       PRIMARY KEY,
-    tenant_id       VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code   VARCHAR(128)    NOT NULL,
     template_name   VARCHAR(256)    NOT NULL,
     category        VARCHAR(64),
@@ -8869,9 +8869,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_template (
     use_count       INTEGER         NOT NULL DEFAULT 0,
     sort_order      INTEGER         NOT NULL DEFAULT 0,
     provider_trace_id VARCHAR(64),
-    created_by      VARCHAR(20)          ${4} DEFAULT 0,
+    created_by      VARCHAR(20)          NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)          ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)          NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -8905,7 +8905,7 @@ COMMENT ON COLUMN pmis_flow_template.deleted IS '逻辑删除 0=未删 1=已删'
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_auto_trigger (
     id                   VARCHAR(20)       PRIMARY KEY,
-    tenant_id            VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id            VARCHAR(20)          NOT NULL DEFAULT '1',
     source_flow_code     VARCHAR(64)     NOT NULL,
     target_flow_code     VARCHAR(64)     NOT NULL,
     condition_expression VARCHAR(1024),
@@ -8913,9 +8913,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_auto_trigger (
     enabled              INTEGER         NOT NULL DEFAULT 1,
     sort_order           INTEGER         NOT NULL DEFAULT 0,
     provider_trace_id    VARCHAR(64),
-    created_by           VARCHAR(20)          ${4} DEFAULT 0,
+    created_by           VARCHAR(20)          NOT NULL DEFAULT '0',
     created_at           TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by           VARCHAR(20)          ${4} DEFAULT 0,
+    updated_by           VARCHAR(20)          NOT NULL DEFAULT '0',
     updated_at           TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted              SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -8947,15 +8947,15 @@ COMMENT ON COLUMN pmis_flow_auto_trigger.deleted IS '逻辑删除 0=未删 1=已
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_channel (
     id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     channel_type      VARCHAR(32)     NOT NULL,
     channel_name      VARCHAR(128)    NOT NULL,
     config            TEXT,
     enabled           SMALLINT        NOT NULL DEFAULT 1,
     provider_trace_id VARCHAR(64),
-    created_by        VARCHAR(20)          ${4} DEFAULT 0,
+    created_by        VARCHAR(20)          NOT NULL DEFAULT '0',
     created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)          ${4} DEFAULT 0,
+    updated_by        VARCHAR(20)          NOT NULL DEFAULT '0',
     updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -8986,19 +8986,19 @@ COMMENT ON COLUMN pmis_flow_notify_channel.deleted IS '逻辑删除 0=未删 1=�
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_task_comment (
     id              VARCHAR(20)       PRIMARY KEY,
-    tenant_id       VARCHAR(20)          ${4} DEFAULT 1,
-    instance_id     VARCHAR(20)          ${4},
-    task_id         VARCHAR(20)          ${4},
+    tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
+    instance_id     VARCHAR(20)          NOT NULL,
+    task_id         VARCHAR(20)          NOT NULL,
     node_code       VARCHAR(64),
-    user_id         VARCHAR(20)          ${4},
+    user_id         VARCHAR(20)          NOT NULL,
     user_name       VARCHAR(128),
     content         TEXT,
     type            VARCHAR(16)     NOT NULL DEFAULT 'COMMENT',
-    parent_id       VARCHAR(20)${4}
+    parent_id       VARCHAR(20),
     provider_trace_id VARCHAR(64),
-    created_by      VARCHAR(20)          ${4} DEFAULT 0,
+    created_by      VARCHAR(20)          NOT NULL DEFAULT '0',
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)          ${4} DEFAULT 0,
+    updated_by      VARCHAR(20)          NOT NULL DEFAULT '0',
     updated_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
@@ -9035,7 +9035,7 @@ COMMENT ON COLUMN pmis_flow_task_comment.deleted IS '逻辑删除 0=未删 1=已
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_chain_graph (
     id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code         VARCHAR(128)    NOT NULL,
     name              VARCHAR(256),
     description       VARCHAR(512),
@@ -9081,7 +9081,7 @@ COMMENT ON COLUMN pmis_rule_chain_graph.deleted IS '逻辑删除 0=未删 1=已�
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_dependency (
     id                       VARCHAR(20)       PRIMARY KEY,
-    tenant_id                VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id                VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code                VARCHAR(128)    NOT NULL,
     depends_on_rule_code     VARCHAR(128)    NOT NULL,
     dependency_type          VARCHAR(16)     NOT NULL DEFAULT 'EXECUTE',
@@ -9123,7 +9123,7 @@ COMMENT ON COLUMN pmis_rule_dependency.deleted IS '逻辑删除 0=未删 1=已�
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_ab_policy (
     id                      VARCHAR(20)       PRIMARY KEY,
-    tenant_id               VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id               VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code               VARCHAR(128)    NOT NULL,
     auto_rollback_enabled   SMALLINT        NOT NULL DEFAULT 1,
     rollback_action         VARCHAR(16)     NOT NULL DEFAULT 'AUTO',
@@ -9178,7 +9178,7 @@ COMMENT ON COLUMN pmis_rule_ab_policy.deleted IS '逻辑删除 0=未删 1=已删
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_ab_rollback (
     id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code         VARCHAR(128)    NOT NULL,
     trigger_reason    VARCHAR(32)     NOT NULL,
     error_rate        NUMERIC(5,4),
@@ -9220,7 +9220,7 @@ COMMENT ON COLUMN pmis_rule_ab_rollback.deleted IS '逻辑删除 0=未删 1=已�
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_pack (
     id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     pack_code         VARCHAR(128)    NOT NULL,
     pack_version      VARCHAR(32)     NOT NULL,
     pack_name         VARCHAR(256)    NOT NULL,
@@ -9278,7 +9278,7 @@ COMMENT ON COLUMN pmis_rule_pack.deleted IS '逻辑删除 0=未删 1=已删';
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_pack_install (
     id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          ${4} DEFAULT 1,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     pack_code         VARCHAR(128)    NOT NULL,
     pack_version      VARCHAR(32)     NOT NULL,
     installed_by      VARCHAR(64),
@@ -10065,12 +10065,12 @@ CREATE TABLE IF NOT EXISTS pmis_meta_schema_version (
     pending_tables      TEXT         NOT NULL DEFAULT '',
     notes               TEXT         NOT NULL DEFAULT '',
     -- 审计字段
-    created_by          VARCHAR(20)       ${4} DEFAULT 0,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       ${4} DEFAULT 0,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT '0',
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)       ${4} DEFAULT 1,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_meta_schema_version UNIQUE (version, deleted)
 );
 

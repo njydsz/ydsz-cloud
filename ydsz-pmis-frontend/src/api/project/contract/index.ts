@@ -92,7 +92,7 @@ export const pageContractTemplates = (
   params?: { keyword?: string; type?: string; status?: string },
 ) =>
   request<PageResult<ContractTemplateVO>>({
-    url: '/project/contract/template/page',
+    url: '/project/contract-template/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })
@@ -104,7 +104,7 @@ export const pageContractTemplates = (
  */
 export const getContractTemplate = (id: number) =>
   request<ContractTemplateVO>({
-    url: `/project/contract/template/${id}`,
+    url: `/project/contract-template/${id}`,
     method: 'GET',
   })
 
@@ -115,7 +115,7 @@ export const getContractTemplate = (id: number) =>
  */
 export const createContractTemplate = (data: ContractTemplateCreateDTO) =>
   request<number>({
-    url: '/project/contract/template',
+    url: '/project/contract-template',
     method: 'POST',
     data,
   })
@@ -127,7 +127,7 @@ export const createContractTemplate = (data: ContractTemplateCreateDTO) =>
  */
 export const changeContractTemplateStatus = (data: ContractTemplateStatusDTO) =>
   request<void>({
-    url: '/project/contract/template/status',
+    url: '/project/contract-template/status',
     method: 'PUT',
     data,
   })

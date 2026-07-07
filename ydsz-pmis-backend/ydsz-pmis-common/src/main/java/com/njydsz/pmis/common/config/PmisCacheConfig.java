@@ -40,9 +40,12 @@ import java.util.Map;
  *   <tr><td>perm:*</td><td>1h</td><td>权限数据（变更频率低）</td></tr>
  *   <tr><td>role</td><td>1h</td><td>角色数据</td></tr>
  *   <tr><td>dept</td><td>1h</td><td>部门数据</td></tr>
- *   <tr><td>user</td><td>30m</td><td>用户数据</td></tr>
+ *   <tr><td>user:by_id / user:by_username</td><td>30m</td><td>用户数据</td></tr>
  *   <tr><td>dict</td><td>2h</td><td>字典数据（变更极少）</td></tr>
- *   <tr><td>cockpit</td><td>5m</td><td>驾驶舱报表（高频刷新）</td></tr>
+ *   <tr><td>cockpit:report</td><td>5m</td><td>驾驶舱报表（高频刷新）</td></tr>
+ *   <tr><td>flow:def:*</td><td>30m</td><td>工作流流程定义</td></tr>
+ *   <tr><td>flow:dmn:by_key</td><td>1h</td><td>DMN 决策表</td></tr>
+ *   <tr><td>flow:thirdparty:by_*</td><td>30m</td><td>三方账号映射</td></tr>
  * </table>
  *
  * <h3>序列化</h3>
@@ -110,13 +113,11 @@ public class PmisCacheConfig {
         // 部门数据：1 小时
         cacheConfigs.put("dept", defaultConfig.entryTtl(Duration.ofHours(1)));
         // 用户数据：30 分钟（变更频率中等）
-        cacheConfigs.put("user", defaultConfig.entryTtl(Duration.ofMinutes(30)));
         cacheConfigs.put("user:by_id", defaultConfig.entryTtl(Duration.ofMinutes(30)));
         cacheConfigs.put("user:by_username", defaultConfig.entryTtl(Duration.ofMinutes(30)));
         // 字典数据：2 小时（变更极少）
         cacheConfigs.put("dict", defaultConfig.entryTtl(Duration.ofHours(2)));
         // 驾驶舱报表：5 分钟（高频刷新）
-        cacheConfigs.put("cockpit", defaultConfig.entryTtl(Duration.ofMinutes(5)));
         cacheConfigs.put("cockpit:report", defaultConfig.entryTtl(Duration.ofMinutes(5)));
         // 工作流模块：流程定义 30 分钟（写操作 @CacheEvict 主动失效）
         cacheConfigs.put("flow:def:published", defaultConfig.entryTtl(Duration.ofMinutes(30)));

@@ -1,4 +1,4 @@
-﻿# ====================================================================
+# ====================================================================
 # V1.0.0.sql 业务 ID 字段统一 VARCHAR(20) 改造脚本 (v2 - 精简版)
 # ====================================================================
 # 大厂规范: 所有主键 ID + 业务 ID 一律 VARCHAR(20),
@@ -93,7 +93,7 @@ foreach ($col in $varchar64Columns) {
         $count3 += $m.Count
     }
 }
-Write-Host ('[Step 3] VARCHAR(64) -> VARCHAR(20): {0} 处' -f $count3)
+Write-Host "[Step 3] VARCHAR(64) -> VARCHAR(20): $count3 处"
 
 # ====================================================================
 # Step 4: tenant_id 的 DEFAULT 0/1 改成 '1' (雪花 ID 字符串)
@@ -101,7 +101,7 @@ Write-Host ('[Step 3] VARCHAR(64) -> VARCHAR(20): {0} 处' -f $count3)
 $pattern4 = "(?m)^(\s+tenant_id\s+VARCHAR\(20\)\s+NOT NULL\s+DEFAULT\s+)\d+"
 $count4 = ([regex]::Matches($content, $pattern4)).Count
 $content = [regex]::Replace($content, $pattern4, "${1}'1'")
-Write-Host ('[Step 4] tenant_id DEFAULT 0 -> "1": {0} 处' -f $count4)
+Write-Host "[Step 4] tenant_id DEFAULT 0 -> '1': $count4 处"
 
 # ====================================================================
 # Step 5: created_by / updated_by DEFAULT 0 -> '0' (雪花 ID 占位)
@@ -109,7 +109,7 @@ Write-Host ('[Step 4] tenant_id DEFAULT 0 -> "1": {0} 处' -f $count4)
 $pattern5 = "(?m)^(\s+(created_by|updated_by)\s+VARCHAR\(20\)\s+NOT NULL\s+DEFAULT\s+)\d+"
 $count5 = ([regex]::Matches($content, $pattern5)).Count
 $content = [regex]::Replace($content, $pattern5, "${1}'0'")
-Write-Host ('[Step 5] created_by/updated_by DEFAULT 0 -> "0": {0} 处' -f $count5)
+Write-Host "[Step 5] created_by/updated_by DEFAULT 0 -> '0': $count5 处"
 
 # ====================================================================
 # Step 6: 校验残留 (用于人工 review)
@@ -117,15 +117,15 @@ Write-Host ('[Step 5] created_by/updated_by DEFAULT 0 -> "0": {0} 处' -f $count
 $remainingBigserial = ([regex]::Matches($content, 'BIGSERIAL')).Count
 $remainingBigint = ([regex]::Matches($content, '(?m)^\s+\w+_id\s+BIGINT')).Count
 Write-Host ""
-Write-Host ('====================================================================')
-Write-Host ('残留检查: BIGSERIAL={0} 处, 业务ID BIGINT={1} 处' -f $remainingBigserial, $remainingBigint)
-Write-Host ('====================================================================')
+Write-Host "===================================================================="
+Write-Host "残留检查: BIGSERIAL=$remainingBigserial 处, 业务ID BIGINT=$remainingBigint 处"
+Write-Host "===================================================================="
 
 # ====================================================================
 # Step 7: 写回
 # ====================================================================
 $content | Set-Content -Path $SqlPath -Encoding UTF8 -NoNewline
 $total = $count1 + $count2 + $count3 + $count4 + $count5
-Write-Host ''
-Write-Host ('[DONE] V1.0.0.sql 累计修改 {0} 处,已写回 {1}' -f $total, $SqlPath)
-Write-Host ('[BACKUP] 原文件: {0}' -f $BackupPath)
+Write-Host ""
+Write-Host "[DONE] V1.0.0.sql 累计修改 $total 处,已写回 $SqlPath"
+Write-Host "[BACKUP] 原文件: $BackupPath"

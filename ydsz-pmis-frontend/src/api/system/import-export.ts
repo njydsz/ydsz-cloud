@@ -60,12 +60,3 @@ export function importData(bizType: BizType, file: File): Promise<ApiResponse<Im
     headers: { 'Content-Type': 'multipart/form-data' }
   }) as unknown as Promise<ApiResponse<ImportResult>>
 }
-
-/**
- * 查询导入历史
- * @param params 分页参数：page 页码 / size 每页条数
- * @returns 统一响应包装的导入历史列表
- */
-export function getImportHistory(params: { page?: number; size?: number }): Promise<ApiResponse<unknown>> {
-  return request.get('/execution/import/history', { params }) as unknown as Promise<ApiResponse<unknown>>
-}
