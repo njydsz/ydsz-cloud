@@ -67,8 +67,8 @@ public class FlowTaskSupport {
     /**
      * 写审计日志（无意见分类）。
      */
-    public void audit(FlowRunTaskDO task, String action, Long operatorId,
-                      Long targetId, String comment) {
+    public void audit(FlowRunTaskDO task, String action, String operatorId,
+                      String targetId, String comment) {
         audit(task, action, operatorId, targetId, comment, null);
     }
 
@@ -82,8 +82,8 @@ public class FlowTaskSupport {
      * @param comment     审批意见
      * @param commentType 意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE
      */
-    public void audit(FlowRunTaskDO task, String action, Long operatorId,
-                      Long targetId, String comment, String commentType) {
+    public void audit(FlowRunTaskDO task, String action, String operatorId,
+                      String targetId, String comment, String commentType) {
         try {
             FlowAuditLogDO log = new FlowAuditLogDO();
             log.setInstanceId(task.getInstanceId());
@@ -115,7 +115,7 @@ public class FlowTaskSupport {
      * @param action 监听器动作
      * @param taskId 任务 ID（仅用于日志，可空）
      */
-    public void fireEvent(Consumer<FlowEventListener> action, Long taskId) {
+    public void fireEvent(Consumer<FlowEventListener> action, String taskId) {
         if (eventListeners == null) return;
         for (FlowEventListener listener : eventListeners) {
             try {
@@ -134,7 +134,7 @@ public class FlowTaskSupport {
      * @param instanceId 实例 ID（可空）
      * @param taskId     任务 ID（可空）
      */
-    public void publishWorkflowEvent(String eventType, String instanceId, Long taskId) {
+    public void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
         if (eventPublisher == null) return;
         try {
             eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, taskId, null));

@@ -58,7 +58,7 @@ public interface DeliveryService {
      * @param projectType 项目类型
      * @return 数量
      */
-    long countStandardsByType(String projectType);
+    Integer countStandardsByType(String projectType);
 
     // === 实例管理 ===
     /**

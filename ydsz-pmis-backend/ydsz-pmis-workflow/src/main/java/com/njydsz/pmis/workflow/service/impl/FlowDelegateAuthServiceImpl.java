@@ -105,7 +105,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void revoke(Long authId, Long ownerUserId) {
+    public void revoke(String authId, String ownerUserId) {
         if (authId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_7804c8f2");
         }
@@ -122,7 +122,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateStatus(Long authId, String status, Long operatorId) {
+    public void updateStatus(String authId, String status, String operatorId) {
         if (authId == null || !StringUtils.hasText(status)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_40437174");
         }
@@ -144,27 +144,27 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowDelegateAuthDO> listMine(Long ownerUserId, String tenantId, String status) {
+    public List<FlowDelegateAuthDO> listMine(String ownerUserId, String tenantId, String status) {
         if (ownerUserId == null) {
             return List.of();
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return authMapper.selectByOwner(tid, ownerUserId, status);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowDelegateAuthDO> listAsDelegate(Long delegateUserId, String tenantId, String status) {
+    public List<FlowDelegateAuthDO> listAsDelegate(String delegateUserId, String tenantId, String status) {
         if (delegateUserId == null) {
             return List.of();
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return authMapper.selectByDelegate(tid, delegateUserId, status);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public FlowDelegateAuthDO matchAuth(String tenantId, Long ownerUserId,
+    public FlowDelegateAuthDO matchAuth(String tenantId, String ownerUserId,
                                          String flowCode, String nodeCode) {
         if (tenantId == null || ownerUserId == null) {
             return null;
@@ -205,7 +205,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<FlowDelegateLogDO> listDelegateLog(Long delegateUserId, int page, int size) {
+    public PageResult<FlowDelegateLogDO> listDelegateLog(String delegateUserId, int page, int size) {
         if (delegateUserId == null) {
             return PageResult.empty();
         }
@@ -219,7 +219,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<FlowDelegateLogDO> listOwnerLog(Long ownerUserId, int page, int size) {
+    public PageResult<FlowDelegateLogDO> listOwnerLog(String ownerUserId, int page, int size) {
         if (ownerUserId == null) {
             return PageResult.empty();
         }

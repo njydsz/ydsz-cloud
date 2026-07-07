@@ -60,7 +60,7 @@ public class FlowTaskQueryServiceImpl {
      * @param taskId 任务 ID
      * @return 任务 DO，不存在返回 null
      */
-    public FlowRunTaskDO getById(Long taskId) {
+    public FlowRunTaskDO getById(String taskId) {
         // P2-20: 任务详情查询，委托 BaseMapper 自带 selectById
         if (taskId == null) {
             return null;
@@ -82,7 +82,7 @@ public class FlowTaskQueryServiceImpl {
      */
     public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return taskMapper.selectTodoByAssignee(assigneeId, tid);
     }
 
@@ -97,7 +97,7 @@ public class FlowTaskQueryServiceImpl {
     public List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
                                             List<String> deptIds, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         Set<FlowRunTaskDO> result = new LinkedHashSet<>();
         // 1. 直接分配给该用户的任务
         result.addAll(taskMapper.selectTodoByAssignee(String.valueOf(userId), tid));
@@ -132,7 +132,7 @@ public class FlowTaskQueryServiceImpl {
     public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
         // P0-3: 改查历史表
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectDoneByAssignee(assigneeId, tid);
         List<FlowRunTaskDO> result = new ArrayList<>();
         for (FlowHisTaskDO his : hisTasks) {
@@ -149,7 +149,7 @@ public class FlowTaskQueryServiceImpl {
     public PageResult<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
         int offset = (safePage - 1) * safeSize;
@@ -164,7 +164,7 @@ public class FlowTaskQueryServiceImpl {
     public PageResult<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET） — 走历史表
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
         int offset = (safePage - 1) * safeSize;
@@ -184,7 +184,7 @@ public class FlowTaskQueryServiceImpl {
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, String tenantId,
                                                                int page, int size) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
         int offset = (safePage - 1) * safeSize;
@@ -212,7 +212,7 @@ public class FlowTaskQueryServiceImpl {
      * P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED）
      */
     public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return taskMapper.selectOverdue(assigneeId, tid);
     }
 
@@ -220,7 +220,7 @@ public class FlowTaskQueryServiceImpl {
      * P2-32: 统计超期任务数量
      */
     public long countOverdue(String assigneeId, String tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return taskMapper.countOverdue(assigneeId, tid);
     }
 
@@ -228,7 +228,7 @@ public class FlowTaskQueryServiceImpl {
      * P2-4: 统计待办任务总数（PENDING + CLAIMED）
      */
     public long countPending(String tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowRunTaskDO> wrapper =
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         wrapper.eq(FlowRunTaskDO::getTenantId, tid)

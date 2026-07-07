@@ -151,7 +151,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      * @param task 超期任务
      */
     private void handleOverdueTask(FlowRunTaskDO task) {
-        Long taskId = task.getId();
+        String taskId = task.getId();
         String instanceId = task.getInstanceId();
         FlowNodeDO node = safelySelectNode(task);
 

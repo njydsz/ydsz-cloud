@@ -74,7 +74,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public void claimTask(Long taskId, String userId) {
+    public void claimTask(String taskId, String userId) {
         taskService.claim(taskId, userId);
     }
 
@@ -95,17 +95,17 @@ public class PmisWorkflowFacade implements WorkflowFacade {
 
     @Override
     public void terminateProcess(String processInstanceId, String reason) {
-        instanceService.terminate(Long.parseLong(processInstanceId), reason);
+        instanceService.terminate(processInstanceId, reason);
     }
 
     @Override
     public void suspendProcess(String processInstanceId) {
-        instanceService.suspend(Long.parseLong(processInstanceId));
+        instanceService.suspend(processInstanceId);
     }
 
     @Override
     public void activateProcess(String processInstanceId) {
-        instanceService.activate(Long.parseLong(processInstanceId));
+        instanceService.activate(processInstanceId);
     }
 
     @Override
@@ -160,18 +160,18 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public List<String> urgeTask(String instanceId, Long operatorId, String comment) {
+    public List<String> urgeTask(String instanceId, String operatorId, String comment) {
         return taskService.urge(instanceId, operatorId, comment);
     }
 
     @Override
-    public boolean recallProcess(String processInstanceId, Long initiatorId) {
-        return instanceService.recall(Long.parseLong(processInstanceId), initiatorId);
+    public boolean recallProcess(String processInstanceId, String initiatorId) {
+        return instanceService.recall(processInstanceId, initiatorId);
     }
 
     @Override
     public List<Map<String, Object>> listAuditTrail(String processInstanceId) {
-        String instanceId = Long.parseLong(processInstanceId);
+        String instanceId = processInstanceId;
         List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
         return logs.stream().map(this::auditToMap).toList();
     }
@@ -184,7 +184,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     // ============================== P2-20: 任务详情查询 ==============================
 
     @Override
-    public Map<String, Object> getTaskDetail(Long taskId) {
+    public Map<String, Object> getTaskDetail(String taskId) {
         // P2-20: 调用 taskService.getById 获取任务，再用 toView 转换为视图
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
@@ -202,7 +202,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public void batchPassTasks(List<Long> taskIds, String userId, String comment) {
+    public void batchPassTasks(List<String> taskIds, String userId, String comment) {
         taskService.batchPass(taskIds, userId, comment);
     }
 
@@ -216,7 +216,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         if (todos.isEmpty()) {
             return 0;
         }
-        List<Long> taskIds = todos.stream().map(FlowRunTaskDO::getId).toList();
+        List<String> taskIds = todos.stream().map(FlowRunTaskDO::getId).toList();
         taskService.batchPass(taskIds, userId, comment);
         log.info("[Flow] 一键通过所有待办: userId={} count={}", userId, taskIds.size());
         return taskIds.size();
@@ -231,7 +231,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      * @return 包含 definition / nodes / skips 的 Map，nodes 中每个节点带 active 标记
      */
     public Map<String, Object> getDiagram(String instanceId) {
-        String id = Long.parseLong(instanceId);
+        String id = instanceId;
         FlowInstanceDO instance = instanceService.getById(id);
         if (instance == null) {
             return null;
@@ -275,7 +275,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      */
     @Override
     public List<Map<String, Object>> getTimeline(String instanceId) {
-        String id = Long.parseLong(instanceId);
+        String id = instanceId;
         // 1. 获取实例信息
         FlowInstanceDO instance = instanceService.getById(id);
         if (instance == null) {
@@ -462,12 +462,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      * @return 步骤列表（按 timestamp 升序），实例不存在时返回空列表
      */
     public List<Map<String, Object>> getReplaySteps(String instanceId) {
-        String id;
-        try {
-            id = Long.parseLong(instanceId);
-        } catch (NumberFormatException nfe) {
-            return Collections.emptyList();
-        }
+        String id = instanceId;
         FlowInstanceDO instance = instanceService.getById(id);
         if (instance == null) {
             return Collections.emptyList();
@@ -673,7 +668,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public void markReadTask(Long taskId, String userId) {
+    public void markReadTask(String taskId, String userId) {
         taskService.markRead(taskId, userId);
     }
 

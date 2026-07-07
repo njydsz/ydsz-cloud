@@ -1,1 +1,0 @@
-﻿[ERROR]   mvn <args> -rf :ydsz-pmis-project

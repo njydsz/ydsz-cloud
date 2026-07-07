@@ -54,14 +54,14 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 详情查询 ==============================
 
     @Override
-    public FlowRunTaskDO getById(Long taskId) {
+    public FlowRunTaskDO getById(String taskId) {
         return queryService.getById(taskId);
     }
 
     // ============================== 签收 ==============================
 
     @Override
-    public void claim(Long taskId, String userId) {
+    public void claim(String taskId, String userId) {
         completeService.claim(taskId, userId);
     }
 
@@ -105,7 +105,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public void timeoutTask(Long taskId, String reason) {
+    public void timeoutTask(String taskId, String reason) {
         completeService.timeoutTask(taskId, reason);
     }
 
@@ -175,7 +175,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 已阅 / 沟通 / 暂存 ==============================
 
     @Override
-    public void markRead(Long taskId, String userId) {
+    public void markRead(String taskId, String userId) {
         signService.markRead(taskId, userId);
     }
 

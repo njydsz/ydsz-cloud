@@ -33,12 +33,12 @@ public class OrgQueryClientFallbackFactory implements FallbackFactory<OrgQueryCl
             }
 
             @Override
-            public Result<Long> getDeptLeaderByDeptId(Long deptId) {
+            public Result<String> getDeptLeaderByDeptId(Long deptId) {
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<Long> getDeptLeaderByDeptCode(String deptCode) {
+            public Result<String> getDeptLeaderByDeptCode(String deptCode) {
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
@@ -63,7 +63,7 @@ public class OrgQueryClientFallbackFactory implements FallbackFactory<OrgQueryCl
             }
 
             @Override
-            public Result<Long> getLeaderByUserId(String userId) {
+            public Result<String> getLeaderByUserId(String userId) {
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
         };

@@ -66,7 +66,7 @@ public interface OpportunityService {
      * @param ownerId  责任人 ID，可空
      * @return 分页结果
      */
-    Page<OpportunityDO> page(int page, int size, String keyword, String status, String level, Long ownerId);
+    Page<OpportunityDO> page(int page, int size, String keyword, String status, String level, String ownerId);
 
     /**
      * 计算并返回赢率（带模型）。

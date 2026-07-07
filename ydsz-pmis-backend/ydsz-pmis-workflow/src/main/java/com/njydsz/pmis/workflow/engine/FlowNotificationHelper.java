@@ -67,11 +67,11 @@ public class FlowNotificationHelper {
      * @param content     内容
      * @param instanceId  流程实例 ID
      */
-    public void notifyUrge(List<Long> receiverIds, String title, String content, String instanceId) {
+    public void notifyUrge(List<String> receiverIds, String title, String content, String instanceId) {
         if (receiverIds == null || receiverIds.isEmpty()) {
             return;
         }
-        for (Long receiverId : receiverIds) {
+        for (String receiverId : receiverIds) {
             try {
                 Map<String, Object> extra = buildExtra("WORKFLOW_URGE", "URGENT");
                 extra.put("instanceId", instanceId);
@@ -86,7 +86,7 @@ public class FlowNotificationHelper {
     /**
      * 流程完成通知：发起人收到结果
      */
-    public void notifyInstanceCompleted(Long receiverId, String title, String content, String instanceId) {
+    public void notifyInstanceCompleted(String receiverId, String title, String content, String instanceId) {
         if (receiverId == null) {
             return;
         }
@@ -103,7 +103,7 @@ public class FlowNotificationHelper {
     /**
      * 流程驳回通知：发起人收到驳回结果
      */
-    public void notifyInstanceRejected(Long receiverId, String title, String content, String instanceId) {
+    public void notifyInstanceRejected(String receiverId, String title, String content, String instanceId) {
         if (receiverId == null) {
             return;
         }
@@ -120,11 +120,11 @@ public class FlowNotificationHelper {
     /**
      * 流程撤回通知：所有当前待办人收到撤回消息
      */
-    public void notifyInstanceRecalled(List<Long> receiverIds, String title, String content, String instanceId) {
+    public void notifyInstanceRecalled(List<String> receiverIds, String title, String content, String instanceId) {
         if (receiverIds == null || receiverIds.isEmpty()) {
             return;
         }
-        for (Long receiverId : receiverIds) {
+        for (String receiverId : receiverIds) {
             try {
                 Map<String, Object> extra = buildExtra("WORKFLOW_RECALLED", "WARN");
                 extra.put("instanceId", instanceId);
@@ -139,7 +139,7 @@ public class FlowNotificationHelper {
     /**
      * 流程终止通知：发起人收到终止消息
      */
-    public void notifyInstanceTerminated(Long receiverId, String title, String content, String instanceId) {
+    public void notifyInstanceTerminated(String receiverId, String title, String content, String instanceId) {
         if (receiverId == null) {
             return;
         }
@@ -156,7 +156,7 @@ public class FlowNotificationHelper {
     /**
      * 任务转办通知：新办理人收到新待办
      */
-    public void notifyTaskTransferred(Long receiverId, String title, String content, Long taskId) {
+    public void notifyTaskTransferred(String receiverId, String title, String content, String taskId) {
         if (receiverId == null) {
             return;
         }
@@ -173,7 +173,7 @@ public class FlowNotificationHelper {
     /**
      * 任务委派通知：被委派人收到委派
      */
-    public void notifyTaskDelegated(Long receiverId, String title, String content, Long taskId) {
+    public void notifyTaskDelegated(String receiverId, String title, String content, String taskId) {
         if (receiverId == null) {
             return;
         }
@@ -190,7 +190,7 @@ public class FlowNotificationHelper {
     /**
      * 任务超时通知：办理人收到超时预警
      */
-    public void notifyTaskTimeout(Long receiverId, String title, String content, Long taskId) {
+    public void notifyTaskTimeout(String receiverId, String title, String content, String taskId) {
         if (receiverId == null) {
             return;
         }

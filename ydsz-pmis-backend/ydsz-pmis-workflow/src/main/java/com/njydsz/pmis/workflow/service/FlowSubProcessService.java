@@ -37,7 +37,7 @@ public interface FlowSubProcessService {
      * @param variables        父流程变量（传递给子流程）
      * @return 子流程实例 ID
      */
-    Long startSubProcess(FlowInstanceDO parentInstance,
+    String startSubProcess(FlowInstanceDO parentInstance,
                          FlowNodeDO callActivityNode,
                          Map<String, Object> variables);
 
@@ -46,7 +46,7 @@ public interface FlowSubProcessService {
      *
      * @param childInstanceId 子流程实例 ID
      */
-    void onSubProcessCompleted(Long childInstanceId);
+    void onSubProcessCompleted(String childInstanceId);
 
     /**
      * 子流程驳回/终止事件回调（同步父流程）
@@ -55,7 +55,7 @@ public interface FlowSubProcessService {
      * @param reason          原因
      * @param terminal        true=终止父流程；false=驳回父流程到 callActivity 节点
      */
-    void onSubProcessTerminated(Long childInstanceId, String reason, boolean terminal);
+    void onSubProcessTerminated(String childInstanceId, String reason, boolean terminal);
 
     /**
      * 查询父流程的所有子流程实例
@@ -63,7 +63,7 @@ public interface FlowSubProcessService {
      * @param parentInstanceId 父流程实例 ID
      * @return 子流程实例列表
      */
-    List<FlowInstanceDO> listChildren(Long parentInstanceId);
+    List<FlowInstanceDO> listChildren(String parentInstanceId);
 
     /** DTO 构造工具：把子流程启动所需参数封装 */
     FlowStartProcessDTO buildSubProcessStartDTO(FlowInstanceDO parentInstance,
@@ -76,7 +76,7 @@ public interface FlowSubProcessService {
      * @param childInstanceId 子流程实例 ID
      * @return 合并后的变量 Map
      */
-    Map<String, Object> getSubProcessContext(Long childInstanceId);
+    Map<String, Object> getSubProcessContext(String childInstanceId);
 
     /**
      * 递归查询子流程树

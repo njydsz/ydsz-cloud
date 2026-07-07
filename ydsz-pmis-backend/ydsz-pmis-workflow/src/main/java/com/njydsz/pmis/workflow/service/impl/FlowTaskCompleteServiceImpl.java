@@ -231,7 +231,7 @@ public class FlowTaskCompleteServiceImpl {
                 task.setDurationMs(0L);
                 taskMapper.insert(task);
                 archiveTask(task, FlowTaskStatus.COMPLETED);
-                support.audit(task, "DEDUP_SKIP", 0L, null, "办理人去重后为空，自动跳过");
+                support.audit(task, "DEDUP_SKIP", null, null, "办理人去重后为空，自动跳过");
                 log.info("[Flow] 办理人去重后为空，自动跳过: instanceId={} node={}",
                         instanceId, node.getNodeCode());
                 // 推进到下一节点（复用 AUTO_PASS 推进逻辑，含递归深度保护）
@@ -254,7 +254,7 @@ public class FlowTaskCompleteServiceImpl {
                     task.setDurationMs(0L);
                     taskMapper.insert(task);
                     archiveTask(task, FlowTaskStatus.COMPLETED);
-                    support.audit(task, "AUTO_PASS", 0L, null, "审批人为空，自动通过");
+                    support.audit(task, "AUTO_PASS", null, null, "审批人为空，自动通过");
                     log.info("[Flow] 审批人为空自动通过: instanceId={} node={}",
                             instanceId, node.getNodeCode());
                     // 推进到下一节点（递归深度保护）
@@ -295,7 +295,7 @@ public class FlowTaskCompleteServiceImpl {
             applyVoteConfig(task, node);
             // GAP-V2-05: 审批人自动去重 — 仅 OR（单人审批）触发，会签/票签不去重
             if (performType == FlowPerformType.OR) {
-                Long dedupTaskId = tryAutoDedup(task, instance, node, variables, userIds.get(0));
+                String dedupTaskId = tryAutoDedup(task, instance, node, variables, userIds.get(0));
                 if (dedupTaskId != null) {
                     return dedupTaskId;
                 }
@@ -380,7 +380,7 @@ public class FlowTaskCompleteServiceImpl {
                 autoTask.setDurationMs(0L);
                 taskMapper.insert(autoTask);
                 archiveTask(autoTask, FlowTaskStatus.COMPLETED);
-                support.audit(autoTask, "FOREACH_AUTO_PASS", 0L, null, "FOREACH 集合为空，自动通过");
+                support.audit(autoTask, "FOREACH_AUTO_PASS", null, null, "FOREACH 集合为空，自动通过");
                 log.info("[Flow] FOREACH 集合为空自动通过: instanceId={} node={}",
                         instance.getId(), node.getNodeCode());
                 // 推进到下一节点（复用 AUTO_PASS 推进逻辑）
@@ -502,12 +502,7 @@ public class FlowTaskCompleteServiceImpl {
             if (!StringUtils.hasText(currentAssigneeId)) {
                 return;
             }
-            Long currentUserId;
-            try {
-                currentUserId = Long.parseLong(currentAssigneeId.trim());
-            } catch (NumberFormatException nfe) {
-                return; // 非纯数字 assignee（INITIATOR/SYSTEM_*）不参与代理
-            }
+            String currentUserId = currentAssigneeId.trim();
             FlowDelegateAuthDO matched = delegateAuthService.matchAuth(
                     instance.getTenantId(), currentUserId,
                     instance.getFlowCode(), node.getNodeCode());
@@ -517,7 +512,7 @@ public class FlowTaskCompleteServiceImpl {
             // 改写：assignorId 记原办理人，assigneeId 改为 delegate
             task.setAssignorId(currentUserId);
             task.setAssignorName(matched.getOwnerUserName());
-            task.setAssigneeId(String.valueOf(matched.getDelegateUserId()));
+            task.setAssigneeId(matched.getDelegateUserId());
             task.setAssigneeName(matched.getDelegateUserName());
             taskMapper.updateById(task);
             // 写审计日志
@@ -539,7 +534,7 @@ public class FlowTaskCompleteServiceImpl {
      * 签收
      */
     @Transactional(rollbackFor = Exception.class)
-    public void claim(Long taskId, String userId) {
+    public void claim(String taskId, String userId) {
         FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5873f2ae", task.getTaskStatus());
@@ -704,7 +699,7 @@ public class FlowTaskCompleteServiceImpl {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_6ddae4d1");
         }
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
-        Long originalAssignorId = parseAssignorId(task.getAssigneeId());
+        String originalAssignorId = parseAssignorId(task.getAssigneeId());
         String originalAssignorName = task.getAssigneeName();
         task.setAssigneeId(String.valueOf(dto.getTargetUserId()));
         task.setAssigneeName(dto.getTargetUserName());
@@ -738,7 +733,7 @@ public class FlowTaskCompleteServiceImpl {
         }
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         // 保存原办理人
-        Long originalAssigneeId = parseAssignorId(task.getAssigneeId());
+        String originalAssigneeId = parseAssignorId(task.getAssigneeId());
         String originalAssigneeName = task.getAssigneeName();
         task.setAssignorId(originalAssigneeId);
         task.setAssignorName(originalAssigneeName);
@@ -768,10 +763,10 @@ public class FlowTaskCompleteServiceImpl {
      *
      * @return 被催办人 ID 列表
      */
-    public List<String> urge(String instanceId, Long operatorId, String comment) {
+    public List<String> urge(String instanceId, String operatorId, String comment) {
         // P0-2: 催办限流：同一催办人对同一实例 30 分钟内只允许一次
         if (operatorId != null && instanceId != null
-                && !urgeLimiter.tryAcquire(operatorId, instanceId, "INSTANCE")) {
+                && !urgeLimiter.tryAcquire(operatorId, Long.parseLong(instanceId), "INSTANCE")) {
             throw new BizException(BizErrorCode.RATE_LIMIT,
                     "error.workflow.msg_75474a57");
         }
@@ -911,7 +906,7 @@ public class FlowTaskCompleteServiceImpl {
      * P2-36: 标记任务超时
      */
     @Transactional(rollbackFor = Exception.class)
-    public void timeoutTask(Long taskId, String reason) {
+    public void timeoutTask(String taskId, String reason) {
         FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         // 校验状态为 PENDING/CLAIMED
         String status = task.getTaskStatus();
@@ -1382,7 +1377,7 @@ public class FlowTaskCompleteServiceImpl {
 
     // ============================== 事件 ==============================
 
-    private void fireTaskCompleted(Long taskId, String action, Map<String, Object> vars) {
+    private void fireTaskCompleted(String taskId, String action, Map<String, Object> vars) {
         support.fireEvent(l -> l.onTaskCompleted(taskId, action, vars), taskId);
         // P2-37: 同时调用携带上下文的重载版本
         FlowEventContext ctx = new FlowEventContext();
@@ -1444,7 +1439,7 @@ public class FlowTaskCompleteServiceImpl {
      * @param variables 流程变量
      * @return 任务 ID（COMPLETED 状态，仅用于审计追溯）
      */
-    private Long executeServiceNode(FlowInstanceDO instance, FlowNodeDO node,
+    private String executeServiceNode(FlowInstanceDO instance, FlowNodeDO node,
                                      Map<String, Object> variables) {
         // 1. 执行服务节点逻辑（HTTP/SCRIPT/AUTO_PASS）
         FlowServiceNodeExecutor.ServiceExecutionResult result =
@@ -1482,7 +1477,7 @@ public class FlowTaskCompleteServiceImpl {
             task.setComment(result.message());
             taskMapper.insert(task);
             archiveTask(task, FlowTaskStatus.COMPLETED);
-            support.audit(task, "SERVICE_EXECUTE", 0L, null,
+            support.audit(task, "SERVICE_EXECUTE", null, null,
                     "服务节点执行成功: " + result.message());
             log.info("[Flow] 服务节点执行成功: instanceId={} node={} msg={}",
                     instance.getId(), node.getNodeCode(), result.message());
@@ -1494,7 +1489,7 @@ public class FlowTaskCompleteServiceImpl {
             task.setComment("服务节点执行失败: " + result.message());
             taskMapper.insert(task);
             archiveTask(task, FlowTaskStatus.TIMEOUT);
-            support.audit(task, "SERVICE_ERROR", 0L, null,
+            support.audit(task, "SERVICE_ERROR", null, null,
                     "服务节点执行失败: " + result.message());
             // 标记实例为异常状态，需人工介入处理
             instanceMapper.updateStatus(instance.getId(),
@@ -1573,7 +1568,7 @@ public class FlowTaskCompleteServiceImpl {
     /**
      * GAP-V2-05: 审批人自动去重检查
      */
-    private Long tryAutoDedup(FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node,
+    private String tryAutoDedup(FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node,
                               Map<String, Object> variables, String currentAssigneeId) {
         try {
             // 查询同实例下最近一条已完成任务（按主键倒序取最新一条）
@@ -1604,7 +1599,7 @@ public class FlowTaskCompleteServiceImpl {
             task.setDurationMs(0L);
             taskMapper.insert(task);
             archiveTask(task, FlowTaskStatus.COMPLETED);
-            support.audit(task, "AUTO_DEDUP", 0L, null, "审批人与上一节点相同，自动去重跳过");
+            support.audit(task, "AUTO_DEDUP", null, null, "审批人与上一节点相同，自动去重跳过");
             // 推进到下一节点（复用 AUTO_PASS 推进逻辑，含递归深度保护）
             advanceAfterAutoPass(instance, node, variables);
             return task.getId();
@@ -1629,16 +1624,12 @@ public class FlowTaskCompleteServiceImpl {
         }
     }
 
-    /** 从 extConfig 中读取 Long 值 */
-    private Long parseLongConfig(Map<String, Object> config, String key, Long defaultValue) {
+    /** 从 extConfig 中读取配置值（字符串形式，兼容 ID 字符串化） */
+    private String parseLongConfig(Map<String, Object> config, String key, String defaultValue) {
         Object val = config.get(key);
         if (val == null) return defaultValue;
-        if (val instanceof Number n) return n.longValue();
-        try {
-            return Long.parseLong(String.valueOf(val));
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
+        if (val instanceof Number n) return String.valueOf(n.longValue());
+        return String.valueOf(val);
     }
 
     /** 展开办理人为用户列表 */
@@ -1714,7 +1705,7 @@ public class FlowTaskCompleteServiceImpl {
                 } catch (NumberFormatException ignored) {
                     log.debug("[FlowTaskCompleteServiceImpl] multi_leader 层级解析失败，使用默认 1 levelStr={}: {}", levelStr, ignored.getMessage());
                 }
-                Long startUserId = resolveInitiatorId(variables);
+                String startUserId = resolveInitiatorId(variables);
                 if (startUserId != null) {
                     List<Long> expanded = assigneeResolver.expandMultiLeader(startUserId, levels, variables);
                     if (expanded != null) {
@@ -1792,7 +1783,7 @@ public class FlowTaskCompleteServiceImpl {
     /**
      * P2-39: 从流程变量中解析发起人 ID（用于 multi_leader 展开的起始用户）
      */
-    private Long resolveInitiatorId(Map<String, Object> variables) {
+    private String resolveInitiatorId(Map<String, Object> variables) {
         if (variables == null || variables.isEmpty()) {
             return null;
         }
@@ -1803,18 +1794,7 @@ public class FlowTaskCompleteServiceImpl {
         if (val == null) {
             return null;
         }
-        if (val instanceof Long l) {
-            return l;
-        }
-        if (val instanceof Number n) {
-            return n.longValue();
-        }
-        try {
-            return Long.parseLong(String.valueOf(val));
-        } catch (NumberFormatException e) {
-            log.warn("[FlowTaskCompleteServiceImpl] 发起人 ID 解析失败 val={}: {}", val, e.getMessage());
-            return null;
-        }
+        return String.valueOf(val);
     }
 
     /** 解析会签类型 */
@@ -1894,16 +1874,11 @@ public class FlowTaskCompleteServiceImpl {
         }
     }
 
-    private Long parseAssignorId(String assigneeId) {
+    private String parseAssignorId(String assigneeId) {
         if (assigneeId == null || !assigneeId.matches("\\d+")) {
             return null;
         }
-        try {
-            return Long.parseLong(assigneeId);
-        } catch (NumberFormatException e) {
-            log.warn("[FlowTaskCompleteServiceImpl] assignorId 解析失败 assigneeId={}: {}", assigneeId, e.getMessage());
-            return null;
-        }
+        return assigneeId;
     }
 
     private FlowRunTaskDO toClaimTask(FlowRunTaskDO src, String userId) {
@@ -2005,8 +1980,8 @@ public class FlowTaskCompleteServiceImpl {
             return;
         }
         try {
-            Long ownerId = task.getAssignorId();
-            Long delegateId = parseAssignorId(task.getAssigneeId());
+            String ownerId = task.getAssignorId();
+            String delegateId = parseAssignorId(task.getAssigneeId());
             if (ownerId == null || delegateId == null) {
                 return; // 非代理场景
             }
@@ -2039,20 +2014,20 @@ public class FlowTaskCompleteServiceImpl {
      * 此处通过 ownerId + flowCode + nodeCode 重新匹配授权规则以恢复 authId。
      * 匹配失败（授权已过期/已撤回）时返回 0L，不影响日志写入。
      */
-    private Long resolveDelegateAuthId(FlowRunTaskDO task, Long ownerId) {
+    private String resolveDelegateAuthId(FlowRunTaskDO task, String ownerId) {
         try {
             FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
             if (instance == null) {
-                return 0L;
+                return null;
             }
             FlowDelegateAuthDO matched = delegateAuthService.matchAuth(
                     instance.getTenantId(), ownerId,
                     instance.getFlowCode(), task.getNodeCode());
-            return matched != null ? matched.getId() : 0L;
+            return matched != null ? matched.getId() : null;
         } catch (Exception e) {
             FlowTaskCompleteServiceImpl.log.debug("[Flow] 委派 authId 解析失败: taskId={} err={}",
                     task.getId(), e.getMessage());
-            return 0L;
+            return null;
         }
     }
 }

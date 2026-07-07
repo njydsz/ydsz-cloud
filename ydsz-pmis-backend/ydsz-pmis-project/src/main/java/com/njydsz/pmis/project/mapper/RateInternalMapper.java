@@ -34,7 +34,7 @@ public interface RateInternalMapper extends BaseMapper<RateInternalDO> {
      * @return 生效的内部成本费率，未找到返回 null
      */
     RateInternalDO matchEffective(@Param("levelCode") String levelCode,
-                                  @Param("departmentId") Long departmentId,
+                                  @Param("departmentId") String departmentId,
                                   @Param("date") LocalDate date);
 
     /**
@@ -45,7 +45,7 @@ public interface RateInternalMapper extends BaseMapper<RateInternalDO> {
      * @return 内部成本费率列表
      */
     List<RateInternalDO> selectByLevelAndDept(@Param("levelCode") String levelCode,
-                                              @Param("departmentId") Long departmentId);
+                                              @Param("departmentId") String departmentId);
 
     /**
      * 全量查询

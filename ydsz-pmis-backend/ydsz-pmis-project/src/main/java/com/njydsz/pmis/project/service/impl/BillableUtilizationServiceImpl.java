@@ -316,17 +316,6 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
         }
     }
 
-    private static Long toLong(Object o) {
-        if (o == null) return null;
-        if (o instanceof Number) return ((Number) o).longValue();
-        try {
-            return Long.parseLong(o.toString());
-        } catch (Exception e) {
-            log.warn("[BillableUtilizationServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
-            return null;
-        }
-    }
-
     private static String str(Object o) {
         return o == null ? "" : o.toString();
     }

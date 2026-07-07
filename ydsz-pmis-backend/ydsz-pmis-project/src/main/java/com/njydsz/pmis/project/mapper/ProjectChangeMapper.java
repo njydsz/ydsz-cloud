@@ -64,5 +64,5 @@ public interface ProjectChangeMapper extends BaseMapper<ProjectChangeDO> {
      * @param initiationId 立项 ID
      * @return 重大变更数量
      */
-    long countMajorByInitiation(@Param("initiationId") String initiationId);
+    Integer countMajorByInitiation(@Param("initiationId") String initiationId);
 }

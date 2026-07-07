@@ -171,12 +171,12 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         }
         int maxLevels = Math.min(levels, 15);  // 防御性限制
         List<Long> result = new ArrayList<>(maxLevels);
-        Long currentUserId = userId;
-        Set<Long> visited = new HashSet<>();
+        String currentUserId = userId;
+        Set<String> visited = new HashSet<>();
         visited.add(userId);  // 防止自环
         for (int i = 0; i < maxLevels; i++) {
             try {
-                Result<Long> resp = orgQueryClient.getLeaderByUserId(currentUserId);
+                Result<String> resp = orgQueryClient.getLeaderByUserId(currentUserId);
                 Long leaderId = extractLong(resp);
                 if (leaderId == null) {
                     log.debug("[Flow] multi_leader 链路中断: userId={} level={}", currentUserId, i + 1);
@@ -301,11 +301,11 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         Long leaderId;
         if (deptToken.matches("\\d+")) {
             // 纯数字：按 deptId 查
-            Result<Long> resp = orgQueryClient.getDeptLeaderByDeptId(Long.parseLong(deptToken));
+            Result<String> resp = orgQueryClient.getDeptLeaderByDeptId(Long.parseLong(deptToken));
             leaderId = extractLong(resp);
         } else {
             // 非数字：按 deptCode 查
-            Result<Long> resp = orgQueryClient.getDeptLeaderByDeptCode(deptToken);
+            Result<String> resp = orgQueryClient.getDeptLeaderByDeptCode(deptToken);
             leaderId = extractLong(resp);
         }
         if (leaderId == null) {
@@ -354,7 +354,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
      * @param resp Feign 响应
      * @return Long 值，失败或为空时返回 null
      */
-    private Long extractLong(Result<Long> resp) {
+    private Long extractLong(Result<String> resp) {
         if (resp == null || resp.getCode() != Result.CODE_SUCCESS) {
             return null;
         }

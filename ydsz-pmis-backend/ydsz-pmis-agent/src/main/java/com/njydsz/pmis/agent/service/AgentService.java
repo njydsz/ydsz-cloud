@@ -96,5 +96,5 @@ public interface AgentService {
      * @param tenantId   租户 ID，可空（为空时默认 1）
      * @return 数量
      */
-    long countByAlertLevel(String alertLevel, String agentType, String tenantId);
+    String countByAlertLevel(String alertLevel, String agentType, String tenantId);
 }

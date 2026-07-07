@@ -220,7 +220,7 @@ public class OpsTicketServiceImpl implements OpsTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OpsTicketDO> listByWarranty(Long warrantyId) {
+    public List<OpsTicketDO> listByWarranty(String warrantyId) {
         return ticketMapper.selectByWarranty(warrantyId);
     }
 

@@ -34,7 +34,7 @@ public interface PurchaseMapper extends BaseMapper<PurchaseDO> {
      * @return 受影响行数
      */
     int updateStatus(@Param("id") String id, @Param("status") String status,
-                     @Param("approverId") Long approverId, @Param("approverName") String approverName);
+                     @Param("approverId") String approverId, @Param("approverName") String approverName);
 
     /**
      * 跨项目汇总所有采购金额

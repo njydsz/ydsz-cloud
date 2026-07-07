@@ -95,7 +95,7 @@ public class OpportunityController {
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "分级") @RequestParam(required = false) String level,
-            @Parameter(description = "负责人ID") @RequestParam(required = false) Long ownerId) {
+            @Parameter(description = "负责人ID") @RequestParam(required = false) String ownerId) {
         return Result.ok(service.page(page, size, keyword, status, level, ownerId));
     }
 
@@ -125,7 +125,7 @@ public class OpportunityController {
     @Operation(summary = "商机转立项自动化(WON -> CONVERTED + 创建预立项草稿)")
     @PrePermission("project:opportunity:convert")
     @PostMapping("/{id}/convert-to-initiation")
-    public Result<Long> convertToInitiation(@Parameter(description = "商机ID") @PathVariable String id,
+    public Result<String> convertToInitiation(@Parameter(description = "商机ID") @PathVariable String id,
                                         @Parameter(description = "发起人ID") @RequestParam(required = false) String sponsorId,
                                         @Parameter(description = "项目经理ID") @RequestParam(required = false) String pmId) {
         return Result.ok(service.convertToInitiation(id, sponsorId, pmId));

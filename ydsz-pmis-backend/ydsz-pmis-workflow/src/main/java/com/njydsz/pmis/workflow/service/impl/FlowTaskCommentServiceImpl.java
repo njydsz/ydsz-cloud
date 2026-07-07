@@ -41,7 +41,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public FlowTaskCommentDO addComment(String instanceId, Long taskId, String nodeCode,
+    public FlowTaskCommentDO addComment(String instanceId, String taskId, String nodeCode,
                                        String userId, String userName, String content,
                                        String type, Long parentId) {
         FlowTaskCommentDO comment = new FlowTaskCommentDO();
@@ -55,7 +55,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
         comment.setContent(content);
         // 类型缺省为 COMMENT
         comment.setType(StringUtils.hasText(type) ? type : "COMMENT");
-        comment.setParentId(parentId);
+        comment.setParentId(parentId != null ? String.valueOf(parentId) : null);
         comment.setCreatedAt(now);
         comment.setUpdatedAt(now);
 
@@ -69,7 +69,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowTaskCommentDO> listByTaskId(Long taskId) {
+    public List<FlowTaskCommentDO> listByTaskId(String taskId) {
         try {
             if (taskId == null) {
                 return List.of();

@@ -44,5 +44,5 @@ public interface DeliveryStandardMapper extends BaseMapper<DeliveryStandardDO> {
      * @param projectType 项目类型
      * @return 交付标准数量
      */
-    long countByType(@Param("projectType") String projectType);
+    Integer countByType(@Param("projectType") String projectType);
 }

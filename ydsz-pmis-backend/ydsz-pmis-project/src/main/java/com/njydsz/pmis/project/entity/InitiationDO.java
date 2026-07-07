@@ -100,7 +100,7 @@ public class InitiationDO implements Serializable {
 
     /** 更新人 ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Long updatedBy;
+    private String updatedBy;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)

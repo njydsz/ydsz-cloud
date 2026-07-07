@@ -77,7 +77,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskCreated(Long taskId) {
+    public void onTaskCreated(String taskId) {
         // P0-1: 给当前办理人发送待办通知
         if (taskId == null) {
             return;
@@ -102,7 +102,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskCompleted(Long taskId, String action, Map<String, Object> variables) {
+    public void onTaskCompleted(String taskId, String action, Map<String, Object> variables) {
         log.info("[FlowListener] 立项任务完成: taskId={} action={}", taskId, action);
         // 审批轨迹与驳回通知由 onInstanceCompleted / onInstanceRejected 统一处理，
         // 此处仅记录任务级审计日志，避免重复触达。
@@ -214,7 +214,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     // ============================== P0-1: 关键事件通知触发 ==============================
 
     @Override
-    public void onTaskUrged(String instanceId, Long taskId) {
+    public void onTaskUrged(String instanceId, String taskId) {
         // P0-1: 催办通知：实例级催办推送给所有当前待办办理人
         if (instanceId == null) {
             return;
@@ -252,7 +252,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onInstanceRecalled(String instanceId, Long initiatorId) {
+    public void onInstanceRecalled(String instanceId, String initiatorId) {
         // P0-1: 撤回通知：通知所有当前待办办理人
         if (instanceId == null) {
             return;
@@ -271,7 +271,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskTransferred(Long taskId, Long fromUserId, Long toUserId) {
+    public void onTaskTransferred(String taskId, String fromUserId, String toUserId) {
         // P0-1: 转办通知：通知新办理人
         if (taskId == null || toUserId == null) {
             return;
@@ -290,7 +290,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskDelegated(Long taskId, Long fromUserId, Long toUserId) {
+    public void onTaskDelegated(String taskId, String fromUserId, String toUserId) {
         // P0-1: 委派通知：通知被委派人
         if (taskId == null || toUserId == null) {
             return;
@@ -309,7 +309,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskTimeout(Long taskId, String instanceId) {
+    public void onTaskTimeout(String taskId, String instanceId) {
         // P0-1: 超时通知：通知当前办理人
         if (taskId == null) {
             return;
@@ -342,7 +342,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
      * @param instance 流程实例（可空）
      * @return 立项 ID，解析失败返回 null
      */
-    private Long resolveInitiationId(FlowInstanceDO instance) {
+    private String resolveInitiationId(FlowInstanceDO instance) {
         if (instance == null) {
             return null;
         }
@@ -354,7 +354,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                 ? bizId.substring(INIT_BIZ_KEY_PREFIX.length())
                 : bizId;
         try {
-            return Long.parseLong(raw.trim());
+            return raw.trim();
         } catch (NumberFormatException e) {
             log.warn("[FlowListener] 无法从业务键解析立项 ID: bizId={}", bizId);
             return null;
@@ -409,7 +409,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
      * @param content    内容
      * @param taskId     任务 ID
      */
-    private void pushImNotification(String assigneeId, String title, String content, Long taskId) {
+    private void pushImNotification(String assigneeId, String title, String content, String taskId) {
         if (assigneeId == null) {
             return;
         }

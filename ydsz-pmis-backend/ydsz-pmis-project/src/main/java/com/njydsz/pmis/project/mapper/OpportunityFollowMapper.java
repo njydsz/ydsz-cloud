@@ -22,5 +22,5 @@ public interface OpportunityFollowMapper extends BaseMapper<OpportunityFollowDO>
      * @param opportunityId 商机 ID
      * @return 跟进记录列表
      */
-    List<OpportunityFollowDO> selectByOpportunityId(@Param("opportunityId") Long opportunityId);
+    List<OpportunityFollowDO> selectByOpportunityId(@Param("opportunityId") String opportunityId);
 }

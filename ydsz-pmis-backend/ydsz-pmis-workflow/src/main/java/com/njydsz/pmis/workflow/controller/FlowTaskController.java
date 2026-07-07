@@ -260,7 +260,7 @@ public class FlowTaskController {
      */
     @PostMapping("/task/batchPass")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> batchPass(@RequestParam List<Long> taskIds,
+    public Result<Void> batchPass(@RequestParam List<String> taskIds,
                                   @RequestParam(required = false) String comment) {
         workflowFacade.batchPassTasks(taskIds, SecurityContext.getUserId(), comment);
         return Result.ok();

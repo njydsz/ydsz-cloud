@@ -45,7 +45,7 @@ public class OpportunityFollowController {
     @Operation(summary = "记录跟进")
     @Idempotent(key = "opportunity-follow:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> record(@Valid @RequestBody OpportunityFollowDTO dto) {
+    public Result<String> record(@Valid @RequestBody OpportunityFollowDTO dto) {
         return Result.ok(service.record(dto));
     }
 
@@ -62,7 +62,7 @@ public class OpportunityFollowController {
     public Result<Page<OpportunityFollowDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) Long opportunityId) {
+            @RequestParam(required = false) String opportunityId) {
         return Result.ok(service.page(page, size, opportunityId));
     }
 }

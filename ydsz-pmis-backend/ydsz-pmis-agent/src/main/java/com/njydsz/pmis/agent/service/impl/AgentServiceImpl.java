@@ -187,9 +187,9 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countByAlertLevel(String alertLevel, String agentType, String tenantId) {
+    public String countByAlertLevel(String alertLevel, String agentType, String tenantId) {
         if (tenantId == null) tenantId = "1";
-        return predictionMapper.countByAlertLevel(alertLevel, agentType, tenantId);
+        return predictionMapper.countByAlertLevel(alertLevel, agentType, tenantId).toString();
     }
 
     // ========== 私有方法 ==========

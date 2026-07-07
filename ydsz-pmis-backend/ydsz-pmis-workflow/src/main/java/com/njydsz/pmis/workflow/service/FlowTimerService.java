@@ -36,7 +36,7 @@ public interface FlowTimerService {
      * @param delay      超时时长
      * @return 定时器 ID
      */
-    Long scheduleBoundary(Long taskId, String instanceId, String nodeCode, Duration delay);
+    Long scheduleBoundary(String taskId, String instanceId, String nodeCode, Duration delay);
 
     /**
      * 触发单个定时器（cronjob 扫描到到点记录时调用）
@@ -59,7 +59,7 @@ public interface FlowTimerService {
      * @param taskId userTask ID
      * @return 取消条数
      */
-    int cancelByTask(Long taskId);
+    int cancelByTask(String taskId);
 
     /**
      * 取消某实例所有 PENDING 定时器（实例终止/驳回时调用）

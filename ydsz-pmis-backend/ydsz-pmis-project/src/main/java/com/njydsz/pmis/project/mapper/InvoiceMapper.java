@@ -44,8 +44,8 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
      * @return 受影响行数
      */
     int updateStatus(@Param("id") String id, @Param("status") String status,
-                     @Param("approvedBy") Long approvedBy,
-                     @Param("issuedBy") Long issuedBy);
+                     @Param("approvedBy") String approvedBy,
+                     @Param("issuedBy") String issuedBy);
 
     /**
      * 按合同 ID 查询发票列表

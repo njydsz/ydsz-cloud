@@ -42,11 +42,11 @@ public class FlowTaskBatchServiceImpl {
      * @param comment 审批意见
      */
     @Transactional(rollbackFor = Exception.class)
-    public void batchPass(List<Long> taskIds, String userId, String comment) {
+    public void batchPass(List<String> taskIds, String userId, String comment) {
         if (taskIds == null || taskIds.isEmpty()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
         }
-        for (Long taskId : taskIds) {
+        for (String taskId : taskIds) {
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
             dto.setTaskId(taskId);
             dto.setUserId(userId);

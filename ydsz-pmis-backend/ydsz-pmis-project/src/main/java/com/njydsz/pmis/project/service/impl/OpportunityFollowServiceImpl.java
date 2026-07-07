@@ -43,7 +43,7 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
      * @throws BizException 商机不存在或参数非法时抛出
      */
     @Override
-    public Long record(OpportunityFollowDTO dto) {
+    public String record(OpportunityFollowDTO dto) {
         validate(dto);
         if (opportunityMapper.selectById(dto.getOpportunityId()) == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_69bdeff3");
@@ -66,10 +66,10 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<OpportunityFollowDO> page(int page, int size, Long opportunityId) {
+    public Page<OpportunityFollowDO> page(int page, int size, String opportunityId) {
         Page<OpportunityFollowDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OpportunityFollowDO> w = new LambdaQueryWrapper<>();
-        if (opportunityId != null) w.eq(OpportunityFollowDO::getOpportunityId, opportunityId);
+        if (opportunityId != null && !opportunityId.isBlank()) w.eq(OpportunityFollowDO::getOpportunityId, opportunityId);
         w.orderByDesc(OpportunityFollowDO::getFollowAt);
         return followMapper.selectPage(p, w);
     }

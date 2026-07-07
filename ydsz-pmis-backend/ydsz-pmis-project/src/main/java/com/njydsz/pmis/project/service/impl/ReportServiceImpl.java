@@ -134,12 +134,12 @@ public class ReportServiceImpl implements ReportService {
         try {
             List<CostAllocationDO> allocations = costAllocationMapper.selectByInitiationAndPeriod(initiationId, period);
             if (allocations != null) {
-                Map<Long, BigDecimal> empTotals = new HashMap<>();
+                Map<String, BigDecimal> empTotals = new HashMap<>();
                 for (CostAllocationDO c : allocations) {
                     if (c.getEmployeeId() == null) continue;
                     empTotals.merge(c.getEmployeeId(), c.getAmount() == null ? BigDecimal.ZERO : c.getAmount(), BigDecimal::add);
                 }
-                for (Map.Entry<Long, BigDecimal> e : empTotals.entrySet()) {
+                for (Map.Entry<String, BigDecimal> e : empTotals.entrySet()) {
                     Map<String, Object> m = new HashMap<>();
                     m.put("employeeId", e.getKey());
                     m.put("amount", e.getValue());
@@ -210,7 +210,7 @@ public class ReportServiceImpl implements ReportService {
     public List<Map<String, Object>> profitRank(int top, String sortBy, String period) {
         int limit = top <= 0 ? 10 : top;
         String dim = StringUtils.hasText(sortBy) ? sortBy : "grossMargin";
-        Map<Long, ProfitSnapshotDO> latestByInitiation = new HashMap<>();
+        Map<String, ProfitSnapshotDO> latestByInitiation = new HashMap<>();
         try {
             LambdaQueryWrapper<ProfitSnapshotDO> w = new LambdaQueryWrapper<>();
             if (StringUtils.hasText(period)) {

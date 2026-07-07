@@ -18,7 +18,7 @@ public interface OpportunityFollowService {
      * @param dto 跟进记录参数
      * @return 跟进记录 ID
      */
-    Long record(OpportunityFollowDTO dto);
+    String record(OpportunityFollowDTO dto);
 
     /**
      * 分页查询商机跟进记录。
@@ -28,5 +28,5 @@ public interface OpportunityFollowService {
      * @param opportunityId 商机 ID，可空
      * @return 分页结果
      */
-    Page<OpportunityFollowDO> page(int page, int size, Long opportunityId);
+    Page<OpportunityFollowDO> page(int page, int size, String opportunityId);
 }

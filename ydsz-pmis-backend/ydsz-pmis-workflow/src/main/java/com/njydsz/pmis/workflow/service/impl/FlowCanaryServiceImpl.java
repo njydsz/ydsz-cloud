@@ -137,7 +137,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     @Override
     @Transactional(readOnly = true)
     public FlowDefinitionDO resolveEffectiveDefinition(String flowCode, String version,
-                                                       String tenantId, Long initiatorId) {
+                                                       String tenantId, String initiatorId) {
         // 1) 先查稳定版（isPublish=1 且 canaryStatus != CANARYING 的最新已发布）
         FlowDefinitionDO stable = definitionMapper.selectPublished(
                 flowCode,
@@ -263,7 +263,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
      * <br>RANDOM：ThreadLocalRandom.nextInt(100) < percent
      * <br>WHITELIST：始终走灰度（白名单在调用方过滤，这里简化认为配置了白名单就走灰度）
      */
-    private boolean shouldUseCanary(FlowDefinitionDO canary, int percent, Long initiatorId) {
+    private boolean shouldUseCanary(FlowDefinitionDO canary, int percent, String initiatorId) {
         String strategy = canary.getCanaryStrategy();
         if (strategy == null) {
             strategy = CanaryStrategy.USER_HASH.name();

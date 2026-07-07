@@ -51,7 +51,7 @@ public interface FlowDmnTableService {
      * @param table 决策表定义
      * @return 新建后的主键 ID
      */
-    Long save(FlowDmnTableDO table);
+    String save(FlowDmnTableDO table);
 
     /**
      * 更新决策表

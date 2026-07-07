@@ -36,19 +36,19 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     private final FlowNotifyOutboxService notifyOutboxService;
 
     @Override
-    public void onTaskCreated(Long taskId) {
+    public void onTaskCreated(String taskId) {
         saveOutbox("TASK_CREATED", "WORKFLOW_TASK", taskId, null, taskId, null);
     }
 
     @Override
-    public void onTaskCompleted(Long taskId, String action, Map<String, Object> variables) {
+    public void onTaskCompleted(String taskId, String action, Map<String, Object> variables) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("action", action);
         saveOutbox("TASK_COMPLETED", "WORKFLOW_TASK", taskId, null, taskId, payload);
     }
 
     @Override
-    public void onTaskCompleted(Long taskId, FlowEventContext ctx) {
+    public void onTaskCompleted(String taskId, FlowEventContext ctx) {
         Map<String, Object> payload = new HashMap<>();
         if (ctx != null) {
             payload.put("action", ctx.getAction());
@@ -102,21 +102,21 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     }
 
     @Override
-    public void onInstanceRecalled(String instanceId, Long initiatorId) {
+    public void onInstanceRecalled(String instanceId, String initiatorId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("initiatorId", initiatorId);
         saveOutbox("INSTANCE_RECALLED", "WORKFLOW_INSTANCE", instanceId, instanceId, null, payload);
     }
 
     @Override
-    public void onTaskUrged(String instanceId, Long taskId) {
+    public void onTaskUrged(String instanceId, String taskId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("instanceId", instanceId);
         saveOutbox("TASK_URGED", "WORKFLOW_TASK", taskId, instanceId, taskId, payload);
     }
 
     @Override
-    public void onTaskTransferred(Long taskId, Long fromUserId, Long toUserId) {
+    public void onTaskTransferred(String taskId, String fromUserId, String toUserId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("fromUserId", fromUserId);
         payload.put("toUserId", toUserId);
@@ -124,7 +124,7 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskDelegated(Long taskId, Long fromUserId, Long toUserId) {
+    public void onTaskDelegated(String taskId, String fromUserId, String toUserId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("fromUserId", fromUserId);
         payload.put("toUserId", toUserId);
@@ -132,7 +132,7 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskCountersigned(Long taskId, Long targetUserId, String action) {
+    public void onTaskCountersigned(String taskId, String targetUserId, String action) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("targetUserId", targetUserId);
         payload.put("action", action);
@@ -140,7 +140,7 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskJumped(Long taskId, String fromNodeCode, String toNodeCode) {
+    public void onTaskJumped(String taskId, String fromNodeCode, String toNodeCode) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("fromNodeCode", fromNodeCode);
         payload.put("toNodeCode", toNodeCode);
@@ -148,7 +148,7 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskTimeout(Long taskId, String instanceId) {
+    public void onTaskTimeout(String taskId, String instanceId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("instanceId", instanceId);
         saveOutbox("TASK_TIMEOUT", "WORKFLOW_TASK", taskId, instanceId, taskId, payload);
@@ -156,8 +156,8 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
 
     // ============================== 内部辅助 ==============================
 
-    private void saveOutbox(String eventType, String bizType, Long bizId,
-                            String instanceId, Long taskId, Map<String, Object> extraPayload) {
+    private void saveOutbox(String eventType, String bizType, String bizId,
+                            String instanceId, String taskId, Map<String, Object> extraPayload) {
         try {
             FlowNotifyOutboxDO event = new FlowNotifyOutboxDO();
             event.setEventType(eventType);

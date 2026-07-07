@@ -173,7 +173,7 @@ public class AgentController {
     @Operation(summary = "告警计数")
     @PrePermission("agent:task:list")
     @GetMapping("/count")
-    public Result<Long> countByAlertLevel(
+    public Result<String> countByAlertLevel(
             @RequestParam(required = false) String alertLevel,
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) String tenantId) {

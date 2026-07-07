@@ -209,7 +209,7 @@ public class OpportunityServiceImpl implements OpportunityService {
     @Override
     @DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
     @Transactional(readOnly = true)
-    public Page<OpportunityDO> page(int page, int size, String keyword, String status, String level, Long ownerId) {
+    public Page<OpportunityDO> page(int page, int size, String keyword, String status, String level, String ownerId) {
         Page<OpportunityDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OpportunityDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {

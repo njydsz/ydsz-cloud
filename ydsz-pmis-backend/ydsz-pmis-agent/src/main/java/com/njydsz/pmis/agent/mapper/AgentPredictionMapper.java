@@ -75,7 +75,7 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
      * @param tenantId   租户 ID
      * @return 数量
      */
-    long countByAlertLevel(@Param("alertLevel") String alertLevel,
+    Integer countByAlertLevel(@Param("alertLevel") String alertLevel,
                            @Param("agentType") String agentType,
                            @Param("tenantId") String tenantId);
 

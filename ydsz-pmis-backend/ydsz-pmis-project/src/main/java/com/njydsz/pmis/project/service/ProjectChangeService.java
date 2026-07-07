@@ -90,5 +90,5 @@ public interface ProjectChangeService {
      * @param initiationId 立项 ID
      * @return 重大变更数量
      */
-    long countMajorByInitiation(String initiationId);
+    Integer countMajorByInitiation(String initiationId);
 }

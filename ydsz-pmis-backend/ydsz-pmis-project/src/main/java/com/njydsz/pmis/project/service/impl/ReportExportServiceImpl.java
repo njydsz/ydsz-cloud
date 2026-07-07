@@ -151,7 +151,7 @@ public class ReportExportServiceImpl implements ReportExportService {
         if (initIdObj == null) {
             return List.of();
         }
-        String initiationId = toLong(initIdObj);
+        String initiationId = String.valueOf(initIdObj);
         String period = stringOf(params.get("period"));
         Map<String, Object> r = reportService.projectProfitReport(initiationId, period);
         if (r == null || r.containsKey("error")) {
@@ -179,7 +179,7 @@ public class ReportExportServiceImpl implements ReportExportService {
         if (initIdObj == null) {
             return List.of();
         }
-        String initiationId = toLong(initIdObj);
+        String initiationId = String.valueOf(initIdObj);
         String period = stringOf(params.get("period"));
         Map<String, Object> r = reportService.costDetailReport(initiationId, period);
         if (r == null || r.containsKey("error")) {
@@ -209,7 +209,7 @@ public class ReportExportServiceImpl implements ReportExportService {
         if (initIdObj == null) {
             return List.of();
         }
-        String initiationId = toLong(initIdObj);
+        String initiationId = String.valueOf(initIdObj);
         Map<String, Object> r = reportService.paymentLedgerReport(initiationId);
         if (r == null || r.containsKey("error")) {
             return List.of();
@@ -236,7 +236,7 @@ public class ReportExportServiceImpl implements ReportExportService {
 
     private List<Map<String, Object>> collectRiskMatrixRows(Map<String, Object> params) {
         Object initIdObj = params.get("initiationId");
-        String initiationId = initIdObj == null ? null : toLong(initIdObj);
+        String initiationId = initIdObj == null ? null : String.valueOf(initIdObj);
         String riskType = stringOf(params.get("riskType"));
         String status = stringOf(params.get("status"));
         Map<String, Object> matrix = advancedReportService.riskMatrix(initiationId, riskType, status);
@@ -258,7 +258,7 @@ public class ReportExportServiceImpl implements ReportExportService {
     private List<Map<String, Object>> collectProjectHealthRows(Map<String, Object> params) {
         String health = stringOf(params.get("health"));
         @SuppressWarnings("unchecked")
-        List<Long> ids = (List<Long>) params.get("initiationIds");
+        List<String> ids = (List<String>) params.get("initiationIds");
         Map<String, Object> out = advancedReportService.projectHealthDashboard(ids, health);
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> projects = (List<Map<String, Object>>) out.getOrDefault("projects", List.of());
@@ -409,16 +409,5 @@ public class ReportExportServiceImpl implements ReportExportService {
         if (o == null) return null;
         String s = o.toString();
         return StringUtils.hasText(s) ? s : null;
-    }
-
-    private static Long toLong(Object o) {
-        if (o == null) return null;
-        if (o instanceof Number) return ((Number) o).longValue();
-        try {
-            return Long.parseLong(o.toString());
-        } catch (Exception e) {
-            log.warn("[ReportExportServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
-            return null;
-        }
     }
 }

@@ -286,7 +286,7 @@ public class FlowMonitorController {
         // 补实例详情字段（若有 instanceId）
         if (instanceId instanceof Number n) {
             try {
-                FlowInstanceDO inst = instanceService.getById(n.longValue());
+                FlowInstanceDO inst = instanceService.getById(String.valueOf(n.longValue()));
                 if (inst != null) {
                     item.put("flowCode", inst.getFlowCode());
                     item.put("flowName", inst.getFlowName());

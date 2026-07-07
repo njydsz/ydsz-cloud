@@ -88,8 +88,8 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countStandardsByType(String projectType) {
-        if (!StringUtils.hasText(projectType)) return 0L;
+    public Integer countStandardsByType(String projectType) {
+        if (!StringUtils.hasText(projectType)) return 0;
         return standardMapper.countByType(projectType);
     }
 

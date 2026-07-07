@@ -115,7 +115,7 @@ public class DeliveryController {
     @Operation(summary = "统计项目类型的标准数")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/count")
-    public Result<Long> countStandardsByType(@RequestParam String projectType) {
+    public Result<Integer> countStandardsByType(@RequestParam String projectType) {
         return Result.ok(service.countStandardsByType(projectType));
     }
 

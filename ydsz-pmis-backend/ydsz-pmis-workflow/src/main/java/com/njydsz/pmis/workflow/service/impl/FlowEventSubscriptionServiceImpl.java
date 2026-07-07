@@ -282,7 +282,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     /**
      * 取消边界事件关联的 userTask
      */
-    private void cancelBoundaryTask(Long taskId, String errorCode) {
+    private void cancelBoundaryTask(String taskId, String errorCode) {
         FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
             return;

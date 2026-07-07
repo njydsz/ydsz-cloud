@@ -41,7 +41,7 @@ public interface OrgQueryClient {
      * @return 部门负责人用户 ID，未设置时返回 null
      */
     @GetMapping("/dept-leader")
-    Result<Long> getDeptLeaderByDeptId(@RequestParam("deptId") Long deptId);
+    Result<String> getDeptLeaderByDeptId(@RequestParam("deptId") Long deptId);
 
     /**
      * 根据部门编码查询部门负责人用户 ID
@@ -50,7 +50,7 @@ public interface OrgQueryClient {
      * @return 部门负责人用户 ID，未设置时返回 null
      */
     @GetMapping("/dept-leader-by-code")
-    Result<Long> getDeptLeaderByDeptCode(@RequestParam("deptCode") String deptCode);
+    Result<String> getDeptLeaderByDeptCode(@RequestParam("deptCode") String deptCode);
 
     /**
      * 查询用户拥有的角色编码列表（用于待办反查）
@@ -97,5 +97,5 @@ public interface OrgQueryClient {
      * @return 直属上级用户 ID，未设置时返回 null
      */
     @GetMapping("/leader-by-user")
-    Result<Long> getLeaderByUserId(@RequestParam("userId") String userId);
+    Result<String> getLeaderByUserId(@RequestParam("userId") String userId);
 }

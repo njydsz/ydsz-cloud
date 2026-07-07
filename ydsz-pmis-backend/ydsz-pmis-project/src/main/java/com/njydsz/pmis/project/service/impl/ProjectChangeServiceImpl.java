@@ -235,8 +235,8 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public long countMajorByInitiation(String initiationId) {
-        if (initiationId == null) return 0L;
+    public Integer countMajorByInitiation(String initiationId) {
+        if (initiationId == null) return 0;
         return changeMapper.countMajorByInitiation(initiationId);
     }
 

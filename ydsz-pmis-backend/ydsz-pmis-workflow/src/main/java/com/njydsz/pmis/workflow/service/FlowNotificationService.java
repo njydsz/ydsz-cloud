@@ -28,7 +28,7 @@ public interface FlowNotificationService {
      * @param assigneeId    办理人 ID
      * @param assigneeName  办理人姓名
      */
-    void notifyTaskCreated(String instanceId, Long taskId, String assigneeId, String assigneeName);
+    void notifyTaskCreated(String instanceId, String taskId, String assigneeId, String assigneeName);
 
     /**
      * 催办通知
@@ -38,7 +38,7 @@ public interface FlowNotificationService {
      * @param assigneeIds   被催办人 ID 列表
      * @param comment       催办备注
      */
-    void notifyUrge(String instanceId, Long taskId, List<String> assigneeIds, String comment);
+    void notifyUrge(String instanceId, String taskId, List<String> assigneeIds, String comment);
 
     /**
      * 抄送通知
@@ -56,7 +56,7 @@ public interface FlowNotificationService {
      * @param instanceId  流程实例 ID
      * @param initiatorId 发起人 ID
      */
-    void notifyInstanceCompleted(String instanceId, Long initiatorId);
+    void notifyInstanceCompleted(String instanceId, String initiatorId);
 
     /**
      * 流程驳回通知
@@ -65,7 +65,7 @@ public interface FlowNotificationService {
      * @param initiatorId 发起人 ID
      * @param reason      驳回原因
      */
-    void notifyInstanceRejected(String instanceId, Long initiatorId, String reason);
+    void notifyInstanceRejected(String instanceId, String initiatorId, String reason);
 
     /**
      * SLA 超时通知
@@ -75,7 +75,7 @@ public interface FlowNotificationService {
      * @param assigneeId  办理人 ID
      * @param action      超时动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）
      */
-    void notifySlaTimeout(String instanceId, Long taskId, String assigneeId, String action);
+    void notifySlaTimeout(String instanceId, String taskId, String assigneeId, String action);
 
     /**
      * 通用发送

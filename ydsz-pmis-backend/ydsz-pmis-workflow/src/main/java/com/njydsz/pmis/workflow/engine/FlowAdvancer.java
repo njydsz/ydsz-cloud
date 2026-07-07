@@ -23,7 +23,7 @@ public interface FlowAdvancer {
     /**
      * 启动实例：找到开始节点，生成第一批任务
      */
-    FlowInstanceViewDTO start(String instanceId);
+    FlowInstanceViewDTO start(Long instanceId);
 
     /**
      * 完成任务后推进：找下一节点，生成下一批任务
@@ -95,7 +95,7 @@ public interface FlowAdvancer {
     /**
      * 解析退回时的目标节点（默认：当前节点的前驱节点）
      */
-    String resolveRejectTarget(String definitionId, String currentNodeCode);
+    String resolveRejectTarget(Long definitionId, String currentNodeCode);
 
     /**
      * 暴露 instanceService 供外部触发（如定时器触发后需要 generateTasksForNodes）
