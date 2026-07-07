@@ -79,11 +79,11 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
         if (top <= 0) top = DEFAULT_TOP;
         List<Map<String, Object>> all = aggregate(from, to);
         // 个人聚合（跨月合并）
-        Map<Long, double[]> byEmp = new HashMap<>();
-        Map<Long, String> nameMap = new HashMap<>();
-        Map<Long, String> levelMap = new HashMap<>();
+        Map<String, double[]> byEmp = new HashMap<>();
+        Map<String, String> nameMap = new HashMap<>();
+        Map<String, String> levelMap = new HashMap<>();
         for (Map<String, Object> r : all) {
-            Long emp = toLong(r.get("employeeId"));
+            String emp = stringOf(r.get("employeeId"));
             if (emp == null) continue;
             double[] acc = byEmp.computeIfAbsent(emp, k -> new double[2]);
             acc[0] += toDouble(r.get("totalHours"));
@@ -92,7 +92,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
             levelMap.putIfAbsent(emp, str(r.get("levelCode")));
         }
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Map.Entry<Long, double[]> e : byEmp.entrySet()) {
+        for (Map.Entry<String, double[]> e : byEmp.entrySet()) {
             Map<String, Object> row = new HashMap<>();
             row.put("employeeId", e.getKey());
             row.put("employeeName", nameMap.getOrDefault(e.getKey(), ""));
@@ -128,10 +128,10 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
     public List<Map<String, Object>> scanAlerts(LocalDate from, LocalDate to) {
         List<Map<String, Object>> all = aggregate(from, to);
         // 个人合并
-        Map<Long, double[]> byEmp = new HashMap<>();
-        Map<Long, Map<String, Object>> meta = new HashMap<>();
+        Map<String, double[]> byEmp = new HashMap<>();
+        Map<String, Map<String, Object>> meta = new HashMap<>();
         for (Map<String, Object> r : all) {
-            Long emp = toLong(r.get("employeeId"));
+            String emp = stringOf(r.get("employeeId"));
             if (emp == null) continue;
             double[] acc = byEmp.computeIfAbsent(emp, k -> new double[2]);
             acc[0] += toDouble(r.get("totalHours"));
@@ -145,7 +145,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
             });
         }
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Map.Entry<Long, double[]> e : byEmp.entrySet()) {
+        for (Map.Entry<String, double[]> e : byEmp.entrySet()) {
             Map<String, Object> row = new HashMap<>(meta.get(e.getKey()));
             row.put("totalHours", e.getValue()[0]);
             row.put("billableHours", e.getValue()[1]);
@@ -300,7 +300,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
 
     private long countDistinctEmployee(List<Map<String, Object>> rows) {
         return rows.stream()
-                .map(r -> toLong(r.get("employeeId")))
+                .map(r -> stringOf(r.get("employeeId")))
                 .filter(Objects::nonNull)
                 .distinct()
                 .count();
@@ -331,6 +331,10 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
         return o == null ? "" : o.toString();
     }
 
+    private static String stringOf(Object o) {
+        return o == null ? null : o.toString();
+    }
+
     @FunctionalInterface
     private interface SupplierX<T> {
         T get();
@@ -350,7 +354,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
                                                      Map<String, String> deptByLevel) {
         BillableUtilizationSnapshotDO snap = new BillableUtilizationSnapshotDO();
         snap.setPeriod(period);
-        Long empId = toLong(firstNonNull(raw, "employeeId", "employee_id"));
+        String empId = stringOf(firstNonNull(raw, "employeeId", "employee_id"));
         if (empId == null) {
             throw new IllegalArgumentException("employee_id 缺失");
         }

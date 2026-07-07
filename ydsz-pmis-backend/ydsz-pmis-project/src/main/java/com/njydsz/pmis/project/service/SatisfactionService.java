@@ -18,7 +18,7 @@ import java.util.Map;
 public interface SatisfactionService {
 
     /** 提交评价 */
-    Long submit(SatisfactionCreateDTO dto);
+    String submit(SatisfactionCreateDTO dto);
 
     /** 标记需跟进（满意度 ≤ 2 星） */
     void markFollowUp(String id, String note);

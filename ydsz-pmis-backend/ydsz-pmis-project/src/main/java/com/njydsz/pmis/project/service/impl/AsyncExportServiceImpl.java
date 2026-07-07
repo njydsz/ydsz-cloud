@@ -153,7 +153,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
      * @return 表头与数据行
      */
     private ReportData fetchReportData(String exportType, Map<String, Object> params) {
-        String initiationId = getLong(params, "initiationId");
+        String initiationId = getString(params, "initiationId");
         String period = getString(params, "period");
         Long deptId = getLong(params, "deptId");
         String type = exportType == null ? "" : exportType;

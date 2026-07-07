@@ -70,7 +70,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     private static final BigDecimal STANDARD_MONTHLY_HOURS = new BigDecimal("174");
 
     @Override
-    public List<Map<String, Object>> evmReport(Long initiationId) {
+    public List<Map<String, Object>> evmReport(String initiationId) {
         if (initiationId == null) {
             return new ArrayList<>();
         }
@@ -292,7 +292,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             billableByDept.merge(dept, billable, BigDecimal::add);
             overtimeByDept.merge(dept, overtime, BigDecimal::add);
             leaveByDept.merge(dept, leave, BigDecimal::add);
-            headByDept.merge(dept, "1", (a, b) -> a + b);
+            headByDept.merge(dept, 1L, Long::sum);
         }
 
         List<Map<String, Object>> out = new ArrayList<>();
@@ -382,8 +382,8 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         String benchSource = totalIdleCostFromUser.signum() > 0 ? "USER_FEIGN" : "LOCAL_AGG";
 
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Map.Entry<Long, BigDecimal> e : benchHoursByEmp.entrySet()) {
-            Long empId = e.getKey();
+        for (Map.Entry<String, BigDecimal> e : benchHoursByEmp.entrySet()) {
+            String empId = e.getKey();
             BigDecimal benchHours = e.getValue();
             if (benchHours.signum() <= 0) {
                 continue;
@@ -490,7 +490,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     }
 
     @Override
-    public List<Map<String, Object>> resourceGantt(Long initiationId) {
+    public List<Map<String, Object>> resourceGantt(String initiationId) {
         if (initiationId == null) {
             return new ArrayList<>();
         }
@@ -545,7 +545,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             log.warn("[AdvancedReport] 风险数据查询失败: {}", e.getMessage());
         }
         Map<String, Integer> byLevel = new HashMap<>();
-        Map<Long, Integer> byInitiation = new HashMap<>();
+        Map<String, Integer> byInitiation = new HashMap<>();
         for (RiskDO r : risks) {
             String level = r.getRiskLevel() == null ? "UNKNOWN" : r.getRiskLevel();
             byLevel.merge(level, 1, (a, b) -> a + b);
@@ -559,7 +559,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             row.put("count", e.getValue());
             out.add(row);
         }
-        for (Map.Entry<Long, Integer> e : byInitiation.entrySet()) {
+        for (Map.Entry<String, Integer> e : byInitiation.entrySet()) {
             Map<String, Object> row = new HashMap<>();
             row.put("type", "BY_INITIATION");
             row.put("initiationId", e.getKey());
@@ -625,7 +625,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         int high = 0;
         int medium = 0;
         int low = 0;
-        Map<Long, Integer> projectCount = new HashMap<>();
+        Map<String, Integer> projectCount = new HashMap<>();
 
         for (RiskDO r : filtered) {
             String p = normalize(r.getProbability());
@@ -841,7 +841,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
 
         // 6) 应用过滤
         String realHealth = StringUtils.hasText(health) ? health.trim().toUpperCase() : null;
-        List<Long> filterIds = initiationIds == null ? List.of() : initiationIds.stream()
+        List<String> filterIds = initiationIds == null ? List.of() : initiationIds.stream()
                 .filter(Objects::nonNull).collect(Collectors.toList());
         boolean filterByIds = !filterIds.isEmpty();
         if (realHealth != null || filterByIds) {
@@ -850,7 +850,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
                 if (realHealth != null && !realHealth.equals(p.get("healthLevel"))) {
                     continue;
                 }
-                if (filterByIds && !filterIds.contains(toLong(p.get("initiationId")))) {
+                if (filterByIds && !filterIds.contains(stringOf(p.get("initiationId")))) {
                     continue;
                 }
                 filtered.add(p);
@@ -861,7 +861,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         // 7) 排序：健康度低到高（优先关注红/黄）
         projects.sort(Comparator
                 .comparing((Map<String, Object> m) -> toBigDecimal(m.get("healthScore")))
-                .thenComparing(m -> toLong(m.get("initiationId")) == null ? 0L : toLong(m.get("initiationId"))));
+                .thenComparing(m -> stringOf(m.get("initiationId")) == null ? "" : stringOf(m.get("initiationId"))));
 
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("totalCount", projects.size());

@@ -146,7 +146,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> profile(Long customerId) {
+    public Map<String, Object> profile(String customerId) {
         if (customerId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "客户 ID 不能为空");
         }

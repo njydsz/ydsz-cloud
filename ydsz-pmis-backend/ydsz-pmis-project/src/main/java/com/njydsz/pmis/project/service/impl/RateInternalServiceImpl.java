@@ -92,7 +92,7 @@ public class RateInternalServiceImpl implements RateInternalService {
 
     @Override
     @Transactional(readOnly = true)
-    public RateInternalDO matchEffective(String levelCode, Long departmentId, LocalDate date) {
+    public RateInternalDO matchEffective(String levelCode, String departmentId, LocalDate date) {
         if (!StringUtils.hasText(levelCode)) return null;
         if (date == null) date = LocalDate.now();
         return rateMapper.matchEffective(levelCode, departmentId, date);
@@ -100,14 +100,14 @@ public class RateInternalServiceImpl implements RateInternalService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RateInternalDO> listByLevelAndDept(String levelCode, Long departmentId) {
+    public List<RateInternalDO> listByLevelAndDept(String levelCode, String departmentId) {
         if (!StringUtils.hasText(levelCode)) return List.of();
         return rateMapper.selectByLevelAndDept(levelCode, departmentId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<RateInternalDO> page(int page, int size, String levelCode, Long departmentId, String status) {
+    public Page<RateInternalDO> page(int page, int size, String levelCode, String departmentId, String status) {
         Page<RateInternalDO> p = new Page<>(page, size);
         LambdaQueryWrapper<RateInternalDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(levelCode)) w.eq(RateInternalDO::getLevelCode, levelCode);

@@ -104,12 +104,12 @@ public class DataScopeAspect {
      * @param targetOwnerId 目标数据归属人 ID（createdBy 或 ownerId）
      * @throws BizException 无权限访问时抛出
      */
-    public static void assertAllowByOwner(Long targetOwnerId) {
+    public static void assertAllowByOwner(String targetOwnerId) {
         DataScopeContext ctx = peek();
         if (ctx.isAll()) {
             return;
         }
-        if (targetOwnerId == null) {
+        if (targetOwnerId == null || targetOwnerId.isBlank()) {
             return;
         }
         if (ctx.getUserId() != null && ctx.getUserId().equals(targetOwnerId)) {

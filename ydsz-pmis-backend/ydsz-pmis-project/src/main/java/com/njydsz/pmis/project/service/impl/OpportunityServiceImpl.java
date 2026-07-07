@@ -330,7 +330,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long convertToInitiation(String opportunityId, Long sponsorId, Long pmId) {
+    public String convertToInitiation(String opportunityId, String sponsorId, String pmId) {
         if (opportunityId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "商机 ID 不能为空");
         }

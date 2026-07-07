@@ -38,7 +38,7 @@ public class SatisfactionServiceImpl implements SatisfactionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long submit(SatisfactionCreateDTO dto) {
+    public String submit(SatisfactionCreateDTO dto) {
         validate(dto);
         SatisfactionDO s = new SatisfactionDO();
         BeanUtils.copyProperties(dto, s);

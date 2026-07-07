@@ -25,7 +25,7 @@ public interface WbsTaskService {
      * @param dto 任务创建参数
      * @return 任务ID
      */
-    Long create(WbsTaskCreateDTO dto);
+    String create(WbsTaskCreateDTO dto);
 
     /**
      * 变更任务状态

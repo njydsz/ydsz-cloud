@@ -109,5 +109,5 @@ public interface OpportunityService {
      * @param pmId          项目经理 ID(可空)
      * @return 新建立项 ID
      */
-    Long convertToInitiation(String opportunityId, Long sponsorId, Long pmId);
+    String convertToInitiation(String opportunityId, String sponsorId, String pmId);
 }
