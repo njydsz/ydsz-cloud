@@ -53,7 +53,7 @@ public class FlowNotifyOutboxServiceImpl implements FlowNotifyOutboxService {
      * <p>不使用 @Transactional，继承调用方事务上下文。
      */
     @Override
-    public Long saveOutbox(FlowNotifyOutboxDO event) {
+    public String saveOutbox(FlowNotifyOutboxDO event) {
         if (event == null) {
             return null;
         }
@@ -215,7 +215,7 @@ public class FlowNotifyOutboxServiceImpl implements FlowNotifyOutboxService {
                     if (extra.containsKey("level")) dto.setLevel((String) extra.get("level"));
                     if (extra.containsKey("receiverId")) {
                         Object rid = extra.get("receiverId");
-                        if (rid instanceof Number n) dto.setReceiverId(n.longValue());
+                        if (rid instanceof Number n) dto.setReceiverId(String.valueOf(n));
                     }
                 }
             } catch (Exception ignore) {

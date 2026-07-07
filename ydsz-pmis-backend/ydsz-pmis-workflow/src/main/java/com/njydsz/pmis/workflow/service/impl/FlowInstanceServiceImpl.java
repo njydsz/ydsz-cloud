@@ -153,7 +153,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         Map<String, Object> mergedVars = dto.getVariables() == null
                 ? new HashMap<>() : new HashMap<>(dto.getVariables());
         if (dto.getNodeAssignees() != null && !dto.getNodeAssignees().isEmpty()) {
-            for (Map.Entry<String, List<String>> entry : dto.getNodeAssignees().entrySet()) {
+            for (Map.Entry<String, List<Long>> entry : dto.getNodeAssignees().entrySet()) {
                 mergedVars.put("_selfSelect_" + entry.getKey(), entry.getValue());
             }
         }

@@ -95,7 +95,7 @@ public class FlowDmnTableServiceImpl implements FlowDmnTableService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CacheConstants.FLOW_DMN_BY_KEY_CACHE, allEntries = true)
-    public Long save(FlowDmnTableDO table) {
+    public String save(FlowDmnTableDO table) {
         if (table == null) {
             throw new IllegalArgumentException("决策表定义不能为空");
         }

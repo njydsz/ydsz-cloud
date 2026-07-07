@@ -116,12 +116,12 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
                 return;
             }
             String content = "流程实例[" + instanceId + "] 节点[" + nodeCode + "] 抄送给您";
-            for (String userId : ccUserIds) {
+            for (Long userId : ccUserIds) {
                 Map<String, Object> extra = new HashMap<>();
                 extra.put("bizType", "WORKFLOW_CC");
                 extra.put("instanceId", instanceId);
                 extra.put("nodeCode", nodeCode);
-                send(CHANNEL_IN_APP, userId, title, content, extra);
+                send(CHANNEL_IN_APP, String.valueOf(userId), title, content, extra);
             }
             log.debug("[FlowNotify] 抄送通知: instanceId={} nodeCode={} targets={}",
                     instanceId, nodeCode, ccUserIds.size());
@@ -332,17 +332,17 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         dto.setContent(asString(payload.get("content")));
         dto.setLevel(asString(payload.get("level")));
         dto.setCategory(asString(payload.get("category")));
-        dto.setSenderId(asLong(payload.get("senderId")));
-        dto.setReceiverId(asLong(payload.get("receiverId")));
+        dto.setSenderId(asString(payload.get("senderId")));
+        dto.setReceiverId(asString(payload.get("receiverId")));
         if (dto.getReceiverId() == null) {
             // payload 中使用 "userId" 表示单接收人
-            dto.setReceiverId(asLong(payload.get("userId")));
+            dto.setReceiverId(asString(payload.get("userId")));
         }
         Object receiverIds = payload.get("receiverIds");
         if (receiverIds instanceof List<?> list) {
             List<Long> ids = new ArrayList<>(list.size());
             for (Object o : list) {
-                String id = asLong(o);
+                Long id = asLong(o);
                 if (id != null) {
                     ids.add(id);
                 }

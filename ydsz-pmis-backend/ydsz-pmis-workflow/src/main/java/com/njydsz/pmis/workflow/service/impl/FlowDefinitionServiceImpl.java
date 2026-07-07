@@ -92,7 +92,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
-    public Long deploy(FlowDeployProcessDTO dto) {
+    public String deploy(FlowDeployProcessDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getFlowCode())
                 || !StringUtils.hasText(dto.getFlowName())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode/flowName 不能为空");
@@ -100,9 +100,9 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
         String version = StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0";
         // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取，最后兜底 1L
-        Long tenantId = dto.getTenantId() != null
+        String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
-                : SecurityContext.getTenantIdOrDefault(1L);
+                : SecurityContext.getTenantIdOrDefault("1");
 
         // 1. 检查重名：同 flowCode + version + tenant 只能有一条
         FlowDefinitionDO existing = definitionMapper.selectPublished(
@@ -212,7 +212,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         def.setTenantId(tenantId);
         def.setProviderTraceId(dto.getProviderTraceId());
         definitionMapper.insert(def);
-        Long definitionId = def.getId();
+        String definitionId = def.getId();
 
         // 4. 写入节点
         for (FlowNodeDO node : nodes) {
@@ -244,7 +244,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
-    public void publish(Long definitionId) {
+    public void publish(String definitionId) {
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
@@ -256,7 +256,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
-    public void deprecate(Long definitionId) {
+    public void deprecate(String definitionId) {
         definitionMapper.publish(definitionId, 9);
         log.info("[Flow] 停用流程: defId={}", definitionId);
     }
@@ -265,12 +265,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             key = "#flowCode + ':' + #version + ':' + #tenantId", unless = "#result == null")
-    public FlowDefinitionDO getPublished(String flowCode, String version, Long tenantId) {
+    public FlowDefinitionDO getPublished(String flowCode, String version, String tenantId) {
         if (!StringUtils.hasText(version)) {
             version = "1.0";
         }
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return definitionMapper.selectPublished(flowCode, version, tid);
     }
 
@@ -278,9 +278,9 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.FLOW_DEF_LATEST_CACHE,
             key = "#flowCode + ':' + #tenantId", unless = "#result == null")
-    public FlowDefinitionDO getLatestByCode(String flowCode, Long tenantId) {
+    public FlowDefinitionDO getLatestByCode(String flowCode, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return definitionMapper.selectLatestByCode(flowCode, tid);
     }
 
@@ -299,7 +299,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> getDetail(Long definitionId) {
+    public Map<String, Object> getDetail(String definitionId) {
         // P2-21: 组装 definition + nodes + skips
         FlowDefinitionDO definition = definitionMapper.selectById(definitionId);
         if (definition == null) {
@@ -320,7 +320,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
-    public void switchActiveVersion(String flowCode, Long definitionId, Long tenantId) {
+    public void switchActiveVersion(String flowCode, String definitionId, String tenantId) {
         if (!StringUtils.hasText(flowCode)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode 不能为空");
         }
@@ -333,7 +333,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                     "flowCode 不匹配: 期望=" + flowCode + " 实际=" + def.getFlowCode());
         }
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         // 失效同 flowCode 的其他已发布版本
         definitionMapper.deactivateByFlowCode(flowCode, definitionId, tid);
         // 激活目标版本
@@ -345,13 +345,13 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     // ============================== P2-28: 启用/停用 ==============================
 
     @Override
-    public void enable(Long definitionId) {
+    public void enable(String definitionId) {
         definitionMapper.updateActivityStatus(definitionId, 1);
         log.info("[Flow] 启用流程定义: defId={}", definitionId);
     }
 
     @Override
-    public void disable(Long definitionId) {
+    public void disable(String definitionId) {
         definitionMapper.updateActivityStatus(definitionId, 0);
         log.info("[Flow] 停用流程定义: defId={}", definitionId);
     }
@@ -360,7 +360,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateNodeCoordinate(Long definitionId, String nodeCode, String coordinate) {
+    public void updateNodeCoordinate(String definitionId, String nodeCode, String coordinate) {
         if (definitionId == null || !StringUtils.hasText(nodeCode)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId/nodeCode 不能为空");
         }
@@ -383,7 +383,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
-    public void updateDefinition(Long definitionId, FlowDeployProcessDTO dto) {
+    public void updateDefinition(String definitionId, FlowDeployProcessDTO dto) {
         if (definitionId == null || dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId/dto 不能为空");
         }
@@ -482,7 +482,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
-    public String exportDefinition(Long definitionId) {
+    public String exportDefinition(String definitionId) {
         Map<String, Object> detail = getDetail(definitionId);
         if (detail == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
@@ -492,7 +492,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long importDefinition(String json, Long tenantId) {
+    public String importDefinition(String json, String tenantId) {
         if (!StringUtils.hasText(json)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "导入 JSON 不能为空");
         }
@@ -575,7 +575,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // 5. 调用 deploy 创建为草稿（isPublish=0）
-        Long newDefinitionId = deploy(dto);
+        String newDefinitionId = deploy(dto);
         log.info("[Flow] 导入流程定义成功: flowCode={} version={} newDefId={}",
                 dto.getFlowCode(), dto.getVersion(), newDefinitionId);
         return newDefinitionId;
@@ -585,7 +585,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> getDesignerData(Long definitionId) {
+    public Map<String, Object> getDesignerData(String definitionId) {
         Map<String, Object> detail = getDetail(definitionId);
         if (detail == null) {
             return null;
@@ -621,7 +621,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveDesignerData(Long definitionId, Map<String, Object> designerData) {
+    public void saveDesignerData(String definitionId, Map<String, Object> designerData) {
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
@@ -682,7 +682,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
-    public String getFormConfig(Long definitionId, String nodeCode) {
+    public String getFormConfig(String definitionId, String nodeCode) {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
@@ -693,7 +693,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveFormConfig(Long definitionId, String nodeCode, String formFieldsConfig) {
+    public void saveFormConfig(String definitionId, String nodeCode, String formFieldsConfig) {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
@@ -711,7 +711,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
-    public String getSlaConfig(Long definitionId, String nodeCode) {
+    public String getSlaConfig(String definitionId, String nodeCode) {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
@@ -722,7 +722,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveSlaConfig(Long definitionId, String nodeCode, String slaConfig) {
+    public void saveSlaConfig(String definitionId, String nodeCode, String slaConfig) {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
@@ -740,12 +740,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> listVersions(Long definitionId) {
+    public List<Map<String, Object>> listVersions(String definitionId) {
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
-        Long tenantId = def.getTenantId() != null ? def.getTenantId() : 1L;
+        String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";
         List<FlowDefinitionDO> versions = definitionMapper.selectByFlowCode(def.getFlowCode(), tenantId);
         List<Map<String, Object>> result = new ArrayList<>();
         for (FlowDefinitionDO v : versions) {
@@ -768,13 +768,13 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> diffVersions(Long definitionId, Integer version1, Integer version2) {
+    public Map<String, Object> diffVersions(String definitionId, Integer version1, Integer version2) {
         // 1. 获取基础定义，找到 flowCode
         FlowDefinitionDO baseDef = definitionMapper.selectById(definitionId);
         if (baseDef == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
-        Long tenantId = baseDef.getTenantId() != null ? baseDef.getTenantId() : 1L;
+        String tenantId = baseDef.getTenantId() != null ? baseDef.getTenantId() : "1";
 
         // 2. 查找两个版本的定义
         List<FlowDefinitionDO> allVersions = definitionMapper.selectByFlowCode(
@@ -981,11 +981,11 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
      * @return Map 包含 successCount（成功数）和 failedItems（失败列表，每项含 fileName + reason）
      */
     @Override
-    public Map<String, Object> batchDeployFromZip(byte[] zipBytes, Long tenantId) {
+    public Map<String, Object> batchDeployFromZip(byte[] zipBytes, String tenantId) {
         if (zipBytes == null || zipBytes.length == 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "zip 文件内容为空");
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
 
         int successCount = 0;
         List<Map<String, String>> failedItems = new ArrayList<>();

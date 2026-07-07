@@ -69,7 +69,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long startSubProcess(FlowInstanceDO parentInstance,
+    public String startSubProcess(FlowInstanceDO parentInstance,
                                 FlowNodeDO callActivityNode,
                                 Map<String, Object> variables) {
         if (parentInstance == null || callActivityNode == null) {
@@ -111,8 +111,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
         FlowStartProcessDTO dto = buildSubProcessStartDTO(parentInstance, subFlowCode, mergedVars);
         dto.setParentInstanceId(parentInstance.getId());
         dto.setParentNodeCode(callActivityNode.getNodeCode());
-        String childIdStr = workflowFacade.startProcess(dto);
-        Long childId = childIdStr == null ? null : Long.parseLong(childIdStr);
+        String childId = workflowFacade.startProcess(dto);
         // 6. 从 ext JSON 读取 subProcessTimeout 并设置 dueAt
         Double subProcessTimeout = extractSubProcessTimeout(callActivityNode);
         if (subProcessTimeout != null && subProcessTimeout > 0 && childId != null) {
@@ -130,7 +129,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void onSubProcessCompleted(Long childInstanceId) {
+    public void onSubProcessCompleted(String childInstanceId) {
         if (childInstanceId == null) {
             return;
         }
@@ -139,7 +138,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             log.warn("[SubProcess] 子实例不存在: id={}", childInstanceId);
             return;
         }
-        Long parentId = child.getParentInstanceId();
+        String parentId = child.getParentInstanceId();
         String parentNodeCode = child.getParentNodeCode();
         if (parentId == null || parentNodeCode == null) {
             // 非子流程场景
@@ -195,7 +194,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void onSubProcessTerminated(Long childInstanceId, String reason, boolean terminal) {
+    public void onSubProcessTerminated(String childInstanceId, String reason, boolean terminal) {
         if (childInstanceId == null) {
             return;
         }
@@ -203,7 +202,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
         if (child == null) {
             return;
         }
-        Long parentId = child.getParentInstanceId();
+        String parentId = child.getParentInstanceId();
         String parentNodeCode = child.getParentNodeCode();
         if (parentId == null || parentNodeCode == null) {
             return;
@@ -228,7 +227,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowInstanceDO> listChildren(Long parentInstanceId) {
+    public List<FlowInstanceDO> listChildren(String parentInstanceId) {
         if (parentInstanceId == null) {
             return List.of();
         }
@@ -262,7 +261,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> getSubProcessContext(Long childInstanceId) {
+    public Map<String, Object> getSubProcessContext(String childInstanceId) {
         if (childInstanceId == null) {
             return new HashMap<>();
         }
@@ -275,7 +274,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
         Map<String, Object> childVars = instanceService.getVariables(childInstanceId);
         Map<String, Object> context = new HashMap<>(childVars);
         // 父流程变量
-        Long parentId = child.getParentInstanceId();
+        String parentId = child.getParentInstanceId();
         if (parentId != null) {
             Map<String, Object> parentVars = instanceService.getVariables(parentId);
             context.putAll(parentVars);
@@ -293,7 +292,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> listSubProcessTree(Long parentInstanceId) {
+    public List<Map<String, Object>> listSubProcessTree(String parentInstanceId) {
         List<Map<String, Object>> tree = new ArrayList<>();
         if (parentInstanceId == null) {
             return tree;
@@ -366,9 +365,9 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
      * @param parentInstanceId 当前父流程实例 ID
      * @return 已有嵌套深度（不含当前层级）
      */
-    private int getNestingDepth(Long parentInstanceId) {
+    private int getNestingDepth(String parentInstanceId) {
         int depth = 0;
-        Long currentId = parentInstanceId;
+        String currentId = parentInstanceId;
         // 防止无限循环
         int maxIterations = 10;
         while (currentId != null && depth < maxIterations) {
@@ -376,7 +375,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             if (instance == null) {
                 break;
             }
-            Long nextParentId = instance.getParentInstanceId();
+            String nextParentId = instance.getParentInstanceId();
             if (nextParentId == null) {
                 break;
             }
@@ -408,7 +407,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
      * @param childInstanceId 子流程实例 ID
      * @param parentInstanceId 父流程实例 ID
      */
-    private void publishWorkflowEvent(String eventType, Long childInstanceId, Long parentInstanceId) {
+    private void publishWorkflowEvent(String eventType, String childInstanceId, String parentInstanceId) {
         if (eventPublisher == null) return;
         try {
             Map<String, Object> data = new HashMap<>();

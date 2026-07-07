@@ -182,12 +182,12 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
                     log.debug("[Flow] multi_leader 链路中断: userId={} level={}", currentUserId, i + 1);
                     break;
                 }
-                if (!visited.add(leaderId)) {
+                if (!visited.add(String.valueOf(leaderId))) {
                     log.warn("[Flow] multi_leader 检测到循环引用: userId={} leaderId={}", currentUserId, leaderId);
                     break;
                 }
                 result.add(leaderId);
-                currentUserId = leaderId;
+                currentUserId = String.valueOf(leaderId);
             } catch (Exception e) {
                 log.warn("[Flow] multi_leader 查询异常: userId={} level={} err={}",
                         currentUserId, i + 1, e.getMessage());
@@ -243,12 +243,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         if ("initiator".equalsIgnoreCase(token)) {
             userId = resolveInitiatorId(variables);
         } else {
-            try {
-                userId = Long.parseLong(token);
-            } catch (NumberFormatException e) {
-                log.warn("[Flow] leader: token 不是数字也不是 initiator: {}", token);
-                return Collections.emptyList();
-            }
+            userId = token;
         }
         if (userId == null) {
             return Collections.emptyList();
@@ -323,7 +318,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
      * @param variables 流程变量
      * @return 发起人 ID，未找到返回 null
      */
-    private Long resolveInitiatorId(Map<String, Object> variables) {
+    private String resolveInitiatorId(Map<String, Object> variables) {
         if (variables == null || variables.isEmpty()) {
             return null;
         }
@@ -338,18 +333,17 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
             return null;
         }
         if (initiator instanceof Number n) {
-            return n.longValue();
+            return String.valueOf(n.longValue());
         }
-        try {
-            return Long.parseLong(String.valueOf(initiator));
-        } catch (NumberFormatException e) {
-            log.warn("[FeignFlowAssigneeResolver] 发起人 ID 解析失败 initiator={}: {}", initiator, e.getMessage());
-            return null;
-        }
+        return String.valueOf(initiator);
     }
 
     /**
      * 从 Result 中安全提取 Long 值
+     *
+     * <p>Feign 返回 {@code Result<String>}（ID 已迁移为 String），此处解析为 Long
+     * 以匹配 {@link FlowAssigneeResolver#expandUsers} / {@link FlowAssigneeResolver#expandMultiLeader}
+     * 的 {@code List<Long>} 返回类型。
      *
      * @param resp Feign 响应
      * @return Long 值，失败或为空时返回 null
@@ -358,6 +352,15 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         if (resp == null || resp.getCode() != Result.CODE_SUCCESS) {
             return null;
         }
-        return resp.getData();
+        String data = resp.getData();
+        if (data == null || data.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(data);
+        } catch (NumberFormatException e) {
+            log.warn("[FeignFlowAssigneeResolver] ID 解析失败 data={}: {}", data, e.getMessage());
+            return null;
+        }
     }
 }

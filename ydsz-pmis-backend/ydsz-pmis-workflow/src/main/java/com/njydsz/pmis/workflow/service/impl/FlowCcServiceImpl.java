@@ -82,7 +82,7 @@ public class FlowCcServiceImpl implements FlowCcService {
             }
 
             // 3. 按逗号拆分，逐个 token 展开用户
-            Set<Long> userIds = new LinkedHashSet<>();
+            Set<String> userIds = new LinkedHashSet<>();
             String[] tokens = resolved.split(",");
             for (String token : tokens) {
                 String trimmed = token.trim();
@@ -177,7 +177,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void markRead(String tenantId, String userId, Long ccId) {
+    public void markRead(String tenantId, String userId, String ccId) {
         try {
             if (ccId == null || userId == null) {
                 return;
@@ -253,30 +253,34 @@ public class FlowCcServiceImpl implements FlowCcService {
      *   <li>其他 → 尝试通过 assigneeResolver 展开</li>
      * </ul>
      */
-    private void expandToken(String token, Map<String, Object> variables, Set<Long> userIds) {
+    private void expandToken(String token, Map<String, Object> variables, Set<String> userIds) {
         try {
             if (token.startsWith("user:")) {
                 String idStr = token.substring("user:".length()).trim();
                 Long uid = tryParseLong(idStr);
                 if (uid != null) {
-                    userIds.add(uid);
+                    userIds.add(String.valueOf(uid));
                 }
             } else if (token.startsWith("role:") || token.startsWith("dept:")
                     || token.startsWith("position:") || token.startsWith("leader:")) {
                 List<Long> expanded = assigneeResolver.expandUsers(token, variables);
                 if (expanded != null && !expanded.isEmpty()) {
-                    userIds.addAll(expanded);
+                    for (Long e : expanded) {
+                        userIds.add(String.valueOf(e));
+                    }
                 }
             } else {
                 // 纯数字 → 直接作为 user ID
                 Long uid = tryParseLong(token);
                 if (uid != null) {
-                    userIds.add(uid);
+                    userIds.add(String.valueOf(uid));
                 } else {
                     // 其他格式 → 尝试通过 resolver 展开
                     List<Long> expanded = assigneeResolver.expandUsers(token, variables);
                     if (expanded != null && !expanded.isEmpty()) {
-                        userIds.addAll(expanded);
+                        for (Long e : expanded) {
+                            userIds.add(String.valueOf(e));
+                        }
                     }
                 }
             }

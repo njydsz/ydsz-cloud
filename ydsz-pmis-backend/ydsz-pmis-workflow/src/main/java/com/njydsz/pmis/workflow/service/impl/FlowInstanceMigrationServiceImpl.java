@@ -74,7 +74,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         if (definitionId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId 不能为空");
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         LambdaQueryWrapper<FlowInstanceDO> w = new LambdaQueryWrapper<>();
         w.eq(FlowInstanceDO::getDefinitionId, definitionId)
                 .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name())
@@ -95,8 +95,8 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         if (sourceDefId == null || targetDefId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "sourceDefId/targetDefId 不能为空");
         }
-        List<FlowNodeDO> sourceNodes = nodeMapper.selectByDefinitionId(sourceDefId);
-        List<FlowNodeDO> targetNodes = nodeMapper.selectByDefinitionId(targetDefId);
+        List<FlowNodeDO> sourceNodes = nodeMapper.selectByDefinitionId(String.valueOf(sourceDefId));
+        List<FlowNodeDO> targetNodes = nodeMapper.selectByDefinitionId(String.valueOf(targetDefId));
         if (sourceNodes == null || targetNodes == null) {
             return Collections.emptyMap();
         }
@@ -146,8 +146,8 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         }
 
         boolean dryRun = Boolean.TRUE.equals(dto.getDryRun()) || forceDry;
-        Long sourceDefId = dto.getSourceDefinitionId();
-        Long targetDefId = dto.getTargetDefinitionId();
+        String sourceDefId = dto.getSourceDefinitionId();
+        String targetDefId = dto.getTargetDefinitionId();
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
                 : SecurityContext.getTenantIdOrDefault("1");
@@ -332,7 +332,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
      * @param targetNodeMap 目标定义节点编码集合
      * @return 成功迁移的任务数
      */
-    private int migrateInstanceTasks(String instanceId, Long targetDefId,
+    private int migrateInstanceTasks(String instanceId, String targetDefId,
                                      String oldInstNode, String newInstNode,
                                      Map<String, String> nodeMapping,
                                      Map<String, FlowNodeDO> targetNodeMap) {

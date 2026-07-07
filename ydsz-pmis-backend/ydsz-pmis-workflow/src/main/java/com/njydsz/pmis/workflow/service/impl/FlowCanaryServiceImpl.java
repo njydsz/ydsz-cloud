@@ -43,7 +43,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishCanary(String definitionId, int initialPercent, String strategy,
-                               Long operatorId, String operatorName, String note) {
+                               String operatorId, String operatorName, String note) {
         validatePercent(initialPercent);
         FlowDefinitionDO def = mustGetDef(definitionId);
         if (def.getIsPublish() == null || def.getIsPublish() != 1) {
@@ -69,7 +69,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void adjustCanaryPercent(String definitionId, int newPercent,
-                                    Long operatorId, String operatorName, String note) {
+                                    String operatorId, String operatorName, String note) {
         validatePercent(newPercent);
         FlowDefinitionDO def = mustGetDef(definitionId);
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
@@ -92,7 +92,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void promoteCanary(String definitionId, Long operatorId, String operatorName, String note) {
+    public void promoteCanary(String definitionId, String operatorId, String operatorName, String note) {
         FlowDefinitionDO def = mustGetDef(definitionId);
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (CanaryStatus.PROMOTED.name().equals(curStatus)) {
@@ -119,7 +119,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void rollbackCanary(String definitionId, Long operatorId, String operatorName, String note) {
+    public void rollbackCanary(String definitionId, String operatorId, String operatorName, String note) {
         FlowDefinitionDO def = mustGetDef(definitionId);
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
         def.setCanaryPercent(0);
@@ -175,7 +175,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         if (!StringUtils.hasText(flowCode)) {
             return Collections.emptyList();
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         List<FlowDefinitionDO> defs = definitionMapper.selectByFlowCode(flowCode, tid);
         if (defs == null || defs.isEmpty()) {
             return Collections.emptyList();
@@ -232,7 +232,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     }
 
     /** 追加一条 rollout log 记录 */
-    private void appendRolloutLog(FlowDefinitionDO def, Long operatorId, String operatorName,
+    private void appendRolloutLog(FlowDefinitionDO def, String operatorId, String operatorName,
                                    int fromPercent, int toPercent, String note) {
         JSONArray arr;
         if (StringUtils.hasText(def.getCanaryRolloutLog())) {

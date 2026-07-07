@@ -84,5 +84,5 @@ public interface FlowSubProcessService {
      * @param parentInstanceId 父流程实例 ID
      * @return 子流程树列表，格式 [{instanceId, instanceName, flowCode, status, subProcesses: [...]}]
      */
-    List<Map<String, Object>> listSubProcessTree(Long parentInstanceId);
+    List<Map<String, Object>> listSubProcessTree(String parentInstanceId);
 }

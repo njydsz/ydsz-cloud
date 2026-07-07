@@ -61,7 +61,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     private static final int DEFAULT_REMINDER_INTERVAL_MINUTES = 60;
     private static final int DEFAULT_MAX_REMINDERS = 3;
     private static final int DEFAULT_TIMEOUT_MINUTES = 24 * 60;
-    private static final long DEFAULT_ADMIN_USER_ID = "1";
+    private static final String DEFAULT_ADMIN_USER_ID = "1";
 
     @Override
     public Map<String, Object> parseSlaConfig(String slaConfigJson) {
@@ -273,7 +273,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                     "系统自动通过：超过 SLA 时限未处理");
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
             dto.setTaskId(task.getId());
-            dto.setUserId(0L); // 0 = 系统用户
+            dto.setUserId("0"); // 0 = 系统用户
             dto.setComment(comment);
             dto.setVariables(Collections.emptyMap());
             taskService.pass(dto);
@@ -300,7 +300,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                     "系统自动驳回：超过 SLA 时限未处理");
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
             dto.setTaskId(task.getId());
-            dto.setUserId(0L);
+            dto.setUserId("0");
             dto.setComment(comment);
             dto.setVariables(Collections.emptyMap());
             taskService.reject(dto);
@@ -327,16 +327,16 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                 log.info("[FlowSla] 任务已升级，跳过重复升级: taskId={}", task.getId());
                 return false;
             }
-            Long escalateUserId = readLong(config, "escalateUserId", null);
+            String escalateUserId = readString(config, "escalateUserId", null);
             if (escalateUserId == null) {
                 escalateUserId = DEFAULT_ADMIN_USER_ID;
             }
-            String comment = String.format("系统升级：原办理人未在 SLA 时限内处理，已转办给用户 %d",
+            String comment = String.format("系统升级：原办理人未在 SLA 时限内处理，已转办给用户 %s",
                     escalateUserId);
             // 通过转办接口将任务转给升级用户
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
             dto.setTaskId(task.getId());
-            dto.setUserId(0L);
+            dto.setUserId("0");
             dto.setTargetUserId(escalateUserId);
             dto.setComment(comment);
             dto.setVariables(Collections.emptyMap());
@@ -415,15 +415,10 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         }
     }
 
-    private Long readLong(Map<String, Object> config, String key, Long defaultValue) {
+    private String readString(Map<String, Object> config, String key, String defaultValue) {
         Object val = config.get(key);
         if (val == null) return defaultValue;
-        if (val instanceof Number n) return n.longValue();
-        try {
-            return Long.parseLong(String.valueOf(val));
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
+        return String.valueOf(val);
     }
 
     private Integer readInt(Map<String, Object> config, String key, Integer defaultValue) {

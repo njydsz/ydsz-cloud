@@ -62,7 +62,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String createSubscription(String instanceId, FlowNodeDO node,
-                                    Map<String, Object> variables, Long boundaryTaskId) {
+                                    Map<String, Object> variables, String boundaryTaskId) {
         if (instanceId == null || node == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "instanceId/node 不能为空");
         }
@@ -109,7 +109,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         if (!StringUtils.hasText(messageName)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "messageName 不能为空");
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
 
         List<FlowEventSubscriptionDO> subscriptions =
                 subscriptionMapper.selectWaitingByEvent(tid, "MESSAGE", messageName);
@@ -141,7 +141,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         if (!StringUtils.hasText(errorCode)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "errorCode 不能为空");
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
 
         List<FlowEventSubscriptionDO> subscriptions =
                 subscriptionMapper.selectWaitingByEvent(tid, "ERROR", errorCode);
@@ -168,7 +168,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
 
     @Override
-    public int cancelByTask(Long boundaryTaskId, String reason) {
+    public int cancelByTask(String boundaryTaskId, String reason) {
         if (boundaryTaskId == null) {
             return 0;
         }

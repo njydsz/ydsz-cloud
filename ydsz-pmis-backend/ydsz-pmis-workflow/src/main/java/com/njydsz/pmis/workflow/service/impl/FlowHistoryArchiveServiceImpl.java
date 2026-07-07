@@ -112,7 +112,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         int archived = 0;
         int missing = 0;
         int errors = 0;
-        List<Long> archivedIds = new ArrayList<>();
+        List<String> archivedIds = new ArrayList<>();
 
         for (FlowInstanceDO instance : candidates) {
             if (System.currentTimeMillis() - start > maxMs) {
@@ -137,7 +137,8 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         // 批量物理删除主表已归档的实例
         if (!archivedIds.isEmpty()) {
             try {
-                int deleted = hisInstanceMapper.deleteByOriginalIds(archivedIds);
+                List<Long> originalIds = archivedIds.stream().map(Long::parseLong).toList();
+                int deleted = hisInstanceMapper.deleteByOriginalIds(originalIds);
                 log.info("[FlowHistoryArchive] 主表物理删除 count={}", deleted);
             } catch (Exception e) {
                 log.error("[FlowHistoryArchive] 主表物理删除失败: {}", e.getMessage(), e);
@@ -201,7 +202,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         }
 
         // 2. 批量删除 his_variable（按 instance_id）
-        List<Long> instanceIds = candidates.stream().map(FlowHisInstanceDO::getId).toList();
+        List<String> instanceIds = candidates.stream().map(FlowHisInstanceDO::getId).toList();
         int purgedVariables = 0;
         try {
             LambdaQueryWrapper<FlowHisVariableDO> varWrapper = new LambdaQueryWrapper<>();
@@ -259,7 +260,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         // 1. 校验所有任务都已归档到 his_task
         List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
         List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instanceId);
-        Set<Long> archivedTaskIds = new HashSet<>();
+        Set<String> archivedTaskIds = new HashSet<>();
         if (hisTasks != null) {
             for (FlowHisTaskDO his : hisTasks) {
                 if (his.getTaskId() != null) {

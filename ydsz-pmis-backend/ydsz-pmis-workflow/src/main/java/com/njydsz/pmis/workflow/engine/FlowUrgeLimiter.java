@@ -83,7 +83,7 @@ public class FlowUrgeLimiter {
                     String.valueOf(System.currentTimeMillis()),
                     String.valueOf(cooldownSeconds)
             );
-            boolean acquired = ok != null && ok == "1";
+            boolean acquired = ok != null && "1".equals(String.valueOf(ok));
             if (!acquired) {
                 log.info("[FlowUrgeLimiter] 催办冷却中 userId={} targetId={} type={} key={}",
                         userId, targetId, targetType, key);

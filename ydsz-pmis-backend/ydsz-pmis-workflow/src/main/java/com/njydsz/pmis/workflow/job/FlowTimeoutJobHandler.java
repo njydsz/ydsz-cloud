@@ -459,7 +459,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
     }
 
     /** 从 paramsJson 解析 tenantId（可空） */
-    private Long parseTenantId(String paramsJson) {
+    private String parseTenantId(String paramsJson) {
         if (paramsJson == null || paramsJson.isBlank()) {
             return null;
         }
@@ -468,7 +468,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
             if (obj == null) {
                 return null;
             }
-            return obj.getLong("tenantId");
+            return obj.getString("tenantId");
         } catch (Exception e) {
             log.warn("[FlowTimeout] 参数 JSON 解析失败，忽略 tenantId: {}", e.getMessage());
             return null;

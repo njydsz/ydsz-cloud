@@ -95,7 +95,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public List<String> urge(String instanceId, Long operatorId, String comment) {
+    public List<String> urge(String instanceId, String operatorId, String comment) {
         return completeService.urge(instanceId, operatorId, comment);
     }
 
@@ -192,7 +192,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 批量审批 ==============================
 
     @Override
-    public void batchPass(List<Long> taskIds, String userId, String comment) {
+    public void batchPass(List<String> taskIds, String userId, String comment) {
         batchService.batchPass(taskIds, userId, comment);
     }
 
