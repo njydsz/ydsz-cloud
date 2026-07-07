@@ -4091,6 +4091,59 @@ CREATE INDEX IF NOT EXISTS idx_pap_tenant_status_created
     WHERE deleted = 0;
 
 -- =====================================================
+-- 6.1 Agent Prompt 模板表 pmis_agent_prompt_template（P2-2）
+--    支持 ${var} 变量替换 / 版本管理 / 激活排他
+-- =====================================================
+CREATE TABLE IF NOT EXISTS pmis_agent_prompt_template(
+    id              VARCHAR(20)      PRIMARY KEY,
+    template_code   VARCHAR(128)  NOT NULL,                  -- 模板编码（业务唯一）
+    template_name   VARCHAR(256)  NOT NULL,                  -- 模板名称（展示用）
+    agent_type      VARCHAR(32)   NOT NULL DEFAULT 'COMMON', -- FLOW_GENERATOR/RISK_WARNING/COMMON
+    prompt_role     VARCHAR(32)   NOT NULL DEFAULT 'SYSTEM', -- SYSTEM/USER/REACT_FORMAT
+    content         TEXT         NOT NULL,                  -- 模板内容，支持 ${var} 占位符
+    version         VARCHAR(32)   NOT NULL DEFAULT '1.0.0',  -- 语义版本
+    is_active       BOOLEAN      NOT NULL DEFAULT false,     -- 是否当前生效（同 code 仅一条为 true）
+    description     VARCHAR(512),
+    tenant_id       VARCHAR(20)       NOT NULL DEFAULT '1',
+    created_by      VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT     NOT NULL DEFAULT 0,
+    CONSTRAINT ck_papt_role_enum     CHECK (prompt_role IN ('SYSTEM', 'USER', 'REACT_FORMAT')),
+    CONSTRAINT ck_papt_deleted_enum  CHECK (deleted IN (0, 1))
+);
+COMMENT ON TABLE  pmis_agent_prompt_template IS 'Agent Prompt 模板表: 支持 ${var} 变量替换 / 版本管理 / 激活排他';
+COMMENT ON COLUMN pmis_agent_prompt_template.template_code IS '模板编码: REACT_FORMAT_INSTRUCTION / FLOW_GENERATOR_SYSTEM / FLOW_GENERATOR_USER 等';
+COMMENT ON COLUMN pmis_agent_prompt_template.agent_type IS 'Agent 类型: FLOW_GENERATOR / RISK_WARNING / COMMON（通用）';
+COMMENT ON COLUMN pmis_agent_prompt_template.prompt_role IS 'Prompt 角色: SYSTEM 系统提示 / USER 用户提示 / REACT_FORMAT ReAct 格式说明';
+COMMENT ON COLUMN pmis_agent_prompt_template.content IS '模板内容: 支持 ${var} 和 ${a.b.c} 嵌套占位符';
+COMMENT ON COLUMN pmis_agent_prompt_template.version IS '语义版本: 同 code 可有多版本，仅一条 is_active=true 生效';
+COMMENT ON COLUMN pmis_agent_prompt_template.is_active IS '是否生效: true=生效，同一 template_code 仅允许一条为 true';
+CREATE UNIQUE INDEX IF NOT EXISTS uk_papt_code_active
+    ON pmis_agent_prompt_template(template_code, tenant_id, is_active)
+    WHERE deleted = 0 AND is_active = true;
+CREATE INDEX IF NOT EXISTS idx_papt_code
+    ON pmis_agent_prompt_template(template_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_papt_agent_role
+    ON pmis_agent_prompt_template(agent_type, prompt_role) WHERE deleted = 0;
+
+-- 种子数据：3 条内置默认模板（与 BuiltInPromptTemplates 保持一致）
+INSERT INTO pmis_agent_prompt_template
+    (id, template_code, template_name, agent_type, prompt_role, content, version, is_active, description, tenant_id)
+VALUES
+    ('1', 'REACT_FORMAT_INSTRUCTION', 'ReAct 推理循环输出格式说明', 'COMMON', 'REACT_FORMAT',
+     E'你正在参与 ReAct 推理循环（Thought → Action → Observation）。\n每一步你必须输出以下 JSON 结构（不要使用 markdown 代码块包裹）：\n{\n  "thought": "对当前步骤的思考（为何选择此 Action）",\n  "action": "工具名 或 final_answer",\n  "parameters": { "参数名": "参数值" },\n  "finalAnswer": null\n}\n\n规则：\n1. 若需要调用工具获取信息，action 填写工具名，parameters 填写工具参数，finalAnswer 必须为 null。\n2. 若已得到最终答案，action 必须填写 "final_answer"，parameters 必须为 null，finalAnswer 填写最终答案。\n3. 你可以最多思考 5 步，请合理规划工具调用顺序。\n4. 工具执行结果会以 "[步骤 N 观察]" 的形式追加在用户问题之后。',
+     '1.0.0', true, 'ReAct 推理循环通用格式说明，所有 ReAct Agent 共享', '1'),
+    ('2', 'FLOW_GENERATOR_SYSTEM', '流程生成 Agent 系统提示词', 'FLOW_GENERATOR', 'SYSTEM',
+     E'你是一名资深的工作流（BPMN 2.0）建模专家。请根据用户提供的自然语言流程描述，\n生成一段符合 BPMN 2.0 规范的 XML 流程定义。\n\n要求：\n1. 根元素必须为 <bpmn:definitions>，并声明 bpmn / bpmndi / dc / di 命名空间；\n   targetNamespace 使用 "http://njydsz.com/pmis/flow"。\n2. 流程必须包含：开始节点（startEvent）、至少一个审批节点（userTask）、结束节点（endEvent）。\n3. 当描述中存在条件分支（如"3天以上需经理审批"）时，使用 exclusiveGateway（排他网关）\n   配合 sequenceFlow 的 conditionExpression 表达分支。\n4. 节点之间使用 <bpmn:sequenceFlow> 连接，sourceRef / targetRef 引用节点 id。\n5. 为每个节点设置语义化 id 与中文 name。\n\n工作流程建议：\n- 先生成 BPMN XML，调用 bpmn_validate 工具校验结构完整性\n- 校验通过后，在 final_answer 中输出完整的 BPMN XML（纯 XML 文本，不要 JSON 包裹）\n- 在 final_answer 步骤的 thought 中用一句话描述流程特点',
+     '1.0.0', true, 'FlowGeneratorAgent 系统提示词，约束 LLM 输出 BPMN 2.0 XML', '1'),
+    ('3', 'FLOW_GENERATOR_USER', '流程生成 Agent 用户提示词模板', 'FLOW_GENERATOR', 'USER',
+     E'请根据以下描述生成 BPMN 2.0 流程定义 XML：\n\n${description}',
+     '1.0.0', true, 'FlowGeneratorAgent 用户提示词模板，支持 ${description} 变量', '1')
+ON CONFLICT DO NOTHING;
+
+-- =====================================================
 -- 7. 初始化 8 类项目类型的默认交付物标准（CD1-CD5）
 -- =====================================================
 INSERT INTO pmis_execution_delivery_standard
