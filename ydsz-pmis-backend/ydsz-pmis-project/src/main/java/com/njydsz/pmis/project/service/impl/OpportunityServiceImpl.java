@@ -248,26 +248,26 @@ public class OpportunityServiceImpl implements OpportunityService {
     /**
      * 按状态聚合计数（租户维度）。
      *
-     * @param tenantId 租户 ID，可空（默认 1L）
+     * @param tenantId 租户 ID，可空（默认 "1"）
      * @return 每种状态对应的数量列表
      */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStatus(String tenantId) {
-        if (tenantId == null) tenantId = 1L;
+        if (tenantId == null) tenantId = "1";
         return opportunityMapper.aggregateByStatus(tenantId);
     }
 
     /**
      * 按级别聚合计数（租户维度）。
      *
-     * @param tenantId 租户 ID，可空（默认 1L）
+     * @param tenantId 租户 ID，可空（默认 "1"）
      * @return 每种级别对应的数量列表
      */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByLevel(String tenantId) {
-        if (tenantId == null) tenantId = 1L;
+        if (tenantId == null) tenantId = "1";
         return opportunityMapper.aggregateByLevel(tenantId);
     }
 

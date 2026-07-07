@@ -19,7 +19,7 @@ import java.io.Serial;
 public class DepartmentQueryDTO extends PageQuery {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 父部门 ID（0=根） */
     private String parentId;

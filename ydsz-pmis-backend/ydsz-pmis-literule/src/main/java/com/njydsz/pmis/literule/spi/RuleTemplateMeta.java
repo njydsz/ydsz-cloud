@@ -27,7 +27,7 @@ import java.util.List;
 @Builder
 public class RuleTemplateMeta implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 模板编码（唯一） */
     private String templateCode;

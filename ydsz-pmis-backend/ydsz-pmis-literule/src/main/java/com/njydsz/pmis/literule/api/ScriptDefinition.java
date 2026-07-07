@@ -36,7 +36,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class ScriptDefinition implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 规则编码（唯一） */
     private String ruleCode;

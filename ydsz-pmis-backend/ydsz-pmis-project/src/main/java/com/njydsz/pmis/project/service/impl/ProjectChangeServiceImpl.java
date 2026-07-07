@@ -204,26 +204,26 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
     /**
      * 按变更类型聚合计数（租户维度）。
      *
-     * @param tenantId 租户 ID，可空（默认 1L）
+     * @param tenantId 租户 ID，可空（默认 "1"）
      * @return 每种变更类型对应的数量列表
      */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByType(String tenantId) {
-        if (tenantId == null) tenantId = 1L;
+        if (tenantId == null) tenantId = "1";
         return changeMapper.aggregateByType(tenantId);
     }
 
     /**
      * 按状态聚合计数（租户维度）。
      *
-     * @param tenantId 租户 ID，可空（默认 1L）
+     * @param tenantId 租户 ID，可空（默认 "1"）
      * @return 每种状态对应的数量列表
      */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStatus(String tenantId) {
-        if (tenantId == null) tenantId = 1L;
+        if (tenantId == null) tenantId = "1";
         return changeMapper.aggregateByStatus(tenantId);
     }
 

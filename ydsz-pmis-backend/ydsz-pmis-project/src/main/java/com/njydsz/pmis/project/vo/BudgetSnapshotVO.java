@@ -24,7 +24,7 @@ import java.math.BigDecimal;
 public class BudgetSnapshotVO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 项目 ID */
     private String projectId;

@@ -296,7 +296,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     /**
      * 校验状态机迁移并持久化
      */
-    private void transit(InvoiceDO inv, InvoiceStatus target, String comment, Long operatorId) {
+    private void transit(InvoiceDO inv, InvoiceStatus target, String comment, String operatorId) {
         InvoiceStatus from = InvoiceStatus.fromCode(inv.getStatus());
         if (from == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST,

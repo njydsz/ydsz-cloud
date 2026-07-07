@@ -292,7 +292,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             billableByDept.merge(dept, billable, BigDecimal::add);
             overtimeByDept.merge(dept, overtime, BigDecimal::add);
             leaveByDept.merge(dept, leave, BigDecimal::add);
-            headByDept.merge(dept, 1L, (a, b) -> a + b);
+            headByDept.merge(dept, "1", (a, b) -> a + b);
         }
 
         List<Map<String, Object>> out = new ArrayList<>();

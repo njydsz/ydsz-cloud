@@ -23,7 +23,7 @@ import java.io.Serial;
 public class DepartmentDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)

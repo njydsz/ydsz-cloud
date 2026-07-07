@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class FlowDelegateAuthSaveDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     @Schema(description = "授权人用户 ID（为空时从登录上下文兜底）")
     private String ownerUserId;

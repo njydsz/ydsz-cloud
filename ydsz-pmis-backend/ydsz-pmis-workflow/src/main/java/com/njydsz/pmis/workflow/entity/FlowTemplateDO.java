@@ -27,7 +27,7 @@ import java.io.Serial;
 public class FlowTemplateDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 主键 */
     @TableId(type = IdType.ASSIGN_ID)

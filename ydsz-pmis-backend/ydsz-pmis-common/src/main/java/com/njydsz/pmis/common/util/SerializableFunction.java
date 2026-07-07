@@ -32,5 +32,5 @@ public interface SerializableFunction<T, R> extends Function<T, R>, Serializable
      * 默认 serialVersionUID（SerializableFunction 自身不会真被序列化到磁盘或网络，
      * 这里仅满足 Serializable 的契约要求）。
      */
-    long serialVersionUID = 1L;
+    String serialVersionUID = "1";
 }

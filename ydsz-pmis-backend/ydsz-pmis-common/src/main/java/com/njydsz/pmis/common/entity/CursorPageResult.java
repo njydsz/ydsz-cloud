@@ -20,7 +20,7 @@ import java.util.List;
 public class CursorPageResult<T> implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 当前页数据列表 */
     private List<T> list;

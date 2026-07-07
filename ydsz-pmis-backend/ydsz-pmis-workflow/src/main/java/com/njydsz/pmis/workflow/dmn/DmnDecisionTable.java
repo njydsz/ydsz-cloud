@@ -19,7 +19,7 @@ import java.util.List;
 public class DmnDecisionTable implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 决策表唯一标识 */
     private String tableKey;

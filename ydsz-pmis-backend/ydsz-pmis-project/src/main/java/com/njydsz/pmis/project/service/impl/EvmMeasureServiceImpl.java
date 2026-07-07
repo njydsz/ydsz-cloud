@@ -45,7 +45,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
      * 项目级 EVM 基线版本号: initiationId -> 自增版本号.
      * 内存维护, 进程重启后从 1 重新计数 (与已存量的 baselineVersion=N 的测量无冲突).
      */
-    private final Map<Long, AtomicInteger> baselineVersions = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> baselineVersions = new ConcurrentHashMap<>();
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -114,7 +114,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EvmMeasureVO> listByInitiation(Long initiationId) {
+    public List<EvmMeasureVO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
         List<EvmMeasureDO> list = evmMapper.selectByInitiation(initiationId);
         if (list == null || list.isEmpty()) return List.of();
@@ -123,7 +123,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EvmMeasureVO> listByWbs(Long wbsTaskId) {
+    public List<EvmMeasureVO> listByWbs(String wbsTaskId) {
         if (wbsTaskId == null) return List.of();
         List<EvmMeasureDO> list = evmMapper.selectByWbs(wbsTaskId);
         if (list == null || list.isEmpty()) return List.of();
@@ -132,14 +132,14 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> trend(Long initiationId) {
+    public List<Map<String, Object>> trend(String initiationId) {
         if (initiationId == null) return List.of();
         return evmMapper.trendByPeriod(initiationId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> dashboard(Long initiationId) {
+    public Map<String, Object> dashboard(String initiationId) {
         Map<String, Object> dash = new HashMap<>();
         if (initiationId == null) return dash;
         List<EvmMeasureDO> all = evmMapper.selectByInitiation(initiationId);

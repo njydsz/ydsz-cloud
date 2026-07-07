@@ -23,7 +23,7 @@ public class ContractCreateDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 合同编号 */
     @NotBlank

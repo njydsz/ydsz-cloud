@@ -15,7 +15,7 @@ import java.io.Serializable;
 public class FileUploadDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 业务类型 */
     private String bizType;

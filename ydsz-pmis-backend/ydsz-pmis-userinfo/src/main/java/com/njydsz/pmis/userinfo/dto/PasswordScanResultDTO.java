@@ -18,7 +18,7 @@ import java.util.List;
 public class PasswordScanResultDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 扫描时间 */
     private LocalDateTime scannedAt;
@@ -59,7 +59,7 @@ public class PasswordScanResultDTO implements Serializable {
     @Data
     public static class AccountRisk implements Serializable {
         @Serial
-        private static final long serialVersionUID = 1L;
+        private static final String serialVersionUID = "1";
 
         /** 用户 ID */
         private String userId;

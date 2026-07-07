@@ -17,7 +17,7 @@ import java.io.Serializable;
 public class DeliveryItemStatusDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     @NotNull(message = "{validation.execution.msg_da609842}")
     private String id;

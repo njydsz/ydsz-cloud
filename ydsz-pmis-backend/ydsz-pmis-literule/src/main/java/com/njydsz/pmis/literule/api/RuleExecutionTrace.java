@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class RuleExecutionTrace implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 追踪 ID（同一批次评估共享） */
     private String traceId;

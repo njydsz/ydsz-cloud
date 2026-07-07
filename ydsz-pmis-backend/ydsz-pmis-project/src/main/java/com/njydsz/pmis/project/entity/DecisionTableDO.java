@@ -22,7 +22,7 @@ import java.util.Map;
 @TableName(value = "pmis_rule_decision_table", autoResultMap = true)
 public class DecisionTableDO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

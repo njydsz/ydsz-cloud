@@ -102,7 +102,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
         // 1) 失效同 flowCode 的其他已发布版本
         String tenantId = def.getTenantId() != null
-                ? def.getTenantId() : SecurityContext.getTenantIdOrDefault(1L);
+                ? def.getTenantId() : SecurityContext.getTenantIdOrDefault("1");
         definitionMapper.deactivateByFlowCode(def.getFlowCode(), definitionId, tenantId);
 
         // 2) 当前定义晋升为稳定版（isPublish=1, canaryPercent=100, canaryStatus=PROMOTED）
@@ -142,7 +142,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         FlowDefinitionDO stable = definitionMapper.selectPublished(
                 flowCode,
                 StringUtils.hasText(version) ? version : "1.0",
-                tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L));
+                tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1"));
         if (stable == null) {
             return null;
         }
@@ -150,7 +150,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         // 2) 查同 flowCode + tenant 的所有 CANARYING 灰度版（按 version desc 取最新）
         List<FlowDefinitionDO> canaries = definitionMapper.selectCanaryingByCode(
                 flowCode,
-                tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L));
+                tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1"));
         if (canaries == null || canaries.isEmpty()) {
             return stable;
         }
@@ -175,7 +175,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         if (!StringUtils.hasText(flowCode)) {
             return Collections.emptyList();
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         List<FlowDefinitionDO> defs = definitionMapper.selectByFlowCode(flowCode, tid);
         if (defs == null || defs.isEmpty()) {
             return Collections.emptyList();

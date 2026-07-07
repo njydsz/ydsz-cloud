@@ -39,7 +39,7 @@ public interface EvmMeasureService {
      * @param initiationId 项目立项ID
      * @return 测量 VO 列表
      */
-    List<EvmMeasureVO> listByInitiation(Long initiationId);
+    List<EvmMeasureVO> listByInitiation(String initiationId);
 
     /**
      * 查询 WBS 节点下所有测量记录
@@ -47,7 +47,7 @@ public interface EvmMeasureService {
      * @param wbsTaskId WBS任务ID
      * @return 测量 VO 列表
      */
-    List<EvmMeasureVO> listByWbs(Long wbsTaskId);
+    List<EvmMeasureVO> listByWbs(String wbsTaskId);
 
     /**
      * WBS 节点级偏差趋势
@@ -74,7 +74,7 @@ public interface EvmMeasureService {
      * @param alertLevel   告警级别
      * @return 分页结果
      */
-    Page<EvmMeasureVO> page(int page, int size, Long initiationId, String alertLevel);
+    Page<EvmMeasureVO> page(int page, int size, String initiationId, String alertLevel);
 
     /**
      * 删除测量记录
@@ -93,7 +93,7 @@ public interface EvmMeasureService {
      * @param reason       重算原因 (如 "PROJECT_CHANGE: changeCode")
      * @return 重算结果 (baselineVersion / affectedMeasures)
      */
-    Map<String, Object> recalculateBaseline(Long initiationId, String reason);
+    Map<String, Object> recalculateBaseline(String initiationId, String reason);
 
     /**
      * 查询项目当前 EVM 基线版本号, 不存在返回 0
@@ -101,5 +101,5 @@ public interface EvmMeasureService {
      * @param initiationId 项目立项 ID
      * @return 基线版本号
      */
-    int currentBaselineVersion(Long initiationId);
+    int currentBaselineVersion(String initiationId);
 }

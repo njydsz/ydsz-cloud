@@ -20,7 +20,7 @@ import java.util.Map;
 public class CockpitKpiVO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 在执行项目数（CLINCHED 阶段） */
     private Integer activeProjects;

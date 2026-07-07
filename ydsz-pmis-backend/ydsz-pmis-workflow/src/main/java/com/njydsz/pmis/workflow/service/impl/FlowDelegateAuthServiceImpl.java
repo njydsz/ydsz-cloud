@@ -86,7 +86,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
         // 默认值
         if (auth.getTenantId() == null) {
-            auth.setTenantId(SecurityContext.getTenantIdOrDefault(1L));
+            auth.setTenantId(SecurityContext.getTenantIdOrDefault("1"));
         }
         if (auth.getAuthStatus() == null) {
             auth.setAuthStatus("ENABLED");
@@ -148,7 +148,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         if (ownerUserId == null) {
             return List.of();
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return authMapper.selectByOwner(tid, ownerUserId, status);
     }
 
@@ -158,7 +158,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         if (delegateUserId == null) {
             return List.of();
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return authMapper.selectByDelegate(tid, delegateUserId, status);
     }
 

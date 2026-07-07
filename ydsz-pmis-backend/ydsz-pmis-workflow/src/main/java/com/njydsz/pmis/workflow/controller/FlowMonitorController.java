@@ -70,7 +70,7 @@ public class FlowMonitorController {
     public Result<Map<String, Object>> efficiencyStats(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(efficiencyService.efficiencyStats(tenantId, startTime, endTime));
     }
 
@@ -85,7 +85,7 @@ public class FlowMonitorController {
     public Result<List<Map<String, Object>>> bottleneckRanking(
             @RequestParam(required = false) String flowCode,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(efficiencyService.bottleneckRanking(tenantId, flowCode, limit));
     }
 
@@ -102,7 +102,7 @@ public class FlowMonitorController {
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(efficiencyService.approverRanking(tenantId, startTime, endTime, limit));
     }
 
@@ -119,7 +119,7 @@ public class FlowMonitorController {
             @RequestParam(defaultValue = "DAY") String interval,
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(efficiencyService.approvalTrend(tenantId, interval, startTime, endTime));
     }
 
@@ -137,7 +137,7 @@ public class FlowMonitorController {
     public Result<Map<String, Object>> healthScore(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(efficiencyService.healthScore(tenantId, startTime, endTime));
     }
 
@@ -155,7 +155,7 @@ public class FlowMonitorController {
     @GetMapping("/monitor/overview")
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<Map<String, Object>> monitorOverview() {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         Map<String, Object> overview = new LinkedHashMap<>();
 
         // P2-4: 1 次 GROUP BY 查询替代 5 次 count（RUNNING/COMPLETED/REJECTED/TERMINATED/SUSPENDED）
@@ -230,7 +230,7 @@ public class FlowMonitorController {
             @RequestParam(required = false) String warnLevel,
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int pageSize) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
 
         // 拉取全量异常（detectAnomalies 默认 limit=100，足够覆盖监控场景）
         List<Map<String, Object>> all = new ArrayList<>();
@@ -344,11 +344,11 @@ public class FlowMonitorController {
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<List<Map<String, Object>>> monitorInstanceTrend(
             @RequestParam(defaultValue = "7") int days) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         int effectiveDays = (days == 30) ? 30 : 7;
 
         LocalDate today = LocalDate.now();
-        LocalDate start = today.minusDays(effectiveDays - 1L);
+        LocalDate start = today.minusDays(effectiveDays - "1");
         LocalDateTime startDt = start.atStartOfDay();
         LocalDateTime endDt = today.atTime(23, 59, 59);
 
@@ -408,7 +408,7 @@ public class FlowMonitorController {
             @RequestParam(defaultValue = "10") int topN,
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         LocalDateTime startDt = parseDateTime(startTime);
         LocalDateTime endDt = parseDateTime(endTime);
         List<Map<String, Object>> rows = hisTaskMapper.selectApproverEfficiency(tenantId, startDt, endDt, topN);
@@ -448,7 +448,7 @@ public class FlowMonitorController {
     public Result<List<Map<String, Object>>> monitorFlowTypeDistribution(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         LocalDateTime startDt = parseDateTime(startTime);
         LocalDateTime endDt = parseDateTime(endTime);
         List<Map<String, Object>> rows = instanceMapper.selectFlowTypeDistribution(tenantId, startDt, endDt);

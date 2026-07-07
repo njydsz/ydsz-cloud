@@ -22,7 +22,7 @@ import java.io.Serializable;
 public class JobSaveDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     @Schema(description = "任务 ID（更新时必填）")
     private String id;

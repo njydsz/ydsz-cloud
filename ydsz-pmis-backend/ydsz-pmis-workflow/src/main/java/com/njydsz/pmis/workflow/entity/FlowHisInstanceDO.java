@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class FlowHisInstanceDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

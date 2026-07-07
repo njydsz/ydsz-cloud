@@ -17,7 +17,7 @@ import java.io.Serializable;
 public class CockpitDrillDownDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 维度类型：DEPT / PROJECT_TYPE / CUSTOMER */
     private String dimension;

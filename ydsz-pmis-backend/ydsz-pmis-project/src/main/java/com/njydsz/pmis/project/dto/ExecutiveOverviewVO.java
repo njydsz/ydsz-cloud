@@ -25,7 +25,7 @@ import java.util.List;
 public class ExecutiveOverviewVO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     // ========== 顶部 KPI ==========
     /** 在执行项目数 */

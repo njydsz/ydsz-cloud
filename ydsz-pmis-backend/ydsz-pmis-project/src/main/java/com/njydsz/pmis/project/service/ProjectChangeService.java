@@ -58,7 +58,7 @@ public interface ProjectChangeService {
      * @return 分页结果
      */
     Page<ProjectChangeDO> page(int page, int size, String keyword,
-                               String changeType, String status, Long initiationId);
+                               String changeType, String status, String initiationId);
 
     /**
      * 按立项查询变更记录列表。
@@ -90,5 +90,5 @@ public interface ProjectChangeService {
      * @param initiationId 立项 ID
      * @return 重大变更数量
      */
-    long countMajorByInitiation(Long initiationId);
+    long countMajorByInitiation(String initiationId);
 }

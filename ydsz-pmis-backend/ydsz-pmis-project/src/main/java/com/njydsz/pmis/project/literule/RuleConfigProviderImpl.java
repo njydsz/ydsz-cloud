@@ -113,7 +113,7 @@ public class RuleConfigProviderImpl implements RuleConfigProvider {
                 .scope(DO.getScope())
                 .drilldownAvailable(DO.getDrilldownAvailable() != null ? DO.getDrilldownAvailable() : true)
                 .version(DO.getVersion() != null ? DO.getVersion() : 1)
-                .tenantId(DO.getTenantId() != null ? Long.parseLong(DO.getTenantId()) : 1L)
+                .tenantId(DO.getTenantId() != null ? Long.parseLong(DO.getTenantId()) : "1")
                 .status(DO.getStatus() != null ? DO.getStatus() : "PUBLISHED")
                 .reviewedBy(DO.getReviewedBy())
                 .reviewComment(DO.getReviewComment())

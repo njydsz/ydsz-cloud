@@ -21,7 +21,7 @@ import java.io.Serializable;
 public class FlowNotifyChannelSaveDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     @Schema(description = "通道 ID（更新时传入）")
     private String id;

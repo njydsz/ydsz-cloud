@@ -99,7 +99,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         String version = StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0";
-        // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取，最后兜底 1L
+        // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取，最后兜底 "1"
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
                 : SecurityContext.getTenantIdOrDefault("1");

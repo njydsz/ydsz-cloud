@@ -23,7 +23,7 @@ import java.util.List;
 public class FlowDeployProcessDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 流程编码 */
     @NotBlank(message = "{validation.workflow.msg_ebccbe46}")
@@ -72,7 +72,7 @@ public class FlowDeployProcessDTO implements Serializable {
     @Data
     public static class FlowNodeDTO implements Serializable {
         @Serial
-        private static final long serialVersionUID = 1L;
+        private static final String serialVersionUID = "1";
         /** 节点编码（流程内唯一） */
         private String nodeCode;
         /** 节点名称 */
@@ -91,7 +91,7 @@ public class FlowDeployProcessDTO implements Serializable {
     @Data
     public static class FlowSkipDTO implements Serializable {
         @Serial
-        private static final long serialVersionUID = 1L;
+        private static final String serialVersionUID = "1";
         /** 源节点编码 */
         private String fromNodeCode;
         /** 目标节点编码 */

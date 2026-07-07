@@ -53,7 +53,7 @@ public interface ProjectClosureService {
      * @param initiationId 项目立项ID
      * @return 结项实体
      */
-    ProjectClosureDO getByInitiation(Long initiationId);
+    ProjectClosureDO getByInitiation(String initiationId);
 
     /**
      * 分页查询结项记录

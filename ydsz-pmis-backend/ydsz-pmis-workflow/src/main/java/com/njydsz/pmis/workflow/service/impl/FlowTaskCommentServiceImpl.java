@@ -46,7 +46,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
                                        String type, Long parentId) {
         FlowTaskCommentDO comment = new FlowTaskCommentDO();
         LocalDateTime now = LocalDateTime.now();
-        comment.setTenantId(SecurityContext.getTenantIdOrDefault(1L));
+        comment.setTenantId(SecurityContext.getTenantIdOrDefault("1"));
         comment.setInstanceId(instanceId);
         comment.setTaskId(taskId);
         comment.setNodeCode(nodeCode);

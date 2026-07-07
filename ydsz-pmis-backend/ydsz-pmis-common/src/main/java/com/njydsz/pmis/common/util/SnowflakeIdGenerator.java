@@ -44,7 +44,7 @@ public class SnowflakeIdGenerator {
     private static final long WORKER_ID_BITS = 10L;
 
     /** 最大 workerId: 1023 */
-    private static final long MAX_WORKER_ID = ~(-1L << WORKER_ID_BITS);
+    private static final long MAX_WORKER_ID = ~(-"1" << WORKER_ID_BITS);
 
     /** 序列号占用位数: 12bit */
     private static final long SEQUENCE_BITS = 12L;
@@ -56,7 +56,7 @@ public class SnowflakeIdGenerator {
     private static final long TIMESTAMP_LEFT_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;
 
     /** 序列号掩码: 0xFFF = 4095 */
-    private static final long SEQUENCE_MASK = ~(-1L << SEQUENCE_BITS);
+    private static final long SEQUENCE_MASK = ~(-"1" << SEQUENCE_BITS);
 
     /** 允许的时钟回拨最大毫秒数: 5ms（超过即抛异常） */
     private static final long MAX_CLOCK_BACKWARD_MS = 5L;
@@ -68,7 +68,7 @@ public class SnowflakeIdGenerator {
     private static final SnowflakeIdGenerator INSTANCE = new SnowflakeIdGenerator();
 
     /** 上次生成 ID 的时间戳 */
-    private long lastTimestamp = -1L;
+    private long lastTimestamp = -"1";
 
     /** 当前毫秒内序列号 */
     private long sequence = 0L;

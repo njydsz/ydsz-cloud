@@ -148,7 +148,7 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
         // report_type 保留订阅侧语义（COCKPIT/EVM/PROFIT...）
         Long subscriberId = resolveSubscriberId(subId);
         jdbcTemplate.update(sql,
-                1L,
+                "1",
                 "SUBSCRIPTION",
                 subscriberId,
                 "SUBSCRIPTION_REPORT",

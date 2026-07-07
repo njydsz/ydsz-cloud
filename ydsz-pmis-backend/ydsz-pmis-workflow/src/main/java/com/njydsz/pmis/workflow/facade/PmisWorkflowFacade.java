@@ -112,7 +112,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     public List<Map<String, Object>> listTodoTasks(Long userId, int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResult<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
-                String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L), page, size);
+                String.valueOf(userId), SecurityContext.getTenantIdOrDefault("1"), page, size);
         return pageResult.getList().stream().map(this::toMap).toList();
     }
 
@@ -121,7 +121,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResult<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
-                String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L), page, size);
+                String.valueOf(userId), SecurityContext.getTenantIdOrDefault("1"), page, size);
         return pageResult.getList().stream().map(this::toMap).toList();
     }
 
@@ -139,7 +139,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
                                                        int page, int size) {
         PageResult<FlowInstanceDO> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
-                SecurityContext.getTenantIdOrDefault(1L), page, size);
+                SecurityContext.getTenantIdOrDefault("1"), page, size);
         return pageResult.getList().stream().map(this::instanceToMap).toList();
     }
 
@@ -209,7 +209,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     /** GAP-P0-4: 一键通过所有待办 */
     @Override
     public int passAllTodoTasks(Long userId, String comment) {
-        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
         PageResult<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
         List<FlowRunTaskDO> todos = pageResult.getList();

@@ -16,17 +16,17 @@ import java.util.UUID;
  * <p>1.5.0 起新增 {@code tenantId} 字段，用于运行时租户隔离：
  * {@link com.njydsz.pmis.literule.core.DefaultRuleEngine} 在评估前会比较
  * {@code rule.getTenantId()} 与 {@code context.getTenantId()}，仅当两者匹配时才评估该规则。
- * 默认 1L（单租户部署），向后兼容。
+ * 默认 "1"（单租户部署），向后兼容。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
 public final class RuleContext implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 默认租户 ID（单租户部署） */
-    private static final long DEFAULT_TENANT_ID = 1L;
+    private static final long DEFAULT_TENANT_ID = "1";
 
     /** 事实数据快照 */
     private final Map<String, Object> facts;
@@ -72,7 +72,7 @@ public final class RuleContext implements Serializable {
     }
 
     /**
-     * 从 Map 构建上下文（默认租户 1L）
+     * 从 Map 构建上下文（默认租户 "1"）
      *
      * @param facts    事实数据
      * @param scenario 业务场景
@@ -85,7 +85,7 @@ public final class RuleContext implements Serializable {
     }
 
     /**
-     * 从 Map 构建上下文（默认租户 1L）
+     * 从 Map 构建上下文（默认租户 "1"）
      *
      * @param facts    事实数据
      * @param scenario 业务场景
@@ -97,7 +97,7 @@ public final class RuleContext implements Serializable {
     }
 
     /**
-     * 从 Map 构建上下文（默认场景为 DEFAULT、租户 1L）
+     * 从 Map 构建上下文（默认场景为 DEFAULT、租户 "1"）
      *
      * @param facts 事实数据
      * @return RuleContext 实例
@@ -133,9 +133,9 @@ public final class RuleContext implements Serializable {
      * 获取租户 ID
      *
      * <p>引擎评估时仅放行 {@code rule.getTenantId() == this.tenantId} 的规则，
-     * 默认 1L（单租户部署，向后兼容）。
+     * 默认 "1"（单租户部署，向后兼容）。
      *
-     * @return 租户 ID；默认 1L
+     * @return 租户 ID；默认 "1"
      * @since 1.5.0
      */
     public long getTenantId() { return tenantId; }

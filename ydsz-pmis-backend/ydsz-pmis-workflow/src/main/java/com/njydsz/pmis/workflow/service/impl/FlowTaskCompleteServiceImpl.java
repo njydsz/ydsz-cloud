@@ -262,7 +262,7 @@ public class FlowTaskCompleteServiceImpl {
                     return task.getId();
                 }
                 case "TRANSFER_ADMIN" -> {
-                    Long adminUserId = parseLongConfig(extConfig, "adminUserId", 1L);
+                    Long adminUserId = parseLongConfig(extConfig, "adminUserId", "1");
                     task.setAssigneeType(FlowAssigneeType.USER.name());
                     task.setAssigneeId(String.valueOf(adminUserId));
                     task.setAssigneeName("ADMIN_FALLBACK");
@@ -271,7 +271,7 @@ public class FlowTaskCompleteServiceImpl {
                             instanceId, node.getNodeCode(), adminUserId);
                 }
                 case "ASSIGN_SPECIFIED" -> {
-                    Long specifiedUserId = parseLongConfig(extConfig, "specifiedUserId", 1L);
+                    Long specifiedUserId = parseLongConfig(extConfig, "specifiedUserId", "1");
                     task.setAssigneeType(FlowAssigneeType.USER.name());
                     task.setAssigneeId(String.valueOf(specifiedUserId));
                     task.setAssigneeName("SPECIFIED_FALLBACK");

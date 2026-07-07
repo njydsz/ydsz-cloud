@@ -418,7 +418,7 @@ public class InitiationServiceImpl implements InitiationService {
     /**
      * 按阶段聚合计数（租户维度）。
      *
-     * @param tenantId 租户 ID，可空（默认 1L）
+     * @param tenantId 租户 ID，可空（默认 "1"）
      * @return 每种阶段对应的数量列表
      */
     @Override

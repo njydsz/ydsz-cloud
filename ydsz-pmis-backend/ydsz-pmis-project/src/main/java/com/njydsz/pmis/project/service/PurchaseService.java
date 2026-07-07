@@ -55,5 +55,5 @@ public interface PurchaseService {
      * @param initiationId 项目立项ID
      * @return 分页结果
      */
-    Page<PurchaseDO> page(int page, int size, String keyword, String status, Long initiationId);
+    Page<PurchaseDO> page(int page, int size, String keyword, String status, String initiationId);
 }

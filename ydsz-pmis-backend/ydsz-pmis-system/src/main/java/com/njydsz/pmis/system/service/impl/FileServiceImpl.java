@@ -187,7 +187,7 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteBatch(List<Long> ids) throws Exception {
+    public void deleteBatch(List<String> ids) throws Exception {
         if (ids == null || ids.isEmpty()) {
             return;
         }

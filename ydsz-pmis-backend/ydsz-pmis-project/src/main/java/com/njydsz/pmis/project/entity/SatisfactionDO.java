@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 public class SatisfactionDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)

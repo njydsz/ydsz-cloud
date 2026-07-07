@@ -37,7 +37,7 @@ import java.util.UUID;
 public class CEPEvent implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 事件唯一 ID */
     @Builder.Default

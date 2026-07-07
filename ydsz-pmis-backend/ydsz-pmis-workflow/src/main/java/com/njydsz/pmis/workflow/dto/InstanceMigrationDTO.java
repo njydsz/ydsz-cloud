@@ -19,7 +19,7 @@ import java.util.Map;
 public class InstanceMigrationDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 源流程定义 ID（旧版本） */
     private String sourceDefinitionId;

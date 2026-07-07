@@ -121,7 +121,7 @@ public class FlowDmnTableServiceImpl implements FlowDmnTableService {
             table.setVersion(1);
         }
         if (table.getTenantId() == null) {
-            table.setTenantId(1L);
+            table.setTenantId("1");
         }
         dmnTableMapper.insert(table);
         log.info("[FlowDmn] 新建决策表: id={} tableKey={} tableName={}",

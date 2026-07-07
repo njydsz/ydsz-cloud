@@ -45,7 +45,7 @@ public interface OpsTicketService {
                            Long initiationId, Long assigneeId, String keyword);
 
     /** 按项目查询 */
-    List<OpsTicketDO> listByInitiation(Long initiationId);
+    List<OpsTicketDO> listByInitiation(String initiationId);
 
     /** 按质保期查询 */
     List<OpsTicketDO> listByWarranty(Long warrantyId);

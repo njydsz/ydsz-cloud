@@ -27,7 +27,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class RuleResult implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /**
      * BREAK 信号编码（循环终止专用）

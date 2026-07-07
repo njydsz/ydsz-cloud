@@ -114,7 +114,7 @@ public interface DeliveryService {
      * @param stage        门径阶段
      * @return 实例列表
      */
-    List<DeliveryItemDO> listItemsByStage(Long initiationId, String stage);
+    List<DeliveryItemDO> listItemsByStage(String initiationId, String stage);
 
     /**
      * 交付物实例状态聚合
@@ -122,7 +122,7 @@ public interface DeliveryService {
      * @param initiationId 项目立项ID
      * @return 聚合结果
      */
-    List<Map<String, Object>> aggregateItemStatus(Long initiationId);
+    List<Map<String, Object>> aggregateItemStatus(String initiationId);
 
     // === 阶段门控 ===
     /**
@@ -133,6 +133,6 @@ public interface DeliveryService {
      * @param projectLevel  项目等级
      * @return 门控校验结果
      */
-    StageGateValidator.GateCheckResult checkStageGate(Long initiationId, String targetStage,
+    StageGateValidator.GateCheckResult checkStageGate(String initiationId, String targetStage,
                                                       String projectLevel);
 }

@@ -25,7 +25,7 @@ public interface InvoiceService {
     /**
      * 提交审批 (DRAFT → SUBMITTED)
      */
-    void submit(String id, Long operatorId);
+    void submit(String id, String operatorId);
 
     /**
      * 审批通过 (SUBMITTED → APPROVED)
@@ -45,12 +45,12 @@ public interface InvoiceService {
     /**
      * 红冲 (ISSUED → RED_REVERSED)
      */
-    void redReverse(String id, Long operatorId, String comment);
+    void redReverse(String id, String operatorId, String comment);
 
     /**
      * 取消 (DRAFT/APPROVED → CANCELLED)
      */
-    void cancel(String id, Long operatorId, String comment);
+    void cancel(String id, String operatorId, String comment);
 
     /**
      * 删除（仅 DRAFT 状态可删）
@@ -79,7 +79,7 @@ public interface InvoiceService {
      * @return 分页结果
      */
     Page<InvoiceDO> page(int page, int size, String keyword, String status,
-                         Long contractId, Long initiationId, Long customerId,
+                         Long contractId, String initiationId, Long customerId,
                          String invoiceType);
 
     /**

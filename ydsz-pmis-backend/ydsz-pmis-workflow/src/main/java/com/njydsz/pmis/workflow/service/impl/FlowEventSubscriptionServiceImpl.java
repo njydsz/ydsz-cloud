@@ -109,7 +109,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         if (!StringUtils.hasText(messageName)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "messageName 不能为空");
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
 
         List<FlowEventSubscriptionDO> subscriptions =
                 subscriptionMapper.selectWaitingByEvent(tid, "MESSAGE", messageName);
@@ -141,7 +141,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         if (!StringUtils.hasText(errorCode)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "errorCode 不能为空");
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
 
         List<FlowEventSubscriptionDO> subscriptions =
                 subscriptionMapper.selectWaitingByEvent(tid, "ERROR", errorCode);

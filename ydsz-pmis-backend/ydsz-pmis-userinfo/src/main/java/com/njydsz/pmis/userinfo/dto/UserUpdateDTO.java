@@ -24,7 +24,7 @@ import java.io.Serializable;
 public class UserUpdateDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     @NotNull(message = "{validation.user.msg_668e9add}")
     @Schema(description = "用户 ID", requiredMode = Schema.RequiredMode.REQUIRED)

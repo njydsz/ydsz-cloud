@@ -23,7 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 public class RuleDefinition implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 规则编码（唯一） */
     private String code;
@@ -119,7 +119,7 @@ public class RuleDefinition implements Serializable {
      * @since 1.4.0
      */
     @Builder.Default
-    private String tenantId = 1L;
+    private String tenantId = "1";
 
     /** 生命周期状态 */
     @Builder.Default

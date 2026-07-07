@@ -33,5 +33,5 @@ public interface SatisfactionService {
     List<Map<String, Object>> levelDistribution();
 
     /** 分页 */
-    Page<SatisfactionDO> page(int page, int size, String level, Long initiationId, String keyword);
+    Page<SatisfactionDO> page(int page, int size, String level, String initiationId, String keyword);
 }

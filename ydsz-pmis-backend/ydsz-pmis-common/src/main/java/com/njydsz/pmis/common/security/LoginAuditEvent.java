@@ -19,7 +19,7 @@ import java.io.Serializable;
 public class LoginAuditEvent implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 用户名 */
     private String username;

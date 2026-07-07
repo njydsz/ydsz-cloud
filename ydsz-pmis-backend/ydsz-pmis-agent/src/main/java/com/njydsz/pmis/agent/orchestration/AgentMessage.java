@@ -24,7 +24,7 @@ public class AgentMessage implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 消息类型：INPUT(初始输入) / OUTPUT(单个 Agent 输出) / CONTROL(控制指令) */
     private String type;

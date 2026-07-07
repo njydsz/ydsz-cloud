@@ -36,7 +36,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class ChainEdgeDTO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 边 ID（画布内唯一） */
     private String edgeId;

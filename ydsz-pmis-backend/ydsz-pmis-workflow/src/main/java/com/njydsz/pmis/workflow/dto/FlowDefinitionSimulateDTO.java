@@ -22,7 +22,7 @@ import java.util.Map;
 public class FlowDefinitionSimulateDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 流程编码（必填，如 project_initiation） */
     @NotBlank(message = "{validation.workflow.msg_ebccbe46}")

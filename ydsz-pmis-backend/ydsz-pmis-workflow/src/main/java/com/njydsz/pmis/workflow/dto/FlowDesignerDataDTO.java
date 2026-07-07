@@ -21,7 +21,7 @@ import java.io.Serializable;
 public class FlowDesignerDataDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 设计器数据 JSON 字符串（含 nodes + edges，前端已序列化好） */
     @NotBlank(message = "{validation.workflow.msg_a8b9c0d7}")

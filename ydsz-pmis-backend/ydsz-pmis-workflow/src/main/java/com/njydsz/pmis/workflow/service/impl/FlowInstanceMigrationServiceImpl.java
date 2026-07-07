@@ -74,7 +74,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         if (definitionId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId 不能为空");
         }
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         LambdaQueryWrapper<FlowInstanceDO> w = new LambdaQueryWrapper<>();
         w.eq(FlowInstanceDO::getDefinitionId, definitionId)
                 .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name())
@@ -150,7 +150,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         Long targetDefId = dto.getTargetDefinitionId();
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
-                : SecurityContext.getTenantIdOrDefault(1L);
+                : SecurityContext.getTenantIdOrDefault("1");
         Map<String, String> nodeMapping = dto.getNodeMapping() != null
                 ? dto.getNodeMapping()
                 : Collections.emptyMap();

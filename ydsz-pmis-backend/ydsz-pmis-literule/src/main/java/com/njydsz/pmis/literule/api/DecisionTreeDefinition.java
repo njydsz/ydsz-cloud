@@ -55,7 +55,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class DecisionTreeDefinition implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 规则编码（唯一） */
     private String ruleCode;
@@ -98,7 +98,7 @@ public class DecisionTreeDefinition implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class DecisionNode implements Serializable {
-        private static final long serialVersionUID = 1L;
+        private static final String serialVersionUID = "1";
         /** 条件表达式（仅条件节点使用，Aviator 返回 boolean） */
         private String conditionExpression;
         /** true 分支子节点 */

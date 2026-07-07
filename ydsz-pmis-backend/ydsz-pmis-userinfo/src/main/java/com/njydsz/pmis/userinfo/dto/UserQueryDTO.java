@@ -19,7 +19,7 @@ import java.io.Serial;
 public class UserQueryDTO extends PageQuery {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 状态：ENABLED/DISABLED/LOCKED */
     private String status;

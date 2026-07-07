@@ -21,7 +21,7 @@ public class Result<T> implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 状态码: 0=成功 */
     public static final int CODE_SUCCESS = 0;

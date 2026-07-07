@@ -18,7 +18,7 @@ import java.time.LocalDate;
 public class DeliveryItemCreateDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     @NotBlank(message = "{validation.execution.msg_1fd28961}")
     private String itemCode;

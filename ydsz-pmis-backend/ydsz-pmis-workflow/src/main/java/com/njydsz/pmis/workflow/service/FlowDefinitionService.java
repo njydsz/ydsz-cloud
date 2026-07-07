@@ -61,7 +61,7 @@ public interface FlowDefinitionService {
      *
      * @param flowCode      流程编码
      * @param definitionId  目标流程定义 ID
-     * @param tenantId      租户 ID（可空，默认 1L）
+     * @param tenantId      租户 ID（可空，默认 "1"）
      */
     void switchActiveVersion(String flowCode, String definitionId, String tenantId);
 

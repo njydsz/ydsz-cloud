@@ -58,5 +58,5 @@ public interface ExpenseService {
      * @return 分页结果
      */
     Page<ExpenseDO> page(int page, int size, String keyword, String status,
-                         String expenseType, Long employeeId, Long initiationId);
+                         String expenseType, Long employeeId, String initiationId);
 }

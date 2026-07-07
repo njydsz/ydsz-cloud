@@ -22,7 +22,7 @@ import java.io.Serial;
 public class FlowCcQueryDTO extends PageQuery {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 已读状态：UNREAD / READ / null=全部 */
     private String readStatus;

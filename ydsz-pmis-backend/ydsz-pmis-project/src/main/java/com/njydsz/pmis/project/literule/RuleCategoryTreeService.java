@@ -138,7 +138,7 @@ public class RuleCategoryTreeService {
                 .scope(d.getScope())
                 .drilldownAvailable(d.getDrilldownAvailable() != null ? d.getDrilldownAvailable() : true)
                 .version(d.getVersion() != null ? d.getVersion() : 1)
-                .tenantId(d.getTenantId() != null ? Long.parseLong(d.getTenantId()) : 1L)
+                .tenantId(d.getTenantId() != null ? Long.parseLong(d.getTenantId()) : "1")
                 .status(d.getStatus() != null ? d.getStatus() : "PUBLISHED")
                 .build();
     }
@@ -158,7 +158,7 @@ public class RuleCategoryTreeService {
     @lombok.Data
     public static class CategoryNode implements Serializable {
         @Serial
-        private static final long serialVersionUID = 1L;
+        private static final String serialVersionUID = "1";
 
         private String name;
         private String path;

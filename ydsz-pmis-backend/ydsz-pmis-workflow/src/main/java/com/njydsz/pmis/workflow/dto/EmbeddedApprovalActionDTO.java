@@ -22,7 +22,7 @@ import java.util.Map;
 public class EmbeddedApprovalActionDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 业务类型（必填） */
     @NotBlank(message = "{validation.workflow.msg_63149825}")

@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class AccountLockInfo implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 失败次数阈值（默认 5） */
     private int maxFailCount;

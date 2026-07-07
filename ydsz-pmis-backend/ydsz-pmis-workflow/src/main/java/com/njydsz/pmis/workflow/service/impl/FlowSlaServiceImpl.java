@@ -61,7 +61,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     private static final int DEFAULT_REMINDER_INTERVAL_MINUTES = 60;
     private static final int DEFAULT_MAX_REMINDERS = 3;
     private static final int DEFAULT_TIMEOUT_MINUTES = 24 * 60;
-    private static final long DEFAULT_ADMIN_USER_ID = 1L;
+    private static final long DEFAULT_ADMIN_USER_ID = "1";
 
     @Override
     public Map<String, Object> parseSlaConfig(String slaConfigJson) {

@@ -27,7 +27,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class RuleConflict implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 冲突级别 */
     public enum Level {

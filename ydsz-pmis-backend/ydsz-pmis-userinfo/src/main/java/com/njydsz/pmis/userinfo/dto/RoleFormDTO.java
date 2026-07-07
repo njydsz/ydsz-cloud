@@ -20,7 +20,7 @@ import java.util.List;
 public class RoleFormDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 主键 ID（更新时必填） */
     private String id;

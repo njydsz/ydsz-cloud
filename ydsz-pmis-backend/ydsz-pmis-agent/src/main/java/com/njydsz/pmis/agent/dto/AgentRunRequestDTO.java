@@ -18,7 +18,7 @@ public class AgentRunRequestDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** Agent 类型（AgentType.code） */
     @NotBlank(message = "{validation.agent.msg_37cbd8cf}")

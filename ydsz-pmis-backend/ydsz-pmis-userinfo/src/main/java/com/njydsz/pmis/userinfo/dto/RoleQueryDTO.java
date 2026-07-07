@@ -19,7 +19,7 @@ import java.io.Serial;
 public class RoleQueryDTO extends PageQuery {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 数据权限范围：ALL/DEPT/SELF/CUSTOM */
     private String dataScope;

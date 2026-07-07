@@ -26,7 +26,7 @@ import java.util.List;
 public class LoginContextDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     @Schema(description = "用户 ID")
     private String userId;

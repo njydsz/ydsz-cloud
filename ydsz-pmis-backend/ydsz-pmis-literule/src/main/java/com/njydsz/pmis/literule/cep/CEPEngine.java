@@ -46,7 +46,7 @@ import java.util.function.Consumer;
 public class CEPEngine implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 模式注册表 */
     private final Map<String, CEPPattern> patterns = new ConcurrentHashMap<>();
@@ -370,7 +370,7 @@ public class CEPEngine implements Serializable {
      */
     private static class SequenceState implements Serializable {
         @Serial
-        private static final long serialVersionUID = 1L;
+        private static final String serialVersionUID = "1";
         int currentStep = 0;
         Instant lastMatchAt;
         final List<CEPEvent> matchedEvents = new ArrayList<>();

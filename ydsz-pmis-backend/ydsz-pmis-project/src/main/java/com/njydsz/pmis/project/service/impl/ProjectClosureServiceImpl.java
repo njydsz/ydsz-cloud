@@ -151,7 +151,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByType(String tenantId) {
-        if (tenantId == null) tenantId = 1L;
+        if (tenantId == null) tenantId = "1";
         return closureMapper.aggregateByType(tenantId);
     }
 

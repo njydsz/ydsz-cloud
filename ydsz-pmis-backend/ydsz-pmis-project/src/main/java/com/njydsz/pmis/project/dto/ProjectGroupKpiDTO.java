@@ -24,7 +24,7 @@ import java.math.BigDecimal;
 public class ProjectGroupKpiDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final String serialVersionUID = "1";
 
     /** 项目群编码 */
     private String groupCode;

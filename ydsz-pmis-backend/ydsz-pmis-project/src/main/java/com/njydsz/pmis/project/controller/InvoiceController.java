@@ -74,7 +74,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "提交发票审批", bizType = "INVOICE")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@Parameter(description = "发票ID") @PathVariable String id, @Parameter(description = "操作人ID") @RequestParam Long operatorId) {
+    public Result<Void> submit(@Parameter(description = "发票ID") @PathVariable String id, @Parameter(description = "操作人ID") @RequestParam String operatorId) {
         service.submit(id, operatorId);
         return Result.ok();
     }
@@ -140,7 +140,7 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
     @PutMapping("/{id}/reverse")
     public Result<Void> redReverse(@Parameter(description = "发票ID") @PathVariable String id,
-                              @Parameter(description = "操作人ID") @RequestParam Long operatorId,
+                              @Parameter(description = "操作人ID") @RequestParam String operatorId,
                               @Parameter(description = "红冲备注") @RequestParam(required = false) String comment) {
         service.redReverse(id, operatorId, comment);
         return Result.ok();
@@ -159,7 +159,7 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "取消发票", bizType = "INVOICE")
     @PutMapping("/{id}/cancel")
     public Result<Void> cancel(@Parameter(description = "发票ID") @PathVariable String id,
-                          @Parameter(description = "操作人ID") @RequestParam Long operatorId,
+                          @Parameter(description = "操作人ID") @RequestParam String operatorId,
                           @Parameter(description = "取消备注") @RequestParam(required = false) String comment) {
         service.cancel(id, operatorId, comment);
         return Result.ok();

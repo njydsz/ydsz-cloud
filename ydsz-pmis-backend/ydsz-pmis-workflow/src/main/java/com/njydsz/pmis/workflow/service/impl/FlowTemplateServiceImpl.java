@@ -98,7 +98,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             dto.setVersion("1.0");
             dto.setFormPath(template.getFormPath());
             dto.setBpmnXml(template.getBpmnXml());
-            dto.setTenantId(SecurityContext.getTenantIdOrDefault(1L));
+            dto.setTenantId(SecurityContext.getTenantIdOrDefault("1"));
 
             // 部署为草稿
             Long definitionId = definitionService.deploy(dto);
