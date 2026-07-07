@@ -7,9 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
 
 import java.util.Map;
 
@@ -39,16 +37,14 @@ import static org.mockito.Mockito.when;
  * @author ydsz-pmis-team
  */
 @DisplayName("ABTestService 单元测试")
-@ExtendWith(MockitoExtension.class)
 class ABTestServiceTest {
 
-    @Mock
     private ExpressionEvaluator evaluator;
-
     private ABTestService abTestService;
 
     @BeforeEach
     void setUp() {
+        evaluator = Mockito.mock(ExpressionEvaluator.class);
         abTestService = new ABTestService(evaluator);
     }
 

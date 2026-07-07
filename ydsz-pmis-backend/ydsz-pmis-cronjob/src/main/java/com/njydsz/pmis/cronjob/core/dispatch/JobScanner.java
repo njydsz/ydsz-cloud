@@ -198,7 +198,9 @@ public class JobScanner {
                 }
                 String logId = taskDispatcher.dispatch(job, null, triggerType);
                 if (logId == null) {
-                    log.info("[JobScanner] 任务被其他实例持有锁, 跳过: key={}", job.getJobKey());
+                    // P1-7: null 可能是异步派发（CRON/RETRY/DEPENDENT/MISFIRED）或锁被持有
+                    log.debug("[JobScanner] 任务异步派发或被跳过: key={} triggerType={}",
+                            job.getJobKey(), triggerType);
                 } else {
                     log.info("[JobScanner] 任务派发成功: key={} logId={} triggerType={} traceId={}",
                             job.getJobKey(), logId, triggerType, TraceIdUtil.get());

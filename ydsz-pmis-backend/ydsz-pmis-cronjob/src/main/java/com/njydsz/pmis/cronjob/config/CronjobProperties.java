@@ -140,6 +140,12 @@ public class CronjobProperties {
 
         /** 单节点最大并发任务数 */
         private int maxConcurrent = 16;
+
+        /** P1-7: 执行线程池队列容量（0=无队列，SynchronousQueue；>0=有界队列） */
+        private int queueCapacity = 32;
+
+        /** P1-7: 线程名前缀 */
+        private String threadNamePrefix = "job-exec-";
     }
 
     /**

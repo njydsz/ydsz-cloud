@@ -11,7 +11,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -76,11 +79,8 @@ class CanaryServiceImplTest {
     @Test
     @DisplayName("hit DISABLED 状态不命中")
     void hitShouldReturnFalseWhenDisabled() {
-        MsgCanaryDO cfg = new MsgCanaryDO();
-        cfg.setCanaryKey("TPL_X");
-        cfg.setPercentage(50);
-        cfg.setStatus("DISABLED");
-        when(msgCanaryMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(cfg);
+        // matchConfig 查询条件含 status=ENABLED,DB 不会返回 DISABLED 配置
+        when(msgCanaryMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
 
         assertFalse(canaryService.hit("TPL_X", "any"));
     }
@@ -90,5 +90,41 @@ class CanaryServiceImplTest {
     void hitShouldReturnFalseWhenNoConfig() {
         when(msgCanaryMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
         assertFalse(canaryService.hit("TPL_X", "any"));
+    }
+
+    @Test
+    @DisplayName("matchConfig 命中时返回灰度配置")
+    void matchConfigShouldReturnConfigWhenHit() {
+        MsgCanaryDO cfg = new MsgCanaryDO();
+        cfg.setCanaryKey("TPL_X");
+        cfg.setPercentage(50);
+        cfg.setStatus("ENABLED");
+        when(msgCanaryMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(cfg);
+
+        // 使用相同的 canaryKey 和 bucketValue,hashCode XOR 结果为 0,bucket=0 < 50,必定命中
+        MsgCanaryDO result = canaryService.matchConfig("TPL_X", "TPL_X");
+
+        assertNotNull(result);
+        assertEquals("TPL_X", result.getCanaryKey());
+    }
+
+    @Test
+    @DisplayName("matchConfig 无 ENABLED 配置时返回 null")
+    void matchConfigShouldReturnNullWhenDisabled() {
+        when(msgCanaryMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+
+        assertNull(canaryService.matchConfig("TPL_X", "receiver-1"));
+    }
+
+    @Test
+    @DisplayName("matchConfig 百分比为 0 时返回 null")
+    void matchConfigShouldReturnNullWhenPercentageZero() {
+        MsgCanaryDO cfg = new MsgCanaryDO();
+        cfg.setCanaryKey("TPL_X");
+        cfg.setPercentage(0);
+        cfg.setStatus("ENABLED");
+        when(msgCanaryMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(cfg);
+
+        assertNull(canaryService.matchConfig("TPL_X", "receiver-1"));
     }
 }

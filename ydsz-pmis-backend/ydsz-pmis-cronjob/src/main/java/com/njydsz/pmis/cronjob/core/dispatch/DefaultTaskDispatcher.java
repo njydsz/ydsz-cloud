@@ -114,6 +114,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     /** P1-1: 重试调度线程池（延迟调度失败重试） */
     private java.util.concurrent.ScheduledExecutorService retryScheduler;
 
+    /** P1-7: 任务执行线程池（隔离调度线程与执行线程，限制并发） */
+    private java.util.concurrent.ThreadPoolExecutor taskExecutorPool;
+
     /** 触发类型常量 */
     public static final String TRIGGER_CRON = "CRON";
     public static final String TRIGGER_MANUAL = "MANUAL";
@@ -138,7 +141,43 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (isShardedJob(job)) {
             return executeShardedJob(job, holdLock, triggerType);
         }
-        return executeJob(job, holdLock, triggerType, 0);
+        // P1-7: MANUAL 触发同步执行（API 调用方需要 logId），其他触发类型异步执行（隔离调度线程）
+        if (TRIGGER_MANUAL.equals(triggerType)) {
+            return executeJob(job, holdLock, triggerType, 0);
+        }
+        return dispatchAsync(job, holdLock, triggerType, 0);
+    }
+
+    /**
+     * P1-7: 异步派发任务到执行线程池。
+     *
+     * <p>将 {@link #executeJob} 提交到 {@link #taskExecutorPool}，调度线程立即返回。
+     * 线程池满时使用 CallerRunsPolicy（在调度线程中同步执行），提供自然背压。
+     *
+     * @return null（异步执行，logId 在执行完成后写入日志）
+     */
+    private String dispatchAsync(JobDO job, boolean holdLock, String triggerType, int retryCount) {
+        try {
+            taskExecutorPool.submit(() -> {
+                try {
+                    executeJob(job, holdLock, triggerType, retryCount);
+                } catch (Exception e) {
+                    log.error("[Dispatcher] 异步执行异常: key={} triggerType={} reason={}",
+                            job.getJobKey(), triggerType, e.getMessage(), e);
+                }
+            });
+            log.debug("[Dispatcher] 任务异步派发: key={} triggerType={} poolSize={} active={} queue={}",
+                    job.getJobKey(), triggerType,
+                    taskExecutorPool.getPoolSize(),
+                    taskExecutorPool.getActiveCount(),
+                    taskExecutorPool.getQueue().size());
+        } catch (java.util.concurrent.RejectedExecutionException e) {
+            // CallerRunsPolicy 已配置，理论上不会走到这里；防御性处理
+            log.warn("[Dispatcher] 线程池拒绝提交, 降级同步执行: key={} reason={}",
+                    job.getJobKey(), e.getMessage());
+            return executeJob(job, holdLock, triggerType, retryCount);
+        }
+        return null;
     }
 
     /**
@@ -794,8 +833,29 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                     t.setDaemon(true);
                     return t;
                 });
+        // P1-7: 初始化任务执行线程池（隔离调度线程与执行线程）
+        CronjobProperties.Executor execConfig = cronjobProperties.getExecutor();
+        int corePoolSize = Math.max(1, execConfig.getMaxConcurrent());
+        int maxPoolSize = Math.max(corePoolSize, execConfig.getMaxConcurrent());
+        int queueCapacity = Math.max(0, execConfig.getQueueCapacity());
+        java.util.concurrent.BlockingQueue<Runnable> workQueue =
+                queueCapacity == 0
+                        ? new java.util.concurrent.SynchronousQueue<>()
+                        : new java.util.concurrent.LinkedBlockingQueue<>(queueCapacity);
+        java.util.concurrent.atomic.AtomicInteger threadCounter = new java.util.concurrent.atomic.AtomicInteger(0);
+        this.taskExecutorPool = new java.util.concurrent.ThreadPoolExecutor(
+                corePoolSize, maxPoolSize, 60L, java.util.concurrent.TimeUnit.SECONDS,
+                workQueue,
+                r -> {
+                    Thread t = new Thread(r, execConfig.getThreadNamePrefix() + threadCounter.incrementAndGet());
+                    t.setDaemon(true);
+                    return t;
+                },
+                new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
         log.info("[Dispatcher] 节点 ID 初始化完成: nodeId={} instanceId={} serverPort={}",
                 nodeId, INSTANCE_ID, serverPort);
+        log.info("[Dispatcher] P1-7 执行线程池初始化: core={} max={} queue={} policy=CallerRunsPolicy",
+                corePoolSize, maxPoolSize, queueCapacity);
     }
 
     @jakarta.annotation.PreDestroy
@@ -809,6 +869,20 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 retryScheduler.shutdownNow();
+            }
+        }
+        // P1-7: 关闭任务执行线程池
+        if (taskExecutorPool != null) {
+            taskExecutorPool.shutdown();
+            try {
+                if (!taskExecutorPool.awaitTermination(
+                        cronjobProperties.getExecutor().getDrainTimeoutSeconds(),
+                        java.util.concurrent.TimeUnit.SECONDS)) {
+                    taskExecutorPool.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                taskExecutorPool.shutdownNow();
             }
         }
     }

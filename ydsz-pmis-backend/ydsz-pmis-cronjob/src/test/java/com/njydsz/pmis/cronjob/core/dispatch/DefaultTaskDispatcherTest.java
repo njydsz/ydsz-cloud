@@ -149,6 +149,24 @@ class DefaultTaskDispatcherTest {
         lenient().when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(null);
         // P1-5: HttpJobHandler 默认不启用（HTTP 任务类型在测试中默认降级到 BEAN 模式）
         lenient().when(httpJobHandlerProvider.getIfAvailable()).thenReturn(null);
+        // P1-7: 初始化执行线程池（测试用同步执行器，任务在调用线程中执行）
+        try {
+            java.util.concurrent.ThreadPoolExecutor syncPool = new java.util.concurrent.ThreadPoolExecutor(
+                    1, 1, 0, java.util.concurrent.TimeUnit.MILLISECONDS,
+                    new java.util.concurrent.LinkedBlockingQueue<>(),
+                    r -> { Thread t = new Thread(r, "test-exec"); t.setDaemon(true); return t; },
+                    new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy()) {
+                @Override
+                public void execute(Runnable command) {
+                    command.run();
+                }
+            };
+            java.lang.reflect.Field f6 = DefaultTaskDispatcher.class.getDeclaredField("taskExecutorPool");
+            f6.setAccessible(true);
+            f6.set(dispatcher, syncPool);
+        } catch (Exception e) {
+            throw new IllegalStateException("注入 taskExecutorPool 失败", e);
+        }
         lenient().when(jobLogMapper.insert(any(JobLogDO.class))).thenAnswer(invocation -> {
             JobLogDO log = invocation.getArgument(0);
             log.setId("log-test-" + System.nanoTime());
@@ -177,7 +195,7 @@ class DefaultTaskDispatcherTest {
     }
 
     @Test
-    @DisplayName("dispatch(CRON) 锁获取成功时执行任务")
+    @DisplayName("dispatch(CRON) 锁获取成功时异步执行任务（P1-7 异步派发返回 null）")
     void dispatch_cron_lockAcquired_executesJob() throws Exception {
         JobDO job = buildJob("cron-key", null);
         when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
@@ -186,7 +204,8 @@ class DefaultTaskDispatcherTest {
 
         String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
 
-        assertNotNull(logId);
+        // P1-7: CRON 触发走异步派发，dispatch 返回 null，但任务已同步执行（测试用同步线程池）
+        assertNull(logId);
         verify(valueOps, times(1)).setIfAbsent(anyString(), anyString(), any(Duration.class));
         verify(redisTemplate, times(1)).execute(any(RedisScript.class), any(), (Object) any());
     }
@@ -215,7 +234,8 @@ class DefaultTaskDispatcherTest {
 
         String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
 
-        assertNotNull(logId);
+        // P1-7: CRON 异步派发返回 null，但任务已执行（测试用同步线程池）
+        assertNull(logId);
         verify(jobLogMapper, times(1)).updateById(any(JobLogDO.class));
         verify(redisTemplate, times(1)).execute(any(RedisScript.class), any(), (Object) any());
         verify(jobNodeHeartbeat, times(1)).onTaskStart();
@@ -410,7 +430,8 @@ class DefaultTaskDispatcherTest {
 
         String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
 
-        assertNotNull(logId);
+        // P1-7: CRON 异步派发返回 null，但配额检查在派发前同步执行
+        assertNull(logId);
         verify(tenantQuotaService, times(1)).checkConcurrentQuota("tenant-test");
         verify(tenantQuotaService, times(1)).checkDailyExecutionQuota("tenant-test");
     }
@@ -450,7 +471,8 @@ class DefaultTaskDispatcherTest {
 
         String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
 
-        assertNotNull(logId);
+        // P1-7: CRON 异步派发返回 null，但任务已执行（测试用同步线程池）
+        assertNull(logId);
         verify(jobHandler, times(1)).execute(any());
         verify(jobLogMapper, times(1)).insert(any(JobLogDO.class));
     }

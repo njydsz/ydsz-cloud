@@ -24,9 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
 
 import java.util.List;
 
@@ -55,24 +53,19 @@ import static org.mockito.Mockito.*;
  * @author ydsz-pmis-team
  */
 @DisplayName("RuleHotReloader 单元测试")
-@ExtendWith(MockitoExtension.class)
 class RuleHotReloaderTest {
 
-    @Mock
     private RuleEngine ruleEngine;
-
-    @Mock
     private ExpressionEvaluator evaluator;
-
-    @Mock
     private RuleConfigProvider configProvider;
-
     private LiteRuleProperties properties;
-
     private RuleHotReloader reloader;
 
     @BeforeEach
     void setUp() {
+        ruleEngine = Mockito.mock(RuleEngine.class);
+        evaluator = Mockito.mock(ExpressionEvaluator.class);
+        configProvider = Mockito.mock(RuleConfigProvider.class);
         properties = new LiteRuleProperties();
         properties.setHotReloadEnabled(true);
         properties.setAutoRegisterBuiltinRules(true);

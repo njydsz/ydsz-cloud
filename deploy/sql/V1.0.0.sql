@@ -11042,7 +11042,50 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- ====================================================================
+-- ====================== [067B] P1-6 工作流 Webhook 订阅表 ======================
+-- ====================================================================
+-- P1-6: Webhook 事件订阅 — 外部系统注册回调 URL，订阅工作流事件
+-- 投递流程：事件触发 → 查匹配订阅 → HMAC-SHA256 签名 → 写入 outbox → 异步 HTTP POST
+
+CREATE TABLE IF NOT EXISTS pmis_flow_webhook_subscription (
+    id                  VARCHAR(20)       PRIMARY KEY,
+    tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
+    name                VARCHAR(128)    NOT NULL,               -- 订阅名称
+    callback_url        VARCHAR(512)    NOT NULL,               -- 回调 URL（HTTPS 推荐）
+    secret              VARCHAR(256),                            -- 签名密钥（HMAC-SHA256）
+    event_types         VARCHAR(512),                            -- 订阅事件类型（逗号分隔，空=全部）
+    enabled             SMALLINT        NOT NULL DEFAULT 1,     -- 1=启用 0=禁用
+    description         VARCHAR(512),
+    -- 审计字段
+    created_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT        NOT NULL DEFAULT 0,
+    provider_trace_id   VARCHAR(64),
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 约束
+    CONSTRAINT uk_pfws_tenant_name UNIQUE (tenant_id, name, deleted),
+    CONSTRAINT ck_pfws_enabled CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_pfws_deleted CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_flow_webhook_subscription IS 'P1-6: 工作流 Webhook 事件订阅表 — 外部系统注册回调 URL 订阅工作流事件';
+COMMENT ON COLUMN pmis_flow_webhook_subscription.callback_url IS '回调 URL（HTTPS 推荐），投递时 HTTP POST 该 URL';
+COMMENT ON COLUMN pmis_flow_webhook_subscription.secret IS 'HMAC-SHA256 签名密钥，投递时以 X-Webhook-Signature: sha256=<hex> 头部携带签名';
+COMMENT ON COLUMN pmis_flow_webhook_subscription.event_types IS '订阅事件类型（逗号分隔，如 TASK_CREATED,TASK_COMPLETED），空表示订阅全部事件';
+COMMENT ON COLUMN pmis_flow_webhook_subscription.enabled IS '是否启用: 1=启用 0=禁用';
+
+CREATE INDEX IF NOT EXISTS idx_pfws_tenant_enabled
+    ON pmis_flow_webhook_subscription (tenant_id, enabled)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfws_trace
+    ON pmis_flow_webhook_subscription (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+-- ====================================================================
 -- ============================ [068] P1-6 工作流审批附件表 ============================
+-- ====================================================================
 -- ====================================================================
 -- GAP-51: 审批附件支持（对标钉钉/飞书审批附件能力）
 -- 审批时提交的附件（图片/文档/视频等）统一落库，支持查询与下载
