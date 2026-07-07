@@ -68,7 +68,7 @@ public interface RevenueService {
      * @return 分页结果
      */
     Page<RevenueDO> page(int page, int size, String keyword, String status,
-                          Long contractId, Long initiationId, String period);
+                          String contractId, Long initiationId, String period);
 
     /**
      * 查询项目下所有收入记录
@@ -81,7 +81,7 @@ public interface RevenueService {
     /**
      * 按合同汇总
      */
-    List<Map<String, Object>> sumByContract(Long contractId);
+    List<Map<String, Object>> sumByContract(String contractId);
 
     /**
      * 按期间汇总

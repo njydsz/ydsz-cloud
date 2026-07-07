@@ -126,9 +126,9 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
                         (a, b) -> a));
 
         // 3) 部门过滤 + 按员工汇总
-        Map<Long, Map<String, Object>> merged = new LinkedHashMap<>();
+        Map<String, Map<String, Object>> merged = new LinkedHashMap<>();
         for (Map<String, Object> row : aggregates) {
-            Long empId = toLong(row.get("employee_id"));
+            String empId = stringOf(row.get("employee_id"));
             if (empId == null) {
                 continue;
             }
@@ -219,7 +219,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     }
 
     @Override
-    public Map<String, Object> utilizationOf(Long employeeId, LocalDate from, LocalDate to) {
+    public Map<String, Object> utilizationOf(String employeeId, LocalDate from, LocalDate to) {
         Map<String, Object> out = new LinkedHashMap<>();
         if (employeeId == null) {
             return out;
@@ -346,11 +346,11 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
                         r -> nz(r.getCostAmount()),
                         (a, b) -> a));
 
-        Map<Long, BigDecimal> benchHoursByEmp = new HashMap<>();
-        Map<Long, BigDecimal> billableHoursByEmp = new HashMap<>();
-        Map<Long, Map<String, Object>> metaByEmp = new HashMap<>();
+        Map<String, BigDecimal> benchHoursByEmp = new HashMap<>();
+        Map<String, BigDecimal> billableHoursByEmp = new HashMap<>();
+        Map<String, Map<String, Object>> metaByEmp = new HashMap<>();
         for (Map<String, Object> row : aggregates) {
-            Long empId = toLong(row.get("employee_id"));
+            String empId = stringOf(row.get("employee_id"));
             if (empId == null) {
                 continue;
             }
@@ -574,7 +574,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Map<String, Object> riskMatrix(Long initiationId, String riskType, String status) {
+    public Map<String, Object> riskMatrix(String initiationId, String riskType, String status) {
         Map<String, Object> out = new LinkedHashMap<>();
         // 1) 拉取风险列表（异常时降级为空）
         List<RiskDO> risks = new ArrayList<>();
@@ -612,7 +612,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
                 cell.put("impact", i);
                 cell.put("count", 0);
                 cell.put("projectCount", 0);
-                cell.put("cellProjectIds", new ArrayList<Long>());
+                cell.put("cellProjectIds", new ArrayList<String>());
                 cell.put("level", deriveLevel(p, i));
                 cellMap.put(key, cell);
             }
@@ -716,7 +716,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     }
 
     @Override
-    public Map<String, Object> projectHealthDashboard(List<Long> initiationIds, String health) {
+    public Map<String, Object> projectHealthDashboard(List<String> initiationIds, String health) {
         Map<String, Object> out = new LinkedHashMap<>();
         // 1) 加载 EVM 健康聚合
         List<Map<String, Object>> evmRows = safeAll(evmMapper, m -> m.aggregateHealthByInitiation());
@@ -732,7 +732,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         }
 
         // 3) 取每个项目最新 snapshot
-        Map<Long, ProfitSnapshotDO> latestSnap = new LinkedHashMap<>();
+        Map<String, ProfitSnapshotDO> latestSnap = new LinkedHashMap<>();
         for (ProfitSnapshotDO s : snaps) {
             if (s == null || s.getInitiationId() == null) continue;
             ProfitSnapshotDO prev = latestSnap.get(s.getInitiationId());
@@ -745,10 +745,10 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         }
 
         // 4) 合并生成项目行
-        Map<Long, Map<String, Object>> projectMap = new LinkedHashMap<>();
+        Map<String, Map<String, Object>> projectMap = new LinkedHashMap<>();
         // 从 EVM 行入
         for (Map<String, Object> row : evmRows) {
-            Long initId = toLong(row.get("initiation_id"));
+            String initId = stringOf(row.get("initiation_id"));
             if (initId == null) continue;
             Map<String, Object> p = projectMap.computeIfAbsent(initId, k -> {
                 Map<String, Object> m = new LinkedHashMap<>();
@@ -762,7 +762,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             p.put("topAlert", row.getOrDefault("top_alert", "NORMAL"));
         }
         // 从 snapshot 补 margin
-        for (Map.Entry<Long, ProfitSnapshotDO> e : latestSnap.entrySet()) {
+        for (Map.Entry<String, ProfitSnapshotDO> e : latestSnap.entrySet()) {
             Map<String, Object> p = projectMap.computeIfAbsent(e.getKey(), k -> {
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("initiationId", k);
@@ -1055,7 +1055,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
 
     // ----------------- 私有 -----------------
 
-    private String resolveDepartment(Long employeeId) {
+    private String resolveDepartment(String employeeId) {
         // 当前 Feign 调用 user 服务；失败时返回 null 表示不过滤
         // 实际接入 UserServiceClient 后填充
         return null;

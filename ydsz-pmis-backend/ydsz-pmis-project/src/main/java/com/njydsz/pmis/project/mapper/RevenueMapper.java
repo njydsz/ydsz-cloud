@@ -59,7 +59,7 @@ public interface RevenueMapper extends BaseMapper<RevenueDO> {
      * @param contractId 合同 ID
      * @return 合同汇总列表
      */
-    List<Map<String, Object>> sumByContract(@Param("contractId") Long contractId);
+    List<Map<String, Object>> sumByContract(@Param("contractId") String contractId);
 
     /**
      * P6 每日对账：跨项目汇总全部已确认收入

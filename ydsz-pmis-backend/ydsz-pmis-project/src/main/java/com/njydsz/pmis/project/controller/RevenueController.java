@@ -135,7 +135,7 @@ public class RevenueController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long contractId,
+            @RequestParam(required = false) String contractId,
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) String period) {
         return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, period));
@@ -150,7 +150,7 @@ public class RevenueController {
     @Operation(summary = "按合同汇总")
     @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/by-contract")
-    public Result<List<Map<String, Object>>> sumByContract(@RequestParam Long contractId) {
+    public Result<List<Map<String, Object>>> sumByContract(@RequestParam String contractId) {
         return Result.ok(service.sumByContract(contractId));
     }
 

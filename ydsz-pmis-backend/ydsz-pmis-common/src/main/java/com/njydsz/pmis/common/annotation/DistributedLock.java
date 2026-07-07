@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * <p>使用示例：
  * <pre>
  * &#64;DistributedLock(key = "'contract:update:' + #contractId", waitTime = 3, leaseTime = 10)
- * public void updateContract(Long contractId, ContractUpdateDTO dto) { ... }
+ * public void updateContract(String contractId, ContractUpdateDTO dto) { ... }
  * </pre>
  *
  * @author ydsz-pmis-team

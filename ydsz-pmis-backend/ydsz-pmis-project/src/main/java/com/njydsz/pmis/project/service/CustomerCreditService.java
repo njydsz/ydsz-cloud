@@ -26,7 +26,7 @@ public interface CustomerCreditService {
     /**
      * 按客户获取信用记录
      */
-    CustomerCreditDO getByCustomer(Long customerId);
+    CustomerCreditDO getByCustomer(String customerId);
 
     /**
      * 按等级列出
@@ -36,7 +36,7 @@ public interface CustomerCreditService {
     /**
      * 客户风险画像（用于资源推荐/合同评审）
      */
-    Map<String, Object> profile(Long customerId);
+    Map<String, Object> profile(String customerId);
 
     /**
      * 信用分布统计（A/B/C/D 各多少客户）

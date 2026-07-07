@@ -71,7 +71,7 @@ public interface TimeEntryService {
      * @return 分页结果
      */
     Page<TimeEntryDO> page(int page, int size, String keyword, String status,
-                           Long employeeId, Long initiationId, Long taskId,
+                           String employeeId, String initiationId, String taskId,
                            LocalDate from, LocalDate to);
 
     /**
@@ -82,7 +82,7 @@ public interface TimeEntryService {
      * @param to         截止日期
      * @return 工时列表
      */
-    List<TimeEntryDO> listByEmployeeAndDateRange(Long employeeId, LocalDate from, LocalDate to);
+    List<TimeEntryDO> listByEmployeeAndDateRange(String employeeId, LocalDate from, LocalDate to);
 
     /**
      * 按项目+日期范围查询
@@ -92,7 +92,7 @@ public interface TimeEntryService {
      * @param to           截止日期
      * @return 工时列表
      */
-    List<TimeEntryDO> listByInitiationAndDateRange(Long initiationId, LocalDate from, LocalDate to);
+    List<TimeEntryDO> listByInitiationAndDateRange(String initiationId, LocalDate from, LocalDate to);
 
     /**
      * 项目工时聚合（按员工与职级）
@@ -102,7 +102,7 @@ public interface TimeEntryService {
      * @param to           截止日期
      * @return 聚合结果列表
      */
-    List<Map<String, Object>> aggregateHoursByEmployeeAndLevel(Long initiationId,
+    List<Map<String, Object>> aggregateHoursByEmployeeAndLevel(String initiationId,
                                                                LocalDate from, LocalDate to);
 
     /**
@@ -112,5 +112,5 @@ public interface TimeEntryService {
      * @param entryDate  填报日期
      * @return 冲突明细列表
      */
-    List<Map<String, Object>> detectCrossProject(Long employeeId, LocalDate entryDate);
+    List<Map<String, Object>> detectCrossProject(String employeeId, LocalDate entryDate);
 }

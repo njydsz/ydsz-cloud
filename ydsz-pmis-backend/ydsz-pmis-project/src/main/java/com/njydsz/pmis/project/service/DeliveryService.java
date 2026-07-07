@@ -82,7 +82,7 @@ public interface DeliveryService {
      * @param itemId    实例ID
      * @param completed 已完成 TR 数
      */
-    void markTrCompleted(Long itemId, Integer completed);
+    void markTrCompleted(String itemId, Integer completed);
 
     /**
      * 删除交付物实例
@@ -105,7 +105,7 @@ public interface DeliveryService {
      * @param initiationId 项目立项ID
      * @return 实例列表
      */
-    List<DeliveryItemDO> listItemsByInitiation(Long initiationId);
+    List<DeliveryItemDO> listItemsByInitiation(String initiationId);
 
     /**
      * 按阶段查询交付物实例

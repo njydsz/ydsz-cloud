@@ -22,7 +22,7 @@ public interface CustomerCreditMapper extends BaseMapper<CustomerCreditDO> {
      * @param customerId 客户 ID
      * @return 客户信用对象，未找到返回 null
      */
-    CustomerCreditDO selectByCustomerId(@Param("customerId") Long customerId);
+    CustomerCreditDO selectByCustomerId(@Param("customerId") String customerId);
 
     /**
      * 更新客户信用等级

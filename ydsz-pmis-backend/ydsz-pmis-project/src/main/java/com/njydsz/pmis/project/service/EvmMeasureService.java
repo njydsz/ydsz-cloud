@@ -55,7 +55,7 @@ public interface EvmMeasureService {
      * @param initiationId 项目立项 ID
      * @return 偏差趋势列表
      */
-    List<Map<String, Object>> trend(Long initiationId);
+    List<Map<String, Object>> trend(String initiationId);
 
     /**
      * 项目 EVM 健康汇总（最新一期）
@@ -63,7 +63,7 @@ public interface EvmMeasureService {
      * @param initiationId 项目立项 ID
      * @return EVM 健康汇总数据
      */
-    Map<String, Object> dashboard(Long initiationId);
+    Map<String, Object> dashboard(String initiationId);
 
     /**
      * 分页查询测量记录

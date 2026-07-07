@@ -214,9 +214,9 @@ public class InvoiceController {
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
-            @Parameter(description = "合同ID") @RequestParam(required = false) Long contractId,
+            @Parameter(description = "合同ID") @RequestParam(required = false) String contractId,
             @Parameter(description = "立项ID") @RequestParam(required = false) String initiationId,
-            @Parameter(description = "客户ID") @RequestParam(required = false) Long customerId,
+            @Parameter(description = "客户ID") @RequestParam(required = false) String customerId,
             @Parameter(description = "发票类型") @RequestParam(required = false) String invoiceType) {
         return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, customerId, invoiceType));
     }
@@ -230,7 +230,7 @@ public class InvoiceController {
     @Operation(summary = "按合同汇总开票金额")
     @PrePermission("finance:invoice:list")
     @GetMapping("/sum/by-contract")
-    public Result<BigDecimal> sumByContract(@Parameter(description = "合同ID") @RequestParam Long contractId) {
+    public Result<BigDecimal> sumByContract(@Parameter(description = "合同ID") @RequestParam String contractId) {
         return Result.ok(service.sumInvoicedByContract(contractId));
     }
 
@@ -243,7 +243,7 @@ public class InvoiceController {
     @Operation(summary = "按状态分组台账")
     @PrePermission("finance:invoice:list")
     @GetMapping("/aggregate/by-status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "合同ID") @RequestParam Long contractId) {
+    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "合同ID") @RequestParam String contractId) {
         return Result.ok(service.aggregateByStatus(contractId));
     }
 }

@@ -14,7 +14,6 @@ import com.njydsz.pmis.project.service.DeliveryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -203,7 +202,7 @@ public class DeliveryController {
     @Operation(summary = "按项目查询所有交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-initiation/{initiationId}")
-    public Result<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable Long initiationId) {
+    public Result<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable String initiationId) {
         return Result.ok(service.listItemsByInitiation(initiationId));
     }
 

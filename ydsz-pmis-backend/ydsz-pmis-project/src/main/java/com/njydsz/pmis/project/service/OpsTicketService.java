@@ -42,16 +42,16 @@ public interface OpsTicketService {
 
     /** 分页查询 */
     Page<OpsTicketDO> page(int page, int size, String status, String priority,
-                           Long initiationId, Long assigneeId, String keyword);
+                           String initiationId, String assigneeId, String keyword);
 
     /** 按项目查询 */
     List<OpsTicketDO> listByInitiation(String initiationId);
 
     /** 按质保期查询 */
-    List<OpsTicketDO> listByWarranty(Long warrantyId);
+    List<OpsTicketDO> listByWarranty(String warrantyId);
 
     /** 按处理人查询 */
-    List<OpsTicketDO> listByAssignee(Long assigneeId, String status);
+    List<OpsTicketDO> listByAssignee(String assigneeId, String status);
 
     /** 工单详情 */
     OpsTicketDO getById(String id);
@@ -60,5 +60,5 @@ public interface OpsTicketService {
     List<Map<String, Object>> slaSummary();
 
     /** 状态聚合 */
-    List<Map<String, Object>> aggregateByStatus(Long initiationId);
+    List<Map<String, Object>> aggregateByStatus(String initiationId);
 }

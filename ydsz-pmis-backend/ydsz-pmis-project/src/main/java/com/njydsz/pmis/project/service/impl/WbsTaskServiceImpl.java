@@ -164,7 +164,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     @DataScope(userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<WbsTaskDO> page(int page, int size, String keyword, String status,
-                                String taskType, String initiationId, Long ownerId) {
+                                String taskType, String initiationId, String ownerId) {
         Page<WbsTaskDO> p = new Page<>(page, size);
         LambdaQueryWrapper<WbsTaskDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {

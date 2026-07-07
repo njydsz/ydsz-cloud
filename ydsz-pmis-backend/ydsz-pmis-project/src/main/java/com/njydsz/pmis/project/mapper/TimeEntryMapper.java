@@ -30,7 +30,7 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @return 受影响行数
      */
     int updateStatus(@Param("id") String id, @Param("status") String status,
-                     @Param("approverId") Long approverId, @Param("approverName") String approverName,
+                     @Param("approverId") String approverId, @Param("approverName") String approverName,
                      @Param("rejectReason") String rejectReason);
 
     /**
@@ -104,7 +104,7 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @param entryDate  填报日期
      * @return 冲突检测结果列表
      */
-    List<Map<String, Object>> detectCrossProject(@Param("employeeId") Long employeeId,
+    List<Map<String, Object>> detectCrossProject(@Param("employeeId") String employeeId,
                                                  @Param("entryDate") LocalDate entryDate);
 
     /**

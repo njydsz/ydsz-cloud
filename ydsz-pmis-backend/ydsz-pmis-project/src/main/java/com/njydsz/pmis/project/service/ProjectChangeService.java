@@ -66,7 +66,7 @@ public interface ProjectChangeService {
      * @param initiationId 立项 ID
      * @return 变更记录列表
      */
-    List<ProjectChangeDO> listByInitiation(Long initiationId);
+    List<ProjectChangeDO> listByInitiation(String initiationId);
 
     /**
      * 按变更类型聚合计数。

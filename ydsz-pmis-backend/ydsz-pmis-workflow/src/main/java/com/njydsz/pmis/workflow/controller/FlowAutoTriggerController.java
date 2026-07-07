@@ -6,7 +6,6 @@ import com.njydsz.pmis.workflow.entity.FlowAutoTriggerDO;
 import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
 import com.njydsz.pmis.workflow.dto.FlowAutoTriggerCreateDTO;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

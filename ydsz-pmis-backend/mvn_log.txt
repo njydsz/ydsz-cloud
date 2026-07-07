@@ -1,0 +1,79 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] ydsz-pmis-parent                                                   [pom]
+[INFO] ydsz-pmis-common                                                   [jar]
+[INFO] ydsz-pmis-system                                                   [jar]
+[INFO] ydsz-pmis-literule                                                 [jar]
+[INFO] ydsz-pmis-project                                                  [jar]
+[INFO] 
+[INFO] Using the MultiThreadedBuilder implementation with a thread count of 16
+[INFO] 
+[INFO] ------------------< com.njydsz.pmis:ydsz-pmis-parent >------------------
+[INFO] Building ydsz-pmis-parent 1.0.0-SNAPSHOT                           [1/5]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] ------------------< com.njydsz.pmis:ydsz-pmis-common >------------------
+[INFO] Building ydsz-pmis-common 1.0.0-SNAPSHOT                           [2/5]
+[INFO]   from ydsz-pmis-common\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ ydsz-pmis-common ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 6 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ ydsz-pmis-common ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] 
+[INFO] -----------------< com.njydsz.pmis:ydsz-pmis-literule >-----------------
+[INFO] ------------------< com.njydsz.pmis:ydsz-pmis-system >------------------
+[INFO] Building ydsz-pmis-literule 1.0.0-SNAPSHOT                         [3/5]
+[INFO] Building ydsz-pmis-system 1.0.0-SNAPSHOT                           [4/5]
+[INFO]   from ydsz-pmis-literule\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]   from ydsz-pmis-system\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] 1 problem was encountered while building the effective model for org.javassist:javassist:jar:3.21.0-GA during dependency collection step for project (use -X to see details)
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ ydsz-pmis-literule ---
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ ydsz-pmis-literule ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ ydsz-pmis-system ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 8 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ ydsz-pmis-system ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] -----------------< com.njydsz.pmis:ydsz-pmis-project >------------------
+[INFO] Building ydsz-pmis-project 1.0.0-SNAPSHOT                          [5/5]
+[INFO]   from ydsz-pmis-project\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ ydsz-pmis-project ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 42 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ ydsz-pmis-project ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for ydsz-pmis-parent 1.0.0-SNAPSHOT:
+[INFO] 
+[INFO] ydsz-pmis-parent ................................... SUCCESS [  0.031 s]
+[INFO] ydsz-pmis-common ................................... SUCCESS [  2.097 s]
+[INFO] ydsz-pmis-system ................................... SUCCESS [  0.599 s]
+[INFO] ydsz-pmis-literule ................................. SUCCESS [  0.384 s]
+[INFO] ydsz-pmis-project .................................. SUCCESS [  0.361 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.535 s (Wall Clock)
+[INFO] Finished at: 2026-07-07T17:14:15+08:00
+[INFO] ------------------------------------------------------------------------

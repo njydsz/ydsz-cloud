@@ -71,7 +71,7 @@ public interface WbsTaskService {
      * @return 分页结果
      */
     Page<WbsTaskDO> page(int page, int size, String keyword, String status,
-                         String taskType, Long initiationId, Long ownerId);
+                         String taskType, String initiationId, String ownerId);
 
     /**
      * 查询项目下所有任务
@@ -79,7 +79,7 @@ public interface WbsTaskService {
      * @param initiationId 项目立项ID
      * @return 任务列表
      */
-    List<WbsTaskDO> listByInitiation(Long initiationId);
+    List<WbsTaskDO> listByInitiation(String initiationId);
 
     /**
      * 查询项目下所有里程碑任务
@@ -87,7 +87,7 @@ public interface WbsTaskService {
      * @param initiationId 项目立项ID
      * @return 里程碑任务列表
      */
-    List<WbsTaskDO> listMilestones(Long initiationId);
+    List<WbsTaskDO> listMilestones(String initiationId);
 
     /**
      * 计算整体进度（任务加权平均）
@@ -95,7 +95,7 @@ public interface WbsTaskService {
      * @param initiationId 项目立项ID
      * @return 整体进度百分比（0-100）
      */
-    BigDecimal calcOverallProgress(Long initiationId);
+    BigDecimal calcOverallProgress(String initiationId);
 
     /**
      * 状态分布统计
@@ -103,5 +103,5 @@ public interface WbsTaskService {
      * @param initiationId 项目立项ID
      * @return 各状态任务数量列表
      */
-    List<Map<String, Object>> aggregateByStatus(Long initiationId);
+    List<Map<String, Object>> aggregateByStatus(String initiationId);
 }

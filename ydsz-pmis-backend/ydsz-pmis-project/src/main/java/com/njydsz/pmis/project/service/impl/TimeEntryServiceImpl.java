@@ -202,7 +202,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     @DataScope(userColumn = "employee_id")
     @Transactional(readOnly = true)
     public Page<TimeEntryDO> page(int page, int size, String keyword, String status,
-                                  Long employeeId, String initiationId, String taskId,
+                                  String employeeId, String initiationId, String taskId,
                                   LocalDate from, LocalDate to) {
         Page<TimeEntryDO> p = new Page<>(page, size);
         LambdaQueryWrapper<TimeEntryDO> w = new LambdaQueryWrapper<>();

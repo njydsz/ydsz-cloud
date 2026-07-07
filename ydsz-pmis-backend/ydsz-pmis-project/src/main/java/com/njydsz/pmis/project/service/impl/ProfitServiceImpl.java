@@ -67,13 +67,13 @@ public class ProfitServiceImpl implements ProfitService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProfitSnapshotDO getByInitiationAndPeriod(Long initiationId, String period) {
+    public ProfitSnapshotDO getByInitiationAndPeriod(String initiationId, String period) {
         return snapshotMapper.selectByInitiationAndPeriod(initiationId, period);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProfitSnapshotDO> listByInitiation(Long initiationId) {
+    public List<ProfitSnapshotDO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
         return snapshotMapper.selectByInitiation(initiationId);
     }
@@ -87,7 +87,7 @@ public class ProfitServiceImpl implements ProfitService {
 
     @Override
     @Transactional(readOnly = true)
-    public int healthScore(Long initiationId, String period) {
+    public int healthScore(String initiationId, String period) {
         ProfitSnapshotDO s = snapshotMapper.selectByInitiationAndPeriod(initiationId, period);
         if (s == null) return -1;
         return ProfitCalculator.healthScore(

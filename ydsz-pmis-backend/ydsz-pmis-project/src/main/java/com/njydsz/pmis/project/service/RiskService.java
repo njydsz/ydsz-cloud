@@ -60,7 +60,7 @@ public interface RiskService {
      * @return 分页结果（VO）
      */
     Page<RiskVO> page(int page, int size, String keyword, String status,
-                      String riskLevel, Long initiationId);
+                      String riskLevel, String initiationId);
 
     /**
      * 查询项目下所有风险
@@ -68,7 +68,7 @@ public interface RiskService {
      * @param initiationId 项目立项ID
      * @return 风险 VO 列表
      */
-    List<RiskVO> listByInitiation(Long initiationId);
+    List<RiskVO> listByInitiation(String initiationId);
 
     /**
      * 风险等级分布统计
@@ -76,5 +76,5 @@ public interface RiskService {
      * @param initiationId 项目立项ID
      * @return 各等级风险数量列表
      */
-    List<Map<String, Object>> aggregateByLevel(Long initiationId);
+    List<Map<String, Object>> aggregateByLevel(String initiationId);
 }

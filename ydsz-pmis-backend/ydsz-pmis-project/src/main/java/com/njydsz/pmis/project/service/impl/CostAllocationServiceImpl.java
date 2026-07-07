@@ -32,7 +32,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long syncFromTimeEntry(Long timeEntryId, Long initiationId, Long employeeId,
+    public Long syncFromTimeEntry(String timeEntryId, String initiationId, String employeeId,
                                    String employeeName, String levelCode,
                                    String period, BigDecimal amount, boolean billable) {
         CostAllocationDO c = new CostAllocationDO();
@@ -101,7 +101,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> sumByType(Long initiationId, String period) {
+    public List<Map<String, Object>> sumByType(String initiationId, String period) {
         if (initiationId == null) return List.of();
         return costAllocationMapper.sumByType(initiationId, period);
     }
@@ -114,7 +114,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void markAllocated(List<Long> ids) {
+    public void markAllocated(List<String> ids) {
         if (ids == null || ids.isEmpty()) return;
         for (String id : ids) {
             CostAllocationDO c = costAllocationMapper.selectById(id);

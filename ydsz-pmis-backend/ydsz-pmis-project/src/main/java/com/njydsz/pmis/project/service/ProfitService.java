@@ -24,20 +24,20 @@ public interface ProfitService {
     /**
      * 查询项目某月快照
      */
-    ProfitSnapshotDO getByInitiationAndPeriod(Long initiationId, String period);
+    ProfitSnapshotDO getByInitiationAndPeriod(String initiationId, String period);
 
     /**
      * 项目所有快照
      */
-    List<ProfitSnapshotDO> listByInitiation(Long initiationId);
+    List<ProfitSnapshotDO> listByInitiation(String initiationId);
 
     /**
      * 趋势分析
      */
-    List<Map<String, Object>> trendByPeriod(Long initiationId);
+    List<Map<String, Object>> trendByPeriod(String initiationId);
 
     /**
      * 项目健康度评分
      */
-    int healthScore(Long initiationId, String period);
+    int healthScore(String initiationId, String period);
 }

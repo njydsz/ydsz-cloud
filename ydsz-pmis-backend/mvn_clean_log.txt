@@ -1,0 +1,78 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] ydsz-pmis-parent                                                   [pom]
+[INFO] ydsz-pmis-common                                                   [jar]
+[INFO] ydsz-pmis-system                                                   [jar]
+[INFO] ydsz-pmis-literule                                                 [jar]
+[INFO] ydsz-pmis-project                                                  [jar]
+[INFO] 
+[INFO] Using the MultiThreadedBuilder implementation with a thread count of 16
+[INFO] 
+[INFO] ------------------< com.njydsz.pmis:ydsz-pmis-parent >------------------
+[INFO] Building ydsz-pmis-parent 1.0.0-SNAPSHOT                           [1/5]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ ydsz-pmis-parent ---
+[INFO] 
+[INFO] ------------------< com.njydsz.pmis:ydsz-pmis-common >------------------
+[INFO] Building ydsz-pmis-common 1.0.0-SNAPSHOT                           [2/5]
+[INFO]   from ydsz-pmis-common\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ ydsz-pmis-common ---
+[INFO] Deleting D:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend\ydsz-pmis-common\target
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ ydsz-pmis-common ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 6 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ ydsz-pmis-common ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 182 source files with javac [debug parameters release 21] to target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-common/src/main/java/com/njydsz/pmis/common/featureflag/LocalFeatureFlagService.java:[296,27] 对于floorMod(java.lang.String,long), 找不到合适的方法
+    方法 java.lang.Math.floorMod(int,int)不适用
+      (参数不匹配; java.lang.String无法转换为int)
+    方法 java.lang.Math.floorMod(long,int)不适用
+      (参数不匹配; java.lang.String无法转换为long)
+    方法 java.lang.Math.floorMod(long,long)不适用
+      (参数不匹配; java.lang.String无法转换为long)
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for ydsz-pmis-parent 1.0.0-SNAPSHOT:
+[INFO] 
+[INFO] ydsz-pmis-parent ................................... SUCCESS [  0.145 s]
+[INFO] ydsz-pmis-common ................................... FAILURE [  7.791 s]
+[INFO] ydsz-pmis-system ................................... SKIPPED
+[INFO] ydsz-pmis-literule ................................. SKIPPED
+[INFO] ydsz-pmis-project .................................. SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  8.383 s (Wall Clock)
+[INFO] Finished at: 2026-07-07T17:14:59+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.15.0:compile (default-compile) on project ydsz-pmis-common: Compilation failure
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-common/src/main/java/com/njydsz/pmis/common/featureflag/LocalFeatureFlagService.java:[296,27] 对于floorMod(java.lang.String,long), 找不到合适的方法
+[ERROR]     方法 java.lang.Math.floorMod(int,int)不适用
+[ERROR]       (参数不匹配; java.lang.String无法转换为int)
+[ERROR]     方法 java.lang.Math.floorMod(long,int)不适用
+[ERROR]       (参数不匹配; java.lang.String无法转换为long)
+[ERROR]     方法 java.lang.Math.floorMod(long,long)不适用
+[ERROR]       (参数不匹配; java.lang.String无法转换为long)
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :ydsz-pmis-common
