@@ -1149,6 +1149,8 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     timeout_ms      BIGINT,
     -- [P2-1] Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行并标记 MISFIRED
     misfire_policy  VARCHAR(32)    NOT NULL DEFAULT 'FIRE_NOW',
+    -- [P3-3] 分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行
+    shard_total     INTEGER        NOT NULL DEFAULT 1,
     created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
@@ -1163,6 +1165,7 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     CONSTRAINT ck_pj_lock_ttl_nonneg CHECK (lock_ttl_ms IS NULL OR lock_ttl_ms > 0),
     CONSTRAINT ck_pj_timeout_nonneg  CHECK (timeout_ms IS NULL OR timeout_ms > 0),
     CONSTRAINT ck_pj_misfire_enum   CHECK (misfire_policy IN ('FIRE_NOW', 'SKIP', 'COALESCE')),
+    CONSTRAINT ck_pj_shard_total_pos CHECK (shard_total >= 1),
     CONSTRAINT ck_pj_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
@@ -1184,6 +1187,7 @@ COMMENT ON COLUMN pmis_job.fail_count IS '失败次数(超过阈值告警)';
 COMMENT ON COLUMN pmis_job.lock_ttl_ms IS '任务级分布式锁 TTL(毫秒, NULL 使用全局默认 pmis.cronjob.job-lock-ttl)';
 COMMENT ON COLUMN pmis_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示不限超时; 超时后 Leader 标记 FAILED 并重派)';
 COMMENT ON COLUMN pmis_job.misfire_policy IS 'Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过推进 next_fire_time / COALESCE 合并执行并日志标记 MISFIRED';
+COMMENT ON COLUMN pmis_job.shard_total IS '分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行';
 COMMENT ON COLUMN pmis_job.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_job.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_job.updated_by IS '最后修改人 ID';

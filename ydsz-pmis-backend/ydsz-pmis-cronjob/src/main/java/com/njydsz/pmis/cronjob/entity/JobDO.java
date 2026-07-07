@@ -88,6 +88,14 @@ public class JobDO extends BaseDO {
      */
     private String misfirePolicy;
 
+    /**
+     * 分片总数（P3-3）：&gt;= 1，1 表示非分片任务（默认）。
+     *
+     * <p>当 shardTotal &gt; 1 时，Leader 通过 {@code ShardingStrategy} 将分片分配到在线节点，
+     * 每个节点仅执行分配给自己的分片，实现数据并行处理。对标 XXL-Job 的分片广播。
+     */
+    private Integer shardTotal;
+
     /** 租户 ID */
     private String tenantId;
 }

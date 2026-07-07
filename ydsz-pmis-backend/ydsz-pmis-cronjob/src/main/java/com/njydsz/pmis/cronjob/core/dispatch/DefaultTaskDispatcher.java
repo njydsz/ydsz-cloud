@@ -1,18 +1,25 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.common.job.ShardingContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.executor.JobNodeHeartbeat;
+import com.njydsz.pmis.cronjob.core.sharding.ShardAssignment;
+import com.njydsz.pmis.cronjob.core.sharding.ShardingStrategy;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
+import com.njydsz.pmis.cronjob.entity.JobNodeDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -26,11 +33,14 @@ import java.lang.management.ManagementFactory;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * 默认任务派发器：本地执行 + 分布式锁。
@@ -65,6 +75,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final StringRedisTemplate redisTemplate;
     private final CronjobProperties cronjobProperties;
     private final JobNodeHeartbeat jobNodeHeartbeat;
+    /** P3: 节点 Mapper，用于查询在线节点列表做分片分配 */
+    private final JobNodeMapper jobNodeMapper;
+    /** P3: 分片策略（可选注入，未配置时 fallback 到非分片模式） */
+    private final ObjectProvider<ShardingStrategy> shardingStrategyProvider;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -90,7 +104,196 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     public String dispatch(JobDO job, String executorNode, String triggerType) {
         // 当前实现：executorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发）
         boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
+        // P3: 分片任务走分片执行路径
+        if (isShardedJob(job)) {
+            return executeShardedJob(job, holdLock, triggerType);
+        }
         return executeJob(job, holdLock, triggerType);
+    }
+
+    /**
+     * 判定是否为分片任务（P3）。
+     *
+     * <p>需同时满足：shardTotal > 1 且 ShardingStrategy Bean 可用。
+     * 否则 fallback 到非分片模式，保证向后兼容。
+     */
+    private boolean isShardedJob(JobDO job) {
+        Integer total = job.getShardTotal();
+        if (total == null || total <= 1) {
+            return false;
+        }
+        return shardingStrategyProvider.getIfAvailable() != null;
+    }
+
+    /**
+     * 分片任务执行入口（P3）。
+     *
+     * <p>流程：
+     * <ol>
+     *   <li>查询在线节点列表（按 nodeId 升序保证确定性）</li>
+     *   <li>通过 ShardingStrategy 计算分片分配方案</li>
+     *   <li>筛选分配给本地节点的分片（P3 阶段仅本地执行，远程派发留作扩展）</li>
+     *   <li>对每个本地分片独立加锁、写日志、执行 handler</li>
+     * </ol>
+     *
+     * @return 第一个成功创建日志的分片 logId；无本地分片或全部被锁返回 null
+     */
+    private String executeShardedJob(JobDO job, boolean holdLock, String triggerType) {
+        int shardTotal = job.getShardTotal();
+        ShardingStrategy strategy = shardingStrategyProvider.getIfAvailable();
+        if (strategy == null) {
+            // 理论上不会走到这里（isShardedJob 已判定），防御性处理
+            log.warn("[Dispatcher] ShardingStrategy 不可用, fallback 到非分片模式: key={}", job.getJobKey());
+            return executeJob(job, holdLock, triggerType);
+        }
+
+        List<String> onlineNodes = getOnlineNodes();
+        String localNodeId = jobNodeHeartbeat != null ? jobNodeHeartbeat.getNodeId() : null;
+
+        List<ShardAssignment> assignments;
+        if (onlineNodes.isEmpty() || localNodeId == null) {
+            // fallback: 无在线节点信息或本地 nodeId 未知, 本地执行全部分片
+            assignments = buildLocalOnlyAssignments(shardTotal, localNodeId);
+        } else {
+            assignments = strategy.assign(shardTotal, onlineNodes);
+        }
+
+        List<ShardAssignment> localShards = assignments.stream()
+                .filter(a -> localNodeId == null || localNodeId.equals(a.nodeId()))
+                .collect(Collectors.toList());
+
+        if (localShards.isEmpty()) {
+            log.info("[Dispatcher] 分片任务无本地分片, 跳过: key={} localNode={}",
+                    job.getJobKey(), localNodeId);
+            return null;
+        }
+
+        log.info("[Dispatcher] 分片任务派发: key={} shardTotal={} localShards={}",
+                job.getJobKey(), shardTotal, localShards.size());
+
+        String firstLogId = null;
+        for (ShardAssignment assignment : localShards) {
+            String logId = executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+            if (firstLogId == null && logId != null) {
+                firstLogId = logId;
+            }
+        }
+        return firstLogId;
+    }
+
+    /**
+     * 执行单个分片（P3）。
+     *
+     * <p>与 {@link #executeJob} 类似，区别：
+     * <ul>
+     *   <li>锁 key 含分片索引: {@code pmis:job:lock:{jobKey}:shard:{shardIndex}}</li>
+     *   <li>构造 {@link ShardingContext} 传入 handler</li>
+     *   <li>不推进 next_fire_time（由 JobScanner 统一推进）</li>
+     * </ul>
+     */
+    private String executeShard(JobDO job, int shardIndex, int shardTotal,
+                                 boolean holdLock, String triggerType) {
+        String lockKey = null;
+        if (holdLock) {
+            lockKey = JOB_LOCK_PREFIX + job.getJobKey() + ":shard:" + shardIndex;
+            Duration ttl = resolveLockTtl(job);
+            Boolean acquired = redisTemplate.opsForValue()
+                    .setIfAbsent(lockKey, INSTANCE_ID, ttl);
+            if (!Boolean.TRUE.equals(acquired)) {
+                log.info("[Dispatcher] 分片锁被其他实例持有, 跳过: key={} shard={}",
+                        job.getJobKey(), shardIndex);
+                return null;
+            }
+        }
+
+        if (jobNodeHeartbeat != null) {
+            jobNodeHeartbeat.onTaskStart();
+        }
+
+        JobLogDO log0 = new JobLogDO();
+        log0.setJobId(job.getId());
+        log0.setJobKey(job.getJobKey());
+        log0.setStartTime(LocalDateTime.now());
+        log0.setStatus("RUNNING");
+        log0.setParamsJson(job.getParamsJson());
+        log0.setTraceId(TraceIdUtil.get());
+        log0.setTriggerType(triggerType);
+        log0.setCreatedAt(LocalDateTime.now());
+        log0.setDeleted(0);
+        jobLogMapper.insert(log0);
+
+        boolean success = false;
+        Object result = null;
+        try {
+            JobHandler handler = applicationContext.getBean(job.getHandler(), JobHandler.class);
+            ShardingContext ctx = new ShardingContext(shardTotal, shardIndex,
+                    Collections.emptyList(), job.getJobKey(), log0.getId());
+            result = handler.execute(job.getParamsJson(), ctx);
+            success = true;
+            log0.setResultJson(result == null ? null : JSON.toJSONString(result));
+        } catch (Exception e) {
+            log.error("[Dispatcher] 分片任务执行失败: key={} shard={} reason={}",
+                    job.getJobKey(), shardIndex, e.getMessage(), e);
+            log0.setErrorMessage(e.getClass().getSimpleName() + ": " + e.getMessage());
+        } finally {
+            log0.setEndTime(LocalDateTime.now());
+            log0.setDurationMs(Duration.between(log0.getStartTime(), log0.getEndTime()).toMillis());
+            log0.setStatus(success ? "SUCCESS" : "FAILED");
+            jobLogMapper.updateById(log0);
+
+            // 分片场景: 只更新统计, 不推进 next_fire_time（由 Scanner 控制）
+            Long incFire = 1L;
+            Long incSucc = success ? 1L : 0L;
+            Long incFail = success ? 0L : 1L;
+            jobMapper.updateStats(job.getId(), null, null, incFire, incSucc, incFail,
+                    success ? null : "ERROR");
+
+            if (lockKey != null) {
+                try {
+                    redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+                            Collections.singletonList(lockKey), INSTANCE_ID);
+                } catch (Exception e) {
+                    log.warn("[Dispatcher] 释放分片锁失败(将等待 TTL 自动过期): key={} reason={}",
+                            lockKey, e.getMessage());
+                }
+            }
+
+            if (jobNodeHeartbeat != null) {
+                jobNodeHeartbeat.onTaskComplete();
+            }
+        }
+        return log0.getId();
+    }
+
+    /**
+     * 查询在线节点列表（按 nodeId 升序，保证分片分配确定性）。
+     */
+    private List<String> getOnlineNodes() {
+        try {
+            long threshold = cronjobProperties.getExecutor().getOfflineThresholdSeconds();
+            LocalDateTime cutoff = LocalDateTime.now().minusSeconds(threshold);
+            LambdaQueryWrapper<JobNodeDO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(JobNodeDO::getStatus, "ONLINE")
+                    .ge(JobNodeDO::getLastHeartbeat, cutoff)
+                    .orderByAsc(JobNodeDO::getNodeId);
+            List<JobNodeDO> nodes = jobNodeMapper.selectList(wrapper);
+            return nodes.stream().map(JobNodeDO::getNodeId).collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("[Dispatcher] 查询在线节点失败, fallback 到本地执行全部分片: reason={}",
+                    e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 构建"本地执行全部分片"的分配方案（fallback）。
+     */
+    private List<ShardAssignment> buildLocalOnlyAssignments(int shardTotal, String localNodeId) {
+        List<ShardAssignment> result = new ArrayList<>(shardTotal);
+        for (int i = 0; i < shardTotal; i++) {
+            result.add(new ShardAssignment(localNodeId, i));
+        }
+        return result;
     }
 
     /**

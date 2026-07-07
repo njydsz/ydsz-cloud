@@ -20,6 +20,7 @@
         <result column="lock_ttl_ms" property="lockTtlMs"/>
         <result column="timeout_ms" property="timeoutMs"/>
         <result column="misfire_policy" property="misfirePolicy"/>
+        <result column="shard_total" property="shardTotal"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
@@ -31,7 +32,7 @@
     <sql id="Base_Column_List">
         id, job_name, job_group, job_key, handler, cron_expression, params_json,
         status, remark, next_fire_time, last_fire_time, fire_count, success_count, fail_count,
-        lock_ttl_ms, timeout_ms, misfire_policy, tenant_id,
+        lock_ttl_ms, timeout_ms, misfire_policy, shard_total, tenant_id,
         created_by, created_at, updated_by, updated_at, deleted
     </sql>
 

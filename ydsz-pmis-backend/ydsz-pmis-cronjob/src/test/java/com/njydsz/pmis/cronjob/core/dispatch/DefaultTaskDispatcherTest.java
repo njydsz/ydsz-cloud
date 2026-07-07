@@ -3,10 +3,12 @@ package com.njydsz.pmis.cronjob.core.dispatch;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.executor.JobNodeHeartbeat;
+import com.njydsz.pmis.cronjob.core.sharding.ShardingStrategy;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,12 +18,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 
 import java.time.Duration;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -69,6 +73,10 @@ class DefaultTaskDispatcherTest {
     private JobHandler jobHandler;
     @Mock
     private JobNodeHeartbeat jobNodeHeartbeat;
+    @Mock
+    private JobNodeMapper jobNodeMapper;
+    @Mock
+    private ObjectProvider<ShardingStrategy> shardingStrategyProvider;
 
     private CronjobProperties cronjobProperties;
 
@@ -94,6 +102,8 @@ class DefaultTaskDispatcherTest {
             log.setId("log-test-" + System.nanoTime());
             return 1;
         });
+        // 默认非分片模式：ShardingStrategy 不可用
+        lenient().when(shardingStrategyProvider.getIfAvailable()).thenReturn(null);
     }
 
     @Test
@@ -181,6 +191,156 @@ class DefaultTaskDispatcherTest {
         dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
 
         verify(valueOps).setIfAbsent(anyString(), anyString(), eq(Duration.ofMinutes(10)));
+    }
+
+    // ==================== P3 分片场景测试 ====================
+
+    @Test
+    @DisplayName("P3: shardTotal=null 走非分片模式")
+    void dispatch_shardTotalNull_fallsBackToNonSharded() throws Exception {
+        JobDO job = buildJob("non-shard", null);
+        job.setShardTotal(null);
+        when(jobHandler.execute(any())).thenReturn("ok");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        assertNotNull(logId);
+        // 验证调用的是单参 execute，而非分片 execute
+        verify(jobHandler, times(1)).execute(any());
+    }
+
+    @Test
+    @DisplayName("P3: shardTotal=1 走非分片模式")
+    void dispatch_shardTotal1_fallsBackToNonSharded() throws Exception {
+        JobDO job = buildJob("single-shard", null);
+        job.setShardTotal(1);
+        when(jobHandler.execute(any())).thenReturn("ok");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        assertNotNull(logId);
+        verify(jobHandler, times(1)).execute(any());
+    }
+
+    @Test
+    @DisplayName("P3: shardTotal>1 但 ShardingStrategy 不可用时 fallback 到非分片")
+    void dispatch_shardStrategyUnavailable_fallsBackToNonSharded() throws Exception {
+        JobDO job = buildJob("no-strategy", null);
+        job.setShardTotal(4);
+        // shardingStrategyProvider.getIfAvailable() 默认返回 null（见 setUp）
+        when(jobHandler.execute(any())).thenReturn("ok");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        assertNotNull(logId);
+        verify(jobHandler, times(1)).execute(any());
+    }
+
+    @Test
+    @DisplayName("P3: 分片任务无在线节点时本地执行全部分片")
+    void dispatch_shardedNoOnlineNodes_executesAllShardsLocally() throws Exception {
+        JobDO job = buildJob("shard-no-nodes", null);
+        job.setShardTotal(3);
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
+        when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        assertNotNull(logId);
+        // 应执行 3 个分片（无锁，因为是 MANUAL）
+        verify(jobHandler, times(3)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(jobLogMapper, times(3)).insert(any(JobLogDO.class));
+        verify(jobNodeHeartbeat, times(3)).onTaskStart();
+        verify(jobNodeHeartbeat, times(3)).onTaskComplete();
+    }
+
+    @Test
+    @DisplayName("P3: 分片任务 CRON 模式每分片独立加锁")
+    void dispatch_shardedCron_acquiresShardLevelLocks() throws Exception {
+        JobDO job = buildJob("shard-cron", null);
+        job.setShardTotal(2);
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
+        when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Boolean.TRUE);
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
+
+        assertNotNull(logId);
+        // 2 个分片，每个加锁一次
+        verify(valueOps, times(2)).setIfAbsent(anyString(), anyString(), any(Duration.class));
+        verify(redisTemplate, times(2)).execute(any(RedisScript.class), any(), (Object) any());
+    }
+
+    @Test
+    @DisplayName("P3: 分片锁被持有时跳过该分片")
+    void dispatch_shardedLockHeld_skipsShard() throws Exception {
+        JobDO job = buildJob("shard-held", null);
+        job.setShardTotal(2);
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
+        when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
+        // 第一个分片锁获取失败，第二个成功
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Boolean.FALSE)
+                .thenReturn(Boolean.TRUE);
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
+
+        assertNotNull(logId);
+        // 只执行了第二个分片
+        verify(jobHandler, times(1)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+    }
+
+    @Test
+    @DisplayName("P3: 分片 handler 接收正确的 ShardingContext")
+    void dispatch_sharded_handlerReceivesCorrectContext() throws Exception {
+        JobDO job = buildJob("shard-ctx", null);
+        job.setShardTotal(2);
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
+        when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+
+        dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        // 验证 handler 被调用时传入了正确的 ShardingContext
+        org.mockito.ArgumentCaptor<com.njydsz.pmis.common.job.ShardingContext> captor =
+                org.mockito.ArgumentCaptor.forClass(com.njydsz.pmis.common.job.ShardingContext.class);
+        verify(jobHandler, times(2)).execute(any(), captor.capture());
+        List<com.njydsz.pmis.common.job.ShardingContext> contexts = captor.getAllValues();
+        // 第一个分片
+        assertEquals(2, contexts.get(0).getShardTotal());
+        assertEquals(0, contexts.get(0).getShardIndex());
+        assertEquals("shard-ctx", contexts.get(0).getJobKey());
+        // 第二个分片
+        assertEquals(2, contexts.get(1).getShardTotal());
+        assertEquals(1, contexts.get(1).getShardIndex());
+    }
+
+    @Test
+    @DisplayName("P3: 分片执行失败不影响其他分片")
+    void dispatch_shardedOneFails_othersStillExecute() throws Exception {
+        JobDO job = buildJob("shard-partial-fail", null);
+        job.setShardTotal(2);
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
+        when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
+        // 第一个分片失败，第二个成功
+        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class)))
+                .thenThrow(new RuntimeException("shard0 failed"))
+                .thenReturn("ok");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        assertNotNull(logId);
+        // 两个分片都被尝试执行
+        verify(jobHandler, times(2)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
     }
 
     private JobDO buildJob(String key, Long lockTtlMs) {
