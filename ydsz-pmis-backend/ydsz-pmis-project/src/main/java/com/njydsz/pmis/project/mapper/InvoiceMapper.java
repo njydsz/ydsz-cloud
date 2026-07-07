@@ -43,7 +43,7 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
      * @param issuedBy   开票人 ID
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status,
+    int updateStatus(@Param("id") String id, @Param("status") String status,
                      @Param("approvedBy") Long approvedBy,
                      @Param("issuedBy") Long issuedBy);
 
@@ -53,7 +53,7 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
      * @param contractId 合同 ID
      * @return 发票列表
      */
-    List<InvoiceDO> selectByContract(@Param("contractId") Long contractId);
+    List<InvoiceDO> selectByContract(@Param("contractId") String contractId);
 
     /**
      * 按立项 ID 查询发票列表
@@ -61,7 +61,7 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
      * @param initiationId 立项 ID
      * @return 发票列表
      */
-    List<InvoiceDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<InvoiceDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按客户 ID 查询发票列表
@@ -69,7 +69,7 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
      * @param customerId 客户 ID
      * @return 发票列表
      */
-    List<InvoiceDO> selectByCustomer(@Param("customerId") Long customerId);
+    List<InvoiceDO> selectByCustomer(@Param("customerId") String customerId);
 
     /**
      * 按合同汇总已开票金额
@@ -77,7 +77,7 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
      * @param contractId 合同 ID
      * @return 已开票金额
      */
-    BigDecimal sumInvoicedByContract(@Param("contractId") Long contractId);
+    BigDecimal sumInvoicedByContract(@Param("contractId") String contractId);
 
     /**
      * 按状态聚合合同下的发票计数
@@ -85,7 +85,7 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
      * @param contractId 合同 ID
      * @return 状态聚合结果列表
      */
-    List<Map<String, Object>> aggregateByStatus(@Param("contractId") Long contractId);
+    List<Map<String, Object>> aggregateByStatus(@Param("contractId") String contractId);
 
     /**
      * 按月汇总开票金额
@@ -93,7 +93,7 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
      * @param initiationId 立项 ID
      * @return 月度汇总列表
      */
-    List<Map<String, Object>> sumByMonth(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> sumByMonth(@Param("initiationId") String initiationId);
 
     /**
      * 跨合同汇总已开票金额

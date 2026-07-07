@@ -53,7 +53,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long recordAttendance(AttendanceCreateDTO dto) {
+    public String recordAttendance(AttendanceCreateDTO dto) {
         validateAttendance(dto);
 
         // 1. 计算工作时长 (若给了 checkIn/checkOut)
@@ -83,7 +83,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AttendanceDO> pageAttendance(Long employeeId, LocalDate startDate, LocalDate endDate, int page, int size) {
+    public Page<AttendanceDO> pageAttendance(String employeeId, LocalDate startDate, LocalDate endDate, int page, int size) {
         Page<AttendanceDO> p = new Page<>(page, size);
         LambdaQueryWrapper<AttendanceDO> wrapper = new LambdaQueryWrapper<>();
         if (employeeId != null) wrapper.eq(AttendanceDO::getEmployeeId, employeeId);
@@ -95,7 +95,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> statByStatus(Long employeeId, LocalDate startDate, LocalDate endDate) {
+    public List<Map<String, Object>> statByStatus(String employeeId, LocalDate startDate, LocalDate endDate) {
         return attendanceMapper.statByStatus(employeeId, startDate, endDate);
     }
 
@@ -103,7 +103,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long submitOvertime(OvertimeCreateDTO dto) {
+    public String submitOvertime(OvertimeCreateDTO dto) {
         validateOvertime(dto);
 
         // 自动计算加班时长
@@ -129,7 +129,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void approveOvertime(Long id, String action, String approverId, String approverName, String remark) {
+    public void approveOvertime(String id, String action, String approverId, String approverName, String remark) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         if (!"APPROVED".equalsIgnoreCase(action) && !"REJECTED".equalsIgnoreCase(action)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_dbf45b98");
@@ -140,7 +140,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_8a0e5737", entity.getApprovalStatus());
         }
         entity.setApprovalStatus(action.toUpperCase());
-        entity.setApproverId(approverId == null ? null : Long.valueOf(approverId));
+        entity.setApproverId(approverId);
         entity.setApproverName(approverName);
         entity.setApprovalTime(LocalDateTime.now());
         entity.setApprovalRemark(remark);
@@ -149,7 +149,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OvertimeDO> pageOvertime(Long employeeId, String approvalStatus, int page, int size) {
+    public Page<OvertimeDO> pageOvertime(String employeeId, String approvalStatus, int page, int size) {
         Page<OvertimeDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OvertimeDO> wrapper = new LambdaQueryWrapper<>();
         if (employeeId != null) wrapper.eq(OvertimeDO::getEmployeeId, employeeId);
@@ -160,7 +160,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public OvertimeDO getOvertime(Long id) {
+    public OvertimeDO getOvertime(String id) {
         return id == null ? null : overtimeMapper.selectById(id);
     }
 
@@ -168,7 +168,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long submitLeave(LeaveCreateDTO dto) {
+    public String submitLeave(LeaveCreateDTO dto) {
         validateLeave(dto);
 
         // 自动计算请假天数
@@ -193,7 +193,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void approveLeave(Long id, String action, String approverId, String approverName, String remark) {
+    public void approveLeave(String id, String action, String approverId, String approverName, String remark) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         LeaveDO entity = leaveMapper.selectById(id);
         if (entity == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_802c6117");
@@ -207,7 +207,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                     "error.user.msg_e6729e07", current.getDesc(), target.getDesc());
         }
         entity.setApprovalStatus(target.getCode());
-        if (approverId != null) entity.setApproverId(Long.valueOf(approverId));
+        entity.setApproverId(approverId);
         entity.setApproverName(approverName);
         entity.setApprovalTime(LocalDateTime.now());
         entity.setApprovalRemark(remark);
@@ -216,7 +216,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<LeaveDO> pageLeave(Long employeeId, String approvalStatus, int page, int size) {
+    public Page<LeaveDO> pageLeave(String employeeId, String approvalStatus, int page, int size) {
         Page<LeaveDO> p = new Page<>(page, size);
         LambdaQueryWrapper<LeaveDO> wrapper = new LambdaQueryWrapper<>();
         if (employeeId != null) wrapper.eq(LeaveDO::getEmployeeId, employeeId);
@@ -227,13 +227,13 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional(readOnly = true)
-    public LeaveDO getLeave(Long id) {
+    public LeaveDO getLeave(String id) {
         return id == null ? null : leaveMapper.selectById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<LeaveDO> listApprovedLeaves(Long employeeId, LocalDate startDate, LocalDate endDate) {
+    public List<LeaveDO> listApprovedLeaves(String employeeId, LocalDate startDate, LocalDate endDate) {
         if (employeeId == null || startDate == null || endDate == null) return List.of();
         return leaveMapper.selectApprovedByEmployeeAndRange(
                 employeeId, startDate.toString(), endDate.toString());

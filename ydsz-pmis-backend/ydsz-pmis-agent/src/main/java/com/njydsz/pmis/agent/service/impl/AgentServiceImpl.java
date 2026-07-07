@@ -159,14 +159,14 @@ public class AgentServiceImpl implements AgentService {
     @Override
     @Transactional(readOnly = true)
     public Page<AgentPredictionDO> page(int page, int size, String agentType, String alertLevel,
-                                        String status, String bizType, Long bizId) {
+                                        String status, String bizType, String bizId) {
         Page<AgentPredictionDO> p = new Page<>(page, size);
         LambdaQueryWrapper<AgentPredictionDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(agentType)) w.eq(AgentPredictionDO::getAgentType, agentType);
         if (StringUtils.hasText(alertLevel)) w.eq(AgentPredictionDO::getAlertLevel, alertLevel);
         if (StringUtils.hasText(status)) w.eq(AgentPredictionDO::getStatus, status);
         if (StringUtils.hasText(bizType)) w.eq(AgentPredictionDO::getBizType, bizType);
-        if (bizId != null) w.eq(AgentPredictionDO::getBizId, bizId);
+        if (StringUtils.hasText(bizId)) w.eq(AgentPredictionDO::getBizId, bizId);
         w.orderByDesc(AgentPredictionDO::getCreatedAt);
         return predictionMapper.selectPage(p, w);
     }
@@ -213,7 +213,7 @@ public class AgentServiceImpl implements AgentService {
         return type;
     }
 
-    private String buildTaskCode(AgentType type, Long bizId) {
+    private String buildTaskCode(AgentType type, String bizId) {
         return LocalDate.now().toString().replace("-", "")
                 + "-" + type.getCode() + "-"
                 + (bizId == null ? "0" : bizId)

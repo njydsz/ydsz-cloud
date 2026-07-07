@@ -32,7 +32,7 @@ public interface RiskMapper extends BaseMapper<RiskDO> {
      * @param status 目标状态
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status);
+    int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
      * 按立项 ID 查询风险列表
@@ -40,7 +40,7 @@ public interface RiskMapper extends BaseMapper<RiskDO> {
      * @param initiationId 立项 ID
      * @return 风险列表
      */
-    List<RiskDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<RiskDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按风险等级聚合统计
@@ -48,7 +48,7 @@ public interface RiskMapper extends BaseMapper<RiskDO> {
      * @param initiationId 立项 ID
      * @return 等级聚合列表
      */
-    List<Map<String, Object>> aggregateByLevel(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> aggregateByLevel(@Param("initiationId") String initiationId);
 
     /**
      * 查询所有未结风险

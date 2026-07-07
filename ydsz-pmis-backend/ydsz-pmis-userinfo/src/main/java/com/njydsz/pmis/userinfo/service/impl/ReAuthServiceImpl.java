@@ -49,7 +49,7 @@ public class ReAuthServiceImpl implements ReAuthService {
     private final TwoFactorService twoFactorService;
 
     @Override
-    public ReAuthResult issueToken(Long userId, ReAuthRequest request) {
+    public ReAuthResult issueToken(String userId, ReAuthRequest request) {
         if (userId == null) {
             throw new BizException(BizErrorCode.UNAUTHORIZED);
         }
@@ -93,7 +93,7 @@ public class ReAuthServiceImpl implements ReAuthService {
     // ----------------- 私有 -----------------
 
     @SuppressWarnings("deprecation")
-    private boolean verifyPassword(Long userId, String rawPassword) {
+    private boolean verifyPassword(String userId, String rawPassword) {
         if (rawPassword == null || rawPassword.isBlank()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_1a011aca");
         }
@@ -108,7 +108,7 @@ public class ReAuthServiceImpl implements ReAuthService {
         return CryptoUtil.verifyPassword(rawPassword, u.getPassword(), u.getSalt());
     }
 
-    private boolean verifyTotp(Long userId, String otp) {
+    private boolean verifyTotp(String userId, String otp) {
         if (otp == null || otp.isBlank()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d6ef6b97");
         }
@@ -119,7 +119,7 @@ public class ReAuthServiceImpl implements ReAuthService {
         return twoFactorService.verify(userId, otp);
     }
 
-    private boolean verifyBackupCode(Long userId, String code) {
+    private boolean verifyBackupCode(String userId, String code) {
         if (code == null || code.isBlank()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_140fe16d");
         }

@@ -69,7 +69,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_NAME, key = "#id", unless = "#result == null")
-    public RoleDO getById(Long id) {
+    public RoleDO getById(String id) {
         RoleDO r = roleMapper.selectById(id);
         if (r == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c3f70e4c");
@@ -80,14 +80,14 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_NAME, key = "'byUserId:' + #userId", unless = "#result == null || #result.isEmpty()")
-    public List<RoleDO> listByUserId(Long userId) {
+    public List<RoleDO> listByUserId(String userId) {
         return roleMapper.selectByUserId(userId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public Long create(RoleFormDTO dto) {
+    public String create(RoleFormDTO dto) {
         if (roleMapper.selectByCode(dto.getRoleCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_af20e82e");
         }
@@ -124,7 +124,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public void delete(Long id) {
+    public void delete(String id) {
         if (roleMapper.selectById(id) == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
@@ -141,14 +141,14 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void assignPermissions(Long roleId, List<Long> permissionIds) {
+    public void assignPermissions(String roleId, List<String> permissionIds) {
         // 先清后插
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermissionDO>()
                 .eq(RolePermissionDO::getRoleId, roleId));
         if (permissionIds == null || permissionIds.isEmpty()) {
             return;
         }
-        for (Long pid : permissionIds) {
+        for (String pid : permissionIds) {
             RolePermissionDO rp = new RolePermissionDO();
             rp.setRoleId(roleId);
             rp.setPermissionId(pid);
@@ -159,7 +159,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_NAME, key = "'permIds:' + #roleId", unless = "#result == null || #result.isEmpty()")
-    public List<Long> listPermissionIds(Long roleId) {
+    public List<String> listPermissionIds(String roleId) {
         return rolePermissionMapper.selectPermissionIdsByRoleId(roleId);
     }
 }

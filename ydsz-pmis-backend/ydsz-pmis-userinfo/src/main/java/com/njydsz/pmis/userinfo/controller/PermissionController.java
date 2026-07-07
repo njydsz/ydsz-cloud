@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +52,7 @@ public class PermissionController {
      */
     @Operation(summary = "查询当前用户权限编码")
     @GetMapping("/mine")
-    public Result<List<String>> mine(@RequestHeader("X-User-Id") Long userId) {
+    public Result<List<String>> mine(@RequestHeader("X-User-Id") String userId) {
         return Result.ok(permissionService.listPermCodesByUserId(userId));
     }
 
@@ -65,7 +64,7 @@ public class PermissionController {
      */
     @Operation(summary = "查询当前用户菜单树")
     @GetMapping("/menu-tree")
-    public Result<List<MenuTreeVO>> menuTree(@RequestHeader("X-User-Id") Long userId) {
+    public Result<List<MenuTreeVO>> menuTree(@RequestHeader("X-User-Id") String userId) {
         return Result.ok(permissionService.listMenuTreeByUserId(userId));
     }
 
@@ -88,7 +87,7 @@ public class PermissionController {
      */
     @Operation(summary = "查询角色的权限")
     @GetMapping("/by-role/{roleId}")
-    public Result<List<PermissionDO>> listByRole(@Parameter(description = "角色ID") @PathVariable @Min(1) Long roleId) {
+    public Result<List<PermissionDO>> listByRole(@Parameter(description = "角色ID") @PathVariable String roleId) {
         return Result.ok(permissionService.listByRoleId(roleId));
     }
 
@@ -114,7 +113,7 @@ public class PermissionController {
     @PrePermission("auth:perm:create")
     @OperationLog(module = "权限管理", action = "创建权限", bizType = "PERM")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody PermissionFormDTO dto) {
+    public Result<String> create(@Valid @RequestBody PermissionFormDTO dto) {
         return Result.ok(permissionService.create(dto));
     }
 
@@ -143,7 +142,7 @@ public class PermissionController {
     @PrePermission("auth:perm:delete")
     @OperationLog(module = "权限管理", action = "删除权限", bizType = "PERM")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "权限ID") @PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "权限ID") @PathVariable String id) {
         permissionService.delete(id);
         return Result.ok();
     }

@@ -18,7 +18,7 @@ class CursorHelperTest {
     @Test
     @DisplayName("编码 - 应返回非空 Base64 字符串")
     void encode_shouldReturnNonEmptyString() {
-        String cursor = CursorHelper.encode(LocalDateTime.now(), 1L);
+        String cursor = CursorHelper.encode(LocalDateTime.now(), "1");
         assertNotNull(cursor);
         assertFalse(cursor.isBlank());
     }
@@ -27,7 +27,7 @@ class CursorHelperTest {
     @DisplayName("编码后解码 - 应还原原始 sortValue 和 id")
     void encodeDecode_shouldRoundtrip() {
         LocalDateTime sortValue = LocalDateTime.of(2025, 6, 15, 10, 30, 0);
-        Long id = 12345L;
+        String id = "12345";
 
         String cursor = CursorHelper.encode(sortValue, id);
         Object[] result = CursorHelper.decode(cursor);

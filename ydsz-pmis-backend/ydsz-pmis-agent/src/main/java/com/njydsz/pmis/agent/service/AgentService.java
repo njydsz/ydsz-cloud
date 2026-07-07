@@ -68,7 +68,7 @@ public interface AgentService {
      * @return 分页结果
      */
     Page<AgentPredictionDO> page(int page, int size, String agentType, String alertLevel,
-                                 String status, String bizType, Long bizId);
+                                 String status, String bizType, String bizId);
 
     /**
      * 查询最近的 Agent 预测记录。

@@ -46,7 +46,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long record(PaymentCreateDTO dto) {
+    public String record(PaymentCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getPaymentCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d55e99b3");
@@ -86,7 +86,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void confirm(Long id, Long operatorId) {
+    public void confirm(String id, Long operatorId) {
         PaymentDO p = getById(id);
         transit(p, PaymentStatus.CONFIRMED, operatorId);
         p.setConfirmedBy(operatorId);
@@ -96,7 +96,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void cancel(Long id, Long operatorId, String reason) {
+    public void cancel(String id, Long operatorId, String reason) {
         PaymentDO p = getById(id);
         if (p.getAllocatedAmount() != null && p.getAllocatedAmount().signum() > 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1ccbb047");
@@ -106,7 +106,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         PaymentDO p = getById(id);
         if (PaymentStatus.ALLOCATED.getCode().equals(p.getStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0eaf2466");
@@ -162,7 +162,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int autoAllocate(Long customerId, Long operatorId) {
+    public int autoAllocate(String customerId, Long operatorId) {
         if (customerId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6de1fd36");
         }
@@ -180,7 +180,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (invoices.isEmpty()) return 0;
 
         // 跟踪每张发票已核销金额（基于现有 payment.invoice_allocation）
-        Map<Long, BigDecimal> invoiceAllocated = new HashMap<>();
+        Map<String, BigDecimal> invoiceAllocated = new HashMap<>();
         for (InvoiceDO inv : invoices) {
             invoiceAllocated.put(inv.getId(), BigDecimal.ZERO);
         }
@@ -195,12 +195,7 @@ public class PaymentServiceImpl implements PaymentService {
                     ? BigDecimal.ZERO
                     : pay.getAllocatedAmount().divide(new BigDecimal(cnt), 2, RoundingMode.HALF_UP);
             for (String idStr : ids) {
-                try {
-                    Long iid = Long.parseLong(idStr.trim());
-                    invoiceAllocated.merge(iid, each, BigDecimal::add);
-                } catch (NumberFormatException ignore) {
-                    log.warn("[PaymentServiceImpl] 收款分摊 ID 解析失败，跳过 idStr={}: {}", idStr, ignore.getMessage());
-                }
+                invoiceAllocated.merge(idStr.trim(), each, BigDecimal::add);
             }
         }
 
@@ -229,7 +224,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> forecastCashFlow(Long initiationId, int months) {
+    public List<Map<String, Object>> forecastCashFlow(String initiationId, int months) {
         if (initiationId == null) return List.of();
         if (months <= 0) months = 3;
         if (months > 12) months = 12;
@@ -275,7 +270,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(readOnly = true)
-    public PaymentDO getById(Long id) {
+    public PaymentDO getById(String id) {
         PaymentDO p = paymentMapper.selectById(id);
         if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_22203a1e");
         return p;
@@ -284,7 +279,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(readOnly = true)
     public Page<PaymentDO> page(int page, int size, String keyword, String status,
-                                Long contractId, Long customerId, Long initiationId) {
+                                String contractId, String customerId, String initiationId) {
         Page<PaymentDO> p = new Page<>(page, size);
         LambdaQueryWrapper<PaymentDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
@@ -302,7 +297,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(readOnly = true)
-    public BigDecimal sumReceivedByContract(Long contractId) {
+    public BigDecimal sumReceivedByContract(String contractId) {
         if (contractId == null) return BigDecimal.ZERO;
         BigDecimal v = paymentMapper.sumReceivedByContract(contractId);
         return v == null ? BigDecimal.ZERO : v;
@@ -310,7 +305,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByMonth(Long initiationId) {
+    public List<Map<String, Object>> aggregateByMonth(String initiationId) {
         if (initiationId == null) return List.of();
         return paymentMapper.aggregateByMonth(initiationId);
     }

@@ -32,7 +32,7 @@ public interface ProjectChangeMapper extends BaseMapper<ProjectChangeDO> {
      * @param status 目标状态码（ChangeStatus.code）
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status);
+    int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
      * 根据立项 ID 查询变更记录列表。
@@ -40,7 +40,7 @@ public interface ProjectChangeMapper extends BaseMapper<ProjectChangeDO> {
      * @param initiationId 立项 ID
      * @return 变更记录列表
      */
-    List<ProjectChangeDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<ProjectChangeDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按变更类型聚合计数（用于看板）。
@@ -64,5 +64,5 @@ public interface ProjectChangeMapper extends BaseMapper<ProjectChangeDO> {
      * @param initiationId 立项 ID
      * @return 重大变更数量
      */
-    long countMajorByInitiation(@Param("initiationId") Long initiationId);
+    long countMajorByInitiation(@Param("initiationId") String initiationId);
 }

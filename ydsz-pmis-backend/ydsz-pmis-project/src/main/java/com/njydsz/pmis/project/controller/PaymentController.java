@@ -58,7 +58,7 @@ public class PaymentController {
     @OperationLog(module = "回款管理", action = "录入回款", bizType = "PAYMENT", saveResult = true)
     @Idempotent(key = "payment:record", ttlSeconds = 10, message = "请勿重复录入回款")
     @PostMapping
-    public Result<Long> record(@Valid @RequestBody PaymentCreateDTO dto) {
+    public Result<String> record(@Valid @RequestBody PaymentCreateDTO dto) {
         return Result.ok(service.record(dto));
     }
 
@@ -73,7 +73,7 @@ public class PaymentController {
     @PrePermission("finance:payment:status")
     @OperationLog(module = "回款管理", action = "确认到账", bizType = "PAYMENT")
     @PutMapping("/{id}/confirm")
-    public Result<Void> confirm(@PathVariable @Min(1) Long id, @RequestParam Long operatorId) {
+    public Result<Void> confirm(@PathVariable String id, @RequestParam Long operatorId) {
         service.confirm(id, operatorId);
         return Result.ok();
     }
@@ -90,7 +90,7 @@ public class PaymentController {
     @PrePermission("finance:payment:status")
     @OperationLog(module = "回款管理", action = "取消回款", bizType = "PAYMENT")
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable @Min(1) Long id,
+    public Result<Void> cancel(@PathVariable String id,
                           @RequestParam Long operatorId,
                           @RequestParam(required = false) String reason) {
         service.cancel(id, operatorId, reason);
@@ -107,7 +107,7 @@ public class PaymentController {
     @PrePermission("finance:payment:delete")
     @OperationLog(module = "回款管理", action = "删除回款", bizType = "PAYMENT")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -191,9 +191,9 @@ public class PaymentController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long contractId,
-            @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) Long initiationId) {
+            @RequestParam(required = false) String contractId,
+            @RequestParam(required = false) String customerId,
+            @RequestParam(required = false) String initiationId) {
         return Result.ok(service.page(page, size, keyword, status, contractId, customerId, initiationId));
     }
 

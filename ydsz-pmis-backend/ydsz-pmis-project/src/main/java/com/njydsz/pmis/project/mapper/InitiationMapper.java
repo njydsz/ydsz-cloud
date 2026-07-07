@@ -33,7 +33,7 @@ public interface InitiationMapper extends BaseMapper<InitiationDO> {
      * @param gate  门径评审点（GateCode），可空
      * @return 受影响行数
      */
-    int updateStage(@Param("id") Long id,
+    int updateStage(@Param("id") String id,
                     @Param("stage") String stage,
                     @Param("gate") String gate);
 
@@ -43,7 +43,7 @@ public interface InitiationMapper extends BaseMapper<InitiationDO> {
      * @param tenantId 租户 ID
      * @return 每种阶段对应的数量列表
      */
-    List<Map<String, Object>> aggregateByStage(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByStage(@Param("tenantId") String tenantId);
 
     /**
      * 统计指定阶段的立项数量。
@@ -52,7 +52,7 @@ public interface InitiationMapper extends BaseMapper<InitiationDO> {
      * @param tenantId 租户 ID
      * @return 数量
      */
-    Long countByStage(@Param("stage") String stage, @Param("tenantId") Long tenantId);
+    Long countByStage(@Param("stage") String stage, @Param("tenantId") String tenantId);
 
     /**
      * 基于 PG tsvector 的项目全文检索（P2-19，替代 ES）。

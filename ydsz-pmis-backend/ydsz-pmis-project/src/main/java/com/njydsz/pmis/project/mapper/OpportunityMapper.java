@@ -49,7 +49,7 @@ public interface OpportunityMapper extends BaseMapper<OpportunityDO> {
      * @param lostReason 输单原因，可空
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id,
+    int updateStatus(@Param("id") String id,
                      @Param("status") String status,
                      @Param("lostReason") String lostReason);
 

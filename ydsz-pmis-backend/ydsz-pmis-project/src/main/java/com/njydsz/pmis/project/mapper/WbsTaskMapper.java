@@ -33,7 +33,7 @@ public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
      * @param status 目标状态
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status);
+    int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
      * 更新任务进度
@@ -43,7 +43,7 @@ public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
      * @param actualEffort  实际工时
      * @return 受影响行数
      */
-    int updateProgress(@Param("id") Long id, @Param("progressPct") BigDecimal progressPct,
+    int updateProgress(@Param("id") String id, @Param("progressPct") BigDecimal progressPct,
                        @Param("actualEffort") BigDecimal actualEffort);
 
     /**
@@ -52,7 +52,7 @@ public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
      * @param initiationId 立项 ID
      * @return WBS 任务列表
      */
-    List<WbsTaskDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<WbsTaskDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 查询子任务列表
@@ -60,7 +60,7 @@ public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
      * @param parentId 父任务 ID
      * @return 子任务列表
      */
-    List<WbsTaskDO> selectChildren(@Param("parentId") Long parentId);
+    List<WbsTaskDO> selectChildren(@Param("parentId") String parentId);
 
     /**
      * 查询里程碑任务列表
@@ -68,7 +68,7 @@ public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
      * @param initiationId 立项 ID
      * @return 里程碑任务列表
      */
-    List<WbsTaskDO> selectMilestones(@Param("initiationId") Long initiationId);
+    List<WbsTaskDO> selectMilestones(@Param("initiationId") String initiationId);
 
     /**
      * 按状态聚合同一立项下的任务计数
@@ -76,5 +76,5 @@ public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
      * @param initiationId 立项 ID
      * @return 状态聚合结果列表
      */
-    List<Map<String, Object>> aggregateByStatus(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> aggregateByStatus(@Param("initiationId") String initiationId);
 }

@@ -40,8 +40,8 @@ class DeliveryItemCreateDTOTest {
         void shouldSetAndGetFields() {
             DeliveryItemCreateDTO dto = new DeliveryItemCreateDTO();
             dto.setItemCode("DEL-001");
-            dto.setInitiationId(1L);
-            dto.setStandardId(10L);
+            dto.setInitiationId("1");
+            dto.setStandardId("10");
             dto.setProjectType("FIXED_PRICE");
             dto.setProjectLevel("B");
             dto.setDeliveryName("需求规格说明书");
@@ -49,16 +49,16 @@ class DeliveryItemCreateDTOTest {
             dto.setStage("REQUIREMENTS");
             dto.setRequired(1);
             dto.setPlannedSubmitDate(LocalDate.of(2026, 4, 1));
-            dto.setSubmitterId(200L);
+            dto.setSubmitterId("200");
             dto.setSubmitterName("李四");
             dto.setTrRequired(1);
             dto.setFileIds("file-001,file-002");
             dto.setRemark("测试备注");
-            dto.setTenantId(1L);
+            dto.setTenantId("1");
 
             assertThat(dto.getItemCode()).isEqualTo("DEL-001");
-            assertThat(dto.getInitiationId()).isEqualTo(1L);
-            assertThat(dto.getStandardId()).isEqualTo(10L);
+            assertThat(dto.getInitiationId()).isEqualTo("1");
+            assertThat(dto.getStandardId()).isEqualTo("10");
             assertThat(dto.getProjectType()).isEqualTo("FIXED_PRICE");
             assertThat(dto.getProjectLevel()).isEqualTo("B");
             assertThat(dto.getDeliveryName()).isEqualTo("需求规格说明书");
@@ -66,12 +66,12 @@ class DeliveryItemCreateDTOTest {
             assertThat(dto.getStage()).isEqualTo("REQUIREMENTS");
             assertThat(dto.getRequired()).isEqualTo(1);
             assertThat(dto.getPlannedSubmitDate()).isEqualTo(LocalDate.of(2026, 4, 1));
-            assertThat(dto.getSubmitterId()).isEqualTo(200L);
+            assertThat(dto.getSubmitterId()).isEqualTo("200");
             assertThat(dto.getSubmitterName()).isEqualTo("李四");
             assertThat(dto.getTrRequired()).isEqualTo(1);
             assertThat(dto.getFileIds()).isEqualTo("file-001,file-002");
             assertThat(dto.getRemark()).isEqualTo("测试备注");
-            assertThat(dto.getTenantId()).isEqualTo(1L);
+            assertThat(dto.getTenantId()).isEqualTo("1");
         }
 
         @Test

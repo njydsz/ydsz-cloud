@@ -132,7 +132,7 @@ public interface AttendanceService {
      * @param id 请假记录 ID
      * @return 请假实体，不存在时返回 null
      */
-    LeaveDO getLeave(Long id);
+    LeaveDO getLeave(String id);
 
     /**
      * 员工在指定日期范围内已批准的请假 (供出勤模块关联判断)

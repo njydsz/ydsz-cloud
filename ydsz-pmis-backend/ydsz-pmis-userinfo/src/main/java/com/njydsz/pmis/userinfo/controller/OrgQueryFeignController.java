@@ -108,7 +108,7 @@ public class OrgQueryFeignController {
      */
     @Operation(summary = "按部门 ID 查询部门负责人")
     @GetMapping("/dept-leader")
-    public Result<Long> getDeptLeaderByDeptId(@RequestParam("deptId") Long deptId) {
+    public Result<String> getDeptLeaderByDeptId(@RequestParam("deptId") String deptId) {
         if (deptId == null) {
             return Result.ok(null);
         }

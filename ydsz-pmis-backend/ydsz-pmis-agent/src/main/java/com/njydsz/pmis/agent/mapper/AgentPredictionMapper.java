@@ -32,7 +32,7 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
      * @param status 目标状态码（AgentRunStatus.code）
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status);
+    int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
      * 按业务维度查询预测记录列表。
@@ -43,7 +43,7 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
      * @return 预测记录列表
      */
     List<AgentPredictionDO> selectByBiz(@Param("bizType") String bizType,
-                                        @Param("bizId") Long bizId,
+                                        @Param("bizId") String bizId,
                                         @Param("agentType") String agentType);
 
     /**

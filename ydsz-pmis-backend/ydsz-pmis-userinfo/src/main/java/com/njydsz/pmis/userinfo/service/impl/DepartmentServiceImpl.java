@@ -43,14 +43,14 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Cacheable(value = CACHE_NAME, key = "'tree'", unless = "#result == null || #result.isEmpty()")
     public List<DepartmentTreeVO> tree() {
         List<DepartmentDO> all = departmentMapper.selectAllEnabled();
-        Map<Long, DepartmentTreeVO> map = new HashMap<>();
+        Map<String, DepartmentTreeVO> map = new HashMap<>();
         for (DepartmentDO d : all) {
             map.put(d.getId(), DepartmentTreeVO.of(d));
         }
         List<DepartmentTreeVO> roots = new ArrayList<>();
         for (DepartmentDO d : all) {
             DepartmentTreeVO node = map.get(d.getId());
-            if (d.getParentId() == null || d.getParentId() == 0L) {
+            if (d.getParentId() == null || "0".equals(d.getParentId())) {
                 roots.add(node);
             } else {
                 DepartmentTreeVO parent = map.get(d.getParentId());
@@ -75,7 +75,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_NAME, key = "#id", unless = "#result == null")
-    public DepartmentDO getById(Long id) {
+    public DepartmentDO getById(String id) {
         DepartmentDO d = departmentMapper.selectById(id);
         if (d == null) {
             throw new BizException(BizErrorCode.DEPARTMENT_NOT_FOUND);
@@ -86,15 +86,15 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public Long create(DepartmentFormDTO dto) {
+    public String create(DepartmentFormDTO dto) {
         // 编码唯一
         DepartmentDO exists = departmentMapper.selectByCode(dto.getDeptCode());
         if (exists != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_58b44529", dto.getDeptCode());
         }
         // 父部门校验
-        Long parentId = dto.getParentId() == null ? 0L : dto.getParentId();
-        if (parentId != 0L) {
+        String parentId = dto.getParentId() == null ? "0" : dto.getParentId();
+        if (!"0".equals(parentId)) {
             DepartmentDO parent = departmentMapper.selectById(parentId);
             if (parent == null) {
                 throw new BizException(BizErrorCode.DEPARTMENT_NOT_FOUND, "error.user.msg_b2cadf60");
@@ -108,7 +108,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
         departmentMapper.insert(entity);
         // 更新部门路径
-        if (parentId == 0L) {
+        if ("0".equals(parentId)) {
             entity.setDeptPath("/" + entity.getId());
         } else {
             DepartmentDO parent = departmentMapper.selectById(parentId);
@@ -141,7 +141,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public void delete(Long id) {
+    public void delete(String id) {
         DepartmentDO d = departmentMapper.selectById(id);
         if (d == null) {
             throw new BizException(BizErrorCode.DEPARTMENT_NOT_FOUND);

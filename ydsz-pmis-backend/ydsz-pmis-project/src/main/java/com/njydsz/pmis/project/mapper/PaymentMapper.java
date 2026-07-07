@@ -34,7 +34,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
      * @param confirmedBy 确认人 ID
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status,
+    int updateStatus(@Param("id") String id, @Param("status") String status,
                      @Param("confirmedBy") Long confirmedBy);
 
     /**
@@ -46,7 +46,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
      * @param unallocatedAmount 未分配金额
      * @return 受影响行数
      */
-    int updateAllocation(@Param("id") Long id,
+    int updateAllocation(@Param("id") String id,
                          @Param("allocation") String allocation,
                          @Param("allocatedAmount") BigDecimal allocatedAmount,
                          @Param("unallocatedAmount") BigDecimal unallocatedAmount);
@@ -57,7 +57,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
      * @param contractId 合同 ID
      * @return 回款列表
      */
-    List<PaymentDO> selectByContract(@Param("contractId") Long contractId);
+    List<PaymentDO> selectByContract(@Param("contractId") String contractId);
 
     /**
      * 按客户 ID 查询回款列表
@@ -65,7 +65,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
      * @param customerId 客户 ID
      * @return 回款列表
      */
-    List<PaymentDO> selectByCustomer(@Param("customerId") Long customerId);
+    List<PaymentDO> selectByCustomer(@Param("customerId") String customerId);
 
     /**
      * 查询客户未分配的回款列表
@@ -73,7 +73,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
      * @param customerId 客户 ID
      * @return 未分配回款列表
      */
-    List<PaymentDO> selectUnallocated(@Param("customerId") Long customerId);
+    List<PaymentDO> selectUnallocated(@Param("customerId") String customerId);
 
     /**
      * 按合同汇总已收回款金额
@@ -81,7 +81,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
      * @param contractId 合同 ID
      * @return 已收回款金额
      */
-    BigDecimal sumReceivedByContract(@Param("contractId") Long contractId);
+    BigDecimal sumReceivedByContract(@Param("contractId") String contractId);
 
     /**
      * 按月聚合回款金额
@@ -89,7 +89,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
      * @param initiationId 立项 ID
      * @return 月度聚合列表
      */
-    List<Map<String, Object>> aggregateByMonth(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> aggregateByMonth(@Param("initiationId") String initiationId);
 
     /**
      * 按客户聚合回款金额

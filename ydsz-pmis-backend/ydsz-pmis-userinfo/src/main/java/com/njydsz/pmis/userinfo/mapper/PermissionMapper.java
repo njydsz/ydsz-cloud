@@ -38,7 +38,7 @@ public interface PermissionMapper extends BaseMapper<PermissionDO> {
             INNER JOIN pmis_user_role ur ON ur.role_id = rp.role_id AND ur.deleted = 0
             WHERE ur.user_id = #{userId} AND p.deleted = 0
             """)
-    List<String> selectPermCodesByUserId(@Param("userId") Long userId);
+    List<String> selectPermCodesByUserId(@Param("userId") String userId);
 
     /**
      * 查询角色拥有的权限
@@ -52,7 +52,7 @@ public interface PermissionMapper extends BaseMapper<PermissionDO> {
             WHERE rp.role_id = #{roleId} AND p.deleted = 0
             ORDER BY p.sort_order, p.id
             """)
-    List<PermissionDO> selectByRoleId(@Param("roleId") Long roleId);
+    List<PermissionDO> selectByRoleId(@Param("roleId") String roleId);
 
     /**
      * 查询用户拥有的全部权限 (含完整属性,用于菜单树构建)
@@ -67,5 +67,5 @@ public interface PermissionMapper extends BaseMapper<PermissionDO> {
             WHERE ur.user_id = #{userId} AND p.deleted = 0
             ORDER BY p.sort_order, p.id
             """)
-    List<PermissionDO> selectByUserId(@Param("userId") Long userId);
+    List<PermissionDO> selectByUserId(@Param("userId") String userId);
 }

@@ -145,9 +145,9 @@ class AgentOrchestrationServiceImplTest {
     private OrchestrationRequest buildRequest(List<String> agentTypes) {
         OrchestrationRequest req = new OrchestrationRequest();
         req.setBizType("PROJECT");
-        req.setBizId(100L);
+        req.setBizId("100");
         req.setBizRef("TEST-REF");
-        req.setCallerId(1L);
+        req.setCallerId("1");
         req.setCallerName("测试用户");
         req.setSource("MANUAL");
         req.setMode(OrchestrationMode.PARALLEL);

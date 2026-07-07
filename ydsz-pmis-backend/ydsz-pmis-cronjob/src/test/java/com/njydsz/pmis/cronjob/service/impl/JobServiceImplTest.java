@@ -63,7 +63,7 @@ class JobServiceImplTest {
     @BeforeEach
     void setUp() {
         tenantContextMock = mockStatic(TenantContext.class);
-        tenantContextMock.when(TenantContext::getTenantId).thenReturn(1L);
+        tenantContextMock.when(TenantContext::getTenantId).thenReturn("1");
 
         traceIdUtilMock = mockStatic(TraceIdUtil.class);
         traceIdUtilMock.when(TraceIdUtil::get).thenReturn("test-trace-id");
@@ -86,7 +86,7 @@ class JobServiceImplTest {
         when(jobMapper.selectByJobKey("test-job")).thenReturn(null);
         when(jobMapper.insert(any(JobDO.class))).thenAnswer(inv -> {
             JobDO j = inv.getArgument(0);
-            j.setId(1L);
+            j.setId("1");
             return 1;
         });
 
@@ -149,14 +149,14 @@ class JobServiceImplTest {
     @DisplayName("getById - 查询存在的任务返回实体")
     void getById_shouldReturnJobWhenFound() {
         JobDO job = buildJob("test-job", "testHandler", "0 0 8 * * ?");
-        job.setId(1L);
+        job.setId("1");
 
         when(jobMapper.selectById(1L)).thenReturn(job);
 
         JobDO result = jobService.getById(1L);
 
         assertNotNull(result);
-        assertEquals(1L, result.getId());
+        assertEquals("1", result.getId());
         assertEquals("test-job", result.getJobKey());
     }
 
@@ -175,7 +175,7 @@ class JobServiceImplTest {
     @DisplayName("pause - 暂停任务并更新状态为 PAUSED")
     void pause_shouldSetStatusToPaused() {
         JobDO job = buildJob("test-job", "testHandler", "0 0 8 * * ?");
-        job.setId(1L);
+        job.setId("1");
         job.setStatus("NORMAL");
 
         when(jobMapper.selectById(1L)).thenReturn(job);
@@ -201,7 +201,7 @@ class JobServiceImplTest {
     @DisplayName("resume - 恢复 PAUSED 任务并更新状态为 NORMAL")
     void resume_shouldSetStatusToNormal() {
         JobDO job = buildJob("test-job", "testHandler", "0 0 8 * * ?");
-        job.setId(1L);
+        job.setId("1");
         job.setStatus("PAUSED");
 
         when(jobMapper.selectById(1L)).thenReturn(job);
@@ -218,7 +218,7 @@ class JobServiceImplTest {
     @DisplayName("trigger - 手动触发执行任务并返回日志 ID")
     void trigger_shouldExecuteJobAndReturnLogId() {
         JobDO job = buildJob("test-job", "testHandler", "0 0 8 * * ?");
-        job.setId(1L);
+        job.setId("1");
         job.setStatus("NORMAL");
 
         JobHandler handler = params -> "success";
@@ -226,10 +226,10 @@ class JobServiceImplTest {
         when(applicationContext.getBean("testHandler", JobHandler.class)).thenReturn(handler);
         when(jobLogMapper.insert(any(JobLogDO.class))).thenAnswer(inv -> {
             JobLogDO log = inv.getArgument(0);
-            log.setId(10L);
+            log.setId("10");
             return 1;
         });
-        when(jobMapper.updateStats(anyLong(), any(), isNull(), anyLong(), anyLong(), anyLong(), any()))
+        when(jobMapper.updateStats(anyString(), any(), isNull(), anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(1);
 
         Long logId = jobService.trigger(1L);
@@ -245,7 +245,7 @@ class JobServiceImplTest {
     @DisplayName("delete - 删除存在的任务")
     void delete_shouldDeleteJobWhenFound() {
         JobDO job = buildJob("test-job", "testHandler", "0 0 8 * * ?");
-        job.setId(1L);
+        job.setId("1");
 
         when(jobMapper.selectById(1L)).thenReturn(job);
 
@@ -332,7 +332,7 @@ class JobServiceImplTest {
     @DisplayName("update - 更新不存在任务时抛出 BizException")
     void update_shouldThrowBizExceptionWhenJobNotFound() {
         JobDO job = new JobDO();
-        job.setId(999L);
+        job.setId("999");
 
         when(jobMapper.selectById(999L)).thenReturn(null);
 

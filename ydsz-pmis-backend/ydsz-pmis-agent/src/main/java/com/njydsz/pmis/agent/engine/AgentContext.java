@@ -34,8 +34,8 @@ public class AgentContext {
     private String providerTraceId;
 
     /** 7 参构造器（兼容历史调用方） */
-    public AgentContext(String bizType, Long bizId, String bizRef,
-                        Long callerId, String callerName, String source,
+    public AgentContext(String bizType, String bizId, String bizRef,
+                        String callerId, String callerName, String source,
                         Map<String, Object> params) {
         this.bizType = bizType;
         this.bizId = bizId;
@@ -47,8 +47,8 @@ public class AgentContext {
     }
 
     /** 9 参构造器（批次 22 全量构造） */
-    public AgentContext(String bizType, Long bizId, String bizRef,
-                        Long callerId, String callerName, String source,
+    public AgentContext(String bizType, String bizId, String bizRef,
+                        String callerId, String callerName, String source,
                         Map<String, Object> params, String traceId, String providerTraceId) {
         this(bizType, bizId, bizRef, callerId, callerName, source, params);
         this.traceId = traceId;

@@ -56,7 +56,7 @@ public class BenchController {
     @PrePermission("resource:bench:act")
     @OperationLog(module = "Bench 池", action = "入/出池", bizType = "BENCH_RECORD")
     @PostMapping("/act")
-    public Result<Long> act(@Valid @RequestBody BenchRecordCreateDTO dto) {
+    public Result<String> act(@Valid @RequestBody BenchRecordCreateDTO dto) {
         return Result.ok(benchService.act(dto));
     }
 
@@ -68,7 +68,7 @@ public class BenchController {
      */
     @Operation(summary = "Bench 详情")
     @GetMapping("/{id}")
-    public Result<BenchRecordDO> get(@PathVariable @Min(1) Long id) {
+    public Result<BenchRecordDO> get(@PathVariable String id) {
         return Result.ok(benchService.getById(id));
     }
 
@@ -80,7 +80,7 @@ public class BenchController {
      */
     @Operation(summary = "员工当前 Bench 记录")
     @GetMapping("/active/{employeeId}")
-    public Result<BenchRecordDO> getActiveByEmployee(@PathVariable @Min(1) Long employeeId) {
+    public Result<BenchRecordDO> getActiveByEmployee(@PathVariable String employeeId) {
         return Result.ok(benchService.getActiveByEmployee(employeeId));
     }
 
@@ -124,7 +124,7 @@ public class BenchController {
     public Result<Page<BenchRecordDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) Long poolId,
+            @RequestParam(required = false) String poolId,
             @RequestParam(required = false) String status) {
         return Result.ok(benchService.page(page, size, poolId, status));
     }

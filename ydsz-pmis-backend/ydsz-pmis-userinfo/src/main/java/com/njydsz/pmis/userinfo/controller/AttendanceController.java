@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
@@ -55,7 +56,7 @@ public class AttendanceController {
     @PrePermission("attendance:record:create")
     @OperationLog(module = "考勤", action = "登记出勤", bizType = "ATTENDANCE")
     @PostMapping("/record")
-    public Result<Long> recordAttendance(@Valid @RequestBody AttendanceCreateDTO dto) {
+    public Result<String> recordAttendance(@Valid @RequestBody AttendanceCreateDTO dto) {
         return Result.ok(attendanceService.recordAttendance(dto));
     }
 
@@ -73,7 +74,7 @@ public class AttendanceController {
     @PrePermission("attendance:record:list")
     @GetMapping("/record/page")
     public Result<Page<AttendanceDO>> pageAttendance(
-            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -92,7 +93,7 @@ public class AttendanceController {
     @Operation(summary = "出勤状态统计")
     @GetMapping("/record/stat")
     public Result<List<Map<String, Object>>> statByStatus(
-            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return Result.ok(attendanceService.statByStatus(employeeId, startDate, endDate));
@@ -110,7 +111,7 @@ public class AttendanceController {
     @PrePermission("attendance:overtime:create")
     @OperationLog(module = "考勤", action = "提交加班", bizType = "OVERTIME")
     @PostMapping("/overtime")
-    public Result<Long> submitOvertime(@Valid @RequestBody OvertimeCreateDTO dto) {
+    public Result<String> submitOvertime(@Valid @RequestBody OvertimeCreateDTO dto) {
         return Result.ok(attendanceService.submitOvertime(dto));
     }
 
@@ -129,7 +130,7 @@ public class AttendanceController {
     @OperationLog(module = "考勤", action = "审批加班", bizType = "OVERTIME")
     @PostMapping("/overtime/{id}/approve")
     public Result<Void> approveOvertime(
-            @PathVariable @Min(1) Long id,
+            @PathVariable @NotBlank String id,
             @RequestParam String action,
             @RequestHeader(value = "X-User-Id", required = false) String approverId,
             @RequestHeader(value = "X-Username", required = false) String approverName,
@@ -151,7 +152,7 @@ public class AttendanceController {
     @PrePermission("attendance:overtime:list")
     @GetMapping("/overtime/page")
     public Result<Page<OvertimeDO>> pageOvertime(
-            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
@@ -166,7 +167,7 @@ public class AttendanceController {
      */
     @Operation(summary = "加班详情")
     @GetMapping("/overtime/{id}")
-    public Result<OvertimeDO> getOvertime(@PathVariable @Min(1) Long id) {
+    public Result<OvertimeDO> getOvertime(@PathVariable @NotBlank String id) {
         return Result.ok(attendanceService.getOvertime(id));
     }
 
@@ -182,7 +183,7 @@ public class AttendanceController {
     @PrePermission("attendance:leave:create")
     @OperationLog(module = "考勤", action = "提交请假", bizType = "LEAVE")
     @PostMapping("/leave")
-    public Result<Long> submitLeave(@Valid @RequestBody LeaveCreateDTO dto) {
+    public Result<String> submitLeave(@Valid @RequestBody LeaveCreateDTO dto) {
         return Result.ok(attendanceService.submitLeave(dto));
     }
 
@@ -201,7 +202,7 @@ public class AttendanceController {
     @OperationLog(module = "考勤", action = "审批请假", bizType = "LEAVE")
     @PostMapping("/leave/{id}/approve")
     public Result<Void> approveLeave(
-            @PathVariable @Min(1) Long id,
+            @PathVariable @NotBlank String id,
             @RequestParam String action,
             @RequestHeader(value = "X-User-Id", required = false) String approverId,
             @RequestHeader(value = "X-Username", required = false) String approverName,
@@ -223,7 +224,7 @@ public class AttendanceController {
     @PrePermission("attendance:leave:list")
     @GetMapping("/leave/page")
     public Result<Page<LeaveDO>> pageLeave(
-            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
@@ -238,7 +239,7 @@ public class AttendanceController {
      */
     @Operation(summary = "请假详情")
     @GetMapping("/leave/{id}")
-    public Result<LeaveDO> getLeave(@PathVariable @Min(1) Long id) {
+    public Result<LeaveDO> getLeave(@PathVariable @NotBlank String id) {
         return Result.ok(attendanceService.getLeave(id));
     }
 
@@ -253,7 +254,7 @@ public class AttendanceController {
     @Operation(summary = "员工在指定日期内已批准的请假")
     @GetMapping("/leave/approved")
     public Result<List<LeaveDO>> listApprovedLeaves(
-            @RequestParam @Min(1) Long employeeId,
+            @RequestParam @NotBlank String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return Result.ok(attendanceService.listApprovedLeaves(employeeId, startDate, endDate));

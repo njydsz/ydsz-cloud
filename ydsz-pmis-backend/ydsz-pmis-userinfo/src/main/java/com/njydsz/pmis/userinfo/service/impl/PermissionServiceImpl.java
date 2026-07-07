@@ -27,8 +27,8 @@ import java.util.Map;
  * <p>P2-6 改进：对高频读路径启用 Spring Cache：
  * <ul>
  *   <li>{@link #listAllEnabled()} — 管理端菜单树构建基础数据</li>
- *   <li>{@link #listPermCodesByUserId(Long)} — 鉴权拦截器/前端菜单加载高频调用</li>
- *   <li>{@link #listMenuTreeByUserId(Long)} — 用户登录后菜单树</li>
+ *   <li>{@link #listPermCodesByUserId(String)} — 鉴权拦截器/前端菜单加载高频调用</li>
+ *   <li>{@link #listMenuTreeByUserId(String)} — 用户登录后菜单树</li>
  *   <li>{@link #listAllMenuTree()} — 管理端菜单树</li>
  * </ul>
  * 写操作（create/update/delete）触发 {@code @CacheEvict(allEntries=true)} 清空所有缓存条目，
@@ -66,14 +66,14 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_PERM_CODES, key = "#userId", unless = "#result == null || #result.isEmpty()")
-    public List<String> listPermCodesByUserId(Long userId) {
+    public List<String> listPermCodesByUserId(String userId) {
         return permissionMapper.selectPermCodesByUserId(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_MENU_TREE, key = "#userId", unless = "#result == null || #result.isEmpty()")
-    public List<MenuTreeVO> listMenuTreeByUserId(Long userId) {
+    public List<MenuTreeVO> listMenuTreeByUserId(String userId) {
         // 1. 拉取该用户所有权限
         List<PermissionDO> perms = permissionMapper.selectByUserId(userId);
         if (perms == null || perms.isEmpty()) {
@@ -94,7 +94,7 @@ public class PermissionServiceImpl implements PermissionService {
      */
     private List<MenuTreeVO> buildMenuTree(List<PermissionDO> perms) {
         // 1. 转 VO
-        Map<Long, MenuTreeVO> map = new HashMap<>();
+        Map<String, MenuTreeVO> map = new HashMap<>();
         for (PermissionDO p : perms) {
             MenuTreeVO vo = new MenuTreeVO();
             BeanUtils.copyProperties(p, vo);
@@ -105,8 +105,8 @@ public class PermissionServiceImpl implements PermissionService {
         List<MenuTreeVO> roots = new ArrayList<>();
         for (PermissionDO p : perms) {
             MenuTreeVO vo = map.get(p.getId());
-            Long pid = p.getParentId() == null ? 0L : p.getParentId();
-            if (pid == null || pid == 0L) {
+            String pid = p.getParentId() == null ? "0" : p.getParentId();
+            if (pid == null || "0".equals(pid)) {
                 roots.add(vo);
             } else {
                 MenuTreeVO parent = map.get(pid);
@@ -137,14 +137,14 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_NAME, key = "#roleId", unless = "#result == null || #result.isEmpty()")
-    public List<PermissionDO> listByRoleId(Long roleId) {
+    public List<PermissionDO> listByRoleId(String roleId) {
         return permissionMapper.selectByRoleId(roleId);
     }
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_NAME, key = "#id", unless = "#result == null")
-    public PermissionDO getById(Long id) {
+    public PermissionDO getById(String id) {
         PermissionDO p = permissionMapper.selectById(id);
         if (p == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_bf562d6f");
@@ -154,7 +154,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE, CACHE_NAME}, allEntries = true)
-    public Long create(PermissionFormDTO dto) {
+    public String create(PermissionFormDTO dto) {
         if (permissionMapper.selectByCode(dto.getPermCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_7b343d30");
         }
@@ -162,7 +162,7 @@ public class PermissionServiceImpl implements PermissionService {
         BeanUtils.copyProperties(dto, entity);
         if (entity.getStatus() == null) entity.setStatus("ENABLED");
         if (entity.getVisible() == null) entity.setVisible(1);
-        if (entity.getParentId() == null) entity.setParentId(0L);
+        if (entity.getParentId() == null) entity.setParentId("0");
         permissionMapper.insert(entity);
         return entity.getId();
     }
@@ -184,7 +184,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE, CACHE_NAME}, allEntries = true)
-    public void delete(Long id) {
+    public void delete(String id) {
         // 存在子权限则不允许删除
         Long childCount = permissionMapper.selectCount(new LambdaQueryWrapper<PermissionDO>()
                 .eq(PermissionDO::getParentId, id));

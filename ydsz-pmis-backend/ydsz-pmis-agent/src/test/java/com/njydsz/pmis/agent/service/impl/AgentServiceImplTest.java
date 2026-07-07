@@ -149,7 +149,7 @@ class AgentServiceImplTest {
     @Test
     @DisplayName("executeInMemory - 正常执行并返回 AgentResult")
     void executeInMemory_shouldReturnAgentResult() {
-        AgentContext ctx = new AgentContext("PROJECT", 100L, "ref", 1L, "user", "MANUAL", null);
+        AgentContext ctx = new AgentContext("PROJECT", "100", "ref", "1", "user", "MANUAL", null);
         AgentResult expectedResult = buildAgentResult(AgentAlertLevel.NORMAL, new BigDecimal("80.0"), new BigDecimal("0.9"));
 
         when(riskWarningAgent.execute(any(AgentContext.class))).thenReturn(expectedResult);
@@ -164,7 +164,7 @@ class AgentServiceImplTest {
     @Test
     @DisplayName("executeInMemory - 无效 Agent 类型时抛出 BizException")
     void executeInMemory_shouldThrowBizExceptionWhenAgentTypeInvalid() {
-        AgentContext ctx = new AgentContext("PROJECT", 100L, "ref", 1L, "user", "MANUAL", null);
+        AgentContext ctx = new AgentContext("PROJECT", "100", "ref", "1", "user", "MANUAL", null);
 
         BizException ex = assertThrows(BizException.class,
                 () -> agentService.executeInMemory("INVALID", ctx));
@@ -177,7 +177,7 @@ class AgentServiceImplTest {
     @DisplayName("getById - 查询存在的记录返回实体")
     void getById_shouldReturnEntityWhenFound() {
         AgentPredictionDO record = new AgentPredictionDO();
-        record.setId(1L);
+        record.setId("1");
         record.setAgentType(AgentType.RISK_WARNING.getCode());
         record.setStatus(AgentRunStatus.SUCCESS.getCode());
 
@@ -186,7 +186,7 @@ class AgentServiceImplTest {
         AgentPredictionDO result = agentService.getById(1L);
 
         assertNotNull(result);
-        assertEquals(1L, result.getId());
+        assertEquals("1", result.getId());
         assertEquals(AgentType.RISK_WARNING.getCode(), result.getAgentType());
     }
 
@@ -267,13 +267,13 @@ class AgentServiceImplTest {
 
     // ==================== helper ====================
 
-    private AgentRunRequestDTO buildRequest(String agentType, Long bizId, String bizType) {
+    private AgentRunRequestDTO buildRequest(String agentType, String bizId, String bizType) {
         AgentRunRequestDTO req = new AgentRunRequestDTO();
         req.setAgentType(agentType);
         req.setBizType(bizType);
         req.setBizId(bizId);
         req.setBizRef("TEST-REF");
-        req.setCallerId(1L);
+        req.setCallerId("1");
         req.setCallerName("测试用户");
         req.setSource("MANUAL");
         req.setParams(Map.of("key", "value"));

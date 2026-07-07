@@ -32,7 +32,7 @@ public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
      * @param initiationId 立项 ID
      * @return 工单列表
      */
-    List<OpsTicketDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<OpsTicketDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按质保期 ID 查询工单列表
@@ -40,7 +40,7 @@ public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
      * @param warrantyId 质保期 ID
      * @return 工单列表
      */
-    List<OpsTicketDO> selectByWarranty(@Param("warrantyId") Long warrantyId);
+    List<OpsTicketDO> selectByWarranty(@Param("warrantyId") String warrantyId);
 
     /**
      * 按经办人 + 状态查询工单列表
@@ -67,7 +67,7 @@ public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
      * @param status 目标状态
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status);
+    int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
      * 更新经办人
@@ -79,7 +79,7 @@ public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
      * @param acceptedAt   受理时间
      * @return 受影响行数
      */
-    int updateAssignee(@Param("id") Long id, @Param("assigneeId") Long assigneeId,
+    int updateAssignee(@Param("id") String id, @Param("assigneeId") Long assigneeId,
                        @Param("assigneeName") String assigneeName,
                        @Param("status") String status,
                        @Param("acceptedAt") LocalDateTime acceptedAt);
@@ -90,7 +90,7 @@ public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
      * @param id 工单 ID
      * @return 受影响行数
      */
-    int markResponseBreached(@Param("id") Long id);
+    int markResponseBreached(@Param("id") String id);
 
     /**
      * 标记解决超时
@@ -98,7 +98,7 @@ public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
      * @param id 工单 ID
      * @return 受影响行数
      */
-    int markResolveBreached(@Param("id") Long id);
+    int markResolveBreached(@Param("id") String id);
 
     /**
      * 按状态聚合统计
@@ -106,7 +106,7 @@ public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
      * @param initiationId 立项 ID
      * @return 状态聚合列表
      */
-    List<Map<String, Object>> aggregateByStatus(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> aggregateByStatus(@Param("initiationId") String initiationId);
 
     /**
      * 按优先级 + 是否超时 聚合 SLA 达成率

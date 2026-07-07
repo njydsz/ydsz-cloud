@@ -20,22 +20,22 @@ public interface PaymentService {
     /**
      * 录入回款（PENDING 状态）
      */
-    Long record(PaymentCreateDTO dto);
+    String record(PaymentCreateDTO dto);
 
     /**
      * 确认到账 (PENDING → CONFIRMED)
      */
-    void confirm(Long id, Long operatorId);
+    void confirm(String id, Long operatorId);
 
     /**
      * 取消 (PENDING/CONFIRMED → CANCELLED)
      */
-    void cancel(Long id, Long operatorId, String reason);
+    void cancel(String id, Long operatorId, String reason);
 
     /**
      * 删除（仅 PENDING/CANCELLED 可删）
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 核销：把回款分配到发票
@@ -45,12 +45,12 @@ public interface PaymentService {
     /**
      * 自动核销：按客户维度，把已确认的回款按发票到期顺序自动分配
      */
-    int autoAllocate(Long customerId, Long operatorId);
+    int autoAllocate(String customerId, Long operatorId);
 
     /**
      * 现金流预测：基于回款历史 + 应收余额预测未来 N 个月回款
      */
-    List<Map<String, Object>> forecastCashFlow(Long initiationId, int months);
+    List<Map<String, Object>> forecastCashFlow(String initiationId, int months);
 
     /**
      * 根据ID查询回款记录
@@ -58,7 +58,7 @@ public interface PaymentService {
      * @param id 回款ID
      * @return 回款实体
      */
-    PaymentDO getById(Long id);
+    PaymentDO getById(String id);
 
     /**
      * 分页查询回款记录
@@ -73,17 +73,17 @@ public interface PaymentService {
      * @return 分页结果
      */
     Page<PaymentDO> page(int page, int size, String keyword, String status,
-                         Long contractId, Long customerId, Long initiationId);
+                         String contractId, String customerId, String initiationId);
 
     /**
      * 合同累计回款金额
      */
-    BigDecimal sumReceivedByContract(Long contractId);
+    BigDecimal sumReceivedByContract(String contractId);
 
     /**
      * 按月汇总回款
      */
-    List<Map<String, Object>> aggregateByMonth(Long initiationId);
+    List<Map<String, Object>> aggregateByMonth(String initiationId);
 
     /**
      * 按客户汇总

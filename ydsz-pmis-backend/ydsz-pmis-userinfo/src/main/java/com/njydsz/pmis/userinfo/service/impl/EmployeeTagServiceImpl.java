@@ -32,7 +32,7 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long add(EmployeeTagCreateDTO dto) {
+    public String add(EmployeeTagCreateDTO dto) {
         validate(dto);
         EmployeeTagDO t = new EmployeeTagDO();
         BeanUtils.copyProperties(dto, t);
@@ -47,14 +47,14 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void remove(Long id) {
+    public void remove(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         tagMapper.deleteById(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void replaceByEmployee(Long employeeId, List<EmployeeTagCreateDTO> tags) {
+    public void replaceByEmployee(String employeeId, List<EmployeeTagCreateDTO> tags) {
         if (employeeId == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         tagMapper.deleteByEmployee(employeeId);
         if (tags == null) return;
@@ -66,7 +66,7 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EmployeeTagDO> listByEmployee(Long employeeId) {
+    public List<EmployeeTagDO> listByEmployee(String employeeId) {
         if (employeeId == null) return List.of();
         return tagMapper.selectByEmployee(employeeId);
     }

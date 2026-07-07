@@ -31,7 +31,7 @@ public interface ProjectClosureMapper extends BaseMapper<ProjectClosureDO> {
      * @param initiationId 立项 ID
      * @return 结项对象，未找到返回 null
      */
-    ProjectClosureDO selectByInitiation(@Param("initiationId") Long initiationId);
+    ProjectClosureDO selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 更新结项状态
@@ -40,7 +40,7 @@ public interface ProjectClosureMapper extends BaseMapper<ProjectClosureDO> {
      * @param status 目标状态
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status);
+    int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
      * 更新锁定状态
@@ -49,7 +49,7 @@ public interface ProjectClosureMapper extends BaseMapper<ProjectClosureDO> {
      * @param locked 锁定状态（0/1）
      * @return 受影响行数
      */
-    int updateLocked(@Param("id") Long id, @Param("locked") Integer locked);
+    int updateLocked(@Param("id") String id, @Param("locked") Integer locked);
 
     /**
      * 按结项类型查询列表

@@ -29,7 +29,7 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @param rejectReason 驳回原因
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status,
+    int updateStatus(@Param("id") String id, @Param("status") String status,
                      @Param("approverId") Long approverId, @Param("approverName") String approverName,
                      @Param("rejectReason") String rejectReason);
 
@@ -53,7 +53,7 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @param to           截止日期
      * @return 工时列表
      */
-    List<TimeEntryDO> selectByInitiationAndDateRange(@Param("initiationId") Long initiationId,
+    List<TimeEntryDO> selectByInitiationAndDateRange(@Param("initiationId") String initiationId,
                                                      @Param("from") LocalDate from,
                                                      @Param("to") LocalDate to);
 
@@ -63,7 +63,7 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @param taskId 任务 ID
      * @return 工时列表
      */
-    List<TimeEntryDO> selectByTask(@Param("taskId") Long taskId);
+    List<TimeEntryDO> selectByTask(@Param("taskId") String taskId);
 
     /**
      * 按状态查询工时列表
@@ -81,7 +81,7 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @param to           截止日期
      * @return 工时聚合列表
      */
-    List<Map<String, Object>> aggregateHoursByEmployeeAndLevel(@Param("initiationId") Long initiationId,
+    List<Map<String, Object>> aggregateHoursByEmployeeAndLevel(@Param("initiationId") String initiationId,
                                                                @Param("from") LocalDate from,
                                                                @Param("to") LocalDate to);
 

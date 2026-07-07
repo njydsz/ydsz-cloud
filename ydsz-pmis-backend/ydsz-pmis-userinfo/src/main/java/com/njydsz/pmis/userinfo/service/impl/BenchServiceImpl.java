@@ -39,7 +39,7 @@ public class BenchServiceImpl implements BenchService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long act(BenchRecordCreateDTO dto) {
+    public String act(BenchRecordCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (!StringUtils.hasText(dto.getBenchCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_b0695d8f");
@@ -62,7 +62,7 @@ public class BenchServiceImpl implements BenchService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long autoEnter(BenchRecordCreateDTO dto) {
+    public String autoEnter(BenchRecordCreateDTO dto) {
         // 校验当前没有活跃 Bench
         BenchRecordDO active = benchMapper.selectActiveByEmployee(dto.getEmployeeId());
         if (active != null) {
@@ -87,7 +87,7 @@ public class BenchServiceImpl implements BenchService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void autoExit(Long employeeId, Long sourceAssignment, String reasonType, LocalDate exitDate) {
+    public void autoExit(String employeeId, String sourceAssignment, String reasonType, LocalDate exitDate) {
         if (employeeId == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         BenchRecordDO active = benchMapper.selectActiveByEmployee(employeeId);
         if (active == null) {
@@ -109,7 +109,7 @@ public class BenchServiceImpl implements BenchService {
 
     @Override
     @Transactional(readOnly = true)
-    public BenchRecordDO getById(Long id) {
+    public BenchRecordDO getById(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         BenchRecordDO b = benchMapper.selectById(id);
         if (b == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_e848f489");
@@ -118,7 +118,7 @@ public class BenchServiceImpl implements BenchService {
 
     @Override
     @Transactional(readOnly = true)
-    public BenchRecordDO getActiveByEmployee(Long employeeId) {
+    public BenchRecordDO getActiveByEmployee(String employeeId) {
         if (employeeId == null) return null;
         return benchMapper.selectActiveByEmployee(employeeId);
     }
@@ -139,7 +139,7 @@ public class BenchServiceImpl implements BenchService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<BenchRecordDO> page(int page, int size, Long poolId, String status) {
+    public Page<BenchRecordDO> page(int page, int size, String poolId, String status) {
         Page<BenchRecordDO> p = new Page<>(page, size);
         LambdaQueryWrapper<BenchRecordDO> w = new LambdaQueryWrapper<>();
         if (poolId != null) w.eq(BenchRecordDO::getPoolId, poolId);

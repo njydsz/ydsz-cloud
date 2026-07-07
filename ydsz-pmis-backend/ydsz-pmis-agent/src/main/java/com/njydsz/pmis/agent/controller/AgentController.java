@@ -127,7 +127,7 @@ public class AgentController {
             @RequestParam(required = false) String alertLevel,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String bizType,
-            @RequestParam(required = false) Long bizId) {
+            @RequestParam(required = false) String bizId) {
         return Result.ok(service.page(page, size, agentType, alertLevel, status, bizType, bizId));
     }
 
@@ -227,7 +227,7 @@ public class AgentController {
         // @NotBlank 已校验 agentType 非空，移除手动校验
         String agentType = dto.getAgentType();
         String bizType = dto.getBizType() == null ? "INTERNAL" : dto.getBizType();
-        Long bizId = dto.getBizId() == null ? 0L : dto.getBizId();
+        String bizId = dto.getBizId() == null ? "0" : dto.getBizId();
         String bizRef = dto.getBizRef() == null ? "" : dto.getBizRef();
         Map<String, Object> params = dto.getParams() == null ? Map.of() : dto.getParams();
 
