@@ -38,5 +38,5 @@ public interface ResourcePoolMapper extends BaseMapper<ResourcePoolDO> {
      * @param departmentId 部门 ID
      * @return 资源池列表
      */
-    List<ResourcePoolDO> selectByDept(@Param("departmentId") Long departmentId);
+    List<ResourcePoolDO> selectByDept(@Param("departmentId") String departmentId);
 }

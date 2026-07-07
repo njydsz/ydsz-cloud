@@ -188,7 +188,7 @@ public class ContractServiceImpl implements ContractService {
      * @throws BizException 合同不存在时抛出
      */
     @Override
-    public String evaluateRisk(Long id) {
+    public String evaluateRisk(String id) {
         ContractDO c = getById(id);
         RiskLevel level = ContractRiskEvaluator.evaluate(c);
         c.setRiskLevel(level.name());

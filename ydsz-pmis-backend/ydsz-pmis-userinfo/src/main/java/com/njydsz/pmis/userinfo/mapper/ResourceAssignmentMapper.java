@@ -31,7 +31,7 @@ public interface ResourceAssignmentMapper extends BaseMapper<ResourceAssignmentD
      * @param employeeId 员工 ID
      * @return 资源分配记录列表
      */
-    List<ResourceAssignmentDO> selectByEmployee(@Param("employeeId") Long employeeId);
+    List<ResourceAssignmentDO> selectByEmployee(@Param("employeeId") String employeeId);
 
     /**
      * 查询某立项项目下的全部资源分配记录
@@ -39,7 +39,7 @@ public interface ResourceAssignmentMapper extends BaseMapper<ResourceAssignmentD
      * @param initiationId 立项 ID
      * @return 资源分配记录列表
      */
-    List<ResourceAssignmentDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<ResourceAssignmentDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 根据状态查询资源分配记录列表
@@ -56,7 +56,7 @@ public interface ResourceAssignmentMapper extends BaseMapper<ResourceAssignmentD
      * @param date 指定日期
      * @return 活跃分配记录列表
      */
-    List<ResourceAssignmentDO> selectActiveOnDate(@Param("employeeId") Long employeeId,
+    List<ResourceAssignmentDO> selectActiveOnDate(@Param("employeeId") String employeeId,
                                                   @Param("date") LocalDate date);
 
     /**
@@ -65,7 +65,7 @@ public interface ResourceAssignmentMapper extends BaseMapper<ResourceAssignmentD
      * @param employeeId 员工 ID
      * @return 活跃项目数
      */
-    Integer countActiveByEmployee(@Param("employeeId") Long employeeId);
+    Integer countActiveByEmployee(@Param("employeeId") String employeeId);
 
     /**
      * 池内当前活跃人数
@@ -73,5 +73,5 @@ public interface ResourceAssignmentMapper extends BaseMapper<ResourceAssignmentD
      * @param poolId 资源池 ID
      * @return 活跃人数
      */
-    Integer countActiveByPool(@Param("poolId") Long poolId);
+    Integer countActiveByPool(@Param("poolId") String poolId);
 }

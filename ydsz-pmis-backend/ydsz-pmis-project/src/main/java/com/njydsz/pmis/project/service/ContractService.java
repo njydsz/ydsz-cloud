@@ -65,7 +65,7 @@ public interface ContractService {
      * @param id 合同 ID
      * @return 风险等级码（RiskLevel.code）
      */
-    String evaluateRisk(Long id);
+    String evaluateRisk(String id);
 
     /**
      * 按状态聚合计数。
@@ -73,7 +73,7 @@ public interface ContractService {
      * @param tenantId 租户 ID，可空
      * @return 每种状态对应的数量列表
      */
-    List<Map<String, Object>> aggregateByStatus(Long tenantId);
+    List<Map<String, Object>> aggregateByStatus(String tenantId);
 
     /**
      * 按风险等级聚合计数。
@@ -81,5 +81,5 @@ public interface ContractService {
      * @param tenantId 租户 ID，可空
      * @return 每种风险等级对应的数量列表
      */
-    List<Map<String, Object>> aggregateByRisk(Long tenantId);
+    List<Map<String, Object>> aggregateByRisk(String tenantId);
 }
