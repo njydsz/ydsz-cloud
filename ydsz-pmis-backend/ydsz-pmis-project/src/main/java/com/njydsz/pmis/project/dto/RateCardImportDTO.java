@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 /**
  * 对外报价费率卡（Rate Card）批量导入 DTO
  *
- * <p>对应 pmis_rate_card 表，模板由 {@code GET /api/v1/execution/import/template/rate-card} 下载。
+ * <p>对应 pmis_rate_card 表，模板由 {@code GET /execution/import/template/rate-card} 下载。
  * 必填字段：level / customerType / projectType / unitPrice / effectiveDate
  * 可选字段：idempotencyKey（幂等键，空则按 (level+customerType+projectType+effectiveDate) 哈希生成）
  *

@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * 规则审批通过请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/{ruleCode}/approve} 接口，将规则从 DRAFT/REVIEW
+ * <p>用于 {@code /rules/{ruleCode}/approve} 接口，将规则从 DRAFT/REVIEW
  * 状态变更为 PUBLISHED，并记录审批人、审批时间、审批意见。
  *
  * @author ydsz-pmis-team

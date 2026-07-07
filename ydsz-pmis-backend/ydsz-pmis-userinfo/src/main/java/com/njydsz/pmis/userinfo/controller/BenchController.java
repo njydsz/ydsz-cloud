@@ -38,7 +38,7 @@ import java.util.Map;
  */
 @Tag(name = "Bench 闲置池管理")
 @RestController
-@RequestMapping("/api/v1/bench")
+@RequestMapping("/bench")
 @RequiredArgsConstructor
 @Validated
 public class BenchController {

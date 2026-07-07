@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * 规则 A/B 测试请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/{ruleCode}/ab-test} 接口，对同一事实数据分别评估
+ * <p>用于 {@code /rules/{ruleCode}/ab-test} 接口，对同一事实数据分别评估
  * 当前规则版本和候选规则版本，返回对比报告。
  *
  * <p>注意：{@code facts} 是动态事实数据（键名由业务自定义），保留 {@code Map<String, Object>}。

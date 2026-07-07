@@ -29,7 +29,7 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "流程自动触发规则")
 @RestController
-@RequestMapping("/api/v1/workflow/trigger")
+@RequestMapping("/workflow/trigger")
 @RequiredArgsConstructor
 @Validated
 public class FlowAutoTriggerController {

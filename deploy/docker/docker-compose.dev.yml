@@ -225,7 +225,7 @@ services:
     networks:
       - pmis-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:7091/api/v1/auth/login -X POST -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:7091/auth/login -X POST -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -541,7 +541,7 @@ services:
   #  12. Promtail - 日志采集客户端
   # ---------------------------------------------------------------------------
   #  采集: /var/log/pmis/*.log (PMIS 后端 logback LOGSTASH_JSON appender 输出)
-  #  推送: http://loki:3100/loki/api/v1/push
+  #  推送: http://loki:3100/loki/push
   #  解析: json pipeline 提取 service / level / traceId 标签
   #  说明: 挂载宿主机日志目录(Windows: D:\Code\ydsz\ydsz-pmis\logs,Mac/Linux: ./logs)
   #        通过 PMIS_LOG_DIR 环境变量配置实际路径

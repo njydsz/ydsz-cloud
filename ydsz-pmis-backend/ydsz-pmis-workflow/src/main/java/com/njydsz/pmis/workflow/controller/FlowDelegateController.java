@@ -31,7 +31,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @Tag(name = "workflow-delegate", description = "工作流授权委派接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowDelegateController {

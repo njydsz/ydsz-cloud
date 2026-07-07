@@ -33,7 +33,7 @@ import java.util.List;
  */
 @Tag(name = "人员标签管理")
 @RestController
-@RequestMapping("/api/v1/employee-tags")
+@RequestMapping("/employee-tags")
 @RequiredArgsConstructor
 @Validated
 public class EmployeeTagController {

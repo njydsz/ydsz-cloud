@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @Tag(name = "文件增强", description = "分片上传、病毒扫描、在线预览接口")
 @RestController
-@RequestMapping("/api/v1/file/enhance")
+@RequestMapping("/file/enhance")
 @RequiredArgsConstructor
 @Validated
 public class FileEnhanceController {

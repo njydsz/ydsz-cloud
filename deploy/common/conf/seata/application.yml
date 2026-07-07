@@ -53,7 +53,7 @@ seata:
     csrf:
       enable: false
     ignore:
-      urls: /,/**/*.css,/**/*.js,/**/*.html,/**/*.map,/**/*.svg,/**/*.png,/**/*.ico,/**/*.gif,/**/*.jpg,/**/*.woff,/**/*.ttf,/api/v1/auth/login,/error,/health,/health/**,/webjars/**
+      urls: /,/**/*.css,/**/*.js,/**/*.html,/**/*.map,/**/*.svg,/**/*.png,/**/*.ico,/**/*.gif,/**/*.jpg,/**/*.woff,/**/*.ttf,/auth/login,/error,/health,/health/**,/webjars/**
 
 # =============================================================================
 #  如需开启 Nacos 注册中心（推荐生产用）：

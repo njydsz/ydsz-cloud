@@ -20,23 +20,23 @@ class PathGuardTest {
     @Test
     @DisplayName("sanitize - 正常路径应原样返回")
     void sanitize_normalPath_shouldReturnAsIs() {
-        assertEquals("/api/v1/users", PathGuard.sanitize("/api/v1/users"));
-        assertEquals("/api/v1/users/123", PathGuard.sanitize("/api/v1/users/123"));
+        assertEquals("/users", PathGuard.sanitize("/users"));
+        assertEquals("/users/123", PathGuard.sanitize("/users/123"));
     }
 
     @Test
     @DisplayName("sanitize - 含 .. 路径穿越应返回 null")
     void sanitize_pathTraversal_shouldReturnNull() {
-        assertNull(PathGuard.sanitize("/api/v1/auth/login/../users/list"));
+        assertNull(PathGuard.sanitize("/auth/login/../users/list"));
         assertNull(PathGuard.sanitize("/../etc/passwd"));
-        assertNull(PathGuard.sanitize("/api/v1/users/../../etc/passwd"));
+        assertNull(PathGuard.sanitize("/users/../../etc/passwd"));
     }
 
     @Test
     @DisplayName("sanitize - 连续斜杠应合并为单个")
     void sanitize_consecutiveSlashes_shouldCollapse() {
-        assertEquals("/api/v1/users", PathGuard.sanitize("//api///v1//users"));
-        assertEquals("/api/v1/users/", PathGuard.sanitize("//api///v1//users//"));
+        assertEquals("/users", PathGuard.sanitize("//api///v1//users"));
+        assertEquals("/users/", PathGuard.sanitize("//api///v1//users//"));
     }
 
     @Test
@@ -64,35 +64,35 @@ class PathGuardTest {
     @Test
     @DisplayName("matchWhiteList - 精确匹配应命中")
     void matchWhiteList_exactMatch_shouldHit() {
-        Set<String> wl = PathGuard.whiteList("/api/v1/auth/login", "/api/v1/health");
-        assertTrue(PathGuard.matchWhiteList("/api/v1/auth/login", wl));
-        assertTrue(PathGuard.matchWhiteList("/api/v1/health", wl));
+        Set<String> wl = PathGuard.whiteList("/auth/login", "/health");
+        assertTrue(PathGuard.matchWhiteList("/auth/login", wl));
+        assertTrue(PathGuard.matchWhiteList("/health", wl));
     }
 
     @Test
     @DisplayName("matchWhiteList - 子路径不应命中（精确匹配语义）")
     void matchWhiteList_subPath_shouldNotHit() {
-        Set<String> wl = PathGuard.whiteList("/api/v1/auth/login");
-        assertFalse(PathGuard.matchWhiteList("/api/v1/auth/login/anything", wl));
-        assertFalse(PathGuard.matchWhiteList("/api/v1/auth/login/", wl));
-        assertFalse(PathGuard.matchWhiteList("/api/v1/auth/login?foo=bar", wl));
+        Set<String> wl = PathGuard.whiteList("/auth/login");
+        assertFalse(PathGuard.matchWhiteList("/auth/login/anything", wl));
+        assertFalse(PathGuard.matchWhiteList("/auth/login/", wl));
+        assertFalse(PathGuard.matchWhiteList("/auth/login?foo=bar", wl));
     }
 
     @Test
     @DisplayName("matchWhiteList - 白名单以 / 结尾时允许前缀匹配子路径")
     void matchWhiteList_trailingSlash_shouldMatchSubPath() {
-        Set<String> wl = PathGuard.whiteList("/api/v1/public/");
-        assertTrue(PathGuard.matchWhiteList("/api/v1/public/", wl));
-        assertTrue(PathGuard.matchWhiteList("/api/v1/public/docs", wl));
-        assertFalse(PathGuard.matchWhiteList("/api/v1/public", wl));
+        Set<String> wl = PathGuard.whiteList("/public/");
+        assertTrue(PathGuard.matchWhiteList("/public/", wl));
+        assertTrue(PathGuard.matchWhiteList("/public/docs", wl));
+        assertFalse(PathGuard.matchWhiteList("/public", wl));
     }
 
     @Test
     @DisplayName("matchWhiteList - 不在白名单应返回 false")
     void matchWhiteList_notInList_shouldReturnFalse() {
-        Set<String> wl = PathGuard.whiteList("/api/v1/auth/login");
-        assertFalse(PathGuard.matchWhiteList("/api/v1/users", wl));
-        assertFalse(PathGuard.matchWhiteList("/api/v1/auth", wl));
+        Set<String> wl = PathGuard.whiteList("/auth/login");
+        assertFalse(PathGuard.matchWhiteList("/users", wl));
+        assertFalse(PathGuard.matchWhiteList("/auth", wl));
     }
 
     @Test

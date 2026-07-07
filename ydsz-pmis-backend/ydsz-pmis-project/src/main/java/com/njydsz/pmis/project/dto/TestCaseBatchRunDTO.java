@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 测试用例批量执行请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/test-cases/batch-run} 接口，对指定测试用例执行回归测试。
+ * <p>用于 {@code /rules/test-cases/batch-run} 接口，对指定测试用例执行回归测试。
  * {@code ids} 为空时执行全部测试用例。
  *
  * @author ydsz-pmis-team

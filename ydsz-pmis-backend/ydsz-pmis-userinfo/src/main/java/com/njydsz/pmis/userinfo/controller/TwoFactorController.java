@@ -25,7 +25,7 @@ import java.util.List;
  */
 @Tag(name = "双因素认证")
 @RestController
-@RequestMapping("/api/v1/user/2fa")
+@RequestMapping("/user/2fa")
 @RequiredArgsConstructor
 @Validated
 public class TwoFactorController {

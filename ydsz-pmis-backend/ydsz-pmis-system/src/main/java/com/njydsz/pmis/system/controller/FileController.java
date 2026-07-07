@@ -36,7 +36,7 @@ import java.util.List;
  */
 @Tag(name = "文件存储", description = "文件上传、下载、删除及查询相关接口")
 @RestController
-@RequestMapping("/api/v1/file")
+@RequestMapping("/file")
 @RequiredArgsConstructor
 @Validated
 public class FileController {

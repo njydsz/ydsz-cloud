@@ -23,7 +23,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @Tag(name = "workflow-migration", description = "工作流实例迁移接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowMigrationController {

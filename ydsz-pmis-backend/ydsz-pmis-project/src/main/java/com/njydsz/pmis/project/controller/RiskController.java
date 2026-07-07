@@ -40,7 +40,7 @@ import java.util.Map;
  */
 @Tag(name = "风险管理", description = "风险管理相关接口")
 @RestController
-@RequestMapping("/api/v1/execution/risk")
+@RequestMapping("/execution/risk")
 @RequiredArgsConstructor
 @Validated
 public class RiskController {

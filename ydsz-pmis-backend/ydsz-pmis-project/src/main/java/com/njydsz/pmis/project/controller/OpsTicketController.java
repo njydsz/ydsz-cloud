@@ -35,7 +35,7 @@ import java.util.Map;
  */
 @Tag(name = "运维工单管理")
 @RestController
-@RequestMapping("/api/v1/execution/ops-ticket")
+@RequestMapping("/execution/ops-ticket")
 @RequiredArgsConstructor
 @Validated
 public class OpsTicketController {

@@ -30,7 +30,7 @@ public interface NotificationPushClient {
      * @param payload 消息内容
      * @return 推送结果
      */
-    @PostMapping("/api/v1/notifications/push")
+    @PostMapping("/notifications/push")
     Map<String, Object> pushToUser(@RequestParam("userId") Long userId,
                                    @RequestParam("type") String type,
                                    @RequestBody Object payload);
@@ -42,7 +42,7 @@ public interface NotificationPushClient {
      * @param payload 消息内容
      * @return 推送结果
      */
-    @PostMapping("/api/v1/notifications/broadcast")
+    @PostMapping("/notifications/broadcast")
     Map<String, Object> broadcast(@RequestParam("type") String type,
                                   @RequestBody Object payload);
 }

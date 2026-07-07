@@ -37,7 +37,7 @@ import java.util.List;
  */
 @Tag(name = "用户管理", description = "用户管理相关接口")
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 @Validated
 public class UserController {

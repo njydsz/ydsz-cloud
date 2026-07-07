@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Agent 内部执行请求体 DTO
  *
- * <p>用于 {@code /api/v1/agent/internal/execute} 端点（供其他模块 Feign 调用，不走落库）。
+ * <p>用于 {@code /agent/internal/execute} 端点（供其他模块 Feign 调用，不走落库）。
  * 直接接收强类型参数，内部构造 {@link com.njydsz.pmis.agent.engine.AgentContext}，
  * 方便跨模块调用。
  *

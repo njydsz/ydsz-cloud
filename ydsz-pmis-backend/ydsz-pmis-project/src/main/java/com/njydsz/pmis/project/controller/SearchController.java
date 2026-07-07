@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "全文检索")
 @RestController
-@RequestMapping("/api/v1/execution/search")
+@RequestMapping("/execution/search")
 @RequiredArgsConstructor
 @Validated
 public class SearchController {

@@ -38,7 +38,7 @@ import java.util.Set;
 @Slf4j
 @Tag(name = "批量导入")
 @RestController
-@RequestMapping("/api/v1/execution/import")
+@RequestMapping("/execution/import")
 @RequiredArgsConstructor
 @Validated
 public class ImportExportController {

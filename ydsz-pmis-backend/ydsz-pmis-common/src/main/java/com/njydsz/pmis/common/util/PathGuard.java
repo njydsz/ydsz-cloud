@@ -75,8 +75,8 @@ public final class PathGuard {
     /**
      * 精确匹配白名单（含路径边界）。
      *
-     * <p>替代 {@code path::startsWith}：{@code /api/v1/auth/login} 只匹配自身，
-     * 不匹配 {@code /api/v1/auth/login/anything}。
+     * <p>替代 {@code path::startsWith}：{@code /auth/login} 只匹配自身，
+     * 不匹配 {@code /auth/login/anything}。
      *
      * @param path       已规范化的路径
      * @param whiteList  白名单路径集合

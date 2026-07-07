@@ -37,7 +37,7 @@ import java.util.Map;
  */
 @Tag(name = "收入确认")
 @RestController
-@RequestMapping("/api/v1/execution/revenue")
+@RequestMapping("/execution/revenue")
 @RequiredArgsConstructor
 @Validated
 public class RevenueController {

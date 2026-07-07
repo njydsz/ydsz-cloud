@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "认证管理", description = "认证管理相关接口")
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 @Validated
 public class AuthController {

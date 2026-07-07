@@ -28,7 +28,7 @@ public interface NotificationClient {
      * @param payload 通知发送参数（与 NotificationSendDTO 字段对齐）
      * @return 实际入库条数
      */
-    @PostMapping("/api/v1/notifications/send")
+    @PostMapping("/notifications/send")
     Result<Integer> send(@RequestBody NotificationFeignDTO payload);
 
     /**
@@ -42,7 +42,7 @@ public interface NotificationClient {
      * @param payload 消息内容
      * @return 推送结果
      */
-    @PostMapping("/api/v1/notifications/push")
+    @PostMapping("/notifications/push")
     Result<Map<String, Object>> pushRealtime(@RequestParam("userId") Long userId,
                                              @RequestParam("type") String type,
                                              @RequestBody RealtimePushDTO payload);

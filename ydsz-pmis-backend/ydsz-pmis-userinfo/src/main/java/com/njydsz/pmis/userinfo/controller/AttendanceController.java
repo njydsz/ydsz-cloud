@@ -35,7 +35,7 @@ import java.util.Map;
  */
 @Tag(name = "考勤管理")
 @RestController
-@RequestMapping("/api/v1/attendance")
+@RequestMapping("/attendance")
 @RequiredArgsConstructor
 @Validated
 public class AttendanceController {

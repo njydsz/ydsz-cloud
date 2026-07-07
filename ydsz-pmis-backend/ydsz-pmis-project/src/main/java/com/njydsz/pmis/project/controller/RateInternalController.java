@@ -38,7 +38,7 @@ import java.util.List;
  */
 @Tag(name = "对内成本费率")
 @RestController
-@RequestMapping("/api/v1/execution/rate-internal")
+@RequestMapping("/execution/rate-internal")
 @RequiredArgsConstructor
 @Validated
 public class RateInternalController {

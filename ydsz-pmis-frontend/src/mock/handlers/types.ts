@@ -31,7 +31,7 @@ export type MockHandlerFn = (ctx: MockContext) => Promise<unknown> | unknown
 export interface MockHandler {
   /** HTTP 方法 */
   method: MockMethod
-  /** 匹配路径 (支持 {id} 占位符, 已剥离 /api/v1 前缀) */
+  /** 匹配路径 (支持 {id} 占位符, 已剥离  前缀) */
   path: string
   /** 处理函数, 返回 Mock 数据 */
   handler: MockHandlerFn

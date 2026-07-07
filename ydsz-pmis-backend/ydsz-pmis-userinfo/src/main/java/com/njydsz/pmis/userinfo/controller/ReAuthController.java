@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "二次认证")
 @RestController
-@RequestMapping("/api/v1/user/reauth")
+@RequestMapping("/user/reauth")
 @RequiredArgsConstructor
 @Validated
 public class ReAuthController {

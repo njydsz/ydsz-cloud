@@ -28,7 +28,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @Tag(name = "workflow-ai-generate", description = "工作流AI生成接口")
-@RequestMapping("/api/v1/workflow/ai")
+@RequestMapping("/workflow/ai")
 @RequiredArgsConstructor
 @Validated
 public class FlowAiGenerateController {

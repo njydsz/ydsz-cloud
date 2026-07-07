@@ -31,7 +31,7 @@ import java.util.Map;
  */
 @Tag(name = "任务调度")
 @RestController
-@RequestMapping("/api/v1/cronjob")
+@RequestMapping("/cronjob")
 @RequiredArgsConstructor
 @Validated
 public class JobController {

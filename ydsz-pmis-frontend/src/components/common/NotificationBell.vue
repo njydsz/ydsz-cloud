@@ -2,7 +2,7 @@
   @file 通知中心铃铛组件
   @description 顶栏通知入口：未读数角标、收件箱弹层、标记已读。
     - WebSocket 实时刷新未读数（P0-2），失败时 60s 轮询兜底
-    - 与后端 NotificationController（/api/v1/notifications）对接
+    - 与后端 NotificationController（/notifications）对接
   @module components/common/NotificationBell
 -->
 <script setup lang="ts">

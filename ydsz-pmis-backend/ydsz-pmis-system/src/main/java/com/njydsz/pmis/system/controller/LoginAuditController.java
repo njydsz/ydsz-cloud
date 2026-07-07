@@ -30,7 +30,7 @@ import java.util.List;
  */
 @Tag(name = "登录审计", description = "登录审计日志查询接口")
 @RestController
-@RequestMapping("/api/v1/audit/login")
+@RequestMapping("/audit/login")
 @RequiredArgsConstructor
 @Validated
 public class LoginAuditController {

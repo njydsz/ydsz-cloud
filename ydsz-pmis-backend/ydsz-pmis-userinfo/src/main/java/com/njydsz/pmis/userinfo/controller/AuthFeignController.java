@@ -29,7 +29,7 @@ import java.util.List;
  */
 @Tag(name = "Feign-认证上下文")
 @RestController
-@RequestMapping("/api/v1/feign/auth")
+@RequestMapping("/feign/auth")
 @RequiredArgsConstructor
 public class AuthFeignController {
 

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(
         name = "ydsz-pmis-project",
         contextId = "initiationFeignClient",
-        path = "/api/v1/project/initiation",
+        path = "/project/initiation",
         fallbackFactory = InitiationFeignClientFallbackFactory.class
 )
 public interface InitiationFeignClient {

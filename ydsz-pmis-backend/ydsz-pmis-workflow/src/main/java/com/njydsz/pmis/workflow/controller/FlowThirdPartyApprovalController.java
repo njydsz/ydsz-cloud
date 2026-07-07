@@ -46,7 +46,7 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "三方审批回调")
 @RestController
-@RequestMapping("/api/v1/workflow/third-party")
+@RequestMapping("/workflow/third-party")
 @RequiredArgsConstructor
 @Validated
 public class FlowThirdPartyApprovalController {

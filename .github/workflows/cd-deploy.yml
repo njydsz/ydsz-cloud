@@ -275,7 +275,7 @@ jobs:
             sleep 30
 
             # 通过 Prometheus 查询错误率（5xx / 总请求，最近 5 分钟）
-            ERROR_RATE=$(curl -s "http://prometheus-server.monitoring.svc.cluster.local:9090/api/v1/query" \
+            ERROR_RATE=$(curl -s "http://prometheus-server.monitoring.svc.cluster.local:9090/query" \
               --data-urlencode "query=sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"pmis-${svc}.*\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"pmis-${svc}.*\"}[5m]))" \
               | jq -r '.data.result[0].value[1] // "0"')
             echo "pmis-${svc} 当前 5xx 错误率: ${ERROR_RATE}"

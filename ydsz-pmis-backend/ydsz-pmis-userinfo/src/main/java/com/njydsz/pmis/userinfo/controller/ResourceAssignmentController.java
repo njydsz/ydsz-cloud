@@ -35,7 +35,7 @@ import java.util.Map;
  */
 @Tag(name = "资源分配管理")
 @RestController
-@RequestMapping("/api/v1/resource-assignments")
+@RequestMapping("/resource-assignments")
 @RequiredArgsConstructor
 @Validated
 public class ResourceAssignmentController {

@@ -246,8 +246,8 @@ pmis:
     ip-whitelist-enabled: false
     # 白名单放行的路径前缀（这些路径不校验 IP）
     ip-whitelist-skip-paths:
-      - /api/v1/health
-      - /api/v1/auth/login
+      - /health
+      - /auth/login
 
   # ---------- KMS 密钥管理（P2-9：轻量级密钥管理方案） ----------
   # 密钥提供者：environment（默认）/ jasypt / vault（未来扩展）

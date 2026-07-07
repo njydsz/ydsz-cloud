@@ -25,7 +25,7 @@ import java.util.Map;
  */
 @Tag(name = "预算强管控")
 @RestController
-@RequestMapping("/api/v1/execution/budget")
+@RequestMapping("/execution/budget")
 @RequiredArgsConstructor
 @Validated
 public class BudgetController {

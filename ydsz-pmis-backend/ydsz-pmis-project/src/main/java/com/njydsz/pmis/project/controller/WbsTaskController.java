@@ -40,7 +40,7 @@ import java.util.Map;
  */
 @Tag(name = "WBS 任务管理")
 @RestController
-@RequestMapping("/api/v1/execution/wbs")
+@RequestMapping("/execution/wbs")
 @RequiredArgsConstructor
 @Validated
 public class WbsTaskController {

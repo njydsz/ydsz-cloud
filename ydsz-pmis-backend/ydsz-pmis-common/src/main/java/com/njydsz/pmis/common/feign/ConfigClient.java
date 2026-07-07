@@ -27,7 +27,7 @@ public interface ConfigClient {
      * @param group 配置组
      * @return 配置项 Map
      */
-    @GetMapping("/api/v1/configs/group/{group}")
+    @GetMapping("/configs/group/{group}")
     Result<Map<String, String>> getGroup(@PathVariable("group") String group);
 
     /**
@@ -37,7 +37,7 @@ public interface ConfigClient {
      * @param key   配置键
      * @return 配置值
      */
-    @GetMapping("/api/v1/configs/by-key")
+    @GetMapping("/configs/by-key")
     Result<String> getValue(@RequestParam("group") String group, @RequestParam("key") String key);
 
     /**
@@ -45,6 +45,6 @@ public interface ConfigClient {
      *
      * @return 公开配置列表
      */
-    @GetMapping("/api/v1/configs/public")
+    @GetMapping("/configs/public")
     Result<List<Map<String, Object>>> listPublic();
 }

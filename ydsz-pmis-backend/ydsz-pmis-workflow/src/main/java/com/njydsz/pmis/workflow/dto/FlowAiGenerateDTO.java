@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * AI 一句话生成流程请求体 DTO
  *
- * <p>用于 {@code /api/v1/workflow/ai/generate} 接口，接收自然语言流程描述，
+ * <p>用于 {@code /workflow/ai/generate} 接口，接收自然语言流程描述，
  * 调用 AI Agent 生成 BPMN 2.0 XML 流程定义。
  *
  * @author ydsz-pmis-team

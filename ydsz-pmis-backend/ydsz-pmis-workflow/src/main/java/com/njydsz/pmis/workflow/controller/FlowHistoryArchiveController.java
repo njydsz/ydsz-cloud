@@ -35,7 +35,7 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "流程历史归档")
 @RestController
-@RequestMapping("/api/v1/workflow/history")
+@RequestMapping("/workflow/history")
 @RequiredArgsConstructor
 @Validated
 public class FlowHistoryArchiveController {

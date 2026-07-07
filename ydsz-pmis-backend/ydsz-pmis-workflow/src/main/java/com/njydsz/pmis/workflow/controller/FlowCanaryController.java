@@ -26,7 +26,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @Tag(name = "workflow-canary", description = "工作流灰度发布接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowCanaryController {

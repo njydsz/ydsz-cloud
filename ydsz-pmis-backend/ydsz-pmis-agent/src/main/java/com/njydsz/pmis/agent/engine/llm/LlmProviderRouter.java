@@ -21,7 +21,7 @@ import java.util.Map;
  * <p>切换方式（生产环境热更新）：
  * <pre>
  *   # Nacos 配置 pmis.agent.llm.provider=mock → spring-ai-openai
- *   # 调用 /api/v1/agent/llm/reload 触发 Bean 重建
+ *   # 调用 /agent/llm/reload 触发 Bean 重建
  * </pre>
  *
  * @author ydsz-pmis-team

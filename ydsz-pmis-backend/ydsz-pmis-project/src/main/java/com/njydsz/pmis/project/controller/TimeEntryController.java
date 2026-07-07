@@ -41,7 +41,7 @@ import java.util.Map;
  */
 @Tag(name = "工时管理")
 @RestController
-@RequestMapping("/api/v1/execution/time-entry")
+@RequestMapping("/execution/time-entry")
 @RequiredArgsConstructor
 @Validated
 public class TimeEntryController {

@@ -8,7 +8,7 @@ import lombok.Data;
 /**
  * 创建用户请求体 DTO
  *
- * <p>用于 {@code /api/v1/users} 接口，创建新用户账号。
+ * <p>用于 {@code /users} 接口，创建新用户账号。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

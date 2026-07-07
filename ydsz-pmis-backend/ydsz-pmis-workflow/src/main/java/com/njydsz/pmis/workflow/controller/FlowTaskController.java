@@ -43,7 +43,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @Tag(name = "workflow-task", description = "工作流任务操作接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowTaskController {

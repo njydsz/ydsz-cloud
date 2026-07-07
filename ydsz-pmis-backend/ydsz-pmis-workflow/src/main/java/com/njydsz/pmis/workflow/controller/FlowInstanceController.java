@@ -36,7 +36,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @Tag(name = "workflow-instance", description = "工作流流程实例接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowInstanceController {

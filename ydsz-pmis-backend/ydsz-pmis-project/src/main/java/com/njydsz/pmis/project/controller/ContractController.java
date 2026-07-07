@@ -37,7 +37,7 @@ import java.util.Map;
  */
 @Tag(name = "合同管理", description = "合同管理相关接口")
 @RestController
-@RequestMapping("/api/v1/project/contract")
+@RequestMapping("/project/contract")
 @RequiredArgsConstructor
 @Validated
 public class ContractController {

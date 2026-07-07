@@ -36,7 +36,7 @@ import java.util.Map;
  */
 @Tag(name = "系统-特性开关", description = "特性开关管理、灰度发布接口")
 @RestController
-@RequestMapping("/api/v1/feature-flags")
+@RequestMapping("/feature-flags")
 @RequiredArgsConstructor
 @Validated
 public class FeatureFlagController {

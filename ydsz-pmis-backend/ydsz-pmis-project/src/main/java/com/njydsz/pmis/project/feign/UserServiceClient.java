@@ -28,7 +28,7 @@ public interface UserServiceClient {
      * @param id 员工 ID
      * @return 员工信息（含姓名 / 部门 / 职级等）
      */
-    @GetMapping("/api/v1/user/employee/{id}")
+    @GetMapping("/user/employee/{id}")
     Result<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
 
     /**
@@ -37,7 +37,7 @@ public interface UserServiceClient {
      * @param customerId 客户 ID
      * @return 客户名称；服务降级时返回空字符串
      */
-    @GetMapping("/api/v1/user/customers/name")
+    @GetMapping("/user/customers/name")
     Result<String> getCustomerName(@RequestParam("customerId") Long customerId);
 
     /**
@@ -46,7 +46,7 @@ public interface UserServiceClient {
      * @param ids 员工 ID 列表
      * @return 员工 ID 到姓名的映射；服务降级时返回空 Map
      */
-    @GetMapping("/api/v1/user/employees/batch")
+    @GetMapping("/user/employees/batch")
     Result<Map<Long, String>> batchEmployeeName(@RequestParam("ids") List<Long> ids);
 
     /**
@@ -55,7 +55,7 @@ public interface UserServiceClient {
      * @param customerIds 客户 ID 列表
      * @return 客户 ID 到名称的映射
      */
-    @GetMapping("/api/v1/user/customers/batch-name")
+    @GetMapping("/user/customers/batch-name")
     Result<Map<Long, String>> batchCustomerName(@RequestParam("ids") List<Long> customerIds);
 
     /**
@@ -64,6 +64,6 @@ public interface UserServiceClient {
      * @param levelCode 职级编码（如 L4、L5）
      * @return 内部日费率；服务降级时返回 0
      */
-    @GetMapping("/api/v1/user/employee/level-rate")
+    @GetMapping("/user/employee/level-rate")
     Result<BigDecimal> getLevelRate(@RequestParam("levelCode") String levelCode);
 }

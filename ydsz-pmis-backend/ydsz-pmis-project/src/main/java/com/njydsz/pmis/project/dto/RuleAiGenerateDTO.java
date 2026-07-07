@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * AI 辅助生成规则请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/ai-generate} 与 {@code /api/v1/rules/ai-generate-and-save}
+ * <p>用于 {@code /rules/ai-generate} 与 {@code /rules/ai-generate-and-save}
  * 接口，接收自然语言描述与可用字段列表，调用 LLM 生成规则定义。
  *
  * @author ydsz-pmis-team

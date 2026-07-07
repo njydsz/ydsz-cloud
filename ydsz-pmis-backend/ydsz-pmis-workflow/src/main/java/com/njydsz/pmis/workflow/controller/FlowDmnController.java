@@ -32,7 +32,7 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "DMN 决策表")
 @RestController
-@RequestMapping("/api/v1/workflow/dmn")
+@RequestMapping("/workflow/dmn")
 @RequiredArgsConstructor
 @Validated
 public class FlowDmnController {

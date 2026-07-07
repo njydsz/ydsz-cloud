@@ -1,16 +1,16 @@
 /**
  * @file Vite 插件: 本地 Mock 数据服务器（批次 20 补齐 P1 vite-plugin-mock）
- * @description 在 Vite dev server 中拦截 /api/v1/* 请求并返回 Mock 数据,
+ * @description 在 Vite dev server 中拦截 /* 请求并返回 Mock 数据,
  *              使前端在后端未启动时也能独立运行; 关闭后请求透传至 proxy。
  *
  * 设计目标:
  * 1. 后端未启动时, 前端可独立运行 (开发联调、UI 调试、CI 截图测试)
  * 2. 不需要真实后端, 降低新成员 onboarding 成本
  * 3. 与 Vite dev server 集成, 不污染 build 产物
- * 4. 拦截真实路径 /api/v1/*, 与生产环境完全一致, 关闭时自动 fallback 到 proxy
+ * 4. 拦截真实路径 /*, 与生产环境完全一致, 关闭时自动 fallback 到 proxy
  *
  * 路由策略:
- * - 启用 mock: 直接在 dev server 中间件里响应 /api/v1/* 请求
+ * - 启用 mock: 直接在 dev server 中间件里响应 /* 请求
  * - 关闭 mock: 请求原样透传给 proxy, 由 vite.config.ts 中的 proxy 配置转发
  *
  * 控制:
@@ -28,7 +28,7 @@ export interface MockPluginOptions {
   enabled?: boolean
   /** 模拟网络延迟 (ms), 默认 200ms */
   delay?: number
-  /** mock 前缀, 默认 /api/v1 (与生产后端一致, 前端代码 0 改动) */
+  /** mock 前缀, 默认  (与生产后端一致, 前端代码 0 改动) */
   prefix?: string
   /** 是否打印 mock 请求日志, 默认 false */
   verbose?: boolean
@@ -37,7 +37,7 @@ export interface MockPluginOptions {
 /**
  * Vite 插件工厂: 注册 PMIS 本地 Mock 中间件
  *
- * 在 dev server 中拦截 /api/v1/* 请求, 按方法+路径匹配 mockHandlers,
+ * 在 dev server 中拦截 /* 请求, 按方法+路径匹配 mockHandlers,
  * 命中则注入延迟并返回统一响应结构, 未命中则透传给 proxy。
  *
  * @param options 插件配置项 (enabled/delay/prefix/verbose), 缺省时从 env 读取
@@ -47,7 +47,7 @@ export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
   const {
     enabled = (import.meta.env?.VITE_USE_MOCK ?? 'true') === 'true',
     delay: defaultDelay = Number(import.meta.env?.VITE_MOCK_DELAY ?? 200),
-    prefix = '/api/v1',
+    prefix = '',
     verbose = false,
   } = options
 
@@ -75,8 +75,8 @@ export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
 
       server.middlewares.use(async (req, res, next) => {
         const rawUrl = req.url || ''
-        // 只接管 /api/v1 开头
-        if (!rawUrl.startsWith('/api/v1')) {
+        // 只接管  开头
+        if (!rawUrl.startsWith('')) {
           return next()
         }
 

@@ -36,7 +36,7 @@ import java.util.List;
  */
 @Tag(name = "合同模板管理")
 @RestController
-@RequestMapping("/api/v1/project/contract-template")
+@RequestMapping("/project/contract-template")
 @RequiredArgsConstructor
 @Validated
 public class ContractTemplateController {

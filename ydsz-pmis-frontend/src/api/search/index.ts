@@ -2,7 +2,7 @@
  * @file 全局搜索 API
  * @description 项目全文检索（基于 PostgreSQL tsvector，P2-19 替代 ES），
  *              对应后端 SearchController
- *              /api/v1/execution/search/projects（/api/v1 前缀由 baseURL 注入）
+ *              /execution/search/projects（ 前缀由 baseURL 注入）
  * @module api/search
  */
 import { request } from '@/utils/request'

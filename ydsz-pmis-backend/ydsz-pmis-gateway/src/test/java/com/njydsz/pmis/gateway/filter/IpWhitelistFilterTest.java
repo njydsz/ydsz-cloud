@@ -78,7 +78,7 @@ class IpWhitelistFilterTest {
         properties.setIpWhitelistEnabled(false);
         properties.setIpWhitelist("10.0.0.1");
 
-        ServerWebExchange exchange = buildExchange("/api/v1/users", "1.2.3.4");
+        ServerWebExchange exchange = buildExchange("/users", "1.2.3.4");
         GatewayFilterChain chain = mockChain();
 
         filter.filter(exchange, chain).block();
@@ -93,7 +93,7 @@ class IpWhitelistFilterTest {
         properties.setIpWhitelistEnabled(true);
         properties.setIpWhitelist("");
 
-        ServerWebExchange exchange = buildExchange("/api/v1/users", "1.2.3.4");
+        ServerWebExchange exchange = buildExchange("/users", "1.2.3.4");
         GatewayFilterChain chain = mockChain();
 
         filter.filter(exchange, chain).block();
@@ -106,9 +106,9 @@ class IpWhitelistFilterTest {
     void filter_skipPath_shouldPassThrough() {
         properties.setIpWhitelistEnabled(true);
         properties.setIpWhitelist("10.0.0.1");
-        properties.setIpWhitelistSkipPaths(List.of("/api/v1/health", "/api/v1/auth/login"));
+        properties.setIpWhitelistSkipPaths(List.of("/health", "/auth/login"));
 
-        ServerWebExchange exchange = buildExchange("/api/v1/health", "1.2.3.4");
+        ServerWebExchange exchange = buildExchange("/health", "1.2.3.4");
         GatewayFilterChain chain = mockChain();
 
         filter.filter(exchange, chain).block();
@@ -121,9 +121,9 @@ class IpWhitelistFilterTest {
     void filter_skipPathPrefix_shouldPassThrough() {
         properties.setIpWhitelistEnabled(true);
         properties.setIpWhitelist("10.0.0.1");
-        properties.setIpWhitelistSkipPaths(List.of("/api/v1/auth/"));
+        properties.setIpWhitelistSkipPaths(List.of("/auth/"));
 
-        ServerWebExchange exchange = buildExchange("/api/v1/auth/login", "1.2.3.4");
+        ServerWebExchange exchange = buildExchange("/auth/login", "1.2.3.4");
         GatewayFilterChain chain = mockChain();
 
         filter.filter(exchange, chain).block();
@@ -137,7 +137,7 @@ class IpWhitelistFilterTest {
         properties.setIpWhitelistEnabled(true);
         properties.setIpWhitelist("192.168.1.0/24,10.0.0.1");
 
-        ServerWebExchange exchange = buildExchange("/api/v1/users", "192.168.1.100");
+        ServerWebExchange exchange = buildExchange("/users", "192.168.1.100");
         GatewayFilterChain chain = mockChain();
 
         filter.filter(exchange, chain).block();
@@ -152,7 +152,7 @@ class IpWhitelistFilterTest {
         properties.setIpWhitelistEnabled(true);
         properties.setIpWhitelist("192.168.1.0/24");
 
-        ServerWebExchange exchange = buildExchange("/api/v1/users", "8.8.8.8");
+        ServerWebExchange exchange = buildExchange("/users", "8.8.8.8");
         GatewayFilterChain chain = mockChain();
 
         filter.filter(exchange, chain).block();
@@ -177,7 +177,7 @@ class IpWhitelistFilterTest {
         properties.setIpWhitelist("1.2.3.4");
 
         // X-Forwarded-For: 1.2.3.4, 5.6.7.8 → 取第一个 IP 1.2.3.4
-        ServerWebExchange exchange = buildExchange("/api/v1/users", "1.2.3.4, 5.6.7.8");
+        ServerWebExchange exchange = buildExchange("/users", "1.2.3.4, 5.6.7.8");
         GatewayFilterChain chain = mockChain();
 
         filter.filter(exchange, chain).block();

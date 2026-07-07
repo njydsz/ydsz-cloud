@@ -33,7 +33,7 @@ import java.util.List;
  */
 @Tag(name = "消息模板", description = "消息模板的增删改查接口")
 @RestController
-@RequestMapping("/api/v1/message/template")
+@RequestMapping("/message/template")
 @RequiredArgsConstructor
 @Validated
 public class MessageTemplateController {

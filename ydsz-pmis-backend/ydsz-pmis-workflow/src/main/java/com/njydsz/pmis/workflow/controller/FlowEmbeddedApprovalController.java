@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Tag(name = "嵌入式审批")
 @RestController
-@RequestMapping("/api/v1/workflow/embedded")
+@RequestMapping("/workflow/embedded")
 @RequiredArgsConstructor
 @Validated
 public class FlowEmbeddedApprovalController {
@@ -104,7 +104,7 @@ public class FlowEmbeddedApprovalController {
     /**
      * 嵌入式快捷操作（按业务类型 + 业务 ID）
      *
-     * <p>URL 形式：/api/v1/workflow/embedded/{businessType}/{businessId}/action
+     * <p>URL 形式：/workflow/embedded/{businessType}/{businessId}/action
      */
     @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
     @PostMapping("/{businessType}/{businessId}/action")

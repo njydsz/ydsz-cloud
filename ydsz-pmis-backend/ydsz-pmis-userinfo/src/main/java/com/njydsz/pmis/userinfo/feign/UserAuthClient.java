@@ -23,7 +23,7 @@ public interface UserAuthClient {
      * @param username 用户名
      * @return 统一响应结果，包含登录上下文（密码、角色、权限等）
      */
-    @GetMapping("/api/v1/feign/auth/context/by-username")
+    @GetMapping("/feign/auth/context/by-username")
     Result<LoginContextDTO> getLoginContextByUsername(@RequestParam("username") String username);
 
     /**
@@ -32,6 +32,6 @@ public interface UserAuthClient {
      * @param userId 用户 ID
      * @return 统一响应结果，包含登录上下文（密码、角色、权限等）
      */
-    @GetMapping("/api/v1/feign/auth/context/by-id")
+    @GetMapping("/feign/auth/context/by-id")
     Result<LoginContextDTO> getLoginContextById(@RequestParam("userId") Long userId);
 }

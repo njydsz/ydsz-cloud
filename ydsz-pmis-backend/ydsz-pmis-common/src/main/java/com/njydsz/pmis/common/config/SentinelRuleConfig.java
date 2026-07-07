@@ -75,22 +75,22 @@ public class SentinelRuleConfig {
         List<FlowRule> rules = new ArrayList<>();
 
         // 认证接口（防暴力枚举）
-        rules.add(buildFlowRule("POST:/api/v1/auth/login", 50));
-        rules.add(buildFlowRule("POST:/api/v1/auth/refresh", 50));
-        rules.add(buildFlowRule("POST:/api/v1/auth/logout", 100));
+        rules.add(buildFlowRule("POST:/auth/login", 50));
+        rules.add(buildFlowRule("POST:/auth/refresh", 50));
+        rules.add(buildFlowRule("POST:/auth/logout", 100));
 
         // 核心业务接口
-        rules.add(buildFlowRule("POST:/api/v1/contracts", 100));
-        rules.add(buildFlowRule("POST:/api/v1/payments", 100));
-        rules.add(buildFlowRule("POST:/api/v1/initiations", 100));
-        rules.add(buildFlowRule("POST:/api/v1/projects", 100));
+        rules.add(buildFlowRule("POST:/contracts", 100));
+        rules.add(buildFlowRule("POST:/payments", 100));
+        rules.add(buildFlowRule("POST:/initiations", 100));
+        rules.add(buildFlowRule("POST:/projects", 100));
 
         // 报表/导出/AI（重负载，需限流保护）
-        rules.add(buildFlowRule("GET:/api/v1/reports", 20));
-        rules.add(buildFlowRule("GET:/api/v1/cockpit", 20));
-        rules.add(buildFlowRule("POST:/api/v1/exports", 10));
-        rules.add(buildFlowRule("POST:/api/v1/agent/orchestration", 10));
-        rules.add(buildFlowRule("POST:/api/v1/agent/prediction", 10));
+        rules.add(buildFlowRule("GET:/reports", 20));
+        rules.add(buildFlowRule("GET:/cockpit", 20));
+        rules.add(buildFlowRule("POST:/exports", 10));
+        rules.add(buildFlowRule("POST:/agent/orchestration", 10));
+        rules.add(buildFlowRule("POST:/agent/prediction", 10));
 
         // 全局默认
         rules.add(buildFlowRule("default", 200));
@@ -108,12 +108,12 @@ public class SentinelRuleConfig {
 
         // 核心接口：异常比例熔断
         String[] criticalResources = {
-                "POST:/api/v1/auth/login",
-                "POST:/api/v1/contracts",
-                "POST:/api/v1/payments",
-                "POST:/api/v1/initiations",
-                "GET:/api/v1/reports",
-                "GET:/api/v1/cockpit"
+                "POST:/auth/login",
+                "POST:/contracts",
+                "POST:/payments",
+                "POST:/initiations",
+                "GET:/reports",
+                "GET:/cockpit"
         };
         for (String resource : criticalResources) {
             // 异常比例熔断

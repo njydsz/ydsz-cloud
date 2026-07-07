@@ -39,7 +39,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @Tag(name = "workflow-monitor", description = "工作流监控与效率分析接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowMonitorController {

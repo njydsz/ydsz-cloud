@@ -18,7 +18,7 @@ import java.util.Map;
  * 可计费利用率定时任务处理器
  *
  * <p>每日凌晨 02:30 触发，调用 ydsz-pmis-project 的
- * {@code /api/v1/execution/billable-utilization/recompute?period=yyyy-MM} 接口，
+ * {@code /execution/billable-utilization/recompute?period=yyyy-MM} 接口，
  * 由项目业务模块内部聚合 pmis_execution_time_entry 并写入快照表
  * pmis_billable_utilization_snapshot。
  *

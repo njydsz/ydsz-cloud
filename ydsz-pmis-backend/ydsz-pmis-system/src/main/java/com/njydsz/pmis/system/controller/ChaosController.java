@@ -53,7 +53,7 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "系统-混沌工程", description = "混沌工程实验管理接口（仅 dev/staging 环境）")
 @RestController
-@RequestMapping("/api/v1/chaos")
+@RequestMapping("/chaos")
 @RequiredArgsConstructor
 @Validated
 public class ChaosController {

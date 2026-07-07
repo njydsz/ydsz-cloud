@@ -40,7 +40,7 @@ import java.util.Map;
  */
 @Tag(name = "AI 智能体")
 @RestController
-@RequestMapping("/api/v1/agent")
+@RequestMapping("/agent")
 @RequiredArgsConstructor
 @Validated
 public class AgentController {

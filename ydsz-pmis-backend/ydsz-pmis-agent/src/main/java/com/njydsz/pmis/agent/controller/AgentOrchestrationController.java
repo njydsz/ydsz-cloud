@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "AI 多智能体编排")
 @RestController
-@RequestMapping("/api/v1/agent/orchestration")
+@RequestMapping("/agent/orchestration")
 @RequiredArgsConstructor
 @Validated
 public class AgentOrchestrationController {

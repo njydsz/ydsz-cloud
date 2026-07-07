@@ -34,7 +34,7 @@ import java.util.List;
  */
 @Tag(name = "用户会话")
 @RestController
-@RequestMapping("/api/v1/user/session")
+@RequestMapping("/user/session")
 @RequiredArgsConstructor
 @Validated
 public class SessionController {

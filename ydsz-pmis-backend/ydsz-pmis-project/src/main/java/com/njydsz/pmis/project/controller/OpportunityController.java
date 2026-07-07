@@ -38,7 +38,7 @@ import java.util.Map;
  */
 @Tag(name = "商机管理", description = "商机管理相关接口")
 @RestController
-@RequestMapping("/api/v1/project/opportunity")
+@RequestMapping("/project/opportunity")
 @RequiredArgsConstructor
 @Validated
 public class OpportunityController {

@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @Tag(name = "通知中心", description = "通知发送、收件箱及实时推送接口")
 @RestController
-@RequestMapping("/api/v1/notifications")
+@RequestMapping("/notifications")
 @RequiredArgsConstructor
 @Validated
 public class NotificationController {

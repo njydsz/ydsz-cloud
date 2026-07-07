@@ -25,6 +25,6 @@ public interface InitiationServiceClient {
      * @param id 立项 ID
      * @return {initiationId, projectCode, projectName, budgetAmount, estimatedAmount, stage}
      */
-    @GetMapping("/api/v1/project/initiation/{id}/budget/snapshot")
+    @GetMapping("/project/initiation/{id}/budget/snapshot")
     Result<Map<String, Object>> budgetSnapshot(@PathVariable("id") Long id);
 }

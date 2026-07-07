@@ -28,7 +28,7 @@ public interface BenchResourceClient {
      *
      * @return Bench 仪表盘汇总数据
      */
-    @GetMapping("/api/v1/bench/dashboard")
+    @GetMapping("/bench/dashboard")
     Result<Map<String, Object>> getBenchDashboard();
 
     /**
@@ -37,7 +37,7 @@ public interface BenchResourceClient {
      * @param initiationId 立项 ID
      * @return 资源分配列表（每条记录为一个 Map）
      */
-    @GetMapping("/api/v1/resource-assignments/by-initiation/{initiationId}")
+    @GetMapping("/resource-assignments/by-initiation/{initiationId}")
     Result<List<Map<String, Object>>> listResourceAssignmentsByInitiation(
             @PathVariable("initiationId") Long initiationId);
 }

@@ -81,7 +81,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/rules")
+@RequestMapping("/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、AI 增强、规则集市场")

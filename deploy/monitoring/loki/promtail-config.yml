@@ -29,7 +29,7 @@ positions:
 # Loki 推送目标
 # =============================================================================
 clients:
-  - url: http://loki:3100/loki/api/v1/push
+  - url: http://loki:3100/loki/push
     # 批处理配置
     batchwait: 1s
     batchsize: 1048576  # 1MB

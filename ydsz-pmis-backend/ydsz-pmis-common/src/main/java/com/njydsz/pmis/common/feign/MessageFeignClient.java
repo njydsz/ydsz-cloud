@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * 消息服务 Feign 客户端。
  *
- * <p>对接 message 模块 {@code POST /api/v1/message/send}，支持 EMAIL / SMS / PUSH 通道。
+ * <p>对接 message 模块 {@code POST /message/send}，支持 EMAIL / SMS / PUSH 通道。
  * 入参使用 {@link Map} 以避免跨模块 DTO 依赖（字段对齐 MessageSendDTO）。
  *
  * @author ydsz-pmis-team
@@ -19,7 +19,7 @@ import java.util.Map;
 @FeignClient(
         name = "ydsz-pmis-system",
         contextId = "messageFeignClient",
-        path = "/api/v1/message",
+        path = "/message",
         fallbackFactory = MessageFeignClientFallbackFactory.class
 )
 public interface MessageFeignClient {

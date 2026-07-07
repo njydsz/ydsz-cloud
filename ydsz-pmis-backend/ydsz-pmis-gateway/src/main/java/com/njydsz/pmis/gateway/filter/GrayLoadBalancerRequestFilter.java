@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * <ol>
  *   <li>请求头 {@code X-Gray-Tag}(值: {@code gray} / {@code stable})</li>
  *   <li>查询参数 {@code gray=true}(命中则灰度,{@code gray=false} 则稳定)</li>
- *   <li>路径模式 {@code /api/v1/canary/**}(自动走灰度)</li>
+ *   <li>路径模式 {@code /canary/**}(自动走灰度)</li>
  * </ol>
  *
  * <h3>标识写入位置</h3>
@@ -48,7 +48,7 @@ public class GrayLoadBalancerRequestFilter implements GlobalFilter, Ordered {
     private static final String QUERY_PARAM_GRAY = "gray";
 
     /** 灰度路径前缀:匹配此路径自动走灰度 */
-    private static final String CANARY_PATH_PREFIX = "/api/v1/canary/";
+    private static final String CANARY_PATH_PREFIX = "/canary/";
 
     /**
      * 过滤逻辑:解析灰度标识 → 写入 exchange attribute 与请求头 → 转发
@@ -112,7 +112,7 @@ public class GrayLoadBalancerRequestFilter implements GlobalFilter, Ordered {
             return GRAY_TAG_STABLE;
         }
 
-        // 3. 检查路径模式 /api/v1/canary/** 自动走灰度
+        // 3. 检查路径模式 /canary/** 自动走灰度
         String path = request.getURI().getPath();
         if (path != null && path.startsWith(CANARY_PATH_PREFIX)) {
             return GRAY_TAG_GRAY;

@@ -14,7 +14,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string
   /** 后端 API 基础地址（如 https://api.pmis.example.com） */
   readonly VITE_API_BASE_URL: string
-  /** API 路径前缀（如 /api/v1） */
+  /** API 路径前缀（如 ） */
   readonly VITE_API_PREFIX: string
   /** 文件上传地址 */
   readonly VITE_UPLOAD_URL: string

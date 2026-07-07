@@ -99,7 +99,7 @@ public class StrictContentTypeFilter extends OncePerRequestFilter {
     /**
      * 判断路径是否在白名单中
      *
-     * <p>匹配规则: 路径以白名单前缀开头,或包含该前缀片段(兼容 /api/v1/auth/login 等嵌套路径)。
+     * <p>匹配规则: 路径以白名单前缀开头,或包含该前缀片段(兼容 /auth/login 等嵌套路径)。
      * 前缀已含前导斜杠与尾随斜杠,避免误匹配(如 /someauth/ 不会命中 /auth/)。
      *
      * @param path 请求 URI

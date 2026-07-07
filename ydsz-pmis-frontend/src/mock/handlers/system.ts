@@ -56,7 +56,7 @@ export const systemHandlers: MockHandler[] = [
           module: moduleName,
           action: ['CREATE', 'UPDATE', 'DELETE', 'QUERY'][i % 4],
           bizType: `${moduleName}:${i}:create`,
-          requestUrl: `/api/v1/${moduleName}/create`,
+          requestUrl: `/${moduleName}/create`,
           requestMethod: 'POST',
           success: i % 5 !== 0,
           costMs: 50 + ((i * 13) % 200),

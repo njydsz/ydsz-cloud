@@ -25,6 +25,6 @@ public interface MessageServiceClient {
      * @param request 消息请求体
      * @return 消息发送结果
      */
-    @PostMapping("/api/v1/message/send")
+    @PostMapping("/message/send")
     Result<MessageResult> send(@RequestBody MessageRequest request);
 }

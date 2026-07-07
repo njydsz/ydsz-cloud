@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @Tag(name = "系统-配置中心", description = "系统配置管理相关接口")
 @RestController
-@RequestMapping("/api/v1/configs")
+@RequestMapping("/configs")
 @RequiredArgsConstructor
 @Validated
 public class ConfigController {

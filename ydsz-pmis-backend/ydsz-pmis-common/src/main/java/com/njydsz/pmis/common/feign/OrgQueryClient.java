@@ -20,7 +20,7 @@ import java.util.List;
 @FeignClient(
         name = "ydsz-pmis-userinfo",
         contextId = "orgQueryClient",
-        path = "/api/v1/feign/org",
+        path = "/feign/org",
         fallbackFactory = OrgQueryClientFallbackFactory.class
 )
 public interface OrgQueryClient {

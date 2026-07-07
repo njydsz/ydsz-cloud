@@ -57,18 +57,18 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      * 白名单(不校验 Token)。
      *
      * <p>P0-C5 改为精确匹配：仅路径完全相等才放行，
-     * 杜绝 {@code /api/v1/auth/login/../users/list} 等 startsWith 绕过。
+     * 杜绝 {@code /auth/login/../users/list} 等 startsWith 绕过。
      */
     private static final Set<String> WHITE_LIST = PathGuard.whiteList(
-            "/api/v1/auth/login",
-            "/api/v1/auth/refresh",
-            "/api/v1/auth/captcha",
-            "/api/v1/auth/register",
-            "/api/v1/health",
+            "/auth/login",
+            "/auth/refresh",
+            "/auth/captcha",
+            "/auth/register",
+            "/health",
             // P0-2: 三方审批回调 webhook（钉钉/飞书/企微），通过签名验证保证安全
-            "/api/v1/workflow/third-party/dingtalk/callback",
-            "/api/v1/workflow/third-party/feishu/callback",
-            "/api/v1/workflow/third-party/wecom/callback"
+            "/workflow/third-party/dingtalk/callback",
+            "/workflow/third-party/feishu/callback",
+            "/workflow/third-party/wecom/callback"
     );
 
     /** JWT Token 生成与校验工具 */

@@ -82,7 +82,7 @@ export default defineConfig(({ mode }) => {
             }),
           ]),
       // P1 批次 20: 独立开发 mock 插件
-      // 启用后, 拦截 /api/v1/* 请求直接返回 mock 数据
+      // 启用后, 拦截 /* 请求直接返回 mock 数据
       // 关闭后, 请求自动 fallback 到 proxy 转发给后端
       viteMockPlugin({
         enabled: useMock,
@@ -178,7 +178,7 @@ export default defineConfig(({ mode }) => {
       port: 5173, // 开发服务器端口
       open: true, // 启动后自动打开浏览器
       host: '0.0.0.0', // 监听所有网卡, 便于容器 / 局域网访问
-      // 当 mock 关闭时, 代理 /api/v1/* 到后端
+      // 当 mock 关闭时, 代理 /* 到后端
       // 当 mock 启用时, viteMockPlugin 已经处理, 这里 proxy 不会触发
       proxy: useMock
         ? undefined

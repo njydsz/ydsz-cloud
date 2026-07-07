@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * AI 自然语言转规则请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/ai/nl2rule} 接口，调用 LLM 将自然语言描述转为
+ * <p>用于 {@code /rules/ai/nl2rule} 接口，调用 LLM 将自然语言描述转为
  * 结构化规则定义（含表达式、严重度、描述）。
  *
  * @author ydsz-pmis-team

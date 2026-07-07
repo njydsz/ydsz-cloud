@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Tag(name = "基础数据-字典")
 @RestController
-@RequestMapping("/api/v1/dict")
+@RequestMapping("/dict")
 @RequiredArgsConstructor
 @Validated
 public class DictController {

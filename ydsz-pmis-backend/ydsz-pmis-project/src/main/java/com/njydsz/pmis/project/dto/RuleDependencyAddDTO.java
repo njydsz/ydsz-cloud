@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 规则依赖新增请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/{ruleCode}/dependencies} 接口，为规则添加依赖关系
+ * <p>用于 {@code /rules/{ruleCode}/dependencies} 接口，为规则添加依赖关系
  * （依赖另一条规则的执行结果，支持级联禁用）。
  *
  * @author ydsz-pmis-team

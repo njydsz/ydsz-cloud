@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Tag(name = "Feign-组织架构查询")
 @RestController
-@RequestMapping("/api/v1/feign/org")
+@RequestMapping("/feign/org")
 @RequiredArgsConstructor
 public class OrgQueryFeignController {
 

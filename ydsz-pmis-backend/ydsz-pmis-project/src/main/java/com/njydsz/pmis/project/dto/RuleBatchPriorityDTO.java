@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 规则批量优先级调整请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/batch-priority} 接口，批量调整规则优先级。
+ * <p>用于 {@code /rules/batch-priority} 接口，批量调整规则优先级。
  * {@code delta} 为增量（可为负），最终优先级钳制在 0-100 范围。
  *
  * @author ydsz-pmis-team

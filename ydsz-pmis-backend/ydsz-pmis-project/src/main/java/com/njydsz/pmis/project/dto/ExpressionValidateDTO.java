@@ -8,7 +8,7 @@ import lombok.Data;
 /**
  * 表达式校验请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/validate-expression} 接口，校验条件/严重度/模板表达式。
+ * <p>用于 {@code /rules/validate-expression} 接口，校验条件/严重度/模板表达式。
  *
  * @author ydsz-pmis-team
  * @since 1.4.0

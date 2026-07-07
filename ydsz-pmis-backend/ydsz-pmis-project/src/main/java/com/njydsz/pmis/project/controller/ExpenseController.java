@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "费用报销")
 @RestController
-@RequestMapping("/api/v1/execution/expense")
+@RequestMapping("/execution/expense")
 @RequiredArgsConstructor
 @Validated
 public class ExpenseController {

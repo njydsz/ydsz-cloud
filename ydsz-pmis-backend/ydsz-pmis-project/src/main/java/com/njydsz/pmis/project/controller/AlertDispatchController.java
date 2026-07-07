@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @Tag(name = "预警分级推送")
 @RestController
-@RequestMapping("/api/v1/execution/alert-dispatch")
+@RequestMapping("/execution/alert-dispatch")
 @RequiredArgsConstructor
 @Validated
 public class AlertDispatchController {

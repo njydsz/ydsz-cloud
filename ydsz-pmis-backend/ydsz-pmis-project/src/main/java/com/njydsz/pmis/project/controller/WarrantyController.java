@@ -35,7 +35,7 @@ import java.util.List;
  */
 @Tag(name = "项目质保期管理")
 @RestController
-@RequestMapping("/api/v1/execution/warranty")
+@RequestMapping("/execution/warranty")
 @RequiredArgsConstructor
 @Validated
 public class WarrantyController {

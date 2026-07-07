@@ -27,7 +27,7 @@ public interface ExecutionClient {
      * @param recomputeAll 是否全量重算
      * @return 重算结果
      */
-    @PostMapping("/api/v1/execution/billable-utilization/recompute")
+    @PostMapping("/execution/billable-utilization/recompute")
     Result<Map<String, Object>> recomputeBillableUtilization(
             @RequestParam(value = "period", required = false) String period,
             @RequestParam(value = "recomputeAll", defaultValue = "false") boolean recomputeAll);
@@ -38,6 +38,6 @@ public interface ExecutionClient {
      * @param period 期间，为 null 时取当前期间
      * @return 平均快照统计
      */
-    @GetMapping("/api/v1/execution/billable-utilization/snapshot-average")
+    @GetMapping("/execution/billable-utilization/snapshot-average")
     Result<Map<String, Object>> snapshotAverage(@RequestParam(value = "period", required = false) String period);
 }

@@ -101,7 +101,7 @@ export const getProfitRank = (top = 10, sortBy?: string, period?: string) =>
 
 /**
  * EVM 挣值管理报表
- * 后端: GET /api/v1/execution/advanced-report/evm?initiationId=...
+ * 后端: GET /execution/advanced-report/evm?initiationId=...
  * @param initiationId 立项 ID
  * @returns EVM 挣值管理报表数据列表
  */
@@ -114,7 +114,7 @@ export const getEvmReport = (initiationId: number) =>
 
 /**
  * 人效排行榜 (默认近 3 个月)
- * 后端: GET /api/v1/execution/advanced-report/utilization-rank
+ * 后端: GET /execution/advanced-report/utilization-rank
  * @param top 取前 N 名，默认 20
  * @returns 人效排行榜列表
  */
@@ -134,7 +134,7 @@ export const getUtilizationReport = (top = 20) => getUtilizationRank(top)
 
 /**
  * Bench 成本报表 (默认近 30 天, 后端为 List)
- * 后端: GET /api/v1/execution/advanced-report/bench-cost
+ * 后端: GET /execution/advanced-report/bench-cost
  * @returns Bench 成本报表列表
  */
 export const getBenchCostReport = () =>
@@ -145,7 +145,7 @@ export const getBenchCostReport = () =>
 
 /**
  * 双费率利润对比 (后端按 period 全局聚合)
- * 后端: GET /api/v1/execution/advanced-report/dual-rate?period=YYYY-MM
+ * 后端: GET /execution/advanced-report/dual-rate?period=YYYY-MM
  * @param period 周期（YYYY-MM，可选）
  * @returns 双费率利润对比列表
  */
@@ -158,7 +158,7 @@ export const getDualRateComparison = (period?: string) =>
 
 /**
  * 资源甘特图 (必传 initiationId)
- * 后端: GET /api/v1/execution/advanced-report/gantt?initiationId=...
+ * 后端: GET /execution/advanced-report/gantt?initiationId=...
  * @param initiationId 立项 ID
  * @returns 资源甘特图数据列表
  */
@@ -171,7 +171,7 @@ export const getResourceGantt = (initiationId: number) =>
 
 /**
  * 项目风险预警看板 (后端为 List)
- * 后端: GET /api/v1/execution/advanced-report/risk-dashboard
+ * 后端: GET /execution/advanced-report/risk-dashboard
  * @returns 项目风险预警看板数据列表
  */
 export const getRiskDashboard = () =>

@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @Tag(name = "服务满意度评价")
 @RestController
-@RequestMapping("/api/v1/execution/satisfaction")
+@RequestMapping("/execution/satisfaction")
 @RequiredArgsConstructor
 @Validated
 public class SatisfactionController {

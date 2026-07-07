@@ -341,7 +341,7 @@ public class FileEnhanceServiceImpl implements FileEnhanceService {
                     .build());
         } catch (Exception e) {
             log.warn("[FilePreview] 生成 MinIO 预签名 URL 失败: fileKey={}, reason={}", fileKey, e.getMessage());
-            return "/api/v1/file/preview/" + fileKey;
+            return "/file/preview/" + fileKey;
         }
     }
 

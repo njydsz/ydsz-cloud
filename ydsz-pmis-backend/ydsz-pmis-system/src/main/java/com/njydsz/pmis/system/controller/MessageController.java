@@ -33,7 +33,7 @@ import java.util.List;
  */
 @Tag(name = "消息发送", description = "消息发送及发送日志查询接口")
 @RestController
-@RequestMapping("/api/v1/message")
+@RequestMapping("/message")
 @RequiredArgsConstructor
 @Validated
 public class MessageController {

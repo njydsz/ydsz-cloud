@@ -26,7 +26,7 @@ public interface MessageServiceClient {
      * @param dto 消息发送 DTO
      * @return 统一响应结果，包含供应商追踪 ID
      */
-    @PostMapping("/api/v1/message/send")
+    @PostMapping("/message/send")
     Result<Object> send(@RequestBody MessageFeignDTO dto);
 
     /**
@@ -34,7 +34,7 @@ public interface MessageServiceClient {
      *
      * @return 统一响应结果，包含通道名称列表
      */
-    @GetMapping("/api/v1/message/channels")
+    @GetMapping("/message/channels")
     Result<List<String>> channels();
 
     /**

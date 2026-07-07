@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 规则批量启停请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/batch-toggle} 接口，批量启用/停用规则。
+ * <p>用于 {@code /rules/batch-toggle} 接口，批量启用/停用规则。
  * 启用时校验 status=PUBLISHED，未发布的规则不能启用。
  *
  * @author ydsz-pmis-team

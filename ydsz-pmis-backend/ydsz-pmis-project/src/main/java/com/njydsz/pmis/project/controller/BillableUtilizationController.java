@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @Tag(name = "可计费利用率")
 @RestController
-@RequestMapping("/api/v1/execution/billable-utilization")
+@RequestMapping("/execution/billable-utilization")
 @RequiredArgsConstructor
 @Validated
 public class BillableUtilizationController {

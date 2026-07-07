@@ -33,7 +33,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/api/v1/execution/export")
+@RequestMapping("/execution/export")
 @RequiredArgsConstructor
 @Tag(name = "异步导出", description = "异步导出任务管理与下载中心")
 @Validated

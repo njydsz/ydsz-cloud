@@ -31,7 +31,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @Tag(name = "workflow-event", description = "工作流事件与通知通道接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowEventController {

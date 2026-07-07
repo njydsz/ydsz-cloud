@@ -30,7 +30,7 @@ import java.util.List;
  */
 @Tag(name = "数据导出审计", description = "数据导出审计记录查询接口")
 @RestController
-@RequestMapping("/api/v1/audit/export")
+@RequestMapping("/audit/export")
 @RequiredArgsConstructor
 @Validated
 public class DataExportAuditController {

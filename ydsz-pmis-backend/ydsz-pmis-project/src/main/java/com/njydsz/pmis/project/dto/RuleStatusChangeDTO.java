@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 规则状态变更请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/{ruleCode}/status} 接口，切换规则生命周期状态
+ * <p>用于 {@code /rules/{ruleCode}/status} 接口，切换规则生命周期状态
  * （DRAFT / REVIEW / PUBLISHED / ARCHIVED 等）。
  *
  * @author ydsz-pmis-team

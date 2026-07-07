@@ -22,7 +22,7 @@ import java.util.List;
  */
 @Tag(name = "基础数据-职级费率")
 @RestController
-@RequestMapping("/api/v1/job-levels")
+@RequestMapping("/job-levels")
 @RequiredArgsConstructor
 @Validated
 public class JobLevelController {

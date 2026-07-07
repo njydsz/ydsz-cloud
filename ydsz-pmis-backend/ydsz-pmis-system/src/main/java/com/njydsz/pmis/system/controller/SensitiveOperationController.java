@@ -30,7 +30,7 @@ import java.util.List;
  */
 @Tag(name = "敏感操作审计", description = "敏感操作审计记录查询接口")
 @RestController
-@RequestMapping("/api/v1/audit/sensitive-op")
+@RequestMapping("/audit/sensitive-op")
 @RequiredArgsConstructor
 @Validated
 public class SensitiveOperationController {

@@ -2,7 +2,7 @@
  * @file 规则引擎 API 接口封装
  * @description 提供规则定义的增删改查、启停切换、版本管理与回滚、Dry-run 仿真、
  *              表达式校验、执行统计、模板市场导入及 AI 辅助生成等能力，
- *              对应后端规则引擎 Controller（/execution/api/v1/rules）。
+ *              对应后端规则引擎 Controller（/execution/rules）。
  *              URL 前缀使用 /execution 是因为后端 execution 服务的 gateway 路由前缀。
  * @module api/execution/rule-engine
  */
@@ -158,7 +158,7 @@ export interface RuleEngineStats {
  * @returns 规则定义列表
  */
 export const listRules = () =>
-  request<RuleDefinition[]>({ url: '/execution/api/v1/rules', method: 'GET' })
+  request<RuleDefinition[]>({ url: '/execution/rules', method: 'GET' })
 
 /**
  * 查询单条规则详情
@@ -166,7 +166,7 @@ export const listRules = () =>
  * @returns 规则定义详情
  */
 export const getRule = (ruleCode: string) =>
-  request<RuleDefinition>({ url: `/execution/api/v1/rules/${ruleCode}`, method: 'GET' })
+  request<RuleDefinition>({ url: `/execution/rules/${ruleCode}`, method: 'GET' })
 
 /**
  * 新建 / 更新规则（按 code 幂等），同时记录版本变更
@@ -176,7 +176,7 @@ export const getRule = (ruleCode: string) =>
  */
 export const saveRule = (data: RuleDefinition, changeDesc?: string) =>
   request<RuleDefinition>({
-    url: '/execution/api/v1/rules',
+    url: '/execution/rules',
     method: 'POST',
     data,
     params: { changeDesc },
@@ -189,7 +189,7 @@ export const saveRule = (data: RuleDefinition, changeDesc?: string) =>
  */
 export const toggleRule = (ruleCode: string, enabled: boolean) =>
   request<void>({
-    url: `/execution/api/v1/rules/${ruleCode}/toggle`,
+    url: `/execution/rules/${ruleCode}/toggle`,
     method: 'PUT',
     params: { enabled },
   })
@@ -203,7 +203,7 @@ export const toggleRule = (ruleCode: string, enabled: boolean) =>
  */
 export const listVersions = (ruleCode: string) =>
   request<RuleVersion[]>({
-    url: `/execution/api/v1/rules/${ruleCode}/versions`,
+    url: `/execution/rules/${ruleCode}/versions`,
     method: 'GET',
   })
 
@@ -215,7 +215,7 @@ export const listVersions = (ruleCode: string) =>
  */
 export const rollbackRule = (ruleCode: string, version: number) =>
   request<RuleDefinition>({
-    url: `/execution/api/v1/rules/${ruleCode}/rollback`,
+    url: `/execution/rules/${ruleCode}/rollback`,
     method: 'POST',
     params: { version },
   })
@@ -230,7 +230,7 @@ export const rollbackRule = (ruleCode: string, version: number) =>
  */
 export const dryRun = (ruleCode: string | null, facts: Record<string, unknown>) =>
   request<RuleResult[]>({
-    url: '/execution/api/v1/rules/dry-run',
+    url: '/execution/rules/dry-run',
     method: 'POST',
     params: { ruleCode },
     data: facts,
@@ -245,7 +245,7 @@ export const dryRun = (ruleCode: string | null, facts: Record<string, unknown>) 
  */
 export const validateExpression = (expression: string) =>
   request<boolean>({
-    url: '/execution/api/v1/rules/validate',
+    url: '/execution/rules/validate',
     method: 'GET',
     params: { expression },
   })
@@ -257,7 +257,7 @@ export const validateExpression = (expression: string) =>
  * @returns 全局 + 按规则的执行统计
  */
 export const getStats = () =>
-  request<RuleEngineStats>({ url: '/execution/api/v1/rules/stats', method: 'GET' })
+  request<RuleEngineStats>({ url: '/execution/rules/stats', method: 'GET' })
 
 // ==================== 模板市场 ====================
 
@@ -266,7 +266,7 @@ export const getStats = () =>
  * @returns 模板列表
  */
 export const listTemplates = () =>
-  request<RuleTemplate[]>({ url: '/execution/api/v1/rules/templates', method: 'GET' })
+  request<RuleTemplate[]>({ url: '/execution/rules/templates', method: 'GET' })
 
 /**
  * 按类别查询规则模板
@@ -275,7 +275,7 @@ export const listTemplates = () =>
  */
 export const listTemplatesByCategory = (category: string) =>
   request<RuleTemplate[]>({
-    url: `/execution/api/v1/rules/templates/category/${category}`,
+    url: `/execution/rules/templates/category/${category}`,
     method: 'GET',
   })
 
@@ -286,7 +286,7 @@ export const listTemplatesByCategory = (category: string) =>
  */
 export const importTemplate = (templateCode: string) =>
   request<RuleDefinition>({
-    url: `/execution/api/v1/rules/templates/${templateCode}/import`,
+    url: `/execution/rules/templates/${templateCode}/import`,
     method: 'POST',
   })
 
@@ -300,7 +300,7 @@ export const importTemplate = (templateCode: string) =>
  */
 export const aiGenerate = (description: string, availableFields?: string[]) =>
   request<RuleDefinition>({
-    url: '/execution/api/v1/rules/ai-generate',
+    url: '/execution/rules/ai-generate',
     method: 'POST',
     data: { description, availableFields },
   })
@@ -313,7 +313,7 @@ export const aiGenerate = (description: string, availableFields?: string[]) =>
  */
 export const aiGenerateAndSave = (description: string, availableFields?: string[]) =>
   request<RuleDefinition>({
-    url: '/execution/api/v1/rules/ai-generate-and-save',
+    url: '/execution/rules/ai-generate-and-save',
     method: 'POST',
     data: { description, availableFields },
   })
@@ -335,7 +335,7 @@ export interface RuleConflict {
  * @returns 冲突规则对列表
  */
 export const detectConflicts = () =>
-  request<RuleConflict[]>({ url: '/execution/api/v1/rules/conflicts', method: 'GET' })
+  request<RuleConflict[]>({ url: '/execution/rules/conflicts', method: 'GET' })
 
 // ==================== 测试用例管理 ====================
 
@@ -361,7 +361,7 @@ export interface RuleTestCase {
  */
 export const listTestCases = (ruleCode?: string) =>
   request<RuleTestCase[]>({
-    url: '/execution/api/v1/rules/test-cases',
+    url: '/execution/rules/test-cases',
     method: 'GET',
     params: { ruleCode },
   })
@@ -371,7 +371,7 @@ export const listTestCases = (ruleCode?: string) =>
  */
 export const saveTestCase = (data: RuleTestCase) =>
   request<RuleTestCase>({
-    url: '/execution/api/v1/rules/test-cases',
+    url: '/execution/rules/test-cases',
     method: 'POST',
     data,
   })
@@ -381,7 +381,7 @@ export const saveTestCase = (data: RuleTestCase) =>
  */
 export const deleteTestCase = (id: number) =>
   request<void>({
-    url: `/execution/api/v1/rules/test-cases/${id}`,
+    url: `/execution/rules/test-cases/${id}`,
     method: 'DELETE',
   })
 
@@ -415,7 +415,7 @@ export interface RegressionReport {
  */
 export const batchRunTestCases = (ids: number[] = []) =>
   request<RegressionReport>({
-    url: '/execution/api/v1/rules/test-cases/batch-run',
+    url: '/execution/rules/test-cases/batch-run',
     method: 'POST',
     data: { ids },
   })
@@ -427,7 +427,7 @@ export const batchRunTestCases = (ids: number[] = []) =>
  */
 export const changeRuleStatus = (ruleCode: string, targetStatus: string, comment?: string) =>
   request<RuleDefinition>({
-    url: `/execution/api/v1/rules/${ruleCode}/status`,
+    url: `/execution/rules/${ruleCode}/status`,
     method: 'PUT',
     data: { targetStatus, comment },
   })
@@ -456,7 +456,7 @@ export interface ExecutionTrace {
  */
 export const getTrace = (traceId: string) =>
   request<ExecutionTrace[]>({
-    url: `/execution/api/v1/rules/traces/${traceId}`,
+    url: `/execution/rules/traces/${traceId}`,
     method: 'GET',
   })
 
@@ -465,7 +465,7 @@ export const getTrace = (traceId: string) =>
  */
 export const getTracesByRule = (ruleCode: string, limit = 20) =>
   request<ExecutionTrace[]>({
-    url: `/execution/api/v1/rules/traces/rule/${ruleCode}`,
+    url: `/execution/rules/traces/rule/${ruleCode}`,
     method: 'GET',
     params: { limit },
   })
@@ -476,7 +476,7 @@ export const getTracesByRule = (ruleCode: string, limit = 20) =>
  */
 export const listRecentTraces = (limit = 50) =>
   request<ExecutionTrace[]>({
-    url: '/execution/api/v1/rules/traces',
+    url: '/execution/rules/traces',
     method: 'GET',
     params: { limit },
   })
@@ -505,7 +505,7 @@ export interface ReplayResult {
  */
 export const replayTrace = (traceId: string) =>
   request<ReplayResult>({
-    url: `/execution/api/v1/rules/traces/${traceId}/replay`,
+    url: `/execution/rules/traces/${traceId}/replay`,
     method: 'POST',
   })
 
@@ -542,7 +542,7 @@ export interface ABTestReport {
  */
 export const abTest = (ruleCode: string, candidate: Partial<RuleDefinition>, facts: Record<string, unknown>) =>
   request<ABTestReport>({
-    url: `/execution/api/v1/rules/${ruleCode}/ab-test`,
+    url: `/execution/rules/${ruleCode}/ab-test`,
     method: 'POST',
     data: { candidate, facts },
   })
@@ -569,25 +569,25 @@ export interface DecisionTable {
  * 查询全部决策表
  */
 export const listDecisionTables = () =>
-  request<DecisionTable[]>({ url: '/execution/api/v1/rules/decision-tables', method: 'GET' })
+  request<DecisionTable[]>({ url: '/execution/rules/decision-tables', method: 'GET' })
 
 /**
  * 查询单条决策表
  */
 export const getDecisionTable = (tableCode: string) =>
-  request<DecisionTable>({ url: `/execution/api/v1/rules/decision-tables/${tableCode}`, method: 'GET' })
+  request<DecisionTable>({ url: `/execution/rules/decision-tables/${tableCode}`, method: 'GET' })
 
 /**
  * 保存决策表
  */
 export const saveDecisionTable = (data: DecisionTable) =>
-  request<DecisionTable>({ url: '/execution/api/v1/rules/decision-tables', method: 'POST', data })
+  request<DecisionTable>({ url: '/execution/rules/decision-tables', method: 'POST', data })
 
 /**
  * 删除决策表
  */
 export const deleteDecisionTable = (id: number) =>
-  request<void>({ url: `/execution/api/v1/rules/decision-tables/${id}`, method: 'DELETE' })
+  request<void>({ url: `/execution/rules/decision-tables/${id}`, method: 'DELETE' })
 
 // ==================== 导入导出 ====================
 
@@ -596,7 +596,7 @@ export const deleteDecisionTable = (id: number) =>
  */
 export const exportRules = () =>
   request<{ exportTime: string; ruleCount: number; rules: Record<string, unknown>[] }>({
-    url: '/execution/api/v1/rules/export',
+    url: '/execution/rules/export',
     method: 'GET',
   })
 
@@ -605,7 +605,7 @@ export const exportRules = () =>
  */
 export const importRules = (rules: Record<string, unknown>[]) =>
   request<{ imported: number; skipped: number }>({
-    url: '/execution/api/v1/rules/import',
+    url: '/execution/rules/import',
     method: 'POST',
     data: { rules },
   })
@@ -618,7 +618,7 @@ export const importRules = (rules: Record<string, unknown>[]) =>
  */
 export const deleteRule = (ruleCode: string) =>
   request<void>({
-    url: `/execution/api/v1/rules/${ruleCode}`,
+    url: `/execution/rules/${ruleCode}`,
     method: 'DELETE',
     headers: { 'X-Operator': 'admin' },
   })
@@ -632,7 +632,7 @@ export const deleteRule = (ruleCode: string) =>
  */
 export const batchToggle = (ruleCodes: string[], enabled: boolean) =>
   request<{ success: number; failed: string[] }>({
-    url: '/execution/api/v1/rules/batch-toggle',
+    url: '/execution/rules/batch-toggle',
     method: 'POST',
     data: { ruleCodes, enabled },
     headers: { 'X-Operator': 'admin' },
@@ -645,7 +645,7 @@ export const batchToggle = (ruleCodes: string[], enabled: boolean) =>
  */
 export const batchPriority = (ruleCodes: string[], delta: number) =>
   request<{ success: number; failed: string[] }>({
-    url: '/execution/api/v1/rules/batch-priority',
+    url: '/execution/rules/batch-priority',
     method: 'POST',
     data: { ruleCodes, delta },
     headers: { 'X-Operator': 'admin' },
@@ -656,7 +656,7 @@ export const batchPriority = (ruleCodes: string[], delta: number) =>
  */
 export const batchCategory = (ruleCodes: string[], category: string) =>
   request<{ success: number; failed: string[] }>({
-    url: '/execution/api/v1/rules/batch-category',
+    url: '/execution/rules/batch-category',
     method: 'POST',
     data: { ruleCodes, category },
     headers: { 'X-Operator': 'admin' },
@@ -741,7 +741,7 @@ export interface SaveGraphResult {
  */
 export const getChainGraph = (ruleCode: string) =>
   request<RuleChainGraph>({
-    url: `/execution/api/v1/rules/${ruleCode}/graph`,
+    url: `/execution/rules/${ruleCode}/graph`,
     method: 'GET',
   })
 
@@ -752,7 +752,7 @@ export const getChainGraph = (ruleCode: string) =>
  */
 export const saveChainGraph = (ruleCode: string, graph: RuleChainGraph) =>
   request<SaveGraphResult>({
-    url: `/execution/api/v1/rules/${ruleCode}/graph`,
+    url: `/execution/rules/${ruleCode}/graph`,
     method: 'POST',
     data: graph,
     headers: { 'X-Operator': 'admin' },
@@ -764,7 +764,7 @@ export const saveChainGraph = (ruleCode: string, graph: RuleChainGraph) =>
  */
 export const validateChainGraph = (graph: RuleChainGraph) =>
   request<RuleChainGraphViewIssue[]>({
-    url: `/execution/api/v1/rules/_/graph/validate`,
+    url: `/execution/rules/_/graph/validate`,
     method: 'POST',
     data: graph,
   })
@@ -774,7 +774,7 @@ export const validateChainGraph = (graph: RuleChainGraph) =>
  */
 export const deleteChainGraph = (ruleCode: string) =>
   request<void>({
-    url: `/execution/api/v1/rules/${ruleCode}/graph`,
+    url: `/execution/rules/${ruleCode}/graph`,
     method: 'DELETE',
   })
 
@@ -796,7 +796,7 @@ export interface ExpressionFunctionDef {
  */
 export const expressionFunctions = (engine: 'aviator' | 'qlexpress' | 'all' = 'all') =>
   request<ExpressionFunctionDef[]>({
-    url: '/execution/api/v1/rules/expression-functions',
+    url: '/execution/rules/expression-functions',
     method: 'GET',
     params: { engine },
   })
@@ -808,7 +808,7 @@ export const expressionFunctions = (engine: 'aviator' | 'qlexpress' | 'all' = 'a
  */
 export const getCategoryTree = () =>
   request<CategoryNode>({
-    url: '/execution/api/v1/rules/category-tree',
+    url: '/execution/rules/category-tree',
     method: 'GET',
   })
 
@@ -818,7 +818,7 @@ export const getCategoryTree = () =>
  */
 export const listByCategoryPath = (path: string) =>
   request<RuleDefinition[]>({
-    url: '/execution/api/v1/rules/by-category-path',
+    url: '/execution/rules/by-category-path',
     method: 'GET',
     params: { path },
   })
@@ -829,7 +829,7 @@ export const listByCategoryPath = (path: string) =>
  */
 export const listByOwner = (owner: string) =>
   request<RuleDefinition[]>({
-    url: '/execution/api/v1/rules/by-owner',
+    url: '/execution/rules/by-owner',
     method: 'GET',
     params: { owner },
   })
@@ -839,7 +839,7 @@ export const listByOwner = (owner: string) =>
  */
 export const setRuleOwner = (ruleCode: string, owner: string) =>
   request<void>({
-    url: `/execution/api/v1/rules/${ruleCode}/owner`,
+    url: `/execution/rules/${ruleCode}/owner`,
     method: 'PUT',
     params: { owner },
   })
@@ -849,7 +849,7 @@ export const setRuleOwner = (ruleCode: string, owner: string) =>
  */
 export const setRuleCategoryPath = (ruleCode: string, path: string) =>
   request<void>({
-    url: `/execution/api/v1/rules/${ruleCode}/category-path`,
+    url: `/execution/rules/${ruleCode}/category-path`,
     method: 'PUT',
     params: { path },
   })
@@ -885,7 +885,7 @@ export interface RulePackInstallResult {
  */
 export const listPacks = () =>
   request<RulePack[]>({
-    url: '/execution/api/v1/rules/packs',
+    url: '/execution/rules/packs',
     method: 'GET',
   })
 
@@ -894,7 +894,7 @@ export const listPacks = () =>
  */
 export const searchPacks = (keyword: string) =>
   request<RulePack[]>({
-    url: '/execution/api/v1/rules/packs/search',
+    url: '/execution/rules/packs/search',
     method: 'GET',
     params: { keyword },
   })
@@ -904,7 +904,7 @@ export const searchPacks = (keyword: string) =>
  */
 export const getLatestPack = (packCode: string) =>
   request<RulePack>({
-    url: `/execution/api/v1/rules/packs/${packCode}/latest`,
+    url: `/execution/rules/packs/${packCode}/latest`,
     method: 'GET',
   })
 
@@ -913,7 +913,7 @@ export const getLatestPack = (packCode: string) =>
  */
 export const installPack = (packCode: string, version?: string) =>
   request<RulePackInstallResult>({
-    url: `/execution/api/v1/rules/packs/${packCode}/install`,
+    url: `/execution/rules/packs/${packCode}/install`,
     method: 'POST',
     params: version ? { version } : {},
   })

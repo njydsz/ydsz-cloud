@@ -72,7 +72,7 @@ class FlowDefinitionControllerTest {
 
         when(definitionService.deploy(any(FlowDeployProcessDTO.class))).thenReturn(DEF_ID);
 
-        mockMvc.perform(post("/api/v1/workflow/engine/definition/deploy")
+        mockMvc.perform(post("/workflow/engine/definition/deploy")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -87,7 +87,7 @@ class FlowDefinitionControllerTest {
     @Test
     @DisplayName("POST /definition/{id}/publish - 发布流程定义")
     void publishShouldReturnOk() throws Exception {
-        mockMvc.perform(post("/api/v1/workflow/engine/definition/{id}/publish", DEF_ID))
+        mockMvc.perform(post("/workflow/engine/definition/{id}/publish", DEF_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
 
@@ -97,7 +97,7 @@ class FlowDefinitionControllerTest {
     @Test
     @DisplayName("POST /definition/{id}/deprecate - 废弃流程定义")
     void deprecateShouldReturnOk() throws Exception {
-        mockMvc.perform(post("/api/v1/workflow/engine/definition/{id}/deprecate", DEF_ID))
+        mockMvc.perform(post("/workflow/engine/definition/{id}/deprecate", DEF_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
 
@@ -112,7 +112,7 @@ class FlowDefinitionControllerTest {
         FlowDefinitionDO def = buildDefinition();
         when(definitionService.getPublished(eq(FLOW_CODE), anyString(), anyLong())).thenReturn(def);
 
-        mockMvc.perform(get("/api/v1/workflow/engine/definition/code/{code}", FLOW_CODE)
+        mockMvc.perform(get("/workflow/engine/definition/code/{code}", FLOW_CODE)
                         .param("version", "1.0")
                         .param("tenantId", "1"))
                 .andExpect(status().isOk())
@@ -128,7 +128,7 @@ class FlowDefinitionControllerTest {
         when(definitionService.page(anyInt(), anyInt(), anyString(), anyString()))
                 .thenReturn(List.of(buildDefinition()));
 
-        mockMvc.perform(get("/api/v1/workflow/engine/definition/page")
+        mockMvc.perform(get("/workflow/engine/definition/page")
                         .param("pageNo", "1")
                         .param("pageSize", "20")
                         .param("category", "HR")
@@ -145,7 +145,7 @@ class FlowDefinitionControllerTest {
     void getDefinitionDetailShouldReturnMap() throws Exception {
         when(definitionService.getDetail(DEF_ID)).thenReturn(Map.of("definition", buildDefinition()));
 
-        mockMvc.perform(get("/api/v1/workflow/engine/definition/{id}", DEF_ID))
+        mockMvc.perform(get("/workflow/engine/definition/{id}", DEF_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.definition.flowCode").value(FLOW_CODE));
@@ -158,7 +158,7 @@ class FlowDefinitionControllerTest {
     @Test
     @DisplayName("POST /definition/{code}/switchVersion - 切换激活版本")
     void switchVersionShouldReturnOk() throws Exception {
-        mockMvc.perform(post("/api/v1/workflow/engine/definition/{code}/switchVersion", FLOW_CODE)
+        mockMvc.perform(post("/workflow/engine/definition/{code}/switchVersion", FLOW_CODE)
                         .param("definitionId", "201")
                         .param("tenantId", "1"))
                 .andExpect(status().isOk())
@@ -170,7 +170,7 @@ class FlowDefinitionControllerTest {
     @Test
     @DisplayName("POST /definition/{id}/enable - 启用流程定义")
     void enableShouldReturnOk() throws Exception {
-        mockMvc.perform(post("/api/v1/workflow/engine/definition/{id}/enable", DEF_ID))
+        mockMvc.perform(post("/workflow/engine/definition/{id}/enable", DEF_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
 
@@ -180,7 +180,7 @@ class FlowDefinitionControllerTest {
     @Test
     @DisplayName("POST /definition/{id}/disable - 停用流程定义")
     void disableShouldReturnOk() throws Exception {
-        mockMvc.perform(post("/api/v1/workflow/engine/definition/{id}/disable", DEF_ID))
+        mockMvc.perform(post("/workflow/engine/definition/{id}/disable", DEF_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
 
@@ -194,7 +194,7 @@ class FlowDefinitionControllerTest {
     void exportDefinitionShouldReturnJson() throws Exception {
         when(definitionService.exportDefinition(DEF_ID)).thenReturn("{\"flowCode\":\"leave\"}");
 
-        mockMvc.perform(get("/api/v1/workflow/engine/definition/{id}/export", DEF_ID))
+        mockMvc.perform(get("/workflow/engine/definition/{id}/export", DEF_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data").isString());
@@ -207,7 +207,7 @@ class FlowDefinitionControllerTest {
     void importDefinitionShouldReturnId() throws Exception {
         when(definitionService.importDefinition(anyString(), anyLong())).thenReturn(DEF_ID);
 
-        mockMvc.perform(post("/api/v1/workflow/engine/definition/import")
+        mockMvc.perform(post("/workflow/engine/definition/import")
                         .param("tenantId", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"flowCode\":\"leave\"}"))
@@ -226,7 +226,7 @@ class FlowDefinitionControllerTest {
         when(definitionService.listVersions(DEF_ID))
                 .thenReturn(List.of(Map.of("id", DEF_ID, "version", "1.0")));
 
-        mockMvc.perform(get("/api/v1/workflow/engine/definition/{id}/versions", DEF_ID))
+        mockMvc.perform(get("/workflow/engine/definition/{id}/versions", DEF_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data[0].id").value(DEF_ID));
@@ -240,7 +240,7 @@ class FlowDefinitionControllerTest {
         when(definitionService.diffVersions(DEF_ID, 1, 2))
                 .thenReturn(Map.of("version1", 1, "version2", 2));
 
-        mockMvc.perform(get("/api/v1/workflow/engine/definition/{id}/diff", DEF_ID)
+        mockMvc.perform(get("/workflow/engine/definition/{id}/diff", DEF_ID)
                         .param("v1", "1")
                         .param("v2", "2"))
                 .andExpect(status().isOk())
@@ -263,7 +263,7 @@ class FlowDefinitionControllerTest {
         when(instanceService.simulate(anyString(), anyString(), any(), anyLong()))
                 .thenReturn(List.of(Map.of("node", "start")));
 
-        mockMvc.perform(post("/api/v1/workflow/engine/definition/simulate")
+        mockMvc.perform(post("/workflow/engine/definition/simulate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())

@@ -35,7 +35,7 @@ import java.util.List;
  */
 @Tag(name = "操作日志", description = "操作审计日志查询与管理接口")
 @RestController
-@RequestMapping("/api/v1/audit/operation")
+@RequestMapping("/audit/operation")
 @RequiredArgsConstructor
 @Validated
 public class OperationLogController {

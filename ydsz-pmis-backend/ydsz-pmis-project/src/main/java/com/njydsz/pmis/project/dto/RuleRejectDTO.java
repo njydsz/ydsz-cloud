@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 规则审批驳回请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/{ruleCode}/reject} 接口，将规则从 DRAFT/REVIEW/PUBLISHED
+ * <p>用于 {@code /rules/{ruleCode}/reject} 接口，将规则从 DRAFT/REVIEW/PUBLISHED
  * 状态变更为 ARCHIVED，并记录驳回理由。
  *
  * @author ydsz-pmis-team

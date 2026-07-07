@@ -26,7 +26,7 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "流程模板市场")
 @RestController
-@RequestMapping("/api/v1/workflow/template")
+@RequestMapping("/workflow/template")
 @RequiredArgsConstructor
 @Validated
 public class FlowTemplateController {

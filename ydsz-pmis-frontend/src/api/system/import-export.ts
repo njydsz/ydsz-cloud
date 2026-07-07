@@ -2,7 +2,7 @@
  * @file 统一数据导入导出 API
  * @description 统一数据导入导出 API（批次 19 P3-3 落地）。
  *              提供模板下载、文件上传导入、导入历史查询等接口；
- *              对应后端 ImportExportController（/api/v1/execution/import）。
+ *              对应后端 ImportExportController（/execution/import）。
  * @module api/system/import-export
  */
 
@@ -42,7 +42,7 @@ export interface ImportResult {
  * @returns 模板文件二进制 Blob
  */
 export function downloadTemplate(bizType: BizType): Promise<Blob> {
-  return request.get(`/api/v1/execution/import/template/${bizType}`, {
+  return request.get(`/execution/import/template/${bizType}`, {
     responseType: 'blob'
   }) as unknown as Promise<Blob>
 }
@@ -56,7 +56,7 @@ export function downloadTemplate(bizType: BizType): Promise<Blob> {
 export function importData(bizType: BizType, file: File): Promise<ApiResponse<ImportResult>> {
   const formData = new FormData()
   formData.append('file', file)
-  return request.post(`/api/v1/execution/import/${bizType}`, formData, {
+  return request.post(`/execution/import/${bizType}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }) as unknown as Promise<ApiResponse<ImportResult>>
 }
@@ -67,5 +67,5 @@ export function importData(bizType: BizType, file: File): Promise<ApiResponse<Im
  * @returns 统一响应包装的导入历史列表
  */
 export function getImportHistory(params: { page?: number; size?: number }): Promise<ApiResponse<unknown>> {
-  return request.get('/api/v1/execution/import/history', { params }) as unknown as Promise<ApiResponse<unknown>>
+  return request.get('/execution/import/history', { params }) as unknown as Promise<ApiResponse<unknown>>
 }

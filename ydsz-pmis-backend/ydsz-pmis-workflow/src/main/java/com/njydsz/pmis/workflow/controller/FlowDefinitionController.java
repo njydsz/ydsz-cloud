@@ -34,7 +34,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @Tag(name = "workflow-definition", description = "工作流流程定义接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowDefinitionController {

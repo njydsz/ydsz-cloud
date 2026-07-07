@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * 规则导入请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/import} 接口，批量导入规则定义。
+ * <p>用于 {@code /rules/import} 接口，批量导入规则定义。
  *
  * <p>注意：{@code rules} 保留 {@code List<Map<String, Object>>} 形式，因为每条规则的字段
  * 由前端导出格式决定，需通过 {@code objectMapper.convertValue} 转为 {@link

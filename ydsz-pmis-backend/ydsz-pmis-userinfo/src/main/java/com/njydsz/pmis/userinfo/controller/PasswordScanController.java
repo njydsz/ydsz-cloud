@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "密码扫描")
 @RestController
-@RequestMapping("/api/v1/user/password-scan")
+@RequestMapping("/user/password-scan")
 @RequiredArgsConstructor
 @Validated
 public class PasswordScanController {

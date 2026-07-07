@@ -22,8 +22,8 @@ import java.util.List;
  *     ip-whitelist: "192.168.1.0/24,10.0.0.1"
  *     ip-whitelist-enabled: true
  *     ip-whitelist-skip-paths:
- *       - /api/v1/health
- *       - /api/v1/auth/login
+ *       - /health
+ *       - /auth/login
  * </pre>
  *
  * @author ydsz-pmis-team

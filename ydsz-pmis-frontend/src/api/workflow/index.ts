@@ -1059,7 +1059,7 @@ export function autoMapNodes(sourceDefinitionId: number, targetDefinitionId: num
 
 // ==================== P2-8: 历史数据归档管理 ====================
 //
-// 对应后端 FlowHistoryArchiveController，路径前缀 /workflow/history（/api/v1 由 VITE_API_PREFIX 注入）。
+// 对应后端 FlowHistoryArchiveController，路径前缀 /workflow/history（ 由 VITE_API_PREFIX 注入）。
 // 运维场景：查看归档策略、手动触发归档、手动清理冷数据，避免每次都需修改 pmis_job 表或等待 cron。
 
 /** 归档配置（与后端 FlowHistoryProperties 字段对齐） */

@@ -2,12 +2,12 @@
  * @file 收藏与最近访问 API (P2-14 收藏/快速访问)
  * @description 提供收藏夹的增删查与最近访问记录能力, 对应后端
  *              FavoriteController(/favorites) 与 RecentAccessController(/recent-access).
- *              /api/v1 前缀由 VITE_API_PREFIX 注入, 此处 BASE 仅写 /favorites.
+ *               前缀由 VITE_API_PREFIX 注入, 此处 BASE 仅写 /favorites.
  * @module api/favorite
  */
 import { request } from '@/utils/request'
 
-/** 收藏接口路径(/api/v1 前缀由 baseURL 注入) */
+/** 收藏接口路径( 前缀由 baseURL 注入) */
 const BASE = '/favorites'
 
 /** 收藏记录 */

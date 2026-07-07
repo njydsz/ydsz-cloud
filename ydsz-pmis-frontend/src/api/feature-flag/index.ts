@@ -3,12 +3,12 @@
  * @description 提供特性开关（Feature Flag）的全量快照、按分类聚合、业务方判断、启停、灰度比例设置与缓存刷新能力。
  *
  * 后端接口位于 ydsz-pmis-system 服务 (端口 9001, 2026-07-03 端口重分配):
- *   GET    /api/v1/feature-flags/snapshot        - 全量快照
- *   GET    /api/v1/feature-flags/snapshot/grouped - 按分类聚合
- *   GET    /api/v1/feature-flags/check          - 判断某 flag 是否启用 (业务方)
- *   PUT    /api/v1/feature-flags/{key}/enabled  - 启停 (admin)
- *   PUT    /api/v1/feature-flags/{key}/rollout  - 设置灰度 (admin)
- *   POST   /api/v1/feature-flags/refresh        - 强制刷新缓存 (admin)
+ *   GET    /feature-flags/snapshot        - 全量快照
+ *   GET    /feature-flags/snapshot/grouped - 按分类聚合
+ *   GET    /feature-flags/check          - 判断某 flag 是否启用 (业务方)
+ *   PUT    /feature-flags/{key}/enabled  - 启停 (admin)
+ *   PUT    /feature-flags/{key}/rollout  - 设置灰度 (admin)
+ *   POST   /feature-flags/refresh        - 强制刷新缓存 (admin)
  *
  * @module api/feature-flag
  */

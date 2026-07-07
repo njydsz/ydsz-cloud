@@ -27,7 +27,7 @@ import java.util.List;
  */
 @Tag(name = "部门管理", description = "部门管理相关接口")
 @RestController
-@RequestMapping("/api/v1/departments")
+@RequestMapping("/departments")
 @RequiredArgsConstructor
 @Validated
 public class DepartmentController {

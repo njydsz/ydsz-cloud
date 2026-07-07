@@ -36,7 +36,7 @@ import java.util.Map;
  */
 @Tag(name = "EVM 挣值管理")
 @RestController
-@RequestMapping("/api/v1/execution/evm")
+@RequestMapping("/execution/evm")
 @RequiredArgsConstructor
 @Validated
 public class EvmController {

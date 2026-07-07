@@ -30,7 +30,7 @@ import java.util.Map;
  */
 @Tag(name = "经营驾驶舱")
 @RestController
-@RequestMapping("/api/v1/execution/cockpit")
+@RequestMapping("/execution/cockpit")
 @RequiredArgsConstructor
 @Validated
 public class CockpitReportController {

@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @FeignClient(
         name = "ydsz-pmis-agent",
-        path = "/api/v1/agent",
+        path = "/agent",
         fallbackFactory = AgentClientFallbackFactory.class
 )
 public interface AgentClient {

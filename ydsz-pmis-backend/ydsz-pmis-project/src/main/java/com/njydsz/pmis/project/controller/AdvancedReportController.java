@@ -25,7 +25,7 @@ import java.util.Map;
  */
 @Tag(name = "高级报表")
 @RestController
-@RequestMapping("/api/v1/execution/advanced-report")
+@RequestMapping("/execution/advanced-report")
 @RequiredArgsConstructor
 @Validated
 public class AdvancedReportController {

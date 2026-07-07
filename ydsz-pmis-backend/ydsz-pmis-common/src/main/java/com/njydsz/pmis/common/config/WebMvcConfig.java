@@ -63,12 +63,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 // 排除白名单
                 .excludePathPatterns(
-                        "/api/v1/auth/login",
-                        "/api/v1/auth/refresh",
-                        "/api/v1/auth/captcha",
-                        "/api/v1/auth/register",
-                        "/api/v1/health",
-                        "/api/v1/health/**",
+                        "/auth/login",
+                        "/auth/refresh",
+                        "/auth/captcha",
+                        "/auth/register",
+                        "/health",
+                        "/health/**",
                         "/error",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",

@@ -225,7 +225,7 @@ data:
       filename: /tmp/positions.yaml
 
     clients:
-      - url: http://loki.observability.svc.cluster.local:3100/loki/api/v1/push
+      - url: http://loki.observability.svc.cluster.local:3100/loki/push
         batchwait: 1s
         batchsize: 1048576
         backoff_min_period: 500ms

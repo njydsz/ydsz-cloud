@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 规则批量分类调整请求体 DTO
  *
- * <p>用于 {@code /api/v1/rules/batch-category} 接口，批量调整规则分类。
+ * <p>用于 {@code /rules/batch-category} 接口，批量调整规则分类。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
