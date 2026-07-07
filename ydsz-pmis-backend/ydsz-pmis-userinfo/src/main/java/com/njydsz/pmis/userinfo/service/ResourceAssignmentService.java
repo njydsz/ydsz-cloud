@@ -21,7 +21,7 @@ public interface ResourceAssignmentService {
      * @param dto 资源分配表单
      * @return 分配记录 ID
      */
-    Long act(ResourceAssignmentCreateDTO dto);
+    String act(ResourceAssignmentCreateDTO dto);
 
     /**
      * 根据 ID 查询分配记录
@@ -29,7 +29,7 @@ public interface ResourceAssignmentService {
      * @param id 分配记录 ID
      * @return 分配记录，不存在时返回 null
      */
-    ResourceAssignmentDO getById(Long id);
+    ResourceAssignmentDO getById(String id);
 
     /**
      * 查询员工的分配记录列表
@@ -37,7 +37,7 @@ public interface ResourceAssignmentService {
      * @param employeeId 员工 ID
      * @return 分配记录列表
      */
-    List<ResourceAssignmentDO> listByEmployee(Long employeeId);
+    List<ResourceAssignmentDO> listByEmployee(String employeeId);
 
     /**
      * 查询项目的分配记录列表
@@ -45,7 +45,7 @@ public interface ResourceAssignmentService {
      * @param initiationId 项目 ID
      * @return 分配记录列表
      */
-    List<ResourceAssignmentDO> listByInitiation(Long initiationId);
+    List<ResourceAssignmentDO> listByInitiation(String initiationId);
 
     /**
      * 员工活跃分配数（用于过载检测）
@@ -53,7 +53,7 @@ public interface ResourceAssignmentService {
      * @param employeeId 员工 ID
      * @return 活跃分配数
      */
-    int activeCount(Long employeeId);
+    int activeCount(String employeeId);
 
     /**
      * 员工利用率统计
@@ -61,7 +61,7 @@ public interface ResourceAssignmentService {
      * @param employeeId 员工 ID
      * @return 利用率统计结果
      */
-    Map<String, Object> utilization(Long employeeId);
+    Map<String, Object> utilization(String employeeId);
 
     /**
      * 分页查询分配记录
@@ -73,5 +73,5 @@ public interface ResourceAssignmentService {
      * @param status       状态（可空）
      * @return 分页结果
      */
-    Page<ResourceAssignmentDO> page(int page, int size, Long employeeId, Long initiationId, String status);
+    Page<ResourceAssignmentDO> page(int page, int size, String employeeId, String initiationId, String status);
 }

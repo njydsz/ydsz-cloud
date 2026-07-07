@@ -36,7 +36,7 @@ public interface ContractService {
      *
      * @param id 合同 ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据合同 ID 查询合同详情。
@@ -44,7 +44,7 @@ public interface ContractService {
      * @param id 合同 ID
      * @return 合同实体；不存在返回 null
      */
-    ContractDO getById(Long id);
+    ContractDO getById(String id);
 
     /**
      * 分页查询合同列表。

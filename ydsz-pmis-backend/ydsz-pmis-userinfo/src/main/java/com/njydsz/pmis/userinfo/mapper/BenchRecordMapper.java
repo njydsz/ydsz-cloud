@@ -32,7 +32,7 @@ public interface BenchRecordMapper extends BaseMapper<BenchRecordDO> {
      * @param employeeId 员工 ID
      * @return 活跃 Bench 记录，未找到返回 null
      */
-    BenchRecordDO selectActiveByEmployee(@Param("employeeId") Long employeeId);
+    BenchRecordDO selectActiveByEmployee(@Param("employeeId") String employeeId);
 
     /**
      * 根据状态查询 Bench 记录列表
@@ -49,7 +49,7 @@ public interface BenchRecordMapper extends BaseMapper<BenchRecordDO> {
      * @param status 状态编码
      * @return Bench 记录列表
      */
-    List<BenchRecordDO> selectByPool(@Param("poolId") Long poolId, @Param("status") String status);
+    List<BenchRecordDO> selectByPool(@Param("poolId") String poolId, @Param("status") String status);
 
     /**
      * 闲置池汇总：按池统计当前人数/总成本/平均天数

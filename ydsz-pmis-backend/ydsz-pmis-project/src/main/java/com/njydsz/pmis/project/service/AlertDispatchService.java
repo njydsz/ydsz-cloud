@@ -34,7 +34,7 @@ public interface AlertDispatchService {
      * @param id 预警 ID
      * @return true 表示发送成功
      */
-    boolean dispatchNow(Long id);
+    boolean dispatchNow(String id);
 
     /**
      * 扫描并重试 FAILED 的预警
@@ -75,5 +75,5 @@ public interface AlertDispatchService {
      * @param id     预警 ID
      * @param reason 取消原因
      */
-    void cancel(Long id, String reason);
+    void cancel(String id, String reason);
 }

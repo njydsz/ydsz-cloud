@@ -152,7 +152,7 @@ public class WarrantyServiceImpl implements WarrantyService {
 
     @Override
     @Transactional(readOnly = true)
-    public WarrantyDO getById(Long id) {
+    public WarrantyDO getById(String id) {
         WarrantyDO w = warrantyMapper.selectById(id);
         if (w == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_6457af8b");
         return w;

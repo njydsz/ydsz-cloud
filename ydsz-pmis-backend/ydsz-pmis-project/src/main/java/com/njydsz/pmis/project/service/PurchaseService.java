@@ -35,7 +35,7 @@ public interface PurchaseService {
      *
      * @param id 采购单ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询采购单
@@ -43,7 +43,7 @@ public interface PurchaseService {
      * @param id 采购单ID
      * @return 采购单实体
      */
-    PurchaseDO getById(Long id);
+    PurchaseDO getById(String id);
 
     /**
      * 分页查询采购单

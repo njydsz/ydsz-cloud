@@ -51,5 +51,5 @@ public interface WarrantyService {
     /**
      * 详情
      */
-    WarrantyDO getById(Long id);
+    WarrantyDO getById(String id);
 }

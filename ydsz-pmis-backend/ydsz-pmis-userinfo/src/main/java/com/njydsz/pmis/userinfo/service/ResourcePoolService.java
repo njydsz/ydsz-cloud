@@ -20,7 +20,7 @@ public interface ResourcePoolService {
      * @param dto 资源池表单
      * @return 新建资源池 ID
      */
-    Long create(ResourcePoolCreateDTO dto);
+    String create(ResourcePoolCreateDTO dto);
 
     /**
      * 更新资源池
@@ -28,14 +28,14 @@ public interface ResourcePoolService {
      * @param id  资源池 ID
      * @param dto 资源池表单
      */
-    void update(Long id, ResourcePoolCreateDTO dto);
+    void update(String id, ResourcePoolCreateDTO dto);
 
     /**
      * 删除资源池
      *
      * @param id 资源池 ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据 ID 查询资源池
@@ -43,7 +43,7 @@ public interface ResourcePoolService {
      * @param id 资源池 ID
      * @return 资源池实体，不存在时返回 null
      */
-    ResourcePoolDO getById(Long id);
+    ResourcePoolDO getById(String id);
 
     /**
      * 按池类型查询资源池列表
@@ -59,7 +59,7 @@ public interface ResourcePoolService {
      * @param departmentId 部门 ID
      * @return 资源池列表
      */
-    List<ResourcePoolDO> listByDept(Long departmentId);
+    List<ResourcePoolDO> listByDept(String departmentId);
 
     /**
      * 分页查询资源池

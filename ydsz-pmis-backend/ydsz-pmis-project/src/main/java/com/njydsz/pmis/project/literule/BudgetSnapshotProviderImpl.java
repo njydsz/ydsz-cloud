@@ -51,7 +51,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
      */
     @Override
     public BigDecimal getTotalBudget(String projectId) {
-        Long initiationId = parseInitiationId(projectId);
+        String initiationId = parseInitiationId(projectId);
         if (initiationId == null) {
             return BigDecimal.ZERO;
         }
@@ -79,7 +79,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
      */
     @Override
     public BigDecimal getIncurredCost(String projectId) {
-        Long initiationId = parseInitiationId(projectId);
+        String initiationId = parseInitiationId(projectId);
         if (initiationId == null) {
             return BigDecimal.ZERO;
         }
@@ -134,16 +134,11 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
      * @param projectId 项目 ID 字符串
      * @return 立项 ID；解析失败返回 null
      */
-    private Long parseInitiationId(String projectId) {
+    private String parseInitiationId(String projectId) {
         if (projectId == null || projectId.isBlank()) {
             return null;
         }
-        try {
-            return Long.parseLong(projectId.trim());
-        } catch (NumberFormatException e) {
-            log.warn("[BudgetSnapshotProvider] projectId={} 无法解析为 Long", projectId);
-            return null;
-        }
+        return projectId.trim();
     }
 
     /**
@@ -155,7 +150,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
      * @param initiationId 项目立项 ID
      * @return 预算快照 Map；服务不可用或返回空时返回 null
      */
-    private Map<String, Object> safeBudgetSnapshot(Long initiationId) {
+    private Map<String, Object> safeBudgetSnapshot(String initiationId) {
         try {
             Result<Map<String, Object>> r = initiationClient.budgetSnapshot(initiationId);
             if (r == null || !r.isSuccess() || r.getData() == null) {

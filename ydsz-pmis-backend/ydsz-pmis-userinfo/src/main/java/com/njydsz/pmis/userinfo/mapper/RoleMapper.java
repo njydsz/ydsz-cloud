@@ -38,5 +38,5 @@ public interface RoleMapper extends BaseMapper<RoleDO> {
             WHERE ur.user_id = #{userId} AND r.deleted = 0
             ORDER BY r.sort_order, r.id
             """)
-    List<RoleDO> selectByUserId(@Param("userId") Long userId);
+    List<RoleDO> selectByUserId(@Param("userId") String userId);
 }

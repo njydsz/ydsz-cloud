@@ -37,7 +37,7 @@ public interface ProjectClosureService {
      *
      * @param id 结项记录ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据ID查询结项记录
@@ -45,7 +45,7 @@ public interface ProjectClosureService {
      * @param id 结项记录ID
      * @return 结项实体
      */
-    ProjectClosureDO getById(Long id);
+    ProjectClosureDO getById(String id);
 
     /**
      * 根据立项ID查询结项记录
@@ -90,5 +90,5 @@ public interface ProjectClosureService {
      * @param id 结项记录ID
      * @return 准入校验结果
      */
-    ClosureAdmissionValidator.AdmissionCheck checkAdmission(Long id);
+    ClosureAdmissionValidator.AdmissionCheck checkAdmission(String id);
 }

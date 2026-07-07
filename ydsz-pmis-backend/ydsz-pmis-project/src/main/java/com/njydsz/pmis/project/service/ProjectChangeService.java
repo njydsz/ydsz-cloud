@@ -36,7 +36,7 @@ public interface ProjectChangeService {
      *
      * @param id 变更 ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据变更 ID 查询变更详情。
@@ -44,7 +44,7 @@ public interface ProjectChangeService {
      * @param id 变更 ID
      * @return 变更实体；不存在返回 null
      */
-    ProjectChangeDO getById(Long id);
+    ProjectChangeDO getById(String id);
 
     /**
      * 分页查询项目变更列表。

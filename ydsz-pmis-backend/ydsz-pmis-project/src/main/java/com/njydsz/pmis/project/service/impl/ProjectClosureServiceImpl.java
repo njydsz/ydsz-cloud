@@ -96,7 +96,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(String id) {
         ProjectClosureDO c = getById(id);
         ClosureStatus st = ClosureStatus.fromCode(c.getStatus());
         if (st == ClosureStatus.ARCHIVED) {
@@ -110,7 +110,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProjectClosureDO getById(Long id) {
+    public ProjectClosureDO getById(String id) {
         ProjectClosureDO c = closureMapper.selectById(id);
         if (c == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_d234ab69");
@@ -157,7 +157,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
 
     @Override
     @Transactional(readOnly = true)
-    public ClosureAdmissionValidator.AdmissionCheck checkAdmission(Long id) {
+    public ClosureAdmissionValidator.AdmissionCheck checkAdmission(String id) {
         ProjectClosureDO c = getById(id);
         ClosureType type = ClosureType.fromCode(c.getClosureType());
         ClosureAdmissionValidator.ClosureMetrics m = new ClosureAdmissionValidator.ClosureMetrics(

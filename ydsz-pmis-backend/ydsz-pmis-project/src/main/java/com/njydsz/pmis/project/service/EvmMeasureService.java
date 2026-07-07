@@ -31,7 +31,7 @@ public interface EvmMeasureService {
      * @param id 记录ID
      * @return 测量 VO（剥离 tenantId/providerTraceId/deleted 等敏感字段）
      */
-    EvmMeasureVO getById(Long id);
+    EvmMeasureVO getById(String id);
 
     /**
      * 查询项目下所有测量记录
@@ -81,7 +81,7 @@ public interface EvmMeasureService {
      *
      * @param id 记录ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 项目变更触发的 EVM 基线重算

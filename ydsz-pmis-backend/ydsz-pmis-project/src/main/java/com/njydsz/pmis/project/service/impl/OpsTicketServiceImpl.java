@@ -232,7 +232,7 @@ public class OpsTicketServiceImpl implements OpsTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public OpsTicketDO getById(Long id) {
+    public OpsTicketDO getById(String id) {
         if (id == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_8f2cc72d");
         }

@@ -132,7 +132,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * @throws BizException 变更不存在或当前状态不允许删除时抛出
      */
     @Override
-    public void delete(Long id) {
+    public void delete(String id) {
         ProjectChangeDO c = getById(id);
         ChangeStatus st = ChangeStatus.fromCode(c.getStatus());
         if (st != ChangeStatus.DRAFT && st != ChangeStatus.REJECTED && st != ChangeStatus.CANCELLED) {
@@ -151,7 +151,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ProjectChangeDO getById(Long id) {
+    public ProjectChangeDO getById(String id) {
         ProjectChangeDO c = changeMapper.selectById(id);
         if (c == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_2cfba1ec");

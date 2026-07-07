@@ -105,7 +105,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     @Transactional(readOnly = true)
-    public EvmMeasureVO getById(Long id) {
+    public EvmMeasureVO getById(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         EvmMeasureDO m = evmMapper.selectById(id);
         if (m == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c14ffd5d");
@@ -195,7 +195,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         evmMapper.deleteById(id);
     }

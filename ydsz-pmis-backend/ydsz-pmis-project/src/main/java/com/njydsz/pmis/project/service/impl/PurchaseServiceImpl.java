@@ -99,7 +99,7 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         PurchaseDO p = getById(id);
         ApprovalStatus s = ApprovalStatus.fromCode(p.getStatus());
         if (s == ApprovalStatus.APPROVED || s == ApprovalStatus.PAID) {
@@ -110,7 +110,7 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     @Override
     @Transactional(readOnly = true)
-    public PurchaseDO getById(Long id) {
+    public PurchaseDO getById(String id) {
         PurchaseDO p = purchaseMapper.selectById(id);
         if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_df942bcd");
         return p;

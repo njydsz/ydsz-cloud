@@ -25,7 +25,7 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
      * @param period       期间
      * @return 成本归集列表
      */
-    List<CostAllocationDO> selectByInitiationAndPeriod(@Param("initiationId") Long initiationId,
+    List<CostAllocationDO> selectByInitiationAndPeriod(@Param("initiationId") String initiationId,
                                                        @Param("period") String period);
 
     /**
@@ -35,7 +35,7 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
      * @param period       期间
      * @return 类型汇总列表
      */
-    List<Map<String, Object>> sumByType(@Param("initiationId") Long initiationId,
+    List<Map<String, Object>> sumByType(@Param("initiationId") String initiationId,
                                         @Param("period") String period);
 
     /**
@@ -44,7 +44,7 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
      * @param initiationId 立项 ID
      * @return 月度成本合计列表
      */
-    List<Map<String, Object>> monthlySummary(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> monthlySummary(@Param("initiationId") String initiationId);
 
     /**
      * 按来源类型汇总
@@ -53,7 +53,7 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
      * @param period       期间
      * @return 来源类型汇总列表
      */
-    List<Map<String, Object>> sumBySourceType(@Param("initiationId") Long initiationId,
+    List<Map<String, Object>> sumBySourceType(@Param("initiationId") String initiationId,
                                               @Param("period") String period);
 
     /**
@@ -84,7 +84,7 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
      * @param initiationId 立项 ID
      * @return 项目成本总金额
      */
-    BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
+    BigDecimal sumByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 批次18：按 levelCode（事业部代码）汇总成本

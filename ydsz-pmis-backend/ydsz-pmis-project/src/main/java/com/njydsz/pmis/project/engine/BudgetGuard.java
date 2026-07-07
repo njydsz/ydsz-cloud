@@ -59,7 +59,7 @@ public class BudgetGuard {
      * @param bizType      业务类型: PURCHASE / EXPENSE
      * @throws BizException 当超出预算时抛出
      */
-    public void check(Long initiationId, BigDecimal delta, String bizType) {
+    public void check(String initiationId, BigDecimal delta, String bizType) {
         if (initiationId == null || delta == null || delta.signum() <= 0) {
             return; // 未关联项目或金额为 0/负，无需校验
         }
@@ -114,7 +114,7 @@ public class BudgetGuard {
      * @param initiationId 项目立项 ID
      * @return {used, budget, ratio, alertLevel}；alertLevel: NORMAL/YELLOW/RED
      */
-    public Map<String, Object> occupancy(Long initiationId) {
+    public Map<String, Object> occupancy(String initiationId) {
         Map<String, Object> snap = safeBudgetSnapshot(initiationId);
         Map<String, Object> R = new LinkedHashMap<>();
         if (snap == null) {
@@ -150,7 +150,7 @@ public class BudgetGuard {
      * @param initiationId 项目立项 ID
      * @return 预算快照；服务不可用或返回空时返回 null
      */
-    private Map<String, Object> safeBudgetSnapshot(Long initiationId) {
+    private Map<String, Object> safeBudgetSnapshot(String initiationId) {
         try {
             Result<Map<String, Object>> r = initiationClient.budgetSnapshot(initiationId);
             if (r == null || !r.isSuccess() || r.getData() == null) {
@@ -177,7 +177,7 @@ public class BudgetGuard {
      * @param ratio      占用率
      * @param level      告警级别
      */
-    private void publishAlert(Map<String, Object> snap, Long initiationId, String bizType,
+    private void publishAlert(Map<String, Object> snap, String initiationId, String bizType,
                               BigDecimal delta, BigDecimal usedAfter, BigDecimal budget,
                               BigDecimal ratio, BudgetAlertEvent.Level level) {
         if (eventPublisher == null) {

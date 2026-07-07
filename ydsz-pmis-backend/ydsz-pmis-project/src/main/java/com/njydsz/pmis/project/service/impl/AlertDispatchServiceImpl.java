@@ -116,7 +116,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     @Override
     @GlobalTransactional(name = "pmis-alert-dispatch-now", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
-    public boolean dispatchNow(Long id) {
+    public boolean dispatchNow(String id) {
         if (id == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         }
@@ -303,7 +303,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void cancel(Long id, String reason) {
+    public void cancel(String id, String reason) {
         if (id == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         }

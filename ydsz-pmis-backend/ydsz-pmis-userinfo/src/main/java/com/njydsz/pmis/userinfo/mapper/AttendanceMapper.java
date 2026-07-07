@@ -21,14 +21,14 @@ public interface AttendanceMapper extends BaseMapper<AttendanceDO> {
     /**
      * 按员工 + 月份范围查询
      */
-    List<AttendanceDO> selectByEmployeeAndDateRange(@Param("employeeId") Long employeeId,
+    List<AttendanceDO> selectByEmployeeAndDateRange(@Param("employeeId") String employeeId,
                                                     @Param("startDate") LocalDate startDate,
                                                     @Param("endDate") LocalDate endDate);
 
     /**
      * 按状态汇总 (例如: 月度出勤统计)
      */
-    List<Map<String, Object>> statByStatus(@Param("employeeId") Long employeeId,
+    List<Map<String, Object>> statByStatus(@Param("employeeId") String employeeId,
                                             @Param("startDate") LocalDate startDate,
                                             @Param("endDate") LocalDate endDate);
 }

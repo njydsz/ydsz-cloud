@@ -22,7 +22,7 @@ public interface PositionMapper extends BaseMapper<PositionDO> {
      * @param departmentId 部门 ID
      * @return 岗位列表
      */
-    List<PositionDO> selectByDepartment(@Param("departmentId") Long departmentId);
+    List<PositionDO> selectByDepartment(@Param("departmentId") String departmentId);
 
     /**
      * 按岗位编码查询

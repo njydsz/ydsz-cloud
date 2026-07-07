@@ -32,7 +32,7 @@ public interface DepartmentMapper extends BaseMapper<DepartmentDO> {
      * @return 子部门列表
      */
     @Select("SELECT * FROM pmis_department WHERE parent_id = #{parentId} AND deleted = 0 ORDER BY sort_order, id")
-    List<DepartmentDO> selectByParentId(@Param("parentId") Long parentId);
+    List<DepartmentDO> selectByParentId(@Param("parentId") String parentId);
 
     /**
      * 根据 deptCode 查部门

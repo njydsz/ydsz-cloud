@@ -22,7 +22,7 @@ public interface EmployeeTagMapper extends BaseMapper<EmployeeTagDO> {
      * @param employeeId 员工 ID
      * @return 标签列表
      */
-    List<EmployeeTagDO> selectByEmployee(@Param("employeeId") Long employeeId);
+    List<EmployeeTagDO> selectByEmployee(@Param("employeeId") String employeeId);
 
     /**
      * 根据标签类型与编码查询被打标的员工标签
@@ -38,5 +38,5 @@ public interface EmployeeTagMapper extends BaseMapper<EmployeeTagDO> {
      *
      * @param employeeId 员工 ID
      */
-    void deleteByEmployee(@Param("employeeId") Long employeeId);
+    void deleteByEmployee(@Param("employeeId") String employeeId);
 }

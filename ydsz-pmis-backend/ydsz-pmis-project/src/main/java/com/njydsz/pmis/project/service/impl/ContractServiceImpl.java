@@ -115,7 +115,7 @@ public class ContractServiceImpl implements ContractService {
      * @throws BizException 合同不存在时抛出
      */
     @Override
-    public void delete(Long id) {
+    public void delete(String id) {
         ContractDO c = getById(id);
         contractMapper.deleteById(c.getId());
         log.info("[Contract] 删除合同: id={}", id);
@@ -131,7 +131,7 @@ public class ContractServiceImpl implements ContractService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ContractDO getById(Long id) {
+    public ContractDO getById(String id) {
         ContractDO c = contractMapper.selectById(id);
         if (c == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_22d39b90");

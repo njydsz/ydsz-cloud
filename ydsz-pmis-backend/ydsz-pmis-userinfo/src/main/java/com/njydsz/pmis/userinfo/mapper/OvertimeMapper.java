@@ -18,7 +18,7 @@ public interface OvertimeMapper extends BaseMapper<OvertimeDO> {
 
     OvertimeDO selectByCode(@Param("overtimeCode") String overtimeCode);
 
-    List<OvertimeDO> selectByEmployee(@Param("employeeId") Long employeeId);
+    List<OvertimeDO> selectByEmployee(@Param("employeeId") String employeeId);
 
     List<OvertimeDO> selectByStatus(@Param("approvalStatus") String approvalStatus);
 }
