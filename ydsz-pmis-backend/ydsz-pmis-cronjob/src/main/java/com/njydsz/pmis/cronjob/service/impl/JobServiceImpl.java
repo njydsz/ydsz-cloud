@@ -228,6 +228,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (job.getTenantId() == null) {
             job.setTenantId(TenantContext.getTenantId());
         }
+        // P3 收尾: 分片/misfire 默认值规整
+        if (job.getShardTotal() == null || job.getShardTotal() < 1) {
+            job.setShardTotal(1);
+        }
+        if (!StringUtils.hasText(job.getMisfirePolicy())) {
+            job.setMisfirePolicy("FIRE_NOW");
+        }
         // 计算 nextFireTime
         LocalDateTime next = nextFireTime(job.getCronExpression());
         job.setNextFireTime(next);
@@ -235,7 +242,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if ("NORMAL".equals(job.getStatus())) {
             register(job);
         }
-        log.info("[Cronjob] 创建任务: key={} cron={} handler={}", job.getJobKey(), job.getCronExpression(), job.getHandler());
+        log.info("[Cronjob] 创建任务: key={} cron={} handler={} shardTotal={}",
+                job.getJobKey(), job.getCronExpression(), job.getHandler(), job.getShardTotal());
         return job.getId();
     }
 
@@ -268,6 +276,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (job.getParamsJson() != null) exists.setParamsJson(job.getParamsJson());
         if (StringUtils.hasText(job.getStatus())) exists.setStatus(job.getStatus());
         if (job.getRemark() != null) exists.setRemark(job.getRemark());
+        // P0/P2/P3 收尾: 同步 lockTtlMs/timeoutMs/misfirePolicy/shardTotal
+        if (job.getLockTtlMs() != null) exists.setLockTtlMs(job.getLockTtlMs());
+        if (job.getTimeoutMs() != null) exists.setTimeoutMs(job.getTimeoutMs());
+        if (StringUtils.hasText(job.getMisfirePolicy())) exists.setMisfirePolicy(job.getMisfirePolicy());
+        if (job.getShardTotal() != null && job.getShardTotal() >= 1) exists.setShardTotal(job.getShardTotal());
         jobMapper.updateById(exists);
 
         // 重新调度

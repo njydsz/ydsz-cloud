@@ -288,6 +288,117 @@ class JobServiceImplTest {
                 eq(1L), eq(0L), eq(1L), eq("ERROR"));
     }
 
+    // ==================== P3 收尾: create/update 字段传递测试 ====================
+
+    @Test
+    @DisplayName("P3: create 时 shardTotal=null 应默认设为 1")
+    void create_nullShardTotal_defaultsToOne() {
+        cronjobProperties.getLeader().setEnabled(true); // 避免 taskScheduler NPE
+        JobDO job = buildJob("create-default-shard", "0 0 8 * * ?", null);
+        job.setShardTotal(null);
+        when(jobMapper.selectByJobKey("create-default-shard")).thenReturn(null);
+
+        jobService.create(job);
+
+        assertEquals(1, job.getShardTotal());
+        verify(jobMapper, times(1)).insert(any(JobDO.class));
+    }
+
+    @Test
+    @DisplayName("P3: create 时 shardTotal=0 应默认设为 1")
+    void create_zeroShardTotal_defaultsToOne() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO job = buildJob("create-zero-shard", "0 0 8 * * ?", null);
+        job.setShardTotal(0);
+        when(jobMapper.selectByJobKey("create-zero-shard")).thenReturn(null);
+
+        jobService.create(job);
+
+        assertEquals(1, job.getShardTotal());
+    }
+
+    @Test
+    @DisplayName("P3: create 时 misfirePolicy=null 应默认设为 FIRE_NOW")
+    void create_nullMisfirePolicy_defaultsToFireNow() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO job = buildJob("create-default-misfire", "0 0 8 * * ?", null);
+        job.setMisfirePolicy(null);
+        when(jobMapper.selectByJobKey("create-default-misfire")).thenReturn(null);
+
+        jobService.create(job);
+
+        assertEquals("FIRE_NOW", job.getMisfirePolicy());
+    }
+
+    @Test
+    @DisplayName("P3: create 时正确设置 shardTotal 应保留")
+    void create_validShardTotal_preserved() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO job = buildJob("create-shard-4", "0 0 8 * * ?", null);
+        job.setShardTotal(4);
+        when(jobMapper.selectByJobKey("create-shard-4")).thenReturn(null);
+
+        jobService.create(job);
+
+        assertEquals(4, job.getShardTotal());
+    }
+
+    @Test
+    @DisplayName("P3: update 时 shardTotal 应被同步到 exists")
+    void update_shardTotal_syncedToExists() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO existing = buildJob("update-shard-exist", "0 0 8 * * ?", null);
+        existing.setShardTotal(1);
+        when(jobMapper.selectById("job-update-shard")).thenReturn(existing);
+
+        JobDO update = new JobDO();
+        update.setId("job-update-shard");
+        update.setShardTotal(4);
+        update.setCronExpression("0 0 9 * * ?");
+
+        jobService.update(update);
+
+        assertEquals(4, existing.getShardTotal());
+        verify(jobMapper, times(1)).updateById(any(JobDO.class));
+    }
+
+    @Test
+    @DisplayName("P3: update 时 misfirePolicy 应被同步到 exists")
+    void update_misfirePolicy_syncedToExists() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO existing = buildJob("update-misfire-exist", "0 0 8 * * ?", null);
+        existing.setMisfirePolicy("FIRE_NOW");
+        when(jobMapper.selectById("job-update-misfire")).thenReturn(existing);
+
+        JobDO update = new JobDO();
+        update.setId("job-update-misfire");
+        update.setMisfirePolicy("SKIP");
+        update.setCronExpression("0 0 9 * * ?");
+
+        jobService.update(update);
+
+        assertEquals("SKIP", existing.getMisfirePolicy());
+    }
+
+    @Test
+    @DisplayName("P3: update 时 lockTtlMs 和 timeoutMs 应被同步到 exists")
+    void update_lockTtlAndTimeout_syncedToExists() {
+        cronjobProperties.getLeader().setEnabled(true);
+        JobDO existing = buildJob("update-ttl-exist", "0 0 8 * * ?", null);
+        when(jobMapper.selectById("job-update-ttl")).thenReturn(existing);
+
+        JobDO update = new JobDO();
+        update.setId("job-update-ttl");
+        update.setLockTtlMs(60000L);
+        update.setTimeoutMs(120000L);
+        update.setCronExpression("0 0 9 * * ?");
+
+        jobService.update(update);
+
+        assertEquals(60000L, existing.getLockTtlMs());
+        assertEquals(120000L, existing.getTimeoutMs());
+    }
+
     /**
      * 构造测试用 JobDO。
      */

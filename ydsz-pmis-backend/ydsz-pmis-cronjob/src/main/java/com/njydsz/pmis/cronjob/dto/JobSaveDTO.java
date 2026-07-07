@@ -1,7 +1,9 @@
 package com.njydsz.pmis.cronjob.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.io.Serial;
@@ -54,4 +56,21 @@ public class JobSaveDTO implements Serializable {
 
     @Schema(description = "备注")
     private String remark;
+
+    @Min(value = 1, message = "任务级锁 TTL 必须为正数")
+    @Schema(description = "任务级分布式锁 TTL（毫秒，null 使用全局默认值）")
+    private Long lockTtlMs;
+
+    @Min(value = 1, message = "任务超时时间必须为正数")
+    @Schema(description = "任务超时时间（毫秒，null 表示不限超时）")
+    private Long timeoutMs;
+
+    @Pattern(regexp = "^(FIRE_NOW|SKIP|COALESCE)$",
+            message = "Misfire 策略必须为 FIRE_NOW / SKIP / COALESCE 之一")
+    @Schema(description = "Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行")
+    private String misfirePolicy;
+
+    @Min(value = 1, message = "分片总数必须 >= 1")
+    @Schema(description = "分片总数（1=非分片任务，>1 时按 ShardingStrategy 分配到在线节点并行执行）")
+    private Integer shardTotal;
 }
