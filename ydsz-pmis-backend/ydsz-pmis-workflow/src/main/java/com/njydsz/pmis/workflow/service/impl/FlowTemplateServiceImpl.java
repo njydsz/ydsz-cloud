@@ -76,7 +76,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long importTemplate(String templateCode, String flowName) {
+    public String importTemplate(String templateCode, String flowName) {
         try {
             if (!StringUtils.hasText(templateCode)) {
                 throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
@@ -101,7 +101,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             dto.setTenantId(SecurityContext.getTenantIdOrDefault("1"));
 
             // 部署为草稿
-            Long definitionId = definitionService.deploy(dto);
+            String definitionId = definitionService.deploy(dto);
 
             // 增加使用次数
             templateMapper.incrementUseCount(templateCode);
@@ -120,7 +120,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void exportAsTemplate(Long definitionId, String templateName, String category) {
+    public void exportAsTemplate(String definitionId, String templateName, String category) {
         try {
             if (definitionId == null) {
                 throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_375a4677");

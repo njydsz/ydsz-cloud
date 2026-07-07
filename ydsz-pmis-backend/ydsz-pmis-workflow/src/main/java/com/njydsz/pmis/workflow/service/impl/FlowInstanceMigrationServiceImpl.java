@@ -70,7 +70,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
 
     @Override
     @Transactional(readOnly = true)
-    public List<String> findRunningInstances(Long definitionId, String tenantId) {
+    public List<String> findRunningInstances(String definitionId, String tenantId) {
         if (definitionId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId 不能为空");
         }

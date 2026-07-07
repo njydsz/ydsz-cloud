@@ -162,8 +162,8 @@ public class FlowDesignerController {
      */
     @PostMapping("/template/{templateCode}/import")
     @PrePermission(PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
-    public Result<Long> importTemplate(@PathVariable String templateCode,
-                                       @RequestParam(required = false) String flowName) {
+    public Result<String> importTemplate(@PathVariable String templateCode,
+                                          @RequestParam(required = false) String flowName) {
         return Result.ok(templateService.importTemplate(templateCode, flowName));
     }
 

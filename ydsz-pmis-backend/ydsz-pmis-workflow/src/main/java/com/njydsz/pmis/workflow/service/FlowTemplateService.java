@@ -43,7 +43,7 @@ public interface FlowTemplateService {
      * @param flowName     自定义流程名称（为空则使用模板名称）
      * @return 新创建的流程定义 ID
      */
-    Long importTemplate(String templateCode, String flowName);
+    String importTemplate(String templateCode, String flowName);
 
     /**
      * 将已发布流程导出为模板
@@ -55,5 +55,5 @@ public interface FlowTemplateService {
      * @param templateName 模板名称
      * @param category     模板分类
      */
-    void exportAsTemplate(Long definitionId, String templateName, String category);
+    void exportAsTemplate(String definitionId, String templateName, String category);
 }

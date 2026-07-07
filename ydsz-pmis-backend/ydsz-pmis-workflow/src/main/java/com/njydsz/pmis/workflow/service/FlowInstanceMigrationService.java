@@ -49,7 +49,7 @@ public interface FlowInstanceMigrationService {
      * @param tenantId     租户 ID（可选，默认从上下文获取）
      * @return 实例 ID 字符串列表
      */
-    List<String> findRunningInstances(Long definitionId, String tenantId);
+    List<String> findRunningInstances(String definitionId, String tenantId);
 
     /**
      * 自动映射节点编码：对比源定义与目标定义的节点，按编码自动匹配。

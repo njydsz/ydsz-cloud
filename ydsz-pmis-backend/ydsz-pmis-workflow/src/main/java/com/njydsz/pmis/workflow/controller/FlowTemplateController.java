@@ -70,8 +70,8 @@ public class FlowTemplateController {
      */
     @Operation(summary = "导入模板")
     @PostMapping("/{templateCode}/import")
-    public Result<Long> importTemplate(@PathVariable String templateCode,
-                                       @RequestParam(required = false) String flowName) {
+    public Result<String> importTemplate(@PathVariable String templateCode,
+                                          @RequestParam(required = false) String flowName) {
         return Result.ok(templateService.importTemplate(templateCode, flowName));
     }
 

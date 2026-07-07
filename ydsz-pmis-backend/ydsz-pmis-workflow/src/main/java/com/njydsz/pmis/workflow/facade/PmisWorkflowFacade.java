@@ -609,7 +609,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      * @param definitionId 流程定义 ID
      * @return 节点坐标映射，无定义时返回空 Map
      */
-    private Map<String, Map<String, Object>> loadNodeCoordinates(Long definitionId) {
+    private Map<String, Map<String, Object>> loadNodeCoordinates(String definitionId) {
         if (definitionId == null) {
             return Collections.emptyMap();
         }

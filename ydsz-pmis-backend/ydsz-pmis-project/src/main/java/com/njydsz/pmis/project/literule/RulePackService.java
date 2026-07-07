@@ -180,7 +180,7 @@ public class RulePackService {
             }
         }
         // 增加下载次数
-        rulePackMapper.increaseDownloadCount(Long.parseLong(entity.getId()));
+        rulePackMapper.increaseDownloadCount(entity.getId());
 
         // 记录安装历史
         RulePackInstallDO record = new RulePackInstallDO();

@@ -38,7 +38,7 @@ public class FlowThirdPartyLogServiceImpl implements FlowThirdPartyLogService {
 
     @Override
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
-    public Long savePending(FlowThirdPartyLogDO logEntry) {
+    public String savePending(FlowThirdPartyLogDO logEntry) {
         try {
             if (logEntry == null) {
                 return null;

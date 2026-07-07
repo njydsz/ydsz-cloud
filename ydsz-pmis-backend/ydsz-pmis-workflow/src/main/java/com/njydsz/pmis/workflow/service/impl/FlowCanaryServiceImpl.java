@@ -42,7 +42,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void publishCanary(Long definitionId, int initialPercent, String strategy,
+    public void publishCanary(String definitionId, int initialPercent, String strategy,
                                Long operatorId, String operatorName, String note) {
         validatePercent(initialPercent);
         FlowDefinitionDO def = mustGetDef(definitionId);
@@ -68,7 +68,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void adjustCanaryPercent(Long definitionId, int newPercent,
+    public void adjustCanaryPercent(String definitionId, int newPercent,
                                     Long operatorId, String operatorName, String note) {
         validatePercent(newPercent);
         FlowDefinitionDO def = mustGetDef(definitionId);
@@ -92,7 +92,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void promoteCanary(Long definitionId, Long operatorId, String operatorName, String note) {
+    public void promoteCanary(String definitionId, Long operatorId, String operatorName, String note) {
         FlowDefinitionDO def = mustGetDef(definitionId);
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (CanaryStatus.PROMOTED.name().equals(curStatus)) {
@@ -119,7 +119,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void rollbackCanary(Long definitionId, Long operatorId, String operatorName, String note) {
+    public void rollbackCanary(String definitionId, Long operatorId, String operatorName, String note) {
         FlowDefinitionDO def = mustGetDef(definitionId);
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
         def.setCanaryPercent(0);
@@ -220,7 +220,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         }
     }
 
-    private FlowDefinitionDO mustGetDef(Long definitionId) {
+    private FlowDefinitionDO mustGetDef(String definitionId) {
         if (definitionId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_375a4677");
         }

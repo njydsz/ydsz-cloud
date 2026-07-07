@@ -260,7 +260,7 @@ public class FlowDefinitionController {
     @PostMapping("/definition/import")
     @Operation(summary = "从 JSON 导入流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
-    public Result<Long> importDefinition(@RequestBody String json,
+    public Result<String> importDefinition(@RequestBody String json,
                                          @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(definitionService.importDefinition(json, tid));

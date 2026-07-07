@@ -49,7 +49,7 @@ public interface RateInternalService {
     RateInternalDO getById(String id);
 
     /** 命中当前生效的对内成本费率 */
-    RateInternalDO matchEffective(String levelCode, Long departmentId, LocalDate date);
+    RateInternalDO matchEffective(String levelCode, String departmentId, LocalDate date);
 
     /**
      * 按职级+部门列出费率
@@ -58,7 +58,7 @@ public interface RateInternalService {
      * @param departmentId 部门ID
      * @return 费率列表
      */
-    List<RateInternalDO> listByLevelAndDept(String levelCode, Long departmentId);
+    List<RateInternalDO> listByLevelAndDept(String levelCode, String departmentId);
 
     /**
      * 分页查询费率
@@ -70,5 +70,5 @@ public interface RateInternalService {
      * @param status       状态过滤
      * @return 分页结果
      */
-    Page<RateInternalDO> page(int page, int size, String levelCode, Long departmentId, String status);
+    Page<RateInternalDO> page(int page, int size, String levelCode, String departmentId, String status);
 }
