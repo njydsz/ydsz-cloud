@@ -44,7 +44,7 @@ public class ReportController {
     @PrePermission("report:profit:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profit")
-    public Result<Map<String, Object>> profit(@RequestParam Long initiationId,
+    public Result<Map<String, Object>> profit(@RequestParam String initiationId,
                                          @RequestParam(required = false) String period) {
         return Result.ok(service.projectProfitReport(initiationId, period));
     }
@@ -60,7 +60,7 @@ public class ReportController {
     @PrePermission("report:cost:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/cost")
-    public Result<Map<String, Object>> cost(@RequestParam Long initiationId,
+    public Result<Map<String, Object>> cost(@RequestParam String initiationId,
                                        @RequestParam(required = false) String period) {
         return Result.ok(service.costDetailReport(initiationId, period));
     }
@@ -75,7 +75,7 @@ public class ReportController {
     @PrePermission("report:payment-ledger:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/payment-ledger")
-    public Result<Map<String, Object>> paymentLedger(@RequestParam Long initiationId) {
+    public Result<Map<String, Object>> paymentLedger(@RequestParam String initiationId) {
         return Result.ok(service.paymentLedgerReport(initiationId));
     }
 
@@ -89,7 +89,7 @@ public class ReportController {
     @PrePermission("report:lifecycle:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/lifecycle")
-    public Result<Map<String, Object>> lifecycle(@RequestParam Long initiationId) {
+    public Result<Map<String, Object>> lifecycle(@RequestParam String initiationId) {
         return Result.ok(service.projectLifecycleReport(initiationId));
     }
 

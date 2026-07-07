@@ -70,7 +70,7 @@ public class RevenueServiceImpl implements RevenueService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void confirm(String id, Long confirmedBy) {
+    public void confirm(String id, String confirmedBy) {
         RevenueDO r = getById(id);
         if (!"DRAFT".equals(r.getStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0f0b1394");

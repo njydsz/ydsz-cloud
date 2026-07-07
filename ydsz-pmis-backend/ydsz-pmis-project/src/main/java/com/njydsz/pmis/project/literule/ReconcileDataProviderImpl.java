@@ -144,14 +144,14 @@ public class ReconcileDataProviderImpl implements ReconcileDataProvider {
      * @param projectId 项目 ID 字符串
      * @return 立项 ID；解析失败返回 null
      */
-    private Long parseInitiationId(String projectId) {
+    private String parseInitiationId(String projectId) {
         if (projectId == null || projectId.isBlank()) {
             return null;
         }
         try {
-            return Long.parseLong(projectId.trim());
-        } catch (NumberFormatException e) {
-            log.warn("[ReconcileDataProvider] projectId={} 无法解析为 Long", projectId);
+            return projectId.trim();
+        } catch (Exception e) {
+            log.warn("[ReconcileDataProvider] projectId={} 无法解析为 String", projectId);
             return null;
         }
     }

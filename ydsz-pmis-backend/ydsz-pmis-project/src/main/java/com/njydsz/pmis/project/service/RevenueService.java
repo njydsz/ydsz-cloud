@@ -31,7 +31,7 @@ public interface RevenueService {
      * @param id          收入记录ID
      * @param confirmedBy 确认人ID
      */
-    void confirm(String id, Long confirmedBy);
+    void confirm(String id, String confirmedBy);
 
     /**
      * 冲红

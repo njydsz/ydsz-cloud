@@ -99,7 +99,7 @@ public class WarrantyController {
     @Operation(summary = "质保期详情")
     @PrePermission("aftersales:warranty:list")
     @GetMapping("/{id}")
-    public Result<WarrantyDO> getById(@PathVariable @Min(1) Long id) {
+    public Result<WarrantyDO> getById(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 }

@@ -20,12 +20,12 @@ public interface FlowTodoCountPushService {
      *
      * @param userId 用户 ID
      */
-    void pushTodoCount(Long userId);
+    void pushTodoCount(String userId);
 
     /**
      * 安全推送：任何异常都被吞掉（事件回调路径使用）
      */
-    void pushTodoCountSafe(Long userId);
+    void pushTodoCountSafe(String userId);
 
     /**
      * 推送任务已分配（包含任务详情 + 最新待办数）
@@ -40,7 +40,7 @@ public interface FlowTodoCountPushService {
      * @param task          任务
      * @param operatorUserId 操作人
      */
-    void pushTaskCompleted(FlowRunTaskDO task, Long operatorUserId);
+    void pushTaskCompleted(FlowRunTaskDO task, String operatorUserId);
 
     /**
      * 推送任务已驳回（含最新待办数）
@@ -49,5 +49,5 @@ public interface FlowTodoCountPushService {
      * @param operatorUserId 操作人
      * @param reason         驳回原因
      */
-    void pushTaskRejected(FlowRunTaskDO task, Long operatorUserId, String reason);
+    void pushTaskRejected(FlowRunTaskDO task, String operatorUserId, String reason);
 }

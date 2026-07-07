@@ -51,5 +51,5 @@ public class PaymentCreateDTO {
     private String invoiceAllocation;
     private BigDecimal allocatedAmount;
 
-    private Long recordedBy;
+    private String recordedBy;
 }

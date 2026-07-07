@@ -78,7 +78,7 @@ public class PaymentDO implements Serializable {
     /** 确认时间 */
     private LocalDateTime confirmedAt;
     /** 录入人ID */
-    private Long recordedBy;
+    private String recordedBy;
     /** 租户ID */
     private String tenantId;
     /** 链路追踪ID */

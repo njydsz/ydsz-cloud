@@ -34,8 +34,8 @@ public interface RevenueMapper extends BaseMapper<RevenueDO> {
      * @param confirmedBy 确认人 ID
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status,
-                     @Param("confirmedBy") Long confirmedBy);
+    int updateStatus(@Param("id") String id, @Param("status") String status,
+                     @Param("confirmedBy") String confirmedBy);
 
     /**
      * 按立项 ID 查询收入确认列表

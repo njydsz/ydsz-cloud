@@ -54,7 +54,7 @@ public class ContractTemplateController {
     @PrePermission("project:contract-template:create")
     @Idempotent(key = "contract-template:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody ContractTemplateCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody ContractTemplateCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

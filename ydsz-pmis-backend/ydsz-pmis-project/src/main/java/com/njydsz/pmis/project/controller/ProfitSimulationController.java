@@ -82,7 +82,7 @@ public class ProfitSimulationController {
     @Operation(summary = "删除")
     @PrePermission("execution:simulation:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -96,7 +96,7 @@ public class ProfitSimulationController {
     @Operation(summary = "详情")
     @PrePermission("execution:simulation:list")
     @GetMapping("/{id}")
-    public Result<ProfitSimulationDO> get(@PathVariable @Min(1) Long id) {
+    public Result<ProfitSimulationDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 

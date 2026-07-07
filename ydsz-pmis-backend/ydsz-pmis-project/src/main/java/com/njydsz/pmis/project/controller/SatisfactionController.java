@@ -50,7 +50,7 @@ public class SatisfactionController {
     @Operation(summary = "标记跟进")
     @PrePermission("aftersales:satisfaction:follow-up")
     @PostMapping("/follow-up")
-    public Result<Void> markFollowUp(@RequestParam Long id, @RequestParam(required = false) String note) {
+    public Result<Void> markFollowUp(@RequestParam String id, @RequestParam(required = false) String note) {
         service.markFollowUp(id, note);
         return Result.ok();
     }
@@ -58,7 +58,7 @@ public class SatisfactionController {
     @Operation(summary = "关闭跟进")
     @PrePermission("aftersales:satisfaction:follow-up")
     @PostMapping("/follow-up/close")
-    public Result<Void> closeFollowUp(@RequestParam Long id) {
+    public Result<Void> closeFollowUp(@RequestParam String id) {
         service.closeFollowUp(id);
         return Result.ok();
     }

@@ -1341,7 +1341,7 @@ public class RuleAdminController {
      */
     @OperationLog(module = "规则引擎", action = "删除规则集", bizType = "RULE_PACK")
     @DeleteMapping("/packs/{id}")
-    public Result<Void> deletePack(@PathVariable Long id) {
+    public Result<Void> deletePack(@PathVariable String id) {
         rulePackService.delete(id);
         return Result.ok();
     }
@@ -1351,7 +1351,7 @@ public class RuleAdminController {
      */
     @PutMapping("/packs/{id}/official")
     public Result<Void> markOfficialPack(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam(value = "official", defaultValue = "true") boolean official) {
         rulePackService.markOfficial(id, official);
         return Result.ok();
@@ -1362,7 +1362,7 @@ public class RuleAdminController {
      */
     @PutMapping("/packs/{id}/rate")
     public Result<Void> ratePack(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam(value = "rating") double rating) {
         rulePackService.rate(id, rating);
         return Result.ok();

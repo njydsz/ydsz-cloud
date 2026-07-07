@@ -21,12 +21,12 @@ public interface FlowInstanceService {
     /**
      * 启动流程
      */
-    Long start(FlowStartProcessDTO dto);
+    String start(FlowStartProcessDTO dto);
 
     /**
      * 按 ID 查
      */
-    FlowInstanceDO getById(Long id);
+    FlowInstanceDO getById(String id);
 
     /**
      * 业务关联查询
@@ -36,22 +36,22 @@ public interface FlowInstanceService {
     /**
      * 终止流程
      */
-    void terminate(Long instanceId, String reason);
+    void terminate(String instanceId, String reason);
 
     /**
      * 挂起
      */
-    void suspend(Long instanceId);
+    void suspend(String instanceId);
 
     /**
      * 激活
      */
-    void activate(Long instanceId);
+    void activate(String instanceId);
 
     /**
      * 强制完成（驳回到终态时由调用方使用）
      */
-    void complete(Long instanceId, String endNodeCode);
+    void complete(String instanceId, String endNodeCode);
 
     /**
      * 转化为视图对象
@@ -61,7 +61,7 @@ public interface FlowInstanceService {
     /**
      * 发起人维度查询
      */
-    List<FlowInstanceDO> listByInitiator(Long initiatorId, String flowStatus);
+    List<FlowInstanceDO> listByInitiator(String initiatorId, String flowStatus);
 
     /**
      * P1-8: 撤回流程（仅发起人可撤回，仅运行中可撤回，下一节点未被处理才可撤回）
@@ -70,7 +70,7 @@ public interface FlowInstanceService {
      * @param initiatorId 发起人 ID
      * @return 是否撤回成功
      */
-    boolean recall(Long instanceId, Long initiatorId);
+    boolean recall(String instanceId, String initiatorId);
 
     /**
      * P2-3: 回滚已完成的流程实例（撤销）
@@ -97,7 +97,7 @@ public interface FlowInstanceService {
      * @param maxRollbackDays 允许回滚的最大天数（&lt;=0 时使用默认值 7）
      * @return 是否回滚成功
      */
-    boolean rollback(Long instanceId, Long operatorId, String reason, int maxRollbackDays);
+    boolean rollback(String instanceId, String operatorId, String reason, int maxRollbackDays);
 
     /**
      * P2-23: 实例多维分页查询
@@ -112,9 +112,9 @@ public interface FlowInstanceService {
      * @param pageSize     每页大小
      * @return 分页结果
      */
-    PageResult<FlowInstanceDO> page(String businessType, Long initiatorId, String flowStatus,
+    PageResult<FlowInstanceDO> page(String businessType, String initiatorId, String flowStatus,
                                     LocalDateTime startTime, LocalDateTime endTime,
-                                    Long tenantId, int pageNo, int pageSize);
+                                    String tenantId, int pageNo, int pageSize);
 
     /**
      * P2-24: 读取实例流程变量
@@ -122,7 +122,7 @@ public interface FlowInstanceService {
      * @param instanceId 实例 ID
      * @return 变量 Map，无变量返回空 Map
      */
-    Map<String, Object> getVariables(Long instanceId);
+    Map<String, Object> getVariables(String instanceId);
 
     /**
      * P2-24: 合并写入单个变量并持久化
@@ -131,7 +131,7 @@ public interface FlowInstanceService {
      * @param key        变量名
      * @param value      变量值
      */
-    void setVariable(Long instanceId, String key, Object value);
+    void setVariable(String instanceId, String key, Object value);
 
     /**
      * P2-24: 批量合并写入变量并持久化
@@ -139,7 +139,7 @@ public interface FlowInstanceService {
      * @param instanceId 实例 ID
      * @param variables  变量 Map
      */
-    void setVariables(Long instanceId, Map<String, Object> variables);
+    void setVariables(String instanceId, Map<String, Object> variables);
 
     /**
      * 引擎内部方法：推进后批量生成任务（供 FlowAdvancer / FlowTaskService 调用）
@@ -148,7 +148,7 @@ public interface FlowInstanceService {
      * @param nextNodes  推进后的下一节点列表
      * @param variables  流程变量
      */
-    void generateTasksForNodes(Long instanceId, List<FlowNodeDO> nextNodes,
+    void generateTasksForNodes(String instanceId, List<FlowNodeDO> nextNodes,
                                 Map<String, Object> variables);
 
     /**
@@ -164,7 +164,7 @@ public interface FlowInstanceService {
      * @return 模拟路径列表，每个 Map 包含 step, nodeCode, nodeName, nodeType, assignee, condition, skipped
      */
     List<Map<String, Object>> simulate(String flowCode, String version,
-                                        Map<String, Object> variables, Long tenantId);
+                                        Map<String, Object> variables, String tenantId);
 
     /**
      * GAP-V2-02: 获取表单渲染数据 — 根据当前任务所在节点返回字段权限配置
@@ -176,7 +176,7 @@ public interface FlowInstanceService {
      * @param taskId     当前任务 ID（可空，为空则取实例当前节点的配置）
      * @return Map 包含 nodeCode / nodeName / formFieldsConfig / variables
      */
-    Map<String, Object> getFormRenderData(Long instanceId, Long taskId);
+    Map<String, Object> getFormRenderData(String instanceId, String taskId);
 
     /**
      * 设置实例的 dueAt 字段（子流程超时处理）
@@ -184,5 +184,5 @@ public interface FlowInstanceService {
      * @param instanceId 实例 ID
      * @param dueAt      超时时间（传 null 清除超时标记）
      */
-    void setDueAt(Long instanceId, LocalDateTime dueAt);
+    void setDueAt(String instanceId, LocalDateTime dueAt);
 }

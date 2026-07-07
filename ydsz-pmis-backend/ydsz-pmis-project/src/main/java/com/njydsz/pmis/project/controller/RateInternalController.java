@@ -70,7 +70,7 @@ public class RateInternalController {
     @PrePermission("execution:rate-internal:update")
     @Idempotent(key = "rate-internal:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable @Min(1) Long id, @Valid @RequestBody RateInternalCreateDTO dto) {
+    public Result<Void> update(@PathVariable String id, @Valid @RequestBody RateInternalCreateDTO dto) {
         service.update(id, dto);
         return Result.ok();
     }
@@ -84,7 +84,7 @@ public class RateInternalController {
     @Operation(summary = "删除")
     @PrePermission("execution:rate-internal:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -98,7 +98,7 @@ public class RateInternalController {
     @Operation(summary = "详情")
     @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
-    public Result<RateInternalDO> get(@PathVariable @Min(1) Long id) {
+    public Result<RateInternalDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 

@@ -74,7 +74,7 @@ public class OpportunityController {
     @PrePermission("project:opportunity:delete")
     @Idempotent(key = "opportunity:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "商机ID") @PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "商机ID") @PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -82,7 +82,7 @@ public class OpportunityController {
     @Operation(summary = "商机详情")
     @PrePermission("project:opportunity:list")
     @GetMapping("/{id}")
-    public Result<OpportunityDO> get(@Parameter(description = "商机ID") @PathVariable @Min(1) Long id) {
+    public Result<OpportunityDO> get(@Parameter(description = "商机ID") @PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
@@ -102,7 +102,7 @@ public class OpportunityController {
     @Operation(summary = "评估并更新赢率")
     @PrePermission("project:opportunity:evaluate")
     @PostMapping("/{id}/evaluate-winrate")
-    public Result<BigDecimal> evaluateWinRate(@Parameter(description = "商机ID") @PathVariable @Min(1) Long id,
+    public Result<BigDecimal> evaluateWinRate(@Parameter(description = "商机ID") @PathVariable String id,
                                          @Parameter(description = "客户信用") @RequestParam(required = false) String customerCredit,
                                          @Parameter(description = "是否有历史合作") @RequestParam(defaultValue = "false") boolean hasHistory) {
         return Result.ok(service.evaluateWinRate(id, customerCredit, hasHistory));

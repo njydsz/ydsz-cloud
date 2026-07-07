@@ -70,7 +70,7 @@ public class RateCardController {
     @PrePermission("execution:rate-card:update")
     @Idempotent(key = "rate-card:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable @Min(1) Long id, @Valid @RequestBody RateCardCreateDTO dto) {
+    public Result<Void> update(@PathVariable String id, @Valid @RequestBody RateCardCreateDTO dto) {
         service.update(id, dto);
         return Result.ok();
     }
@@ -85,7 +85,7 @@ public class RateCardController {
     @PrePermission("execution:rate-card:delete")
     @Idempotent(key = "rate-card:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }

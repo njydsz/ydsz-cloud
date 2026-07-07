@@ -56,7 +56,7 @@ public class RevenueDO implements Serializable {
     /** 状态 */
     private String status;
     /** 确认人ID */
-    private Long confirmedBy;
+    private String confirmedBy;
     /** 确认时间 */
     private LocalDateTime confirmedAt;
     /** 描述 */

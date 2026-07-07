@@ -67,5 +67,5 @@ public class InvoiceCreateDTO {
     private String acceptanceProofId;
 
     private String attachmentId;
-    private Long appliedBy;
+    private String appliedBy;
 }

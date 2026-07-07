@@ -2480,7 +2480,7 @@ CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
     percent_complete    NUMERIC(5,2),
     invoice_id          VARCHAR(20),
     status              VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
-    confirmed_by        BIGINT,
+    confirmed_by        VARCHAR(20),
     confirmed_at        TIMESTAMPTZ,
     description         TEXT,
     provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
@@ -3281,11 +3281,11 @@ CREATE TABLE IF NOT EXISTS pmis_finance_invoice(
     reversed_by_id      VARCHAR(20),                                   -- 被红冲的发票ID
     attachment_id       VARCHAR(64),                              -- 发票扫描件
     approval_comment    TEXT,
-    applied_by          BIGINT,
-    approved_by         BIGINT,
+    applied_by          VARCHAR(20),
     approved_at         TIMESTAMPTZ,
-    issued_by           BIGINT,
+    approved_by         VARCHAR(20),
     issued_at           TIMESTAMPTZ,
+    issued_by           VARCHAR(20),
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
     created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
@@ -3380,9 +3380,9 @@ CREATE TABLE IF NOT EXISTS pmis_finance_payment(
     unallocated_amount  NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 未核销金额
     status              VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- PaymentStatus
     remark              TEXT,
-    confirmed_by        BIGINT,
+    confirmed_by        VARCHAR(20),
     confirmed_at        TIMESTAMPTZ,
-    recorded_by         BIGINT,
+    recorded_by         VARCHAR(20),
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
     created_by          VARCHAR(20)       NOT NULL DEFAULT '0',
@@ -9400,6 +9400,30 @@ ANALYZE pmis_dict_version;
 ANALYZE pmis_flow_run_task;
 ANALYZE pmis_flow_his_task;
 ANALYZE pmis_finance_invoice;
+
+-- ----------------------------------------------------------------------------
+-- 4) 人员ID字段 BIGINT -> VARCHAR(20) 统一(对齐其它 _by 雪花 ID 约定)
+--    - pmis_finance_revenue_recognition.confirmed_by  BIGINT -> VARCHAR(20)
+--    - pmis_finance_invoice.applied_by / approved_by / issued_by  BIGINT -> VARCHAR(20)
+--    - pmis_finance_payment.confirmed_by / recorded_by             BIGINT -> VARCHAR(20)
+--    USING ::VARCHAR(20) 处理历史 BIGINT 数据(雪花 ID 字符串可直接转型)
+-- ----------------------------------------------------------------------------
+ALTER TABLE pmis_profit_revenue ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
+ALTER TABLE pmis_finance_invoice ALTER COLUMN applied_by   TYPE VARCHAR(20) USING applied_by::VARCHAR(20);
+ALTER TABLE pmis_finance_invoice ALTER COLUMN approved_by  TYPE VARCHAR(20) USING approved_by::VARCHAR(20);
+ALTER TABLE pmis_finance_invoice ALTER COLUMN issued_by    TYPE VARCHAR(20) USING issued_by::VARCHAR(20);
+ALTER TABLE pmis_finance_payment ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);
+ALTER TABLE pmis_finance_payment ALTER COLUMN recorded_by  TYPE VARCHAR(20) USING recorded_by::VARCHAR(20);
+
+COMMENT ON COLUMN pmis_profit_revenue.confirmed_by   IS '确认人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_finance_invoice.applied_by    IS '申请人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_finance_invoice.approved_by   IS '审批人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_finance_invoice.issued_by     IS '开票人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_finance_payment.confirmed_by  IS '确认人ID(雪花ID VARCHAR(20))';
+COMMENT ON COLUMN pmis_finance_payment.recorded_by   IS '录入人ID(雪花ID VARCHAR(20))';
+
+ANALYZE pmis_profit_revenue;
+ANALYZE pmis_finance_payment;
 
 -- ====================================================================
 -- ============================ [061] merge export tables ============================

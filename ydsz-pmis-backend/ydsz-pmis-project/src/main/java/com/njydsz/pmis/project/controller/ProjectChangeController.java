@@ -85,7 +85,7 @@ public class ProjectChangeController {
     @Operation(summary = "删除变更")
     @PrePermission("project:change:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -99,7 +99,7 @@ public class ProjectChangeController {
     @Operation(summary = "变更详情")
     @PrePermission("project:change:list")
     @GetMapping("/{id}")
-    public Result<ProjectChangeDO> get(@PathVariable @Min(1) Long id) {
+    public Result<ProjectChangeDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
@@ -192,7 +192,7 @@ public class ProjectChangeController {
     @Operation(summary = "获取合法状态迁移列表")
     @PrePermission("project:change:list")
     @GetMapping("/{id}/allowed-transitions")
-    public Result<List<String>> getAllowedTransitions(@PathVariable @Min(1) Long id) {
+    public Result<List<String>> getAllowedTransitions(@PathVariable String id) {
         ProjectChangeDO change = service.getById(id);
         if (change == null) {
             return Result.ok(List.of());

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -156,7 +157,7 @@ public class RuleCategoryTreeService {
      */
     @lombok.Data
     public static class CategoryNode implements Serializable {
-        @java.io.Serial
+        @Serial
         private static final long serialVersionUID = 1L;
 
         private String name;

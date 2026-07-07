@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -78,7 +79,7 @@ public class FlowDefinitionController {
         }
         try {
             return Result.ok(definitionService.batchDeployFromZip(file.getBytes(), null));
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             return Result.fail("读取 zip 文件失败: " + e.getMessage());
         }
     }

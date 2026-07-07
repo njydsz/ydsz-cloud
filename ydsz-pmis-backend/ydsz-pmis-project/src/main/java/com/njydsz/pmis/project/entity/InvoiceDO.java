@@ -89,13 +89,13 @@ public class InvoiceDO implements Serializable {
     /** 审批意见 */
     private String approvalComment;
     /** 申请人ID */
-    private Long appliedBy;
+    private String appliedBy;
     /** 审批人ID */
-    private Long approvedBy;
+    private String approvedBy;
     /** 审批时间 */
     private LocalDateTime approvedAt;
     /** 开票人ID */
-    private Long issuedBy;
+    private String issuedBy;
     /** 开票时间 */
     private LocalDateTime issuedAt;
     /** 租户ID */

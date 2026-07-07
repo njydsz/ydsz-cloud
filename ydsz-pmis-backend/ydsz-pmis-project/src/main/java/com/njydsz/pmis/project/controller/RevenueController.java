@@ -69,7 +69,7 @@ public class RevenueController {
     @PrePermission("execution:revenue:update")
     @Idempotent(key = "revenue:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/confirm")
-    public Result<Void> confirm(@PathVariable String id, @RequestParam Long confirmedBy) {
+    public Result<Void> confirm(@PathVariable String id, @RequestParam String confirmedBy) {
         service.confirm(id, confirmedBy);
         return Result.ok();
     }
@@ -97,7 +97,7 @@ public class RevenueController {
     @Operation(summary = "删除")
     @PrePermission("execution:revenue:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -111,7 +111,7 @@ public class RevenueController {
     @Operation(summary = "详情")
     @PrePermission("execution:revenue:list")
     @GetMapping("/{id}")
-    public Result<RevenueDO> get(@PathVariable @Min(1) Long id) {
+    public Result<RevenueDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 

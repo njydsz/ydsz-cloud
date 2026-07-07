@@ -71,7 +71,7 @@ public class DeliveryController {
     @PrePermission("execution:delivery:delete")
     @OperationLog(module = "交付物管理", action = "删除交付物标准", bizType = "DELIVERY_STANDARD")
     @DeleteMapping("/standard/{id}")
-    public Result<Void> deleteStandard(@PathVariable @Min(1) Long id) {
+    public Result<Void> deleteStandard(@PathVariable String id) {
         service.deleteStandard(id);
         return Result.ok();
     }
@@ -85,7 +85,7 @@ public class DeliveryController {
     @Operation(summary = "交付物标准详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/{id}")
-    public Result<DeliveryStandardDO> getStandard(@PathVariable @Min(1) Long id) {
+    public Result<DeliveryStandardDO> getStandard(@PathVariable String id) {
         return Result.ok(service.getStandardById(id));
     }
 
@@ -176,7 +176,7 @@ public class DeliveryController {
     @PrePermission("execution:delivery:delete")
     @OperationLog(module = "交付物管理", action = "删除交付物实例", bizType = "DELIVERY_ITEM")
     @DeleteMapping("/item/{id}")
-    public Result<Void> deleteItem(@PathVariable @Min(1) Long id) {
+    public Result<Void> deleteItem(@PathVariable String id) {
         service.deleteItem(id);
         return Result.ok();
     }
@@ -190,7 +190,7 @@ public class DeliveryController {
     @Operation(summary = "交付物实例详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/{id}")
-    public Result<DeliveryItemDO> getItem(@PathVariable @Min(1) Long id) {
+    public Result<DeliveryItemDO> getItem(@PathVariable String id) {
         return Result.ok(service.getItemById(id));
     }
 

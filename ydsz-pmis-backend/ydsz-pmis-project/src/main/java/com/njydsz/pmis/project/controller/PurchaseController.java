@@ -80,7 +80,7 @@ public class PurchaseController {
     @Operation(summary = "删除")
     @PrePermission("execution:purchase:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -94,7 +94,7 @@ public class PurchaseController {
     @Operation(summary = "详情")
     @PrePermission("execution:purchase:list")
     @GetMapping("/{id}")
-    public Result<PurchaseDO> get(@PathVariable @Min(1) Long id) {
+    public Result<PurchaseDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 

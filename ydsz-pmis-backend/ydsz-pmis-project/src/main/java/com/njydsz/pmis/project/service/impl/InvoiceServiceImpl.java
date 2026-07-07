@@ -124,7 +124,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void submit(String id, Long operatorId) {
+    public void submit(String id, String operatorId) {
         InvoiceDO inv = getById(id);
         transit(inv, InvoiceStatus.SUBMITTED, null, operatorId);
         if (inv.getAppliedBy() == null) {
@@ -187,7 +187,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void redReverse(String id, Long operatorId, String comment) {
+    public void redReverse(String id, String operatorId, String comment) {
         if (operatorId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
         }
@@ -207,7 +207,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void cancel(String id, Long operatorId, String comment) {
+    public void cancel(String id, String operatorId, String comment) {
         if (operatorId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
         }

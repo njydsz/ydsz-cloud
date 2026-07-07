@@ -65,7 +65,7 @@ public class EvmController {
     @Operation(summary = "详情")
     @PrePermission("execution:evm:list")
     @GetMapping("/{id}")
-    public Result<EvmMeasureVO> get(@PathVariable @Min(1) Long id) {
+    public Result<EvmMeasureVO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
@@ -151,7 +151,7 @@ public class EvmController {
     @PrePermission("execution:evm:delete")
     @OperationLog(module = "挣值管理", action = "删除EVM测量", bizType = "EVM_MEASURE")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
