@@ -320,7 +320,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
                 json = JSON.toJSONString(value);
             }
             RBucket<String> bucket = redissonClient.getBucket(key);
-            bucket.set(json, cacheConfig.getL2TtlSeconds(), TimeUnit.SECONDS);
+            bucket.set(json, Duration.ofSeconds(cacheConfig.getL2TtlSeconds()));
         } catch (Exception e) {
             log.warn("[LiteRule-Cache] L2 写入失败: {}", e.getMessage());
         }

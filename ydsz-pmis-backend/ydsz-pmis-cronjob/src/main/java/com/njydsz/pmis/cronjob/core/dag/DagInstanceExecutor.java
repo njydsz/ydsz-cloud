@@ -516,6 +516,7 @@ public class DagInstanceExecutor {
                 case SKIPPED -> skipped++;
                 case PENDING -> pending++;
                 case RUNNING -> running++;
+                case RETRYING -> pending++;
             }
         }
         // 还有未完成的节点，不结束

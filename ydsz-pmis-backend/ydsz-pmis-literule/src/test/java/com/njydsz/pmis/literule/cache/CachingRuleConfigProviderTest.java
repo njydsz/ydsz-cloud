@@ -18,7 +18,6 @@ import org.redisson.api.RedissonClient;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,7 +28,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -56,6 +54,7 @@ import static org.mockito.Mockito.when;
  * @author ydsz-pmis-team
  */
 @DisplayName("CachingRuleConfigProvider 多级缓存单元测试")
+@SuppressWarnings("unchecked")
 class CachingRuleConfigProviderTest {
 
     private RuleConfigProvider delegate;
@@ -95,16 +94,6 @@ class CachingRuleConfigProviderTest {
      */
     private CachingRuleConfigProvider l1L2Provider(RedissonClient redissonClient) {
         return new CachingRuleConfigProvider(delegate, redissonClient, cacheConfig, new FakeTicker());
-    }
-
-    /**
-     * 构造 L1+L2 的 Provider，并 mock 版本号检查返回 0L
-     */
-    private CachingRuleConfigProvider l1L2ProviderWithVersionMock(RedissonClient redissonClient,
-                                                                   RAtomicLong versionAtomic) {
-        when(redissonClient.getAtomicLong("literule:rules:version")).thenReturn(versionAtomic);
-        when(versionAtomic.get()).thenReturn(0L);
-        return l1L2Provider(redissonClient);
     }
 
     /**
@@ -424,7 +413,7 @@ class CachingRuleConfigProviderTest {
             verify(delegate, times(1)).loadEnabledRules();
 
             // 验证 L2 被回填
-            verify(bucket).set(eq(JSON.toJSONString(rules)), eq(300L), eq(TimeUnit.SECONDS));
+            verify(bucket).set(eq(JSON.toJSONString(rules)), eq(Duration.ofSeconds(300)));
         }
     }
 
@@ -579,16 +568,20 @@ class CachingRuleConfigProviderTest {
 
             int threadCount = 10;
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            // 使用 CountDownLatch 确保所有线程同时开始
+            CountDownLatch readyLatch = new CountDownLatch(threadCount);
             CountDownLatch startLatch = new CountDownLatch(1);
-            List<Callable<List<RuleDefinition>>> tasks = new ArrayList<>();
+            List<Future<List<RuleDefinition>>> futures = new ArrayList<>();
             for (int i = 0; i < threadCount; i++) {
-                tasks.add(() -> {
+                futures.add(executor.submit(() -> {
+                    readyLatch.countDown();
                     startLatch.await();
                     return provider.loadEnabledRules();
-                });
+                }));
             }
 
-            List<Future<List<RuleDefinition>>> futures = executor.invokeAll(tasks);
+            // 等待所有线程就绪后统一放行，避免 invokeAll 阻塞导致的死锁
+            readyLatch.await(5, TimeUnit.SECONDS);
             startLatch.countDown();
 
             for (Future<List<RuleDefinition>> future : futures) {
@@ -610,16 +603,18 @@ class CachingRuleConfigProviderTest {
 
             int threadCount = 8;
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            CountDownLatch readyLatch = new CountDownLatch(threadCount);
             CountDownLatch startLatch = new CountDownLatch(1);
-            List<Callable<RuleDefinition>> tasks = new ArrayList<>();
+            List<Future<RuleDefinition>> futures = new ArrayList<>();
             for (int i = 0; i < threadCount; i++) {
-                tasks.add(() -> {
+                futures.add(executor.submit(() -> {
+                    readyLatch.countDown();
                     startLatch.await();
                     return provider.findByCode("R1");
-                });
+                }));
             }
 
-            List<Future<RuleDefinition>> futures = executor.invokeAll(tasks);
+            readyLatch.await(5, TimeUnit.SECONDS);
             startLatch.countDown();
 
             for (Future<RuleDefinition> future : futures) {

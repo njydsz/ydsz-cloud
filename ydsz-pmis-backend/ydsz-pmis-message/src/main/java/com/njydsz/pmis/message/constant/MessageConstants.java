@@ -75,4 +75,16 @@ public final class MessageConstants {
 
     /** P2-6: 级联发送最大深度(防止无限递归,顶层消息深度=0) */
     public static final int MAX_CASCADE_DEPTH = 5;
+
+    /** P2-9: 回执拉取调度器分布式锁 key */
+    public static final String RECEIPT_PULL_LOCK_KEY = "pmis:msg:receipt:pull:lock";
+
+    /** P2-9: 单次回执拉取扫描批量大小 */
+    public static final int RECEIPT_PULL_BATCH_SIZE = 200;
+
+    /** P2-9: 回执拉取延迟阈值(分钟): 发送成功后多少分钟才开始主动拉取回执(给服务商回调留窗口) */
+    public static final long RECEIPT_PULL_DELAY_MINUTES = 5L;
+
+    /** P2-9: 回执超时阈值(分钟): 超过此时间仍未收到回执则标记为 TIMEOUT */
+    public static final long RECEIPT_TIMEOUT_MINUTES = 30L;
 }

@@ -59,6 +59,30 @@ public class FlowInstanceController {
     }
 
     /**
+     * P2-6: 批量启动流程实例。
+     *
+     * <p>对标钉钉/飞书"批量发起审批"能力：一次性提交多个流程实例，每个实例独立事务，
+     * 单个失败不影响其他实例的发起。适用于"批量立项"、"批量报销"等场景。
+     *
+     * <p>行为约定：
+     * <ul>
+     *   <li>每个 {@link FlowStartProcessDTO} 独立事务，失败记录到 failedItems</li>
+     *   <li>限制单次批量最大 100 条</li>
+     *   <li>幂等性由 {@link #startProcess} 内部保证（同 businessType+businessId 已有 RUNNING 实例时返回原 ID）</li>
+     * </ul>
+     *
+     * @param dtos 流程启动参数列表
+     * @return 统一响应结果，包含 successCount / failedCount / instanceIds / failedItems
+     */
+    @PostMapping("/instance/batch-start")
+    @io.swagger.v3.oas.annotations.Operation(summary = "批量启动流程实例")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
+    public Result<java.util.Map<String, Object>> batchStartInstances(
+            @Valid @RequestBody List<FlowStartProcessDTO> dtos) {
+        return Result.ok(instanceService.batchStartInstances(dtos));
+    }
+
+    /**
      * 按业务类型与业务 ID 查询流程实例
      *
      * @param businessType 业务类型

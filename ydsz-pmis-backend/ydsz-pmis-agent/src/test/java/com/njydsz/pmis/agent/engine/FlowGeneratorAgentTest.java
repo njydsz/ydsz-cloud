@@ -3,6 +3,8 @@ package com.njydsz.pmis.agent.engine;
 import com.njydsz.pmis.agent.engine.react.ReActLoop;
 import com.njydsz.pmis.agent.engine.react.ReActResult;
 import com.njydsz.pmis.agent.engine.react.ReActStep;
+import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
+import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
 import com.njydsz.pmis.agent.enums.AgentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +25,12 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -121,14 +128,16 @@ class FlowGeneratorAgentTest {
         return ReActResult.success(finalAnswer, steps);
     }
 
-    /** mock ReActLoop.run 返回指定结果 */
+    /** mock ReActLoop.runStream 返回指定结果（listener=NoOp 时） */
     private void mockReActResult(ReActResult result) {
-        when(reactLoop.run(anyString(), anyString(), any())).thenReturn(result);
+        when(reactLoop.runStream(anyString(), anyString(), any(),
+                anyInt(), any(ReActEventListener.class))).thenReturn(result);
     }
 
-    /** mock ReActLoop.run 抛指定异常 */
+    /** mock ReActLoop.runStream 抛指定异常 */
     private void mockReActException(Exception ex) {
-        when(reactLoop.run(anyString(), anyString(), any())).thenThrow(ex);
+        when(reactLoop.runStream(anyString(), anyString(), any(),
+                anyInt(), any(ReActEventListener.class))).thenThrow(ex);
     }
 
     // ==================== 基础属性测试 ====================
@@ -383,6 +392,86 @@ class FlowGeneratorAgentTest {
                             && s.contains(String.valueOf(desc.length())));
             assertThat(r.getMatchedRules())
                     .anyMatch(s -> s.startsWith("react.steps="));
+        }
+    }
+
+    // ==================== P2-1 流式执行测试 ====================
+
+    @Nested
+    @DisplayName("P2-1 流式执行测试")
+    class StreamableAgentTest {
+
+        @Test
+        @DisplayName("FlowGeneratorAgent 实现 StreamableAgent 接口")
+        void shouldImplementStreamableAgent() {
+            assertThat(agent).isInstanceOf(StreamableAgent.class);
+        }
+
+        @Test
+        @DisplayName("execute 等价于 executeStream + NoOpListener")
+        void executeShouldDelegateToExecuteStream() {
+            ReActResult result = successResult(buildBpmnXml(), "摘要");
+            when(reactLoop.runStream(anyString(), anyString(), any(),
+                    anyInt(), eq(NoOpReActEventListener.getInstance()))).thenReturn(result);
+
+            AgentResult r = agent.execute(ctx("请假审批"));
+
+            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RECOMMEND);
+            // 验证确实调用了 runStream
+            verify(reactLoop, times(1)).runStream(anyString(), anyString(), any(),
+                    anyInt(), any(ReActEventListener.class));
+        }
+
+        @Test
+        @DisplayName("executeStream 把 listener 透传给 ReActLoop.runStream")
+        void shouldPassListenerToRunStream() {
+            ReActResult result = successResult(buildBpmnXml(), "摘要");
+            mockReActResult(result);
+            ReActEventListener listener = mock(ReActEventListener.class);
+
+            AgentResult r = agent.executeStream(ctx("请假审批"), listener);
+
+            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RECOMMEND);
+            verify(reactLoop, times(1)).runStream(anyString(), anyString(), any(),
+                    anyInt(), eq(listener));
+        }
+
+        @Test
+        @DisplayName("空描述时 executeStream 仍触发 listener.onComplete")
+        void shouldTriggerOnCompleteWhenDescriptionEmpty() {
+            ReActEventListener listener = mock(ReActEventListener.class);
+
+            AgentResult r = agent.executeStream(ctx(""), listener);
+
+            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.INFO);
+            verify(listener, times(1)).onComplete(any());
+            // 不调用 runStream
+            verify(reactLoop, times(0)).runStream(anyString(), anyString(), any(),
+                    anyInt(), any(ReActEventListener.class));
+        }
+
+        @Test
+        @DisplayName("ReAct 异常时 executeStream 触发 listener.onError + onComplete")
+        void shouldTriggerOnErrorAndOnCompleteWhenReActThrows() {
+            mockReActException(new RuntimeException("LLM 故障"));
+            ReActEventListener listener = mock(ReActEventListener.class);
+
+            AgentResult r = agent.executeStream(ctx("请假审批"), listener);
+
+            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RED);
+            verify(listener, times(1)).onError(eq(0), any());
+            verify(listener, times(1)).onComplete(any());
+        }
+
+        @Test
+        @DisplayName("listener=null 时 executeStream 不抛异常（降级为 NoOp）")
+        void shouldNotThrowWhenListenerNull() {
+            ReActResult result = successResult(buildBpmnXml(), "摘要");
+            mockReActResult(result);
+
+            AgentResult r = agent.executeStream(ctx("请假审批"), null);
+
+            assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RECOMMEND);
         }
     }
 }

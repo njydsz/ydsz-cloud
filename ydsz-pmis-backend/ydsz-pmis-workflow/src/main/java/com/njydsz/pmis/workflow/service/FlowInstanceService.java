@@ -24,6 +24,32 @@ public interface FlowInstanceService {
     String start(FlowStartProcessDTO dto);
 
     /**
+     * P2-6: 批量发起流程实例。
+     *
+     * <p>对标钉钉/飞书"批量发起审批"能力：一次性提交多个流程实例，每个实例独立事务，
+     * 单个失败不影响其他实例的发起。适用于"批量立项"、"批量报销"等场景。
+     *
+     * <p>行为约定：
+     * <ul>
+     *   <li>每个 {@link FlowStartProcessDTO} 独立事务，失败记录到 failedItems</li>
+     *   <li>返回成功发起的 instanceId 列表 + 失败项明细</li>
+     *   <li>限制单次批量最大 100 条（防止事务过多）</li>
+     *   <li>幂等性由 {@link #start} 内部保证（同 businessType+businessId 已有 RUNNING 实例时返回原 ID）</li>
+     * </ul>
+     *
+     * @param dtos 流程启动参数列表（不能为空，最多 100 条）
+     * @return Map 包含：
+     *   <ul>
+     *     <li>{@code successCount} (int) — 成功发起数</li>
+     *     <li>{@code failedCount} (int) — 失败数</li>
+     *     <li>{@code instanceIds} (List&lt;String&gt;) — 成功发起的实例 ID 列表</li>
+     *     <li>{@code failedItems} (List&lt;Map&gt;) — 失败项明细，每项含 index / businessId / reason</li>
+     *   </ul>
+     * @throws BizException 当 dtos 为空或超过 100 条时
+     */
+    Map<String, Object> batchStartInstances(List<FlowStartProcessDTO> dtos);
+
+    /**
      * 按 ID 查
      */
     FlowInstanceDO getById(String id);

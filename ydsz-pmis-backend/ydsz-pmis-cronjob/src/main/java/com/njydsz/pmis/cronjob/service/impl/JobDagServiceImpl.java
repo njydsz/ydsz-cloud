@@ -58,13 +58,15 @@ public class JobDagServiceImpl implements JobDagService {
     private final JobDagMapper jobDagMapper;
     /** DAG 实例 Mapper */
     private final JobDagInstanceMapper jobDagInstanceMapper;
-    /** DAG 节点实例 Mapper */
+    /** DAG 节点实例 Mapper（由 DagInstanceExecutor 通过 setter 注入使用） */
+    @SuppressWarnings("unused")
     private final JobDagNodeInstanceMapper jobDagNodeInstanceMapper;
     /** DAG 定义编解码器 */
     private final DagDefinitionCodec dagDefinitionCodec;
     /** DAG 解析器（环检测） */
     private final DagParser dagParser;
-    /** 任务定义 Mapper（用于校验节点引用的任务存在性） */
+    /** 任务定义 Mapper（保留字段，用于后续校验节点引用的任务存在性） */
+    @SuppressWarnings("unused")
     private final JobMapper jobMapper;
 
     /**

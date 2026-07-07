@@ -69,18 +69,21 @@ const levelOptions = [
   { label: 'URGENT', value: 'URGENT' },
 ]
 
+/** Element Plus el-tag type 联合类型 */
+type TagType = 'info' | 'warning' | 'primary' | 'success' | 'danger'
+
 /** 级别 Tag 类型映射 */
-const levelTagType: Record<string, string> = {
+const levelTagType: Record<string, TagType> = {
   INFO: 'info',
   WARN: 'warning',
   ERROR: 'danger',
   URGENT: 'danger',
 }
 
-/** 分类 Tag 类型映射 */
-const categoryTagType: Record<string, string> = {
+/** 分类 Tag 类型映射（WORKFLOW 用 primary） */
+const categoryTagType: Record<string, TagType> = {
   SYSTEM: 'info',
-  WORKFLOW: '',
+  WORKFLOW: 'primary',
   ALERT: 'warning',
   TODO: 'success',
   ANNOUNCE: 'info',
@@ -344,7 +347,7 @@ onUnmounted(() => {
       </el-table-column>
       <el-table-column :label="t('notification.category')" width="110">
         <template #default="{ row }">
-          <el-tag :type="categoryTagType[row.category] || ''" size="small">
+          <el-tag :type="categoryTagType[row.category] || 'info'" size="small">
             {{ row.category || '-' }}
           </el-tag>
         </template>
@@ -374,31 +377,31 @@ onUnmounted(() => {
         </template>
       </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
-        <template #default="{ row }">
+        <template #default="scope">
           <el-button
-            v-if="row.readStatus === 0"
+            v-if="(scope.row as NotificationVO).readStatus === 0"
             link
             type="primary"
             size="small"
-            @click.stop="handleMarkRead(row)"
+            @click.stop="handleMarkRead(scope.row as NotificationVO)"
           >
             {{ t('notification.read') }}
           </el-button>
           <el-button
-            v-if="row.actionUrl && row.recallStatus !== 'RECALLED'"
+            v-if="(scope.row as NotificationVO).actionUrl && (scope.row as NotificationVO).recallStatus !== 'RECALLED'"
             link
             type="primary"
             size="small"
-            @click.stop="handleAction(row)"
+            @click.stop="handleAction(scope.row as NotificationVO)"
           >
             {{ t('notification.actionUrl') }}
           </el-button>
           <el-button
-            v-if="row.recallStatus !== 'RECALLED'"
+            v-if="(scope.row as NotificationVO).recallStatus !== 'RECALLED'"
             link
             type="warning"
             size="small"
-            @click.stop="handleRecall(row)"
+            @click.stop="handleRecall(scope.row as NotificationVO)"
           >
             {{ t('notification.recall') }}
           </el-button>
@@ -406,7 +409,7 @@ onUnmounted(() => {
             link
             type="danger"
             size="small"
-            @click.stop="handleDelete(row)"
+            @click.stop="handleDelete(scope.row as NotificationVO)"
           >
             {{ t('notification.delete') }}
           </el-button>

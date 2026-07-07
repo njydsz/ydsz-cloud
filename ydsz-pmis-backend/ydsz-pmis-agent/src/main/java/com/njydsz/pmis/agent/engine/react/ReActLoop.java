@@ -144,7 +144,7 @@ public class ReActLoop {
         try {
             for (int step = 1; step <= maxSteps; step++) {
                 final int currentStep = step;
-                safeNotify(listener, l -> l.onStepStart(currentStep));
+                safeNotify(finalListener, l -> l.onStepStart(currentStep));
 
                 ReActStep stepRecord = new ReActStep();
                 stepRecord.setStepIndex(currentStep);
@@ -162,8 +162,8 @@ public class ReActLoop {
                     steps.add(stepRecord);
                     finalResult = ReActResult.failure(
                             "LLM 调用失败: " + e.getMessage(), steps);
-                    safeNotify(listener, l -> l.onStepEnd(currentStep));
-                    safeNotifyComplete(listener, finalResult);
+                    safeNotify(finalListener, l -> l.onStepEnd(currentStep));
+                    safeNotifyComplete(finalListener, finalResult);
                     return finalResult;
                 }
 
@@ -175,8 +175,8 @@ public class ReActLoop {
                     stepRecord.setFinalAnswer(null);
                     steps.add(stepRecord);
                     finalResult = ReActResult.failure("LLM 返回空决策", steps);
-                    safeNotify(listener, l -> l.onStepEnd(currentStep));
-                    safeNotifyComplete(listener, finalResult);
+                    safeNotify(finalListener, l -> l.onStepEnd(currentStep));
+                    safeNotifyComplete(finalListener, finalResult);
                     return finalResult;
                 }
 
@@ -189,19 +189,19 @@ public class ReActLoop {
                         truncate(decision.getThought(), 80), decision.getAction());
 
                 // 通知 thought + action
-                safeNotify(listener, l -> l.onThought(currentStep, decision.getThought()));
-                safeNotify(listener, l -> l.onAction(currentStep, decision));
+                safeNotify(finalListener, l -> l.onThought(currentStep, decision.getThought()));
+                safeNotify(finalListener, l -> l.onAction(currentStep, decision));
 
                 // 2. 判断是否为终止步骤
                 if (decision.isTerminal()) {
                     stepRecord.setFinalAnswer(decision.getFinalAnswer());
                     steps.add(stepRecord);
-                    safeNotify(listener, l -> l.onFinalAnswer(currentStep, decision.getFinalAnswer()));
-                    safeNotify(listener, l -> l.onStepEnd(currentStep));
+                    safeNotify(finalListener, l -> l.onFinalAnswer(currentStep, decision.getFinalAnswer()));
+                    safeNotify(finalListener, l -> l.onStepEnd(currentStep));
                     log.info("[ReAct] 循环完成, steps={}, finalAnswer.length={}",
                             currentStep, decision.getFinalAnswer() == null ? 0 : decision.getFinalAnswer().length());
                     finalResult = ReActResult.success(decision.getFinalAnswer(), steps);
-                    safeNotifyComplete(listener, finalResult);
+                    safeNotifyComplete(finalListener, finalResult);
                     return finalResult;
                 }
 
@@ -209,13 +209,13 @@ public class ReActLoop {
                 String observation = executeTool(decision, ctx);
                 stepRecord.setObservation(observation);
                 steps.add(stepRecord);
-                safeNotify(listener, l -> l.onObservation(currentStep, observation));
+                safeNotify(finalListener, l -> l.onObservation(currentStep, observation));
 
                 // 4. 将 Observation 拼接到下一轮 user prompt
                 currentUserPrompt.append("\n\n[步骤 ").append(currentStep).append(" 观察]\n")
                         .append(observation);
 
-                safeNotify(listener, l -> l.onStepEnd(currentStep));
+                safeNotify(finalListener, l -> l.onStepEnd(currentStep));
             }
 
             // 达到最大循环次数仍未得到 final_answer
@@ -223,11 +223,11 @@ public class ReActLoop {
             finalResult = ReActResult.failure("达到最大循环次数: " + maxSteps, steps);
         } catch (RuntimeException e) {
             log.error("[ReAct] 未捕获异常: {}", e.getMessage(), e);
-            safeNotifyError(listener, steps.size(), e);
+            safeNotifyError(finalListener, steps.size(), e);
             finalResult = ReActResult.failure("未捕获异常: " + e.getMessage(), steps);
         }
 
-        safeNotifyComplete(listener, finalResult);
+        safeNotifyComplete(finalListener, finalResult);
         return finalResult;
     }
 

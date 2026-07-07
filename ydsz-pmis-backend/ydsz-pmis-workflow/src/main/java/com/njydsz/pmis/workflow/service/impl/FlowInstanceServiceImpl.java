@@ -120,6 +120,14 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Lazy
     private final FlowTimerService timerService;
 
+    /**
+     * P2-6: 自注入代理引用，使 {@link #batchStartInstances} 内部调用 {@link #start}
+     * 时能正确触发 Spring 事务代理（避免 self-invocation 导致事务失效）。
+     * 使用 {@code @Lazy} 打破启动期循环依赖。
+     */
+    @Lazy
+    private final FlowInstanceServiceImpl self;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String start(FlowStartProcessDTO dto) {
@@ -1489,5 +1497,65 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         log.info("[Flow] 重做为新实例: 原实例={} 新实例={} initiatorId={}",
                 instanceId, newInstanceId, initiatorId);
         return newInstanceId;
+    }
+
+    // ============================== P2-6: 批量发起流程实例 ==============================
+
+    /** P2-6: 单次批量发起的最大数量限制（防止事务过多） */
+    private static final int BATCH_START_MAX_SIZE = 100;
+
+    /**
+     * P2-6: 批量发起流程实例。
+     *
+     * <p>每个 {@link FlowStartProcessDTO} 通过 {@link #self}.start() 独立事务发起，
+     * 单个失败不影响其他实例。返回成功发起的 instanceId 列表 + 失败项明细。
+     */
+    @Override
+    public Map<String, Object> batchStartInstances(List<FlowStartProcessDTO> dtos) {
+        if (dtos == null || dtos.isEmpty()) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_e4f5a6b7");
+        }
+        if (dtos.size() > BATCH_START_MAX_SIZE) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_f5a6b7c8",
+                    dtos.size(), BATCH_START_MAX_SIZE);
+        }
+
+        int successCount = 0;
+        List<String> instanceIds = new ArrayList<>();
+        List<Map<String, Object>> failedItems = new ArrayList<>();
+
+        for (int i = 0; i < dtos.size(); i++) {
+            FlowStartProcessDTO dto = dtos.get(i);
+            String businessId = dto != null ? dto.getBusinessId() : null;
+            try {
+                // 通过 self 代理调用，确保 start() 的 @Transactional 生效（独立事务）
+                String instanceId = self.start(dto);
+                successCount++;
+                instanceIds.add(instanceId);
+                log.info("[Flow] 批量发起第 {} 条成功: businessId={} instanceId={}",
+                        i + 1, businessId, instanceId);
+            } catch (Exception e) {
+                Map<String, Object> fail = new LinkedHashMap<>();
+                fail.put("index", i + 1);
+                fail.put("businessId", businessId);
+                String reason = e.getMessage() != null
+                        ? e.getMessage() : e.getClass().getSimpleName();
+                fail.put("reason", reason);
+                failedItems.add(fail);
+                log.warn("[Flow] 批量发起第 {} 条失败: businessId={} reason={}",
+                        i + 1, businessId, reason);
+            }
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("successCount", successCount);
+        result.put("failedCount", failedItems.size());
+        result.put("instanceIds", instanceIds);
+        result.put("failedItems", failedItems);
+        log.info("[Flow] 批量发起完成: total={} success={} failed={}",
+                dtos.size(), successCount, failedItems.size());
+        return result;
     }
 }

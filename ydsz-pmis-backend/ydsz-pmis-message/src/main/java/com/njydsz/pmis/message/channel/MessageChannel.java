@@ -2,6 +2,10 @@ package com.njydsz.pmis.message.channel;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.message.dto.ReceiptResult;
+import com.njydsz.pmis.message.entity.MsgLogDO;
+
+import java.util.Optional;
 
 /**
  * 消息通道 SPI 接口。
@@ -29,4 +33,20 @@ public interface MessageChannel {
      * @return 发送结果（含供应商侧追踪 ID），失败时返回 {@code fail}
      */
     MessageResult send(MessageRequest request);
+
+    /**
+     * P2-9: 主动拉取回执状态。
+     *
+     * <p>对于发送成功（{@code status=SUCCESS}）但回执状态为 {@code NONE} 的消息，
+     * {@code ReceiptPuller} 会定时调用此方法向服务商查询最新回执状态。
+     *
+     * <p>默认返回 {@link Optional#empty()} 表示该渠道不支持主动拉取回执
+     * （如 IN_APP 站内信、WEBHOOK 等无需回执的渠道），实现类按需覆盖。
+     *
+     * @param logDO 消息日志实体（含 providerTraceId 用于查询）
+     * @return 回执结果；空表示渠道不支持或暂无回执
+     */
+    default Optional<ReceiptResult> queryReceipt(MsgLogDO logDO) {
+        return Optional.empty();
+    }
 }
