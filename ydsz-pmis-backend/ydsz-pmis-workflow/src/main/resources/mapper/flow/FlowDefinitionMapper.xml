@@ -29,13 +29,17 @@
         <result column="canary_status" property="canaryStatus"/>
         <result column="canary_strategy" property="canaryStrategy"/>
         <result column="canary_rollout_log" property="canaryRolloutLog"/>
+        <!-- P2-4: 设计器协同编辑锁定 -->
+        <result column="locked_by" property="lockedBy"/>
+        <result column="locked_at" property="lockedAt"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, flow_code, flow_name, category, version, model_value, form_custom, form_path,
         activity_status, is_publish, listener_type, listener_path, ext, description, status,
         created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id,
-        canary_percent, canary_status, canary_strategy, canary_rollout_log
+        canary_percent, canary_status, canary_strategy, canary_rollout_log,
+        locked_by, locked_at
     </sql>
 
     <select id="selectPublished" resultMap="BaseResultMap">
@@ -117,4 +121,44 @@
           AND deleted = 0
         ORDER BY version DESC, created_at DESC
     </select>
+
+    <!--
+        P2-4: CAS 加锁
+        条件：id 匹配 + 乐观锁 version 匹配 + deleted = 0
+              + (locked_by IS NULL OR locked_by = expectedOldBy OR locked_at &lt; timeoutExpired)
+        满足时更新 locked_by / locked_at / version+1
+        expectedOldBy 为 NULL 时仅匹配未锁定场景；非 NULL 时也允许同号续约
+    -->
+    <update id="casLock">
+        UPDATE pmis_flow_definition
+        SET locked_by = #{lockedBy},
+            locked_at = #{lockedAt},
+            version = version + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND version = #{version}
+          AND deleted = 0
+          AND (
+                locked_by IS NULL
+             OR locked_by = #{expectedOldBy}
+             OR locked_at &lt; #{timeoutExpired}
+          )
+    </update>
+
+    <!--
+        P2-4: CAS 解锁
+        条件：id 匹配 + locked_by = expectedBy + 乐观锁 version 匹配 + deleted = 0
+        满足时清空 locked_by / locked_at / version+1
+    -->
+    <update id="casUnlock">
+        UPDATE pmis_flow_definition
+        SET locked_by = NULL,
+            locked_at = NULL,
+            version = version + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND locked_by = #{expectedBy}
+          AND version = #{version}
+          AND deleted = 0
+    </update>
 </mapper>

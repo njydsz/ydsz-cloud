@@ -88,6 +88,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Caffeine（L1 本地缓存，P1-1 多级缓存；版本由 spring-boot-dependencies 管理） -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- MyBatis-Plus（规则配置持久化，可选，由消费方提供 Mapper 实现） -->
         <dependency>
             <groupId>com.baomidou</groupId>

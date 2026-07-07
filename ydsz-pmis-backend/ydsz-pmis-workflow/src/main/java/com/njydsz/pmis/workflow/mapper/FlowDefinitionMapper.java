@@ -75,4 +75,36 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      */
     java.util.List<FlowDefinitionDO> selectByFlowCode(@Param("flowCode") String flowCode,
                                                       @Param("tenantId") String tenantId);
+
+    /**
+     * P2-4: CAS 加锁 — 仅当当前 lockedBy 为空或已超时才更新成功。
+     *
+     * <p>使用乐观锁 version 校验 + 条件更新，确保并发安全。
+     *
+     * @param id            流程定义 ID
+     * @param lockedBy      持锁人 ID
+     * @param lockedAt      加锁时间
+     * @param expectedOldBy 期望的旧持锁人（NULL=未锁定场景），用于续约校验
+     * @param timeoutExpired 超时阈值（早于此时间的锁视为已过期，可被抢占）
+     * @param version       乐观锁版本号
+     * @return 受影响行数（1=成功，0=失败）
+     */
+    int casLock(@Param("id") String id,
+                @Param("lockedBy") String lockedBy,
+                @Param("lockedAt") java.time.LocalDateTime lockedAt,
+                @Param("expectedOldBy") String expectedOldBy,
+                @Param("timeoutExpired") java.time.LocalDateTime timeoutExpired,
+                @Param("version") Integer version);
+
+    /**
+     * P2-4: CAS 解锁 — 仅当 lockedBy 为持锁人时才清空。
+     *
+     * @param id          流程定义 ID
+     * @param expectedBy  期望的持锁人 ID
+     * @param version     乐观锁版本号
+     * @return 受影响行数（1=成功，0=失败）
+     */
+    int casUnlock(@Param("id") String id,
+                  @Param("expectedBy") String expectedBy,
+                  @Param("version") Integer version);
 }

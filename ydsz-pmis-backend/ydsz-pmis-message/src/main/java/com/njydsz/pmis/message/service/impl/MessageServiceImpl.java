@@ -77,8 +77,29 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public MessageResult send(MessageRequest request) {
+        return sendInternal(request, 0);
+    }
+
+    /**
+     * P2-6: 内部发送方法,携带级联深度。
+     *
+     * <p>顶层消息 depth=0,级联子消息 depth 递增,超过 {@link MessageConstants#MAX_CASCADE_DEPTH} 跳过。
+     * 级联触发时机：父消息 {@code doDispatch} 成功后,遍历 {@link MessageRequest#getCascadeTo()},
+     * 为每个子消息设置 {@code parentMsgId = 父 msgId} 后递归调用本方法。
+     * 单条级联消息失败不影响其他级联消息(try-catch 吞异常记 WARN)。
+     *
+     * @param request 消息请求
+     * @param depth   级联深度(0=顶层消息)
+     */
+    private MessageResult sendInternal(MessageRequest request, int depth) {
         if (request == null) {
             return MessageResult.fail(null, "消息请求为空");
+        }
+        // P2-6: 级联深度保护(防御性,正常路径下 triggerCascade 已提前拦截)
+        if (depth > MessageConstants.MAX_CASCADE_DEPTH) {
+            log.warn("[Message] 级联深度超限,拒绝发送: depth={} max={} receiver={}",
+                    depth, MessageConstants.MAX_CASCADE_DEPTH, request.getReceiver());
+            return MessageResult.fail(request.getChannel(), "级联深度超限");
         }
         String channel = request.getChannel();
         if (!StringUtils.hasText(channel)) {
@@ -141,10 +162,17 @@ public class MessageServiceImpl implements MessageService {
         String prefLocale = pref != null ? pref.getLocale() : null;
 
         // ⑥ 限流 + 频率
+        // ⑥-1 通道+bizType 维度令牌桶（全局配额）
         if (!rateLimitService.tryAcquire(buildRateLimitKey(channel, bizType), 1)) {
             messageMetrics.recordSend(channel, "FAILED", 0);
             throw new BizException(BizErrorCode.RATE_LIMIT, "发送限流，请稍后重试");
         }
+        // ⑥-2 P2-5: 多维度令牌桶（receiver/templateCode/tenant）
+        if (!rateLimitService.checkSendLimit(channel, receiver, templateCode, TenantContext.getTenantId())) {
+            messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
+            throw new BizException(BizErrorCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
+        }
+        // ⑥-3 用户偏好频率（每日/每小时上限）
         if (StringUtils.hasText(receiver)
                 && !rateLimitService.checkFrequency(receiver, channel, bizType)) {
             messageMetrics.recordSend(channel, "FAILED", 0);
@@ -193,6 +221,8 @@ public class MessageServiceImpl implements MessageService {
         logDO.setMsgId(StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
                 : SnowflakeIdGenerator.nextIdStr());
         logDO.setDedupKey(buildDedupKey(request));
+        // P2-6: 级联发送时记录父消息 ID,用于追溯级联关系
+        logDO.setParentMsgId(request.getParentMsgId());
         if (matchedRule != null) {
             logDO.setRouteRuleId(matchedRule.getId());
         }
@@ -212,7 +242,47 @@ public class MessageServiceImpl implements MessageService {
         }
 
         // ⑩ 通道分发
-        return doDispatch(logDO, matchedRule, receiver);
+        MessageResult result = doDispatch(logDO, matchedRule, receiver);
+        // P2-6: 父消息发送成功后触发级联发送(聚合消息不触发级联,由聚合 flush 时自行处理)
+        if (result != null && result.isSuccess()) {
+            triggerCascade(request, logDO, depth);
+        }
+        return result;
+    }
+
+    /**
+     * P2-6: 触发级联发送。
+     *
+     * <p>遍历 {@code request.getCascadeTo()},为每个子消息设置 {@code parentMsgId = 父 msgId},
+     * 递归调用 {@link #sendInternal}。单条级联失败不影响其他级联(try-catch 吞异常记 WARN)。
+     * 深度超限时整体跳过并记 WARN。
+     *
+     * @param request  父消息请求(含 cascadeTo 列表)
+     * @param parentLog 父消息落库记录(提供 msgId 作为子消息的 parentMsgId)
+     * @param depth    父消息的级联深度
+     */
+    private void triggerCascade(MessageRequest request, MsgLogDO parentLog, int depth) {
+        List<MessageRequest> cascadeTo = request.getCascadeTo();
+        if (cascadeTo == null || cascadeTo.isEmpty()) {
+            return;
+        }
+        if (depth + 1 > MessageConstants.MAX_CASCADE_DEPTH) {
+            log.warn("[Message] 级联深度超限,跳过全部级联: parentMsgId={} depth={} max={}",
+                    parentLog.getMsgId(), depth, MessageConstants.MAX_CASCADE_DEPTH);
+            return;
+        }
+        for (MessageRequest child : cascadeTo) {
+            if (child == null) {
+                continue;
+            }
+            child.setParentMsgId(parentLog.getMsgId());
+            try {
+                sendInternal(child, depth + 1);
+            } catch (Exception e) {
+                log.warn("[Message] 级联消息发送失败,不影响其他级联: parentMsgId={} err={}",
+                        parentLog.getMsgId(), e.getMessage());
+            }
+        }
     }
 
     /**

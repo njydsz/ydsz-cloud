@@ -2049,6 +2049,8 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     msg_id            VARCHAR(64),
     topic             VARCHAR(128),
     reconsume_times   INTEGER        NOT NULL DEFAULT 0,
+    -- P2-6: 级联发送父消息 ID(用于追溯级联关系,顶层消息为 NULL)
+    parent_msg_id     VARCHAR(64),
     -- 审计字段统一
     created_by        VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2110,6 +2112,7 @@ COMMENT ON COLUMN pmis_msg_log.trace_id IS '系统链路追踪 ID';
 COMMENT ON COLUMN pmis_msg_log.msg_id IS 'RocketMQ 消息 ID';
 COMMENT ON COLUMN pmis_msg_log.topic IS 'RocketMQ Topic(DLQ 消息填充原 Topic)';
 COMMENT ON COLUMN pmis_msg_log.reconsume_times IS 'RocketMQ 重试次数';
+COMMENT ON COLUMN pmis_msg_log.parent_msg_id IS 'P2-6: 级联发送父消息 ID(顶层消息为 NULL)';
 COMMENT ON COLUMN pmis_msg_log.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pml_channel
@@ -2136,6 +2139,9 @@ CREATE INDEX IF NOT EXISTS idx_pml_recall
     ON pmis_msg_log (recall_status) WHERE deleted = 0 AND recall_status = 'RECALLED';
 CREATE INDEX IF NOT EXISTS idx_pml_retry_due
     ON pmis_msg_log (status, next_retry_at) WHERE deleted = 0 AND status = 'RETRY' AND next_retry_at IS NOT NULL;
+-- P2-6: 级联发送父子关系查询索引(按 parent_msg_id 查询某条消息触发的全部级联消息)
+CREATE INDEX IF NOT EXISTS idx_pml_parent
+    ON pmis_msg_log (parent_msg_id) WHERE deleted = 0 AND parent_msg_id IS NOT NULL;
 
 
 -- 消息模板表 pmis_msg_template（由原 pmis_message_template 重构升级，新增 i18n/版本/审核/分类/场景）
@@ -6193,6 +6199,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_definition(
     ext                VARCHAR(1024),
     description        VARCHAR(512),
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+    -- P2-4: 设计器协同编辑锁定（对标钉钉/飞书流程设计器"编辑锁定"）
+    locked_by          VARCHAR(20),                               -- 当前持锁人 ID（NULL=未锁定）
+    locked_at          TIMESTAMPTZ,                                -- 加锁时间（用于超时自动释放判断）
     created_by         VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by         VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
@@ -6227,6 +6236,8 @@ COMMENT ON COLUMN pmis_flow_definition.listener_path IS '监听器 Spring Bean �
 COMMENT ON COLUMN pmis_flow_definition.ext IS '扩展字段(业务自定义 JSON 字符串)';
 COMMENT ON COLUMN pmis_flow_definition.description IS '流程描述';
 COMMENT ON COLUMN pmis_flow_definition.status IS '状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN pmis_flow_definition.locked_by IS 'P2-4: 当前持锁人 ID（设计器协同编辑锁定，NULL=未锁定）';
+COMMENT ON COLUMN pmis_flow_definition.locked_at IS 'P2-4: 加锁时间（超过 lock-timeout-minutes 自动释放，默认 30 分钟）';
 COMMENT ON COLUMN pmis_flow_definition.deleted IS '逻辑删除: 0=未删除,1=已删除';
 COMMENT ON COLUMN pmis_flow_definition.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
 COMMENT ON COLUMN pmis_flow_definition.tenant_id IS '租户 ID: 多租户隔离';

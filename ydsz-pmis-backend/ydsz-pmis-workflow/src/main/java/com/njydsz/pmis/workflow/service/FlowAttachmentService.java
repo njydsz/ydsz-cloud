@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.service;
 
 import com.njydsz.pmis.workflow.dto.FlowAttachmentDTO;
+import com.njydsz.pmis.workflow.dto.FlowAttachmentPreviewVO;
 import com.njydsz.pmis.workflow.entity.FlowAttachmentDO;
 
 import java.util.List;
@@ -55,4 +56,23 @@ public interface FlowAttachmentService {
      * @param operatorId   操作人 ID
      */
     void delete(String attachmentId, String operatorId);
+
+    /**
+     * P2-3: 附件在线预览 — 根据文件类型返回预览策略与预览 URL。
+     *
+     * <p>预览策略：
+     * <ul>
+     *   <li>IMAGE/PDF/VIDEO/TEXT → previewUrl 即 downloadUrl，前端原生渲染</li>
+     *   <li>OFFICE → previewUrl 为外部预览服务 URL（kkFileView/Office Online），
+     *       需配置 {@code workflow.attachment.preview-server-url}；未配置时降级为下载</li>
+     *   <li>UNSUPPORTED → previewable=false，前端引导下载</li>
+     * </ul>
+     *
+     * @param attachmentId 附件 ID
+     * @return 预览 VO（含 previewType / previewUrl / downloadUrl / previewable）
+     * @throws com.njydsz.pmis.common.exception.BizException 附件不存在时抛 NOT_FOUND
+     * @since 1.7.0
+     */
+    FlowAttachmentPreviewVO previewAttachment(String attachmentId);
 }
+

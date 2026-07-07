@@ -121,6 +121,22 @@ public class RuleDefinition implements Serializable {
     @Builder.Default
     private String tenantId = "1";
 
+    /**
+     * 环境标识（dev/staging/prod/default）
+     *
+     * <p>与 {@link #tenantId} 正交，实现多环境规则隔离（P1-5）。
+     * <ul>
+     *   <li>{@code "default"}（默认）- 全环境生效，向后兼容</li>
+     *   <li>{@code "dev"} / {@code "staging"} / {@code "prod"} - 仅匹配同环境的上下文</li>
+     * </ul>
+     * 过滤规则：规则的 environment 为 {@code "default"} 时匹配任何上下文环境；
+     * 非 {@code "default"} 时必须与 {@link RuleContext#getEnvironment()} 完全匹配。
+     *
+     * @since 1.6.0
+     */
+    @Builder.Default
+    private String environment = "default";
+
     /** 生命周期状态 */
     @Builder.Default
     private String status = "PUBLISHED";

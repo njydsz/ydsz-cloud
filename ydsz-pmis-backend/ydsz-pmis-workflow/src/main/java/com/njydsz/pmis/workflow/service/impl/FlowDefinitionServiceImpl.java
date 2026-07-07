@@ -25,6 +25,7 @@ import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
@@ -35,6 +36,8 @@ import org.springframework.util.StringUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -70,6 +73,15 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
      * 使用 {@code @Lazy} 打破启动期循环依赖。
      */
     private final FlowDefinitionServiceImpl self;
+
+    /**
+     * P2-4: 设计器协同编辑锁定超时阈值（分钟）。
+     *
+     * <p>超过此时间未续约的锁视为已过期，可被其他用户抢占。
+     * 默认 30 分钟，对标钉钉/飞书设计器协同编辑的默认锁定时长。
+     */
+    @Value("${workflow.designer.lock-timeout-minutes:30}")
+    private long lockTimeoutMinutes;
 
     public FlowDefinitionServiceImpl(
             FlowDefinitionMapper definitionMapper,
@@ -1069,5 +1081,158 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             name = name.substring(0, dotIdx);
         }
         return name;
+    }
+
+    // ============================== P2-4: 设计器协同编辑锁定 ==============================
+
+    /**
+     * P2-4: 加锁流程定义。
+     *
+     * <p>采用 CAS（Compare-And-Swap）乐观锁实现，保证多用户并发加锁的强一致性：
+     * <ol>
+     *   <li>未锁定（lockedBy IS NULL）→ CAS 成功</li>
+     *   <li>同一人持锁（lockedBy = userId）→ CAS 续约成功</li>
+     *   <li>他人持锁但已超时（lockedAt &lt; timeoutExpired）→ CAS 抢占成功</li>
+     *   <li>他人持锁且未超时 → CAS 失败，抛 BizException</li>
+     * </ol>
+     *
+     * <p>使用 {@link FlowDefinitionMapper#casLock} 的单条 UPDATE SQL 完成判定 + 更新，
+     * 避免"读-判-写"竞态。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean lockDefinition(String definitionId, String userId) {
+        if (!StringUtils.hasText(definitionId) || !StringUtils.hasText(userId)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_d6e7f8a9");
+        }
+        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.workflow.msg_e7f8a9b0", definitionId);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime timeoutExpired = now.minusMinutes(lockTimeoutMinutes);
+
+        // CAS 加锁：expectedOldBy = userId 用于"同号续约"场景
+        // SQL 条件：(locked_by IS NULL OR locked_by = userId OR locked_at < timeoutExpired)
+        //          AND version = #{version}
+        // 这里 expectedOldBy 传 userId，因为若是同一人持锁应允许续约
+        int affected = definitionMapper.casLock(
+                definitionId, userId, now, userId, timeoutExpired, def.getVersion());
+
+        if (affected == 1) {
+            log.info("[Flow] 设计器加锁成功: defId={} userId={} timeout={}min",
+                    definitionId, userId, lockTimeoutMinutes);
+            return true;
+        }
+
+        // CAS 失败：要么 version 不匹配（并发更新），要么锁被他人持有且未超时
+        FlowDefinitionDO latest = definitionMapper.selectById(definitionId);
+        if (latest == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.workflow.msg_e7f8a9b0", definitionId);
+        }
+        String holder = latest.getLockedBy();
+        if (StringUtils.hasText(holder) && !holder.equals(userId)) {
+            // 检查是否其实已超时（理论上 SQL 应能命中，但 version 不匹配会阻塞）
+            boolean expired = latest.getLockedAt() != null
+                    && latest.getLockedAt().isBefore(timeoutExpired);
+            if (expired) {
+                // 已超时但 CAS 失败 → 因 version 变化导致，重试一次
+                log.warn("[Flow] 设计器加锁重试（锁已超时但 version 变化）: defId={} holder={}",
+                        definitionId, holder);
+                int retry = definitionMapper.casLock(
+                        definitionId, userId, now, userId, timeoutExpired, latest.getVersion());
+                if (retry == 1) {
+                    log.info("[Flow] 设计器加锁成功（重试）: defId={} userId={} 抢占自={}",
+                            definitionId, userId, holder);
+                    return true;
+                }
+            }
+            // 锁被他人持有且未超时
+            throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
+                    "error.workflow.msg_f8a9b0c1", holder);
+        }
+        // 走到这里说明是并发 version 变化导致，按并发冲突处理
+        throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
+                "error.workflow.msg_a9b0c1d2");
+    }
+
+    /**
+     * P2-4: 解锁流程定义。
+     *
+     * <p>仅持锁人本人可解锁；他人持锁或未锁定时抛 BizException。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean unlockDefinition(String definitionId, String userId) {
+        if (!StringUtils.hasText(definitionId) || !StringUtils.hasText(userId)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_d6e7f8a9");
+        }
+        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.workflow.msg_e7f8a9b0", definitionId);
+        }
+
+        // 未锁定直接返回成功（幂等）
+        if (!StringUtils.hasText(def.getLockedBy())) {
+            log.debug("[Flow] 设计器解锁：当前未锁定，幂等返回 defId={}", definitionId);
+            return true;
+        }
+
+        // CAS 解锁：仅持锁人可解锁
+        int affected = definitionMapper.casUnlock(definitionId, userId, def.getVersion());
+        if (affected == 1) {
+            log.info("[Flow] 设计器解锁成功: defId={} userId={}", definitionId, userId);
+            return true;
+        }
+
+        // CAS 失败：要么非持锁人，要么 version 变化
+        FlowDefinitionDO latest = definitionMapper.selectById(definitionId);
+        if (latest == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.workflow.msg_e7f8a9b0", definitionId);
+        }
+        String holder = latest.getLockedBy();
+        if (StringUtils.hasText(holder) && !holder.equals(userId)) {
+            throw new BizException(BizErrorCode.FORBIDDEN,
+                    "error.workflow.msg_b1c2d3e4", holder);
+        }
+        // 此时 holder = userId 或 holder 已被清空（并发已解锁）→ 视为成功
+        log.info("[Flow] 设计器解锁：锁已被并发清空，视为成功 defId={} userId={}",
+                definitionId, userId);
+        return true;
+    }
+
+    /**
+     * P2-4: 查询流程定义的锁定状态。
+     */
+    @Override
+    public Map<String, Object> getLockStatus(String definitionId) {
+        if (!StringUtils.hasText(definitionId)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_d6e7f8a9");
+        }
+        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
+            return null;
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        boolean locked = StringUtils.hasText(def.getLockedBy());
+        boolean expired = false;
+        if (locked && def.getLockedAt() != null) {
+            LocalDateTime timeoutExpired = LocalDateTime.now().minusMinutes(lockTimeoutMinutes);
+            expired = def.getLockedAt().isBefore(timeoutExpired);
+        }
+        result.put("locked", locked);
+        result.put("lockedBy", def.getLockedBy());
+        result.put("lockedAt", def.getLockedAt());
+        result.put("expired", expired);
+        return result;
     }
 }

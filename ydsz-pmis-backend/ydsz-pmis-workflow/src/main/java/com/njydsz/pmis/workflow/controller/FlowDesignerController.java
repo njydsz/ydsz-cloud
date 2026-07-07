@@ -4,9 +4,11 @@ import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.dto.FlowDesignerDataDTO;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.service.FlowTemplateService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +72,70 @@ public class FlowDesignerController {
         Map<String, Object> designerData = JSON.parseObject(dto.getDesignerData());
         definitionService.saveDesignerData(id, designerData);
         return Result.ok();
+    }
+
+    // ============== P2-4: 设计器协同编辑锁定 API ==============
+
+    /**
+     * P2-4: 加锁流程定义（设计器协同编辑）。
+     *
+     * <p>对标钉钉/飞书流程设计器"编辑锁定"：用户进入设计器编辑模式前调用此接口，
+     * 成功获取锁后方可编辑；编辑过程中前端定期调用此接口续约（保持锁不过期）。
+     *
+     * <p>行为约定：
+     * <ul>
+     *   <li>未锁定 → 加锁成功，可进入编辑</li>
+     *   <li>同一人持锁 → 续约成功（刷新 lockedAt）</li>
+     *   <li>他人持锁且未超时 → 返回 409 冲突，前端展示"当前 {lockedBy} 正在编辑"</li>
+     *   <li>他人持锁但已超时（默认 30 分钟）→ 抢占成功</li>
+     * </ul>
+     *
+     * @param id 流程定义 ID
+     * @return 统一响应结果，true=加锁成功
+     */
+    @PostMapping("/definition/{id}/lock")
+    @Operation(summary = "加锁流程定义（设计器协同编辑）")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public Result<Boolean> lockDefinition(@PathVariable String id) {
+        String userId = SecurityContext.getUserId();
+        return Result.ok(definitionService.lockDefinition(id, userId));
+    }
+
+    /**
+     * P2-4: 解锁流程定义（设计器协同编辑）。
+     *
+     * <p>用户退出设计器编辑模式或页面卸载时调用，释放锁。仅持锁人本人可解锁。
+     *
+     * @param id 流程定义 ID
+     * @return 统一响应结果，true=解锁成功
+     */
+    @PostMapping("/definition/{id}/unlock")
+    @Operation(summary = "解锁流程定义（设计器协同编辑）")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public Result<Boolean> unlockDefinition(@PathVariable String id) {
+        String userId = SecurityContext.getUserId();
+        return Result.ok(definitionService.unlockDefinition(id, userId));
+    }
+
+    /**
+     * P2-4: 查询流程定义的锁定状态。
+     *
+     * <p>用户进入设计器前调用，判断是否可编辑：
+     * <ul>
+     *   <li>{@code locked=false} → 可直接进入编辑并加锁</li>
+     *   <li>{@code locked=true, lockedBy=当前用户} → 可继续编辑并续约</li>
+     *   <li>{@code locked=true, lockedBy=他人, expired=false} → 只读模式，提示"正在被 XX 编辑"</li>
+     *   <li>{@code locked=true, lockedBy=他人, expired=true} → 可强制抢占进入编辑</li>
+     * </ul>
+     *
+     * @param id 流程定义 ID
+     * @return 统一响应结果，包含 locked / lockedBy / lockedAt / expired
+     */
+    @GetMapping("/definition/{id}/lock-status")
+    @Operation(summary = "查询流程定义锁定状态")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public Result<Map<String, Object>> getLockStatus(@PathVariable String id) {
+        return Result.ok(definitionService.getLockStatus(id));
     }
 
     // ============== GAP-V2-02: 表单引擎字段配置 ==============

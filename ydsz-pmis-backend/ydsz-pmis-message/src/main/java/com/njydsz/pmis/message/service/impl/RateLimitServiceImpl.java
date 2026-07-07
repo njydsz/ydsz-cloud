@@ -118,6 +118,9 @@ public class RateLimitServiceImpl implements RateLimitService {
      *
      * <p>按 receiver / templateCode / tenant 三个维度分别做令牌桶限流，
      * 任一维度超限即返回 false。空值维度跳过。各维度开关与 permits 由配置控制。
+     *
+     * <p>注意：{@link #tryAcquire} 内部会自动加 {@code RATE_LIMIT_KEY_PREFIX} 前缀,
+     * 此处传入的 key 仅包含维度标识 + 值(如 {@code receiver:u1}),避免前缀重复拼接。
      */
     @Override
     public boolean checkSendLimit(String channel, String receiver, String templateCode, String tenantId) {
@@ -128,7 +131,7 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
         // receiver 维度
         if (cfg.isReceiverEnabled() && receiver != null && !receiver.isBlank()) {
-            if (!tryAcquire(MessageConstants.RATE_LIMIT_RECEIVER_PREFIX + receiver, cfg.getReceiverPermits())) {
+            if (!tryAcquire("receiver:" + receiver, cfg.getReceiverPermits())) {
                 log.info("[RateLimit] receiver 维度限流: channel={} receiver={} permits={}/s",
                         channel, receiver, cfg.getReceiverPermits());
                 return false;
@@ -136,7 +139,7 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
         // templateCode 维度
         if (cfg.isTemplateEnabled() && templateCode != null && !templateCode.isBlank()) {
-            if (!tryAcquire(MessageConstants.RATE_LIMIT_TEMPLATE_PREFIX + templateCode, cfg.getTemplatePermits())) {
+            if (!tryAcquire("template:" + templateCode, cfg.getTemplatePermits())) {
                 log.info("[RateLimit] template 维度限流: channel={} template={} permits={}/s",
                         channel, templateCode, cfg.getTemplatePermits());
                 return false;
@@ -144,7 +147,7 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
         // tenant 维度
         if (cfg.isTenantEnabled() && tenantId != null && !tenantId.isBlank()) {
-            if (!tryAcquire(MessageConstants.RATE_LIMIT_TENANT_PREFIX + tenantId, cfg.getTenantPermits())) {
+            if (!tryAcquire("tenant:" + tenantId, cfg.getTenantPermits())) {
                 log.info("[RateLimit] tenant 维度限流: channel={} tenant={} permits={}/s",
                         channel, tenantId, cfg.getTenantPermits());
                 return false;

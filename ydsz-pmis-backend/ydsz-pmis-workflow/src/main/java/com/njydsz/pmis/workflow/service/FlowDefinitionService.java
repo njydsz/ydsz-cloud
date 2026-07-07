@@ -197,4 +197,49 @@ public interface FlowDefinitionService {
      * @return 批量导入结果：successCount / failedItems（fileName + reason）
      */
     Map<String, Object> batchDeployFromZip(byte[] zipBytes, String tenantId);
+
+    /**
+     * P2-4: 加锁流程定义（设计器协同编辑）。
+     *
+     * <p>对标钉钉/飞书流程设计器"编辑锁定"机制：
+     * <ul>
+     *   <li>未锁定 → 加锁成功，返回 true</li>
+     *   <li>同一人持锁 → 续约（刷新 lockedAt），返回 true</li>
+     *   <li>他人持锁且未超时 → 抛 BizException</li>
+     *   <li>他人持锁但已超时 → 强制抢占，返回 true</li>
+     * </ul>
+     *
+     * @param definitionId 流程定义 ID
+     * @param userId       当前操作用户 ID
+     * @return true=加锁成功
+     * @throws BizException 当锁被他人持有时
+     */
+    boolean lockDefinition(String definitionId, String userId);
+
+    /**
+     * P2-4: 解锁流程定义（设计器协同编辑）。
+     *
+     * <p>仅持锁人本人可解锁；他人持锁或未锁定时抛 BizException。
+     *
+     * @param definitionId 流程定义 ID
+     * @param userId       当前操作用户 ID
+     * @return true=解锁成功
+     * @throws BizException 当非持锁人尝试解锁时
+     */
+    boolean unlockDefinition(String definitionId, String userId);
+
+    /**
+     * P2-4: 查询流程定义的锁定状态。
+     *
+     * @param definitionId 流程定义 ID
+     * @return Map 包含：
+     *   <ul>
+     *     <li>{@code locked} (boolean) — 是否锁定中</li>
+     *     <li>{@code lockedBy} (String) — 当前持锁人 ID（未锁定返回 null）</li>
+     *     <li>{@code lockedAt} (LocalDateTime) — 加锁时间（未锁定返回 null）</li>
+     *     <li>{@code expired} (boolean) — 锁是否已超时（可被抢占）</li>
+     *   </ul>
+     *   定义不存在返回 null。
+     */
+    Map<String, Object> getLockStatus(String definitionId);
 }

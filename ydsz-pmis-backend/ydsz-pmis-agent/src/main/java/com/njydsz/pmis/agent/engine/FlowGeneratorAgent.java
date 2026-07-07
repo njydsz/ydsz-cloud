@@ -1,7 +1,8 @@
 package com.njydsz.pmis.agent.engine;
 
-import com.njydsz.pmis.agent.dto.FlowGenerationResult;
-import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
+import com.njydsz.pmis.agent.engine.react.ReActLoop;
+import com.njydsz.pmis.agent.engine.react.ReActResult;
+import com.njydsz.pmis.agent.engine.react.ReActStep;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
 import com.njydsz.pmis.agent.enums.AgentType;
 import lombok.RequiredArgsConstructor;
@@ -14,14 +15,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P0-3/P1-5: AI 一句话生成流程 Agent（工作流场景）
+ * P0-3/P1-5/P1-2: AI 一句话生成流程 Agent（工作流场景）
  *
  * <p>接收自然语言描述（如"请假审批：直属领导审批 → 部门经理审批（3天以上）→ 人事备案"），
- * 构建 prompt 调用 LLM 生成符合 BPMN 2.0 规范的 XML 流程定义。
+ * 通过 ReAct 推理循环调用 LLM 生成符合 BPMN 2.0 规范的 XML 流程定义。
  *
- * <p><b>P1-5 变更</b>：从正则提取 XML 改为 {@code LlmProvider.chatForJson()} 结构化输出，
- * LLM 返回 JSON {@code {"bpmnXml": "...", "summary": "..."}}，由 fastjson2 反序列化为
- * {@link FlowGenerationResult}，避免正则提取的脆弱性（代码块嵌套、命名空间前缀变化等）。
+ * <p><b>P1-2 变更</b>：从直接调用 {@code LlmProvider.chatForJson()} 改为通过 {@link ReActLoop}
+ * 推理循环，LLM 可主动调用 {@code bpmn_validate} 工具校验生成的 XML，再基于校验结果
+ * 决定是否输出最终答案。这使流程生成具备了「生成 → 校验 → 修正」的自闭环能力。
+ *
+ * <p>ReAct 循环流程：
+ * <ol>
+ *   <li>LLM 生成 BPMN XML，调用 {@code bpmn_validate} 工具校验</li>
+ *   <li>若校验失败，LLM 根据缺失元素修正 XML，再次校验</li>
+ *   <li>校验通过后，LLM 输出 {@code final_answer}，其值为最终 BPMN XML</li>
+ *   <li>FlowGeneratorAgent 将 final_answer 作为 bpmnXml 返回</li>
+ * </ol>
  *
  * <p>输入参数（params）：
  * <ul>
@@ -32,7 +41,8 @@ import java.util.Map;
  * <ul>
  *   <li>bpmnXml: String 生成的 BPMN 2.0 XML（根元素 {@code <bpmn:definitions>}）</li>
  *   <li>valid: boolean 是否包含完整 bpmn:definitions</li>
- *   <li>summary: String LLM 生成的流程摘要</li>
+ *   <li>summary: String 流程摘要（取自 ReAct 终止步骤的 thought）</li>
+ *   <li>reactSteps: int ReAct 实际执行步数（用于可观测性）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -43,8 +53,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowGeneratorAgent implements Agent {
 
-    /** LLM Provider 路由器 */
-    private final LlmProviderRouter llmProviderRouter;
+    /** ReAct 推理循环 */
+    private final ReActLoop reactLoop;
 
     private static final String DEFINITIONS_CLOSE = "</bpmn:definitions>";
 
@@ -68,29 +78,43 @@ public class FlowGeneratorAgent implements Agent {
         String systemPrompt = buildSystemPrompt();
         String userPrompt = buildUserPrompt(description);
 
-        FlowGenerationResult result;
+        // 调用 ReAct 推理循环
+        ReActResult reactResult;
         try {
-            result = llmProviderRouter.active()
-                    .chatForJson(systemPrompt, userPrompt, FlowGenerationResult.class, ctx);
+            reactResult = reactLoop.run(systemPrompt, userPrompt, ctx);
         } catch (Exception e) {
-            log.warn("[FlowGenerator] biz={} LLM 调用或 JSON 解析异常: {}", ctx.getBizRef(), e.getMessage());
+            log.warn("[FlowGenerator] biz={} ReAct 循环异常: {}", ctx.getBizRef(), e.getMessage());
             return new AgentResult(AgentType.FLOW_GENERATOR, AgentAlertLevel.RED,
                     BigDecimal.ZERO, BigDecimal.valueOf(0.2),
-                    "LLM 调用失败: " + e.getMessage(),
-                    List.of("LLM_ERROR"), Map.of("bpmnXml", ""));
+                    "ReAct 循环异常: " + e.getMessage(),
+                    List.of("REACT_ERROR"), Map.of("bpmnXml", ""));
         }
 
-        if (result == null || result.getBpmnXml() == null || result.getBpmnXml().isBlank()) {
-            log.warn("[FlowGenerator] biz={} LLM 返回为空", ctx.getBizRef());
+        // 处理 ReAct 失败
+        if (!reactResult.isSuccess()) {
+            log.warn("[FlowGenerator] biz={} ReAct 失败: {}", ctx.getBizRef(), reactResult.getFailureReason());
+            return new AgentResult(AgentType.FLOW_GENERATOR, AgentAlertLevel.RED,
+                    BigDecimal.ZERO, BigDecimal.valueOf(0.2),
+                    "ReAct 推理失败: " + reactResult.getFailureReason(),
+                    List.of("REACT_FAILED"), Map.of("bpmnXml", ""));
+        }
+
+        // 提取 final_answer 作为 BPMN XML
+        String bpmnXml = reactResult.getFinalAnswer();
+        if (bpmnXml == null || bpmnXml.isBlank()) {
+            log.warn("[FlowGenerator] biz={} ReAct final_answer 为空", ctx.getBizRef());
             return new AgentResult(AgentType.FLOW_GENERATOR, AgentAlertLevel.YELLOW,
                     BigDecimal.ZERO, BigDecimal.valueOf(0.3),
                     "LLM 返回为空", List.of("EMPTY_LLM_OUTPUT"),
                     Map.of("bpmnXml", ""));
         }
 
-        String bpmnXml = result.getBpmnXml();
+        // 校验 BPMN XML 结构完整性
         boolean valid = bpmnXml.contains("<bpmn:definitions")
                 && bpmnXml.contains(DEFINITIONS_CLOSE);
+
+        // 提取 summary（取自 ReAct 终止步骤的 thought）
+        String summary = extractSummary(reactResult);
 
         AgentAlertLevel level = valid ? AgentAlertLevel.RECOMMEND : AgentAlertLevel.YELLOW;
         BigDecimal score = valid ? BigDecimal.valueOf(0.8) : BigDecimal.valueOf(0.4);
@@ -100,26 +124,52 @@ public class FlowGeneratorAgent implements Agent {
                 : "LLM 输出未包含完整的 bpmn:definitions，请重试或调整描述";
         List<String> matched = List.of(
                 "description.length=" + description.length(),
-                valid ? "VALID_BPMN" : "INVALID_BPMN");
+                valid ? "VALID_BPMN" : "INVALID_BPMN",
+                "react.steps=" + reactResult.getTotalSteps());
 
-        log.info("[FlowGenerator] biz={} valid={} xml.length={} provider={}",
+        log.info("[FlowGenerator] biz={} valid={} xml.length={} reactSteps={} summary={}",
                 ctx.getBizRef(), valid, bpmnXml.length(),
-                llmProviderRouter.getActiveProviderName());
+                reactResult.getTotalSteps(), summary.isEmpty() ? "(空)" : summary);
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("bpmnXml", bpmnXml);
         payload.put("valid", valid);
-        if (result.getSummary() != null) {
-            payload.put("summary", result.getSummary());
+        payload.put("reactSteps", reactResult.getTotalSteps());
+        if (!summary.isEmpty()) {
+            payload.put("summary", summary);
         }
         return new AgentResult(AgentType.FLOW_GENERATOR, level, score,
                 confidence, suggestion, matched, payload);
     }
 
+    /**
+     * 从 ReAct 结果中提取流程摘要。
+     *
+     * <p>策略：取终止步骤（{@code final_answer}）的 {@code thought} 字段作为摘要。
+     * 因为 LLM 在输出最终答案时，通常会在 thought 中说明流程特点。
+     *
+     * @param reactResult ReAct 结果
+     * @return 流程摘要（可能为空字符串，不返回 null）
+     */
+    private String extractSummary(ReActResult reactResult) {
+        if (reactResult.getSteps() == null || reactResult.getSteps().isEmpty()) {
+            return "";
+        }
+        for (ReActStep step : reactResult.getSteps()) {
+            if (step.isTerminal()) {
+                return step.getThought() == null ? "" : step.getThought();
+            }
+        }
+        return "";
+    }
+
     // ========== Prompt 构建 ==========
 
     /**
-     * 构建 system prompt：约束 LLM 输出符合 BPMN 2.0 规范的 XML，并以 JSON 结构返回。
+     * 构建 system prompt：约束 LLM 输出符合 BPMN 2.0 规范的 XML。
+     *
+     * <p>注意：ReAct 格式说明与工具清单由 {@link ReActLoop} 自动拼接，
+     * 这里只描述业务角色与 BPMN 生成规则。
      */
     private String buildSystemPrompt() {
         return """
@@ -135,13 +185,10 @@ public class FlowGeneratorAgent implements Agent {
                 4. 节点之间使用 <bpmn:sequenceFlow> 连接，sourceRef / targetRef 引用节点 id。
                 5. 为每个节点设置语义化 id 与中文 name。
 
-                输出格式：严格输出以下 JSON 结构（不要使用 markdown 代码块包裹）：
-                {
-                  "bpmnXml": "<bpmn:definitions xmlns:bpmn=\\"http://www.omg.org/spec/BPMN/20100524/MODEL\\">...</bpmn:definitions>",
-                  "summary": "流程摘要说明"
-                }
-
-                其中 bpmnXml 字段为完整的 BPMN 2.0 XML 文本，summary 为一句话流程摘要。""";
+                工作流程建议：
+                - 先生成 BPMN XML，调用 bpmn_validate 工具校验结构完整性
+                - 校验通过后，在 final_answer 中输出完整的 BPMN XML（纯 XML 文本，不要 JSON 包裹）
+                - 在 final_answer 步骤的 thought 中用一句话描述流程特点""";
     }
 
     /**

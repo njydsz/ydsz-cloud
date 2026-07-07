@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.time.LocalDateTime;
 
 /**
  * 流程定义 DO
@@ -122,4 +123,21 @@ public class FlowDefinitionDO extends BaseDO {
     /** 乐观锁版本号（P1-2） */
     @Version
     private Integer version;
+
+    // ============================== P2-4: 设计器协同编辑锁定 ==============================
+
+    /**
+     * P2-4: 当前持锁人 ID（设计器协同编辑锁定，NULL=未锁定）。
+     *
+     * <p>对标钉钉/飞书流程设计器"编辑锁定"机制，避免多人同时编辑导致冲突。
+     */
+    private String lockedBy;
+
+    /**
+     * P2-4: 加锁时间（用于超时自动释放判断）。
+     *
+     * <p>超过 {@code workflow.designer.lock-timeout-minutes}（默认 30 分钟）后，
+     * 其他用户可强制抢占锁。
+     */
+    private LocalDateTime lockedAt;
 }

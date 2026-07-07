@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleEnvironment;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
@@ -79,6 +80,23 @@ public class ExpressionRule implements Rule {
      */
     @Override
     public String getTenantId() { return definition.getTenantId(); }
+
+    /**
+     * 环境标识（来自规则定义，P1-5 多环境隔离）
+     *
+     * <p>1.6.0 起启用运行时环境过滤：{@link com.njydsz.pmis.literule.core.DefaultRuleEngine}
+     * 在评估前会比较本方法返回值与 {@link RuleContext#getEnvironment()}：
+     * 规则 environment 为 {@link RuleEnvironment#DEFAULT "default"} 时匹配任何上下文环境；
+     * 非 "default" 时必须完全匹配。
+     *
+     * @return 规则定义中的环境标识；默认 "default"
+     * @since 1.6.0
+     */
+    @Override
+    public String getEnvironment() {
+        String env = definition.getEnvironment();
+        return env != null ? env : RuleEnvironment.DEFAULT;
+    }
 
     @Override
     public RuleResult evaluate(RuleContext context) {

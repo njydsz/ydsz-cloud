@@ -5,6 +5,7 @@ import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
+import com.njydsz.pmis.literule.api.RuleEnvironment;
 import com.njydsz.pmis.literule.api.RuleExecutionTrace;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.StatsRecorder;
@@ -163,7 +164,14 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
                 ? ruleIndexer.findCandidates(contextTenantId, scenario, triggeredGroups)
                 : rules;
 
-        // 遍历候选规则（索引模式下已按租户+场景+互斥组过滤）
+        // P1-2：倒排索引第二层过滤，按 facts 字段进一步缩小候选集
+        // 仅当倒排索引启用且非空时执行，避免对无字段引用的场景产生开销
+        if (ruleIndexer.isIndexEnabled() && ruleIndexer.hasFieldIndex()) {
+            Set<String> factKeys = context.getFacts().keySet();
+            candidateRules = ruleIndexer.filterByFacts(candidateRules, factKeys);
+        }
+
+        // 遍历候选规则（索引模式下已按租户+场景+互斥组+字段过滤）
         for (Rule rule : candidateRules) {
             // 索引未启用时仍需租户和场景过滤
             if (!ruleIndexer.isIndexEnabled()) {

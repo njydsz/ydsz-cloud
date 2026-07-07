@@ -106,6 +106,27 @@ public interface Rule {
     }
 
     /**
+     * 环境标识（多环境运行时隔离，P1-5）
+     *
+     * <p>1.6.0 起启用运行时环境过滤：{@link com.njydsz.pmis.literule.core.DefaultRuleEngine}
+     * 在评估前会比较 {@code rule.getEnvironment()} 与 {@link RuleContext#getEnvironment()}：
+     * <ul>
+     *   <li>规则 environment 为 {@link RuleEnvironment#DEFAULT "default"} 时，匹配任何上下文环境（向后兼容）</li>
+     *   <li>规则 environment 非 "default" 时，必须与 context.environment 完全匹配</li>
+     * </ul>
+     *
+     * <p>默认返回 {@link RuleEnvironment#DEFAULT "default"}（全环境生效），向后兼容。
+     * {@link com.njydsz.pmis.literule.impl.ExpressionRule} 等基于 {@link RuleDefinition}
+     * 的规则会覆写此方法返回定义中的 environment。
+     *
+     * @return 环境标识；默认 "default"
+     * @since 1.6.0
+     */
+    default String getEnvironment() {
+        return RuleEnvironment.DEFAULT;
+    }
+
+    /**
      * 评估规则
      *
      * @param context 规则上下文（事实数据）

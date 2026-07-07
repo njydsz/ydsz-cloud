@@ -72,4 +72,7 @@ public final class MessageConstants {
 
     /** 单次批量发送最大条数(防止阻塞过久) */
     public static final int BATCH_SEND_MAX_SIZE = 100;
+
+    /** P2-6: 级联发送最大深度(防止无限递归,顶层消息深度=0) */
+    public static final int MAX_CASCADE_DEPTH = 5;
 }

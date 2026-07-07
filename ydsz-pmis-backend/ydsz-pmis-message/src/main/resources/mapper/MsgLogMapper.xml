@@ -32,6 +32,7 @@
         <result column="msg_id" property="msgId"/>
         <result column="topic" property="topic"/>
         <result column="reconsume_times" property="reconsumeTimes"/>
+        <result column="parent_msg_id" property="parentMsgId"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
@@ -44,7 +45,7 @@
         id, channel, biz_type, biz_id, receiver, template_code, template_params, content, status,
         error_message, priority, sender_id, message_group, batch_id, route_rule_id, canary, dedup_key,
         recall_status, recall_at, receipt_status, receipt_at, retry_count, next_retry_at,
-        provider_trace_id, cost_ms, trace_id, msg_id, topic, reconsume_times,
+        provider_trace_id, cost_ms, trace_id, msg_id, topic, reconsume_times, parent_msg_id,
         created_by, created_at, updated_by, updated_at, deleted, tenant_id
     </sql>
 
