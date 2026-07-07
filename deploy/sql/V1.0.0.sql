@@ -10941,6 +10941,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
     template_code       VARCHAR(64)     NOT NULL,               -- 模板编码: TASK_CREATED / TASK_URGED / TASK_TIMEOUT 等
     template_name       VARCHAR(128)    NOT NULL,               -- 模板名称
     channel             VARCHAR(32)     NOT NULL DEFAULT 'IN_APP', -- 通道: IN_APP / EMAIL / SMS / WEBHOOK
+    locale              VARCHAR(10)     NOT NULL DEFAULT 'zh_CN', -- P1-5: 语言区域: zh_CN / en_US 等
     title               VARCHAR(256)    NOT NULL,               -- 标题模板（支持 ${var} 占位符）
     content             TEXT            NOT NULL,               -- 内容模板（支持 ${var} 占位符）
     enabled             SMALLINT        NOT NULL DEFAULT 1,     -- 1=启用 0=禁用
@@ -10954,21 +10955,22 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
     provider_trace_id   VARCHAR(64),
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 约束
-    CONSTRAINT uk_pfnt_tenant_code_channel UNIQUE (tenant_id, template_code, channel, deleted),
+    CONSTRAINT uk_pfnt_tenant_code_channel_locale UNIQUE (tenant_id, template_code, channel, locale, deleted),
     CONSTRAINT ck_pfnt_channel CHECK (channel IN ('IN_APP','EMAIL','SMS','WEBHOOK','DINGTALK','FEISHU','WECOM')),
     CONSTRAINT ck_pfnt_enabled CHECK (enabled IN (0, 1)),
     CONSTRAINT ck_pfnt_deleted CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_flow_notify_template IS 'P1-2: 工作流通知模板表 — 通知内容模板化管理，支持 ${var} 变量占位符';
+COMMENT ON TABLE  pmis_flow_notify_template IS 'P1-2: 工作流通知模板表 — 通知内容模板化管理，支持 ${var} 变量占位符。P1-5: locale 字段支持多语言';
 COMMENT ON COLUMN pmis_flow_notify_template.template_code IS '模板编码: TASK_CREATED / TASK_COMPLETED / TASK_REJECTED / TASK_URGED / TASK_TIMEOUT / INSTANCE_TERMINATED / CC_CREATED 等';
 COMMENT ON COLUMN pmis_flow_notify_template.channel IS '通知通道: IN_APP / EMAIL / SMS / WEBHOOK / DINGTALK / FEISHU / WECOM';
+COMMENT ON COLUMN pmis_flow_notify_template.locale IS 'P1-5: 语言区域（zh_CN / en_US 等），同一 templateCode+channel 可配置多语言模板，默认 zh_CN';
 COMMENT ON COLUMN pmis_flow_notify_template.title IS '标题模板（支持 ${flowName} ${nodeName} ${assigneeName} ${instanceId} ${taskId} 等占位符）';
 COMMENT ON COLUMN pmis_flow_notify_template.content IS '内容模板（支持与 title 相同的占位符）';
 COMMENT ON COLUMN pmis_flow_notify_template.enabled IS '是否启用: 1=启用 0=禁用';
 
-CREATE INDEX IF NOT EXISTS idx_pfnt_tenant_code
-    ON pmis_flow_notify_template (tenant_id, template_code, channel)
+CREATE INDEX IF NOT EXISTS idx_pfnt_tenant_code_locale
+    ON pmis_flow_notify_template (tenant_id, template_code, channel, locale)
     WHERE deleted = 0 AND enabled = 1;
 CREATE INDEX IF NOT EXISTS idx_pfnt_tenant_enabled
     ON pmis_flow_notify_template (tenant_id, enabled)
@@ -10977,37 +10979,66 @@ CREATE INDEX IF NOT EXISTS idx_pfnt_trace
     ON pmis_flow_notify_template (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
--- 初始化默认模板
-INSERT INTO pmis_flow_notify_template (id, tenant_id, template_code, template_name, channel, title, content, description)
+-- 初始化默认模板（P1-5: locale 默认 zh_CN）
+INSERT INTO pmis_flow_notify_template (id, tenant_id, template_code, template_name, channel, locale, title, content, description)
 VALUES
-    ('1', '1', 'TASK_CREATED', '任务创建通知', 'IN_APP',
+    ('1', '1', 'TASK_CREATED', '任务创建通知', 'IN_APP', 'zh_CN',
      '您有一个新的审批待办',
      '流程【${flowName}】节点【${nodeName}】需要您处理，请尽快审批。',
      '任务创建时通知办理人'),
-    ('2', '1', 'TASK_COMPLETED', '任务通过通知', 'IN_APP',
+    ('2', '1', 'TASK_COMPLETED', '任务通过通知', 'IN_APP', 'zh_CN',
      '审批已通过',
      '流程【${flowName}】节点【${nodeName}】已由 ${operatorName} 通过审批。',
      '任务通过时通知发起人'),
-    ('3', '1', 'TASK_REJECTED', '任务驳回通知', 'IN_APP',
+    ('3', '1', 'TASK_REJECTED', '任务驳回通知', 'IN_APP', 'zh_CN',
      '审批被驳回',
      '流程【${flowName}】节点【${nodeName}】被 ${operatorName} 驳回，请查看并修改后重新提交。',
      '任务驳回时通知发起人'),
-    ('4', '1', 'TASK_URGED', '催办通知', 'IN_APP',
+    ('4', '1', 'TASK_URGED', '催办通知', 'IN_APP', 'zh_CN',
      '您有待办被催办',
      '流程【${flowName}】的审批任务被催办，请尽快处理。${comment}',
      '催办时通知办理人'),
-    ('5', '1', 'TASK_TIMEOUT', '任务超时提醒', 'IN_APP',
+    ('5', '1', 'TASK_TIMEOUT', '任务超时提醒', 'IN_APP', 'zh_CN',
      '审批任务即将超时',
      '【${flowName}】${nodeName} 已超过截止时间 ${dueAt}，请尽快处理（第 ${reminderCount}/${maxReminders} 次提醒）。',
      'SLA 超时提醒办理人'),
-    ('6', '1', 'INSTANCE_TERMINATED', '流程终止通知', 'IN_APP',
+    ('6', '1', 'INSTANCE_TERMINATED', '流程终止通知', 'IN_APP', 'zh_CN',
      '流程已终止',
      '流程【${flowName}】已被终止，原因：${reason}。',
      '实例终止时通知发起人'),
-    ('7', '1', 'CC_CREATED', '抄送通知', 'IN_APP',
+    ('7', '1', 'CC_CREATED', '抄送通知', 'IN_APP', 'zh_CN',
      '您有新的抄送',
      '流程【${flowName}】节点【${nodeName}】抄送给您，请查阅。',
-     '抄送时通知接收人')
+     '抄送时通知接收人'),
+    -- P1-5: 英文模板（en_US）
+    ('101', '1', 'TASK_CREATED', 'Task Created', 'IN_APP', 'en_US',
+     'You have a new approval task',
+     'Workflow [${flowName}] node [${nodeName}] requires your action. Please review promptly.',
+     'Notify assignee when task is created'),
+    ('102', '1', 'TASK_COMPLETED', 'Task Approved', 'IN_APP', 'en_US',
+     'Approval passed',
+     'Workflow [${flowName}] node [${nodeName}] has been approved by ${operatorName}.',
+     'Notify initiator when task is approved'),
+    ('103', '1', 'TASK_REJECTED', 'Task Rejected', 'IN_APP', 'en_US',
+     'Approval rejected',
+     'Workflow [${flowName}] node [${nodeName}] has been rejected by ${operatorName}. Please review and resubmit.',
+     'Notify initiator when task is rejected'),
+    ('104', '1', 'TASK_URGED', 'Task Urged', 'IN_APP', 'en_US',
+     'You have an urged task',
+     'Workflow [${flowName}] approval task has been urged. Please process it ASAP. ${comment}',
+     'Notify assignee when task is urged'),
+    ('105', '1', 'TASK_TIMEOUT', 'Task Timeout Reminder', 'IN_APP', 'en_US',
+     'Approval task is about to timeout',
+     '[${flowName}] ${nodeName} has exceeded the deadline ${dueAt}. Please process it ASAP (reminder ${reminderCount}/${maxReminders}).',
+     'SLA timeout reminder for assignee'),
+    ('106', '1', 'INSTANCE_TERMINATED', 'Instance Terminated', 'IN_APP', 'en_US',
+     'Workflow terminated',
+     'Workflow [${flowName}] has been terminated. Reason: ${reason}.',
+     'Notify initiator when instance is terminated'),
+    ('107', '1', 'CC_CREATED', 'CC Notification', 'IN_APP', 'en_US',
+     'You have a new CC',
+     'Workflow [${flowName}] node [${nodeName}] has been CC-ed to you for your reference.',
+     'Notify receiver when CC is created')
 ON CONFLICT DO NOTHING;
 
 -- ====================================================================
