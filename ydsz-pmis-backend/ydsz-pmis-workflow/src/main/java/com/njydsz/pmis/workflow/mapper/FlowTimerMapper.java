@@ -18,7 +18,7 @@ import java.util.List;
 public interface FlowTimerMapper extends BaseMapper<FlowTimerDO> {
 
     /**
-     * 扫描到点的 PENDING 定时器（status = PENDING AND fire_at &lt;= now AND deleted = 0）
+     * 扫描到点的 PENDING 定时器（status = PENDING AND fire_at <= now AND deleted = 0）
      *
      * @param now 当前时间
      * @param limit 单次扫描上限
@@ -33,23 +33,23 @@ public interface FlowTimerMapper extends BaseMapper<FlowTimerDO> {
      * @param reason 取消原因
      * @return 受影响行数
      */
-    String cancelByTask(@Param("boundaryTaskId") String boundaryTaskId,
+    int cancelByTask(@Param("boundaryTaskId") String boundaryTaskId,
                      @Param("reason") String reason);
 
     /**
      * 标记定时器已触发
      */
-    String markFired(@Param("id") String id,
+    int markFired(@Param("id") String id,
                   @Param("firedAt") LocalDateTime firedAt);
 
     /**
      * 关闭某实例所有 PENDING 定时器（实例终止/驳回时使用）
      */
-    String cancelByInstance(@Param("instanceId") String instanceId,
+    int cancelByInstance(@Param("instanceId") String instanceId,
                          @Param("reason") String reason);
 
     /**
      * 统计实例的 PENDING 定时器数（用于检查流程是否被定时器阻塞）
      */
-    String countPendingByInstance(@Param("instanceId") String instanceId);
+    long countPendingByInstance(@Param("instanceId") String instanceId);
 }

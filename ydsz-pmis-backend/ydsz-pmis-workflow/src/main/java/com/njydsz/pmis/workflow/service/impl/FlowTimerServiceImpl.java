@@ -55,7 +55,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long scheduleIntermediate(String instanceId, String nodeCode, Duration delay) {
+    public String scheduleIntermediate(String instanceId, String nodeCode, Duration delay) {
         if (instanceId == null || nodeCode == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "instanceId/nodeCode 不能为空");
         }
@@ -86,7 +86,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long scheduleBoundary(String taskId, String instanceId, String nodeCode, Duration delay) {
+    public String scheduleBoundary(String taskId, String instanceId, String nodeCode, Duration delay) {
         if (taskId == null || instanceId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "taskId/instanceId 不能为空");
         }

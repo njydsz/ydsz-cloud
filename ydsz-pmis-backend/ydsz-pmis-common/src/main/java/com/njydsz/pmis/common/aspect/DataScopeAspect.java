@@ -72,7 +72,7 @@ public class DataScopeAspect {
      * @param targetDeptId 目标部门 ID
      * @throws BizException 无权限访问时抛出
      */
-    public static void assertAllow(Long targetDeptId) {
+    public static void assertAllow(String targetDeptId) {
         DataScopeContext ctx = peek();
         if (ctx.isAll()) {
             return;

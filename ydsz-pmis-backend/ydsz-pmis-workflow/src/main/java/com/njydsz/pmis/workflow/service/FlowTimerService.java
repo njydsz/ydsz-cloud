@@ -25,7 +25,7 @@ public interface FlowTimerService {
      * @param delay      等待时长
      * @return 定时器 ID
      */
-    Long scheduleIntermediate(String instanceId, String nodeCode, Duration delay);
+    String scheduleIntermediate(String instanceId, String nodeCode, Duration delay);
 
     /**
      * 注册边界定时器（userTask 创建时调用）
@@ -36,7 +36,7 @@ public interface FlowTimerService {
      * @param delay      超时时长
      * @return 定时器 ID
      */
-    Long scheduleBoundary(String taskId, String instanceId, String nodeCode, Duration delay);
+    String scheduleBoundary(String taskId, String instanceId, String nodeCode, Duration delay);
 
     /**
      * 触发单个定时器（cronjob 扫描到到点记录时调用）

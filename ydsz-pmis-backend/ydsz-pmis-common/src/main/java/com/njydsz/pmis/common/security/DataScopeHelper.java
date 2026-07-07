@@ -38,7 +38,7 @@ public final class DataScopeHelper {
      * @param targetDeptId 目标部门 ID
      * @throws BizException 无权限时抛出
      */
-    public static void requireDept(Long targetDeptId) {
+    public static void requireDept(String targetDeptId) {
         if (targetDeptId == null) {
             return;
         }
@@ -61,7 +61,7 @@ public final class DataScopeHelper {
      * @param ownerUserId 目标用户 ID
      * @throws BizException 无权限时抛出
      */
-    public static void requireOwner(Long ownerUserId) {
+    public static void requireOwner(String ownerUserId) {
         if (ownerUserId == null) {
             return;
         }

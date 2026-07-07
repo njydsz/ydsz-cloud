@@ -292,7 +292,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             billableByDept.merge(dept, billable, BigDecimal::add);
             overtimeByDept.merge(dept, overtime, BigDecimal::add);
             leaveByDept.merge(dept, leave, BigDecimal::add);
-            headByDept.merge(dept, 1L, Long::sum);
+            headByDept.merge(dept, 1L, (a, b) -> a + b);
         }
 
         List<Map<String, Object>> out = new ArrayList<>();
@@ -1073,17 +1073,6 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             return new BigDecimal(o.toString());
         } catch (Exception e) {
             return ZERO;
-        }
-    }
-
-    private Long toLong(Object o) {
-        if (o == null) return null;
-        if (o instanceof Number) return ((Number) o).longValue();
-        try {
-            return Long.parseLong(o.toString());
-        } catch (Exception e) {
-            log.warn("[AdvancedReportServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
-            return null;
         }
     }
 

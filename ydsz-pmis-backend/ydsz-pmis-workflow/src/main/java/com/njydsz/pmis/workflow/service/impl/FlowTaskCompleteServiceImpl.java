@@ -262,18 +262,18 @@ public class FlowTaskCompleteServiceImpl {
                     return task.getId();
                 }
                 case "TRANSFER_ADMIN" -> {
-                    Long adminUserId = parseLongConfig(extConfig, "adminUserId", "1");
+                    String adminUserId = parseLongConfig(extConfig, "adminUserId", "1");
                     task.setAssigneeType(FlowAssigneeType.USER.name());
-                    task.setAssigneeId(String.valueOf(adminUserId));
+                    task.setAssigneeId(adminUserId);
                     task.setAssigneeName("ADMIN_FALLBACK");
                     taskMapper.insert(task);
                     log.info("[Flow] 审批人为空转管理员: instanceId={} node={} adminId={}",
                             instanceId, node.getNodeCode(), adminUserId);
                 }
                 case "ASSIGN_SPECIFIED" -> {
-                    Long specifiedUserId = parseLongConfig(extConfig, "specifiedUserId", "1");
+                    String specifiedUserId = parseLongConfig(extConfig, "specifiedUserId", "1");
                     task.setAssigneeType(FlowAssigneeType.USER.name());
-                    task.setAssigneeId(String.valueOf(specifiedUserId));
+                    task.setAssigneeId(specifiedUserId);
                     task.setAssigneeName("SPECIFIED_FALLBACK");
                     taskMapper.insert(task);
                     log.info("[Flow] 审批人为空指定人员: instanceId={} node={} userId={}",
@@ -393,7 +393,7 @@ public class FlowTaskCompleteServiceImpl {
         }
 
         // 为每个元素创建独立 task
-        Long firstTaskId = null;
+        String firstTaskId = null;
         for (String element : elements) {
             FlowRunTaskDO task = buildForeachTask(instance, node, element,
                     "USER:" + element, element);

@@ -279,7 +279,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
         // 构造系统用户操作 DTO，通过 taskService.pass() 完成任务 + 推进流程
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(latest.getId());
-        dto.setUserId(0L);
+        dto.setUserId("0");
         dto.setUserName("SLA系统自动通过");
         dto.setAction("PASS");
         dto.setComment("SLA 超时自动通过");
@@ -392,7 +392,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
         // 清除 dueAt 标记
         instanceMapper.updateDueAt(instanceId, null);
         // 如果存在父流程，同步终止父流程
-        Long parentId = latest.getParentInstanceId();
+        String parentId = latest.getParentInstanceId();
         if (parentId != null) {
             FlowInstanceDO parent = instanceMapper.selectById(parentId);
             if (parent != null && FlowInstanceStatus.RUNNING.name().equals(parent.getFlowStatus())) {
