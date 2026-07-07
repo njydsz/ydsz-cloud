@@ -23,7 +23,7 @@ public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAc
      * @param platform 平台: DINGTALK/FEISHU/WECOM
      * @return 账号映射记录
      */
-    FlowThirdPartyAccountDO selectByUserIdAndPlatform(@Param("userId") Long userId,
+    FlowThirdPartyAccountDO selectByUserIdAndPlatform(@Param("userId") String userId,
                                                       @Param("platform") String platform);
 
     /**

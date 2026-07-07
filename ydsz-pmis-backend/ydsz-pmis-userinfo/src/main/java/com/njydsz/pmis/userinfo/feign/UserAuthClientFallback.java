@@ -35,7 +35,7 @@ public class UserAuthClientFallback implements FallbackFactory<UserAuthClient> {
             }
 
             @Override
-            public Result<LoginContextDTO> getLoginContextById(Long userId) {
+            public Result<LoginContextDTO> getLoginContextById(String userId) {
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
         };

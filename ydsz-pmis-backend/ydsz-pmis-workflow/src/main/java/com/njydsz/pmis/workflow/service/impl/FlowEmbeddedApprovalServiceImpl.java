@@ -56,7 +56,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
 
     @Override
     @Transactional(readOnly = true)
-    public EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, Long userId) {
+    public EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, String userId) {
         if (businessType == null || businessType.isBlank()
                 || businessId == null || businessId.isBlank()) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
@@ -211,7 +211,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 计算当前用户在流程中的角色
      */
-    private String computeMyRole(FlowInstanceDO instance, List<FlowRunTaskDO> pending, Long userId) {
+    private String computeMyRole(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
         if (userId == null) {
             return ROLE_OBSERVER;
         }
@@ -231,7 +231,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 计算当前用户可执行的操作
      */
-    private List<String> computeActions(FlowInstanceDO instance, List<FlowRunTaskDO> pending, Long userId) {
+    private List<String> computeActions(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
         List<String> actions = new ArrayList<>();
         if (userId == null) {
             return actions;
@@ -284,7 +284,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      *   <li>【P0-4 新增】无已完成的历史任务 — 如果有审批人已处理过任务，说明流程已推进到下游，不可撤回</li>
      * </ol>
      */
-    private boolean canRecall(FlowInstanceDO instance, List<FlowRunTaskDO> pending, Long userId) {
+    private boolean canRecall(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
         if (userId == null) {
             return false;
         }
@@ -321,7 +321,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 判定 task 是否属于指定 userId（USER/ROLE/DEPT 等多种 assigneeType 均纳入判断）
      */
-    private boolean isMine(FlowRunTaskDO t, Long userId) {
+    private boolean isMine(FlowRunTaskDO t, String userId) {
         if (t == null || userId == null) {
             return false;
         }
@@ -345,7 +345,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 找到当前用户 mine 的第一个未完成任务
      */
-    private FlowRunTaskDO findMyTask(Long instanceId, Long userId) {
+    private FlowRunTaskDO findMyTask(Long instanceId, String userId) {
         if (userId == null) {
             return null;
         }
@@ -362,7 +362,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      * 构造当前待办视图
      */
     private List<EmbeddedApprovalViewDTO.CurrentTaskView> buildCurrentTaskViews(
-            List<FlowRunTaskDO> pending, Long userId) {
+            List<FlowRunTaskDO> pending, String userId) {
         if (pending == null || pending.isEmpty()) {
             return Collections.emptyList();
         }

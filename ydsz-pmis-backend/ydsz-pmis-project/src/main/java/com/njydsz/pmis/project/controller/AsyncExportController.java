@@ -46,17 +46,17 @@ public class AsyncExportController {
     @RateLimit(key = "export", qps = 3, windowSeconds = 60,
             message = "{validation.execution.msg_54683c1c}")
     public Map<String, Object> submitExport(
-            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Id") String userId,
             @RequestParam String exportType,
             @RequestBody(required = false) Map<String, Object> params) {
-        Long recordId = asyncExportService.submitExport(userId, exportType, params != null ? params : Map.of());
+        String recordId = asyncExportService.submitExport(userId, exportType, params != null ? params : Map.of());
         return Map.of("recordId", recordId, "status", "PENDING");
     }
 
     @GetMapping("/records")
     @Operation(summary = "查询导出记录列表")
     public Page<Map<String, Object>> getExportRecords(
-            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Id") String userId,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return asyncExportService.getExportRecords(userId,

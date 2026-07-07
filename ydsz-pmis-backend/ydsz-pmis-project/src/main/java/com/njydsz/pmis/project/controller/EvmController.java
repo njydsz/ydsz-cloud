@@ -91,7 +91,7 @@ public class EvmController {
     @Operation(summary = "按 WBS 查询")
     @PrePermission("execution:evm:list")
     @GetMapping("/by-wbs")
-    public Result<List<EvmMeasureVO>> listByWbs(@RequestParam Long wbsTaskId) {
+    public Result<List<EvmMeasureVO>> listByWbs(@RequestParam String wbsTaskId) {
         return Result.ok(service.listByWbs(wbsTaskId));
     }
 
@@ -104,7 +104,7 @@ public class EvmController {
     @Operation(summary = "项目偏差趋势（按周期）")
     @PrePermission("execution:evm:list")
     @GetMapping("/trend")
-    public Result<List<Map<String, Object>>> trend(@RequestParam String initiationId) {
+    public Result<List<Map<String, Object>>> trend(@RequestParam Long initiationId) {
         return Result.ok(service.trend(initiationId));
     }
 
@@ -117,7 +117,7 @@ public class EvmController {
     @Operation(summary = "项目 EVM 健康仪表盘")
     @PrePermission("execution:evm:dashboard")
     @GetMapping("/dashboard")
-    public Result<Map<String, Object>> dashboard(@RequestParam String initiationId) {
+    public Result<Map<String, Object>> dashboard(@RequestParam Long initiationId) {
         return Result.ok(service.dashboard(initiationId));
     }
 

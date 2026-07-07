@@ -99,7 +99,7 @@ public class FileController {
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "批量删除文件", bizType = "FILE")
     @DeleteMapping("/batch")
-    public Result<Void> deleteBatch(@Valid @RequestBody List<Long> ids) throws Exception {
+    public Result<Void> deleteBatch(@Valid @RequestBody List<String> ids) throws Exception {
         fileService.deleteBatch(ids);
         return Result.ok();
     }

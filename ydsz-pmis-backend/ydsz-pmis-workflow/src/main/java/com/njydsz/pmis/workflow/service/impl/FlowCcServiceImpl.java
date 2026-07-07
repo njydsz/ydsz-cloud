@@ -102,7 +102,7 @@ public class FlowCcServiceImpl implements FlowCcService {
             LocalDateTime now = LocalDateTime.now();
             String traceId = TraceIdUtil.getOrCreate();
             int insertCount = 0;
-            for (Long userId : userIds) {
+            for (String userId : userIds) {
                 FlowCcDO cc = buildCcDO(instance, node, userId, now, traceId);
                 ccMapper.insert(cc);
                 insertCount++;
@@ -121,7 +121,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowCcDO> pageMyCc(String tenantId, Long userId, FlowCcQueryDTO query) {
+    public List<FlowCcDO> pageMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
         try {
             if (userId == null || query == null) {
                 return List.of();
@@ -139,7 +139,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countMyCc(String tenantId, Long userId, FlowCcQueryDTO query) {
+    public long countMyCc(String tenantId, String userId, FlowCcQueryDTO query) {
         try {
             if (userId == null || query == null) {
                 return 0L;
@@ -153,7 +153,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<FlowCcDO> listCcByUser(Long userId, String readStatus, String flowCode,
+    public PageResult<FlowCcDO> listCcByUser(String userId, String readStatus, String flowCode,
                                              String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
@@ -177,7 +177,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void markRead(String tenantId, Long userId, Long ccId) {
+    public void markRead(String tenantId, String userId, Long ccId) {
         try {
             if (ccId == null || userId == null) {
                 return;
@@ -191,7 +191,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int markAllRead(String tenantId, Long userId) {
+    public int markAllRead(String tenantId, String userId) {
         try {
             if (userId == null || tenantId == null) {
                 return 0;
@@ -210,7 +210,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countUnread(Long userId, String tenantId) {
+    public long countUnread(String userId, String tenantId) {
         try {
             if (userId == null || tenantId == null) {
                 return 0L;
@@ -289,7 +289,7 @@ public class FlowCcServiceImpl implements FlowCcService {
      * 构建 FlowCcDO 记录
      */
     private FlowCcDO buildCcDO(FlowInstanceDO instance, FlowNodeDO node,
-                               Long userId, LocalDateTime now, String traceId) {
+                               String userId, LocalDateTime now, String traceId) {
         FlowCcDO cc = new FlowCcDO();
         cc.setTenantId(instance.getTenantId());
         cc.setInstanceId(instance.getId());

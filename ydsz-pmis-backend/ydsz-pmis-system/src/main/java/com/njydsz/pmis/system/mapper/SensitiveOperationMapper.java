@@ -32,6 +32,6 @@ public interface SensitiveOperationMapper extends BaseMapper<SensitiveOperationD
      * @param limit  最大条数
      * @return 敏感操作列表
      */
-    List<SensitiveOperationDO> selectByUser(@Param("userId") Long userId,
+    List<SensitiveOperationDO> selectByUser(@Param("userId") String userId,
                                                       @Param("limit") int limit);
 }

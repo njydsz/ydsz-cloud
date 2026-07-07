@@ -34,7 +34,7 @@ public interface FileService {
     /**
      * 批量删除
      */
-    void deleteBatch(List<Long> ids) throws Exception;
+    void deleteBatch(List<String> ids) throws Exception;
 
     /**
      * 获取文件元信息

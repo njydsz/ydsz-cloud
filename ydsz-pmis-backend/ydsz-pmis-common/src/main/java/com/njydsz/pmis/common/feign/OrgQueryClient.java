@@ -59,7 +59,7 @@ public interface OrgQueryClient {
      * @return 角色编码列表
      */
     @GetMapping("/user-role-codes")
-    Result<List<String>> listRoleCodesByUserId(@RequestParam("userId") Long userId);
+    Result<List<String>> listRoleCodesByUserId(@RequestParam("userId") String userId);
 
     /**
      * 根据用户 ID 查询其所属部门 ID 列表（用于待办反查）
@@ -70,7 +70,7 @@ public interface OrgQueryClient {
      * @return 部门 ID 列表（字符串形式，便于 permissionFlag 字符串匹配）
      */
     @GetMapping("/user-dept-ids")
-    Result<List<String>> listDeptIdsByUserId(@RequestParam("userId") Long userId);
+    Result<List<String>> listDeptIdsByUserId(@RequestParam("userId") String userId);
 
     /**
      * P2-2: 根据部门 ID 查询启用状态的用户 ID 列表
@@ -97,5 +97,5 @@ public interface OrgQueryClient {
      * @return 直属上级用户 ID，未设置时返回 null
      */
     @GetMapping("/leader-by-user")
-    Result<Long> getLeaderByUserId(@RequestParam("userId") Long userId);
+    Result<Long> getLeaderByUserId(@RequestParam("userId") String userId);
 }

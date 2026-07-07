@@ -33,7 +33,7 @@ public class DataExportAuditServiceImpl {
      * @param module 导出模块（可选）
      * @return 分页结果
      */
-    public Page<DataExportAuditDO> page(int page, int size, Long userId, String module) {
+    public Page<DataExportAuditDO> page(int page, int size, String userId, String module) {
         Page<DataExportAuditDO> p = new Page<>(page, size);
         LambdaQueryWrapper<DataExportAuditDO> w = new LambdaQueryWrapper<>();
         if (userId != null) w.eq(DataExportAuditDO::getUserId, userId);
@@ -49,7 +49,7 @@ public class DataExportAuditServiceImpl {
      * @param limit  最大条数
      * @return 导出审计列表
      */
-    public List<DataExportAuditDO> listByUser(Long userId, int limit) {
+    public List<DataExportAuditDO> listByUser(String userId, int limit) {
         return mapper.selectByUser(userId, Math.max(1, Math.min(limit, 500)));
     }
 

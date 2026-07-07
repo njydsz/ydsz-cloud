@@ -29,7 +29,7 @@ public interface FlowTaskCommentService {
      * @return 新建的评论记录
      */
     FlowTaskCommentDO addComment(Long instanceId, Long taskId, String nodeCode,
-                                 Long userId, String userName, String content,
+                                 String userId, String userName, String content,
                                  String type, Long parentId);
 
     /**
@@ -55,5 +55,5 @@ public interface FlowTaskCommentService {
      * @param userId    操作人 ID（用于归属校验）
      * @return 是否删除成功
      */
-    boolean deleteComment(Long commentId, Long userId);
+    boolean deleteComment(Long commentId, String userId);
 }

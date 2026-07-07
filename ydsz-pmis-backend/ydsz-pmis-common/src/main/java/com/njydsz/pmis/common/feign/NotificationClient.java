@@ -43,7 +43,7 @@ public interface NotificationClient {
      * @return 推送结果
      */
     @PostMapping("/notifications/push")
-    Result<Map<String, Object>> pushRealtime(@RequestParam("userId") Long userId,
+    Result<Map<String, Object>> pushRealtime(@RequestParam("userId") String userId,
                                              @RequestParam("type") String type,
                                              @RequestBody RealtimePushDTO payload);
 }

@@ -42,7 +42,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public FlowTaskCommentDO addComment(Long instanceId, Long taskId, String nodeCode,
-                                       Long userId, String userName, String content,
+                                       String userId, String userName, String content,
                                        String type, Long parentId) {
         FlowTaskCommentDO comment = new FlowTaskCommentDO();
         LocalDateTime now = LocalDateTime.now();
@@ -106,7 +106,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteComment(Long commentId, Long userId) {
+    public boolean deleteComment(Long commentId, String userId) {
         try {
             if (commentId == null) {
                 return false;

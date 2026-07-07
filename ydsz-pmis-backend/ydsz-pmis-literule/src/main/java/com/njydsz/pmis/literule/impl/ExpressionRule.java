@@ -77,7 +77,7 @@ public class ExpressionRule implements Rule {
      * @since 1.5.0
      */
     @Override
-    public long getTenantId() { return definition.getTenantId(); }
+    public String getTenantId() { return definition.getTenantId(); }
 
     @Override
     public RuleResult evaluate(RuleContext context) {

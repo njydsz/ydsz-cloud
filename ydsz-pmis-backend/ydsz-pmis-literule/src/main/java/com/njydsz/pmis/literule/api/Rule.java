@@ -101,7 +101,7 @@ public interface Rule {
      * @return 租户 ID；默认 "1"
      * @since 1.5.0
      */
-    default long getTenantId() {
+    default String getTenantId() {
         return "1";
     }
 

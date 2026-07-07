@@ -272,7 +272,7 @@ public class EncryptedFieldMigrationService {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     RowData r = new RowData();
-                    r.id = rs.getLong("id");
+                    r.id = rs.getString("id");
                     r.plainValue = rs.getString("plain");
                     r.cipherValue = rs.getString("cipher");
                     out.add(r);
@@ -295,7 +295,7 @@ public class EncryptedFieldMigrationService {
         String sql = String.format("UPDATE %s SET \"%s\" = ? WHERE id = ?", col.table, col.cipherColumn);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, cipher);
-            ps.setLong(2, id);
+            ps.setString(2, id);
             ps.executeUpdate();
         }
     }

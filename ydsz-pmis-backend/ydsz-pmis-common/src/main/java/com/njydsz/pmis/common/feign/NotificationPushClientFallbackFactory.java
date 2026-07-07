@@ -26,7 +26,7 @@ public class NotificationPushClientFallbackFactory implements FallbackFactory<No
         log.warn("[Feign] 通知推送服务降级: {}", cause == null ? "null" : cause.getMessage());
         return new NotificationPushClient() {
             @Override
-            public Map<String, Object> pushToUser(Long userId, String type, Object payload) {
+            public Map<String, Object> pushToUser(String userId, String type, Object payload) {
                 Map<String, Object> r = new HashMap<>();
                 r.put("success", false);
                 r.put("reason", "notification-service-unavailable");

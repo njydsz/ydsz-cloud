@@ -26,7 +26,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     private final FeatureFlagService featureFlagService;
 
     @Override
-    public boolean isEnabled(FeatureFlag flag, Long userId) {
+    public boolean isEnabled(FeatureFlag flag, String userId) {
         return featureFlagService.isEnabled(flag, userId);
     }
 

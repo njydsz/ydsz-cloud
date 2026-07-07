@@ -44,7 +44,7 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE,
             key = "#userId + ':' + #platform", unless = "#result == null")
-    public FlowThirdPartyAccountDO getByUserIdAndPlatform(Long userId, String platform) {
+    public FlowThirdPartyAccountDO getByUserIdAndPlatform(String userId, String platform) {
         try {
             if (userId == null || !StringUtils.hasText(platform)) {
                 return null;
@@ -123,7 +123,7 @@ public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountSe
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {CacheConstants.FLOW_THIRDPARTY_BY_OPENID_CACHE,
             CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE}, allEntries = true)
-    public void bindAccount(Long userId, String platform, String openId, String unionId) {
+    public void bindAccount(String userId, String platform, String openId, String unionId) {
         try {
             if (userId == null || !StringUtils.hasText(platform) || !StringUtils.hasText(openId)) {
                 log.warn("[ThirdPartyAccount] 绑定参数为空: userId={} platform={} openId={}",

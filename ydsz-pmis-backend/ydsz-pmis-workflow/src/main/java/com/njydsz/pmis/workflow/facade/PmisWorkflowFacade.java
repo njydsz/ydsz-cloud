@@ -74,7 +74,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public void claimTask(Long taskId, Long userId) {
+    public void claimTask(Long taskId, String userId) {
         taskService.claim(taskId, userId);
     }
 
@@ -109,7 +109,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public List<Map<String, Object>> listTodoTasks(Long userId, int page, int size) {
+    public List<Map<String, Object>> listTodoTasks(String userId, int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResult<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), SecurityContext.getTenantIdOrDefault("1"), page, size);
@@ -117,7 +117,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public List<Map<String, Object>> listDoneTasks(Long userId, int page, int size) {
+    public List<Map<String, Object>> listDoneTasks(String userId, int page, int size) {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResult<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
@@ -202,13 +202,13 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public void batchPassTasks(List<Long> taskIds, Long userId, String comment) {
+    public void batchPassTasks(List<Long> taskIds, String userId, String comment) {
         taskService.batchPass(taskIds, userId, comment);
     }
 
     /** GAP-P0-4: 一键通过所有待办 */
     @Override
-    public int passAllTodoTasks(Long userId, String comment) {
+    public int passAllTodoTasks(String userId, String comment) {
         String tenantId = SecurityContext.getTenantIdOrDefault("1");
         PageResult<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
@@ -673,7 +673,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public void markReadTask(Long taskId, Long userId) {
+    public void markReadTask(Long taskId, String userId) {
         taskService.markRead(taskId, userId);
     }
 

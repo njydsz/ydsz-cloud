@@ -79,7 +79,7 @@ public interface InvoiceService {
      * @return 分页结果
      */
     Page<InvoiceDO> page(int page, int size, String keyword, String status,
-                         Long contractId, String initiationId, Long customerId,
+                         String contractId, String initiationId, String customerId,
                          String invoiceType);
 
     /**
@@ -88,7 +88,7 @@ public interface InvoiceService {
      * @param contractId 合同ID
      * @return 发票列表
      */
-    List<InvoiceDO> listByContract(Long contractId);
+    List<InvoiceDO> listByContract(String contractId);
 
     /**
      * 查询项目下所有发票
@@ -96,20 +96,20 @@ public interface InvoiceService {
      * @param initiationId 项目立项ID
      * @return 发票列表
      */
-    List<InvoiceDO> listByInitiation(Long initiationId);
+    List<InvoiceDO> listByInitiation(String initiationId);
 
     /**
      * 合同累计开票金额（仅 NORMAL+APPROVED/ISSUED）
      */
-    BigDecimal sumInvoicedByContract(Long contractId);
+    BigDecimal sumInvoicedByContract(String contractId);
 
     /**
      * 开票台账（按状态分组）
      */
-    List<Map<String, Object>> aggregateByStatus(Long contractId);
+    List<Map<String, Object>> aggregateByStatus(String contractId);
 
     /**
      * 按月汇总开票
      */
-    List<Map<String, Object>> sumByMonth(Long initiationId);
+    List<Map<String, Object>> sumByMonth(String initiationId);
 }

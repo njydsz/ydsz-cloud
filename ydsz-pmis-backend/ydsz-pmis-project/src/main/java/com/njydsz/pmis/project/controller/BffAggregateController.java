@@ -83,7 +83,7 @@ public class BffAggregateController {
     @GetMapping("/dashboard-summary")
     @RateLimit(key = "bff", qps = 20, windowSeconds = 60)
     @Operation(summary = "首页仪表盘聚合", description = "一次返回KPI+图表+待办数据")
-    public Map<String, Object> dashboardSummary(@RequestHeader(value = "X-User-Id", required = false) Long userId) {
+    public Map<String, Object> dashboardSummary(@RequestHeader(value = "X-User-Id", required = false) String userId) {
         Map<String, Object> result = new HashMap<>();
         try {
             // KPI 核心指标（驾驶舱总览）

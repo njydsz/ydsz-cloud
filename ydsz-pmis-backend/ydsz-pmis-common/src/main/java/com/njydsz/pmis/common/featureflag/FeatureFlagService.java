@@ -48,7 +48,7 @@ public interface FeatureFlagService {
      * @param userId 用户 ID, 为 null 时不应用灰度比例 (rolloutPercentage=100 才算开启)
      * @return true 表示启用
      */
-    boolean isEnabled(FeatureFlag flag, Long userId);
+    boolean isEnabled(FeatureFlag flag, String userId);
 
     /**
      * 获取所有 flag 的快照.

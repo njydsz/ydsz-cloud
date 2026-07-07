@@ -47,7 +47,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     public static final String TYPE_TASK_REJECTED = "TASK_REJECTED";
 
     @Override
-    public void pushTodoCount(Long userId) {
+    public void pushTodoCount(String userId) {
         if (userId == null) {
             return;
         }
@@ -65,7 +65,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
 
     @Override
-    public void pushTodoCountSafe(Long userId) {
+    public void pushTodoCountSafe(String userId) {
         pushTodoCount(userId);
     }
 
@@ -74,7 +74,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
         if (task == null) {
             return;
         }
-        Long userId = parseUserId(task.getAssigneeId());
+        String userId = parseUserId(task.getAssigneeId());
         if (userId == null) {
             return;
         }

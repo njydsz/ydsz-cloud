@@ -33,5 +33,5 @@ public interface UserAuthClient {
      * @return 统一响应结果，包含登录上下文（密码、角色、权限等）
      */
     @GetMapping("/feign/auth/context/by-id")
-    Result<LoginContextDTO> getLoginContextById(@RequestParam("userId") Long userId);
+    Result<LoginContextDTO> getLoginContextById(@RequestParam("userId") String userId);
 }

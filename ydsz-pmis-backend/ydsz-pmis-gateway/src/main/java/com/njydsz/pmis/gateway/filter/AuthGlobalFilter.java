@@ -170,7 +170,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                         return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
                     }
 
-                    Long userId = Long.parseLong(claims.getSubject());
+                    String userId = Long.parseLong(claims.getSubject());
                     String username = claims.get("username", String.class);
                     @SuppressWarnings("unchecked")
                     List<String> roles = (List<String>) claims.get("roles");

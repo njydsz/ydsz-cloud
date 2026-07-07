@@ -66,7 +66,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             }
             String title = "您有一个新的审批待办";
             String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 需要您处理";
-            Long userId = parseUserId(assigneeId);
+            String userId = parseUserId(assigneeId);
             Map<String, Object> extra = new HashMap<>();
             extra.put("bizType", "WORKFLOW_TASK");
             extra.put("instanceId", instanceId);
@@ -93,7 +93,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
                 content += "，备注：" + comment;
             }
             for (String assigneeId : assigneeIds) {
-                Long userId = parseUserId(assigneeId);
+                String userId = parseUserId(assigneeId);
                 Map<String, Object> extra = new HashMap<>();
                 extra.put("bizType", "WORKFLOW_URGE");
                 extra.put("instanceId", instanceId);
@@ -116,7 +116,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
                 return;
             }
             String content = "流程实例[" + instanceId + "] 节点[" + nodeCode + "] 抄送给您";
-            for (Long userId : ccUserIds) {
+            for (String userId : ccUserIds) {
                 Map<String, Object> extra = new HashMap<>();
                 extra.put("bizType", "WORKFLOW_CC");
                 extra.put("instanceId", instanceId);
@@ -183,7 +183,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             }
             String title = "审批任务已超时";
             String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 超时，触发动作：" + action;
-            Long userId = parseUserId(assigneeId);
+            String userId = parseUserId(assigneeId);
             Map<String, Object> extra = new HashMap<>();
             extra.put("bizType", "WORKFLOW_SLA_TIMEOUT");
             extra.put("instanceId", instanceId);
@@ -201,7 +201,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
 
     @Override
-    public void send(String channel, Long userId, String title, String content, Map<String, Object> extra) {
+    public void send(String channel, String userId, String title, String content, Map<String, Object> extra) {
         try {
             if (channel == null || userId == null) {
                 return;
@@ -226,7 +226,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
      * IN_APP 通道：通过 NotificationClient Feign 调用 notification 服务写入站内信。
      * channel=PUSH，Feign 异常由 fallbackFactory 兜底，再叠加 try-catch 双保险。
      */
-    private void sendInApp(Long userId, String title, String content,
+    private void sendInApp(String userId, String title, String content,
                            Object bizType, Map<String, Object> extra, String traceId) {
         Map<String, Object> payload = new HashMap<>();
         if (extra != null) {
@@ -253,7 +253,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
      * 由 notification 服务负责实际邮件发送。receiver 优先取自 extra，
      * 未配置时不设占位邮箱，由 notification 服务按 userId 查询真实邮箱（P0-2 修复）。
      */
-    private void sendEmail(Long userId, String title, String content,
+    private void sendEmail(String userId, String title, String content,
                            Object bizType, Map<String, Object> extra, String traceId) {
         Map<String, Object> payload = new HashMap<>();
         if (extra != null) {
@@ -283,7 +283,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
      * WEBHOOK 通道：通过 RestTemplate POST 发送到 extra.webhookUrl 指定的机器人地址。
      * webhookUrl 未配置时直接跳过（不算异常）。
      */
-    private void sendWebhook(Long userId, String title, String content,
+    private void sendWebhook(String userId, String title, String content,
                              Map<String, Object> extra, String traceId) {
         String webhookUrl = extra == null ? null : (String) extra.get("webhookUrl");
         if (webhookUrl == null || webhookUrl.isBlank()) {

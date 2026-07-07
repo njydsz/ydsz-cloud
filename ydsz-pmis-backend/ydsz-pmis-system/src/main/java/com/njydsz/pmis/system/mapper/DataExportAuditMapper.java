@@ -31,6 +31,6 @@ public interface DataExportAuditMapper extends BaseMapper<DataExportAuditDO> {
      * @param limit  最大条数
      * @return 导出审计列表
      */
-    List<DataExportAuditDO> selectByUser(@Param("userId") Long userId,
+    List<DataExportAuditDO> selectByUser(@Param("userId") String userId,
                                                    @Param("limit") int limit);
 }

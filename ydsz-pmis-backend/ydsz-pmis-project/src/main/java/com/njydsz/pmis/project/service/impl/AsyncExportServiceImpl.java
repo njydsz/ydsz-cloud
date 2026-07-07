@@ -62,7 +62,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
     private final CockpitReportService cockpitReportService;
 
     @Override
-    public Long submitExport(Long userId, String exportType, Map<String, Object> params) {
+    public Long submitExport(String userId, String exportType, Map<String, Object> params) {
         String sql = "INSERT INTO pmis_export_record (user_id, export_type, params, status, created_at, expired_at) "
                 + "VALUES (?, ?, ?::text, ?, ?, ?)";
         LocalDateTime now = LocalDateTime.now();
@@ -76,7 +76,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Map<String, Object>> getExportRecords(Long userId, Pageable pageable) {
+    public Page<Map<String, Object>> getExportRecords(String userId, Pageable pageable) {
         String countSql = "SELECT COUNT(*) FROM pmis_export_record WHERE user_id = ? AND deleted = 0";
         Long total = jdbcTemplate.queryForObject(countSql, Long.class, userId);
         if (total == null || total == 0) {
@@ -91,7 +91,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
 
     @Override
     @Transactional(readOnly = true)
-    public String getDownloadUrl(Long recordId) {
+    public String getDownloadUrl(String recordId) {
         String sql = "SELECT file_url FROM pmis_export_record WHERE id = ? AND deleted = 0 AND status = 'COMPLETED'";
         try {
             return jdbcTemplate.queryForObject(sql, String.class, recordId);
@@ -102,7 +102,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
     }
 
     @Override
-    public void deleteExportRecord(Long recordId) {
+    public void deleteExportRecord(String recordId) {
         jdbcTemplate.update("UPDATE pmis_export_record SET deleted = 1 WHERE id = ?", recordId);
         log.info("[AsyncExport] 删除导出记录: id={}", recordId);
     }
@@ -115,7 +115,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
      * @param recordId 导出记录 ID
      */
     @Override
-    public void executeExport(Long recordId) {
+    public void executeExport(String recordId) {
         try {
             jdbcTemplate.update("UPDATE pmis_export_record SET status = 'GENERATING' WHERE id = ?", recordId);
             Map<String, Object> record = jdbcTemplate.queryForMap(
@@ -241,7 +241,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
      * @return MinIO 对象 key
      * @throws Exception 上传失败时抛出（由外层 try-catch 捕获置 FAILED）
      */
-    private String uploadToMinio(Long recordId, String exportType, byte[] bytes) throws Exception {
+    private String uploadToMinio(String recordId, String exportType, byte[] bytes) throws Exception {
         String objectKey = EXPORT_PREFIX + recordId + "/"
                 + (exportType == null ? "EXPORT" : exportType) + "_"
                 + System.currentTimeMillis() + ".xlsx";

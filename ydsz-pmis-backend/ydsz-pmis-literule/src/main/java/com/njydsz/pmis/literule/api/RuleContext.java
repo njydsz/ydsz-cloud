@@ -26,7 +26,7 @@ public final class RuleContext implements Serializable {
     private static final String serialVersionUID = "1";
 
     /** 默认租户 ID（单租户部署） */
-    private static final long DEFAULT_TENANT_ID = "1";
+    private static final String DEFAULT_TENANT_ID = "1";
 
     /** 事实数据快照 */
     private final Map<String, Object> facts;
@@ -138,7 +138,7 @@ public final class RuleContext implements Serializable {
      * @return 租户 ID；默认 "1"
      * @since 1.5.0
      */
-    public long getTenantId() { return tenantId; }
+    public String getTenantId() { return tenantId; }
 
     @Override
     public String toString() {

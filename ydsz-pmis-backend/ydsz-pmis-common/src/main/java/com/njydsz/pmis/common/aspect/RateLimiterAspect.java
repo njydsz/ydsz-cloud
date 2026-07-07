@@ -178,6 +178,6 @@ public class RateLimiterAspect {
                 String.valueOf(qps),
                 String.valueOf(window)
         );
-        return result != null && result == "1";
+        return result != null && result.equals("1");
     }
 }

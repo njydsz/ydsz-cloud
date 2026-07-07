@@ -539,7 +539,7 @@ public class FlowTaskCompleteServiceImpl {
      * 签收
      */
     @Transactional(rollbackFor = Exception.class)
-    public void claim(Long taskId, Long userId) {
+    public void claim(Long taskId, String userId) {
         FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5873f2ae", task.getTaskStatus());
@@ -1906,7 +1906,7 @@ public class FlowTaskCompleteServiceImpl {
         }
     }
 
-    private FlowRunTaskDO toClaimTask(FlowRunTaskDO src, Long userId) {
+    private FlowRunTaskDO toClaimTask(FlowRunTaskDO src, String userId) {
         src.setAssigneeId(String.valueOf(userId));
         src.setTaskStatus(FlowTaskStatus.CLAIMED.name());
         src.setClaimAt(LocalDateTime.now());

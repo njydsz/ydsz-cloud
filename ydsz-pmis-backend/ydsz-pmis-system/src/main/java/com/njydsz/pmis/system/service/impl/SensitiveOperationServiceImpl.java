@@ -33,7 +33,7 @@ public class SensitiveOperationServiceImpl {
      * @param opType 操作类型（可选）
      * @return 分页结果
      */
-    public Page<SensitiveOperationDO> page(int page, int size, Long userId, String opType) {
+    public Page<SensitiveOperationDO> page(int page, int size, String userId, String opType) {
         Page<SensitiveOperationDO> p = new Page<>(page, size);
         LambdaQueryWrapper<SensitiveOperationDO> w = new LambdaQueryWrapper<>();
         if (userId != null) w.eq(SensitiveOperationDO::getUserId, userId);
@@ -49,7 +49,7 @@ public class SensitiveOperationServiceImpl {
      * @param limit  最大条数
      * @return 敏感操作列表
      */
-    public List<SensitiveOperationDO> listByUser(Long userId, int limit) {
+    public List<SensitiveOperationDO> listByUser(String userId, int limit) {
         return mapper.selectByUser(userId, Math.max(1, Math.min(limit, 500)));
     }
 

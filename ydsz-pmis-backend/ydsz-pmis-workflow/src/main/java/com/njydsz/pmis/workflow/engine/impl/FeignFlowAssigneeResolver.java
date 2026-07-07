@@ -103,7 +103,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
      * @return 角色编码列表
      */
     @Override
-    public List<String> getRoleCodes(Long userId) {
+    public List<String> getRoleCodes(String userId) {
         if (userId == null) {
             return Collections.emptyList();
         }
@@ -133,7 +133,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
      * @return 部门 ID 列表（字符串形式）
      */
     @Override
-    public List<String> getDeptIds(Long userId) {
+    public List<String> getDeptIds(String userId) {
         if (userId == null) {
             return Collections.emptyList();
         }
@@ -165,7 +165,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
      * @return 多级上级用户 ID 列表
      */
     @Override
-    public List<Long> expandMultiLeader(Long userId, int levels, Map<String, Object> variables) {
+    public List<Long> expandMultiLeader(String userId, int levels, Map<String, Object> variables) {
         if (userId == null || levels <= 0) {
             return Collections.emptyList();
         }
@@ -239,7 +239,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         if (token == null || token.isBlank()) {
             return Collections.emptyList();
         }
-        Long userId;
+        String userId;
         if ("initiator".equalsIgnoreCase(token)) {
             userId = resolveInitiatorId(variables);
         } else {

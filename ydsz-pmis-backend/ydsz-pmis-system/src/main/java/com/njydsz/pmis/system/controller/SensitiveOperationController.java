@@ -43,7 +43,7 @@ public class SensitiveOperationController {
     public Result<PageResult<SensitiveOperationDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "用户ID") @RequestParam(required = false) String userId,
             @Parameter(description = "操作类型") @RequestParam(required = false) String opType) {
         Page<SensitiveOperationDO> p = new Page<>(page, size);
         LambdaQueryWrapper<SensitiveOperationDO> w = new LambdaQueryWrapper<>();
@@ -57,7 +57,7 @@ public class SensitiveOperationController {
     @PrePermission("audit:sensitive:view")
     @GetMapping("/by-user")
     public Result<List<SensitiveOperationDO>> byUser(
-            @Parameter(description = "用户ID") @RequestParam Long userId,
+            @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
         return Result.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
     }

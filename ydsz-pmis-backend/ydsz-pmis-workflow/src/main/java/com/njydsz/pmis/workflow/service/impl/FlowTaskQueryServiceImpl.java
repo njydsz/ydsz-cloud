@@ -94,7 +94,7 @@ public class FlowTaskQueryServiceImpl {
      * @param deptIds   用户所属部门 ID（字符串形式，可空）
      * @param tenantId  租户 ID（可空，默认 "1"）
      */
-    public List<FlowRunTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
+    public List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
                                             List<String> deptIds, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");

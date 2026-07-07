@@ -31,7 +31,7 @@ public interface FlowAssigneeResolver {
      * @param userId 用户 ID
      * @return 角色编码列表
      */
-    default List<String> getRoleCodes(Long userId) {
+    default List<String> getRoleCodes(String userId) {
         return List.of();
     }
 
@@ -41,7 +41,7 @@ public interface FlowAssigneeResolver {
      * @param userId 用户 ID
      * @return 部门 ID 列表
      */
-    default List<String> getDeptIds(Long userId) {
+    default List<String> getDeptIds(String userId) {
         return List.of();
     }
 
@@ -56,7 +56,7 @@ public interface FlowAssigneeResolver {
      * @param variables 流程变量（可用于动态解析）
      * @return 多级上级用户 ID 列表（空列表表示无法展开，引擎将原样保留）
      */
-    default List<Long> expandMultiLeader(Long userId, int levels, Map<String, Object> variables) {
+    default List<Long> expandMultiLeader(String userId, int levels, Map<String, Object> variables) {
         return List.of();
     }
 }

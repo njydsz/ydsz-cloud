@@ -78,7 +78,7 @@ public class RuleConflictDetector {
         }
 
         String newCode = newDefinition.getCode();
-        long newTenantId = newDefinition.getTenantId();
+        String newTenantId = newDefinition.getTenantId();
         String newCategory = newDefinition.getCategory();
         String newName = newDefinition.getName();
         String newConditionRaw = newDefinition.getConditionExpression();
@@ -91,7 +91,7 @@ public class RuleConflictDetector {
 
         for (RuleDefinition other : existingRules) {
             if (Objects.equals(other.getCode(), newCode)) continue;
-            if (other.getTenantId() != newTenantId) continue;
+            if (!Objects.equals(other.getTenantId(), newTenantId)) continue;
 
             String otherCondition = normalize(other.getConditionExpression());
             String otherSeverity = severityKey(other);

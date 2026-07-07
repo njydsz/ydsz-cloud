@@ -177,7 +177,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<EvmMeasureVO> page(int page, int size, Long initiationId, String alertLevel) {
+    public Page<EvmMeasureVO> page(int page, int size, String initiationId, String alertLevel) {
         Page<EvmMeasureDO> p = new Page<>(page, size);
         LambdaQueryWrapper<EvmMeasureDO> w = new LambdaQueryWrapper<>();
         if (initiationId != null) w.eq(EvmMeasureDO::getInitiationId, initiationId);
@@ -201,7 +201,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     }
 
     @Override
-    public Map<String, Object> recalculateBaseline(Long initiationId, String reason) {
+    public Map<String, Object> recalculateBaseline(String initiationId, String reason) {
         Map<String, Object> result = new HashMap<>();
         if (initiationId == null) {
             result.put("ok", false);
@@ -224,13 +224,13 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     }
 
     @Override
-    public int currentBaselineVersion(Long initiationId) {
+    public int currentBaselineVersion(String initiationId) {
         if (initiationId == null) return 0;
         AtomicInteger v = baselineVersions.get(initiationId);
         return v == null ? 0 : v.get();
     }
 
-    private long countByInitiation(Long initiationId) {
+    private long countByInitiation(String initiationId) {
         if (initiationId == null) return 0L;
         // 用 listByInitiation.size() 简化; 大数据量场景可后续替换为 count mapper
         List<EvmMeasureDO> all = evmMapper.selectByInitiation(initiationId);

@@ -230,7 +230,7 @@ public class FlowTaskSignServiceImpl {
      * @param userId 操作人 ID
      */
     @Transactional(rollbackFor = Exception.class)
-    public void markRead(Long taskId, Long userId) {
+    public void markRead(Long taskId, String userId) {
         FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         support.audit(task, "READ", userId, null, null);
         log.info("[Flow] 已阅: taskId={} userId={}", taskId, userId);

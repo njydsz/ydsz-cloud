@@ -58,7 +58,7 @@ public class FlowUrgeLimiter {
      * @param targetType     目标类型（TASK/INSTANCE）
      * @return true=可催办；false=冷却中
      */
-    public boolean tryAcquire(Long userId, Long targetId, String targetType) {
+    public boolean tryAcquire(String userId, Long targetId, String targetType) {
         return tryAcquire(userId, targetId, targetType, DEFAULT_COOLDOWN_SECONDS);
     }
 
@@ -71,7 +71,7 @@ public class FlowUrgeLimiter {
      * @param cooldownSeconds 冷却秒数
      * @return true=可催办；false=冷却中
      */
-    public boolean tryAcquire(Long userId, Long targetId, String targetType, long cooldownSeconds) {
+    public boolean tryAcquire(String userId, Long targetId, String targetType, long cooldownSeconds) {
         if (userId == null || targetId == null) {
             return true; // 缺参数不阻断主流程
         }
@@ -103,7 +103,7 @@ public class FlowUrgeLimiter {
      * @param targetId   目标
      * @param targetType 类型
      */
-    public void release(Long userId, Long targetId, String targetType) {
+    public void release(String userId, Long targetId, String targetType) {
         if (userId == null || targetId == null) {
             return;
         }
@@ -122,7 +122,7 @@ public class FlowUrgeLimiter {
      * @param type      目标类型
      * @return 剩余秒数列表（0=可催办，>0=冷却中）
      */
-    public List<Long> getCooldownSeconds(Long userId, List<Long> targetIds, String type) {
+    public List<Long> getCooldownSeconds(String userId, List<Long> targetIds, String type) {
         if (userId == null || targetIds == null || targetIds.isEmpty()) {
             return Collections.emptyList();
         }
@@ -141,7 +141,7 @@ public class FlowUrgeLimiter {
 
     // ============================== 私有 ==============================
 
-    private static String buildKey(Long userId, Long targetId, String targetType) {
+    private static String buildKey(String userId, Long targetId, String targetType) {
         return "pmis:flow:urge:" + targetType + ":" + targetId + ":by:" + userId;
     }
 }

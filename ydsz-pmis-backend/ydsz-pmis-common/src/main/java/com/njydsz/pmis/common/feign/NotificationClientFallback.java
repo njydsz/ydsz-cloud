@@ -34,7 +34,7 @@ public class NotificationClientFallback implements FallbackFactory<NotificationC
             }
 
             @Override
-            public Result<Map<String, Object>> pushRealtime(Long userId, String type, RealtimePushDTO payload) {
+            public Result<Map<String, Object>> pushRealtime(String userId, String type, RealtimePushDTO payload) {
                 log.warn("[Feign] NotificationClient 降级 pushRealtime: userId={} type={} cause={}",
                         userId, type, cause == null ? "null" : cause.getMessage());
                 return Result.ok(Collections.emptyMap());

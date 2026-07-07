@@ -86,5 +86,5 @@ public interface FlowNotificationService {
      * @param content 通知内容
      * @param extra   扩展参数（如跳转链接、业务类型等）
      */
-    void send(String channel, Long userId, String title, String content, Map<String, Object> extra);
+    void send(String channel, String userId, String title, String content, Map<String, Object> extra);
 }

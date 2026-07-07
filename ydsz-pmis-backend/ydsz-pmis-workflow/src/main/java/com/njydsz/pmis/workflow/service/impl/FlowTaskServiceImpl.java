@@ -61,7 +61,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 签收 ==============================
 
     @Override
-    public void claim(Long taskId, Long userId) {
+    public void claim(Long taskId, String userId) {
         completeService.claim(taskId, userId);
     }
 
@@ -139,7 +139,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public List<FlowRunTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
+    public List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
                                             List<String> deptIds, String tenantId) {
         return queryService.listTodoByUser(userId, roleCodes, deptIds, tenantId);
     }
@@ -175,7 +175,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 已阅 / 沟通 / 暂存 ==============================
 
     @Override
-    public void markRead(Long taskId, Long userId) {
+    public void markRead(Long taskId, String userId) {
         signService.markRead(taskId, userId);
     }
 
@@ -192,7 +192,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 批量审批 ==============================
 
     @Override
-    public void batchPass(List<Long> taskIds, Long userId, String comment) {
+    public void batchPass(List<Long> taskIds, String userId, String comment) {
         batchService.batchPass(taskIds, userId, comment);
     }
 

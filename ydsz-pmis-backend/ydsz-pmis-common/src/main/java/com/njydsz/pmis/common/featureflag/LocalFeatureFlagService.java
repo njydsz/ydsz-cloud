@@ -79,7 +79,7 @@ public class LocalFeatureFlagService implements FeatureFlagService {
      * @return true 表示该用户可使用此特性
      */
     @Override
-    public boolean isEnabled(FeatureFlag flag, Long userId) {
+    public boolean isEnabled(FeatureFlag flag, String userId) {
         if (flag.isMandatory()) {
             return true;
         }
@@ -292,7 +292,7 @@ public class LocalFeatureFlagService implements FeatureFlagService {
      * @param rolloutPercentage 灰度比例 (0-100)
      * @return true 表示该用户命中灰度白名单
      */
-    static boolean isUserInRollout(long userId, int rolloutPercentage) {
+    static boolean isUserInRollout(String userId, int rolloutPercentage) {
         long bucket = Math.floorMod(userId, ROLLOUT_HASH_BASE);
         return bucket < rolloutPercentage;
     }

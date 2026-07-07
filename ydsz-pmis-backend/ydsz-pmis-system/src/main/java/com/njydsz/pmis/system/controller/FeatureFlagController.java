@@ -79,7 +79,7 @@ public class FeatureFlagController {
     @GetMapping("/check")
     public Result<Boolean> check(
             @Parameter(description = "flag 键") @RequestParam @NotNull String key,
-            @Parameter(description = "用户ID（可选，用于灰度判断）") @RequestParam(required = false) Long userId) {
+            @Parameter(description = "用户ID（可选，用于灰度判断）") @RequestParam(required = false) String userId) {
         FeatureFlag flag;
         try {
             flag = FeatureFlag.valueOf(key);

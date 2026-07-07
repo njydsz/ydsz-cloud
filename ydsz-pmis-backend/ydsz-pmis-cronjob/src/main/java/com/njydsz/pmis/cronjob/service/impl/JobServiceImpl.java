@@ -488,9 +488,9 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             jobLogMapper.updateById(log0);
 
             // 更新任务统计
-            Long incFire = "1";
-            Long incSucc = success ? "1" : 0L;
-            Long incFail = success ? 0L : "1";
+            Long incFire = 1L;
+            Long incSucc = success ? 1L : 0L;
+            Long incFail = success ? 0L : 1L;
             LocalDateTime next = null;
             if (!manual) {
                 next = nextFireTime(job.getCronExpression());

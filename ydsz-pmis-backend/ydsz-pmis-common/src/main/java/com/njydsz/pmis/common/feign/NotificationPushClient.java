@@ -31,7 +31,7 @@ public interface NotificationPushClient {
      * @return 推送结果
      */
     @PostMapping("/notifications/push")
-    Map<String, Object> pushToUser(@RequestParam("userId") Long userId,
+    Map<String, Object> pushToUser(@RequestParam("userId") String userId,
                                    @RequestParam("type") String type,
                                    @RequestBody Object payload);
 
