@@ -1,7 +1,6 @@
 package com.njydsz.pmis.message.consumer;
 
 import com.njydsz.pmis.message.entity.MsgLogDO;
-import com.njydsz.pmis.message.enums.MessageStatusEnum;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
 import com.njydsz.pmis.message.metric.MessageMetrics;
 import org.apache.rocketmq.common.message.MessageExt;

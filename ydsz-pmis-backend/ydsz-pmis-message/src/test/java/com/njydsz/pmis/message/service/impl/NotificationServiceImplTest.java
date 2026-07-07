@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("NotificationServiceImpl 通知服务测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class NotificationServiceImplTest {
 
     @Mock

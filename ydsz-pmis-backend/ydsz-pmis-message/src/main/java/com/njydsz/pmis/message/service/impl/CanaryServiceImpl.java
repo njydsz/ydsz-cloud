@@ -53,16 +53,21 @@ public class CanaryServiceImpl implements CanaryService {
             entity.setBucketTotal(total);
             entity.setBucketSelected(bucketSelected);
             entity.setPercentage(percentage);
+            entity.setExperimentTemplateCode(dto.getExperimentTemplateCode());
+            entity.setExperimentChannel(dto.getExperimentChannel());
             entity.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "ENABLED");
             entity.setDescription(dto.getDescription());
             entity.setTenantId(TenantContext.getTenantId());
             msgCanaryMapper.insert(entity);
-            log.info("[Canary] 新建灰度桶: key={} percentage={}", dto.getCanaryKey(), percentage);
+            log.info("[Canary] 新建灰度桶: key={} percentage={} expTpl={} expChan={}",
+                    dto.getCanaryKey(), percentage, dto.getExperimentTemplateCode(), dto.getExperimentChannel());
             return entity;
         }
         existing.setBucketTotal(total);
         existing.setBucketSelected(bucketSelected);
         existing.setPercentage(percentage);
+        existing.setExperimentTemplateCode(dto.getExperimentTemplateCode());
+        existing.setExperimentChannel(dto.getExperimentChannel());
         if (StringUtils.hasText(dto.getStatus())) {
             existing.setStatus(dto.getStatus());
         }
@@ -75,18 +80,23 @@ public class CanaryServiceImpl implements CanaryService {
 
     @Override
     public boolean hit(String canaryKey, String bucketValue) {
+        return matchConfig(canaryKey, bucketValue) != null;
+    }
+
+    @Override
+    public MsgCanaryDO matchConfig(String canaryKey, String bucketValue) {
         if (!StringUtils.hasText(canaryKey) || !StringUtils.hasText(bucketValue)) {
-            return false;
+            return null;
         }
         MsgCanaryDO config = msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanaryDO>()
                 .eq(MsgCanaryDO::getCanaryKey, canaryKey)
                 .eq(MsgCanaryDO::getStatus, "ENABLED")
                 .last("LIMIT 1"));
         if (config == null || config.getPercentage() == null || config.getPercentage() <= 0) {
-            return false;
+            return null;
         }
         int bucket = Math.floorMod(canaryKey.hashCode() ^ bucketValue.hashCode(), 100);
-        return bucket < config.getPercentage();
+        return bucket < config.getPercentage() ? config : null;
     }
 
     @Override

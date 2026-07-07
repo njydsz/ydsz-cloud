@@ -6,16 +6,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
 /**
  * 基于 Redisson 的 Leader 选举实现。
  *
@@ -45,12 +47,32 @@ public class RedissonLeaderElector implements LeaderElector {
 
     /** Leader 锁 key 前缀 */
     private static final String LOCK_KEY_PREFIX = "pmis:job:leader:";
+    /** P0-3: Leader 持有者标识 key 前缀（value=nodeId，供 getCurrentLeader 读取） */
+    private static final String HOLDER_KEY_PREFIX = "pmis:job:leader:holder:";
 
     private final RedissonClient redissonClient;
     private final CronjobProperties cronjobProperties;
 
     /** 当前节点持有的 Leader 锁（role -> RLock） */
     private final Map<String, RLock> heldLocks = new ConcurrentHashMap<>();
+
+    /** P0-3: 当前节点 ID（hostname:port），用于 getCurrentLeader 返回真实节点标识 */
+    private String nodeId;
+
+    /** P0-5: 服务端口 */
+    @Value("${server.port:0}")
+    private int serverPort;
+
+    @jakarta.annotation.PostConstruct
+    private void initNodeId() {
+        try {
+            String hostname = InetAddress.getLocalHost().getHostName();
+            this.nodeId = hostname + ":" + serverPort;
+        } catch (Exception e) {
+            this.nodeId = ManagementFactory.getRuntimeMXBean().getName();
+        }
+        log.info("[LeaderElector] 节点 ID 初始化: nodeId={}", nodeId);
+    }
 
     @Override
     public boolean tryAcquire(String role, Duration lease) {
@@ -60,7 +82,11 @@ public class RedissonLeaderElector implements LeaderElector {
             boolean acquired = lock.tryLock(0, lease.toMillis(), TimeUnit.MILLISECONDS);
             if (acquired) {
                 heldLocks.put(role, lock);
-                log.info("[LeaderElector] 抢占 Leader 成功: role={} lease={}ms", role, lease.toMillis());
+                // P0-3: 写入 Leader 持有者标识，供 getCurrentLeader 返回真实节点
+                String holderKey = HOLDER_KEY_PREFIX + role;
+                redissonClient.<String>getBucket(holderKey).set(nodeId, lease);
+                log.info("[LeaderElector] 抢占 Leader 成功: role={} lease={}ms nodeId={}",
+                        role, lease.toMillis(), nodeId);
             }
             return acquired;
         } catch (InterruptedException e) {
@@ -78,12 +104,14 @@ public class RedissonLeaderElector implements LeaderElector {
         }
         try {
             if (lock.isHeldByCurrentThread()) {
-                // RLock 续期：通过 Redisson 的 expire(Duration) 设置新过期时间
-                // 注意：RLock 自身不暴露 expire(long, TimeUnit)，但 RedissonObject 基类提供
-                // 此处用 redissonClient 获取底层 key 并重新设置 TTL
-                String key = LOCK_KEY_PREFIX + role;
-                redissonClient.getBucket(key).expire(
-                        Duration.ofSeconds(cronjobProperties.getLeader().getLeaseSeconds()));
+                // Redisson RLock 自身不暴露 renew / expire API（4.6.1）：
+                //   - 内部通过 scheduleExpirationRenewal 自动续期，无需调用方介入
+                //   - 这里仅续期 holder 标识 key，供 getCurrentLeader() 读取真实节点
+                Duration lease = Duration.ofSeconds(cronjobProperties.getLeader().getLeaseSeconds());
+                String holderKey = HOLDER_KEY_PREFIX + role;
+                redissonClient.<String>getBucket(holderKey).set(nodeId, lease);
+                log.debug("[LeaderElector] 续期 holder key: role={} lease={}s nodeId={}",
+                        role, lease.toSeconds(), nodeId);
                 return true;
             }
             return false;
@@ -106,6 +134,9 @@ public class RedissonLeaderElector implements LeaderElector {
         if (lock != null && lock.isHeldByCurrentThread()) {
             try {
                 lock.unlock();
+                // P0-3: 清理 holder key
+                String holderKey = HOLDER_KEY_PREFIX + role;
+                redissonClient.getBucket(holderKey).delete();
                 log.info("[LeaderElector] 释放 Leader: role={}", role);
             } catch (Exception e) {
                 log.warn("[LeaderElector] 释放 Leader 失败: role={} reason={}", role, e.getMessage());
@@ -115,8 +146,15 @@ public class RedissonLeaderElector implements LeaderElector {
 
     @Override
     public String getCurrentLeader(String role) {
+        // P0-3: 从 holder key 读取真实 Leader 节点标识
+        // 修复之前返回 "unknown" 的问题
+        String holderKey = HOLDER_KEY_PREFIX + role;
+        String holder = redissonClient.<String>getBucket(holderKey).get();
+        if (holder != null && !holder.isBlank()) {
+            return holder;
+        }
+        // 兜底: holder key 不存在（可能未启用 P0-3 改造），检查锁是否存在
         RLock lock = redissonClient.getLock(LOCK_KEY_PREFIX + role);
-        // Redisson RLock 不直接暴露持有者标识；返回是否存在活跃锁
         return lock.isLocked() ? "unknown" : null;
     }
 

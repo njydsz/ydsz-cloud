@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("RecallServiceImpl 撤回服务测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class RecallServiceImplTest {
 
     @Mock

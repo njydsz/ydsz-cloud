@@ -17,7 +17,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @FeignClient(
-        name = "ydsz-pmis-system",
+        name = "ydsz-pmis-message",
         contextId = "messageFeignClient",
         path = "/message",
         fallbackFactory = MessageFeignClientFallbackFactory.class

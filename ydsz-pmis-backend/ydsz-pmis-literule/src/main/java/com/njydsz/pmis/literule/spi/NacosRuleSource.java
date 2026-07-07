@@ -77,7 +77,6 @@ public class NacosRuleSource implements RuleSource {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<RuleDefinition> loadEnabledRules() {
         if (!isAvailable()) {
             log.warn("[NacosRuleSource] 未初始化或不可用，返回空列表");
@@ -108,7 +107,8 @@ public class NacosRuleSource implements RuleSource {
         try {
             // 反射创建 Nacos ConfigService，避免硬依赖 nacos-client
             Class<?> factoryClass = Class.forName("com.alibaba.nacos.api.NacosFactory");
-            Class<?> configServiceClass = Class.forName("com.alibaba.nacos.api.config.ConfigService");
+            // 触发 ConfigService 类加载（NacosFactory.createConfigService 内部会引用）
+            Class.forName("com.alibaba.nacos.api.config.ConfigService");
             // properties.put("serverAddr", serverAddr)
             java.util.Properties properties = new java.util.Properties();
             properties.put("serverAddr", serverAddr);
@@ -178,7 +178,6 @@ public class NacosRuleSource implements RuleSource {
      *
      * <p>使用 fastjson2 解析，格式为 {@code List<RuleDefinition>} 的 JSON 序列化。
      */
-    @SuppressWarnings("unchecked")
     private List<RuleDefinition> parseRulesFromJson(String json) {
         if (json == null || json.isBlank()) {
             return List.of();

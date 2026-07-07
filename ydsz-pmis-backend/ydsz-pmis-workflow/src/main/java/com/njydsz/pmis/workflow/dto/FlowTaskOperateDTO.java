@@ -67,6 +67,17 @@ public class FlowTaskOperateDTO implements Serializable {
     private List<String> targetNodeCodes;
 
     /**
+     * P1-2: 退回到发起人快捷方式（仅 REJECT 时使用）
+     *
+     * <p>对标钉钉/飞书"退回到发起人"：将流程退回到开始节点后的第一个审批节点，
+     * 让发起人重新修改表单后再次提交。
+     *
+     * <p>为 true 时优先于 {@link #targetNodeCode} / {@link #targetNodeCodes}；
+     * 为 false 或 null 时走原有退回逻辑（向后兼容）。
+     */
+    private Boolean rejectToInitiator;
+
+    /**
      * GAP-P2-9: 自由流（JUMP）运行时指定目标节点办理人列表
      *
      * <p>对标钉钉/飞书"自由流"能力：跳转时可显式指定目标节点的办理人（用户 ID 字符串列表，

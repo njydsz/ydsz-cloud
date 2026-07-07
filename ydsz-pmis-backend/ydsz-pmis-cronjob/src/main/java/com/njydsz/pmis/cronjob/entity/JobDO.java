@@ -103,6 +103,66 @@ public class JobDO extends BaseDO {
      */
     private Integer shardTotal;
 
+    /**
+     * 任务类型（P1-5）：BEAN / HTTP / SHELL / GLUE。
+     *
+     * <p>BEAN: Spring Bean 处理器（默认）；HTTP: HTTP 调用；SHELL: 脚本；GLUE: 在线代码。
+     */
+    private String jobType;
+
+    /**
+     * 最大重试次数（P1-1）：0=不重试（默认），&gt;0 时失败后自动重试。
+     */
+    private Integer maxRetries;
+
+    /**
+     * 重试间隔（毫秒，P1-1）：null=立即重试，&gt;0 时按 retryBackoff 策略计算间隔。
+     */
+    private Long retryIntervalMs;
+
+    /**
+     * 重试退避策略（P1-1）：FIXED 固定间隔 / EXPONENTIAL 指数退避。
+     */
+    private String retryBackoff;
+
+    /**
+     * 阻塞策略（P1-2）：SERIAL / COVER / DISCARD / CONCURRENT。
+     *
+     * <p>任务正在执行时下一次触发如何处理：
+     * <ul>
+     *   <li>SERIAL: 排队等待（默认，通过 Redis 锁互斥实现）</li>
+     *   <li>COVER: 中断当前执行新任务</li>
+     *   <li>DISCARD: 丢弃新触发</li>
+     *   <li>CONCURRENT: 并行执行（不加锁）</li>
+     * </ul>
+     */
+    private String blockStrategy;
+
+    /**
+     * 连续失败次数（P1-6）：成功时归零，失败时 +1。
+     */
+    private Integer consecutiveFailCount;
+
+    /**
+     * 最大连续失败次数（P1-6）：null=不熔断，&gt;0 时达到阈值后 status 改为 AUTO_PAUSED。
+     */
+    private Integer maxConsecutiveFails;
+
+    /**
+     * 自动恢复时间（分钟，P1-6）：null=不自动恢复，&gt;0 时 AUTO_PAUSED 后定时检查恢复。
+     */
+    private Integer autoResumeAfterMinutes;
+
+    /**
+     * 优先级（P4-7）：1-10，越小越高（默认 5）。
+     */
+    private Integer priority;
+
+    /**
+     * 版本号（P4-8）：每次修改 +1，用于乐观锁和版本追溯。
+     */
+    private Integer version;
+
     /** 租户 ID */
     private String tenantId;
 }

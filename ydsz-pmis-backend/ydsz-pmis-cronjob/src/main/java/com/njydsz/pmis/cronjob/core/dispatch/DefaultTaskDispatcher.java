@@ -22,6 +22,7 @@ import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
 import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
+import com.njydsz.pmis.cronjob.service.TenantQuotaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -89,6 +90,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ObjectProvider<AlertTrigger> alertTriggerProvider;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
+    /** P7-3: 租户级配额服务（可选注入，未配置时跳过配额检查与计数） */
+    private final ObjectProvider<TenantQuotaService> tenantQuotaServiceProvider;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -98,6 +101,16 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
     /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete） */
     private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
+
+    /** P0-2: 执行节点 ID（hostname:port），用于故障转移时定位任务所在节点 */
+    private String nodeId;
+
+    /** P0-5: 服务端口（通过 @Value 注入，修正 JobNodeHeartbeat 之前返回 PID 的问题） */
+    @org.springframework.beans.factory.annotation.Value("${server.port:0}")
+    private int serverPort;
+
+    /** P1-1: 重试调度线程池（延迟调度失败重试） */
+    private java.util.concurrent.ScheduledExecutorService retryScheduler;
 
     /** 触发类型常量 */
     public static final String TRIGGER_CRON = "CRON";
@@ -111,11 +124,50 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     public String dispatch(JobDO job, String executorNode, String triggerType) {
         // 当前实现：executorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发）
         boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
+        // P1-2: CONCURRENT 策略不加锁
+        if ("CONCURRENT".equals(job.getBlockStrategy())) {
+            holdLock = false;
+        }
+        // P7-3: 对非 MANUAL 触发的任务进行配额检查（手动触发的任务不限制）
+        if (holdLock) {
+            checkExecutionQuota(job);
+        }
         // P3: 分片任务走分片执行路径
         if (isShardedJob(job)) {
             return executeShardedJob(job, holdLock, triggerType);
         }
-        return executeJob(job, holdLock, triggerType);
+        return executeJob(job, holdLock, triggerType, 0);
+    }
+
+    /**
+     * P7-3: 检查租户并发配额 + 日执行配额。
+     *
+     * <p>仅对 CRON/RETRY/DEPENDENT/MISFIRED 触发类型调用（MANUAL 不检查）。
+     * 配额超限时抛 {@link BizException}，任务不会被派发。
+     * 配额服务不可用时降级放行（不影响任务执行）。
+     */
+    private void checkExecutionQuota(JobDO job) {
+        TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
+        if (quotaService == null) {
+            return;
+        }
+        String tenantId = job.getTenantId();
+        if (tenantId == null || tenantId.isBlank()) {
+            return;
+        }
+        try {
+            quotaService.checkConcurrentQuota(tenantId);
+            quotaService.checkDailyExecutionQuota(tenantId);
+        } catch (BizException e) {
+            // 配额超限，记录日志后重新抛出
+            log.warn("[Dispatcher] 租户配额超限, 拒绝派发: key={} tenant={} code={}",
+                    job.getJobKey(), tenantId, e.getCode());
+            throw e;
+        } catch (Exception e) {
+            // 配额服务异常，降级放行
+            log.warn("[Dispatcher] 配额检查异常, 降级放行: key={} tenant={} reason={}",
+                    job.getJobKey(), tenantId, e.getMessage());
+        }
     }
 
     /**
@@ -225,9 +277,19 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         log0.setParamsJson(job.getParamsJson());
         log0.setTraceId(TraceIdUtil.get());
         log0.setTriggerType(triggerType);
+        // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
+        if (lockKey != null) {
+            log0.setLockHolder(INSTANCE_ID);
+        }
+        // P0-2: 记录执行节点 ID 和线程 ID，供故障转移和超时清理定位
+        log0.setExecNodeId(nodeId);
+        log0.setExecThreadId(Thread.currentThread().threadId());
         log0.setCreatedAt(LocalDateTime.now());
         log0.setDeleted(0);
         jobLogMapper.insert(log0);
+
+        // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
+        recordExecutionStart(job.getTenantId());
 
         boolean success = false;
         Object result = null;
@@ -264,6 +326,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                             lockKey, e.getMessage());
                 }
             }
+
+            // P7-3: 记录执行结束（DECR 并发计数器）
+            recordExecutionEnd(job.getTenantId());
 
             if (jobNodeHeartbeat != null) {
                 jobNodeHeartbeat.onTaskComplete();
@@ -313,9 +378,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @param job         任务定义
      * @param holdLock    是否抢占分布式锁
      * @param triggerType 触发类型
+     * @param retryCount  当前重试次数（0=首次执行）
      * @return 执行日志 ID；锁被持有时返回 null
      */
-    private String executeJob(JobDO job, boolean holdLock, String triggerType) {
+    private String executeJob(JobDO job, boolean holdLock, String triggerType, int retryCount) {
         String lockKey = null;
         if (holdLock) {
             lockKey = JOB_LOCK_PREFIX + job.getJobKey();
@@ -323,8 +389,15 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             Boolean acquired = redisTemplate.opsForValue()
                     .setIfAbsent(lockKey, INSTANCE_ID, ttl);
             if (!Boolean.TRUE.equals(acquired)) {
-                log.info("[Dispatcher] 任务已被其他实例持有锁, 跳过: key={} triggerType={}",
-                        job.getJobKey(), triggerType);
+                // P1-2: 锁被持有时根据阻塞策略决定行为
+                String strategy = job.getBlockStrategy();
+                if ("DISCARD".equals(strategy)) {
+                    log.info("[Dispatcher] DISCARD 策略, 丢弃新触发: key={}", job.getJobKey());
+                    return null;
+                }
+                // SERIAL（默认）和其他策略都视为跳过（无法中断正在执行的任务）
+                log.info("[Dispatcher] 任务已被其他实例持有锁, 跳过: key={} triggerType={} strategy={}",
+                        job.getJobKey(), triggerType, strategy);
                 return null;
             }
             log.debug("[Dispatcher] 获取分布式锁成功: key={} holder={} ttl={}ms",
@@ -345,9 +418,19 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         log0.setParamsJson(job.getParamsJson());
         log0.setTraceId(TraceIdUtil.get());
         log0.setTriggerType(triggerType);
+        // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
+        if (lockKey != null) {
+            log0.setLockHolder(INSTANCE_ID);
+        }
+        // P0-2: 记录执行节点 ID 和线程 ID，供故障转移和超时清理定位
+        log0.setExecNodeId(nodeId);
+        log0.setExecThreadId(Thread.currentThread().threadId());
         log0.setCreatedAt(LocalDateTime.now());
         log0.setDeleted(0);
         jobLogMapper.insert(log0);
+
+        // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
+        recordExecutionStart(job.getTenantId());
 
         boolean success = false;
         Object result = null;
@@ -373,8 +456,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             LocalDateTime next = TRIGGER_CRON.equals(triggerType)
                     ? nextFireTime(job.getCronExpression())
                     : null;
+            // P1-6: 熔断逻辑 - 成功时不改 status（保持 NORMAL），失败时只在非重试场景改 ERROR
+            String statusOnError = success ? null : "ERROR";
             jobMapper.updateStats(job.getId(), log0.getStartTime(), next, incFire, incSucc, incFail,
-                    success ? null : "ERROR");
+                    statusOnError);
+
+            // P1-6: 熔断计数（成功归零，失败递增 + 达到阈值自动暂停）
+            updateCircuitBreaker(job, success);
 
             // 释放分布式锁（Lua 脚本安全释放）
             if (lockKey != null) {
@@ -387,6 +475,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 }
             }
 
+            // P7-3: 记录执行结束（DECR 并发计数器）
+            recordExecutionEnd(job.getTenantId());
+
             // 通知心跳组件：任务结束
             if (jobNodeHeartbeat != null) {
                 jobNodeHeartbeat.onTaskComplete();
@@ -398,6 +489,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         publishTaskCompleted(job, success, log0.getId());
         // P5: 触发告警（失败告警 + 慢任务告警）
         triggerAlerts(job, success, log0);
+        // P1-1: 失败重试（非 RETRY 触发且 maxRetries > 0 且 retryCount < maxRetries）
+        if (!success) {
+            scheduleRetryIfNeeded(job, holdLock, triggerType, retryCount);
+        }
         return log0.getId();
     }
 
@@ -460,6 +555,46 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
 
     /**
+     * P7-3: 记录任务执行开始（INCR 并发计数器 + 日执行计数器）。
+     *
+     * <p>TenantQuotaService 不可用时跳过；内部有容错，不会抛异常。
+     *
+     * @param tenantId 租户 ID
+     */
+    private void recordExecutionStart(String tenantId) {
+        TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
+        if (quotaService == null || tenantId == null || tenantId.isBlank()) {
+            return;
+        }
+        try {
+            quotaService.recordExecutionStart(tenantId);
+        } catch (Exception e) {
+            log.debug("[Dispatcher] recordExecutionStart 失败(不影响主流程): tenant={} reason={}",
+                    tenantId, e.getMessage());
+        }
+    }
+
+    /**
+     * P7-3: 记录任务执行结束（DECR 并发计数器）。
+     *
+     * <p>TenantQuotaService 不可用时跳过；内部有容错，不会抛异常。
+     *
+     * @param tenantId 租户 ID
+     */
+    private void recordExecutionEnd(String tenantId) {
+        TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
+        if (quotaService == null || tenantId == null || tenantId.isBlank()) {
+            return;
+        }
+        try {
+            quotaService.recordExecutionEnd(tenantId);
+        } catch (Exception e) {
+            log.debug("[Dispatcher] recordExecutionEnd 失败(不影响主流程): tenant={} reason={}",
+                    tenantId, e.getMessage());
+        }
+    }
+
+    /**
      * P6-2: 记录任务执行指标。
      *
      * <p>使用 try-catch 包裹，确保指标记录失败不影响主流程。
@@ -518,6 +653,132 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private static String initInstanceId() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
         return name != null ? name : "unknown:" + ProcessHandle.current().pid();
+    }
+
+    /**
+     * P1-1: 失败重试调度。
+     *
+     * <p>当任务执行失败且 maxRetries > 0 且 retryCount < maxRetries 时，
+     * 通过 ScheduledExecutorService 延迟调度重试。
+     * 重试延迟根据 retryBackoff 计算：
+     * <ul>
+     *   <li>FIXED: 固定 retryIntervalMs</li>
+     *   <li>EXPONENTIAL: retryIntervalMs * 2^retryCount</li>
+     * </ul>
+     *
+     * @param job         任务定义
+     * @param holdLock    是否持锁
+     * @param triggerType 原始触发类型
+     * @param retryCount  当前重试次数
+     */
+    private void scheduleRetryIfNeeded(JobDO job, boolean holdLock, String triggerType, int retryCount) {
+        Integer maxRetries = job.getMaxRetries();
+        if (maxRetries == null || maxRetries <= 0 || retryCount >= maxRetries) {
+            return;
+        }
+        // 计算重试延迟
+        long delayMs = calculateRetryDelayMs(job, retryCount);
+        int nextRetry = retryCount + 1;
+        log.info("[Dispatcher] 调度失败重试: key={} retry={}/{} delay={}ms backoff={}",
+                job.getJobKey(), nextRetry, maxRetries, delayMs, job.getRetryBackoff());
+        try {
+            retryScheduler.schedule(() -> {
+                try {
+                    executeJob(job, holdLock, TRIGGER_RETRY, nextRetry);
+                } catch (Exception e) {
+                    log.error("[Dispatcher] 重试执行异常: key={} retry={} reason={}",
+                            job.getJobKey(), nextRetry, e.getMessage(), e);
+                }
+            }, delayMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("[Dispatcher] 调度重试失败: key={} retry={} reason={}",
+                    job.getJobKey(), nextRetry, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * P1-1: 计算重试延迟（毫秒）。
+     */
+    private long calculateRetryDelayMs(JobDO job, int retryCount) {
+        Long interval = job.getRetryIntervalMs();
+        if (interval == null || interval <= 0) {
+            return 0; // 立即重试
+        }
+        String backoff = job.getRetryBackoff();
+        if ("EXPONENTIAL".equals(backoff)) {
+            // 指数退避: interval * 2^retryCount，上限 5 分钟避免过长延迟
+            long delay = interval * (1L << Math.min(retryCount, 10));
+            return Math.min(delay, 300_000L);
+        }
+        // FIXED: 固定间隔
+        return interval;
+    }
+
+    /**
+     * P1-6: 熔断计数（成功归零，失败递增 + 达到阈值自动暂停）。
+     *
+     * @param job     任务定义
+     * @param success 是否执行成功
+     */
+    private void updateCircuitBreaker(JobDO job, boolean success) {
+        try {
+            if (success) {
+                jobMapper.resetConsecutiveFail(job.getId());
+            } else {
+                jobMapper.incrementConsecutiveFail(job.getId());
+                Integer maxFails = job.getMaxConsecutiveFails();
+                if (maxFails != null && maxFails > 0) {
+                    Integer current = jobMapper.selectConsecutiveFailCount(job.getId());
+                    if (current != null && current >= maxFails) {
+                        jobMapper.markAutoPaused(job.getId());
+                        log.warn("[Dispatcher] 任务熔断, 自动暂停: key={} consecutiveFails={}/{}",
+                                job.getJobKey(), current, maxFails);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Dispatcher] 熔断计数更新失败(不影响主流程): key={} reason={}",
+                    job.getJobKey(), e.getMessage());
+        }
+    }
+
+    /**
+     * P0-2/P0-5: 初始化执行节点 ID（hostname:port）。
+     *
+     * <p>在 @PostConstruct 中调用，确保 serverPort 已通过 @Value 注入。
+     */
+    @jakarta.annotation.PostConstruct
+    private void initNodeId() {
+        try {
+            String hostname = java.net.InetAddress.getLocalHost().getHostName();
+            this.nodeId = hostname + ":" + serverPort;
+        } catch (Exception e) {
+            this.nodeId = INSTANCE_ID;
+        }
+        // P1-1: 初始化重试调度线程池
+        this.retryScheduler = java.util.concurrent.Executors.newScheduledThreadPool(
+                2, r -> {
+                    Thread t = new Thread(r, "pmis-job-retry");
+                    t.setDaemon(true);
+                    return t;
+                });
+        log.info("[Dispatcher] 节点 ID 初始化完成: nodeId={} instanceId={} serverPort={}",
+                nodeId, INSTANCE_ID, serverPort);
+    }
+
+    @jakarta.annotation.PreDestroy
+    private void shutdownRetryScheduler() {
+        if (retryScheduler != null) {
+            retryScheduler.shutdown();
+            try {
+                if (!retryScheduler.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)) {
+                    retryScheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                retryScheduler.shutdownNow();
+            }
+        }
     }
 
     private static DefaultRedisScript<Long> initReleaseScript() {

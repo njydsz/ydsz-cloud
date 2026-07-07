@@ -1,7 +1,5 @@
 package com.njydsz.pmis.workflow.service;
 
-import com.njydsz.pmis.workflow.entity.FlowThirdPartyLogDO;
-
 /**
  * 三方审批双向同步服务
  *

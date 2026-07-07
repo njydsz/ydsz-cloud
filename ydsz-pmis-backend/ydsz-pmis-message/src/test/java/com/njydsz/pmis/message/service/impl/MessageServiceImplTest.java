@@ -40,6 +40,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("MessageServiceImpl 发送编排测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class MessageServiceImplTest {
 
     @Mock

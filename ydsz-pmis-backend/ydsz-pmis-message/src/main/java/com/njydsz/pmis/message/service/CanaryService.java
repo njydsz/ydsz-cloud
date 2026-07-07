@@ -31,6 +31,16 @@ public interface CanaryService {
     boolean hit(String canaryKey, String bucketValue);
 
     /**
+     * 匹配灰度配置:命中则返回灰度桶实体(含 experimentTemplateCode/experimentChannel),
+     * 未命中或未配置返回 null。一次 DB 查询,避免 hit + getByKey 双查。
+     *
+     * @param canaryKey   灰度键
+     * @param bucketValue 桶值(如接收人 / 单据 ID)
+     * @return 命中的灰度桶实体;未命中返回 null
+     */
+    MsgCanaryDO matchConfig(String canaryKey, String bucketValue);
+
+    /**
      * 按灰度键查询灰度桶配置
      *
      * @param canaryKey 灰度键

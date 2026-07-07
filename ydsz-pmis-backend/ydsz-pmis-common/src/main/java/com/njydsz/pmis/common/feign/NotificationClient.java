@@ -19,7 +19,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
-@FeignClient(name = "ydsz-pmis-system", fallbackFactory = NotificationClientFallback.class)
+@FeignClient(name = "ydsz-pmis-message", fallbackFactory = NotificationClientFallback.class)
 public interface NotificationClient {
 
     /**

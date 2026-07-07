@@ -16,11 +16,13 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -72,6 +74,16 @@ public class TimeoutMonitor {
 
     /** 任务锁 key 前缀（与 DefaultTaskDispatcher 保持一致） */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
+
+    /** P0-1: Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete），与 DefaultTaskDispatcher 一致 */
+    private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
+
+    private static DefaultRedisScript<Long> initReleaseScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptText("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
+        script.setResultType(Long.class);
+        return script;
+    }
 
     /** 单批最多扫描超时日志数 */
     private static final int BATCH_SIZE = 100;
@@ -145,14 +157,29 @@ public class TimeoutMonitor {
         if (metrics != null) {
             metrics.incJobTimeout(log0.getJobKey());
         }
-        // 释放任务锁（Lua 脚本安全释放；锁的 value 无法精确匹配，使用通配删除）
+        // P0-1: 释放任务锁（Lua 脚本安全释放，仅当 lockHolder 匹配时才 delete）
+        // 修复之前直接 redisTemplate.delete() 可能误删其他节点持有的锁的问题
         String lockKey = JOB_LOCK_PREFIX + log0.getJobKey();
-        try {
-            redisTemplate.delete(lockKey);
-            log.info("[TimeoutMonitor] 释放超时任务锁: jobKey={} lockKey={}", log0.getJobKey(), lockKey);
-        } catch (Exception e) {
-            log.warn("[TimeoutMonitor] 释放锁失败（将等待 TTL 自动过期）: lockKey={} reason={}",
-                    lockKey, e.getMessage());
+        String holder = log0.getLockHolder();
+        if (holder != null && !holder.isBlank()) {
+            try {
+                Long released = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+                        Collections.singletonList(lockKey), holder);
+                if (released != null && released > 0) {
+                    log.info("[TimeoutMonitor] 安全释放超时任务锁成功: jobKey={} lockKey={} holder={}",
+                            log0.getJobKey(), lockKey, holder);
+                } else {
+                    log.info("[TimeoutMonitor] 锁 holder 不匹配或已过期, 跳过释放: jobKey={} lockKey={} holder={}",
+                            log0.getJobKey(), lockKey, holder);
+                }
+            } catch (Exception e) {
+                log.warn("[TimeoutMonitor] 释放锁失败(将等待 TTL 自动过期): lockKey={} reason={}",
+                        lockKey, e.getMessage());
+            }
+        } else {
+            // 兜底: 日志无 lockHolder（历史数据或 MANUAL 触发未持锁），跳过释放
+            log.debug("[TimeoutMonitor] 日志无 lockHolder, 跳过锁释放: logId={} jobKey={}",
+                    log0.getId(), log0.getJobKey());
         }
         // 更新任务统计：失败次数 +1，status=ERROR
         try {

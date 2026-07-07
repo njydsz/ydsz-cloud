@@ -18,7 +18,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
-@FeignClient(name = "ydsz-pmis-system", contextId = "pushClient",
+@FeignClient(name = "ydsz-pmis-message", contextId = "pushClient",
         fallbackFactory = NotificationPushClientFallbackFactory.class)
 public interface NotificationPushClient {
 

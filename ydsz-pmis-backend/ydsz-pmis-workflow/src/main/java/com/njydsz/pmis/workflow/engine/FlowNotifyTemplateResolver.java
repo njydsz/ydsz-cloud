@@ -3,7 +3,6 @@ package com.njydsz.pmis.workflow.engine;
 import com.njydsz.pmis.workflow.entity.FlowNotifyTemplateDO;
 import com.njydsz.pmis.workflow.mapper.FlowNotifyTemplateMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -32,7 +31,6 @@ public class FlowNotifyTemplateResolver {
 
     private final FlowNotifyTemplateMapper templateMapper;
 
-    @Autowired
     public FlowNotifyTemplateResolver(
             org.springframework.beans.factory.ObjectProvider<FlowNotifyTemplateMapper> provider) {
         this.templateMapper = provider.getIfAvailable();

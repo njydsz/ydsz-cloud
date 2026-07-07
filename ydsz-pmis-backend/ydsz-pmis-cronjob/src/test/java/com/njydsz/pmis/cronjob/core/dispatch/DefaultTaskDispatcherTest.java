@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.alert.AlertTrigger;
@@ -11,6 +13,7 @@ import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
 import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
+import com.njydsz.pmis.cronjob.service.TenantQuotaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,9 +36,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -87,6 +92,10 @@ class DefaultTaskDispatcherTest {
     private ObjectProvider<AlertTrigger> alertTriggerProvider;
     @Mock
     private ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
+    @Mock
+    private ObjectProvider<TenantQuotaService> tenantQuotaServiceProvider;
+    @Mock
+    private TenantQuotaService tenantQuotaService;
 
     private CronjobProperties cronjobProperties;
 
@@ -116,6 +125,10 @@ class DefaultTaskDispatcherTest {
             java.lang.reflect.Field f3 = DefaultTaskDispatcher.class.getDeclaredField("cronjobMetricsProvider");
             f3.setAccessible(true);
             f3.set(dispatcher, cronjobMetricsProvider);
+            // P7-3: 注入 TenantQuotaService ObjectProvider
+            java.lang.reflect.Field f4 = DefaultTaskDispatcher.class.getDeclaredField("tenantQuotaServiceProvider");
+            f4.setAccessible(true);
+            f4.set(dispatcher, tenantQuotaServiceProvider);
         } catch (Exception e) {
             throw new IllegalStateException("注入 ObjectProvider 失败", e);
         }
@@ -126,6 +139,8 @@ class DefaultTaskDispatcherTest {
         lenient().when(shardingStrategyProvider.getIfAvailable()).thenReturn(null);
         lenient().when(alertTriggerProvider.getIfAvailable()).thenReturn(null);
         lenient().when(cronjobMetricsProvider.getIfAvailable()).thenReturn(null);
+        // P7-3: TenantQuotaService 默认不启用（配额检查在测试中默认关闭）
+        lenient().when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(null);
         lenient().when(jobLogMapper.insert(any(JobLogDO.class))).thenAnswer(invocation -> {
             JobLogDO log = invocation.getArgument(0);
             log.setId("log-test-" + System.nanoTime());
@@ -374,6 +389,124 @@ class DefaultTaskDispatcherTest {
         verify(jobHandler, times(2)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
     }
 
+    // ==================== P7-3 租户级配额集成测试 ====================
+
+    @Test
+    @DisplayName("P7-3: dispatch(CRON) 配额服务可用时调用 checkConcurrentQuota + checkDailyExecutionQuota")
+    void dispatch_cron_quotaServiceAvailable_callsQuotaChecks() throws Exception {
+        JobDO job = buildJob("quota-pass", null);
+        when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(tenantQuotaService);
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Boolean.TRUE);
+        when(jobHandler.execute(any())).thenReturn("ok");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
+
+        assertNotNull(logId);
+        verify(tenantQuotaService, times(1)).checkConcurrentQuota("tenant-test");
+        verify(tenantQuotaService, times(1)).checkDailyExecutionQuota("tenant-test");
+    }
+
+    @Test
+    @DisplayName("P7-3: dispatch(CRON) 并发配额超限时抛 BizException 且不执行任务")
+    void dispatch_cron_quotaExceeded_throwsAndNoExecution() throws Exception {
+        JobDO job = buildJob("quota-exceeded", null);
+        when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(tenantQuotaService);
+        doThrow(new BizException(BizErrorCode.QUOTA_EXCEEDED,
+                "error.cronjob.msg_quota_concurrent_exceeded", "tenant-test", 5L, 5))
+                .when(tenantQuotaService).checkConcurrentQuota("tenant-test");
+
+        BizException ex = assertThrows(BizException.class,
+                () -> dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON));
+
+        assertEquals(BizErrorCode.QUOTA_EXCEEDED.getCode(), ex.getCode());
+        verify(jobHandler, never()).execute(any());
+        verify(valueOps, never()).setIfAbsent(anyString(), anyString(), any(Duration.class));
+        verify(jobLogMapper, never()).insert(any(JobLogDO.class));
+        // 配额超限时不应记录执行计数
+        verify(tenantQuotaService, never()).recordExecutionStart(anyString());
+        verify(tenantQuotaService, never()).recordExecutionEnd(anyString());
+    }
+
+    @Test
+    @DisplayName("P7-3: dispatch(CRON) 配额服务异常时降级放行（仍执行任务）")
+    void dispatch_cron_quotaServiceException_degradesAndExecutes() throws Exception {
+        JobDO job = buildJob("quota-degrade", null);
+        when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(tenantQuotaService);
+        // 非 BizException 异常（如 Redis 故障）触发降级放行
+        doThrow(new RuntimeException("redis down"))
+                .when(tenantQuotaService).checkConcurrentQuota("tenant-test");
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Boolean.TRUE);
+        when(jobHandler.execute(any())).thenReturn("ok");
+
+        String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
+
+        assertNotNull(logId);
+        verify(jobHandler, times(1)).execute(any());
+        verify(jobLogMapper, times(1)).insert(any(JobLogDO.class));
+    }
+
+    @Test
+    @DisplayName("P7-3: dispatch(MANUAL) 不触发配额检查")
+    void dispatch_manual_doesNotCheckQuota() throws Exception {
+        JobDO job = buildJob("quota-manual", null);
+        when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(tenantQuotaService);
+        when(jobHandler.execute(any())).thenReturn("ok");
+
+        dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
+
+        verify(tenantQuotaService, never()).checkConcurrentQuota(anyString());
+        verify(tenantQuotaService, never()).checkDailyExecutionQuota(anyString());
+    }
+
+    @Test
+    @DisplayName("P7-3: dispatch(CRON) 正常执行时调用 recordExecutionStart + recordExecutionEnd")
+    void dispatch_cron_normal_callsRecordStartAndEnd() throws Exception {
+        JobDO job = buildJob("quota-record-normal", null);
+        when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(tenantQuotaService);
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Boolean.TRUE);
+        when(jobHandler.execute(any())).thenReturn("ok");
+
+        dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
+
+        verify(tenantQuotaService, times(1)).recordExecutionStart("tenant-test");
+        verify(tenantQuotaService, times(1)).recordExecutionEnd("tenant-test");
+    }
+
+    @Test
+    @DisplayName("P7-3: dispatch(CRON) 执行异常时 finally 块仍调用 recordExecutionEnd")
+    void dispatch_cron_executionFails_stillCallsRecordExecutionEnd() throws Exception {
+        JobDO job = buildJob("quota-record-fail", null);
+        when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(tenantQuotaService);
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Boolean.TRUE);
+        when(jobHandler.execute(any())).thenThrow(new RuntimeException("boom"));
+
+        dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
+
+        verify(tenantQuotaService, times(1)).recordExecutionStart("tenant-test");
+        // finally 块中调用 recordExecutionEnd，即使执行失败
+        verify(tenantQuotaService, times(1)).recordExecutionEnd("tenant-test");
+    }
+
+    @Test
+    @DisplayName("P7-3: dispatch(CRON) tenantId 为空时跳过配额检查")
+    void dispatch_cron_emptyTenantId_skipsQuotaCheck() throws Exception {
+        JobDO job = buildJob("quota-empty-tenant", null);
+        job.setTenantId(null);
+        when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(tenantQuotaService);
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(Boolean.TRUE);
+        when(jobHandler.execute(any())).thenReturn("ok");
+
+        dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
+
+        verify(tenantQuotaService, never()).checkConcurrentQuota(anyString());
+        verify(tenantQuotaService, never()).recordExecutionStart(anyString());
+    }
+
     private JobDO buildJob(String key, Long lockTtlMs) {
         JobDO job = new JobDO();
         job.setId("job-" + key);
@@ -383,6 +516,8 @@ class DefaultTaskDispatcherTest {
         job.setCronExpression("0 0 8 * * ?");
         job.setStatus("NORMAL");
         job.setLockTtlMs(lockTtlMs);
+        // P7-3: 默认设置 tenantId，便于配额检查测试
+        job.setTenantId("tenant-test");
         return job;
     }
 }

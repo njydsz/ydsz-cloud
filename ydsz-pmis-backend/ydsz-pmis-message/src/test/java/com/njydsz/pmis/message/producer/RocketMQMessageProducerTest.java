@@ -1,7 +1,6 @@
 package com.njydsz.pmis.message.producer;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.util.JsonUtils;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -81,9 +80,9 @@ class RocketMQMessageProducerTest {
         MessageRequest req = new MessageRequest();
         req.setChannel("SMS");
         req.setMessageId("m1");
-        String payload = JsonUtils.toJson(req);
-        when(rocketMQTemplate.asyncSend(anyString(), anyString(), org.mockito.ArgumentMatchers.any()))
-                .thenAnswer(inv -> null);
+        org.mockito.Mockito.doNothing()
+                .when(rocketMQTemplate)
+                .asyncSend(anyString(), anyString(), org.mockito.ArgumentMatchers.any());
 
         producer.asyncSend(req); // 不抛异常
     }

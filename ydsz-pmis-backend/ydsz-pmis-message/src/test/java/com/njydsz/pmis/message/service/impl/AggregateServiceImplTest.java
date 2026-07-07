@@ -36,6 +36,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("AggregateServiceImpl 聚合批次测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class AggregateServiceImplTest {
 
     @Mock

@@ -120,7 +120,6 @@ public class ApolloRuleSource implements RuleSource {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private List<RuleDefinition> parseRulesFromJson(String json) {
         if (json == null || json.isBlank() || "[]".equals(json.trim())) {
             return List.of();

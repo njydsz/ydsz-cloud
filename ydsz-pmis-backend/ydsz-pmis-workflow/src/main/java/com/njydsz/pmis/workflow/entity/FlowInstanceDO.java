@@ -108,4 +108,7 @@ public class FlowInstanceDO extends BaseDO {
     /** 乐观锁版本号（P1-2） */
     @Version
     private Integer version;
+
+    /** 退回原因（最近一次 REJECT 操作的备注，重审时清空） */
+    private String rejectReason;
 }

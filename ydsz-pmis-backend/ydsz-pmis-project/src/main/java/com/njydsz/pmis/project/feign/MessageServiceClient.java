@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-system", fallbackFactory = MessageServiceClientFallback.class)
+@FeignClient(name = "ydsz-pmis-message", fallbackFactory = MessageServiceClientFallback.class)
 public interface MessageServiceClient {
 
     /**

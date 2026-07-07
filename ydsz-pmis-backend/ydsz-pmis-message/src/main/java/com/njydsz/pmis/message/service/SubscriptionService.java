@@ -49,6 +49,17 @@ public interface SubscriptionService {
     boolean isSubscribed(String userId, String topicCode, String channel);
 
     /**
+     * 判断用户是否已退订(拦截发送)。默认订阅语义:无记录或 SUBSCRIBED 返回 false,
+     * 仅当存在 UNSUBSCRIBED 记录时返回 true。
+     *
+     * @param userId    用户 ID
+     * @param topicCode 主题编码
+     * @param channel   通道
+     * @return true 表示用户已退订,应拦截发送
+     */
+    boolean isBlocked(String userId, String topicCode, String channel);
+
+    /**
      * 退订指定主题 + 通道
      *
      * @param userId    用户 ID

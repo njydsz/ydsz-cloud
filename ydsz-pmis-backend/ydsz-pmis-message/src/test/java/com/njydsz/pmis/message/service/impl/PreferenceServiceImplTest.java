@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("PreferenceServiceImpl 偏好服务测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class PreferenceServiceImplTest {
 
     @Mock

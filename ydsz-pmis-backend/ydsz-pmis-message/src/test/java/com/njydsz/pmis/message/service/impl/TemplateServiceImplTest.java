@@ -34,6 +34,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("TemplateServiceImpl 模板服务测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class TemplateServiceImplTest {
 
     @Mock

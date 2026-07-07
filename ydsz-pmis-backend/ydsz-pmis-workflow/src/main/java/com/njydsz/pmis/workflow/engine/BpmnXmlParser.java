@@ -217,6 +217,15 @@ public class BpmnXmlParser {
      * 解析节点：BPMN 元素 → FlowNodeDO
      */
     private FlowNodeDO parseNode(Element elem, String localName) {
+        // P0-3: 暂未实现 eventBasedGateway / complexGateway 的行为语义
+        // 历史问题：mapNodeType 静默降级为 CONDITION（互斥网关），导致流程运行行为
+        // 与设计图不一致（事件网关应等待事件触发，复杂网关应基于复杂条件聚合）
+        // 解析阶段直接拒绝，强制用户改用 exclusiveGateway / parallelGateway / inclusiveGateway
+        String normalized = localName == null ? "" : localName.toLowerCase();
+        if ("eventbasedgateway".equals(normalized) || "complexgateway".equals(normalized)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_b1a3f7c2", localName);
+        }
         FlowNodeDO node = new FlowNodeDO();
         node.setNodeCode(elem.getAttribute("id"));
         node.setNodeName(elem.getAttribute("name"));
@@ -608,7 +617,8 @@ public class BpmnXmlParser {
             // manualTask / receiveTask 确实需要人工处理，保持映射为 APPROVAL(1)
             case "usertask", "manualtask", "receivetask" -> FlowNodeType.APPROVAL.getCode();
             case "callactivity", "subprocess" -> FlowNodeType.SUBPROCESS.getCode();
-            case "exclusivegateway", "eventbasedgateway", "complexgateway" -> FlowNodeType.CONDITION.getCode();
+            // P0-3: eventBasedGateway / complexGateway 在 parseNode 入口已拒绝，此处不再映射
+            case "exclusivegateway" -> FlowNodeType.CONDITION.getCode();
             case "parallelgateway" -> FlowNodeType.PARALLEL.getCode();
             case "inclusivegateway" -> FlowNodeType.INCLUSIVE.getCode();
             case "intermediatethrowevent", "intermediatecatchevent", "boundaryevent" -> FlowNodeType.CC.getCode();

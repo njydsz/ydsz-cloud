@@ -2,12 +2,12 @@
 #  PMIS 调度服务（ydsz-pmis-cronjob）配置
 #  --------------------------------------------------------------------
 #  端口：9004
-#  职责：与 XXL-Job Admin 通信的 Executor 客户端
+#  职责：自研分布式任务调度引擎（Leader 选举 + DB 行锁 + Redis 分布式锁）
 #    - 报表定时生成（每日报表、订阅推送）
 #    - 成本/收入/工时/利润/开票/回款 月度自动对账
 #    - 预警重试补偿、巡检、SLA 计算
 #    - 流程超时扫描、归档
-#  依赖：Nacos、PostgreSQL、Redis、MinIO、XXL-Job Admin
+#  依赖：Nacos、PostgreSQL、Redis、MinIO
 # =====================================================================
 
 # HTTP 监听端口（提供 actuator / 业务接口）
@@ -101,26 +101,6 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
 
 # =====================================================================
-# XXL-Job Executor 配置（生产通过 Nacos 覆盖）
-# ---------------------------------------------------------------------
-xxl:
-  job:
-    admin:
-      addresses: ${XXL_JOB_ADMIN_ADDRESSES:http://127.0.0.1:9100/xxl-job-admin}
-      # 登录账号（与 deploy/cronjob 初始化一致）
-      username: ${XXL_JOB_USERNAME:admin}
-      password: ${XXL_JOB_PASSWORD:}
-    executor:
-      appname: ${XXL_JOB_APPNAME:pmis-executor}
-      address:
-      ip:
-      port: ${XXL_JOB_EXECUTOR_PORT:9999}
-      logpath: ${XXL_JOB_LOG_PATH:./logs/xxl-job}
-      logretentiondays: 30
-    # 访问令牌（生产必须设置，与 Admin 端保持一致）
-    accessToken: ${XXL_JOB_ACCESS_TOKEN:default-token}
-
-# =====================================================================
 # Actuator 监控
 # =====================================================================
 management:
@@ -155,3 +135,48 @@ pmis:
     scheduler-pool-size: 8
     # 调度器优雅关闭等待时间
     scheduler-await-termination-seconds: 30
+    # -----------------------------------------------------------------
+    # P0-4: Leader 选举配置（默认启用，确保多实例下任务不重复执行）
+    # -----------------------------------------------------------------
+    leader:
+      enabled: true
+      role: pmis-job-scheduler
+      lease-seconds: 30
+      renew-interval-seconds: 10
+    # -----------------------------------------------------------------
+    # 任务扫描器配置
+    # -----------------------------------------------------------------
+    scanner:
+      interval-ms: 5000
+      batch-size: 100
+      misfire-grace-minutes: 30
+    # -----------------------------------------------------------------
+    # 执行器配置
+    # -----------------------------------------------------------------
+    executor:
+      register-on-startup: true
+      heartbeat-interval-seconds: 10
+      offline-threshold-seconds: 30
+      drain-on-shutdown: true
+      drain-timeout-seconds: 60
+      max-concurrent: 16
+    # -----------------------------------------------------------------
+    # 超时监控配置
+    # -----------------------------------------------------------------
+    timeout-monitor:
+      interval-ms: 10000
+    # -----------------------------------------------------------------
+    # P7-2 / P7-3: 租户级配额配置
+    # -----------------------------------------------------------------
+    # 默认禁用；启用后在任务创建时校验任务数配额、在任务派发时校验并发数与日执行量配额。
+    # 配额优先级：DB 记录(pmis_tenant_quota 表) > 下列全局默认 > null(unlimited)。
+    # 配额服务异常时自动降级放行，不影响任务执行。
+    quota:
+      # 是否启用租户级配额检查（false=所有租户 unlimited）
+      enabled: false
+      # 默认任务数上限（租户未在 DB 配置时使用，null=unlimited）
+      default-max-jobs: null
+      # 默认并发执行上限（null=unlimited）
+      default-max-concurrent: null
+      # 默认日执行量上限（null=unlimited）
+      default-max-daily-executions: null

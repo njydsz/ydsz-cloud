@@ -84,4 +84,28 @@ public interface JobMapper extends BaseMapper<JobDO> {
                     @Param("successCount") Long successCount,
                     @Param("failCount") Long failCount,
                     @Param("status") String status);
+
+    /**
+     * P1-6: 重置连续失败计数为 0（任务执行成功时调用）。
+     */
+    @org.apache.ibatis.annotations.Update("UPDATE pmis_job SET consecutive_fail_count = 0 WHERE id = #{id}")
+    int resetConsecutiveFail(@Param("id") String id);
+
+    /**
+     * P1-6: 递增连续失败计数（任务执行失败时调用）。
+     */
+    @org.apache.ibatis.annotations.Update("UPDATE pmis_job SET consecutive_fail_count = consecutive_fail_count + 1 WHERE id = #{id}")
+    int incrementConsecutiveFail(@Param("id") String id);
+
+    /**
+     * P1-6: 标记任务为 AUTO_PAUSED（熔断自动暂停）。
+     */
+    @org.apache.ibatis.annotations.Update("UPDATE pmis_job SET status = 'AUTO_PAUSED' WHERE id = #{id} AND status = 'NORMAL'")
+    int markAutoPaused(@Param("id") String id);
+
+    /**
+     * P1-6: 查询连续失败计数。
+     */
+    @org.apache.ibatis.annotations.Select("SELECT consecutive_fail_count FROM pmis_job WHERE id = #{id}")
+    Integer selectConsecutiveFailCount(@Param("id") String id);
 }

@@ -8,6 +8,7 @@ import com.njydsz.pmis.workflow.dto.FlowAssigneeDTO;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.engine.FlowAssigneeResolver;
+import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;
 import com.njydsz.pmis.workflow.engine.FlowEventContext;
 import com.njydsz.pmis.workflow.engine.FlowServiceNodeExecutor;
 import com.njydsz.pmis.workflow.engine.FlowUrgeLimiter;
@@ -32,6 +33,7 @@ import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
+import com.njydsz.pmis.workflow.service.FlowAttachmentService;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.service.FlowEventSubscriptionService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
@@ -119,6 +121,30 @@ public class FlowTaskCompleteServiceImpl {
     private final FlowEventSubscriptionService eventSubscriptionService;
     /** P1-6: 审批附件服务（任务通过/驳回时保存附件） */
     private final FlowAttachmentService attachmentService;
+    /**
+     * P1-2: 流程定义缓存服务 — reject 退回发起人时解析 startNode 下游第一节点
+     *
+     * <p>使用 @Lazy 避免循环依赖：FlowDefinitionCacheService → 无下游依赖，但通过 @Lazy 显式声明更安全
+     */
+    @Lazy
+    private final FlowDefinitionCacheService definitionCacheService;
+
+    /**
+     * P0-1: 审批人为空时统一兜底策略
+     *
+     * <p>历史问题：普通任务默认 {@code FALLBACK}，逐级审批 / FOREACH 默认 {@code AUTO_PASS}，
+     * 三处默认值不一致导致行为分裂。统一为 {@code FALLBACK}（最保守：转交管理员人工处理），
+     * 避免出现"逐级审批无人时静默自动通过"这类高风险行为。
+     *
+     * <p>支持的策略：
+     * <ul>
+     *   <li>{@code FALLBACK}         — 默认；回退到 resolveAssignee 或转交管理员（assigneeId="1"）</li>
+     *   <li>{@code AUTO_PASS}        — 自动通过（创建后立即 COMPLETED 并推进）</li>
+     *   <li>{@code TRANSFER_ADMIN}   — 转交管理员（ext.adminUserId，默认 "1"）</li>
+     *   <li>{@code ASSIGN_SPECIFIED} — 指定人员（ext.specifiedUserId，默认 "1"）</li>
+     * </ul>
+     */
+    private static final String DEFAULT_EMPTY_STRATEGY = "FALLBACK";
 
     // ============================== 创建任务 ==============================
 
@@ -254,9 +280,9 @@ public class FlowTaskCompleteServiceImpl {
                 advanceAfterAutoPass(instance, node, variables);
                 return task.getId();
             }
-            // GAP-P0: 审批人为空兜底处理 — 读取 node.ext 中的 emptyStrategy 配置
+            // P0-1: 审批人为空兜底处理 — 读取 node.ext 中的 emptyStrategy 配置（统一默认 FALLBACK）
             Map<String, Object> extConfig = parseExtConfig(node.getExt());
-            String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", "FALLBACK");
+            String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
 
             switch (emptyStrategy) {
                 case "AUTO_PASS" -> {
@@ -387,6 +413,7 @@ public class FlowTaskCompleteServiceImpl {
         if (!(autoApproveObj instanceof Map<?, ?> autoApprove)) {
             return;
         }
+        @SuppressWarnings("unchecked")
         Map<String, Object> cfg = (Map<String, Object>) autoApprove;
         Boolean enabled = (Boolean) cfg.get("enabled");
         if (enabled == null || !enabled) {
@@ -620,7 +647,8 @@ public class FlowTaskCompleteServiceImpl {
             task.setProviderTraceId(instance.getProviderTraceId());
 
             Map<String, Object> extConfig = parseExtConfig(node.getExt());
-            String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", "AUTO_PASS");
+            // P0-1: 统一默认值 FALLBACK（不再静默 AUTO_PASS）
+            String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
             switch (emptyStrategy) {
                 case "AUTO_PASS", "TRANSFER_ADMIN", "ASSIGN_SPECIFIED" -> {
                     String fallbackUserId = "AUTO_PASS".equals(emptyStrategy) ? "0"
@@ -646,6 +674,7 @@ public class FlowTaskCompleteServiceImpl {
                             instance.getId(), node.getNodeCode(), emptyStrategy);
                 }
                 default -> {
+                    // P0-1: FALLBACK — 转交管理员人工处理（不再静默 AUTO_PASS）
                     task.setAssigneeType(FlowAssigneeType.USER.name());
                     task.setAssigneeId("1");
                     task.setAssigneeName("FALLBACK");
@@ -709,10 +738,10 @@ public class FlowTaskCompleteServiceImpl {
                 ? new ArrayList<>(explicitAssignees)
                 : expandAssignees(node, variables);
 
-        // 集合为空兜底（复用 emptyStrategy 配置，默认 AUTO_PASS 直接推进）
+        // P0-1: 集合为空兜底（复用 emptyStrategy 配置，统一默认 FALLBACK）
         if (elements.isEmpty()) {
             Map<String, Object> extConfig = parseExtConfig(node.getExt());
-            String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", "AUTO_PASS");
+            String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
             if ("AUTO_PASS".equals(emptyStrategy)) {
                 FlowRunTaskDO autoTask = buildForeachTask(instance, node, "0",
                         "SYSTEM_AUTO_PASS", "0");
@@ -988,6 +1017,19 @@ public class FlowTaskCompleteServiceImpl {
         FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
         Map<String, Object> mergedVars = mergeVariables(instance, dto.getVariables());
 
+        // P1-2: 退回到发起人 — 解析 startNode 下游第一个节点作为退回目标
+        // 对标钉钉/飞书"退回到发起人"快捷方式
+        if (Boolean.TRUE.equals(dto.getRejectToInitiator())) {
+            String initiatorNodeCode = resolveInitiatorNodeCode(instance.getDefinitionId());
+            if (initiatorNodeCode != null) {
+                dto.setTargetNodeCode(initiatorNodeCode);
+                dto.setTargetNodeCodes(null); // 覆盖多节点同退
+            } else {
+                log.warn("[Flow] 退回发起人失败：无法解析开始节点下游第一节点，降级到默认退回: instanceId={}",
+                        instance.getId());
+            }
+        }
+
         // GAP-P0-2: 优先使用多节点同退；为空时降级到单节点（向后兼容）
         List<FlowNodeDO> rejectTargets;
         boolean multiReject = dto.getTargetNodeCodes() != null && dto.getTargetNodeCodes().size() > 1;
@@ -1157,7 +1199,6 @@ public class FlowTaskCompleteServiceImpl {
      * <p>nodeCode 为 null/空时退化为实例级催办（{@link #urge}）。
      * 限流维度：催办人 + 任务 ID（节点级），避免单节点被频繁催办刷屏。
      */
-    @Override
     public List<String> urgeByNode(String instanceId, String nodeCode, String operatorId, String comment) {
         if (nodeCode == null || nodeCode.isBlank()) {
             // 退化为实例级催办
@@ -1877,21 +1918,126 @@ public class FlowTaskCompleteServiceImpl {
             // 推进到下一节点（复用 AUTO_PASS 推进逻辑，含递归深度保护）
             advanceAfterAutoPass(instance, node, variables);
         } else {
-            // 3b. 失败：标记 TIMEOUT，归档，审计，实例标记为异常
+            // 3b. 失败：P0-2 优先尝试触发 error boundary 接管流程；无 error boundary 才标记实例异常
+            boolean errorBoundaryTriggered = triggerErrorBoundaryIfExists(instance, node, result.message());
             task.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
-            task.setComment("服务节点执行失败: " + result.message());
+            if (errorBoundaryTriggered) {
+                task.setComment("服务节点失败，error boundary 已触发: " + result.message());
+            } else {
+                task.setComment("服务节点执行失败: " + result.message());
+            }
             taskMapper.insert(task);
             archiveTask(task, FlowTaskStatus.TIMEOUT);
-            support.audit(task, "SERVICE_ERROR", null, null,
-                    "服务节点执行失败: " + result.message());
-            // 标记实例为异常状态，需人工介入处理
-            instanceMapper.updateStatus(instance.getId(),
-                    FlowInstanceStatus.ERROR.name(),
-                    node.getNodeCode(), node.getNodeName(), null, null);
-            log.error("[Flow] 服务节点执行失败，实例标记为异常: instanceId={} node={} msg={}",
-                    instance.getId(), node.getNodeCode(), result.message());
+            if (errorBoundaryTriggered) {
+                support.audit(task, "SERVICE_ERROR_BOUNDARY", null, null,
+                        "服务节点失败，error boundary 触发: " + result.message());
+                log.info("[Flow] 服务节点失败，error boundary 已触发: instanceId={} node={}",
+                        instance.getId(), node.getNodeCode());
+            } else {
+                support.audit(task, "SERVICE_ERROR", null, null,
+                        "服务节点执行失败: " + result.message());
+                // 无 error boundary：标记实例为异常状态，需人工介入处理
+                instanceMapper.updateStatus(instance.getId(),
+                        FlowInstanceStatus.ERROR.name(),
+                        node.getNodeCode(), node.getNodeName(), null, null);
+                log.error("[Flow] 服务节点执行失败，实例标记为异常: instanceId={} node={} msg={}",
+                        instance.getId(), node.getNodeCode(), result.message());
+            }
         }
         return task.getId();
+    }
+
+    /**
+     * P0-2: 触发附着在 serviceNode 上的 error boundary 事件
+     *
+     * <p>查找流程定义中所有 attachedToRef = serviceNode.nodeCode 且 eventType=ERROR 的 boundaryEvent 节点，
+     * 调用 {@link FlowEventSubscriptionService#throwError} 触发其订阅，让 error boundary 接管流程控制。
+     *
+     * @return true 表示至少触发了一个 error boundary；false 表示无 error boundary 或触发失败
+     */
+    private boolean triggerErrorBoundaryIfExists(FlowInstanceDO instance, FlowNodeDO serviceNode,
+                                                   String errorMsg) {
+        if (eventSubscriptionService == null) {
+            return false;
+        }
+        try {
+            // 查询同定义下所有节点，过滤出附着在本 serviceNode 上的 error boundary
+            List<FlowNodeDO> allNodes = nodeMapper.selectByDefinitionId(instance.getDefinitionId());
+            if (allNodes == null || allNodes.isEmpty()) {
+                return false;
+            }
+            List<FlowNodeDO> errorBoundaries = allNodes.stream()
+                    .filter(n -> {
+                        if (!eventSubscriptionService.isEventCatchNode(n)) {
+                            return false;
+                        }
+                        Map<String, Object> ext = parseExtConfig(n.getExt());
+                        String attachedTo = (String) ext.get("attachedToRef");
+                        String eventType = (String) ext.get("eventType");
+                        return serviceNode.getNodeCode().equals(attachedTo)
+                                && "ERROR".equalsIgnoreCase(eventType);
+                    })
+                    .toList();
+            if (errorBoundaries.isEmpty()) {
+                return false;
+            }
+            for (FlowNodeDO boundary : errorBoundaries) {
+                Map<String, Object> ext = parseExtConfig(boundary.getExt());
+                String errorRef = (String) ext.getOrDefault("errorRef", "SERVICE_ERROR");
+                eventSubscriptionService.throwError(instance.getTenantId(),
+                        instance.getId(), errorRef, errorMsg);
+                log.info("[Flow] error boundary 触发: instanceId={} serviceNode={} boundary={} errorRef={}",
+                        instance.getId(), serviceNode.getNodeCode(), boundary.getNodeCode(), errorRef);
+            }
+            return true;
+        } catch (Exception e) {
+            log.warn("[Flow] 触发 error boundary 失败，降级到标记实例异常: instanceId={} node={} err={}",
+                    instance.getId(), serviceNode.getNodeCode(), e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * P1-2: 解析"退回到发起人"目标节点编码
+     *
+     * <p>语义：取开始节点（START）下游的第一个节点（通常是发起人填表节点或第一审批节点）。
+     * 该节点会被标记为发起人重新提交的入口。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 开始节点下游第一节点的 nodeCode；解析失败返回 null
+     */
+    private String resolveInitiatorNodeCode(String definitionId) {
+        if (definitionCacheService == null || definitionId == null) {
+            return null;
+        }
+        try {
+            com.njydsz.pmis.workflow.entity.FlowNodeDO startNode =
+                    definitionCacheService.getStartNode(definitionId);
+            if (startNode == null) {
+                log.warn("[Flow] 退回发起人：流程定义无开始节点: definitionId={}", definitionId);
+                return null;
+            }
+            List<com.njydsz.pmis.workflow.entity.FlowSkipDO> skips =
+                    definitionCacheService.getSkipsByNodeCode(definitionId, startNode.getNodeCode());
+            if (skips == null || skips.isEmpty()) {
+                log.warn("[Flow] 退回发起人：开始节点无下游跳转: definitionId={} startNode={}",
+                        definitionId, startNode.getNodeCode());
+                return null;
+            }
+            // 取第一条 PASS 跳转的下游节点
+            for (com.njydsz.pmis.workflow.entity.FlowSkipDO skip : skips) {
+                if ("PASS".equalsIgnoreCase(skip.getSkipType())
+                        && skip.getNextNodeCode() != null) {
+                    return skip.getNextNodeCode();
+                }
+            }
+            // 兜底：取第一条跳转
+            return skips.get(0).getNextNodeCode();
+        } catch (Exception e) {
+            log.warn("[Flow] 退回发起人解析失败: definitionId={} err={}",
+                    definitionId, e.getMessage());
+            return null;
+        }
     }
 
     // ============================== P1-5: 跨节点办理人去重 ==============================

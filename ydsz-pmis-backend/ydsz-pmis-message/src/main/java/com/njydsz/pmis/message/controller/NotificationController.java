@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.message.dto.NotificationQueryDTO;
 import com.njydsz.pmis.message.dto.NotificationSendDTO;
 import com.njydsz.pmis.message.entity.MsgNotificationDO;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import com.njydsz.pmis.message.realtime.RealtimePushService;
 import com.njydsz.pmis.message.service.NotificationService;
 import com.njydsz.pmis.message.service.RecallService;
@@ -92,17 +93,23 @@ public class NotificationController {
 
     @Operation(summary = "单推(实时推送指定用户)")
     @PostMapping("/push")
-    public Result<Void> push(@RequestParam String userId, @RequestBody Map<String, Object> payload) {
+    public Result<Map<String, Object>> push(
+            @RequestParam String userId,
+            @RequestParam String type,
+            @RequestBody RealtimePushDTO payload) {
         // TODO 权限码
-        realtimePushService.pushToUser(userId, "CUSTOM", payload);
-        return Result.ok();
+        Object data = payload != null ? payload.getData() : null;
+        realtimePushService.pushToUser(userId, type, data);
+        return Result.ok(Map.of("success", true, "userId", userId, "type", type));
     }
 
     @Operation(summary = "广播(实时推送所有在线用户)")
     @PostMapping("/broadcast")
-    public Result<Void> broadcast(@RequestBody Map<String, Object> payload) {
+    public Result<Map<String, Object>> broadcast(
+            @RequestParam String type,
+            @RequestBody Object payload) {
         // TODO 权限码
-        realtimePushService.broadcast("BROADCAST", payload);
-        return Result.ok();
+        realtimePushService.broadcast(type, payload);
+        return Result.ok(Map.of("success", true, "type", type));
     }
 }

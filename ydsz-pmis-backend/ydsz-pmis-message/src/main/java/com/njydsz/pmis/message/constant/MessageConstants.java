@@ -52,4 +52,13 @@ public final class MessageConstants {
 
     /** 最大重试次数 */
     public static final int MAX_RETRY_COUNT = 3;
+
+    /** 重试基础退避（毫秒），实际退避 = base * 2^retryCount */
+    public static final long RETRY_BASE_BACKOFF_MS = 2000L;
+
+    /** 重试扫描分布式锁 key */
+    public static final String RETRY_SCAN_LOCK_KEY = "pmis:msg:retry:scan:lock";
+
+    /** 单次重试扫描批量大小 */
+    public static final int RETRY_SCAN_BATCH_SIZE = 200;
 }

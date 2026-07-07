@@ -33,7 +33,8 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
      */
     @Select("SELECT l.id, l.job_id, l.job_key, l.start_time, l.end_time, l.duration_ms, "
             + "       l.status, l.error_message, l.params_json, l.result_json, l.trace_id, "
-            + "       l.trigger_type, l.created_at, l.deleted "
+            + "       l.trigger_type, l.lock_holder, l.exec_node_id, l.exec_thread_id, "
+            + "       l.created_at, l.deleted "
             + "FROM pmis_job_log l "
             + "INNER JOIN pmis_job j ON j.id = l.job_id AND j.deleted = 0 "
             + "WHERE l.status = 'RUNNING' "
@@ -83,7 +84,8 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
      */
     @Select("SELECT l.id, l.job_id, l.job_key, l.start_time, l.end_time, l.duration_ms, "
             + "       l.status, l.error_message, l.params_json, l.result_json, l.trace_id, "
-            + "       l.trigger_type, l.created_at, l.deleted "
+            + "       l.trigger_type, l.lock_holder, l.exec_node_id, l.exec_thread_id, "
+            + "       l.created_at, l.deleted "
             + "FROM pmis_job_log l "
             + "INNER JOIN pmis_job j ON j.id = l.job_id AND j.deleted = 0 "
             + "LEFT JOIN pmis_job_slow_log s ON s.log_id = l.id AND s.deleted = 0 "

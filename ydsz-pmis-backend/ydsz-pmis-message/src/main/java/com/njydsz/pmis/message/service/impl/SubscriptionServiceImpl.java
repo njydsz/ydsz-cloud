@@ -102,6 +102,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    public boolean isBlocked(String userId, String topicCode, String channel) {
+        if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode)) {
+            return false;
+        }
+        Long count = msgSubscriptionMapper.selectCount(new LambdaQueryWrapper<MsgSubscriptionDO>()
+                .eq(MsgSubscriptionDO::getUserId, userId)
+                .eq(MsgSubscriptionDO::getTopicCode, topicCode)
+                .eq(StringUtils.hasText(channel), MsgSubscriptionDO::getChannel, channel)
+                .eq(MsgSubscriptionDO::getStatus, SubscriptionStatusEnum.UNSUBSCRIBED.name()));
+        return count != null && count > 0;
+    }
+
+    @Override
     public void unsubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");

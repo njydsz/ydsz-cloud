@@ -183,7 +183,6 @@ public class ZookeeperRuleSource implements RuleSource {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private List<RuleDefinition> parseRulesFromJson(String json) {
         if (json == null || json.isBlank()) {
             return List.of();

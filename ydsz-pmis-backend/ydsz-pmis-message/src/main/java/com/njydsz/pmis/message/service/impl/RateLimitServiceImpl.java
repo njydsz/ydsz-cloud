@@ -15,7 +15,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +41,7 @@ public class RateLimitServiceImpl implements RateLimitService {
     private final PreferenceService preferenceService;
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean tryAcquire(String key, int permits) {
         if (key == null || key.isBlank() || permits <= 0) {
             return true;
@@ -122,6 +122,7 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void incrCounter(String prefix, String userId, String channel, String bizType, String suffix, long ttlSeconds) {
         String key = prefix + userId + ":" + (channel == null ? SystemConstants.SYSTEM_USER_ID : channel)
                 + ":" + (bizType == null ? SystemConstants.SYSTEM_USER_ID : bizType) + ":" + suffix;

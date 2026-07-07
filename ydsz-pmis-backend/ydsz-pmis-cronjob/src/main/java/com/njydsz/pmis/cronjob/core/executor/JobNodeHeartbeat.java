@@ -46,7 +46,11 @@ public class JobNodeHeartbeat {
     private final JobNodeMapper jobNodeMapper;
     private final CronjobProperties cronjobProperties;
 
-    /** 当前节点 ID（hostname:pid） */
+    /** P0-5: 服务端口（通过 @Value 注入，修正之前返回 PID 的问题） */
+    @org.springframework.beans.factory.annotation.Value("${server.port:0}")
+    private int serverPort;
+
+    /** 当前节点 ID（hostname:port，P0-5 修复：之前用 hostname:pid 导致重启后僵尸记录） */
     private String nodeId;
 
     /** 当前节点正在执行的任务数（由 TaskExecutor 维护） */
@@ -169,8 +173,9 @@ public class JobNodeHeartbeat {
     // ==================== 内部辅助方法 ====================
 
     private String initNodeId() {
-        String name = ManagementFactory.getRuntimeMXBean().getName();
-        return name != null ? name : "unknown:" + ProcessHandle.current().pid();
+        // P0-5: 改用 hostname:port 作为节点 ID，重启后端口不变则 nodeId 稳定
+        // 之前用 hostname:pid 导致每次重启 PID 变化，DB 中累积大量僵尸节点记录
+        return getHostName() + ":" + serverPort;
     }
 
     private JobNodeDO buildNodeRecord() {
@@ -203,16 +208,8 @@ public class JobNodeHeartbeat {
     }
 
     private int getServerPort() {
-        // 端口由 spring.web.server.port 配置，这里从 runtime MXBean 提取 pid 作为兜底
-        String name = ManagementFactory.getRuntimeMXBean().getName();
-        if (name != null && name.contains("@")) {
-            try {
-                return Integer.parseInt(name.substring(name.indexOf('@') + 1));
-            } catch (NumberFormatException ignored) {
-                // fallthrough
-            }
-        }
-        return 0;
+        // P0-5: 直接返回 Spring 注入的 server.port，修复之前返回 PID 的问题
+        return serverPort;
     }
 
     /**

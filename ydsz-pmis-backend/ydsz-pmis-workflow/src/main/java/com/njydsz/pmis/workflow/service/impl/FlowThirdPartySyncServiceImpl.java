@@ -67,16 +67,16 @@ public class FlowThirdPartySyncServiceImpl implements FlowThirdPartySyncService 
         if (logs == null || logs.isEmpty()) {
             return;
         }
-        for (FlowThirdPartyLogDO log : logs) {
+        for (FlowThirdPartyLogDO logDo : logs) {
             FlowThirdPartyAccountDO account = null;
             try {
-                account = accountService.getActiveByPlatform(log.getPlatform());
+                account = accountService.getActiveByPlatform(logDo.getPlatform());
             } catch (Exception e) {
-                log.debug("[Flow3pSync] 查询三方账号失败 platform={} err={}", log.getPlatform(), e.getMessage());
+                log.debug("[Flow3pSync] 查询三方账号失败 platform={} err={}", logDo.getPlatform(), e.getMessage());
             }
             String cancelUrl = account != null ? account.getCancelWebhookUrl() : null;
             if (cancelUrl == null || cancelUrl.isBlank()) {
-                logMapper.updateSyncBack(log.getId(), "NOT_CONFIGURED",
+                logMapper.updateSyncBack(logDo.getId(), "NOT_CONFIGURED",
                         "账号未配置 cancelWebhookUrl，跳过本地→三方同步");
                 continue;
             }
@@ -84,21 +84,21 @@ public class FlowThirdPartySyncServiceImpl implements FlowThirdPartySyncService 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 Map<String, Object> body = new HashMap<>();
-                body.put("processInstanceId", log.getProcessInstanceId());
+                body.put("processInstanceId", logDo.getProcessInstanceId());
                 body.put("action", action);
                 body.put("reason", reason);
                 ResponseEntity<String> resp = restTemplate.postForEntity(
                         cancelUrl, new HttpEntity<>(body, headers), String.class);
                 boolean ok = resp.getStatusCode() == HttpStatus.OK
                         || resp.getStatusCode() == HttpStatus.ACCEPTED;
-                logMapper.updateSyncBack(log.getId(), ok ? "SUCCESS" : "FAIL",
+                logMapper.updateSyncBack(logDo.getId(), ok ? "SUCCESS" : "FAIL",
                         "本地→三方同步" + (ok ? "成功" : "失败: HTTP " + resp.getStatusCode()));
                 log.info("[Flow3pSync] 本地→三方同步 instanceId={} platform={} ok={}",
-                        instanceId, log.getPlatform(), ok);
+                        instanceId, logDo.getPlatform(), ok);
             } catch (Exception e) {
-                logMapper.updateSyncBack(log.getId(), "FAIL", "本地→三方同步异常: " + e.getMessage());
+                logMapper.updateSyncBack(logDo.getId(), "FAIL", "本地→三方同步异常: " + e.getMessage());
                 log.warn("[Flow3pSync] 本地→三方同步异常 instanceId={} platform={} err={}",
-                        instanceId, log.getPlatform(), e.getMessage());
+                        instanceId, logDo.getPlatform(), e.getMessage());
             }
         }
     }

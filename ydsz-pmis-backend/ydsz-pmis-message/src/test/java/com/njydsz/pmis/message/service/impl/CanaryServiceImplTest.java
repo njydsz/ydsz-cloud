@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("CanaryServiceImpl 灰度桶测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class CanaryServiceImplTest {
 
     @Mock

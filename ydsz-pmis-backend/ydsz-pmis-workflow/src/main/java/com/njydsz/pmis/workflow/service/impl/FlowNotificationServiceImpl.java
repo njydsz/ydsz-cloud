@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.workflow.engine.FlowNotifyFrequencyLimiter;
 import com.njydsz.pmis.workflow.engine.FlowNotifyTemplateResolver;
 import com.njydsz.pmis.workflow.service.FlowNotificationService;
 import lombok.RequiredArgsConstructor;

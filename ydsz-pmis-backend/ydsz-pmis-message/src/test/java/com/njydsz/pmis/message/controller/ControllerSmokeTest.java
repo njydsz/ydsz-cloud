@@ -1,13 +1,10 @@
 package com.njydsz.pmis.message.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.dto.CanaryUpsertDTO;
-import com.njydsz.pmis.message.dto.MessageLogQueryDTO;
 import com.njydsz.pmis.message.dto.MessageSendDTO;
-import com.njydsz.pmis.message.dto.NotificationQueryDTO;
 import com.njydsz.pmis.message.dto.NotificationSendDTO;
 import com.njydsz.pmis.message.dto.PreferenceUpsertDTO;
 import com.njydsz.pmis.message.dto.ReceiptCallbackDTO;
@@ -18,12 +15,8 @@ import com.njydsz.pmis.message.dto.TemplateAuditDTO;
 import com.njydsz.pmis.message.dto.TemplateCreateDTO;
 import com.njydsz.pmis.message.entity.MsgAggregateDO;
 import com.njydsz.pmis.message.entity.MsgCanaryDO;
-import com.njydsz.pmis.message.entity.MsgLogDO;
-import com.njydsz.pmis.message.entity.MsgNotificationDO;
 import com.njydsz.pmis.message.entity.MsgPreferenceDO;
-import com.njydsz.pmis.message.entity.MsgReceiptDO;
 import com.njydsz.pmis.message.entity.MsgRouteRuleDO;
-import com.njydsz.pmis.message.entity.MsgSubscriptionDO;
 import com.njydsz.pmis.message.entity.MsgTemplateDO;
 import com.njydsz.pmis.message.realtime.RealtimePushService;
 import com.njydsz.pmis.message.service.AggregateService;
@@ -31,7 +24,6 @@ import com.njydsz.pmis.message.service.CanaryService;
 import com.njydsz.pmis.message.service.MessageService;
 import com.njydsz.pmis.message.service.NotificationService;
 import com.njydsz.pmis.message.service.PreferenceService;
-import com.njydsz.pmis.message.service.RateLimitService;
 import com.njydsz.pmis.message.service.RecallService;
 import com.njydsz.pmis.message.service.ReceiptService;
 import com.njydsz.pmis.message.service.RouteRuleService;
@@ -100,9 +92,12 @@ class ControllerSmokeTest {
         @Test
         void routesExist() throws Exception {
             MessageService svc = mock(MessageService.class);
+            @SuppressWarnings("unchecked")
+            org.springframework.beans.factory.ObjectProvider<com.njydsz.pmis.message.producer.RocketMQMessageProducer> producerProvider =
+                    mock(org.springframework.beans.factory.ObjectProvider.class);
             when(svc.send(any())).thenReturn(MessageResult.ok("SMS", "t"));
             when(svc.pageLog(any())).thenReturn(new Page<>());
-            MockMvc m = build(new MessageController(svc));
+            MockMvc m = build(new MessageController(svc, producerProvider));
             m.perform(post("/message/send").contentType("application/json")
                     .content(MAPPER.writeValueAsString(new MessageRequest()))).andExpect(status().isOk());
             m.perform(post("/message/send-direct").contentType("application/json")

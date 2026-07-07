@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("ReceiptServiceImpl 回执服务测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class ReceiptServiceImplTest {
 
     @Mock

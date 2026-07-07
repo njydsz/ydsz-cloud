@@ -15,6 +15,7 @@ import com.njydsz.pmis.workflow.engine.FlowEventContext;
 import com.njydsz.pmis.workflow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.engine.FlowWorkflowEvent;
+import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
@@ -23,6 +24,7 @@ import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
+import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
@@ -36,6 +38,8 @@ import com.njydsz.pmis.workflow.service.FlowEventSubscriptionService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowSubProcessService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
+import com.njydsz.pmis.workflow.service.FlowThirdPartySyncService;
+import com.njydsz.pmis.workflow.service.FlowTimerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -103,6 +107,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowAuditLogMapper auditLogMapper;
     /** P2-6: 三方审批双向同步服务（终止/撤回时主动同步回三方） */
     private final FlowThirdPartySyncService thirdPartySyncService;
+    /**
+     * P0-2: 定时器服务 — boundaryEvent 含 timer 配置时注册边界定时器自动触发
+     *
+     * <p>使用 @Lazy 避免循环依赖：FlowTimerServiceImpl → FlowAdvancer → FlowInstanceService → FlowTimerService
+     */
+    @Lazy
+    private final FlowTimerService timerService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -622,6 +633,17 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
     }
 
+    /**
+     * 将 {@code Map<?,?>} 强转为 {@code Map<String, Object>}。
+     *
+     * <p>ext JSON 由业务方配置（节点扩展字段），运行时信任其结构为 Map&lt;String,Object&gt;，
+     * 因此这里的强转是安全的。该方法仅用于抑制 unchecked cast 编译警告。
+     */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> castToStringObjectMap(Map<?, ?> m) {
+        return (Map<String, Object>) m;
+    }
+
     // ============================== 内部方法 ==============================
 
     private FlowInstanceDO getByIdOrThrow(String id) {
@@ -660,6 +682,21 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return;
         }
         for (FlowNodeDO node : nextNodes) {
+            // P0-2: 优先判断事件捕获节点（boundaryEvent / intermediateCatchEvent）
+            // 历史问题：boundaryEvent 在 mapNodeType 中被映射为 CC 类型，会被下方 CC 分支误处理为抄送
+            // 修复：先判断 isEventCatchNode（基于 ext.eventCatch=true），命中则走事件订阅逻辑
+            if (eventSubscriptionService.isEventCatchNode(node)) {
+                String boundaryTaskId = resolveBoundaryTaskId(node, instanceId);
+                eventSubscriptionService.createSubscription(instanceId, node, variables, boundaryTaskId);
+                // P0-2: 如果 ext.timer 存在，注册边界定时器自动触发（timer boundary 语义）
+                scheduleBoundaryTimerIfPresent(node, instanceId, boundaryTaskId);
+                // 更新实例当前节点为事件捕获节点（流程在此等待事件触发）
+                instanceMapper.updateStatus(instanceId, null,
+                        node.getNodeCode(), node.getNodeName(), null, null);
+                log.info("[Flow] 事件捕获节点等待触发: instanceId={} node={} type={}",
+                        instanceId, node.getNodeCode(), node.getNodeType());
+                continue;
+            }
             if (node.getNodeType().equals(FlowNodeType.CC.getCode())) {
                 // GAP-P1: 抄送节点 — 展开接收人并写入 pmis_flow_cc，然后自动推进到下一节点
                 try {
@@ -702,18 +739,103 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 }
                 continue;
             }
-            // P0-1: 事件捕获节点（intermediateCatchEvent / boundaryEvent）— 创建订阅，不创建人工任务
-            if (eventSubscriptionService.isEventCatchNode(node)) {
-                String boundaryTaskId = resolveBoundaryTaskId(node, instanceId);
-                eventSubscriptionService.createSubscription(instanceId, node, variables, boundaryTaskId);
-                // 更新实例当前节点为事件捕获节点（流程在此等待事件触发）
-                instanceMapper.updateStatus(instanceId, null,
-                        node.getNodeCode(), node.getNodeName(), null, null);
-                log.info("[Flow] 事件捕获节点等待触发: instanceId={} node={} type={}",
-                        instanceId, node.getNodeCode(), node.getNodeType());
-                continue;
-            }
             taskService.createTask(instanceId, node, variables);
+        }
+    }
+
+    /**
+     * P0-2: 解析 boundaryEvent 的 timer 配置并注册边界定时器
+     *
+     * <p>BPMN timer event definition 支持三种形式：
+     * <ul>
+     *   <li>{@code timeDuration} — ISO 8601 持续时间（如 "PT1H30M"），到点触发一次</li>
+     *   <li>{@code timeDate} — ISO 8601 绝对时间（如 "2026-07-07T10:00:00"），到点触发一次</li>
+     *   <li>{@code timeCycle} — ISO 8601 循环（如 "R3/PT10M"），目前仅支持首次触发，循环触发待后续实现</li>
+     * </ul>
+     *
+     * <p>解析失败时不抛异常，仅记录 warn 日志，避免阻塞流程实例创建。
+     */
+    private void scheduleBoundaryTimerIfPresent(FlowNodeDO node, String instanceId, String boundaryTaskId) {
+        if (timerService == null || boundaryTaskId == null) {
+            return;
+        }
+        Map<String, Object> ext = parseExtMap(node);
+        if (ext == null) return;
+        Object timerObj = ext.get("timer");
+        if (!(timerObj instanceof Map<?, ?> timerRaw)) {
+            return;
+        }
+        Duration delay = parseTimerDelay(timerRaw);
+        if (delay == null || delay.isNegative() || delay.isZero()) {
+            log.warn("[Flow] 边界定时器配置无法解析或已过期，跳过: node={} timer={}",
+                    node.getNodeCode(), timerRaw);
+            return;
+        }
+        try {
+            timerService.scheduleBoundary(boundaryTaskId, instanceId, node.getNodeCode(), delay);
+            log.info("[Flow] 边界定时器已注册: instanceId={} node={} delay={} taskId={}",
+                    instanceId, node.getNodeCode(), delay, boundaryTaskId);
+        } catch (Exception e) {
+            log.warn("[Flow] 边界定时器注册失败: instanceId={} node={} err={}",
+                    instanceId, node.getNodeCode(), e.getMessage());
+        }
+    }
+
+    /**
+     * P0-2: 解析 BPMN timer 配置为 Duration
+     *
+     * <p>优先级：duration > date > cycle（cycle 仅取首次）
+     */
+    private Duration parseTimerDelay(Map<?, ?> timer) {
+        Object duration = timer.get("duration");
+        if (duration != null) {
+            try {
+                return Duration.parse(duration.toString());  // ISO 8601, e.g. "PT1H30M"
+            } catch (Exception e) {
+                log.warn("[Flow] timer.duration 解析失败: {} err={}", duration, e.getMessage());
+            }
+        }
+        Object date = timer.get("date");
+        if (date != null) {
+            try {
+                java.time.LocalDateTime target = java.time.LocalDateTime.parse(date.toString(),
+                        java.time.format.DateTimeFormatter.ISO_DATE_TIME);
+                Duration d = Duration.between(java.time.LocalDateTime.now(), target);
+                return d.isNegative() ? null : d;
+            } catch (Exception e) {
+                log.warn("[Flow] timer.date 解析失败: {} err={}", date, e.getMessage());
+            }
+        }
+        // cycle（如 "R3/PT10M"）暂仅支持首次触发：提取 PT 部分
+        Object cycle = timer.get("cycle");
+        if (cycle != null) {
+            String cycleStr = cycle.toString();
+            // 简单提取 PT 片段（"R3/PT10M" → "PT10M"）
+            int ptIdx = cycleStr.indexOf("PT");
+            if (ptIdx >= 0) {
+                try {
+                    return Duration.parse(cycleStr.substring(ptIdx));
+                } catch (Exception e) {
+                    log.warn("[Flow] timer.cycle 解析失败: {} err={}", cycle, e.getMessage());
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * P0-2: 解析节点 ext JSON 为 Map（容错）
+     */
+    private Map<String, Object> parseExtMap(FlowNodeDO node) {
+        if (node == null || !StringUtils.hasText(node.getExt())) {
+            return null;
+        }
+        try {
+            return JsonUtils.parseMap(node.getExt());
+        } catch (Exception e) {
+            log.warn("[Flow] 节点 ext 解析失败: nodeCode={} err={}",
+                    node.getNodeCode(), e.getMessage());
+            return null;
         }
     }
 
@@ -1072,11 +1194,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                         if (ext != null) {
                             Object fp = ext.get("formFieldPermissions");
                             if (fp instanceof Map<?, ?> m) {
-                                fieldPermissions = (Map<String, Object>) m;
+                                // ext JSON 由业务方配置，运行时信任其结构为 Map<String,Object>，强转是安全的
+                                fieldPermissions = castToStringObjectMap(m);
                             }
                             Object cc = ext.get("commentConfig");
                             if (cc instanceof Map<?, ?> m2) {
-                                commentConfig = (Map<String, Object>) m2;
+                                // 同上：ext JSON 业务方配置，运行时信任其结构为 Map<String,Object>
+                                commentConfig = castToStringObjectMap(m2);
                             }
                         }
                     } catch (Exception e) {

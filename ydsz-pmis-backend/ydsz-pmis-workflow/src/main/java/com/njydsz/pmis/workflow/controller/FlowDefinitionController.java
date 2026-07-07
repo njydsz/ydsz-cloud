@@ -159,6 +159,20 @@ public class FlowDefinitionController {
     }
 
     /**
+     * P2-8 (GAP-53): 流程定义预览 — 只读模式返回定义详情 + readOnly 标记
+     *
+     * <p>前端用 bpmn-js 以只读模式渲染（禁用编辑 palette），展示流程全貌。
+     * 数据与 {@link #getDefinitionDetail} 一致，额外携带 {@code readOnly=true} 标志。
+     */
+    @GetMapping("/definition/{id}/preview")
+    @Operation(summary = "流程定义预览（只读）")
+    public Result<Map<String, Object>> getDefinitionPreview(@PathVariable String id) {
+        Map<String, Object> detail = definitionService.getDetail(id);
+        detail.put("readOnly", true);
+        return Result.ok(detail);
+    }
+
+    /**
      * P2-27: 切换流程定义的激活版本
      *
      * @param code         流程编码

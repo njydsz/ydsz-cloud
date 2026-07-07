@@ -8,7 +8,6 @@ import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
-import java.util.List;
 
 /**
  * 通知频率控制器（P2-5, GAP-39）

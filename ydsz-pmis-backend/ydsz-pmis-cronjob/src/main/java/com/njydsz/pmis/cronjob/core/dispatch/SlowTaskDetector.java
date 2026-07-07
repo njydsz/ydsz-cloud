@@ -143,6 +143,7 @@ public class SlowTaskDetector {
     /**
      * 批量查询 JobDO（容错：查询异常时返回空 Map，调用方逐条跳过）。
      */
+    @SuppressWarnings("deprecation")
     private Map<String, JobDO> batchFetchJobs(Set<String> jobIds) {
         if (jobIds.isEmpty()) {
             return Collections.emptyMap();

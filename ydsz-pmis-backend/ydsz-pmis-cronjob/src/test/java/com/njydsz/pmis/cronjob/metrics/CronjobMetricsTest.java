@@ -1,6 +1,5 @@
 package com.njydsz.pmis.cronjob.metrics;
 
-import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
@@ -19,7 +18,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
@@ -65,7 +63,7 @@ class CronjobMetricsTest {
         when(jobLogMapperProvider.getIfAvailable()).thenReturn(jobLogMapper);
         when(jobLogMapper.selectCount(org.mockito.ArgumentMatchers.any())).thenReturn(3L);
 
-        CronjobMetrics metrics = new CronjobMetrics(registry, jobLogMapperProvider);
+        new CronjobMetrics(registry, jobLogMapperProvider);
 
         Gauge runningGauge = registry.find("pmis_cronjob_job_running").gauge();
         assertNotNull(runningGauge, "pmis_cronjob_job_running Gauge 应已注册");
@@ -85,7 +83,7 @@ class CronjobMetricsTest {
     void construct_mapperNull_gaugeDegradesToZero() {
         when(jobLogMapperProvider.getIfAvailable()).thenReturn(null);
 
-        CronjobMetrics metrics = new CronjobMetrics(registry, jobLogMapperProvider);
+        new CronjobMetrics(registry, jobLogMapperProvider);
 
         Gauge runningGauge = registry.find("pmis_cronjob_job_running").gauge();
         assertNotNull(runningGauge, "Gauge 仍应注册");
@@ -99,7 +97,7 @@ class CronjobMetricsTest {
         when(jobLogMapper.selectCount(org.mockito.ArgumentMatchers.any()))
                 .thenThrow(new RuntimeException("DB connection lost"));
 
-        CronjobMetrics metrics = new CronjobMetrics(registry, jobLogMapperProvider);
+        new CronjobMetrics(registry, jobLogMapperProvider);
 
         Gauge runningGauge = registry.find("pmis_cronjob_job_running").gauge();
         assertNotNull(runningGauge);

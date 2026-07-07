@@ -82,8 +82,13 @@ public class CronjobProperties {
      */
     @Data
     public static class Leader {
-        /** 是否启用 Leader 选举模式（false=回退旧的 Leaderless 模式） */
-        private boolean enabled = false;
+        /**
+         * 是否启用 Leader 选举模式（false=回退旧的 Leaderless 模式）。
+         *
+         * <p>P0-4: 默认改为 true，确保多实例环境下任务不会重复执行。
+         * 单节点环境也会正常工作（自己成为 Leader）。
+         */
+        private boolean enabled = true;
 
         /** 角色（多套调度集群隔离时使用） */
         private String role = "pmis-job-scheduler";

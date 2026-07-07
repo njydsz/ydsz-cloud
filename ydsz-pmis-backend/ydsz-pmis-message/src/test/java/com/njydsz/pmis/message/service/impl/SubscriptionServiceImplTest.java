@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("SubscriptionServiceImpl 订阅服务测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class SubscriptionServiceImplTest {
 
     @Mock

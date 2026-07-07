@@ -1234,7 +1234,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_file_url_expire
 -- =====================================================
 -- PMIS 任务调度模块 DDL
 -- 版本: V1.0.0_006 (merged into V1.0.0.sql)
--- 描述: 动态定时任务定义 + 执行日志(Quartz/XXL-JOB 兼容)
+-- 描述: 动态定时任务定义 + 执行日志(自研调度引擎)
 -- =====================================================
 
 -- 任务定义表 pmis_job
@@ -1262,6 +1262,22 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     misfire_policy  VARCHAR(32)    NOT NULL DEFAULT 'FIRE_NOW',
     -- [P3-3] 分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行
     shard_total     INTEGER        NOT NULL DEFAULT 1,
+    -- [P1-5] 任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码)
+    job_type        VARCHAR(32)    NOT NULL DEFAULT 'BEAN',
+    -- [P1-1] 失败重试: 最大重试次数(0=不重试) / 重试间隔(毫秒, NULL=立即) / 退避策略
+    max_retries     INTEGER        NOT NULL DEFAULT 0,
+    retry_interval_ms BIGINT,
+    retry_backoff   VARCHAR(32)    NOT NULL DEFAULT 'FIXED',
+    -- [P1-2] 阻塞策略: SERIAL(排队, 默认) / COVER(中断+执行新) / DISCARD(丢弃新) / CONCURRENT(并行)
+    block_strategy  VARCHAR(32)    NOT NULL DEFAULT 'SERIAL',
+    -- [P1-6] 任务级熔断: 连续失败次数 / 最大连续失败次数(达到后自动暂停) / 自动恢复时间(分钟)
+    consecutive_fail_count INTEGER NOT NULL DEFAULT 0,
+    max_consecutive_fails INTEGER,
+    auto_resume_after_minutes INTEGER,
+    -- [P4-7] 优先级: 1-10, 越小越高(默认 5)
+    priority        INTEGER        NOT NULL DEFAULT 5,
+    -- [P4-8] 版本号: 每次修改 +1, 用于乐观锁和版本追溯
+    version         INTEGER        NOT NULL DEFAULT 1,
     created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
@@ -1270,7 +1286,8 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     -- 数据完整性约束
     CONSTRAINT uk_pmis_job_key UNIQUE (job_key, deleted),
-    CONSTRAINT ck_pj_status_enum    CHECK (status IN ('NORMAL', 'PAUSED', 'ERROR', 'COMPLETE')),
+    -- [P1-6] status 增加 AUTO_PAUSED: 连续失败熔断后自动暂停
+    CONSTRAINT ck_pj_status_enum    CHECK (status IN ('NORMAL', 'PAUSED', 'ERROR', 'COMPLETE', 'AUTO_PAUSED')),
     CONSTRAINT ck_pj_counts_nonneg  CHECK (fire_count >= 0 AND success_count >= 0 AND fail_count >= 0),
     CONSTRAINT ck_pj_success_le     CHECK (success_count <= fire_count),
     CONSTRAINT ck_pj_lock_ttl_nonneg CHECK (lock_ttl_ms IS NULL OR lock_ttl_ms > 0),
@@ -1278,10 +1295,19 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     CONSTRAINT ck_pj_slow_threshold_nonneg CHECK (slow_threshold_ms IS NULL OR slow_threshold_ms > 0),
     CONSTRAINT ck_pj_misfire_enum   CHECK (misfire_policy IN ('FIRE_NOW', 'SKIP', 'COALESCE')),
     CONSTRAINT ck_pj_shard_total_pos CHECK (shard_total >= 1),
+    CONSTRAINT ck_pj_job_type_enum  CHECK (job_type IN ('BEAN', 'HTTP', 'SHELL', 'GLUE')),
+    CONSTRAINT ck_pj_max_retries_nonneg CHECK (max_retries >= 0),
+    CONSTRAINT ck_pj_retry_backoff_enum CHECK (retry_backoff IN ('FIXED', 'EXPONENTIAL')),
+    CONSTRAINT ck_pj_block_strategy_enum CHECK (block_strategy IN ('SERIAL', 'COVER', 'DISCARD', 'CONCURRENT')),
+    CONSTRAINT ck_pj_consecutive_fail_nonneg CHECK (consecutive_fail_count >= 0),
+    CONSTRAINT ck_pj_max_consecutive_fails_pos CHECK (max_consecutive_fails IS NULL OR max_consecutive_fails > 0),
+    CONSTRAINT ck_pj_auto_resume_pos CHECK (auto_resume_after_minutes IS NULL OR auto_resume_after_minutes > 0),
+    CONSTRAINT ck_pj_priority_range CHECK (priority >= 1 AND priority <= 10),
+    CONSTRAINT ck_pj_version_pos    CHECK (version >= 1),
     CONSTRAINT ck_pj_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job IS '动态定时任务定义表: 支持运行时增删改触发频率的定时任务(Quartz/XXL-JOB)';
+COMMENT ON TABLE pmis_job IS '动态定时任务定义表: 支持运行时增删改触发频率的定时任务(自研调度引擎)';
 COMMENT ON COLUMN pmis_job.id IS '主键 ID';
 COMMENT ON COLUMN pmis_job.job_name IS '任务名称(展示用)';
 COMMENT ON COLUMN pmis_job.job_group IS '任务分组(如 DEFAULT/RECONCILE/ALERT)';
@@ -1301,6 +1327,16 @@ COMMENT ON COLUMN pmis_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示
 COMMENT ON COLUMN pmis_job.slow_threshold_ms IS '慢任务阈值(毫秒, NULL 不检测慢任务; 执行耗时超过此值记入 pmis_job_slow_log)';
 COMMENT ON COLUMN pmis_job.misfire_policy IS 'Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过推进 next_fire_time / COALESCE 合并执行并日志标记 MISFIRED';
 COMMENT ON COLUMN pmis_job.shard_total IS '分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行';
+COMMENT ON COLUMN pmis_job.job_type IS '任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码)';
+COMMENT ON COLUMN pmis_job.max_retries IS '最大重试次数: 0=不重试(默认), >0 时失败后自动重试';
+COMMENT ON COLUMN pmis_job.retry_interval_ms IS '重试间隔(毫秒): NULL=立即重试, >0 时按 retry_backoff 策略计算间隔';
+COMMENT ON COLUMN pmis_job.retry_backoff IS '重试退避策略: FIXED 固定间隔(默认) / EXPONENTIAL 指数退避(间隔*2^retryCount)';
+COMMENT ON COLUMN pmis_job.block_strategy IS '阻塞策略: SERIAL 排队(默认) / COVER 中断+执行新 / DISCARD 丢弃新 / CONCURRENT 并行';
+COMMENT ON COLUMN pmis_job.consecutive_fail_count IS '连续失败次数: 成功时归零, 失败时+1, 达到 max_consecutive_fails 时自动暂停';
+COMMENT ON COLUMN pmis_job.max_consecutive_fails IS '最大连续失败次数: NULL=不熔断, >0 时达到阈值后 status 改为 AUTO_PAUSED';
+COMMENT ON COLUMN pmis_job.auto_resume_after_minutes IS '自动恢复时间(分钟): NULL=不自动恢复, >0 时 AUTO_PAUSED 后定时检查恢复';
+COMMENT ON COLUMN pmis_job.priority IS '优先级: 1-10, 越小越高(默认 5), 扫描器按优先级排序派发';
+COMMENT ON COLUMN pmis_job.version IS '版本号: 每次修改 +1, 用于乐观锁和版本追溯';
 COMMENT ON COLUMN pmis_job.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_job.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_job.updated_by IS '最后修改人 ID';
@@ -1376,6 +1412,13 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     trace_id        VARCHAR(20),
     -- [P2-2] 触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发
     trigger_type    VARCHAR(32)    NOT NULL DEFAULT 'CRON',
+    -- [P0-1] 持锁者标识(hostname:pid): 任务派发抢占分布式锁时记录锁的 value,
+    --        供 TimeoutMonitor 超时后通过 Lua 脚本安全释放锁(仅当 value 匹配时才 delete)
+    lock_holder     VARCHAR(64),
+    -- [P0-2] 执行节点 ID(hostname:port): 用于故障转移时定位任务所在节点
+    exec_node_id    VARCHAR(64),
+    -- [P0-2] 执行线程 ID: 用于超时强制中断时定位执行线程
+    exec_thread_id  BIGINT,
     -- [INLINE-OPT] P0-D3 内联:MQ 投递元信息字段
     msg_id          VARCHAR(20),
     topic           VARCHAR(128),
@@ -1384,7 +1427,8 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     -- 数据完整性约束
-    CONSTRAINT ck_pjl_status_enum   CHECK (status IN ('RUNNING', 'SUCCESS', 'FAILED', 'TIMEOUT')),
+    -- [P0-2] status 增加 ZOMBIE: 超时后线程无法中断,标记为僵尸任务由下次扫描清理
+    CONSTRAINT ck_pjl_status_enum   CHECK (status IN ('RUNNING', 'SUCCESS', 'FAILED', 'TIMEOUT', 'ZOMBIE')),
     CONSTRAINT ck_pjl_duration_nonneg CHECK (duration_ms IS NULL OR duration_ms >= 0),
     CONSTRAINT ck_pjl_times_valid   CHECK (end_time IS NULL OR end_time >= start_time),
     CONSTRAINT ck_pjl_reconsume_nonneg CHECK (reconsume_times >= 0),
@@ -1407,6 +1451,9 @@ COMMENT ON COLUMN pmis_job_log.params_json IS '执行参数 JSON';
 COMMENT ON COLUMN pmis_job_log.result_json IS '执行结果 JSON';
 COMMENT ON COLUMN pmis_job_log.trace_id IS '链路追踪 ID(SkyWalking/TLog)';
 COMMENT ON COLUMN pmis_job_log.trigger_type IS '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发';
+COMMENT ON COLUMN pmis_job_log.lock_holder IS '持锁者标识(hostname:pid): 分布式锁的 value,超时后通过 Lua 脚本安全释放锁';
+COMMENT ON COLUMN pmis_job_log.exec_node_id IS '执行节点 ID(hostname:port): 用于故障转移时定位任务所在节点';
+COMMENT ON COLUMN pmis_job_log.exec_thread_id IS '执行线程 ID: 用于超时强制中断时定位执行线程';
 COMMENT ON COLUMN pmis_job_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
 COMMENT ON COLUMN pmis_job_log.topic IS 'RocketMQ Topic(标识消息来源 Topic,DLQ 消息填充原 Topic)';
 COMMENT ON COLUMN pmis_job_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';
@@ -2010,29 +2057,34 @@ CREATE INDEX IF NOT EXISTS idx_pmag_due ON pmis_msg_aggregate(scheduled_send_at)
 
 -- 灰度桶表 pmis_msg_canary（按 template_code/biz_type 灰度发布）
 CREATE TABLE IF NOT EXISTS pmis_msg_canary(
-    id                VARCHAR(20)      PRIMARY KEY,
-    canary_key        VARCHAR(128)  NOT NULL,
-    bucket_total      INTEGER       NOT NULL DEFAULT 100,
-    bucket_selected   TEXT,
-    percentage        INTEGER       NOT NULL DEFAULT 0,
-    status            VARCHAR(16)   NOT NULL DEFAULT 'ENABLED',
-    description       VARCHAR(512),
-    created_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    created_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
+    id                       VARCHAR(20)      PRIMARY KEY,
+    canary_key               VARCHAR(128)  NOT NULL,
+    bucket_total             INTEGER       NOT NULL DEFAULT 100,
+    bucket_selected          TEXT,
+    percentage               INTEGER       NOT NULL DEFAULT 0,
+    experiment_template_code VARCHAR(128),
+    experiment_channel       VARCHAR(32),
+    status                   VARCHAR(16)   NOT NULL DEFAULT 'ENABLED',
+    description              VARCHAR(512),
+    created_by               VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                  SMALLINT     NOT NULL DEFAULT 0,
+    tenant_id                VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmc_key UNIQUE (canary_key, tenant_id, deleted),
     CONSTRAINT ck_pmc_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pmc_pct_range   CHECK (percentage >= 0 AND percentage <= 100),
     CONSTRAINT ck_pmc_bucket_pos  CHECK (bucket_total > 0),
+    CONSTRAINT ck_pmc_exp_chan_enum CHECK (experiment_channel IS NULL OR experiment_channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pmc_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_msg_canary IS '灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布';
+COMMENT ON TABLE pmis_msg_canary IS '灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布,命中后可切换实验模板/通道';
 COMMENT ON COLUMN pmis_msg_canary.canary_key IS '灰度键(如 template_code 或 biz_type)';
 COMMENT ON COLUMN pmis_msg_canary.bucket_selected IS '命中的桶列表 JSON(如 [0,1,2,...,4] 表示 0-4 号桶命中)';
 COMMENT ON COLUMN pmis_msg_canary.percentage IS '灰度比例(0-100)';
+COMMENT ON COLUMN pmis_msg_canary.experiment_template_code IS '灰度命中后切换的实验模板编码(可空,空则不切换)';
+COMMENT ON COLUMN pmis_msg_canary.experiment_channel IS '灰度命中后切换的实验通道(可空,空则不切换)';
 
 CREATE INDEX IF NOT EXISTS idx_pmc_key ON pmis_msg_canary(canary_key) WHERE deleted = 0 AND status = 'ENABLED';
 
@@ -6100,6 +6152,11 @@ CREATE TABLE IF NOT EXISTS pmis_flow_instance(
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     provider_trace_id  VARCHAR(64),
+    parent_instance_id VARCHAR(20),
+    parent_node_code   VARCHAR(64),
+    reject_reason      TEXT,
+    due_at             TIMESTAMPTZ,
+    version            INT          NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT ck_pfi_flow_status       CHECK (flow_status IN ('RUNNING','SUSPENDED','COMPLETED','TERMINATED','REJECTED','DRAFT')),
     CONSTRAINT ck_pfi_activity_status   CHECK (activity_status IN (0, 1)),
@@ -6131,6 +6188,11 @@ COMMENT ON COLUMN pmis_flow_instance.duration_ms IS '总耗时(毫秒)';
 COMMENT ON COLUMN pmis_flow_instance.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_instance.deleted IS '逻辑删除: 0=未删除,1=已删除';
 COMMENT ON COLUMN pmis_flow_instance.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON COLUMN pmis_flow_instance.parent_instance_id IS 'GAP-P1: 父流程实例 ID（子流程场景，可空）';
+COMMENT ON COLUMN pmis_flow_instance.parent_node_code IS 'GAP-P1: 父流程中触发子流程的节点编码（可空）';
+COMMENT ON COLUMN pmis_flow_instance.reject_reason IS '退回原因（最近一次 REJECT 操作的备注，重审时清空）';
+COMMENT ON COLUMN pmis_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
+COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
 
 -- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_finance_invoice) 的
 --      索引同名 (idx_pfi_status),触发"关系已存在"报错。改为
@@ -6853,9 +6915,15 @@ COMMENT ON COLUMN pmis_flow_node.sla_config IS 'GAP-P1: SLA 超时配置 JSON �
 -- -------------------------------------------
 ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS parent_instance_id VARCHAR(20);
 ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS parent_node_code VARCHAR(64);
+ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS reject_reason      TEXT;
+ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS due_at             TIMESTAMPTZ;
+ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS version            INT NOT NULL DEFAULT 0;
 
 COMMENT ON COLUMN pmis_flow_instance.parent_instance_id IS 'GAP-P1: 父流程实例 ID（子流程场景，可空）';
 COMMENT ON COLUMN pmis_flow_instance.parent_node_code IS 'GAP-P1: 父流程中触发子流程的节点编码（可空）';
+COMMENT ON COLUMN pmis_flow_instance.reject_reason IS '退回原因（最近一次 REJECT 操作的备注，重审时清空）';
+COMMENT ON COLUMN pmis_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
+COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_instance_parent
     ON pmis_flow_instance (parent_instance_id)

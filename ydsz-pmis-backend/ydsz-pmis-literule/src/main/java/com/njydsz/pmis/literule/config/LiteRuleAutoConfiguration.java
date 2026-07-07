@@ -15,7 +15,6 @@ import com.njydsz.pmis.literule.core.RuleCircuitBreaker;
 import com.njydsz.pmis.literule.core.RuleMetrics;
 import com.njydsz.pmis.literule.core.RuleTimeoutExecutor;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
-import com.njydsz.pmis.literule.config.LiteRuleAnnotationRegistrar;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.spi.DecisionTableConfigProvider;
 import com.njydsz.pmis.literule.spi.DecisionTreeConfigProvider;
