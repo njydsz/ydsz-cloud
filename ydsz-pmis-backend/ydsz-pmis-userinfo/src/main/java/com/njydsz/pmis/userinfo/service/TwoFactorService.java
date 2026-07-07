@@ -20,7 +20,7 @@ public interface TwoFactorService {
      * @param account 账号标识（用于 otpauth URI label）
      * @return 绑定结果（含 secret、otpauth URI、备份码）
      */
-    TwoFactorBindResult bindTotp(Long userId, String account);
+    TwoFactorBindResult bindTotp(String userId, String account);
 
     /**
      * 确认绑定：校验一次 OTP
@@ -29,7 +29,7 @@ public interface TwoFactorService {
      * @param otp    6 位 TOTP 动态码
      * @return 校验通过返回 true
      */
-    boolean confirmBind(Long userId, String otp);
+    boolean confirmBind(String userId, String otp);
 
     /**
      * 校验 TOTP
@@ -38,7 +38,7 @@ public interface TwoFactorService {
      * @param otp    6 位 TOTP 动态码
      * @return 校验通过返回 true
      */
-    boolean verify(Long userId, String otp);
+    boolean verify(String userId, String otp);
 
     /**
      * 校验备份码
@@ -47,14 +47,14 @@ public interface TwoFactorService {
      * @param code   8 位备份码
      * @return 校验通过返回 true（校验后该备份码即作废）
      */
-    boolean verifyBackup(Long userId, String code);
+    boolean verifyBackup(String userId, String code);
 
     /**
      * 关闭 2FA
      *
      * @param userId 用户 ID
      */
-    void disable(Long userId);
+    void disable(String userId);
 
     /**
      * 查询用户已绑定的 2FA
@@ -62,7 +62,7 @@ public interface TwoFactorService {
      * @param userId 用户 ID
      * @return 2FA 实体，未绑定时返回 null
      */
-    User2FADO find(Long userId);
+    User2FADO find(String userId);
 
     /**
      * 查询备份码（仅用于脱敏展示，前 2 后 2）
@@ -70,5 +70,5 @@ public interface TwoFactorService {
      * @param userId 用户 ID
      * @return 脱敏后的备份码列表
      */
-    List<String> listBackupCodesMasked(Long userId);
+    List<String> listBackupCodesMasked(String userId);
 }

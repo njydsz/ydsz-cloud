@@ -22,7 +22,7 @@ public interface BenchService {
      * @param dto Bench 入池/出池 DTO
      * @return Bench 记录 ID
      */
-    Long act(BenchRecordCreateDTO dto);
+    String act(BenchRecordCreateDTO dto);
 
     /**
      * 自动入池：项目结束触发
@@ -30,7 +30,7 @@ public interface BenchService {
      * @param dto Bench 入池/出池 DTO
      * @return Bench 记录 ID
      */
-    Long autoEnter(BenchRecordCreateDTO dto);
+    String autoEnter(BenchRecordCreateDTO dto);
 
     /**
      * 自动出池：被新项目分配时关闭当前 Bench
@@ -40,7 +40,7 @@ public interface BenchService {
      * @param reasonType      出池原因类型
      * @param exitDate        出池日期
      */
-    void autoExit(Long employeeId, Long sourceAssignment, String reasonType, java.time.LocalDate exitDate);
+    void autoExit(String employeeId, String sourceAssignment, String reasonType, java.time.LocalDate exitDate);
 
     /**
      * 根据 ID 查询 Bench 记录
@@ -48,7 +48,7 @@ public interface BenchService {
      * @param id 记录 ID
      * @return Bench 记录，不存在时返回 null
      */
-    BenchRecordDO getById(Long id);
+    BenchRecordDO getById(String id);
 
     /**
      * 查询员工当前活跃的 Bench 记录
@@ -56,7 +56,7 @@ public interface BenchService {
      * @param employeeId 员工 ID
      * @return 活跃 Bench 记录，无则返回 null
      */
-    BenchRecordDO getActiveByEmployee(Long employeeId);
+    BenchRecordDO getActiveByEmployee(String employeeId);
 
     /**
      * Bench 池汇总（按池统计）
@@ -83,7 +83,7 @@ public interface BenchService {
      * @param status 状态（可空）
      * @return 分页结果
      */
-    Page<BenchRecordDO> page(int page, int size, Long poolId, String status);
+    Page<BenchRecordDO> page(int page, int size, String poolId, String status);
 
     /**
      * 累计闲置成本

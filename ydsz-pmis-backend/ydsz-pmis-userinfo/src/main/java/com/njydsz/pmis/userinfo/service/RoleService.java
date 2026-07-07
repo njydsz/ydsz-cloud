@@ -36,7 +36,7 @@ public interface RoleService {
      * @param id 角色 ID
      * @return 角色实体，不存在时返回 null
      */
-    RoleDO getById(Long id);
+    RoleDO getById(String id);
 
     /**
      * 查询用户拥有的所有角色
@@ -44,7 +44,7 @@ public interface RoleService {
      * @param userId 用户 ID
      * @return 角色列表
      */
-    List<RoleDO> listByUserId(Long userId);
+    List<RoleDO> listByUserId(String userId);
 
     /**
      * 创建角色
@@ -52,7 +52,7 @@ public interface RoleService {
      * @param dto 角色表单
      * @return 新建角色 ID
      */
-    Long create(RoleFormDTO dto);
+    String create(RoleFormDTO dto);
 
     /**
      * 更新角色
@@ -66,7 +66,7 @@ public interface RoleService {
      *
      * @param id 角色 ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 为角色分配权限
@@ -74,7 +74,7 @@ public interface RoleService {
      * @param roleId        角色 ID
      * @param permissionIds 权限 ID 列表
      */
-    void assignPermissions(Long roleId, List<Long> permissionIds);
+    void assignPermissions(String roleId, List<String> permissionIds);
 
     /**
      * 查询角色的权限 ID 列表
@@ -82,5 +82,5 @@ public interface RoleService {
      * @param roleId 角色 ID
      * @return 权限 ID 列表
      */
-    List<Long> listPermissionIds(Long roleId);
+    List<String> listPermissionIds(String roleId);
 }

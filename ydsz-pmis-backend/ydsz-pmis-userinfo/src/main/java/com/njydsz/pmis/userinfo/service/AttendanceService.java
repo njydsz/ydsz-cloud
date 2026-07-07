@@ -30,7 +30,7 @@ public interface AttendanceService {
      * @param dto 出勤登记表单
      * @return 出勤记录 ID
      */
-    Long recordAttendance(AttendanceCreateDTO dto);
+    String recordAttendance(AttendanceCreateDTO dto);
 
     /**
      * 查询出勤记录
@@ -42,7 +42,7 @@ public interface AttendanceService {
      * @param size       每页条数
      * @return 分页结果
      */
-    Page<AttendanceDO> pageAttendance(Long employeeId, LocalDate startDate, LocalDate endDate, int page, int size);
+    Page<AttendanceDO> pageAttendance(String employeeId, LocalDate startDate, LocalDate endDate, int page, int size);
 
     /**
      * 月度出勤统计
@@ -52,7 +52,7 @@ public interface AttendanceService {
      * @param endDate    结束日期
      * @return 按状态分组的统计结果
      */
-    List<Map<String, Object>> statByStatus(Long employeeId, LocalDate startDate, LocalDate endDate);
+    List<Map<String, Object>> statByStatus(String employeeId, LocalDate startDate, LocalDate endDate);
 
     // ===== 加班 =====
 
@@ -62,7 +62,7 @@ public interface AttendanceService {
      * @param dto 加班申请表单
      * @return 加班记录 ID
      */
-    Long submitOvertime(OvertimeCreateDTO dto);
+    String submitOvertime(OvertimeCreateDTO dto);
 
     /**
      * 审批加班
@@ -73,7 +73,7 @@ public interface AttendanceService {
      * @param approverName 审批人姓名
      * @param remark      审批意见
      */
-    void approveOvertime(Long id, String action, String approverId, String approverName, String remark);
+    void approveOvertime(String id, String action, String approverId, String approverName, String remark);
 
     /**
      * 加班分页
@@ -84,7 +84,7 @@ public interface AttendanceService {
      * @param size           每页条数
      * @return 分页结果
      */
-    Page<OvertimeDO> pageOvertime(Long employeeId, String approvalStatus, int page, int size);
+    Page<OvertimeDO> pageOvertime(String employeeId, String approvalStatus, int page, int size);
 
     /**
      * 加班详情
@@ -92,7 +92,7 @@ public interface AttendanceService {
      * @param id 加班记录 ID
      * @return 加班实体，不存在时返回 null
      */
-    OvertimeDO getOvertime(Long id);
+    OvertimeDO getOvertime(String id);
 
     // ===== 请假 =====
 
@@ -102,7 +102,7 @@ public interface AttendanceService {
      * @param dto 请假申请表单
      * @return 请假记录 ID
      */
-    Long submitLeave(LeaveCreateDTO dto);
+    String submitLeave(LeaveCreateDTO dto);
 
     /**
      * 审批请假
@@ -113,7 +113,7 @@ public interface AttendanceService {
      * @param approverName 审批人姓名
      * @param remark      审批意见
      */
-    void approveLeave(Long id, String action, String approverId, String approverName, String remark);
+    void approveLeave(String id, String action, String approverId, String approverName, String remark);
 
     /**
      * 请假分页
@@ -124,7 +124,7 @@ public interface AttendanceService {
      * @param size           每页条数
      * @return 分页结果
      */
-    Page<LeaveDO> pageLeave(Long employeeId, String approvalStatus, int page, int size);
+    Page<LeaveDO> pageLeave(String employeeId, String approvalStatus, int page, int size);
 
     /**
      * 请假详情
@@ -142,5 +142,5 @@ public interface AttendanceService {
      * @param endDate    结束日期
      * @return 已批准请假列表
      */
-    List<LeaveDO> listApprovedLeaves(Long employeeId, LocalDate startDate, LocalDate endDate);
+    List<LeaveDO> listApprovedLeaves(String employeeId, LocalDate startDate, LocalDate endDate);
 }

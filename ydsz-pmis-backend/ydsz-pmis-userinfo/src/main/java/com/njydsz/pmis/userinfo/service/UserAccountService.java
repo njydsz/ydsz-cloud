@@ -32,7 +32,7 @@ public interface UserAccountService {
      * @param userId 用户 ID
      * @return 用户账号实体，不存在时返回 null
      */
-    UserAccountDO findById(Long userId);
+    UserAccountDO findById(String userId);
 
     /**
      * 根据 userId 查询并转换为 VO（剥离 password/salt 等敏感字段）
@@ -42,7 +42,7 @@ public interface UserAccountService {
      * @param userId 用户 ID
      * @return 用户视图对象
      */
-    UserVO findVoById(Long userId);
+    UserVO findVoById(String userId);
 
     /**
      * 分页查询
@@ -69,7 +69,7 @@ public interface UserAccountService {
      * @param rawPassword 明文密码
      * @return 新建用户 ID
      */
-    Long create(UserAccountDO user, String rawPassword);
+    String create(UserAccountDO user, String rawPassword);
 
     /**
      * 更新用户
@@ -83,7 +83,7 @@ public interface UserAccountService {
      *
      * @param userId 用户 ID
      */
-    void delete(Long userId);
+    void delete(String userId);
 
     /**
      * 重置密码
@@ -91,7 +91,7 @@ public interface UserAccountService {
      * @param userId      用户 ID
      * @param newPassword 新密码明文
      */
-    void resetPassword(Long userId, String newPassword);
+    void resetPassword(String userId, String newPassword);
 
     /**
      * 启用/禁用
@@ -99,7 +99,7 @@ public interface UserAccountService {
      * @param userId 用户 ID
      * @param status 目标状态：ENABLED/DISABLED
      */
-    void toggleStatus(Long userId, String status);
+    void toggleStatus(String userId, String status);
 
     /**
      * 为用户分配角色
@@ -107,7 +107,7 @@ public interface UserAccountService {
      * @param userId  用户 ID
      * @param roleIds 角色 ID 列表
      */
-    void assignRoles(Long userId, List<Long> roleIds);
+    void assignRoles(String userId, List<String> roleIds);
 
     /**
      * 查询用户角色 ID
@@ -115,7 +115,7 @@ public interface UserAccountService {
      * @param userId 用户 ID
      * @return 角色 ID 列表
      */
-    List<Long> listRoleIds(Long userId);
+    List<String> listRoleIds(String userId);
 
     /**
      * 登录（带失败锁定 + 登录审计 + 2FA 校验）
@@ -132,14 +132,14 @@ public interface UserAccountService {
      * @param oldPassword 旧密码明文
      * @param newPassword 新密码明文
      */
-    void changePassword(Long userId, String oldPassword, String newPassword);
+    void changePassword(String userId, String oldPassword, String newPassword);
 
     /**
      * 清除登录失败计数（管理员解锁）
      *
      * @param userId 用户 ID
      */
-    void clearLoginFailCount(Long userId);
+    void clearLoginFailCount(String userId);
 
     /**
      * 锁定账号（设置 locked_until，到期后由登录校验时自动放行）
@@ -147,7 +147,7 @@ public interface UserAccountService {
      * @param userId      用户 ID
      * @param lockedUntil 锁定截止时间
      */
-    void lockAccount(Long userId, LocalDateTime lockedUntil);
+    void lockAccount(String userId, LocalDateTime lockedUntil);
 
     /**
      * 升级密码哈希为 BCrypt（用于历史 MD5 密码的惰性升级）
@@ -158,5 +158,5 @@ public interface UserAccountService {
      * @param userId     用户 ID
      * @param bcryptHash BCrypt 哈希字符串
      */
-    void upgradePasswordHash(Long userId, String bcryptHash);
+    void upgradePasswordHash(String userId, String bcryptHash);
 }

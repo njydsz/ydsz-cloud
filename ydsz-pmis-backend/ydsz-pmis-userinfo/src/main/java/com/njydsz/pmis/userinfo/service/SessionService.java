@@ -22,7 +22,7 @@ public interface SessionService {
      * @param expireSeconds 会话有效期（秒）
      * @return 创建的会话实体
      */
-    UserSessionDO create(Long userId, String clientIp, String userAgent, String deviceType, int expireSeconds);
+    UserSessionDO create(String userId, String clientIp, String userAgent, String deviceType, int expireSeconds);
 
     /**
      * 更新最后活跃时间
@@ -46,7 +46,7 @@ public interface SessionService {
      * @param keepSessionId 保留的会话 ID
      * @return 被踢下线的会话数
      */
-    int kickOthers(Long userId, String keepSessionId);
+    int kickOthers(String userId, String keepSessionId);
 
     /**
      * 查询用户活跃会话
@@ -54,7 +54,7 @@ public interface SessionService {
      * @param userId 用户 ID
      * @return 活跃会话列表
      */
-    List<UserSessionDO> listActive(Long userId);
+    List<UserSessionDO> listActive(String userId);
 
     /**
      * 查询会话

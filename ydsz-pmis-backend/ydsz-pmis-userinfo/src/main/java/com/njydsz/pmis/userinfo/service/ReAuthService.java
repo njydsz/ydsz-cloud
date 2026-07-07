@@ -22,5 +22,5 @@ public interface ReAuthService {
      * @return token + 剩余有效期（秒）
      * @throws com.njydsz.pmis.common.exception.BizException 凭据错误时抛出
      */
-    ReAuthResult issueToken(Long userId, ReAuthRequest request);
+    ReAuthResult issueToken(String userId, ReAuthRequest request);
 }
