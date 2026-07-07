@@ -110,6 +110,66 @@ public final class PermissionCodes {
     public static final String NOTIF_PUSH = "notif:message:push";
     /** 广播消息到所有在线用户 (内部 Feign 接口, 仅服务账号/管理员可调用) */
     public static final String NOTIF_BROADCAST = "notif:message:broadcast";
+    /** 收件箱分页/未读数量 (本人) */
+    public static final String NOTIF_MESSAGE_LIST = "notif:message:list";
+    /** 标记已读 (本人) */
+    public static final String NOTIF_MESSAGE_VIEW = "notif:message:view";
+    /** 删除通知 (本人) */
+    public static final String NOTIF_MESSAGE_DELETE = "notif:message:delete";
+    /** 撤回通知 (本人/管理员) */
+    public static final String NOTIF_MESSAGE_RECALL = "notif:message:recall";
+
+    // ==================== 消息模板 ====================
+
+    public static final String MESSAGE_TEMPLATE_CREATE = "message:template:create";
+    public static final String MESSAGE_TEMPLATE_UPDATE = "message:template:update";
+    public static final String MESSAGE_TEMPLATE_DELETE = "message:template:delete";
+    public static final String MESSAGE_TEMPLATE_VIEW = "message:template:view";
+    public static final String MESSAGE_TEMPLATE_LIST = "message:template:list";
+    /** 模板审核 (管理员) */
+    public static final String MESSAGE_TEMPLATE_APPROVE = "message:template:approve";
+
+    // ==================== 消息订阅 ====================
+
+    public static final String MESSAGE_SUBSCRIPTION_UPDATE = "message:subscription:update";
+    public static final String MESSAGE_SUBSCRIPTION_LIST = "message:subscription:list";
+    public static final String MESSAGE_SUBSCRIPTION_DELETE = "message:subscription:delete";
+
+    // ==================== 消息路由规则 ====================
+
+    public static final String MESSAGE_ROUTE_RULE_CREATE = "message:route-rule:create";
+    public static final String MESSAGE_ROUTE_RULE_UPDATE = "message:route-rule:update";
+    public static final String MESSAGE_ROUTE_RULE_DELETE = "message:route-rule:delete";
+    public static final String MESSAGE_ROUTE_RULE_VIEW = "message:route-rule:view";
+    public static final String MESSAGE_ROUTE_RULE_LIST = "message:route-rule:list";
+
+    // ==================== 消息回执 ====================
+
+    /** 回执回调 (服务商 → 系统) */
+    public static final String MESSAGE_RECEIPT_CALLBACK = "message:receipt:callback";
+    /** 回执查询 */
+    public static final String MESSAGE_RECEIPT_VIEW = "message:receipt:view";
+
+    // ==================== 消息撤回 ====================
+
+    /** 撤回站内通知/已发送消息/批量撤回 */
+    public static final String MESSAGE_RECALL_ACT = "message:recall:act";
+
+    // ==================== 消息偏好 ====================
+
+    public static final String MESSAGE_PREFERENCE_UPDATE = "message:preference:update";
+    public static final String MESSAGE_PREFERENCE_VIEW = "message:preference:view";
+    public static final String MESSAGE_PREFERENCE_DELETE = "message:preference:delete";
+
+    // ==================== 消息灰度 ====================
+
+    public static final String MESSAGE_CANARY_UPDATE = "message:canary:update";
+    public static final String MESSAGE_CANARY_VIEW = "message:canary:view";
+
+    // ==================== 消息聚合 ====================
+
+    public static final String MESSAGE_AGGREGATE_LIST = "message:aggregate:list";
+    public static final String MESSAGE_AGGREGATE_REFRESH = "message:aggregate:refresh";
 
     // ==================== 文件 ====================
 

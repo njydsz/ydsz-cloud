@@ -203,9 +203,9 @@ class CascadeStrategyTest {
         void shouldNotReachWhenConfidence084() {
             OrchestrationRequest req = req(List.of("A", "B"));
             Map<String, Agent> agents = new HashMap<>();
-            // confidence=0.84 小于阈值 0.85，未达标
+            // 两个 Agent 的 confidence=0.84 小于阈值 0.85，均未达标
             agents.put("A", mockAgent(result(0.5, 0.84, AgentAlertLevel.NORMAL)));
-            agents.put("B", mockAgent(result(0.9, 0.99, AgentAlertLevel.RED)));
+            agents.put("B", mockAgent(result(0.9, 0.84, AgentAlertLevel.RED)));
 
             OrchestrationResult r = strategy.apply(req, agents, new AgentBlackboard(null));
 

@@ -3,10 +3,12 @@ package com.njydsz.pmis.workflow.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.workflow.engine.FlowNotifyFrequencyLimiter;
 import com.njydsz.pmis.workflow.engine.FlowNotifyTemplateResolver;
 import com.njydsz.pmis.workflow.service.FlowNotificationService;
+import com.njydsz.pmis.workflow.service.FlowNotifyPreferenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -56,6 +58,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
 
     /** P2-5 (GAP-39): 通知频率控制器（可选注入，不可用时不做频率限制） */
     private final FlowNotifyFrequencyLimiter frequencyLimiter;
+
+    /** P1-7: 通知偏好服务（免打扰时段 / 聚合模式），可选注入 */
+    private final FlowNotifyPreferenceService preferenceService;
 
     /**
      * WEBHOOK 通道使用的 RestTemplate。
@@ -226,6 +231,12 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     public void send(String channel, String userId, String title, String content, Map<String, Object> extra) {
         try {
             if (channel == null || userId == null) {
+                return;
+            }
+            // P1-7: 免打扰时段 + 聚合模式 → 跳过站内推送（EMAIL/WEBHOOK 不受影响，SLA 超时等紧急通知仍走邮件）
+            if (CHANNEL_IN_APP.equals(channel) && preferenceService != null
+                    && preferenceService.shouldDefer(TenantContext.getTenantId(), userId)) {
+                log.debug("[FlowNotify] 免打扰时段内跳过站内推送: userId={} title={}", userId, title);
                 return;
             }
             String traceId = TraceIdUtil.getOrCreate();

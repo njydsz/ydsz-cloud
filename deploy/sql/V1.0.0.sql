@@ -1419,6 +1419,11 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     exec_node_id    VARCHAR(64),
     -- [P0-2] 执行线程 ID: 用于超时强制中断时定位执行线程
     exec_thread_id  BIGINT,
+    -- [P1-4] 分片索引: 非分片任务为 NULL; 分片任务为 0-based 索引
+    --        供 JobNodeReaper 故障转移时重建分片锁 key (pmis:job:lock:{jobKey}:shard:{shardIndex})
+    shard_index     INTEGER,
+    -- [P1-4] 分片总数: 非分片任务为 NULL; 分片任务为 shardTotal 值
+    shard_total     INTEGER,
     -- [INLINE-OPT] P0-D3 内联:MQ 投递元信息字段
     msg_id          VARCHAR(20),
     topic           VARCHAR(128),
@@ -1454,6 +1459,8 @@ COMMENT ON COLUMN pmis_job_log.trigger_type IS '触发类型: CRON 定时 / MANU
 COMMENT ON COLUMN pmis_job_log.lock_holder IS '持锁者标识(hostname:pid): 分布式锁的 value,超时后通过 Lua 脚本安全释放锁';
 COMMENT ON COLUMN pmis_job_log.exec_node_id IS '执行节点 ID(hostname:port): 用于故障转移时定位任务所在节点';
 COMMENT ON COLUMN pmis_job_log.exec_thread_id IS '执行线程 ID: 用于超时强制中断时定位执行线程';
+COMMENT ON COLUMN pmis_job_log.shard_index IS '分片索引: 非分片任务为 NULL; 分片任务为 0-based, 供故障转移重建分片锁 key';
+COMMENT ON COLUMN pmis_job_log.shard_total IS '分片总数: 非分片任务为 NULL; 分片任务为 shardTotal 值';
 COMMENT ON COLUMN pmis_job_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
 COMMENT ON COLUMN pmis_job_log.topic IS 'RocketMQ Topic(标识消息来源 Topic,DLQ 消息填充原 Topic)';
 COMMENT ON COLUMN pmis_job_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';
@@ -11082,6 +11089,43 @@ CREATE INDEX IF NOT EXISTS idx_pfws_tenant_enabled
 CREATE INDEX IF NOT EXISTS idx_pfws_trace
     ON pmis_flow_webhook_subscription (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
+
+-- ====================================================================
+-- ====================== [067C] P1-7 工作流通知偏好表 ======================
+-- ====================================================================
+-- P1-7: 免打扰时段 / 通知聚合 — 用户可配置 quietHours（免打扰时段）和 digestMode（聚合模式）
+-- 免打扰时段内（支持跨午夜，如 22:00→08:00）+ digestMode=1 时，站内推送延迟到时段结束后投递
+-- 每个用户在租户内至多一条偏好记录（uk_pfnp_tenant_user）
+
+CREATE TABLE IF NOT EXISTS pmis_flow_notify_preference (
+    id                  VARCHAR(20)       PRIMARY KEY,
+    tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
+    user_id             VARCHAR(20)       NOT NULL,               -- 用户 ID
+    quiet_hours_start   VARCHAR(8),                               -- 免打扰开始时间 HH:mm（如 22:00），NULL=不启用
+    quiet_hours_end     VARCHAR(8),                               -- 免打扰结束时间 HH:mm（如 08:00），NULL=不启用
+    digest_mode         SMALLINT         NOT NULL DEFAULT 0,     -- 1=启用聚合（免打扰时段内延迟投递） 0=立即投递
+    -- 审计字段
+    created_by          VARCHAR(20)          NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)          NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT        NOT NULL DEFAULT 0,
+    provider_trace_id   VARCHAR(64),
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 约束
+    CONSTRAINT uk_pfnp_tenant_user UNIQUE (tenant_id, user_id, deleted),
+    CONSTRAINT ck_pfnp_digest CHECK (digest_mode IN (0, 1)),
+    CONSTRAINT ck_pfnp_deleted CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_flow_notify_preference IS 'P1-7: 工作流通知偏好表 — 用户免打扰时段与通知聚合配置';
+COMMENT ON COLUMN pmis_flow_notify_preference.quiet_hours_start IS '免打扰开始时间 HH:mm（如 22:00），NULL 表示不启用免打扰';
+COMMENT ON COLUMN pmis_flow_notify_preference.quiet_hours_end IS '免打扰结束时间 HH:mm（如 08:00），支持跨午夜（start > end 时跨次日）';
+COMMENT ON COLUMN pmis_flow_notify_preference.digest_mode IS '1=启用聚合（免打扰时段内延迟投递） 0=立即逐条投递（忽略免打扰）';
+
+CREATE INDEX IF NOT EXISTS idx_pfnp_tenant_user
+    ON pmis_flow_notify_preference (tenant_id, user_id)
+    WHERE deleted = 0;
 
 -- ====================================================================
 -- ============================ [068] P1-6 工作流审批附件表 ============================

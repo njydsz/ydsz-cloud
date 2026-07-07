@@ -124,7 +124,6 @@ class MessageServiceImplTest {
         MessageRequest req = buildRequest();
         when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
         when(routeRuleService.match(any())).thenReturn(null);
-        when(canaryService.hit(anyString(), anyString())).thenReturn(false);
         when(rateLimitService.tryAcquire(anyString(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(false);
 
         org.junit.jupiter.api.Assertions.assertThrows(com.njydsz.pmis.common.exception.BizException.class,
@@ -174,6 +173,7 @@ class MessageServiceImplTest {
         dto.setChannel("SMS");
         dto.setReceiver("u1");
         dto.setContent("hi");
+        dto.setBizType("DIRECT");
         when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
         when(routeRuleService.match(any())).thenReturn(null);
         when(rateLimitService.tryAcquire(anyString(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(true);

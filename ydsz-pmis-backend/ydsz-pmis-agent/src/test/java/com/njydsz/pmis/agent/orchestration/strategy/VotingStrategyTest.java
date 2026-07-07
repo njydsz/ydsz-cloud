@@ -176,7 +176,8 @@ class VotingStrategyTest {
 
             OrchestrationResult r = strategy.apply(req, agents, new AgentBlackboard(null));
 
-            assertThat(r.getExecutedAgents()).containsExactlyInAnyOrder("BAD1", "BAD2");
+            // 异常 Agent 不会加入 executedAgents（Map.entry 不允许 null value）
+            assertThat(r.getExecutedAgents()).isEmpty();
             assertThat(r.getAgentResults()).isEmpty();
             assertThat(r.getFinalResult()).isNull();
         }
@@ -251,8 +252,12 @@ class VotingStrategyTest {
             Map<String, AgentResult> results = new LinkedHashMap<>();
             results.put("A", result(0.5, 0.8, AgentAlertLevel.NORMAL));
             results.put("B", result(0.9, 0.95, AgentAlertLevel.RED));
+            // fuse 直接使用 weights，不会自动填充默认值（apply 中才会填充）
+            Map<String, Double> weights = new HashMap<>();
+            weights.put("A", 1.0);
+            weights.put("B", 1.0);
 
-            AgentResult fused = strategy.fuse(results, new HashMap<>());
+            AgentResult fused = strategy.fuse(results, weights);
 
             assertThat(fused).isNotNull();
             // 期望 0.7171（保留 2 位）

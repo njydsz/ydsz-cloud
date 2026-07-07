@@ -1,14 +1,13 @@
 # =====================================================================
-#  PMIS 系统服务（file + config + audit + notification + message 合并）配置
+#  PMIS 系统服务（file + config + audit）配置
 #  --------------------------------------------------------------------
 #  端口：9001
 #  职责：
 #    - 文件管理（MinIO 对象存储）
 #    - 系统配置（参数/字典/数据导出审计）
 #    - 审计日志（登录审计 / 操作日志 / 数据导出审计）
-#    - 消息通知（站内信 / 邮件 / WebSocket / RocketMQ）
-#    - 消息模板（多通道渲染）
-#  依赖：Nacos、PostgreSQL、Redis、MinIO、RocketMQ、Mail（SMTP）
+#  依赖：Nacos、PostgreSQL、Redis、MinIO
+#  消息通知/模板/通道已迁移至 ydsz-pmis-message 模块（端口 9010）
 # =====================================================================
 
 server:
@@ -71,33 +70,6 @@ spring:
       password: ${REDIS_PASSWORD}
       database: 0
       timeout: 5s
-  # ---------- 邮件（SMTP）----------
-  mail:
-    host: ${MAIL_HOST:smtp.example.com}
-    port: ${MAIL_PORT:465}            # SSL 端口
-    username: ${MAIL_USER:no-reply@example.com}
-    password: ${MAIL_PASSWORD}
-    default-encoding: UTF-8
-    properties:
-      mail:
-        smtp:
-          ssl:
-            enable: true              # 启用 SSL
-          auth: true                  # 需认证
-          starttls:
-            enable: true              # 启用 STARTTLS
-          connectiontimeout: 10000
-          timeout: 10000
-          writetimeout: 10000
-
-# ---------- Webhook 通道（企业微信 / 钉钉 / 飞书群机器人）----------
-# 对接 MessageChannel WEBHOOK 通道：HTTP POST 推送到用户配置的 Webhook URL。
-# URL 解析优先级：消息参数 params.webhookUrl > request.receiver(http 开头) > 默认配置 default-url
-pmis:
-  webhook:
-    default-url: ${PMIS_WEBHOOK_DEFAULT_URL:}   # 兜底默认 Webhook 地址（留空表示不启用兜底）
-    connect-timeout: 5000                       # 连接超时（毫秒）
-    read-timeout: 10000                         # 读取超时（毫秒）
 
 # ---------- MinIO 对象存储（原 file 模块） ----------
 minio:
@@ -106,19 +78,6 @@ minio:
   secret-key: ${MINIO_SECRET_KEY}
   default-bucket: ${MINIO_BUCKET:pmis}
   url-expire-seconds: 3600  # 预签名 URL 1 小时过期
-
-# ---------- RocketMQ（原 message 模块）----------
-# 消息分类：
-#   - 通知消息（站内信、邮件、企微推送）
-#   - 业务事件（项目状态变更、审批结果、预警触发）
-#   - 审计消息（登录、敏感操作、导出）
-rocketmq:
-  name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
-  producer:
-    group: ${ROCKETMQ_PRODUCER_GROUP:pmis-producer-group}
-    send-message-timeout: 5000   # 发送超时 5s
-  consumer:
-    enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
 
 # ---------- MyBatis-Plus ----------
 mybatis-plus:

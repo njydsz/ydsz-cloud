@@ -70,6 +70,19 @@ public class JobLogDO implements Serializable {
      * 执行线程 ID（P0-2）。用于超时强制中断时定位执行线程。
      */
     private Long execThreadId;
+    /**
+     * 分片索引（P1-4：远程派发支持）。
+     *
+     * <p>非分片任务为 null；分片任务为 0-based 索引。
+     * 供 JobNodeReaper 故障转移时重建分片锁 key（{@code pmis:job:lock:{jobKey}:shard:{shardIndex}}）。
+     */
+    private Integer shardIndex;
+    /**
+     * 分片总数（P1-4：远程派发支持）。
+     *
+     * <p>非分片任务为 null；分片任务为 shardTotal 值。便于日志查询时识别分片任务。
+     */
+    private Integer shardTotal;
     /** 创建时间（与 SQL 字段 created_at 对齐） */
     private LocalDateTime createdAt;
     /** 逻辑删除标识：0 未删除 / 1 已删除 */

@@ -39,7 +39,9 @@ public final class PermissionCodeValidator {
             "issue", "reverse", "allocate", "assess",
             "publish", "reject", "review",
             // P1-11 扩充: 审计日志清理
-            "clean"
+            "clean",
+            // 消息模块扩充: 撤回/回调
+            "recall", "callback"
     );
 
     private PermissionCodeValidator() {}

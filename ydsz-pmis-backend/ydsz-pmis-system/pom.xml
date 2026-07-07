@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-system</artifactId>
     <name>ydsz-pmis-system</name>
-    <description>系统基础服务（合并 file + config + audit + notification + message）：文件存储/系统配置/审计日志/通知中心/消息通道</description>
+    <description>系统基础服务（file + config + audit）：文件存储/系统配置/审计日志</description>
 
     <dependencies>
         <dependency>
@@ -43,15 +43,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-websocket</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
         <dependency>
@@ -75,13 +67,6 @@
         <dependency>
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
-        </dependency>
-
-        <!-- RocketMQ（原 message 模块） -->
-        <dependency>
-            <groupId>org.apache.rocketmq</groupId>
-            <artifactId>rocketmq-spring-boot-starter</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <dependency>

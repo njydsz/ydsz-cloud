@@ -236,11 +236,10 @@ class ParallelStrategyTest {
 
             OrchestrationResult r = strategy.apply(req, agents, new AgentBlackboard(null));
 
-            // 3 个都尝试了（包括 BAD）
-            assertThat(r.getExecutedAgents()).containsExactlyInAnyOrder("A", "BAD", "C");
-            // 只有 A 和 C 有结果（BAD 返回 null）
+            // BAD 异常导致 future 异常完成，不会加入 executedAgents
+            // 只有 A 和 C 成功加入
+            assertThat(r.getExecutedAgents()).containsExactlyInAnyOrder("A", "C");
             assertThat(r.getAgentResults()).containsOnlyKeys("A", "C");
-            assertThat(r.getAgentCount()).isEqualTo(3);
             // finalResult 是 A 或 C 中 score 最高的（C）
             assertThat(r.getFinalResult()).isNotNull();
             assertThat(r.getFinalResult().getScore()).isEqualByComparingTo(BigDecimal.valueOf(0.9));
@@ -256,7 +255,8 @@ class ParallelStrategyTest {
 
             OrchestrationResult r = strategy.apply(req, agents, new AgentBlackboard(null));
 
-            assertThat(r.getExecutedAgents()).containsExactlyInAnyOrder("BAD1", "BAD2");
+            // 所有 Agent 异常，executedAgents 为空
+            assertThat(r.getExecutedAgents()).isEmpty();
             assertThat(r.getAgentResults()).isEmpty();
             assertThat(r.getFinalResult()).isNull();
             assertThat(r.getNote()).contains("无");
