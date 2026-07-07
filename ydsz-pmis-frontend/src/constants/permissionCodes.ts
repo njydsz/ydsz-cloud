@@ -114,6 +114,12 @@ export const PC = {
 
   // ============= 通知中心(notif) =============
   NOTIF_MESSAGE_SEND: 'notif:message:send',
+  NOTIF_MESSAGE_LIST: 'notif:message:list',
+  NOTIF_MESSAGE_VIEW: 'notif:message:view',
+  NOTIF_MESSAGE_DELETE: 'notif:message:delete',
+  NOTIF_MESSAGE_RECALL: 'notif:message:recall',
+  NOTIF_PUSH: 'notif:push:send',
+  NOTIF_BROADCAST: 'notif:broadcast:send',
 
   // ============= 文件存储(file) =============
   FILE_STORAGE_UPLOAD: 'file:storage:upload',

@@ -21,6 +21,7 @@ import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.enums.FlowSkipType;
 import com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper;
+import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
@@ -73,6 +74,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
      * 使用 {@code @Lazy} 打破启动期循环依赖。
      */
     private final FlowDefinitionServiceImpl self;
+    /** P2-5: 流程实例 Mapper，用于变更影响分析 */
+    private final FlowInstanceMapper instanceMapper;
 
     /**
      * P2-4: 设计器协同编辑锁定超时阈值（分钟）。
@@ -90,6 +93,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             BpmnXmlParser bpmnXmlParser,
             FlowGraphValidator graphValidator,
             FlowDefinitionCacheService flowDefinitionCacheService,
+            FlowInstanceMapper instanceMapper,
             @Lazy FlowDefinitionServiceImpl self) {
         this.definitionMapper = definitionMapper;
         this.nodeMapper = nodeMapper;
@@ -97,6 +101,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         this.bpmnXmlParser = bpmnXmlParser;
         this.graphValidator = graphValidator;
         this.flowDefinitionCacheService = flowDefinitionCacheService;
+        this.instanceMapper = instanceMapper;
         this.self = self;
     }
 
@@ -1234,5 +1239,218 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         result.put("lockedAt", def.getLockedAt());
         result.put("expired", expired);
         return result;
+    }
+
+    // ============================== P2-5: 变更影响分析报告 ==============================
+
+    /**
+     * P2-5: 变更影响分析报告。
+     *
+     * <p>评估老版本定义升级到新版本对在途实例的影响，输出：
+     * <ul>
+     *   <li>版本差异（节点新增/删除/修改 + 跳转新增/删除）</li>
+     *   <li>在途实例统计（总数 + 按节点分布）</li>
+     *   <li>受影响实例识别（卡死节点 / 类型变更节点）</li>
+     *   <li>风险等级（HIGH/MEDIUM/LOW/NONE）</li>
+     *   <li>迁移建议（人工介入 / 等待自然完成 / 直接升级）</li>
+     * </ul>
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> analyzeMigrationImpact(String oldDefinitionId, String newDefinitionId) {
+        if (!StringUtils.hasText(oldDefinitionId) || !StringUtils.hasText(newDefinitionId)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_c2d3e4f5");
+        }
+
+        // 1. 校验两个定义存在
+        FlowDefinitionDO oldDef = definitionMapper.selectById(oldDefinitionId);
+        if (oldDef == null || (oldDef.getDeleted() != null && oldDef.getDeleted() == 1)) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.workflow.msg_e7f8a9b0", oldDefinitionId);
+        }
+        FlowDefinitionDO newDef = definitionMapper.selectById(newDefinitionId);
+        if (newDef == null || (newDef.getDeleted() != null && newDef.getDeleted() == 1)) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.workflow.msg_e7f8a9b0", newDefinitionId);
+        }
+        // 校验同 flowCode
+        if (!Objects.equals(oldDef.getFlowCode(), newDef.getFlowCode())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_d3e4f5a6");
+        }
+
+        // 2. 复用 diffVersions 计算版本差异
+        Integer v1 = parseVersionInt(oldDef.getFlowVersion());
+        Integer v2 = parseVersionInt(newDef.getFlowVersion());
+        Map<String, Object> diff = diffVersions(oldDefinitionId, v1, v2);
+
+        // 3. 统计老版本在途实例
+        long runningTotal = instanceMapper.countRunningByDefinition(oldDefinitionId);
+        List<Map<String, Object>> runningByNode = instanceMapper
+                .selectRunningGroupByNode(oldDefinitionId);
+
+        // 4. 识别受影响实例
+        // 4.1 卡死实例：当前节点在老版本存在但在新版本被删除
+        @SuppressWarnings("unchecked")
+        Map<String, Object> nodeChanges = (Map<String, Object>) diff.get("nodeChanges");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> removedNodes = (List<Map<String, Object>>)
+                nodeChanges.get("removed");
+        java.util.Set<String> removedNodeCodes = removedNodes.stream()
+                .map(n -> String.valueOf(n.get("nodeCode")))
+                .collect(Collectors.toSet());
+
+        // 4.2 类型/审批人变更节点
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> modifiedNodes = (List<Map<String, Object>>)
+                nodeChanges.get("modified");
+
+        List<Map<String, Object>> stuckInstances = new ArrayList<>();
+        List<Map<String, Object>> affectedInstances = new ArrayList<>();
+        for (Map<String, Object> node : runningByNode) {
+            String nodeCode = String.valueOf(node.get("currentNodeCode"));
+            long cnt = ((Number) node.get("cnt")).longValue();
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("nodeCode", nodeCode);
+            entry.put("currentNodeName", node.get("currentNodeName"));
+            entry.put("instanceCount", cnt);
+            if (removedNodeCodes.contains(nodeCode)) {
+                entry.put("reason", "NODE_REMOVED");
+                stuckInstances.add(entry);
+            } else if (modifiedNodes.stream()
+                    .anyMatch(m -> nodeCode.equals(String.valueOf(m.get("nodeCode"))))) {
+                entry.put("reason", "NODE_MODIFIED");
+                affectedInstances.add(entry);
+            }
+        }
+
+        // 5. 计算风险等级
+        // HIGH：有在途实例卡在已删除节点（无法继续流转）
+        // MEDIUM：有在途实例在已修改节点（类型/审批人变化）或大量在途实例（>100）
+        // LOW：有少量在途实例但节点未变更
+        // NONE：无在途实例
+        String riskLevel;
+        if (runningTotal == 0) {
+            riskLevel = "NONE";
+        } else if (!stuckInstances.isEmpty()) {
+            riskLevel = "HIGH";
+        } else if (!affectedInstances.isEmpty() || runningTotal > 100) {
+            riskLevel = "MEDIUM";
+        } else {
+            riskLevel = "LOW";
+        }
+
+        // 6. 生成迁移建议
+        List<String> recommendations = buildRecommendations(
+                riskLevel, runningTotal, stuckInstances, affectedInstances,
+                removedNodes, modifiedNodes);
+
+        // 7. 组装结果
+        Map<String, Object> oldDefInfo = new LinkedHashMap<>();
+        oldDefInfo.put("id", oldDef.getId());
+        oldDefInfo.put("flowCode", oldDef.getFlowCode());
+        oldDefInfo.put("flowName", oldDef.getFlowName());
+        oldDefInfo.put("flowVersion", oldDef.getFlowVersion());
+
+        Map<String, Object> newDefInfo = new LinkedHashMap<>();
+        newDefInfo.put("id", newDef.getId());
+        newDefInfo.put("flowCode", newDef.getFlowCode());
+        newDefInfo.put("flowName", newDef.getFlowName());
+        newDefInfo.put("flowVersion", newDef.getFlowVersion());
+
+        Map<String, Object> runningInstances = new LinkedHashMap<>();
+        runningInstances.put("total", runningTotal);
+        runningInstances.put("byNode", runningByNode);
+
+        Map<String, Object> impactedInstances = new LinkedHashMap<>();
+        impactedInstances.put("stuckInstances", stuckInstances);
+        impactedInstances.put("affectedInstances", affectedInstances);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("oldDefinition", oldDefInfo);
+        result.put("newDefinition", newDefInfo);
+        result.put("diff", diff);
+        result.put("runningInstances", runningInstances);
+        result.put("impactedInstances", impactedInstances);
+        result.put("riskLevel", riskLevel);
+        result.put("recommendations", recommendations);
+
+        log.info("[Flow] 变更影响分析: oldDef={} newDef={} running={} stuck={} affected={} risk={}",
+                oldDefinitionId, newDefinitionId, runningTotal,
+                stuckInstances.size(), affectedInstances.size(), riskLevel);
+        return result;
+    }
+
+    /**
+     * 解析版本号字符串为整数（用于 diffVersions 调用）。
+     *
+     * @param versionStr 版本字符串（如 "1.0" / "2"）
+     * @return 主版本号整数（如 1 / 2），无法解析时返回 0
+     */
+    private Integer parseVersionInt(String versionStr) {
+        if (!StringUtils.hasText(versionStr)) {
+            return 0;
+        }
+        try {
+            // "1.0" → 取 "." 之前的部分；"2" → 直接转
+            String main = versionStr.contains(".")
+                    ? versionStr.substring(0, versionStr.indexOf('.'))
+                    : versionStr;
+            return Integer.parseInt(main.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * 根据风险等级和影响范围生成迁移建议。
+     */
+    private List<String> buildRecommendations(
+            String riskLevel,
+            long runningTotal,
+            List<Map<String, Object>> stuckInstances,
+            List<Map<String, Object>> affectedInstances,
+            List<Map<String, Object>> removedNodes,
+            List<Map<String, Object>> modifiedNodes) {
+        List<String> recs = new ArrayList<>();
+
+        switch (riskLevel) {
+            case "NONE":
+                recs.add("无在途实例，可直接发布新版本");
+                recs.add("建议发布后停用老版本，避免新实例继续使用老版本");
+                break;
+            case "LOW":
+                recs.add("存在 " + runningTotal + " 个在途实例，但节点未变更，风险较低");
+                recs.add("建议：发布新版本 + 等待在途实例自然完成后停用老版本");
+                recs.add("可选：通知发起人主动撤回后重新发起以使用新版本");
+                break;
+            case "MEDIUM":
+                if (!affectedInstances.isEmpty()) {
+                    recs.add("存在 " + affectedInstances.size() + " 个节点的在途实例受影响（类型/审批人变更）");
+                    recs.add("建议：通知相关审批人确认变更影响，必要时手工干预");
+                }
+                if (runningTotal > 100) {
+                    recs.add("在途实例数量较多（" + runningTotal + "），建议分批次迁移");
+                }
+                recs.add("建议：发布新版本但保留老版本激活，待在途实例自然消化后再切换");
+                break;
+            case "HIGH":
+                recs.add("【高危】存在 " + stuckInstances.size() + " 个节点的在途实例将卡死");
+                for (Map<String, Object> stuck : stuckInstances) {
+                    recs.add("  - 节点 " + stuck.get("nodeCode")
+                            + "（" + stuck.get("currentNodeName") + "）有 "
+                            + stuck.get("instanceCount") + " 个实例无法继续流转");
+                }
+                recs.add("建议：发布新版本前必须先处理在途实例：");
+                recs.add("  1) 对卡死节点的实例手工强制流转到新版本对应节点");
+                recs.add("  2) 或通知发起人撤回后重新发起");
+                recs.add("  3) 或保留老版本激活直到所有在途实例完成");
+                recs.add("禁止：直接停用老版本会导致在途实例永久卡死");
+                break;
+            default:
+                recs.add("未知风险等级: " + riskLevel);
+        }
+        return recs;
     }
 }

@@ -5,18 +5,23 @@ import com.njydsz.pmis.agent.dto.AgentRunRequestDTO;
 import com.njydsz.pmis.agent.dto.AgentInternalExecuteDTO;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
+import com.njydsz.pmis.agent.engine.stream.SseEventListener;
 import com.njydsz.pmis.agent.entity.AgentPredictionDO;
 import com.njydsz.pmis.agent.mapper.AgentPredictionMapper;
 import com.njydsz.pmis.agent.service.AgentService;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.constant.AsyncExecutorNames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.LinkedHashMap;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -38,10 +43,10 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
+@Slf4j
 @Tag(name = "AI 智能体")
 @RestController
 @RequestMapping("/agent")
-@RequiredArgsConstructor
 @Validated
 public class AgentController {
 
@@ -49,6 +54,23 @@ public class AgentController {
     private final AgentService service;
     /** Agent 预测记录 Mapper */
     private final AgentPredictionMapper predictionMapper;
+    /** SSE 流式输出专用线程池（复用 agentExecutor，避免新增线程池） */
+    private final ThreadPoolTaskExecutor streamExecutor;
+
+    /**
+     * 构造注入。
+     *
+     * @param service           Agent 服务
+     * @param predictionMapper  Agent 预测记录 Mapper
+     * @param streamExecutor    SSE 流式执行线程池（Bean name = {@link AsyncExecutorNames#AGENT}）
+     */
+    public AgentController(AgentService service,
+                          AgentPredictionMapper predictionMapper,
+                          @Qualifier(AsyncExecutorNames.AGENT) ThreadPoolTaskExecutor streamExecutor) {
+        this.service = service;
+        this.predictionMapper = predictionMapper;
+        this.streamExecutor = streamExecutor;
+    }
 
     /**
      * 同步执行 Agent，结果落库。
@@ -90,6 +112,82 @@ public class AgentController {
     public Result<AgentResult> inMemory(@RequestParam String agentType,
                                     @RequestBody AgentContext ctx) {
         return Result.ok(service.executeInMemory(agentType, ctx));
+    }
+
+    /**
+     * 流式执行 Agent（P2-1 落地）。
+     *
+     * <p>通过 SSE 推送 ReAct 推理过程事件，前端可实时展示「思考中 → 调用工具 → 观察 → 最终回答」。
+     * 对标 Coze / Dify 的 Chat Stream API。
+     *
+     * <p>SSE 事件类型：
+     * <ul>
+     *   <li>{@code STEP_START}      - 步骤开始</li>
+     *   <li>{@code THOUGHT}         - LLM 思考文本</li>
+     *   <li>{@code ACTION}          - LLM 决策动作（含工具名 + 参数）</li>
+     *   <li>{@code OBSERVATION}     - 工具执行结果</li>
+     *   <li>{@code FINAL_ANSWER}   - 最终答案</li>
+     *   <li>{@code STEP_END}       - 步骤结束</li>
+     *   <li>{@code DONE}           - 整个循环完成</li>
+     *   <li>{@code ERROR}          - 异常终止</li>
+     * </ul>
+     *
+     * <p>使用示例（前端 EventSource）：
+     * <pre>
+     *   const es = new EventSource('/agent/run/stream?agentType=FLOW_GENERATOR', {
+     *     method: 'POST',
+     *     body: JSON.stringify({...ctx})
+     *   });
+     *   es.addEventListener('THOUGHT', e =&gt; console.log(JSON.parse(e.data)));
+     *   es.addEventListener('DONE', e =&gt; es.close());
+     * </pre>
+     *
+     * <p><b>注意</b>：标准 EventSource 仅支持 GET，POST 场景需使用 fetch + ReadableStream 或
+     * 第三方库（如 @microsoft/fetch-event-source）。
+     *
+     * @param agentType Agent 类型（AgentType.code）
+     * @param ctx       Agent 执行上下文
+     * @return SseEmitter，Spring MVC 会自动处理 SSE 流
+     */
+    @Operation(summary = "流式执行 Agent（SSE）")
+    @PrePermission("agent:task:run")
+    @PostMapping(value = "/run/stream", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter runStream(@RequestParam String agentType,
+                                @RequestBody AgentContext ctx) {
+        // 超时 5 分钟（覆盖多步 ReAct + LLM 调用）
+        SseEmitter emitter = new SseEmitter(5 * 60 * 1000L);
+        SseEventListener listener = new SseEventListener(emitter);
+
+        // 设置超时和错误回调
+        emitter.onTimeout(() -> {
+            log.warn("[SSE] agentType={} biz={} 超时", agentType, ctx == null ? null : ctx.getBizRef());
+            try {
+                emitter.complete();
+            } catch (Exception ignore) {
+                // emitter 已关闭
+            }
+        });
+        emitter.onError(throwable -> {
+            log.warn("[SSE] agentType={} biz={} 客户端异常: {}",
+                    agentType, ctx == null ? null : ctx.getBizRef(), throwable.getMessage());
+        });
+
+        // 异步执行 ReAct 循环
+        streamExecutor.submit(() -> {
+            try {
+                service.executeStream(agentType, ctx, listener);
+            } catch (Exception e) {
+                log.error("[SSE] agentType={} biz={} 执行异常",
+                        agentType, ctx == null ? null : ctx.getBizRef(), e);
+                listener.onError(0, e);
+                try {
+                    emitter.completeWithError(e);
+                } catch (Exception ignore) {
+                    // emitter 已关闭
+                }
+            }
+        });
+        return emitter;
     }
 
     /**

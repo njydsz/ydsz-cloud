@@ -10,6 +10,10 @@ import com.njydsz.pmis.agent.dto.AgentRunRequestDTO;
 import com.njydsz.pmis.agent.engine.Agent;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
+import com.njydsz.pmis.agent.engine.StreamableAgent;
+import com.njydsz.pmis.agent.engine.react.ReActResult;
+import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
+import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
 import com.njydsz.pmis.agent.entity.AgentPredictionDO;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
 import com.njydsz.pmis.agent.enums.AgentRunStatus;
@@ -144,6 +148,49 @@ public class AgentServiceImpl implements AgentService {
         }
         Agent agent = findAgent(type);
         return agent.execute(context);
+    }
+
+    /**
+     * 流式执行 Agent（P2-1 落地）。
+     *
+     * <p>实现策略：
+     * <ol>
+     *   <li>查找 Agent</li>
+     *   <li>若 Agent 实现 {@link StreamableAgent}，调用其 {@code executeStream}</li>
+     *   <li>否则降级为同步 {@link Agent#execute} 后包装为 FINAL_ANSWER 事件</li>
+     * </ol>
+     *
+     * <p>异常处理：所有异常通过 listener.onError 推送，再走 onComplete 兜底。
+     */
+    @Override
+    public AgentResult executeStream(String agentType, AgentContext context, ReActEventListener listener) {
+        if (listener == null) {
+            listener = NoOpReActEventListener.getInstance();
+        }
+        AgentType type = AgentType.fromCode(agentType);
+        if (type == null) {
+            BizException ex = new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.agent.msg_3e4d9788", agentType);
+            listener.onError(0, ex);
+            listener.onComplete(ReActResult.failure("无效 agentType: " + agentType, List.of()));
+            throw ex;
+        }
+        Agent agent = findAgent(type);
+        try {
+            if (agent instanceof StreamableAgent streamable) {
+                return streamable.executeStream(context, listener);
+            }
+            // 降级：同步执行后包装为单个事件
+            AgentResult result = agent.execute(context);
+            listener.onFinalAnswer(1, result.getSuggestion() == null ? "" : result.getSuggestion());
+            listener.onComplete(ReActResult.success(result.getSuggestion(), List.of()));
+            return result;
+        } catch (RuntimeException e) {
+            log.error("[Agent] 流式执行失败: type={} biz={}", type, context.getBizRef(), e);
+            listener.onError(0, e);
+            listener.onComplete(ReActResult.failure("执行异常: " + e.getMessage(), List.of()));
+            throw e;
+        }
     }
 
     @Override

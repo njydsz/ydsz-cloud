@@ -544,4 +544,18 @@ export const asyncRoutes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/notification',
+    component: () => import('@/layout/default/index.vue'),
+    redirect: '/notification/inbox',
+    meta: { title: 'route.notificationCenter', icon: 'ChatDotRound' },
+    children: [
+      {
+        path: 'inbox',
+        name: 'NotificationInbox',
+        component: () => import('@/views/notification/inbox.vue'),
+        meta: { title: 'route.notificationInbox', icon: 'Message', keepAlive: true, permCode: PC.NOTIF_MESSAGE_LIST },
+      },
+    ],
+  },
 ]

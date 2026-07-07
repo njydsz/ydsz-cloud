@@ -1,9 +1,10 @@
 /**
  * @file 通知中心 API 接口封装
- * @description 提供收件箱分页、未读数、标记已读、全部已读、发送通知、删除通知等能力，
+ * @description 提供收件箱分页、未读数、标记已读、全部已读、发送通知、删除通知、撤回通知等能力，
  *              对应后端 NotificationController（/notifications）。
  *
  *   - 收件箱/未读数/标记已读等后台静默请求，不触发全局 loading
+ *   - ID 类型为 String（后端 VARCHAR(20) 雪花算法字符串）
  * @module api/notification
  */
 import { request } from '@/utils/request'
@@ -37,7 +38,7 @@ export const getUnreadCount = () =>
  * 标记单条通知为已读
  * @param id 通知 ID
  */
-export const markRead = (id: number) =>
+export const markRead = (id: string) =>
   request<void>({ url: `${BASE}/${id}/read`, method: 'POST', silent: true })
 
 /**
@@ -56,7 +57,14 @@ export const sendNotification = (data: NotificationSendDTO) =>
 
 /**
  * 删除通知（支持批量）
- * @param ids 通知 ID 列表（后端 @RequestBody List<Long>）
+ * @param ids 通知 ID 列表（后端 @RequestBody List<String>）
  */
-export const deleteNotifications = (ids: number[]) =>
+export const deleteNotifications = (ids: string[]) =>
   request<void>({ url: BASE, method: 'DELETE', data: ids })
+
+/**
+ * P2-8: 撤回通知（仅撤回自己发送的通知）
+ * @param id 通知 ID
+ */
+export const recallNotification = (id: string) =>
+  request<boolean>({ url: `${BASE}/${id}/recall`, method: 'POST' })

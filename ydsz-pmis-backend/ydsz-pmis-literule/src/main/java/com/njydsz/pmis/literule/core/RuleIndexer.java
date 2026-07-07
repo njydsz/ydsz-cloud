@@ -324,13 +324,17 @@ public class RuleIndexer {
      * @since 1.6.0
      */
     public List<Rule> findCandidatesByFacts(String tenantId, Set<String> factKeys) {
-        if (!indexEnabled || ruleToFields.isEmpty()) {
+        if (!indexEnabled) {
             return Collections.emptyList();
         }
         String tenantKey = tenantId != null ? tenantId : "1";
         List<Rule> tenantRules = tenantIndex.get(tenantKey);
         if (tenantRules == null || tenantRules.isEmpty()) {
             return Collections.emptyList();
+        }
+        // 倒排索引为空时（无任何字段引用），所有规则均为无字段引用，全部保留为候选
+        if (ruleToFields.isEmpty()) {
+            return new ArrayList<>(tenantRules);
         }
         if (factKeys == null || factKeys.isEmpty()) {
             // facts 为空时，仅返回无字段引用的规则（非表达式规则）

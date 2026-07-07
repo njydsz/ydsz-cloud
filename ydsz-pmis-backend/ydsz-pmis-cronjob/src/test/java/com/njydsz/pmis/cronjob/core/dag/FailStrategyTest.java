@@ -4,9 +4,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * {@link FailStrategy} 单元测试（P4-3 DAG 工作流）。
+ * {@link FailStrategy} 单元测试（P4-3 DAG 工作流，P2-6 增强）。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -53,5 +55,37 @@ class FailStrategyTest {
         assertEquals(FailStrategy.FAIL_FAST, FailStrategy.parse("INVALID"));
         assertEquals(FailStrategy.FAIL_FAST, FailStrategy.parse("SKIP"));
         assertEquals(FailStrategy.FAIL_FAST, FailStrategy.parse("abc123"));
+    }
+
+    // ==================== P2-6: 新增策略 ====================
+
+    @Test
+    @DisplayName("P2-6 parse RETRY 大小写不敏感")
+    void parse_retry_caseInsensitive() {
+        assertEquals(FailStrategy.RETRY, FailStrategy.parse("retry"));
+        assertEquals(FailStrategy.RETRY, FailStrategy.parse("RETRY"));
+        assertEquals(FailStrategy.RETRY, FailStrategy.parse("  Retry  "));
+    }
+
+    @Test
+    @DisplayName("P2-6 parse SKIP_SUBSEQUENT 大小写不敏感")
+    void parse_skipSubsequent_caseInsensitive() {
+        assertEquals(FailStrategy.SKIP_SUBSEQUENT, FailStrategy.parse("skip_subsequent"));
+        assertEquals(FailStrategy.SKIP_SUBSEQUENT, FailStrategy.parse("SKIP_SUBSEQUENT"));
+        assertEquals(FailStrategy.SKIP_SUBSEQUENT, FailStrategy.parse("  Skip_Subsequent  "));
+    }
+
+    @Test
+    @DisplayName("P2-6 shouldTriggerOnFailure: CONTINUE_ON_FAIL 返回 true")
+    void shouldTriggerOnFailure_continueOnFail_true() {
+        assertTrue(FailStrategy.CONTINUE_ON_FAIL.shouldTriggerOnFailure());
+    }
+
+    @Test
+    @DisplayName("P2-6 shouldTriggerOnFailure: FAIL_FAST/RETRY/SKIP_SUBSEQUENT 返回 false")
+    void shouldTriggerOnFailure_others_false() {
+        assertFalse(FailStrategy.FAIL_FAST.shouldTriggerOnFailure());
+        assertFalse(FailStrategy.RETRY.shouldTriggerOnFailure());
+        assertFalse(FailStrategy.SKIP_SUBSEQUENT.shouldTriggerOnFailure());
     }
 }

@@ -58,7 +58,7 @@ const fetchInbox = async () => {
 }
 
 /** 标记单条已读 */
-const handleMarkRead = async (id: number) => {
+const handleMarkRead = async (id: string) => {
   await markRead(id)
   await fetchUnreadCount()
   await fetchInbox()

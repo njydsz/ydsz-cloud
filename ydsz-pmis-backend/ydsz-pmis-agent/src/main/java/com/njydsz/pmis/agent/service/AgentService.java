@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.agent.dto.AgentRunRequestDTO;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
+import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
 import com.njydsz.pmis.agent.entity.AgentPredictionDO;
 
 import java.util.List;
@@ -46,6 +47,22 @@ public interface AgentService {
      * @return Agent 执行结果
      */
     AgentResult executeInMemory(String agentType, AgentContext context);
+
+    /**
+     * 流式执行 Agent（P2-1 落地）。
+     *
+     * <p>对实现 {@link com.njydsz.pmis.agent.engine.StreamableAgent} 的 Agent，
+     * 通过 {@code listener} 实时推送 ReAct 推理过程事件；
+     * 对未实现 StreamableAgent 的 Agent，自动降级为同步执行后推送单个 FINAL_ANSWER 事件。
+     *
+     * <p>不会触发持久化（与 {@link #executeInMemory} 一致）。
+     *
+     * @param agentType Agent 类型码（AgentType.code）
+     * @param context   Agent 执行上下文
+     * @param listener  事件监听器（null 时使用 NoOp，等价于 {@link #executeInMemory}）
+     * @return Agent 执行结果（与 executeInMemory 一致）
+     */
+    AgentResult executeStream(String agentType, AgentContext context, ReActEventListener listener);
 
     /**
      * 根据 ID 查询 Agent 预测记录详情。

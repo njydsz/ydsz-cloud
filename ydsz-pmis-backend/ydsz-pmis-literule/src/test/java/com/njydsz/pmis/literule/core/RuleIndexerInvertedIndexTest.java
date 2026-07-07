@@ -640,12 +640,13 @@ class RuleIndexerInvertedIndexTest {
         @DisplayName("字段名含下划线 - 正确提取并索引")
         void shouldExtractUnderscoreFieldName() {
             List<Rule> rules = new ArrayList<>();
-            rules.add(mockExprRule("R_UNDER", 100, "1", null, null, "user_name == 'admin' && user_age > 18"));
+            // 使用 != null 避免字符串字面量被误提取为字段
+            rules.add(mockExprRule("R_UNDER", 100, "1", null, null, "user_name != null && user_age > 18"));
             rules.addAll(mockFillRules(199, "1", null));
 
             indexer.rebuildIndex(rules);
 
-            // user_name, user_age 两个字段
+            // user_name, user_age 两个字段（null 被关键字过滤）
             assertThat(indexer.getIndexStats()).contains("fieldIndexSize=2");
 
             // facts 含 user_name 和 user_age 时命中

@@ -3,6 +3,8 @@ package com.njydsz.pmis.agent.engine;
 import com.njydsz.pmis.agent.engine.react.ReActLoop;
 import com.njydsz.pmis.agent.engine.react.ReActResult;
 import com.njydsz.pmis.agent.engine.react.ReActStep;
+import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
+import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
 import com.njydsz.pmis.agent.enums.AgentType;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P0-3/P1-5/P1-2: AI 一句话生成流程 Agent（工作流场景）
+ * P0-3/P1-5/P1-2/P2-1: AI 一句话生成流程 Agent（工作流场景）
  *
  * <p>接收自然语言描述（如"请假审批：直属领导审批 → 部门经理审批（3天以上）→ 人事备案"），
  * 通过 ReAct 推理循环调用 LLM 生成符合 BPMN 2.0 规范的 XML 流程定义。
@@ -23,6 +25,10 @@ import java.util.Map;
  * <p><b>P1-2 变更</b>：从直接调用 {@code LlmProvider.chatForJson()} 改为通过 {@link ReActLoop}
  * 推理循环，LLM 可主动调用 {@code bpmn_validate} 工具校验生成的 XML，再基于校验结果
  * 决定是否输出最终答案。这使流程生成具备了「生成 → 校验 → 修正」的自闭环能力。
+ *
+ * <p><b>P2-1 变更</b>：实现 {@link StreamableAgent}，支持通过 SSE 实时推送 ReAct 推理过程。
+ * {@link #execute(AgentContext)} 等价于 {@link #executeStream(AgentContext, ReActEventListener)}
+ * 传入 {@link NoOpReActEventListener}。
  *
  * <p>ReAct 循环流程：
  * <ol>
@@ -51,7 +57,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FlowGeneratorAgent implements Agent {
+public class FlowGeneratorAgent implements StreamableAgent {
 
     /** ReAct 推理循环 */
     private final ReActLoop reactLoop;
@@ -65,25 +71,40 @@ public class FlowGeneratorAgent implements Agent {
 
     @Override
     public AgentResult execute(AgentContext ctx) {
+        return executeStream(ctx, NoOpReActEventListener.getInstance());
+    }
+
+    @Override
+    public AgentResult executeStream(AgentContext ctx, ReActEventListener listener) {
         Map<String, Object> p = ctx.getParams() == null ? Map.of() : ctx.getParams();
         String description = p.get("description") == null ? "" : p.get("description").toString().trim();
         if (description.isEmpty()) {
             log.warn("[FlowGenerator] biz={} 未提供流程描述", ctx.getBizRef());
-            return new AgentResult(AgentType.FLOW_GENERATOR, AgentAlertLevel.INFO,
+            AgentResult empty = new AgentResult(AgentType.FLOW_GENERATOR, AgentAlertLevel.INFO,
                     BigDecimal.ZERO, BigDecimal.valueOf(0.3),
                     "未提供流程描述", List.of("NO_DESCRIPTION"),
                     Map.of("bpmnXml", ""));
+            // 仍然触发监听器回调（保持流式契约）
+            if (listener != null) {
+                listener.onComplete(ReActResult.failure("NO_DESCRIPTION", List.of()));
+            }
+            return empty;
         }
 
         String systemPrompt = buildSystemPrompt();
         String userPrompt = buildUserPrompt(description);
 
-        // 调用 ReAct 推理循环
+        // 调用 ReAct 推理循环（流式版本）
         ReActResult reactResult;
         try {
-            reactResult = reactLoop.run(systemPrompt, userPrompt, ctx);
+            reactResult = reactLoop.runStream(systemPrompt, userPrompt, ctx,
+                    ReActLoop.DEFAULT_MAX_STEPS, listener);
         } catch (Exception e) {
             log.warn("[FlowGenerator] biz={} ReAct 循环异常: {}", ctx.getBizRef(), e.getMessage());
+            if (listener != null) {
+                listener.onError(0, e);
+                listener.onComplete(ReActResult.failure("ReAct 循环异常: " + e.getMessage(), List.of()));
+            }
             return new AgentResult(AgentType.FLOW_GENERATOR, AgentAlertLevel.RED,
                     BigDecimal.ZERO, BigDecimal.valueOf(0.2),
                     "ReAct 循环异常: " + e.getMessage(),

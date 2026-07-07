@@ -324,4 +324,30 @@ public class FlowDefinitionController {
         return Result.ok(instanceService.simulate(dto.getFlowCode(),
                 String.valueOf(dto.getVersion()), dto.getVariables(), tid));
     }
+
+    /**
+     * P2-5: 变更影响分析报告 — 评估老版本定义升级到新版本对在途实例的影响。
+     *
+     * <p>对标 Activiti/Flowable 的"流程定义升级影响分析"：
+     * <ul>
+     *   <li>对比两个版本的节点 / 跳转差异</li>
+     *   <li>统计老版本在途实例数 + 按当前节点分组分布</li>
+     *   <li>识别卡死节点（HIGH 风险）和受影响节点（MEDIUM 风险）</li>
+     *   <li>输出整体风险等级（HIGH / MEDIUM / LOW / NONE）与迁移建议</li>
+     * </ul>
+     *
+     * <p>典型用法：发布新版本前调用此接口评估影响，根据 riskLevel 决定发布策略。
+     *
+     * @param oldDefinitionId 老版本流程定义 ID
+     * @param newDefinitionId 新版本流程定义 ID
+     * @return 统一响应结果，包含完整的影响分析报告
+     */
+    @GetMapping("/definition/migration-impact")
+    @Operation(summary = "变更影响分析报告（评估版本升级对在途实例的影响）")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public Result<Map<String, Object>> analyzeMigrationImpact(
+            @RequestParam String oldDefinitionId,
+            @RequestParam String newDefinitionId) {
+        return Result.ok(definitionService.analyzeMigrationImpact(oldDefinitionId, newDefinitionId));
+    }
 }

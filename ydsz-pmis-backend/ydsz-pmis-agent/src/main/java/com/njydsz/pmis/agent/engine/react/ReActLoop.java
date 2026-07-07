@@ -121,8 +121,12 @@ public class ReActLoop {
     public ReActResult runStream(String baseSystemPrompt, String userPrompt,
                                  AgentContext ctx, int maxSteps,
                                  ReActEventListener listener) {
+        // 处理 null 监听器（赋值给 final 变量供 lambda 引用）
+        final ReActEventListener finalListener;
         if (listener == null) {
-            listener = NoOpReActEventListener.getInstance();
+            finalListener = NoOpReActEventListener.getInstance();
+        } else {
+            finalListener = listener;
         }
         if (maxSteps <= 0) {
             maxSteps = DEFAULT_MAX_STEPS;
@@ -139,10 +143,11 @@ public class ReActLoop {
         ReActResult finalResult;
         try {
             for (int step = 1; step <= maxSteps; step++) {
-                safeNotify(listener, l -> l.onStepStart(step));
+                final int currentStep = step;
+                safeNotify(listener, l -> l.onStepStart(currentStep));
 
                 ReActStep stepRecord = new ReActStep();
-                stepRecord.setStepIndex(step);
+                stepRecord.setStepIndex(currentStep);
 
                 // 1. 调用 LLM，获取决策
                 ReActDecision decision;
@@ -150,27 +155,27 @@ public class ReActLoop {
                     decision = llm.chatForJson(fullSystemPrompt,
                             currentUserPrompt.toString(), ReActDecision.class, ctx);
                 } catch (Exception e) {
-                    log.warn("[ReAct] step={} LLM 调用或 JSON 解析异常: {}", step, e.getMessage());
+                    log.warn("[ReAct] step={} LLM 调用或 JSON 解析异常: {}", currentStep, e.getMessage());
                     stepRecord.setThought("[LLM 异常] " + e.getMessage());
                     stepRecord.setAction(ACTION_FINAL_ANSWER);
                     stepRecord.setFinalAnswer(null);
                     steps.add(stepRecord);
                     finalResult = ReActResult.failure(
                             "LLM 调用失败: " + e.getMessage(), steps);
-                    safeNotify(listener, l -> l.onStepEnd(step));
+                    safeNotify(listener, l -> l.onStepEnd(currentStep));
                     safeNotifyComplete(listener, finalResult);
                     return finalResult;
                 }
 
                 // 防御：LLM 返回 null
                 if (decision == null || decision.getAction() == null) {
-                    log.warn("[ReAct] step={} LLM 返回空决策", step);
+                    log.warn("[ReAct] step={} LLM 返回空决策", currentStep);
                     stepRecord.setThought("[空决策]");
                     stepRecord.setAction(ACTION_FINAL_ANSWER);
                     stepRecord.setFinalAnswer(null);
                     steps.add(stepRecord);
                     finalResult = ReActResult.failure("LLM 返回空决策", steps);
-                    safeNotify(listener, l -> l.onStepEnd(step));
+                    safeNotify(listener, l -> l.onStepEnd(currentStep));
                     safeNotifyComplete(listener, finalResult);
                     return finalResult;
                 }
@@ -180,21 +185,21 @@ public class ReActLoop {
                 stepRecord.setAction(decision.getAction());
                 stepRecord.setParameters(decision.getParameters());
 
-                log.info("[ReAct] step={} thought={} action={}", step,
+                log.info("[ReAct] step={} thought={} action={}", currentStep,
                         truncate(decision.getThought(), 80), decision.getAction());
 
                 // 通知 thought + action
-                safeNotify(listener, l -> l.onThought(step, decision.getThought()));
-                safeNotify(listener, l -> l.onAction(step, decision));
+                safeNotify(listener, l -> l.onThought(currentStep, decision.getThought()));
+                safeNotify(listener, l -> l.onAction(currentStep, decision));
 
                 // 2. 判断是否为终止步骤
                 if (decision.isTerminal()) {
                     stepRecord.setFinalAnswer(decision.getFinalAnswer());
                     steps.add(stepRecord);
-                    safeNotify(listener, l -> l.onFinalAnswer(step, decision.getFinalAnswer()));
-                    safeNotify(listener, l -> l.onStepEnd(step));
+                    safeNotify(listener, l -> l.onFinalAnswer(currentStep, decision.getFinalAnswer()));
+                    safeNotify(listener, l -> l.onStepEnd(currentStep));
                     log.info("[ReAct] 循环完成, steps={}, finalAnswer.length={}",
-                            step, decision.getFinalAnswer() == null ? 0 : decision.getFinalAnswer().length());
+                            currentStep, decision.getFinalAnswer() == null ? 0 : decision.getFinalAnswer().length());
                     finalResult = ReActResult.success(decision.getFinalAnswer(), steps);
                     safeNotifyComplete(listener, finalResult);
                     return finalResult;
@@ -204,13 +209,13 @@ public class ReActLoop {
                 String observation = executeTool(decision, ctx);
                 stepRecord.setObservation(observation);
                 steps.add(stepRecord);
-                safeNotify(listener, l -> l.onObservation(step, observation));
+                safeNotify(listener, l -> l.onObservation(currentStep, observation));
 
                 // 4. 将 Observation 拼接到下一轮 user prompt
-                currentUserPrompt.append("\n\n[步骤 ").append(step).append(" 观察]\n")
+                currentUserPrompt.append("\n\n[步骤 ").append(currentStep).append(" 观察]\n")
                         .append(observation);
 
-                safeNotify(listener, l -> l.onStepEnd(step));
+                safeNotify(listener, l -> l.onStepEnd(currentStep));
             }
 
             // 达到最大循环次数仍未得到 final_answer

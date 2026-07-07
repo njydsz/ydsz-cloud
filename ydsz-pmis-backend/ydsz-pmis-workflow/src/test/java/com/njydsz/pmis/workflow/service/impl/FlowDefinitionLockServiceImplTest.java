@@ -7,6 +7,7 @@ import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;
 import com.njydsz.pmis.workflow.engine.FlowGraphValidator;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper;
+import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,6 +56,8 @@ class FlowDefinitionLockServiceImplTest {
     private FlowGraphValidator graphValidator;
     @Mock
     private FlowDefinitionCacheService flowDefinitionCacheService;
+    @Mock
+    private FlowInstanceMapper instanceMapper;
 
     @InjectMocks
     private FlowDefinitionServiceImpl service;
