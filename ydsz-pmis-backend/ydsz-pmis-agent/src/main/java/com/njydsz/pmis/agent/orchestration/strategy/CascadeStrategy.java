@@ -8,6 +8,7 @@ import com.njydsz.pmis.agent.orchestration.OrchestrationMode;
 import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,10 +32,16 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Slf4j
+@Component
 public class CascadeStrategy implements OrchestrationStrategy {
 
     /** 默认置信度阈值（0.85） */
     private static final double DEFAULT_THRESHOLD = 0.85d;
+
+    @Override
+    public OrchestrationMode mode() {
+        return OrchestrationMode.CASCADE;
+    }
 
     @Override
     public OrchestrationResult apply(OrchestrationRequest req,

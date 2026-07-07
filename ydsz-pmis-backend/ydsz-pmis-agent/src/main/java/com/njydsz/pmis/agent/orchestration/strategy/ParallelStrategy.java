@@ -7,7 +7,11 @@ import com.njydsz.pmis.agent.orchestration.AgentBlackboard;
 import com.njydsz.pmis.agent.orchestration.OrchestrationMode;
 import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
+import com.njydsz.pmis.common.constant.AsyncExecutorNames;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,49 +19,42 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 并行编排策略
  *
- * <p>所有 Agent 同时跑（独立线程），最后合并到黑板。
+ * <p>所有 Agent 同时跑（共享 {@code agentExecutor} 线程池），最后合并到黑板。
  * <ul>
- *   <li>finalResult 取第一个完成且 score 最高的 Agent 输出（竞速）</li>
- *   <li>或者：finalResult 取最先完成的 Agent 输出（更快 → 可配置）</li>
+ *   <li>finalResult 取 score 最高的 Agent 输出（兼顾置信度）</li>
  * </ul>
  *
- * <p>线程池：固定 5 线程守护线程，Bean 由协调器持有以便复用。
+ * <p><b>P0-1 修复</b>：原实现内部 {@code newFixedThreadPool(5)} 永不 shutdown，
+ * 且 {@code AgentCoordinatorImpl} 单例化时被多次构造导致线程池泄漏。
+ * 现统一改为 Spring Bean 注入共享 {@link AsyncExecutorNames#AGENT}，由容器统一管理生命周期
+ * （core=2 / max=8 / queue=100 / CallerRunsPolicy / 优雅关闭 60s）。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j
+@Component
 public class ParallelStrategy implements OrchestrationStrategy {
 
-    /** 并行执行线程池 */
-    private final ExecutorService executor;
-
-    /** 默认构造器（并行度 5） */
-    public ParallelStrategy() {
-        this(5);
-    }
+    /** 共享 AI Agent 线程池（由 AsyncThreadPoolConfig 提供，避免泄漏） */
+    private final ThreadPoolTaskExecutor agentExecutor;
 
     /**
-     * 指定并行度构造器。
+     * 构造并行策略，注入共享线程池。
      *
-     * @param parallelism 并行度
+     * @param agentExecutor AI Agent 共享线程池（Bean name = {@link AsyncExecutorNames#AGENT}）
      */
-    public ParallelStrategy(int parallelism) {
-        AtomicInteger seq = new AtomicInteger(0);
-        ThreadFactory tf = r -> {
-            Thread t = new Thread(r, "agent-orch-parallel-" + seq.incrementAndGet());
-            t.setDaemon(true);
-            return t;
-        };
-        this.executor = Executors.newFixedThreadPool(parallelism, tf);
+    public ParallelStrategy(@Qualifier(AsyncExecutorNames.AGENT) ThreadPoolTaskExecutor agentExecutor) {
+        this.agentExecutor = agentExecutor;
+    }
+
+    @Override
+    public OrchestrationMode mode() {
+        return OrchestrationMode.PARALLEL;
     }
 
     @Override
@@ -77,7 +74,7 @@ public class ParallelStrategy implements OrchestrationStrategy {
             return result;
         }
 
-        // 提交所有 Agent 到线程池
+        // 提交所有 Agent 到共享线程池
         List<CompletableFuture<Map.Entry<String, AgentResult>>> futures = new ArrayList<>();
         for (String agentType : types) {
             Agent agent = agents.get(agentType);
@@ -96,7 +93,7 @@ public class ParallelStrategy implements OrchestrationStrategy {
                     log.error("[Parallel] Agent 执行失败: type={} err={}", agentType, e.getMessage());
                     return Map.entry(agentType, (AgentResult) null);
                 }
-            }, executor);
+            }, agentExecutor);
             futures.add(f);
         }
 
@@ -105,7 +102,7 @@ public class ParallelStrategy implements OrchestrationStrategy {
         String bestType = null;
         for (CompletableFuture<Map.Entry<String, AgentResult>> f : futures) {
             try {
-                Map.Entry<String, AgentResult> e = f.get();
+                Map.Entry<String, AgentResult> e = f.join();
                 String type = e.getKey();
                 AgentResult ar = e.getValue();
                 result.getExecutedAgents().add(type);
@@ -144,12 +141,5 @@ public class ParallelStrategy implements OrchestrationStrategy {
         int c = a.getScore() == null ? 0 : a.getScore().compareTo(b.getScore() == null ? BigDecimal.ZERO : b.getScore());
         if (c != 0) return c;
         return a.getConfidence() == null ? 0 : a.getConfidence().compareTo(b.getConfidence() == null ? BigDecimal.ZERO : b.getConfidence());
-    }
-
-    /**
-     * 关闭线程池。
-     */
-    public void shutdown() {
-        executor.shutdown();
     }
 }

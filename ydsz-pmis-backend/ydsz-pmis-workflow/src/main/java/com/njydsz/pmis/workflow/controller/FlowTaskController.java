@@ -267,6 +267,57 @@ public class FlowTaskController {
     }
 
     /**
+     * P1-4: 批量驳回 — 对多个任务逐一执行 reject，任一失败整批回滚。
+     *
+     * @param taskIds        任务 ID 列表
+     * @param comment        审批意见
+     * @param targetNodeCode 退回目标节点编码（可选）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/batchReject")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    public Result<Void> batchReject(@RequestParam List<String> taskIds,
+                                    @RequestParam(required = false) String comment,
+                                    @RequestParam(required = false) String targetNodeCode) {
+        taskService.batchReject(taskIds, SecurityContext.getUserId(), comment, targetNodeCode);
+        return Result.ok();
+    }
+
+    /**
+     * P1-4: 批量转办 — 对多个任务逐一执行 transfer，任一失败整批回滚。
+     *
+     * @param taskIds        任务 ID 列表
+     * @param comment        转办说明
+     * @param targetUserId   目标人 ID
+     * @param targetUserName 目标人姓名
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/batchTransfer")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    public Result<Void> batchTransfer(@RequestParam List<String> taskIds,
+                                      @RequestParam(required = false) String comment,
+                                      @RequestParam String targetUserId,
+                                      @RequestParam(required = false) String targetUserName) {
+        taskService.batchTransfer(taskIds, SecurityContext.getUserId(), comment,
+                targetUserId, targetUserName);
+        return Result.ok();
+    }
+
+    /**
+     * P1-4: 批量催办 — 对多个实例逐一执行 urge，单个失败不影响其他。
+     *
+     * @param instanceIds 实例 ID 列表
+     * @param comment     催办说明
+     * @return 统一响应结果，包含成功催办的实例数量
+     */
+    @PostMapping("/instance/batchUrge")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    public Result<Integer> batchUrge(@RequestParam List<String> instanceIds,
+                                     @RequestParam(required = false) String comment) {
+        return Result.ok(taskService.batchUrge(instanceIds, SecurityContext.getUserId(), comment));
+    }
+
+    /**
      * GAP-P0-4: 一键通过所有待办 — 查询当前用户全部待办（上限 100 条）并逐一通过。
      *
      * <p>对标钉钉/飞书审批中心"一键通过"按钮。
@@ -439,6 +490,22 @@ public class FlowTaskController {
         dto.setUserName(SecurityContext.getUsername());
         workflowFacade.addApprover(dto);
         return Result.ok();
+    }
+
+    /**
+     * P1-3: 取回审批 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
+     *
+     * <p>对标钉钉/飞书"取回"。仅审批人本人可操作，且下一节点待办必须未处理。
+     *
+     * @param hisTaskId 历史任务 ID（pmis_flow_his_task.id）
+     * @param comment   取回说明（可选）
+     * @return 统一响应结果，包含新创建的待办任务 ID
+     */
+    @PostMapping("/task/{hisTaskId}/retract")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    public Result<String> retract(@PathVariable String hisTaskId,
+                                  @RequestParam(required = false) String comment) {
+        return Result.ok(taskService.retract(hisTaskId, SecurityContext.getUserId(), comment));
     }
 
     // ============== P1-7: WebSocket 待办数实时推送 ==============

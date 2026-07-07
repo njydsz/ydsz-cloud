@@ -3,9 +3,12 @@ package com.njydsz.pmis.message.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.message.dto.BatchSendResult;
 import com.njydsz.pmis.message.dto.MessageLogQueryDTO;
 import com.njydsz.pmis.message.dto.MessageSendDTO;
 import com.njydsz.pmis.message.entity.MsgLogDO;
+
+import java.util.List;
 
 /**
  * 消息发送服务
@@ -30,6 +33,16 @@ public interface MessageService {
      * @return 发送结果
      */
     MessageResult sendDirect(MessageSendDTO dto);
+
+    /**
+     * 批量发送消息（同步循环,限制 100 条/批）。
+     * 每条请求的 bizId 会统一设置为 batchId,便于后续进度查询。
+     *
+     * @param requests 消息请求列表
+     * @param batchId  批次 ID（业务侧生成）
+     * @return 批量发送结果（含成功/失败/跳过计数）
+     */
+    BatchSendResult batchSend(List<MessageRequest> requests, String batchId);
 
     /**
      * 分页查询消息发送日志

@@ -66,11 +66,48 @@ public interface FlowInstanceService {
     /**
      * P1-8: 撤回流程（仅发起人可撤回，仅运行中可撤回，下一节点未被处理才可撤回）
      *
+     * <p>默认撤回到开始节点下游第一节点（重新生成第一批待办）。
+     * 如需撤回到任意历史节点，请使用 {@link #recall(String, String, String)}。
+     *
      * @param instanceId  实例 ID
      * @param initiatorId 发起人 ID
      * @return 是否撤回成功
      */
     boolean recall(String instanceId, String initiatorId);
+
+    /**
+     * P1-1: 撤回到指定历史节点（对标钉钉/飞书"撤回到指定节点"）。
+     *
+     * <p>与 {@link #recall(String, String)} 的差异：调用方可显式指定退回到任意历史已办节点，
+     * 而非仅能撤回到开始节点下游第一节点。
+     *
+     * <p>校验规则：
+     * <ul>
+     *   <li>继承 {@link #recall(String, String)} 的全部校验（发起人、运行中、未处理）；</li>
+     *   <li>额外校验 targetNodeCode 必须在 {@link #listRecallableNodes(String, String)} 返回的列表中。</li>
+     * </ul>
+     *
+     * @param instanceId     实例 ID
+     * @param initiatorId    发起人 ID
+     * @param targetNodeCode 目标节点编码（null/空时降级到 {@link #recall(String, String)}）
+     * @return 是否撤回成功
+     * @since 1.6.0
+     */
+    boolean recall(String instanceId, String initiatorId, String targetNodeCode);
+
+    /**
+     * P1-1: 查询可撤回的历史节点列表。
+     *
+     * <p>返回当前实例已办过的历史节点（排除当前待办节点），供前端展示"撤回到"选择列表。
+     *
+     * <p>校验规则：仅发起人可查询，仅运行中实例可查询。
+     *
+     * @param instanceId  实例 ID
+     * @param initiatorId 发起人 ID
+     * @return 节点列表，每个 Map 包含 nodeCode / nodeName / firstFinishAt / visitCount
+     * @since 1.6.0
+     */
+    List<Map<String, Object>> listRecallableNodes(String instanceId, String initiatorId);
 
     /**
      * P2-3: 回滚已完成的流程实例（撤销）

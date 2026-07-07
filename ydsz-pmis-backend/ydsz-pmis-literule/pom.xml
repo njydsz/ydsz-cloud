@@ -127,17 +127,15 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- 单元测试（P2-9 / P2-10 回归） -->
+        <!-- 单元测试（P2-9 / P2-10 回归；版本由 spring-boot-starter-test 统一管理） -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.12.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>1.12.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -15,6 +15,7 @@ import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.message.channel.ChannelRouter;
 import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.constant.MessageConstants;
+import com.njydsz.pmis.message.dto.BatchSendResult;
 import com.njydsz.pmis.message.dto.MessageLogQueryDTO;
 import com.njydsz.pmis.message.dto.MessageSendDTO;
 import com.njydsz.pmis.message.entity.MsgCanaryDO;
@@ -41,6 +42,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -316,6 +318,41 @@ public class MessageServiceImpl implements MessageService {
         request.setBizId(dto.getBizId());
         request.setMessageId(dto.getMessageId());
         return send(request);
+    }
+
+    @Override
+    public BatchSendResult batchSend(List<MessageRequest> requests, String batchId) {
+        BatchSendResult result = new BatchSendResult(batchId, 0, 0, 0, 0);
+        if (requests == null || requests.isEmpty() || !StringUtils.hasText(batchId)) {
+            return result;
+        }
+        // 限制单批最大 100 条,防止阻塞过久
+        int limit = Math.min(requests.size(), MessageConstants.BATCH_SEND_MAX_SIZE);
+        result.setTotal(limit);
+        for (int i = 0; i < limit; i++) {
+            MessageRequest req = requests.get(i);
+            if (req == null) {
+                result.incSkipped();
+                continue;
+            }
+            // 统一设置 bizId = batchId 便于进度查询
+            req.setBizId(batchId);
+            try {
+                MessageResult r = send(req);
+                if (r != null && r.isSuccess()) {
+                    result.incSuccess();
+                } else {
+                    result.incFailed();
+                }
+            } catch (Exception e) {
+                log.warn("[Message] 批量发送单条失败: batchId={} idx={} err={}",
+                        batchId, i, e.getMessage());
+                result.incFailed();
+            }
+        }
+        log.info("[Message] 批量发送完成: batchId={} total={} success={} failed={} skipped={}",
+                batchId, result.getTotal(), result.getSuccess(), result.getFailed(), result.getSkipped());
+        return result;
     }
 
     @Override

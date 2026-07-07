@@ -1,7 +1,6 @@
 package com.njydsz.pmis.literule.config;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import org.junit.jupiter.api.BeforeEach;

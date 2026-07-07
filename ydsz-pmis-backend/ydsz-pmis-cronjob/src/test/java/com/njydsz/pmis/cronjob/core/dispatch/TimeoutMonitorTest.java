@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -25,9 +26,11 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -43,6 +46,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("TimeoutMonitor 任务超时监控测试")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
+@SuppressWarnings("unchecked")
 class TimeoutMonitorTest {
 
     @Mock
@@ -134,13 +138,16 @@ class TimeoutMonitorTest {
         log0.setJobKey("timeout-key");
         log0.setStartTime(LocalDateTime.now().minusMinutes(10));
         log0.setStatus("RUNNING");
+        log0.setLockHolder("instance-1");
         when(jobLogMapper.selectTimedOutLogs(any(), anyInt())).thenReturn(List.of(log0));
         when(jobLogMapper.markTimeout(anyString(), any(), anyLong(), anyString())).thenReturn(1);
 
         monitor.scan();
 
         verify(jobLogMapper, times(1)).markTimeout(eq("log-1"), any(), anyLong(), anyString());
-        verify(redisTemplate, times(1)).delete(eq("pmis:job:lock:timeout-key"));
+        // P0-1: 锁释放改用 Lua 脚本安全释放（仅当 holder 匹配时才 delete）
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class),
+                eq(Collections.singletonList("pmis:job:lock:timeout-key")), eq("instance-1"));
         verify(jobMapper, times(1)).updateStats(eq("job-1"), any(), eq(null),
                 eq(null), eq(0L), eq(1L), eq("ERROR"));
     }
@@ -160,7 +167,7 @@ class TimeoutMonitorTest {
 
         monitor.scan();
 
-        verify(redisTemplate, never()).delete(anyString());
+        verify(redisTemplate, never()).execute(any(RedisScript.class), anyList(), anyString());
         verify(jobMapper, never()).updateStats(anyString(), any(), any(),
                 any(), any(), any(), any());
     }
@@ -175,9 +182,11 @@ class TimeoutMonitorTest {
         log0.setJobKey("fail-lock-key");
         log0.setStartTime(LocalDateTime.now().minusMinutes(10));
         log0.setStatus("RUNNING");
+        log0.setLockHolder("instance-3");
         when(jobLogMapper.selectTimedOutLogs(any(), anyInt())).thenReturn(List.of(log0));
         when(jobLogMapper.markTimeout(anyString(), any(), anyLong(), anyString())).thenReturn(1);
-        when(redisTemplate.delete(anyString())).thenThrow(new RuntimeException("redis conn err"));
+        doThrow(new RuntimeException("redis conn err"))
+                .when(redisTemplate).execute(any(RedisScript.class), anyList(), eq("instance-3"));
 
         monitor.scan(); // 不应抛异常
 
@@ -195,19 +204,25 @@ class TimeoutMonitorTest {
         log1.setJobKey("key-a");
         log1.setStartTime(LocalDateTime.now().minusMinutes(20));
         log1.setStatus("RUNNING");
+        log1.setLockHolder("instance-a");
         JobLogDO log2 = new JobLogDO();
         log2.setId("log-b");
         log2.setJobId("job-b");
         log2.setJobKey("key-b");
         log2.setStartTime(LocalDateTime.now().minusMinutes(15));
         log2.setStatus("RUNNING");
+        log2.setLockHolder("instance-b");
         when(jobLogMapper.selectTimedOutLogs(any(), anyInt())).thenReturn(List.of(log1, log2));
         when(jobLogMapper.markTimeout(anyString(), any(), anyLong(), anyString())).thenReturn(1);
 
         monitor.scan();
 
         verify(jobLogMapper, times(2)).markTimeout(anyString(), any(), anyLong(), anyString());
-        verify(redisTemplate, times(2)).delete(anyString());
+        // P0-1: 锁释放改用 Lua 脚本安全释放（仅当 holder 匹配时才 delete）
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class),
+                eq(Collections.singletonList("pmis:job:lock:key-a")), eq("instance-a"));
+        verify(redisTemplate, times(1)).execute(any(RedisScript.class),
+                eq(Collections.singletonList("pmis:job:lock:key-b")), eq("instance-b"));
         verify(jobMapper, times(2)).updateStats(anyString(), any(), any(),
                 any(), any(), any(), anyString());
     }

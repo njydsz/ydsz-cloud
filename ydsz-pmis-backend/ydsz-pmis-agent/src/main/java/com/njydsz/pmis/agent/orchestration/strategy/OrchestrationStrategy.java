@@ -2,6 +2,7 @@ package com.njydsz.pmis.agent.orchestration.strategy;
 
 import com.njydsz.pmis.agent.engine.Agent;
 import com.njydsz.pmis.agent.orchestration.AgentBlackboard;
+import com.njydsz.pmis.agent.orchestration.OrchestrationMode;
 import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 
@@ -12,10 +13,20 @@ import java.util.Map;
  *
  * <p>由 AgentCoordinator 调度，根据 OrchestrationRequest.mode 选择具体策略。
  *
+ * <p>每个策略实现需声明对应的 {@link OrchestrationMode}，由
+ * {@code AgentCoordinatorImpl} 在启动时收集为 {@code Map<OrchestrationMode, OrchestrationStrategy>}。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface OrchestrationStrategy {
+
+    /**
+     * 策略对应的编排模式。
+     *
+     * @return 编排模式枚举
+     */
+    OrchestrationMode mode();
 
     /**
      * 应用策略

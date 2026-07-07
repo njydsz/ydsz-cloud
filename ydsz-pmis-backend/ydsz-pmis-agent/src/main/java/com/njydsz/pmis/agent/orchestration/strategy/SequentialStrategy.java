@@ -8,6 +8,7 @@ import com.njydsz.pmis.agent.orchestration.OrchestrationMode;
 import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +31,13 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Slf4j
+@Component
 public class SequentialStrategy implements OrchestrationStrategy {
+
+    @Override
+    public OrchestrationMode mode() {
+        return OrchestrationMode.SEQUENTIAL;
+    }
 
     @Override
     public OrchestrationResult apply(OrchestrationRequest req,

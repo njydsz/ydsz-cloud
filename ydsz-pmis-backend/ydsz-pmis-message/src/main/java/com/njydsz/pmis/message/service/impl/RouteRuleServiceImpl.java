@@ -7,12 +7,15 @@ import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.dto.RouteRuleUpsertDTO;
 import com.njydsz.pmis.message.entity.MsgRouteRuleDO;
 import com.njydsz.pmis.message.mapper.MsgRouteRuleMapper;
 import com.njydsz.pmis.message.service.RouteRuleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -20,6 +23,8 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,8 +41,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RouteRuleServiceImpl implements RouteRuleService {
 
+    /** 路由规则缓存 TTL */
+    private static final Duration CACHE_TTL = Duration.ofMinutes(5);
+
     private final MsgRouteRuleMapper msgRouteRuleMapper;
     private final ExpressionParser expressionParser;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public MsgRouteRuleDO create(RouteRuleUpsertDTO dto) {
@@ -53,6 +62,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         }
         MsgRouteRuleDO entity = toEntity(dto);
         msgRouteRuleMapper.insert(entity);
+        evictCache();
         log.info("[RouteRule] 创建规则: code={}", dto.getRuleCode());
         return entity;
     }
@@ -94,6 +104,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
             entity.setSortOrder(dto.getSortOrder());
         }
         msgRouteRuleMapper.updateById(entity);
+        evictCache();
         return entity;
     }
 
@@ -103,6 +114,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "规则 ID 不能为空");
         }
         msgRouteRuleMapper.deleteById(id);
+        evictCache();
     }
 
     @Override
@@ -129,9 +141,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
 
     @Override
     public List<MsgRouteRuleDO> listEnabled() {
-        return msgRouteRuleMapper.selectList(new LambdaQueryWrapper<MsgRouteRuleDO>()
-                .eq(MsgRouteRuleDO::getStatus, "ENABLED")
-                .orderByAsc(MsgRouteRuleDO::getSortOrder));
+        return loadEnabledRulesFromCache();
     }
 
     @Override
@@ -139,9 +149,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         if (request == null) {
             return null;
         }
-        List<MsgRouteRuleDO> rules = msgRouteRuleMapper.selectList(new LambdaQueryWrapper<MsgRouteRuleDO>()
-                .eq(MsgRouteRuleDO::getStatus, "ENABLED")
-                .orderByAsc(MsgRouteRuleDO::getPriority));
+        List<MsgRouteRuleDO> rules = loadEnabledRulesFromCache();
         EvaluationContext ctx = new StandardEvaluationContext();
         ctx.setVariable("request", request);
         for (MsgRouteRuleDO rule : rules) {
@@ -162,6 +170,46 @@ public class RouteRuleServiceImpl implements RouteRuleService {
             }
         }
         return null;
+    }
+
+    /**
+     * 从 Redis 加载启用规则列表(未命中则查 DB 并回填)。
+     */
+    private List<MsgRouteRuleDO> loadEnabledRulesFromCache() {
+        try {
+            String json = stringRedisTemplate.opsForValue().get(MessageConstants.ROUTE_RULE_CACHE_KEY);
+            if (StringUtils.hasText(json)) {
+                List<MsgRouteRuleDO> cached = com.alibaba.fastjson2.JSON.parseArray(json, MsgRouteRuleDO.class);
+                if (cached != null) {
+                    return cached;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[RouteRule] 缓存读取失败,回退 DB: {}", e.getMessage());
+        }
+        List<MsgRouteRuleDO> rules = msgRouteRuleMapper.selectList(new LambdaQueryWrapper<MsgRouteRuleDO>()
+                .eq(MsgRouteRuleDO::getStatus, "ENABLED")
+                .orderByAsc(MsgRouteRuleDO::getPriority));
+        try {
+            stringRedisTemplate.opsForValue().set(
+                    MessageConstants.ROUTE_RULE_CACHE_KEY,
+                    JsonUtils.toJson(rules),
+                    CACHE_TTL);
+        } catch (Exception e) {
+            log.warn("[RouteRule] 缓存回填失败: {}", e.getMessage());
+        }
+        return rules == null ? Collections.emptyList() : rules;
+    }
+
+    /**
+     * 主动失效路由规则缓存。
+     */
+    private void evictCache() {
+        try {
+            stringRedisTemplate.delete(MessageConstants.ROUTE_RULE_CACHE_KEY);
+        } catch (Exception e) {
+            log.warn("[RouteRule] 缓存失效失败: {}", e.getMessage());
+        }
     }
 
     private MsgRouteRuleDO toEntity(RouteRuleUpsertDTO dto) {

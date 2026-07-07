@@ -101,4 +101,26 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
             + "LIMIT #{limit}")
     List<JobLogDO> selectSlowLogs(@Param("since") LocalDateTime since,
                                     @Param("limit") int limit);
+
+    /**
+     * P1-3: 查询指定节点上 RUNNING 状态的日志（故障转移用）。
+     */
+    @Select("SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
+            + "       status, error_message, params_json, result_json, trace_id, "
+            + "       trigger_type, lock_holder, exec_node_id, exec_thread_id, "
+            + "       created_at, deleted "
+            + "FROM pmis_job_log "
+            + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id = #{nodeId}")
+    List<JobLogDO> selectRunningByNode(@Param("nodeId") String nodeId);
+
+    /**
+     * P1-3: 标记指定节点上 RUNNING 日志为 FAILED（节点掉线故障转移）。
+     */
+    @Update("UPDATE pmis_job_log "
+            + "SET status = 'FAILED', end_time = #{now}, "
+            + "    duration_ms = EXTRACT(EPOCH FROM (#{now} - start_time)) * 1000, "
+            + "    error_message = 'Node went offline during execution' "
+            + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id = #{nodeId}")
+    int markFailedByNodeOffline(@Param("nodeId") String nodeId,
+                                 @Param("now") LocalDateTime now);
 }

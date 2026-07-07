@@ -200,6 +200,13 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         signService.addApprover(dto);
     }
 
+    /** P1-3: 取回审批 — 加分布式锁防止并发 */
+    @Override
+    @DistributedLock(key = "'flow:task:retract:' + #hisTaskId", waitTime = 3, leaseTime = 30)
+    public String retract(String hisTaskId, String operatorId, String comment) {
+        return completeService.retract(hisTaskId, operatorId, comment);
+    }
+
     // ============================== 已阅 / 沟通 / 暂存 ==============================
 
     @Override
@@ -222,6 +229,26 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     @Override
     public void batchPass(List<String> taskIds, String userId, String comment) {
         batchService.batchPass(taskIds, userId, comment);
+    }
+
+    /** P1-4: 批量驳回 */
+    @Override
+    public void batchReject(List<String> taskIds, String userId, String comment,
+                            String targetNodeCode) {
+        batchService.batchReject(taskIds, userId, comment, targetNodeCode);
+    }
+
+    /** P1-4: 批量转办 */
+    @Override
+    public void batchTransfer(List<String> taskIds, String userId, String comment,
+                              String targetUserId, String targetUserName) {
+        batchService.batchTransfer(taskIds, userId, comment, targetUserId, targetUserName);
+    }
+
+    /** P1-4: 批量催办 */
+    @Override
+    public int batchUrge(List<String> instanceIds, String operatorId, String comment) {
+        return batchService.batchUrge(instanceIds, operatorId, comment);
     }
 
     // ============================== 视图转换 / 统计 ==============================

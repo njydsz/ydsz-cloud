@@ -25,6 +25,7 @@ import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
@@ -105,6 +106,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowEventSubscriptionService eventSubscriptionService;
     /** P2-2: 审计日志 Mapper（重审时写入 RESUBMIT 轨迹） */
     private final FlowAuditLogMapper auditLogMapper;
+    /**
+     * P1-1: 历史任务 Mapper（查询可撤回的历史节点列表）
+     */
+    private final FlowHisTaskMapper hisTaskMapper;
     /** P2-6: 三方审批双向同步服务（终止/撤回时主动同步回三方） */
     private final FlowThirdPartySyncService thirdPartySyncService;
     /**
@@ -440,6 +445,115 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P2-35: 发布 Spring 异步事件
         publishWorkflowEvent("INSTANCE_RECALLED", instanceId, null);
         // P2-6: 双向同步 — 撤回对应三方 canceled（发起人撤回），主动取消三方审批单
+        try {
+            thirdPartySyncService.syncBackOnRecall(instanceId, initiatorId);
+        } catch (Exception e) {
+            log.warn("[Flow] 三方审批同步撤回失败（不影响本地撤回）: instanceId={} err={}",
+                    instanceId, e.getMessage());
+        }
+        return true;
+    }
+
+    // ============================== P1-1: 撤回到指定历史节点 ==============================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listRecallableNodes(String instanceId, String initiatorId) {
+        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        // 校验：仅发起人可查询
+        if (!instance.getInitiatorId().equals(initiatorId)) {
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
+        }
+        // 校验：仅运行中可查询
+        if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_3095a676");
+        }
+        // 查历史已办节点
+        List<Map<String, Object>> passedNodes = hisTaskMapper.listPassedNodes(instanceId);
+        if (passedNodes == null || passedNodes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // 排除当前待办节点（撤回到当前节点无意义）
+        String currentNodeCode = instance.getCurrentNodeCode();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> n : passedNodes) {
+            Object code = n.get("nodeCode");
+            if (code != null && !code.toString().equals(currentNodeCode)) {
+                result.add(n);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @DistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
+    public boolean recall(String instanceId, String initiatorId, String targetNodeCode) {
+        // 向后兼容：targetNodeCode 为空时降级到原有 recall
+        if (!StringUtils.hasText(targetNodeCode)) {
+            return recall(instanceId, initiatorId);
+        }
+
+        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        // 校验：仅发起人可撤回
+        if (!instance.getInitiatorId().equals(initiatorId)) {
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
+        }
+        // 校验：仅运行中可撤回
+        if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_3095a676");
+        }
+        // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
+        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+        boolean anyProcessed = pendingTasks.stream()
+                .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
+                        || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
+        if (anyProcessed) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c55fe642");
+        }
+        // 校验：targetNodeCode 必须在可撤回节点列表中
+        List<Map<String, Object>> recallable = hisTaskMapper.listPassedNodes(instanceId);
+        Set<String> recallableCodes = new HashSet<>();
+        if (recallable != null) {
+            for (Map<String, Object> n : recallable) {
+                Object code = n.get("nodeCode");
+                if (code != null) {
+                    recallableCodes.add(code.toString());
+                }
+            }
+        }
+        if (!recallableCodes.contains(targetNodeCode)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_e5f6a7b8", targetNodeCode);
+        }
+
+        // 取消当前待办（审计：CANCELLED，原因 RECALL）
+        String currentNodeCode = pendingTasks.isEmpty()
+                ? instance.getCurrentNodeCode() : pendingTasks.get(0).getNodeCode();
+        taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
+
+        // 退回到目标节点（复用 advancer.advance 的 REJECT 通道，保持审计轨迹一致）
+        Map<String, Object> variables = parseVariables(instance.getVariable());
+        try {
+            advancer.advance(instance, currentNodeCode, "REJECT", targetNodeCode, variables);
+        } catch (Exception e) {
+            log.error("[Flow] 撤回到指定节点失败: instanceId={} targetNodeCode={}",
+                    instanceId, targetNodeCode, e);
+            throw new BizException(BizErrorCode.INTERNAL_ERROR,
+                    "error.workflow.msg_3d726320", e.getMessage());
+        }
+
+        log.info("[Flow] 撤回流程到指定节点: instanceId={} initiatorId={} targetNodeCode={}",
+                instanceId, initiatorId, targetNodeCode);
+        // P2-3: Prometheus 指标 — 撤回
+        if (flowMetrics != null) {
+            flowMetrics.incRecall(instance.getFlowCode());
+        }
+        // P2-34: 触发 onInstanceRecalled 事件
+        fireEvent(l -> l.onInstanceRecalled(instanceId, initiatorId));
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("INSTANCE_RECALLED", instanceId, null);
+        // P2-6: 双向同步 — 撤回对应三方 canceled
         try {
             thirdPartySyncService.syncBackOnRecall(instanceId, initiatorId);
         } catch (Exception e) {

@@ -96,6 +96,8 @@ class DefaultTaskDispatcherTest {
     private ObjectProvider<TenantQuotaService> tenantQuotaServiceProvider;
     @Mock
     private TenantQuotaService tenantQuotaService;
+    @Mock
+    private ObjectProvider<com.njydsz.pmis.cronjob.core.handler.HttpJobHandler> httpJobHandlerProvider;
 
     private CronjobProperties cronjobProperties;
 
@@ -129,6 +131,10 @@ class DefaultTaskDispatcherTest {
             java.lang.reflect.Field f4 = DefaultTaskDispatcher.class.getDeclaredField("tenantQuotaServiceProvider");
             f4.setAccessible(true);
             f4.set(dispatcher, tenantQuotaServiceProvider);
+            // P1-5: 注入 HttpJobHandler ObjectProvider
+            java.lang.reflect.Field f5 = DefaultTaskDispatcher.class.getDeclaredField("httpJobHandlerProvider");
+            f5.setAccessible(true);
+            f5.set(dispatcher, httpJobHandlerProvider);
         } catch (Exception e) {
             throw new IllegalStateException("注入 ObjectProvider 失败", e);
         }
@@ -141,6 +147,8 @@ class DefaultTaskDispatcherTest {
         lenient().when(cronjobMetricsProvider.getIfAvailable()).thenReturn(null);
         // P7-3: TenantQuotaService 默认不启用（配额检查在测试中默认关闭）
         lenient().when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(null);
+        // P1-5: HttpJobHandler 默认不启用（HTTP 任务类型在测试中默认降级到 BEAN 模式）
+        lenient().when(httpJobHandlerProvider.getIfAvailable()).thenReturn(null);
         lenient().when(jobLogMapper.insert(any(JobLogDO.class))).thenAnswer(invocation -> {
             JobLogDO log = invocation.getArgument(0);
             log.setId("log-test-" + System.nanoTime());

@@ -116,7 +116,7 @@ class RedissonLeaderElectorTest {
     }
 
     @Test
-    @DisplayName("renew 是 Leader 时通过 RBucket.expire 续期返回 true")
+    @DisplayName("renew 是 Leader 时通过 RBucket.set 续期 holder key 返回 true")
     void renew_isLeader_extendsLease() throws InterruptedException {
         when(lock.tryLock(eq(0L), anyLong(), eq(TimeUnit.MILLISECONDS))).thenReturn(true);
         when(lock.isHeldByCurrentThread()).thenReturn(true);
@@ -126,7 +126,8 @@ class RedissonLeaderElectorTest {
         boolean renewed = elector.renew("role-1");
 
         assertTrue(renewed);
-        verify(bucket, times(1)).expire(eq(Duration.ofSeconds(30)));
+        // tryAcquire + renew 各调用一次 bucket.set(nodeId, lease)
+        verify(bucket, times(2)).set(any(), eq(Duration.ofSeconds(30)));
     }
 
     @Test
@@ -134,7 +135,7 @@ class RedissonLeaderElectorTest {
     void renew_notHeld_returnsFalse() {
         boolean renewed = elector.renew("role-1");
         assertFalse(renewed);
-        verify(bucket, never()).expire(any(Duration.class));
+        verify(bucket, never()).set(any(), any(Duration.class));
     }
 
     @Test

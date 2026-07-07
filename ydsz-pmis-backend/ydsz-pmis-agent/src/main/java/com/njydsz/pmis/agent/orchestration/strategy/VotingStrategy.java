@@ -9,7 +9,11 @@ import com.njydsz.pmis.agent.orchestration.AgentBlackboard;
 import com.njydsz.pmis.agent.orchestration.OrchestrationMode;
 import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
+import com.njydsz.pmis.common.constant.AsyncExecutorNames;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 投票融合编排策略
@@ -32,11 +37,32 @@ import java.util.Map;
  *
  * <p>适用场景：多视角风险评估（如同时跑风险预警 + 利润预测 + 工时异常）。
  *
+ * <p><b>P0-2 修复</b>：原实现使用串行 for 循环执行所有 Agent，违背"投票"语义（应并行）。
+ * 现改为并行提交至共享 {@code agentExecutor}，与 {@link ParallelStrategy} 复用同一线程池。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j
+@Component
 public class VotingStrategy implements OrchestrationStrategy {
+
+    /** 共享 AI Agent 线程池（由 AsyncThreadPoolConfig 提供） */
+    private final ThreadPoolTaskExecutor agentExecutor;
+
+    /**
+     * 构造投票策略，注入共享线程池。
+     *
+     * @param agentExecutor AI Agent 共享线程池
+     */
+    public VotingStrategy(@Qualifier(AsyncExecutorNames.AGENT) ThreadPoolTaskExecutor agentExecutor) {
+        this.agentExecutor = agentExecutor;
+    }
+
+    @Override
+    public OrchestrationMode mode() {
+        return OrchestrationMode.VOTING;
+    }
 
     @Override
     public OrchestrationResult apply(OrchestrationRequest req,
@@ -61,7 +87,8 @@ public class VotingStrategy implements OrchestrationStrategy {
             weights.putIfAbsent(t, 1.0);
         }
 
-        // 执行所有 Agent
+        // 并行执行所有 Agent（P0-2 修复：原串行 → 现并行）
+        List<CompletableFuture<Map.Entry<String, AgentResult>>> futures = new ArrayList<>();
         for (String agentType : types) {
             Agent agent = agents.get(agentType);
             if (agent == null) {
@@ -71,18 +98,36 @@ public class VotingStrategy implements OrchestrationStrategy {
             AgentContext ctx = new AgentContext(req.getBizType(), req.getBizId(), req.getBizRef(),
                     req.getCallerId(), req.getCallerName(), req.getSource(),
                     req.getFacts() == null ? new HashMap<>() : new HashMap<>(req.getFacts()));
+            CompletableFuture<Map.Entry<String, AgentResult>> f = CompletableFuture.supplyAsync(() -> {
+                try {
+                    AgentResult ar = agent.execute(ctx);
+                    return Map.entry(agentType, ar);
+                } catch (Exception e) {
+                    log.error("[Voting] Agent 执行失败: type={} err={}", agentType, e.getMessage());
+                    return Map.entry(agentType, (AgentResult) null);
+                }
+            }, agentExecutor);
+            futures.add(f);
+        }
+
+        // 等待全部完成并合并到黑板
+        for (CompletableFuture<Map.Entry<String, AgentResult>> f : futures) {
             try {
-                AgentResult ar = agent.execute(ctx);
-                result.getAgentResults().put(agentType, ar);
+                Map.Entry<String, AgentResult> e = f.join();
+                String agentType = e.getKey();
+                AgentResult ar = e.getValue();
                 result.getExecutedAgents().add(agentType);
-                blackboard.putScratch(agentType, ar);
-                blackboard.appendTrace(agentType, OrchestrationMode.VOTING,
-                        ar.getScore(), ar.getConfidence(),
-                        "权重=" + weights.getOrDefault(agentType, 1.0));
+                if (ar != null) {
+                    result.getAgentResults().put(agentType, ar);
+                    blackboard.putScratch(agentType, ar);
+                    blackboard.appendTrace(agentType, OrchestrationMode.VOTING,
+                            ar.getScore(), ar.getConfidence(),
+                            "权重=" + weights.getOrDefault(agentType, 1.0));
+                } else {
+                    blackboard.appendTrace(agentType, OrchestrationMode.VOTING, null, null, "并行执行失败");
+                }
             } catch (Exception e) {
-                log.error("[Voting] Agent 执行失败: type={} err={}", agentType, e.getMessage());
-                blackboard.appendTrace(agentType, OrchestrationMode.VOTING, null, null,
-                        "执行异常: " + e.getMessage());
+                log.error("[Voting] 等待 Agent 失败: err={}", e.getMessage());
             }
         }
 

@@ -9,10 +9,12 @@ import com.njydsz.pmis.message.entity.MsgLogDO;
 import com.njydsz.pmis.message.entity.MsgTemplateDO;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
 import com.njydsz.pmis.message.metric.MessageMetrics;
+import com.njydsz.pmis.message.service.AggregateService;
 import com.njydsz.pmis.message.service.CanaryService;
 import com.njydsz.pmis.message.service.PreferenceService;
 import com.njydsz.pmis.message.service.RateLimitService;
 import com.njydsz.pmis.message.service.RouteRuleService;
+import com.njydsz.pmis.message.service.SubscriptionService;
 import com.njydsz.pmis.message.service.TemplateService;
 import com.njydsz.pmis.message.template.TemplateEngine;
 import org.junit.jupiter.api.DisplayName;
@@ -63,6 +65,10 @@ class MessageServiceImplTest {
     private MessageProperties messageProperties;
     @Mock
     private MessageMetrics messageMetrics;
+    @Mock
+    private SubscriptionService subscriptionService;
+    @Mock
+    private AggregateService aggregateService;
 
     @InjectMocks
     private MessageServiceImpl messageService;
@@ -83,7 +89,6 @@ class MessageServiceImplTest {
         MessageRequest req = buildRequest();
         when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
         when(routeRuleService.match(any())).thenReturn(null);
-        when(canaryService.hit(anyString(), anyString())).thenReturn(false);
         when(rateLimitService.tryAcquire(anyString(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(true);
         when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
         MsgTemplateDO tpl = new MsgTemplateDO();
@@ -132,7 +137,6 @@ class MessageServiceImplTest {
         MessageRequest req = buildRequest();
         when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
         when(routeRuleService.match(any())).thenReturn(null);
-        when(canaryService.hit(anyString(), anyString())).thenReturn(false);
         when(rateLimitService.tryAcquire(anyString(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(true);
         when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
         when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(null);
@@ -148,7 +152,6 @@ class MessageServiceImplTest {
         MessageRequest req = buildRequest();
         when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
         when(routeRuleService.match(any())).thenReturn(null);
-        when(canaryService.hit(anyString(), anyString())).thenReturn(false);
         when(rateLimitService.tryAcquire(anyString(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(true);
         when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
         MsgTemplateDO tpl = new MsgTemplateDO();
@@ -173,7 +176,6 @@ class MessageServiceImplTest {
         dto.setContent("hi");
         when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
         when(routeRuleService.match(any())).thenReturn(null);
-        when(canaryService.hit(anyString(), anyString())).thenReturn(false);
         when(rateLimitService.tryAcquire(anyString(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(true);
         when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
         when(channelRouter.dispatch(any(MsgLogDO.class))).thenReturn("trace");

@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
@@ -19,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
@@ -34,6 +37,10 @@ class RouteRuleServiceImplTest {
 
     @Mock
     private MsgRouteRuleMapper msgRouteRuleMapper;
+    @Mock
+    private StringRedisTemplate stringRedisTemplate;
+    @Mock
+    private ValueOperations<String, String> valueOperations;
 
     private final ExpressionParser parser = new SpelExpressionParser();
 
@@ -54,6 +61,9 @@ class RouteRuleServiceImplTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        // mock Redis 缓存未命中,走 DB 查询
+        when(stringRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenReturn(null);
     }
 
     @Test

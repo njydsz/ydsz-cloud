@@ -61,4 +61,7 @@ public final class MessageConstants {
 
     /** 单次重试扫描批量大小 */
     public static final int RETRY_SCAN_BATCH_SIZE = 200;
+
+    /** 单次批量发送最大条数(防止阻塞过久) */
+    public static final int BATCH_SEND_MAX_SIZE = 100;
 }

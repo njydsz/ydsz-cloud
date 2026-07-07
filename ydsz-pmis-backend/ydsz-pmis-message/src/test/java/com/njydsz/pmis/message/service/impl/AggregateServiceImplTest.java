@@ -7,6 +7,7 @@ import com.njydsz.pmis.message.entity.MsgAggregateDO;
 import com.njydsz.pmis.message.enums.AggregateBatchStatusEnum;
 import com.njydsz.pmis.message.mapper.MsgAggregateMapper;
 import com.njydsz.pmis.message.service.MessageService;
+import com.njydsz.pmis.message.service.TemplateService;
 import com.njydsz.pmis.message.template.TemplateEngine;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,8 @@ class AggregateServiceImplTest {
     private MessageService messageService;
     @Mock
     private TemplateEngine templateEngine;
+    @Mock
+    private TemplateService templateService;
     @Mock
     private RedissonClient redissonClient;
     @Mock
@@ -97,8 +100,11 @@ class AggregateServiceImplTest {
         batch.setReceiver("u1");
         batch.setChannel("EMAIL");
         batch.setMessageCount(3);
+        batch.setTenantId("t1");
         when(msgAggregateMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(List.of(batch));
         when(templateEngine.render(anyString(), any())).thenReturn("digest");
+        // mock 无摘要模板,回退默认文案
+        when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(null);
         MessageResult ok = MessageResult.ok("EMAIL", "trace");
         when(messageService.send(any(MessageRequest.class))).thenReturn(ok);
 

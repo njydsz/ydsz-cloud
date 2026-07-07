@@ -10,10 +10,12 @@ import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.entity.MsgAggregateDO;
+import com.njydsz.pmis.message.entity.MsgTemplateDO;
 import com.njydsz.pmis.message.enums.AggregateBatchStatusEnum;
 import com.njydsz.pmis.message.mapper.MsgAggregateMapper;
 import com.njydsz.pmis.message.service.AggregateService;
 import com.njydsz.pmis.message.service.MessageService;
+import com.njydsz.pmis.message.service.TemplateService;
 import com.njydsz.pmis.message.template.TemplateEngine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,9 +47,16 @@ public class AggregateServiceImpl implements AggregateService {
     /** 默认聚合频率窗口(分钟) */
     private static final long DEFAULT_FREQUENCY_MINUTES = 30L;
 
+    /** 摘要模板编码前缀,完整编码 = 前缀 + aggregateGroup(bizType) */
+    private static final String DIGEST_TEMPLATE_PREFIX = "DIGEST_";
+
+    /** 默认摘要模板内容(未配置摘要模板时回退) */
+    private static final String DEFAULT_DIGEST_TEMPLATE = "您有 ${count} 条 ${group} 相关消息,请及时查看";
+
     private final MsgAggregateMapper msgAggregateMapper;
     private final MessageService messageService;
     private final TemplateEngine templateEngine;
+    private final TemplateService templateService;
     private final RedissonClient redissonClient;
 
     @Override
@@ -157,12 +166,12 @@ public class AggregateServiceImpl implements AggregateService {
      */
     private boolean sendBatch(MsgAggregateDO batch) {
         try {
-            // 渲染摘要内容
+            // 渲染摘要内容：优先按 bizType 查找摘要模板 DIGEST_{group},回退默认模板
             Map<String, Object> params = new HashMap<>();
             params.put("count", batch.getMessageCount());
             params.put("group", batch.getAggregateGroup());
-            String digest = templateEngine.render(
-                    "您有 ${count} 条 ${group} 相关消息,请及时查看", params);
+            String digestTemplate = loadDigestTemplate(batch);
+            String digest = templateEngine.render(digestTemplate, params);
             batch.setDigestContent(digest);
             MessageRequest request = new MessageRequest();
             request.setChannel(batch.getChannel());
@@ -185,5 +194,28 @@ public class AggregateServiceImpl implements AggregateService {
             log.error("[Aggregate] 批次发送异常: id={} err={}", batch.getId(), e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * 加载摘要模板：按约定编码 DIGEST_{aggregateGroup} 查找,
+     * 找到则用模板 content,否则回退默认摘要文案。
+     */
+    private String loadDigestTemplate(MsgAggregateDO batch) {
+        String group = batch.getAggregateGroup();
+        if (!StringUtils.hasText(group)) {
+            return DEFAULT_DIGEST_TEMPLATE;
+        }
+        try {
+            MsgTemplateDO tpl = templateService.loadByCodeAndChannel(
+                    DIGEST_TEMPLATE_PREFIX + group, batch.getChannel(),
+                    null, batch.getTenantId());
+            if (tpl != null && StringUtils.hasText(tpl.getContent())) {
+                return tpl.getContent();
+            }
+        } catch (Exception e) {
+            log.debug("[Aggregate] 摘要模板加载失败,回退默认: group={} err={}",
+                    group, e.getMessage());
+        }
+        return DEFAULT_DIGEST_TEMPLATE;
     }
 }

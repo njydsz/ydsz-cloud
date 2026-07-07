@@ -116,13 +116,31 @@ public class FlowInstanceController {
      *
      * <p>P0-1 修复：发起人 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
      *
-     * @param id 流程实例 ID
+     * <p>P1-1 扩展：支持 targetNodeCode 参数，撤回到指定历史节点；为空时撤回到开始节点下游第一节点。
+     *
+     * @param id              流程实例 ID
+     * @param targetNodeCode  目标节点编码（可选，为空时撤回到开始节点下游第一节点）
      * @return 统一响应结果，包含是否撤回成功
      */
     @PostMapping("/instance/{id}/recall")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
-    public Result<Boolean> recall(@PathVariable String id) {
-        return Result.ok(workflowFacade.recallProcess(id, SecurityContext.getUserId()));
+    public Result<Boolean> recall(@PathVariable String id,
+                                  @RequestParam(required = false) String targetNodeCode) {
+        return Result.ok(instanceService.recall(id, SecurityContext.getUserId(), targetNodeCode));
+    }
+
+    /**
+     * P1-1: 查询可撤回的历史节点列表。
+     *
+     * <p>返回当前实例已办过的历史节点（排除当前待办节点），供前端展示"撤回到"选择列表。
+     *
+     * @param id 流程实例 ID
+     * @return 统一响应结果，包含可撤回节点列表
+     */
+    @GetMapping("/instance/{id}/recallable-nodes")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
+    public Result<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
+        return Result.ok(instanceService.listRecallableNodes(id, SecurityContext.getUserId()));
     }
 
     /**

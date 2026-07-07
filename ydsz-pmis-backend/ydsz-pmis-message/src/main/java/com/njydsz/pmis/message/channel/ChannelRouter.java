@@ -6,12 +6,16 @@ import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.entity.MsgLogDO;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,12 +47,27 @@ public class ChannelRouter {
     /** 通道缓存：channelType(大写) -> MessageChannel */
     private final Map<String, MessageChannel> channelCache = new HashMap<>();
 
+    /** 熔断器缓存：channelType(大写) -> CircuitBreaker */
+    private final Map<String, CircuitBreaker> breakerCache = new HashMap<>();
+
+    /** 默认熔断配置：50% 失败率触发熔断,开启 30s,半开试探 3 次 */
+    private static final CircuitBreakerConfig DEFAULT_CB_CONFIG = CircuitBreakerConfig.custom()
+            .failureRateThreshold(50)
+            .slowCallRateThreshold(80)
+            .slowCallDurationThreshold(Duration.ofSeconds(5))
+            .waitDurationInOpenState(Duration.ofSeconds(30))
+            .permittedNumberOfCallsInHalfOpenState(3)
+            .slidingWindowSize(20)
+            .minimumNumberOfCalls(10)
+            .build();
+
     /**
-     * 收集所有 MessageChannel Bean 并按通道类型注册。
+     * 收集所有 MessageChannel Bean 并按通道类型注册,同时为每个通道创建独立熔断器。
      */
     @PostConstruct
     public void initChannels() {
         Map<String, MessageChannel> beans = applicationContext.getBeansOfType(MessageChannel.class);
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(DEFAULT_CB_CONFIG);
         for (MessageChannel channel : beans.values()) {
             String type = channel.channelType() == null ? "" : channel.channelType().trim().toUpperCase();
             if (type.isEmpty()) {
@@ -56,8 +75,9 @@ public class ChannelRouter {
                 continue;
             }
             channelCache.put(type, channel);
+            breakerCache.put(type, registry.circuitBreaker("ch-" + type, DEFAULT_CB_CONFIG));
         }
-        log.info("[ChannelRouter] 已注册 {} 个消息通道: {}", channelCache.size(), channelCache.keySet());
+        log.info("[ChannelRouter] 已注册 {} 个消息通道(含熔断器): {}", channelCache.size(), channelCache.keySet());
     }
 
     /**
@@ -87,16 +107,37 @@ public class ChannelRouter {
     public MessageResult dispatch(MessageRequest request) {
         String channel = request.getChannel();
         MessageChannel target = route(channel);
+        CircuitBreaker breaker = breakerCache.get(channel.trim().toUpperCase());
+        // 熔断开启时快速失败,不调用真实通道
+        if (breaker != null && !breaker.tryAcquirePermission()) {
+            log.warn("[ChannelRouter] 通道熔断中,快速失败: channel={} state={}",
+                    channel, breaker.getState());
+            return MessageResult.fail(channel, "通道熔断中,请稍后重试");
+        }
         long start = System.currentTimeMillis();
         try {
             MessageResult result = target.send(request);
             long cost = System.currentTimeMillis() - start;
-            log.info("[ChannelRouter] channel={} status={} costMs={}",
-                    channel, result.getStatus(), cost);
+            log.info("[ChannelRouter] channel={} status={} costMs={} cbState={}",
+                    channel, result.getStatus(), cost,
+                    breaker == null ? "N/A" : breaker.getState());
+            // 业务失败(非异常)也计入熔断失败率
+            if (breaker != null) {
+                if (result.isSuccess()) {
+                    breaker.onSuccess(cost, java.util.concurrent.TimeUnit.MILLISECONDS);
+                } else {
+                    breaker.onError(cost, java.util.concurrent.TimeUnit.MILLISECONDS,
+                            new RuntimeException(result.getErrorMessage()));
+                }
+            }
             return result;
         } catch (Exception e) {
             long cost = System.currentTimeMillis() - start;
-            log.error("[ChannelRouter] channel={} 发送异常 costMs={}", channel, cost, e);
+            if (breaker != null) {
+                breaker.onError(cost, java.util.concurrent.TimeUnit.MILLISECONDS, e);
+            }
+            log.error("[ChannelRouter] channel={} 发送异常 costMs={} cbState={}",
+                    channel, cost, breaker == null ? "N/A" : breaker.getState(), e);
             return MessageResult.fail(channel, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }

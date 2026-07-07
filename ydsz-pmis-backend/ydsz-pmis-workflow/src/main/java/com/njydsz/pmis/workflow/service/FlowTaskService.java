@@ -200,6 +200,38 @@ public interface FlowTaskService {
     void batchPass(List<String> taskIds, String userId, String comment);
 
     /**
+     * P1-4: 批量驳回 — 对多个任务逐一执行 reject，@Transactional 保证原子性。
+     *
+     * @param taskIds        任务 ID 列表
+     * @param userId         操作人 ID
+     * @param comment        审批意见
+     * @param targetNodeCode 退回目标节点编码（可选，为空时走默认退回逻辑）
+     */
+    void batchReject(List<String> taskIds, String userId, String comment, String targetNodeCode);
+
+    /**
+     * P1-4: 批量转办 — 对多个任务逐一执行 transfer，@Transactional 保证原子性。
+     *
+     * @param taskIds        任务 ID 列表
+     * @param userId         操作人 ID
+     * @param comment        转办说明
+     * @param targetUserId   目标人 ID
+     * @param targetUserName 目标人姓名
+     */
+    void batchTransfer(List<String> taskIds, String userId, String comment,
+                       String targetUserId, String targetUserName);
+
+    /**
+     * P1-4: 批量催办 — 对多个实例逐一执行 urge，单个失败不影响其他。
+     *
+     * @param instanceIds 实例 ID 列表
+     * @param operatorId  操作人 ID
+     * @param comment     催办说明
+     * @return 成功催办的实例数量
+     */
+    int batchUrge(List<String> instanceIds, String operatorId, String comment);
+
+    /**
      * 转视图
      */
     FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task);
@@ -289,4 +321,27 @@ public interface FlowTaskService {
      * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
      */
     void addApprover(FlowTaskOperateDTO dto);
+
+    /**
+     * P1-3: 取回 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
+     *
+     * <p>对标钉钉/飞书"取回"能力。与发起人撤回（{@link com.njydsz.pmis.workflow.service.FlowInstanceService#recall}) 不同，
+     * 取回是<b>审批人</b>维度：审批人已 PASS 后，下一节点尚未处理时，可取回自己的审批，
+     * 流程退回到审批人所在节点重新审批。
+     *
+     * <p>校验规则：
+     * <ul>
+     *   <li>历史任务存在且 taskStatus=COMPLETED；</li>
+     *   <li>操作人必须是历史任务的办理人（assigneeId）；</li>
+     *   <li>实例状态为 RUNNING；</li>
+     *   <li>下一节点的待办任务必须全部为 PENDING（未签收/未完成）。</li>
+     * </ul>
+     *
+     * @param hisTaskId 历史任务 ID（pmis_flow_his_task.id）
+     * @param operatorId 操作人 ID（校验与 hisTask.assigneeId 一致）
+     * @param comment 取回说明（可选）
+     * @return 新创建的待办任务 ID
+     * @since 1.6.0
+     */
+    String retract(String hisTaskId, String operatorId, String comment);
 }

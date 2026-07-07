@@ -92,6 +92,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
     /** P7-3: 租户级配额服务（可选注入，未配置时跳过配额检查与计数） */
     private final ObjectProvider<TenantQuotaService> tenantQuotaServiceProvider;
+    /** P1-5: HTTP 任务处理器（可选注入，未配置时 HTTP 类型任务降级到 BEAN 模式） */
+    private final ObjectProvider<com.njydsz.pmis.cronjob.core.handler.HttpJobHandler> httpJobHandlerProvider;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -203,7 +205,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (strategy == null) {
             // 理论上不会走到这里（isShardedJob 已判定），防御性处理
             log.warn("[Dispatcher] ShardingStrategy 不可用, fallback 到非分片模式: key={}", job.getJobKey());
-            return executeJob(job, holdLock, triggerType);
+            return executeJob(job, holdLock, triggerType, 0);
         }
 
         List<String> onlineNodes = getOnlineNodes();
@@ -294,7 +296,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         boolean success = false;
         Object result = null;
         try {
-            JobHandler handler = applicationContext.getBean(job.getHandler(), JobHandler.class);
+            JobHandler handler = resolveHandler(job);
             ShardingContext ctx = new ShardingContext(shardTotal, shardIndex,
                     Collections.emptyList(), job.getJobKey(), log0.getId());
             result = handler.execute(job.getParamsJson(), ctx);
@@ -373,6 +375,36 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
 
     /**
+     * P1-5: 根据任务类型解析处理器。
+     *
+     * <p>路由规则：
+     * <ul>
+     *   <li>{@code jobType=HTTP}: 返回 {@link com.njydsz.pmis.cronjob.core.handler.HttpJobHandler}</li>
+     *   <li>{@code jobType=BEAN} 或 null: 按 handler 字段查找 Spring Bean（默认行为）</li>
+     *   <li>其他类型: 暂不支持，降级到 BEAN 模式查找</li>
+     * </ul>
+     *
+     * <p>HTTP 处理器不可用时降级到 BEAN 模式（记录警告），保证启动兼容性。
+     *
+     * @param job 任务定义
+     * @return 任务处理器
+     * @throws org.springframework.beans.factory.NoSuchBeanDefinitionException BEAN 模式下找不到对应 Bean
+     */
+    private JobHandler resolveHandler(JobDO job) {
+        String jobType = job.getJobType();
+        if ("HTTP".equals(jobType)) {
+            com.njydsz.pmis.cronjob.core.handler.HttpJobHandler httpHandler =
+                    httpJobHandlerProvider.getIfAvailable();
+            if (httpHandler != null) {
+                return httpHandler;
+            }
+            log.warn("[Dispatcher] HTTP 处理器未注册, 降级到 BEAN 模式: key={} handler={}",
+                    job.getJobKey(), job.getHandler());
+        }
+        return applicationContext.getBean(job.getHandler(), JobHandler.class);
+    }
+
+    /**
      * 执行任务（核心逻辑，从 JobServiceImpl 抽取）。
      *
      * @param job         任务定义
@@ -435,7 +467,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         boolean success = false;
         Object result = null;
         try {
-            JobHandler handler = applicationContext.getBean(job.getHandler(), JobHandler.class);
+            JobHandler handler = resolveHandler(job);
             result = handler.execute(job.getParamsJson());
             success = true;
             log0.setResultJson(result == null ? null : JSON.toJSONString(result));

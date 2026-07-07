@@ -1,24 +1,28 @@
 package com.njydsz.pmis.agent.orchestration;
 
 import com.njydsz.pmis.agent.engine.Agent;
-import com.njydsz.pmis.agent.orchestration.strategy.CascadeStrategy;
 import com.njydsz.pmis.agent.orchestration.strategy.OrchestrationStrategy;
-import com.njydsz.pmis.agent.orchestration.strategy.ParallelStrategy;
-import com.njydsz.pmis.agent.orchestration.strategy.SequentialStrategy;
-import com.njydsz.pmis.agent.orchestration.strategy.VotingStrategy;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * 多智能体协调器实现
  *
  * <p>根据 OrchestrationRequest.mode 选择对应策略 + 黑板协调。
- * 策略实例复用，避免每次 new。
+ *
+ * <p><b>P0-1 修复</b>：原实现于构造函数中 {@code new XxxStrategy()}，导致：
+ * <ul>
+ *   <li>{@code ParallelStrategy} 内部 {@code newFixedThreadPool} 永不 shutdown，线程池泄漏</li>
+ *   <li>策略无法注入 Spring 容器管理的依赖（如共享线程池、LLM Router 等）</li>
+ * </ul>
+ * 现改为通过 Spring 注入 {@code List<OrchestrationStrategy>}，按 {@link OrchestrationStrategy#mode()}
+ * 收集为 {@code EnumMap<OrchestrationMode, OrchestrationStrategy>}，策略实例由容器统一管理生命周期。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -27,18 +31,25 @@ import java.util.Map;
 @Component
 public class AgentCoordinatorImpl implements AgentCoordinator {
 
-    /** 策略表（模式 -> 策略实例） */
+    /** 策略表（模式 -> 策略实例，启动时一次性收集） */
     private final Map<OrchestrationMode, OrchestrationStrategy> strategyMap;
 
     /**
-     * 构造协调器，初始化 4 种编排策略。
+     * 构造协调器，注入所有策略 Bean 并按 {@link OrchestrationMode} 索引。
+     *
+     * <p>策略 Bean 由 Spring 容器统一管理，可在策略内注入线程池、LLM Router 等依赖。
+     *
+     * @param strategies Spring 自动收集的所有 {@link OrchestrationStrategy} 实现
      */
-    public AgentCoordinatorImpl() {
+    public AgentCoordinatorImpl(List<OrchestrationStrategy> strategies) {
         this.strategyMap = new EnumMap<>(OrchestrationMode.class);
-        this.strategyMap.put(OrchestrationMode.SEQUENTIAL, new SequentialStrategy());
-        this.strategyMap.put(OrchestrationMode.PARALLEL, new ParallelStrategy());
-        this.strategyMap.put(OrchestrationMode.VOTING, new VotingStrategy());
-        this.strategyMap.put(OrchestrationMode.CASCADE, new CascadeStrategy());
+        for (OrchestrationStrategy s : strategies) {
+            OrchestrationMode m = s.mode();
+            if (strategyMap.put(m, s) != null) {
+                log.warn("[Coordinator] 重复注册策略: mode={} 旧策略将被覆盖", m);
+            }
+        }
+        log.info("[Coordinator] 已注册编排策略: {}", strategyMap.keySet());
     }
 
     @Override

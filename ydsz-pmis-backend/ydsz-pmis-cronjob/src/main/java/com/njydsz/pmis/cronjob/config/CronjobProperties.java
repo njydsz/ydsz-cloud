@@ -56,6 +56,9 @@ public class CronjobProperties {
     /** 租户级配额配置（P7-2 新增） */
     private Quota quota = new Quota();
 
+    /** HTTP 任务配置（P1-5 新增） */
+    private Http http = new Http();
+
     /**
      * 校验并规整化 TTL 值。
      *
@@ -165,6 +168,27 @@ public class CronjobProperties {
 
         /** 默认日执行量上限（当租户未配置时使用，null=unlimited） */
         private Integer defaultMaxDailyExecutions = null;
+    }
+
+    /**
+     * HTTP 任务配置（P1-5）。
+     *
+     * <p>为 {@code jobType=HTTP} 的任务提供默认 HTTP 客户端参数。
+     * 任务级可在 paramsJson 中通过 {@code timeoutMs} 覆盖超时时间。
+     */
+    @Data
+    public static class Http {
+        /** 默认连接超时（秒） */
+        private int connectTimeoutSeconds = 10;
+
+        /** 默认请求超时（秒），任务级可通过 paramsJson.timeoutMs 覆盖 */
+        private int requestTimeoutSeconds = 30;
+
+        /** 默认成功状态码范围（inclusive），如 "200-299" */
+        private String successStatusRange = "200-299";
+
+        /** 是否跟随重定向 */
+        private boolean followRedirects = true;
     }
 }
 

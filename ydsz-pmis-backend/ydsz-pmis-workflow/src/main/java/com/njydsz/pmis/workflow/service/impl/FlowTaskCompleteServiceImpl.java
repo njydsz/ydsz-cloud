@@ -19,6 +19,7 @@ import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.entity.FlowUserDO;
 import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
@@ -2011,13 +2012,12 @@ public class FlowTaskCompleteServiceImpl {
             return null;
         }
         try {
-            com.njydsz.pmis.workflow.entity.FlowNodeDO startNode =
-                    definitionCacheService.getStartNode(definitionId);
+            FlowNodeDO startNode = definitionCacheService.getStartNode(definitionId);
             if (startNode == null) {
                 log.warn("[Flow] 退回发起人：流程定义无开始节点: definitionId={}", definitionId);
                 return null;
             }
-            List<com.njydsz.pmis.workflow.entity.FlowSkipDO> skips =
+            List<FlowSkipDO> skips =
                     definitionCacheService.getSkipsByNodeCode(definitionId, startNode.getNodeCode());
             if (skips == null || skips.isEmpty()) {
                 log.warn("[Flow] 退回发起人：开始节点无下游跳转: definitionId={} startNode={}",
@@ -2025,7 +2025,7 @@ public class FlowTaskCompleteServiceImpl {
                 return null;
             }
             // 取第一条 PASS 跳转的下游节点
-            for (com.njydsz.pmis.workflow.entity.FlowSkipDO skip : skips) {
+            for (FlowSkipDO skip : skips) {
                 if ("PASS".equalsIgnoreCase(skip.getSkipType())
                         && skip.getNextNodeCode() != null) {
                     return skip.getNextNodeCode();
@@ -2038,6 +2038,109 @@ public class FlowTaskCompleteServiceImpl {
                     definitionId, e.getMessage());
             return null;
         }
+    }
+
+    // ============================== P1-3: 取回（已审批后取回） ==============================
+
+    /**
+     * P1-3: 取回 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
+     *
+     * <p>对标钉钉/飞书"取回"。审批人 PASS 后下一节点待办尚未处理时，
+     * 可取回自己的审批：取消下一节点待办，在本节点重新生成 PENDING 任务。
+     *
+     * @param hisTaskId  历史任务 ID（pmis_flow_his_task.id）
+     * @param operatorId 操作人 ID（校验与 hisTask.assigneeId 一致）
+     * @param comment    取回说明（可选）
+     * @return 新创建的待办任务 ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public String retract(String hisTaskId, String operatorId, String comment) {
+        // 1. 查历史任务
+        FlowHisTaskDO hisTask = hisTaskMapper.selectById(hisTaskId);
+        if (hisTask == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_f1a2b3c4", hisTaskId);
+        }
+        // 2. 校验：历史任务状态为 COMPLETED
+        if (!FlowTaskStatus.COMPLETED.name().equals(hisTask.getTaskStatus())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_a2b3c4d5", hisTask.getTaskStatus());
+        }
+        // 3. 校验：操作人必须是历史任务的办理人
+        if (!hisTask.getAssigneeId().equals(operatorId)) {
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.workflow.msg_b3c4d5e6");
+        }
+        // 4. 校验：实例存在且为 RUNNING
+        FlowInstanceDO instance = instanceMapper.selectById(hisTask.getInstanceId());
+        if (instance == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.workflow.msg_fc4b1c16", hisTask.getInstanceId());
+        }
+        if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_c4d5e6f7", instance.getFlowStatus());
+        }
+        // 5. 校验：下一节点待办必须全部为 PENDING（未签收/未完成）
+        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instance.getId());
+        boolean anyProcessed = pendingTasks.stream()
+                .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
+                        || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
+        if (anyProcessed) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d5e6f7a8");
+        }
+
+        // 6. 取消下一节点待办
+        taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
+
+        // 7. 重新生成本节点的 PENDING 任务（复用历史任务的元数据）
+        FlowRunTaskDO newTask = new FlowRunTaskDO();
+        newTask.setInstanceId(instance.getId());
+        newTask.setFlowCode(instance.getFlowCode());
+        newTask.setDefinitionId(instance.getDefinitionId());
+        newTask.setNodeCode(hisTask.getNodeCode());
+        newTask.setNodeName(hisTask.getNodeName());
+        newTask.setNodeType(hisTask.getNodeType());
+        newTask.setBusinessType(instance.getBusinessType());
+        newTask.setBusinessId(instance.getBusinessId());
+        newTask.setBusinessNo(instance.getBusinessNo());
+        newTask.setFlowName(instance.getFlowName());
+        newTask.setTitle(instance.getTitle());
+        newTask.setPermissionFlag(null);
+        newTask.setPerformType(hisTask.getPerformType());
+        newTask.setApproveCount(hisTask.getApproveCount() == null ? 1 : hisTask.getApproveCount());
+        newTask.setApproveFinished(0);
+        newTask.setTaskStatus(FlowTaskStatus.PENDING.name());
+        newTask.setAssigneeType(hisTask.getAssigneeType());
+        newTask.setAssigneeId(hisTask.getAssigneeId());
+        newTask.setAssigneeName(hisTask.getAssigneeName());
+        newTask.setTenantId(instance.getTenantId());
+        newTask.setProviderTraceId(instance.getProviderTraceId());
+        newTask.setComment(comment);
+        taskMapper.insert(newTask);
+
+        // 8. 更新实例 currentNodeCode 回退到本节点（复用 updateStatus，null 字段不更新）
+        instanceMapper.updateStatus(instance.getId(),
+                null, hisTask.getNodeCode(), hisTask.getNodeName(),
+                null, null);
+
+        // 9. 审计日志（RETRACT 操作）
+        support.audit(newTask, "RETRACT", operatorId, null,
+                "取回审批" + (StringUtils.hasText(comment) ? "：" + comment : ""));
+
+        // 10. 标记历史任务为 RETRACTED（保留轨迹，便于追溯）
+        FlowHisTaskDO update = new FlowHisTaskDO();
+        update.setId(hisTask.getId());
+        update.setTaskStatus("RETRACTED");
+        update.setComment("已取回" + (StringUtils.hasText(comment) ? "：" + comment : ""));
+        hisTaskMapper.updateById(update);
+
+        // 11. Prometheus 指标 + 事件
+        if (flowMetrics != null) {
+            flowMetrics.incRecall(instance.getFlowCode());
+        }
+
+        log.info("[Flow] 取回审批: instanceId={} hisTaskId={} operatorId={} nodeCode={} newTaskId={}",
+                instance.getId(), hisTaskId, operatorId, hisTask.getNodeCode(), newTask.getId());
+        return newTask.getId();
     }
 
     // ============================== P1-5: 跨节点办理人去重 ==============================

@@ -5,9 +5,11 @@ import com.njydsz.pmis.cronjob.entity.JobNodeDO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 调度节点心跳 Mapper。
@@ -30,6 +32,19 @@ public interface JobNodeMapper extends BaseMapper<JobNodeDO> {
     @Update("UPDATE pmis_job_node SET status = 'OFFLINE' " +
             "WHERE status = 'ONLINE' AND last_heartbeat < #{cutoff}")
     int markStaleOnlineAsOffline(@Param("cutoff") LocalDateTime cutoff);
+
+    /**
+     * P1-3: 查询即将被标记为 OFFLINE 的僵尸节点 ID 列表（故障转移用）。
+     *
+     * <p>在 {@link #markStaleOnlineAsOffline} 执行前调用，
+     * 获取所有心跳超时但仍为 ONLINE 的节点 ID，用于对这些节点上的 RUNNING 任务执行故障转移。
+     *
+     * @param cutoff 心跳截止时间（早于此时间的 ONLINE 节点视为僵尸）
+     * @return 僵尸节点 ID 列表（nodeId）
+     */
+    @Select("SELECT node_id FROM pmis_job_node " +
+            "WHERE status = 'ONLINE' AND last_heartbeat < #{cutoff}")
+    List<String> selectStaleOnlineNodeIds(@Param("cutoff") LocalDateTime cutoff);
 
     /**
      * P0-8: 物理删除已离线超过指定时长的节点记录。

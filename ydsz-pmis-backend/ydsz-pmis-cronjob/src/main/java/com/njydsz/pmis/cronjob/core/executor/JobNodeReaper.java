@@ -2,20 +2,27 @@ package com.njydsz.pmis.cronjob.core.executor;
 
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
+import com.njydsz.pmis.cronjob.entity.JobLogDO;
+import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
 /**
- * 僵尸节点回收器（P0-8）。
+ * 僵尸节点回收器（P0-8） + 节点掉线故障转移（P1-3）。
  *
- * <p>定时清理 {@code pmis_job_node} 表中的僵尸节点：
+ * <p>定时清理 {@code pmis_job_node} 表中的僵尸节点，并对掉线节点上的 RUNNING 任务执行故障转移：
  * <ol>
+ *   <li>P1-3 故障转移：查询掉线节点上 RUNNING 状态的日志，释放 Redis 锁，标记为 FAILED</li>
  *   <li>将超时仍为 ONLINE 的节点标记为 OFFLINE（节点未优雅下线，如 kill -9 / 宕机）</li>
  *   <li>物理删除已离线超过 30 分钟的节点记录，避免表无限膨胀</li>
  * </ol>
@@ -32,6 +39,11 @@ import java.time.LocalDateTime;
  *   <li>记录删除：{@code last_heartbeat < NOW() - 30min}（硬编码，避免误删刚下线节点）</li>
  * </ul>
  *
+ * <h3>P1-3 故障转移策略</h3>
+ * <p>对标 XXL-Job / PowerJob：节点掉线时，其上 RUNNING 任务不会自动迁移到其他节点立即重跑，
+ * 而是标记为 FAILED 并释放分布式锁，等待任务的下一次 Cron 触发自然重新执行。
+ * 释放锁的目的是避免下次触发时因锁未过期而被误判为「仍在执行」导致跳过。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -42,11 +54,25 @@ import java.time.LocalDateTime;
 public class JobNodeReaper {
 
     private final JobNodeMapper jobNodeMapper;
+    private final JobLogMapper jobLogMapper;
     private final LeaderElector leaderElector;
     private final CronjobProperties cronjobProperties;
+    private final StringRedisTemplate redisTemplate;
 
     /** 离线节点记录保留时长（分钟），超过此时长才物理删除 */
     private static final long STALE_NODE_RETENTION_MINUTES = 30;
+
+    /** 任务锁 key 前缀（与 DefaultTaskDispatcher 保持一致） */
+    private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
+
+    /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete，避免误删其他节点持有的锁） */
+    private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT;
+    static {
+        RELEASE_LOCK_SCRIPT = new DefaultRedisScript<>();
+        RELEASE_LOCK_SCRIPT.setScriptText(
+                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
+        RELEASE_LOCK_SCRIPT.setResultType(Long.class);
+    }
 
     private String leaderRole;
 
@@ -75,14 +101,88 @@ public class JobNodeReaper {
 
     /**
      * 将超时仍为 ONLINE 的节点标记为 OFFLINE。
+     *
+     * <p>P1-3: 在标记 OFFLINE 之前，先对这些节点上的 RUNNING 任务执行故障转移
+     * （释放 Redis 锁 + 标记日志为 FAILED），避免任务永久卡在 RUNNING 状态。
      */
     private void markStaleNodes() {
         long offlineThreshold = cronjobProperties.getExecutor().getOfflineThresholdSeconds();
         LocalDateTime cutoff = LocalDateTime.now().minusSeconds(offlineThreshold);
+
+        // P1-3: 先查询即将被标记为 OFFLINE 的节点，执行故障转移
+        List<String> staleNodeIds = jobNodeMapper.selectStaleOnlineNodeIds(cutoff);
+        if (!staleNodeIds.isEmpty()) {
+            for (String nodeId : staleNodeIds) {
+                failoverNode(nodeId);
+            }
+        }
+
+        // 标记为 OFFLINE
         int affected = jobNodeMapper.markStaleOnlineAsOffline(cutoff);
         if (affected > 0) {
             log.warn("[JobNodeReaper] 标记 {} 个僵尸节点为 OFFLINE (heartbeat < {})",
                     affected, cutoff);
+        }
+    }
+
+    /**
+     * P1-3: 节点掉线故障转移。
+     *
+     * <p>对掉线节点上 RUNNING 状态的任务执行：
+     * <ol>
+     *   <li>释放 Redis 分布式锁（Lua 脚本安全释放，使用 logHolder 匹配）</li>
+     *   <li>标记日志为 FAILED（error_message='Node went offline during execution'）</li>
+     * </ol>
+     *
+     * <p>注意：不主动推进 next_fire_time，让正常 Cron 调度在下次触发时重新执行。
+     * 释放锁是为了确保下次触发时能成功获取锁（避免 TTL 内被误判为仍在执行）。
+     */
+    private void failoverNode(String nodeId) {
+        try {
+            List<JobLogDO> runningLogs = jobLogMapper.selectRunningByNode(nodeId);
+            if (runningLogs.isEmpty()) {
+                return;
+            }
+            log.warn("[JobNodeReaper] 故障转移开始: nodeId={} runningTasks={}",
+                    nodeId, runningLogs.size());
+
+            // 1. 释放 Redis 锁（best-effort，仅非分片任务可重建 lockKey）
+            for (JobLogDO logEntry : runningLogs) {
+                releaseLockSafe(logEntry);
+            }
+
+            // 2. 标记日志为 FAILED（批量）
+            int marked = jobLogMapper.markFailedByNodeOffline(nodeId, LocalDateTime.now());
+            log.warn("[JobNodeReaper] 故障转移完成: nodeId={} markedFailed={} releasedLocksAttempt={}",
+                    nodeId, marked, runningLogs.size());
+        } catch (Exception e) {
+            log.error("[JobNodeReaper] 故障转移异常: nodeId={} reason={}",
+                    nodeId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 安全释放锁（Lua 脚本，仅当 lockHolder 匹配时才 delete）。
+     *
+     * <p>仅处理非分片任务的锁（lockKey = {@code pmis:job:lock:{jobKey}}）。
+     * 分片任务的锁含 shard 索引（{@code :shard:{index}}），无法从日志重建完整 lockKey，
+     * 依赖 TTL 自动过期。Lua 脚本在 key 不存在或 value 不匹配时返回 0，无副作用。
+     */
+    private void releaseLockSafe(JobLogDO logEntry) {
+        String lockHolder = logEntry.getLockHolder();
+        if (lockHolder == null || lockHolder.isBlank()) {
+            return;
+        }
+        String lockKey = JOB_LOCK_PREFIX + logEntry.getJobKey();
+        try {
+            Long result = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+                    Collections.singletonList(lockKey), lockHolder);
+            if (result != null && result > 0) {
+                log.info("[JobNodeReaper] 释放锁成功: key={} holder={}", lockKey, lockHolder);
+            }
+        } catch (Exception e) {
+            log.warn("[JobNodeReaper] 释放锁失败(将等待 TTL 自动过期): key={} reason={}",
+                    lockKey, e.getMessage());
         }
     }
 

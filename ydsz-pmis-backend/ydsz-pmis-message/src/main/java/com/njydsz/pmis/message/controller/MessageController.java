@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.message.dto.BatchSendResult;
 import com.njydsz.pmis.message.dto.MessageLogQueryDTO;
 import com.njydsz.pmis.message.dto.MessageSendDTO;
 import com.njydsz.pmis.message.entity.MsgLogDO;
@@ -16,10 +17,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * 消息发送 Controller。
@@ -90,6 +95,43 @@ public class MessageController {
     @Operation(summary = "发送日志分页")
     @GetMapping("/log/page")
     public Result<Page<MsgLogDO>> pageLog(MessageLogQueryDTO query) {
+        return Result.ok(messageService.pageLog(query));
+    }
+
+    /**
+     * 批量发送消息（同步循环,限制 100 条/批）。
+     *
+     * @param requests 消息请求列表
+     * @param batchId  批次 ID（业务侧生成,用于进度查询）
+     * @return 批量发送结果
+     */
+    @Operation(summary = "批量发送消息(限制 100 条/批)")
+    @PostMapping("/batch-send")
+    public Result<BatchSendResult> batchSend(@RequestBody List<MessageRequest> requests,
+                                             @RequestParam String batchId) {
+        if (requests == null || requests.isEmpty()) {
+            return Result.failed(BizErrorCode.BAD_REQUEST, "消息列表为空");
+        }
+        return Result.ok(messageService.batchSend(requests, batchId));
+    }
+
+    /**
+     * 查询批次发送进度：按 bizId=batchId 分页查询发送日志。
+     *
+     * @param batchId 批次 ID
+     * @param page    页码
+     * @param size    每页大小
+     * @return 分页日志
+     */
+    @Operation(summary = "查询批次发送进度")
+    @GetMapping("/batch/{batchId}/progress")
+    public Result<Page<MsgLogDO>> batchProgress(@PathVariable String batchId,
+                                                @RequestParam(defaultValue = "1") int page,
+                                                @RequestParam(defaultValue = "20") int size) {
+        MessageLogQueryDTO query = new MessageLogQueryDTO();
+        query.setBizId(batchId);
+        query.setPage(page);
+        query.setSize(size);
         return Result.ok(messageService.pageLog(query));
     }
 }
