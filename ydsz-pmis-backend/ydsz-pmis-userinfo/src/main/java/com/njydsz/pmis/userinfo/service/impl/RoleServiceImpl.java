@@ -3,6 +3,7 @@ package com.njydsz.pmis.userinfo.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.RoleFormDTO;
 import com.njydsz.pmis.userinfo.dto.RoleQueryDTO;
@@ -40,7 +41,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(readOnly = true)
     public Page<RoleDO> page(RoleQueryDTO query) {
-        Page<RoleDO> page = new Page<>(query.getPage(), query.getSize());
+        Page<RoleDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
         LambdaQueryWrapper<RoleDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getKeyword())) {
             w.and(qw -> qw.like(RoleDO::getRoleCode, query.getKeyword())

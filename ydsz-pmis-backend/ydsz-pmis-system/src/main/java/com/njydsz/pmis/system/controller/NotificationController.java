@@ -64,7 +64,7 @@ public class NotificationController {
      */
     @Operation(summary = "我的收件箱")
     @GetMapping("/inbox")
-    public Result<Page<NotificationDO>> inbox(NotificationQueryDTO query) {
+    public Result<Page<NotificationDO>> inbox(@Valid NotificationQueryDTO query) {
         return Result.ok(notificationService.inbox(SecurityContext.getUserId(), query));
     }
 

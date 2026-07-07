@@ -7,6 +7,7 @@ import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;
+import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.AccountLockInfo;
@@ -145,7 +146,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @DataScope(deptColumn = "dept_id", userColumn = "id")
     @Transactional(readOnly = true)
     public Page<UserAccountDO> page(UserQueryDTO query) {
-        Page<UserAccountDO> page = new Page<>(query.getPage(), query.getSize());
+        Page<UserAccountDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
         LambdaQueryWrapper<UserAccountDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getKeyword())) {
             w.like(UserAccountDO::getUsername, query.getKeyword());

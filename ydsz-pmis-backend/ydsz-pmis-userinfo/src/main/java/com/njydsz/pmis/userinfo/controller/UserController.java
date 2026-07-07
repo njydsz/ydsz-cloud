@@ -55,7 +55,7 @@ public class UserController {
     @PrePermission("auth:user:list")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping
-    public Result<Page<UserVO>> page(UserQueryDTO query) {
+    public Result<Page<UserVO>> page(@Valid UserQueryDTO query) {
         return Result.ok(userAccountService.pageVo(query));
     }
 

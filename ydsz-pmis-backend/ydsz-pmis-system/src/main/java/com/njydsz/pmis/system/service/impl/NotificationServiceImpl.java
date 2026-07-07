@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.system.dto.NotificationQueryDTO;
 import com.njydsz.pmis.system.dto.NotificationSendDTO;
@@ -148,7 +149,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public Page<NotificationDO> inbox(Long userId, NotificationQueryDTO query) {
-        Page<NotificationDO> page = new Page<>(query.getPage(), query.getSize());
+        Page<NotificationDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
         LambdaQueryWrapper<NotificationDO> w = new LambdaQueryWrapper<>();
         w.eq(NotificationDO::getReceiverId, userId);
         if (query.getCategory() != null) {

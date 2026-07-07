@@ -40,7 +40,7 @@ public class ConfigController {
     @PrePermission("sys:config:list")
     @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping
-    public Result<Page<ConfigDO>> page(ConfigQueryDTO query) {
+    public Result<Page<ConfigDO>> page(@Valid ConfigQueryDTO query) {
         return Result.ok(configService.page(query));
     }
 

@@ -9,6 +9,7 @@ import com.njydsz.pmis.workflow.dto.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.entity.FlowCcDO;
 import com.njydsz.pmis.workflow.service.FlowCcService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,11 +43,11 @@ public class FlowCcController {
      */
     @PostMapping("/cc/page")
     @PrePermission(PermissionCodes.WORKFLOW_CC_VIEW)
-    public Result<PageResult<FlowCcDO>> pageCc(@RequestBody FlowCcQueryDTO query) {
+    public Result<PageResult<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         Long userId = SecurityContext.getUserId();
-        int pageNo = query.getPageNum() == null ? 1 : query.getPageNum();
-        int pageSize = query.getPageSize() == null ? 20 : query.getPageSize();
+        int pageNo = (int) query.getPage();
+        int pageSize = (int) query.getSize();
         return Result.ok(ccService.listCcByUser(userId, query.getReadStatus(),
                 query.getFlowCode(), tenantId, pageNo, pageSize));
     }

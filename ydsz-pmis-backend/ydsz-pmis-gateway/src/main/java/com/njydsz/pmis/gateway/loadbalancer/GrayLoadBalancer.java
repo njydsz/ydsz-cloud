@@ -93,6 +93,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
      * @return 实例响应 Mono
      */
     @Override
+    @SuppressWarnings("rawtypes")
     public Mono<Response<ServiceInstance>> choose(Request request) {
         String grayTag = resolveGrayTag(request);
 

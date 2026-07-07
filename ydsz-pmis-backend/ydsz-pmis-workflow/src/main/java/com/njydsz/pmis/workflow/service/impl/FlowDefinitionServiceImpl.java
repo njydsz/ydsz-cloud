@@ -23,9 +23,7 @@ import com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +51,6 @@ import java.util.zip.ZipInputStream;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     private final FlowDefinitionMapper definitionMapper;
@@ -63,16 +60,29 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     private final FlowGraphValidator graphValidator;
     /** P1: 流程定义元数据缓存，部署/更新时主动失效 */
     private final FlowDefinitionCacheService flowDefinitionCacheService;
-
     /**
      * GAP-P1-6: 自注入代理引用，使 {@link #batchDeployFromZip} 内部调用 {@link #deploy}
      * 时能正确触发 Spring 事务代理（避免 self-invocation 导致事务失效）。
      * 使用 {@code @Lazy} 打破启动期循环依赖。
-     * 包级可见以便单元测试注入 mock/self 引用。
      */
-    @Autowired
-    @Lazy
-    FlowDefinitionServiceImpl self;
+    private final FlowDefinitionServiceImpl self;
+
+    public FlowDefinitionServiceImpl(
+            FlowDefinitionMapper definitionMapper,
+            FlowNodeMapper nodeMapper,
+            FlowSkipMapper skipMapper,
+            BpmnXmlParser bpmnXmlParser,
+            FlowGraphValidator graphValidator,
+            FlowDefinitionCacheService flowDefinitionCacheService,
+            @Lazy FlowDefinitionServiceImpl self) {
+        this.definitionMapper = definitionMapper;
+        this.nodeMapper = nodeMapper;
+        this.skipMapper = skipMapper;
+        this.bpmnXmlParser = bpmnXmlParser;
+        this.graphValidator = graphValidator;
+        this.flowDefinitionCacheService = flowDefinitionCacheService;
+        this.self = self;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)

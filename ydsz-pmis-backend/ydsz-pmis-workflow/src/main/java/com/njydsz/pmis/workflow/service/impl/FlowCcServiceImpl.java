@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.service.impl;
 
 import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.workflow.dto.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.engine.FlowAssigneeResolver;
@@ -125,8 +126,8 @@ public class FlowCcServiceImpl implements FlowCcService {
             if (userId == null || query == null) {
                 return List.of();
             }
-            int page = query.getPageNum() == null || query.getPageNum() < 1 ? 1 : query.getPageNum();
-            int size = query.getPageSize() == null || query.getPageSize() < 1 ? 20 : query.getPageSize();
+            int page = (int) Math.max(query.getPage(), 1);
+            int size = (int) Math.min(Math.max(query.getSize(), 1), PageQuery.MAX_SIZE);
             int offset = (page - 1) * size;
             return ccMapper.selectCcByUserPage(tenantId, userId,
                     query.getReadStatus(), query.getFlowCode(), offset, size);
@@ -158,8 +159,8 @@ public class FlowCcServiceImpl implements FlowCcService {
             if (userId == null) {
                 return PageResult.empty();
             }
-            int page = pageNo < 1 ? 1 : pageNo;
-            int size = pageSize < 1 ? 20 : pageSize;
+            int page = Math.max(pageNo, 1);
+            int size = (int) Math.min(Math.max(pageSize, 1), PageQuery.MAX_SIZE);
             int offset = (page - 1) * size;
 
             List<FlowCcDO> list = ccMapper.selectCcByUserPage(tenantId, userId,

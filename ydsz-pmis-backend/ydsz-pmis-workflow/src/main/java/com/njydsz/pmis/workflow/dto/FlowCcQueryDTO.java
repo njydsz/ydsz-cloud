@@ -1,22 +1,25 @@
 package com.njydsz.pmis.workflow.dto;
 
+import com.njydsz.pmis.common.entity.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.io.Serializable;
 
 /**
  * 抄送查询 DTO
  *
  * <p>P0-3: 抄送中心查询参数。
+ * P1-7a: 继承 {@link PageQuery} 复用分页安全校验（@Min/@Max/@Pattern + safeOrderBy）。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "抄送查询 DTO")
-public class FlowCcQueryDTO implements Serializable {
+public class FlowCcQueryDTO extends PageQuery {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -26,10 +29,4 @@ public class FlowCcQueryDTO implements Serializable {
 
     /** 流程编码过滤 */
     private String flowCode;
-
-    /** 当前页（从 1 开始） */
-    private Integer pageNum = 1;
-
-    /** 每页大小 */
-    private Integer pageSize = 20;
 }

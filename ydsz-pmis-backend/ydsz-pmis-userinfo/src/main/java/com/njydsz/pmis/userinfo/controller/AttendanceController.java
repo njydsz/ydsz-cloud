@@ -153,7 +153,7 @@ public class AttendanceController {
     public Result<Page<OvertimeDO>> pageOvertime(
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) String approvalStatus,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return Result.ok(attendanceService.pageOvertime(employeeId, approvalStatus, page, size));
     }

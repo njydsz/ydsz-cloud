@@ -46,7 +46,7 @@ public class RoleController {
     @PrePermission("auth:role:list")
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping
-    public Result<Page<RoleDO>> page(RoleQueryDTO query) {
+    public Result<Page<RoleDO>> page(@Valid RoleQueryDTO query) {
         return Result.ok(roleService.page(query));
     }
 

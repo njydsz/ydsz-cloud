@@ -64,9 +64,20 @@ class FlowDefinitionServiceImplTest {
     void setUp() {
         service = new FlowDefinitionServiceImpl(
                 definitionMapper, nodeMapper, skipMapper,
-                bpmnXmlParser, graphValidator, flowDefinitionCacheService);
+                bpmnXmlParser, graphValidator, flowDefinitionCacheService, service);
         // GAP-P1-6: batchDeployFromZip 通过 self 代理调用 deploy，单元测试中指向自身
-        service.self = service;
+        setSelfField(service);
+    }
+
+    /** 通过反射设置 private final self 字段 */
+    private void setSelfField(FlowDefinitionServiceImpl target) {
+        try {
+            java.lang.reflect.Field selfField = FlowDefinitionServiceImpl.class.getDeclaredField("self");
+            selfField.setAccessible(true);
+            selfField.set(target, target);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set self field", e);
+        }
     }
 
     // ============ 部署 ============
@@ -525,7 +536,7 @@ class FlowDefinitionServiceImplTest {
         // 用 spy 替换 self，mock deploy 方法返回成功，避免触发真实 deploy 的图校验逻辑
         FlowDefinitionServiceImpl spySelf = org.mockito.Mockito.spy(service);
         org.mockito.Mockito.doReturn(DEFINITION_ID).when(spySelf).deploy(any(FlowDeployProcessDTO.class));
-        service.self = spySelf;
+        setSelfField(spySelf);
 
         // bpmnXmlParser 对两个文件分别返回不同 processId 的 model
         when(bpmnXmlParser.parse(xml1)).thenReturn(buildBpmnModel("flow_a", "流程A"));
@@ -559,7 +570,7 @@ class FlowDefinitionServiceImplTest {
             }
             return DEFINITION_ID;
         }).when(spySelf).deploy(any(FlowDeployProcessDTO.class));
-        service.self = spySelf;
+        setSelfField(spySelf);
 
         when(bpmnXmlParser.parse(xmlOk)).thenReturn(buildBpmnModel("flow_ok", "OK流程"));
         when(bpmnXmlParser.parse(xmlBad)).thenThrow(new RuntimeException("XML 解析错误"));

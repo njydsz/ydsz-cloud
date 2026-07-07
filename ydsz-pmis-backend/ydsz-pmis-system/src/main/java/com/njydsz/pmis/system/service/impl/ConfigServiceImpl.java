@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.system.dto.ConfigFormDTO;
 import com.njydsz.pmis.system.dto.ConfigQueryDTO;
@@ -65,7 +66,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional(readOnly = true)
     public Page<ConfigDO> page(ConfigQueryDTO query) {
-        Page<ConfigDO> page = new Page<>(query.getPage(), query.getSize());
+        Page<ConfigDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
         LambdaQueryWrapper<ConfigDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getKeyword())) {
             w.and(qw -> qw.like(ConfigDO::getConfigKey, query.getKeyword())

@@ -3,6 +3,8 @@ package com.njydsz.pmis.workflow.controller;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowHistoryArchiveService;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -67,9 +69,9 @@ public class FlowHistoryArchiveController {
     @Operation(summary = "手动触发归档")
     @OperationLog(module = "流程历史归档", action = "手动触发归档", bizType = "FLOW_HISTORY_ARCHIVE")
     @PostMapping("/archive")
-    public Result<Map<String, Object>> archive(@RequestParam(required = false) Integer retentionDays,
-                                                  @RequestParam(required = false) Integer batchSize,
-                                                  @RequestParam(required = false) Long maxProcessMs) {
+    public Result<Map<String, Object>> archive(@RequestParam(required = false) @Min(1) Integer retentionDays,
+                                                  @RequestParam(required = false) @Min(1) @Max(1000) Integer batchSize,
+                                                  @RequestParam(required = false) @Min(1) Long maxProcessMs) {
         log.info("[FlowHistoryArchiveController] 手动触发归档 retentionDays={} batchSize={} maxProcessMs={}",
                 retentionDays, batchSize, maxProcessMs);
         return Result.ok(archiveService.archive(retentionDays, batchSize, maxProcessMs));
