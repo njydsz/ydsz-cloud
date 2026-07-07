@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.entity;
+﻿package com.njydsz.pmis.workflow.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -27,8 +27,8 @@ public class FlowAutoTriggerDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 源流程编码（触发方） */
     private String sourceFlowCode;

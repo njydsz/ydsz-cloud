@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.entity;
+﻿package com.njydsz.pmis.project.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -27,8 +27,8 @@ public class SatisfactionDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 业务编码（SV-YYYYMMDD-XXXX） */
     private String surveyCode;

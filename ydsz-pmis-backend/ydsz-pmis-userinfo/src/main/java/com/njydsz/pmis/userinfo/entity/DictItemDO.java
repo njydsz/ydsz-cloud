@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.entity;
+﻿package com.njydsz.pmis.userinfo.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -25,8 +25,8 @@ public class DictItemDO extends BaseDO {
     private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 所属字典类型编码 */
     private String typeCode;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.entity;
+﻿package com.njydsz.pmis.userinfo.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -31,8 +31,8 @@ public class EmployeeDO extends BaseDO {
     private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 关联登录账号 ID（pmis_user_account.id） */
     private Long userId;

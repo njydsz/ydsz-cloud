@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.entity;
+﻿package com.njydsz.pmis.userinfo.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -24,8 +24,8 @@ public class PermissionDO extends BaseDO {
     private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 父权限 ID（0=根） */
     private Long parentId;

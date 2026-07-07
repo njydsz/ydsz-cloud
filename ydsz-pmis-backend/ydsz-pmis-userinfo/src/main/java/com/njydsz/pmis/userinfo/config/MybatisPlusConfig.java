@@ -2,23 +2,27 @@ package com.njydsz.pmis.userinfo.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.njydsz.pmis.common.config.AuditFieldFiller;
+import com.njydsz.pmis.common.util.PmisSnowflakeIdentifierGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * MyBatis-Plus 配置
  *
+ * <p>P3-1: 注册雪花算法字符串版 {@link IdentifierGenerator}，
+ * 配合 {@code @TableId(type = IdType.ASSIGN_ID)} 实现主键 VARCHAR(20) 雪花字符串。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Configuration
 public class MybatisPlusConfig {
-
     /**
      * 分页 + 防全表操作 + 乐观锁拦截器（PostgreSQL 方言）
      *
@@ -35,7 +39,6 @@ public class MybatisPlusConfig {
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
         return interceptor;
     }
-
     /**
      * 审计字段自动填充处理器
      *
@@ -44,5 +47,15 @@ public class MybatisPlusConfig {
     @Bean
     public MetaObjectHandler metaObjectHandler() {
         return new AuditFieldFiller();
+    }
+
+    /**
+     * 主键生成器（雪花算法字符串版，19 位 VARCHAR(20)）
+     *
+     * @return IdentifierGenerator
+     */
+    @Bean
+    public IdentifierGenerator identifierGenerator() {
+        return new PmisSnowflakeIdentifierGenerator();
     }
 }

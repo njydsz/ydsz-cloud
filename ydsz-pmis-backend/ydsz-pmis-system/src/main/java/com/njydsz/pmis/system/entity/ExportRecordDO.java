@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.entity;
+﻿package com.njydsz.pmis.system.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -32,8 +32,8 @@ public class ExportRecordDO extends BaseDO {
     private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 租户 ID */
     private Long tenantId;

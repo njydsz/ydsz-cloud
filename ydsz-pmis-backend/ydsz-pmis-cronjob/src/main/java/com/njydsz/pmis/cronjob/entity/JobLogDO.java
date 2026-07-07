@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.entity;
+﻿package com.njydsz.pmis.cronjob.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -25,8 +25,8 @@ public class JobLogDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 任务 ID */
     private Long jobId;

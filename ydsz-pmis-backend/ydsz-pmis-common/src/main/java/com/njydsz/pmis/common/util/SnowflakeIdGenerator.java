@@ -6,8 +6,9 @@ import org.springframework.stereotype.Component;
 /**
  * 雪花算法分布式 ID 生成器
  *
- * <p>大厂规范: 业务 ID 不应使用 UUID（B-tree 索引页分裂严重、写入性能差），
- * 也不应依赖数据库自增（暴露业务量、分库分表无法保证全局唯一）。
+ * <p>大厂规范: 业务 ID / 主键 ID 一律由应用层雪花算法生成，
+ * 不依赖数据库自增（暴露业务量、不可跨库、不可水平扩展），
+ * 不用 UUID（B-tree 索引页分裂严重、写入性能差）。
  *
  * <p>雪花算法 64 位结构:
  * <pre>
@@ -19,11 +20,14 @@ import org.springframework.stereotype.Component;
  *   <li>sequence: 12bit，单机单毫秒最多 4096 个 ID</li>
  * </ul>
  *
+ * <p>最终 ID 以 19 位十进制字符串输出，存储到 VARCHAR(20) 主键 / 业务ID列；
+ * 索引/排序效率接近 BIGINT，避免自增 ID 的枚举攻击与分库困难。
+ *
  * <p>时钟回拨处理: 检测到回拨时等待 5ms，仍回拨则抛出异常（避免 ID 重复）。
  *
  * <p>使用方式:
  * <pre>
- *   String id = SnowflakeIdGenerator.nextId();   // 18 位 Long
+ *   String id = SnowflakeIdGenerator.nextIdStr();   // 19 位字符串
  *   String traceId = SnowflakeIdGenerator.nextTraceId(); // 16 进制 16 位
  * </pre>
  *
@@ -58,7 +62,7 @@ public class SnowflakeIdGenerator {
     private static final long MAX_CLOCK_BACKWARD_MS = 5L;
 
     /** 静态 workerId，由 Spring 注入后赋值 */
-    private static long workerId;
+    private static volatile long workerId;
 
     /** 静态实例（用于无 Spring 上下文的工具方法调用） */
     private static final SnowflakeIdGenerator INSTANCE = new SnowflakeIdGenerator();
@@ -68,6 +72,24 @@ public class SnowflakeIdGenerator {
 
     /** 当前毫秒内序列号 */
     private long sequence = 0L;
+
+    static {
+        // 类加载兜底初始化 workerId（@Component 注入前的快速调用场景）
+        long wid;
+        String envWorkerId = System.getenv("PMIS_WORKER_ID");
+        if (envWorkerId != null && !envWorkerId.isEmpty()) {
+            wid = Long.parseLong(envWorkerId);
+        } else {
+            String podIndex = System.getenv("POD_INDEX");
+            if (podIndex != null && !podIndex.isEmpty()) {
+                wid = Long.parseLong(podIndex);
+            } else {
+                String serviceName = System.getProperty("spring.application.name", "default");
+                wid = Math.abs(serviceName.hashCode()) % (MAX_WORKER_ID + 1);
+            }
+        }
+        workerId = wid;
+    }
     /**
      * Spring 构造时注入 workerId
      * <p>优先级: 环境变量 PMIS_WORKER_ID > K8s POD_INDEX > 服务名 hash 取模

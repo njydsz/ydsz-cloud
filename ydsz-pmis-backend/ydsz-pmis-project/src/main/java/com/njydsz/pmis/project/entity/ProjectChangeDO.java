@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.entity;
+﻿package com.njydsz.pmis.project.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -30,8 +30,8 @@ public class ProjectChangeDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 变更单号 */
     private String changeCode;

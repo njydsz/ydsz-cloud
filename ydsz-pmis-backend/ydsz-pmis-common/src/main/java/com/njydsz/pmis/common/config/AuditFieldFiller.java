@@ -29,12 +29,12 @@ public class AuditFieldFiller implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         LocalDateTime now = LocalDateTime.now();
-        Long userId = currentUserId();
+        String userId = currentUserId();
 
         strictInsertFill(metaObject, "createdAt", LocalDateTime.class, now);
         strictInsertFill(metaObject, "updatedAt", LocalDateTime.class, now);
-        strictInsertFill(metaObject, "createdBy", Long.class, userId);
-        strictInsertFill(metaObject, "updatedBy", Long.class, userId);
+        strictInsertFill(metaObject, "createdBy", String.class, userId);
+        strictInsertFill(metaObject, "updatedBy", String.class, userId);
         strictInsertFill(metaObject, "deleted", Integer.class, 0);
     }
 
@@ -45,17 +45,18 @@ public class AuditFieldFiller implements MetaObjectHandler {
      */
     @Override
     public void updateFill(MetaObject metaObject) {
-        Long userId = currentUserId();
+        String userId = currentUserId();
         strictUpdateFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
-        strictUpdateFill(metaObject, "updatedBy", Long.class, userId);
+        strictUpdateFill(metaObject, "updatedBy", String.class, userId);
     }
 
-    private Long currentUserId() {
+    private String currentUserId() {
         try {
-            return SecurityContext.getUserId();
+            String uid = SecurityContext.getUserId();
+            return uid == null || uid.isEmpty() ? "0" : uid;
         } catch (Exception e) {
-            log.debug("[AuditFieldFiller] 当前线程无登录用户，审计字段使用默认值 0L: {}", e.getMessage());
-            return 0L;
+            log.debug("[AuditFieldFiller] 当前线程无登录用户，审计字段使用默认值 0: {}", e.getMessage());
+            return "0";
         }
     }
 }

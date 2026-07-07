@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.entity;
+﻿package com.njydsz.pmis.project.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -26,8 +26,8 @@ public class ContractSupplementDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 合同 ID */
     private Long contractId;

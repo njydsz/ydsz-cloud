@@ -25,17 +25,17 @@ public abstract class BaseDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 创建人 ID */
+    /** 创建人 ID（雪花算法字符串） */
     @TableField(fill = FieldFill.INSERT)
-    private Long createdBy;
+    private String createdBy;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
-    /** 更新人 ID */
+    /** 更新人 ID（雪花算法字符串） */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Long updatedBy;
+    private String updatedBy;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)

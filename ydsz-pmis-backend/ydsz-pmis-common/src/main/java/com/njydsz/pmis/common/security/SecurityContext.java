@@ -59,11 +59,11 @@ public final class SecurityContext {
     }
 
     /**
-     * 当前用户 ID
+     * 当前用户 ID（雪花算法字符串）
      *
      * @return 当前用户 ID
      */
-    public static Long getUserId() {
+    public static String getUserId() {
         return getCurrent().getUserId();
     }
 
@@ -77,24 +77,24 @@ public final class SecurityContext {
     }
 
     /**
-     * 当前部门 ID
+     * 当前部门 ID（雪花算法字符串）
      *
      * @return 当前部门 ID
      */
-    public static Long getDeptId() {
+    public static String getDeptId() {
         return getCurrent().getDeptId();
     }
 
     /**
      * 当前租户 ID（P2-16：多租户上下文）
      *
-     * <p>从登录用户上下文获取 tenantId。未登录或上下文为空时返回默认值 1L。
+     * <p>从登录用户上下文获取 tenantId。未登录或上下文为空时返回默认值 "1"。
      * 适用于后台任务、单元测试等无 HTTP 请求上下文的场景。
      *
-     * @return 当前租户 ID；未登录时返回 1L
+     * @return 当前租户 ID；未登录时返回 "1"
      */
-    public static Long getTenantIdOrDefault() {
-        return getTenantIdOrDefault(1L);
+    public static String getTenantIdOrDefault() {
+        return getTenantIdOrDefault("1");
     }
 
     /**
@@ -103,10 +103,10 @@ public final class SecurityContext {
      * @param defaultTenantId 默认租户 ID（未登录时使用）
      * @return 当前租户 ID；未登录时返回 defaultTenantId
      */
-    public static Long getTenantIdOrDefault(Long defaultTenantId) {
+    public static String getTenantIdOrDefault(String defaultTenantId) {
         LoginUser user = getCurrentOrNull();
-        if (user == null || user.getTenantId() == null) {
-            return defaultTenantId == null ? 1L : defaultTenantId;
+        if (user == null || user.getTenantId() == null || user.getTenantId().isEmpty()) {
+            return defaultTenantId == null || defaultTenantId.isEmpty() ? "1" : defaultTenantId;
         }
         return user.getTenantId();
     }

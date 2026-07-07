@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.entity;
+﻿package com.njydsz.pmis.workflow.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -25,8 +25,8 @@ public class FlowHisVariableDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 归档实例 ID（对应 pmis_flow_his_instance.id） */
     private Long instanceId;

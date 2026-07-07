@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.entity;
+﻿package com.njydsz.pmis.userinfo.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -27,8 +27,8 @@ public class ResourcePoolDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 业务编号 */
     private String poolCode;

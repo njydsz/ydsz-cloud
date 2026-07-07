@@ -26,8 +26,8 @@ public class LoginUser implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 用户 ID */
-    private Long userId;
+    /** 用户 ID（雪花算法字符串） */
+    private String userId;
 
     /** 用户名 */
     private String username;
@@ -35,14 +35,14 @@ public class LoginUser implements Serializable {
     /** 真实姓名 */
     private String realName;
 
-    /** 部门 ID */
-    private Long deptId;
+    /** 部门 ID（雪花算法字符串） */
+    private String deptId;
 
     /** 部门名称 */
     private String deptName;
 
-    /** 租户 ID（P2-16：多租户上下文，默认 1L） */
-    private Long tenantId;
+    /** 租户 ID（P2-16：多租户上下文，默认 "1"） */
+    private String tenantId;
 
     /** 职级编码 */
     private String levelCode;
@@ -56,11 +56,11 @@ public class LoginUser implements Serializable {
     /** 数据权限范围: ALL/DEPT/SELF/CUSTOM */
     private String dataScope;
 
-    /** 自定义部门 ID 集（CUSTOM 模式） */
-    private List<Long> customDeptIds;
+    /** 自定义部门 ID 集（CUSTOM 模式，雪花字符串） */
+    private List<String> customDeptIds;
 
     /** 本部门及下级部门 ID 链（DEPT_AND_CHILD 模式，登录时计算并放入 JWT） */
-    private List<Long> deptIds;
+    private List<String> deptIds;
 
     /** Token */
     private String token;

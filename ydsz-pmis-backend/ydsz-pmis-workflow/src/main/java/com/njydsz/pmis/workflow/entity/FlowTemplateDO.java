@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.entity;
+﻿package com.njydsz.pmis.workflow.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -30,8 +30,8 @@ public class FlowTemplateDO {
     private static final long serialVersionUID = 1L;
 
     /** 主键 */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 模板编码（唯一标识，如 hr_leave_approval） */
     private String templateCode;

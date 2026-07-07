@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.entity;
+﻿package com.njydsz.pmis.system.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -27,8 +27,8 @@ public class ConfigDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
 
     /** 配置分组 */
     private String configGroup;
