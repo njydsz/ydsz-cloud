@@ -22,7 +22,7 @@ public interface ContractSupplementMapper extends BaseMapper<ContractSupplementD
      * @param contractId 合同 ID
      * @return 补充协议列表
      */
-    List<ContractSupplementDO> selectByContractId(@Param("contractId") Long contractId);
+    List<ContractSupplementDO> selectByContractId(@Param("contractId") String contractId);
 
     /**
      * 根据补充协议编号查询记录。

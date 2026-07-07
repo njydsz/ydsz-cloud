@@ -20,7 +20,7 @@ public interface ContractSupplementService {
      * @param dto 补充协议参数
      * @return 补充协议 ID
      */
-    Long create(ContractSupplementDTO dto);
+    String create(ContractSupplementDTO dto);
 
     /**
      * 删除补充协议（逻辑删除）。
@@ -43,7 +43,7 @@ public interface ContractSupplementService {
      * @param contractId 合同 ID
      * @return 补充协议列表
      */
-    List<ContractSupplementDO> listByContract(Long contractId);
+    List<ContractSupplementDO> listByContract(String contractId);
 
     /**
      * 分页查询补充协议。
@@ -53,5 +53,5 @@ public interface ContractSupplementService {
      * @param contractId 合同 ID，可空
      * @return 分页结果
      */
-    Page<ContractSupplementDO> page(int page, int size, Long contractId);
+    Page<ContractSupplementDO> page(int page, int size, String contractId);
 }

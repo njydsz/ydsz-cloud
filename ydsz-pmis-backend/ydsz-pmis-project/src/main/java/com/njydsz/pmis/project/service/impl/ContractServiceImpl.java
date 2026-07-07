@@ -57,7 +57,7 @@ public class ContractServiceImpl implements ContractService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(ContractCreateDTO dto) {
+    public String create(ContractCreateDTO dto) {
         validate(dto);
         if (contractMapper.selectByCode(dto.getContractCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_f038adba", dto.getContractCode());
@@ -238,7 +238,7 @@ public class ContractServiceImpl implements ContractService {
         if (!StringUtils.hasText(dto.getContractName())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_c6c8edbf");
         }
-        if (dto.getCustomerId() == null) {
+        if (!StringUtils.hasText(dto.getCustomerId())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_6de1fd36");
         }
         if (!StringUtils.hasText(dto.getContractType())) {
@@ -247,7 +247,7 @@ public class ContractServiceImpl implements ContractService {
         if (dto.getTotalAmount() == null || dto.getTotalAmount().signum() < 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8ece143c");
         }
-        if (dto.getOwnerId() == null) {
+        if (!StringUtils.hasText(dto.getOwnerId())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_26804acb");
         }
         if (dto.getEffectiveDate() != null && dto.getExpireDate() != null
@@ -264,13 +264,13 @@ public class ContractServiceImpl implements ContractService {
      */
     private void assembleNames(ContractDO c) {
         if (c == null || nameAssembler == null) return;
-        if (!StringUtils.hasText(c.getCustomerName()) && c.getCustomerId() != null) {
+        if (!StringUtils.hasText(c.getCustomerName()) && StringUtils.hasText(c.getCustomerId())) {
             try {
                 String n = nameAssembler.resolveCustomer(c.getCustomerId());
                 if (n != null) c.setCustomerName(n);
             } catch (Exception e) { log.warn("解析客户名称失败 customerId={}: {}", c.getCustomerId(), e.getMessage(), e); }
         }
-        if (!StringUtils.hasText(c.getOwnerName()) && c.getOwnerId() != null) {
+        if (!StringUtils.hasText(c.getOwnerName()) && StringUtils.hasText(c.getOwnerId())) {
             try {
                 String n = nameAssembler.resolveEmployee(c.getOwnerId());
                 if (n != null) c.setOwnerName(n);
@@ -288,28 +288,28 @@ public class ContractServiceImpl implements ContractService {
     private void batchAssembleNames(List<ContractDO> records) {
         if (records == null || records.isEmpty() || nameAssembler == null) return;
         // 第 1 步：收集需要解析的 ID（用 Set 去重）
-        Set<Long> customerIds = new HashSet<>();
-        Set<Long> employeeIds = new HashSet<>();
+        Set<String> customerIds = new HashSet<>();
+        Set<String> employeeIds = new HashSet<>();
         for (ContractDO rec : records) {
-            if (!StringUtils.hasText(rec.getCustomerName()) && rec.getCustomerId() != null) {
+            if (!StringUtils.hasText(rec.getCustomerName()) && StringUtils.hasText(rec.getCustomerId())) {
                 customerIds.add(rec.getCustomerId());
             }
-            if (!StringUtils.hasText(rec.getOwnerName()) && rec.getOwnerId() != null) {
+            if (!StringUtils.hasText(rec.getOwnerName()) && StringUtils.hasText(rec.getOwnerId())) {
                 employeeIds.add(rec.getOwnerId());
             }
         }
         // 第 2 步：一次性批量查询（空集合守卫，Set → ArrayList 转换）
-        Map<Long, String> customerNames = customerIds.isEmpty()
+        Map<String, String> customerNames = customerIds.isEmpty()
                 ? Map.of() : nameAssembler.batchCustomerName(new ArrayList<>(customerIds));
-        Map<Long, String> employeeNames = employeeIds.isEmpty()
+        Map<String, String> employeeNames = employeeIds.isEmpty()
                 ? Map.of() : nameAssembler.batchEmployeeName(new ArrayList<>(employeeIds));
         // 第 3 步：循环填充名称（Map 查找，Feign 失败时 Map 为空自然跳过）
         for (ContractDO rec : records) {
-            if (!StringUtils.hasText(rec.getCustomerName()) && rec.getCustomerId() != null) {
+            if (!StringUtils.hasText(rec.getCustomerName()) && StringUtils.hasText(rec.getCustomerId())) {
                 String n = customerNames.get(rec.getCustomerId());
                 if (n != null) rec.setCustomerName(n);
             }
-            if (!StringUtils.hasText(rec.getOwnerName()) && rec.getOwnerId() != null) {
+            if (!StringUtils.hasText(rec.getOwnerName()) && StringUtils.hasText(rec.getOwnerId())) {
                 String n = employeeNames.get(rec.getOwnerId());
                 if (n != null) rec.setOwnerName(n);
             }

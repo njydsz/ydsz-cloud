@@ -53,7 +53,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long apply(ContractChangeDTO dto) {
+    public String apply(ContractChangeDTO dto) {
         validate(dto);
         if (contractMapper.selectById(dto.getContractId()) == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_22d39b90");
@@ -78,7 +78,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void submit(Long id) {
+    public void submit(String id) {
         ContractChangeDO c = getById(id);
         if (!"DRAFT".equalsIgnoreCase(c.getStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d85e77c2", c.getStatus());
@@ -98,7 +98,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void approve(Long id, Long approverId, String approverName) {
+    public void approve(String id, String approverId, String approverName) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8a0e5737", c.getStatus());
@@ -133,7 +133,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void reject(Long id, Long approverId, String approverName, String reason) {
+    public void reject(String id, String approverId, String approverName, String reason) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_a77d8060", c.getStatus());
@@ -175,7 +175,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<ContractChangeDO> page(int page, int size, Long contractId, String status) {
+    public Page<ContractChangeDO> page(int page, int size, String contractId, String status) {
         Page<ContractChangeDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ContractChangeDO> w = new LambdaQueryWrapper<>();
         if (contractId != null) w.eq(ContractChangeDO::getContractId, contractId);
@@ -192,7 +192,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<ContractChangeDO> listByContract(Long contractId) {
+    public List<ContractChangeDO> listByContract(String contractId) {
         if (contractId == null) return List.of();
         return changeMapper.selectByContractId(contractId);
     }
@@ -207,7 +207,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
-        if (dto.getContractId() == null) {
+        if (!StringUtils.hasText(dto.getContractId())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_af96cf73");
         }
         if (!StringUtils.hasText(dto.getChangeCode())) {

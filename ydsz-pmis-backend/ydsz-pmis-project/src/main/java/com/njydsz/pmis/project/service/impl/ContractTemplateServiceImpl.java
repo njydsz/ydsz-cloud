@@ -46,7 +46,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(ContractTemplateCreateDTO dto) {
+    public String create(ContractTemplateCreateDTO dto) {
         validate(dto);
         if (templateMapper.selectByCode(dto.getTemplateCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,

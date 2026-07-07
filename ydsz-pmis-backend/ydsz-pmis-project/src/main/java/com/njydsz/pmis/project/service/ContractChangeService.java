@@ -20,7 +20,7 @@ public interface ContractChangeService {
      * @param dto 变更申请参数
      * @return 变更记录 ID
      */
-    Long apply(ContractChangeDTO dto);
+    String apply(ContractChangeDTO dto);
 
     /**
      * 提交变更进入审批流。
@@ -36,7 +36,7 @@ public interface ContractChangeService {
      * @param approverId   审批人 ID
      * @param approverName 审批人名称
      */
-    void approve(String id, Long approverId, String approverName);
+    void approve(String id, String approverId, String approverName);
 
     /**
      * 驳回变更。
@@ -46,7 +46,7 @@ public interface ContractChangeService {
      * @param approverName 审批人名称
      * @param reason       驳回原因，可空
      */
-    void reject(String id, Long approverId, String approverName, String reason);
+    void reject(String id, String approverId, String approverName, String reason);
 
     /**
      * 根据变更 ID 查询变更详情。
@@ -65,7 +65,7 @@ public interface ContractChangeService {
      * @param status     状态码，可空
      * @return 分页结果
      */
-    Page<ContractChangeDO> page(int page, int size, Long contractId, String status);
+    Page<ContractChangeDO> page(int page, int size, String contractId, String status);
 
     /**
      * 按合同查询变更记录列表。
@@ -73,5 +73,5 @@ public interface ContractChangeService {
      * @param contractId 合同 ID
      * @return 变更记录列表
      */
-    List<ContractChangeDO> listByContract(Long contractId);
+    List<ContractChangeDO> listByContract(String contractId);
 }

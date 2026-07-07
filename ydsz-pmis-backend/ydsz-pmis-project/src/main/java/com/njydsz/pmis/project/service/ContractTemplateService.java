@@ -21,7 +21,7 @@ public interface ContractTemplateService {
      * @param dto 模板创建参数
      * @return 模板 ID
      */
-    Long create(ContractTemplateCreateDTO dto);
+    String create(ContractTemplateCreateDTO dto);
 
     /**
      * 模板状态迁移（DRAFT/PUBLISHED/DEPRECATED 之间转换）。

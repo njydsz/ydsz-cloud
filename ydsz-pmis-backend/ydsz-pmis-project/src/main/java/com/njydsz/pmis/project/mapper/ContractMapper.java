@@ -58,7 +58,7 @@ public interface ContractMapper extends BaseMapper<ContractDO> {
      * @param tenantId 租户 ID
      * @return 每种风险等级对应的数量列表
      */
-    List<Map<String, Object>> aggregateByRisk(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByRisk(@Param("tenantId") String tenantId);
 
     /**
      * 统计指定状态的合同数量。
@@ -67,5 +67,5 @@ public interface ContractMapper extends BaseMapper<ContractDO> {
      * @param tenantId 租户 ID
      * @return 数量
      */
-    Long countByStatus(@Param("status") String status, @Param("tenantId") Long tenantId);
+    Long countByStatus(@Param("status") String status, @Param("tenantId") String tenantId);
 }

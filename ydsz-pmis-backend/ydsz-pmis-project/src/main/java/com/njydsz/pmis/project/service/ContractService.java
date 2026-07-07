@@ -22,7 +22,7 @@ public interface ContractService {
      * @param dto 合同创建参数
      * @return 合同 ID
      */
-    Long create(ContractCreateDTO dto);
+    String create(ContractCreateDTO dto);
 
     /**
      * 合同状态迁移（遵循 ContractStatus 状态机）。

@@ -22,7 +22,7 @@ public interface ContractChangeMapper extends BaseMapper<ContractChangeDO> {
      * @param contractId 合同 ID
      * @return 变更记录列表
      */
-    List<ContractChangeDO> selectByContractId(@Param("contractId") Long contractId);
+    List<ContractChangeDO> selectByContractId(@Param("contractId") String contractId);
 
     /**
      * 根据变更单号查询合同变更记录。
@@ -41,7 +41,7 @@ public interface ContractChangeMapper extends BaseMapper<ContractChangeDO> {
      * @param approverName 审批人名称
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status,
-                     @Param("approverId") Long approverId,
+    int updateStatus(@Param("id") String id, @Param("status") String status,
+                     @Param("approverId") String approverId,
                      @Param("approverName") String approverName);
 }

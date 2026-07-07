@@ -52,7 +52,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(ContractSupplementDTO dto) {
+    public String create(ContractSupplementDTO dto) {
         validate(dto);
         if (contractMapper.selectById(dto.getContractId()) == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_22d39b90");
@@ -123,7 +123,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      */
     @Override
     @Transactional(readOnly = true)
-    public List<ContractSupplementDO> listByContract(Long contractId) {
+    public List<ContractSupplementDO> listByContract(String contractId) {
         if (contractId == null) return List.of();
         return supplementMapper.selectByContractId(contractId);
     }
@@ -138,7 +138,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<ContractSupplementDO> page(int page, int size, Long contractId) {
+    public Page<ContractSupplementDO> page(int page, int size, String contractId) {
         Page<ContractSupplementDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ContractSupplementDO> w = new LambdaQueryWrapper<>();
         if (contractId != null) w.eq(ContractSupplementDO::getContractId, contractId);
@@ -156,7 +156,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
-        if (dto.getContractId() == null) {
+        if (!StringUtils.hasText(dto.getContractId())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_af96cf73");
         }
         if (!StringUtils.hasText(dto.getSupplementCode())) {
