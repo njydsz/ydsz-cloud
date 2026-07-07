@@ -49,10 +49,11 @@ public class RuleEngineBenchmark {
         engine = new DefaultRuleEngine();
         for (int i = 0; i < ruleCount; i++) {
             final int prio = i;
+            final int idx = i;
             final String code = "BENCH_" + i;
             engine.register(new Rule() {
                 @Override public String getCode() { return code; }
-                @Override public String getName() { return "基准规则" + i; }
+                @Override public String getName() { return "基准规则" + idx; }
                 @Override public String getCategory() { return "BENCH"; }
                 @Override public int getPriority() { return prio; }
                 @Override public RuleResult evaluate(RuleContext ctx) {

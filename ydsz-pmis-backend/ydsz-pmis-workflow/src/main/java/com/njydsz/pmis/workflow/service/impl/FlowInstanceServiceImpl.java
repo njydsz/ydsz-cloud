@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.annotation.DistributedLock;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.exception.BizException;
@@ -211,6 +212,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @DistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void terminate(String instanceId, String reason) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
@@ -257,6 +259,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @DistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void suspend(String instanceId) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
@@ -280,6 +283,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @DistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void activate(String instanceId) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.SUSPENDED.name().equals(instance.getFlowStatus())) {
@@ -303,6 +307,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @DistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public void complete(String instanceId, String endNodeCode) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
@@ -373,6 +378,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @DistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public boolean recall(String instanceId, String initiatorId) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         // 校验：仅发起人可撤回
@@ -423,6 +429,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @DistributedLock(key = "'flow:instance:op:' + #instanceId", waitTime = 3, leaseTime = 30)
     public boolean rollback(String instanceId, String operatorId, String reason, int maxRollbackDays) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
 

@@ -1357,6 +1357,170 @@ CREATE INDEX IF NOT EXISTS idx_pjr_parent
 CREATE INDEX IF NOT EXISTS idx_pjr_child
     ON pmis_job_relation (child_job_id) WHERE deleted = 0;
 
+-- ============================================================================
+-- [P5-1] 任务告警规则表 pmis_job_alert_rule
+-- ----------------------------------------------------------------------------
+-- 定义告警触发条件、级别、通知通道与去重策略。
+-- 规则可绑定到具体任务（job_id 非空），也可作为全局规则（job_id 为 NULL）应用于所有任务。
+-- 对标 XXL-Job 告警中心 / PowerJob 告警配置。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_alert_rule(
+    id                    VARCHAR(20)      PRIMARY KEY,
+    rule_name             VARCHAR(128)  NOT NULL,
+    job_id                VARCHAR(20),
+    job_key               VARCHAR(128),
+    -- [P5-2] 告警类型: FAIL 任务失败 / TIMEOUT 任务超时 / SLOW 任务慢 / FAIL_RATE 失败率 / DURATION_P95 P95耗时
+    alert_type            VARCHAR(32)   NOT NULL,
+    -- [P5-2] 告警级别: INFO 提示 / WARN 警告 / ERROR 错误 / CRITICAL 严重
+    alert_level           VARCHAR(32)   NOT NULL DEFAULT 'WARN',
+    -- 阈值: 按 alert_type 解释 (FAIL_RATE 百分比 0-100 / SLOW+DURATION_P95 毫秒数)
+    threshold             BIGINT,
+    -- 统计时间窗口 (分钟), 仅 FAIL_RATE / DURATION_P95 生效
+    time_window_minutes   INTEGER,
+    -- 通知通道 (JSON 数组: ["EMAIL","DINGTALK","WECOM","WEBHOOK"])
+    channels              TEXT          NOT NULL,
+    -- 接收人 (JSON 数组: 邮箱/手机号/userId 列表)
+    receivers             TEXT,
+    -- 冷却时间 (分钟), 同一规则在冷却期内不重复告警
+    cooldown_minutes      INTEGER       NOT NULL DEFAULT 10,
+    -- 是否启用: 0 禁用 / 1 启用
+    enabled               SMALLINT      NOT NULL DEFAULT 1,
+    -- 最后告警时间 (用于冷却判断)
+    last_alert_at         TIMESTAMPTZ,
+    created_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at            TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at            TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted               SMALLINT      NOT NULL DEFAULT 0,
+    tenant_id             VARCHAR(20)         NOT NULL DEFAULT '1',
+    -- 数据完整性约束
+    CONSTRAINT ck_pjar_alert_type_enum   CHECK (alert_type IN ('FAIL', 'TIMEOUT', 'SLOW', 'FAIL_RATE', 'DURATION_P95')),
+    CONSTRAINT ck_pjar_alert_level_enum  CHECK (alert_level IN ('INFO', 'WARN', 'ERROR', 'CRITICAL')),
+    CONSTRAINT ck_pjar_threshold_nonneg  CHECK (threshold IS NULL OR threshold >= 0),
+    CONSTRAINT ck_pjar_window_nonneg     CHECK (time_window_minutes IS NULL OR time_window_minutes > 0),
+    CONSTRAINT ck_pjar_cooldown_nonneg   CHECK (cooldown_minutes >= 0),
+    CONSTRAINT ck_pjar_enabled_enum      CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_pjar_deleted_enum      CHECK (deleted IN (0, 1)),
+    -- [P5-2] 阈值约束: FAIL_RATE / SLOW / DURATION_P95 必须配置阈值
+    CONSTRAINT ck_pjar_threshold_required CHECK (
+        alert_type IN ('FAIL', 'TIMEOUT') OR threshold IS NOT NULL
+    ),
+    -- [P5-2] 时间窗口约束: FAIL_RATE / DURATION_P95 必须配置时间窗口
+    CONSTRAINT ck_pjar_window_required   CHECK (
+        alert_type NOT IN ('FAIL_RATE', 'DURATION_P95') OR time_window_minutes IS NOT NULL
+    )
+);
+
+COMMENT ON TABLE pmis_job_alert_rule IS '任务告警规则表（P5 告警 + 监控）';
+COMMENT ON COLUMN pmis_job_alert_rule.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_alert_rule.rule_name IS '规则名称（展示用）';
+COMMENT ON COLUMN pmis_job_alert_rule.job_id IS '关联任务 ID（NULL 表示全局规则）';
+COMMENT ON COLUMN pmis_job_alert_rule.job_key IS '任务 KEY 冗余（NULL 表示全局规则）';
+COMMENT ON COLUMN pmis_job_alert_rule.alert_type IS '告警类型: FAIL 任务失败 / TIMEOUT 任务超时 / SLOW 任务慢 / FAIL_RATE 失败率 / DURATION_P95 P95耗时';
+COMMENT ON COLUMN pmis_job_alert_rule.alert_level IS '告警级别: INFO 提示 / WARN 警告 / ERROR 错误 / CRITICAL 严重';
+COMMENT ON COLUMN pmis_job_alert_rule.threshold IS '阈值（按 alert_type 解释: FAIL_RATE 百分比 0-100 / SLOW+DURATION_P95 毫秒数）';
+COMMENT ON COLUMN pmis_job_alert_rule.time_window_minutes IS '统计时间窗口（分钟），仅 FAIL_RATE / DURATION_P95 生效';
+COMMENT ON COLUMN pmis_job_alert_rule.channels IS '通知通道（JSON 数组: ["EMAIL","DINGTALK","WECOM","WEBHOOK"]）';
+COMMENT ON COLUMN pmis_job_alert_rule.receivers IS '接收人（JSON 数组: 邮箱/手机号/userId 列表）';
+COMMENT ON COLUMN pmis_job_alert_rule.cooldown_minutes IS '冷却时间（分钟），同一规则在冷却期内不重复告警';
+COMMENT ON COLUMN pmis_job_alert_rule.enabled IS '是否启用: 0 禁用 / 1 启用';
+COMMENT ON COLUMN pmis_job_alert_rule.last_alert_at IS '最后告警时间（用于冷却判断，CAS 更新）';
+COMMENT ON COLUMN pmis_job_alert_rule.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job_alert_rule.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_alert_rule.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_job_alert_rule.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_job_alert_rule.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_job_alert_rule.tenant_id IS '租户 ID（单租户部署默认 1）';
+
+-- 索引: 按 job_id 查询任务专属规则（任务告警触发时使用）
+CREATE INDEX IF NOT EXISTS idx_pjar_job_id
+    ON pmis_job_alert_rule (job_id) WHERE deleted = 0 AND enabled = 1;
+-- 索引: 按告警类型筛选（批量加载同类规则）
+CREATE INDEX IF NOT EXISTS idx_pjar_alert_type
+    ON pmis_job_alert_rule (alert_type) WHERE deleted = 0 AND enabled = 1;
+-- 索引: 按启用状态加载全部启用规则（启动时缓存）
+CREATE INDEX IF NOT EXISTS idx_pjar_enabled
+    ON pmis_job_alert_rule (enabled) WHERE deleted = 0;
+-- 索引: 按租户 + 创建时间倒序（告警中心列表）
+CREATE INDEX IF NOT EXISTS idx_pjar_tenant_created
+    ON pmis_job_alert_rule (tenant_id, created_at DESC) WHERE deleted = 0;
+
+-- ============================================================================
+-- [P5-1] 任务告警日志表 pmis_job_alert_log
+-- ----------------------------------------------------------------------------
+-- 记录每次告警派发的实际情况，用于审计、去重判断和告警效果统计。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_alert_log(
+    id                    VARCHAR(20)      PRIMARY KEY,
+    rule_id               VARCHAR(20)   NOT NULL,
+    rule_name             VARCHAR(128)  NOT NULL,
+    job_id                VARCHAR(20),
+    job_key               VARCHAR(128),
+    alert_type            VARCHAR(32)   NOT NULL,
+    alert_level           VARCHAR(32)   NOT NULL,
+    -- 触发时的实际值（如失败率 85.5、耗时 5000）
+    trigger_value         VARCHAR(64),
+    threshold             BIGINT,
+    -- 实际发送通道（JSON 数组）
+    channels              TEXT          NOT NULL,
+    -- 告警状态: PENDING 派发中 / SUCCESS 全部成功 / PARTIAL 部分成功 / FAILED 全部失败
+    status                VARCHAR(32)   NOT NULL DEFAULT 'PENDING',
+    error_message         TEXT,
+    trace_id              VARCHAR(20),
+    -- 触发该告警的任务日志 ID（关联 pmis_job_log.id）
+    trigger_log_id        VARCHAR(20),
+    created_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at            TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at            TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted               SMALLINT      NOT NULL DEFAULT 0,
+    tenant_id             VARCHAR(20)         NOT NULL DEFAULT '1',
+    -- 数据完整性约束
+    CONSTRAINT ck_pjal_alert_type_enum   CHECK (alert_type IN ('FAIL', 'TIMEOUT', 'SLOW', 'FAIL_RATE', 'DURATION_P95')),
+    CONSTRAINT ck_pjal_alert_level_enum  CHECK (alert_level IN ('INFO', 'WARN', 'ERROR', 'CRITICAL')),
+    CONSTRAINT ck_pjal_threshold_nonneg  CHECK (threshold IS NULL OR threshold >= 0),
+    CONSTRAINT ck_pjal_status_enum       CHECK (status IN ('PENDING', 'SUCCESS', 'PARTIAL', 'FAILED')),
+    CONSTRAINT ck_pjal_deleted_enum      CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_alert_log IS '任务告警日志表（P5 告警 + 监控）';
+COMMENT ON COLUMN pmis_job_alert_log.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_alert_log.rule_id IS '告警规则 ID（关联 pmis_job_alert_rule.id）';
+COMMENT ON COLUMN pmis_job_alert_log.rule_name IS '规则名称（冗余，避免连表）';
+COMMENT ON COLUMN pmis_job_alert_log.job_id IS '任务 ID（NULL 表示全局告警）';
+COMMENT ON COLUMN pmis_job_alert_log.job_key IS '任务 KEY（冗余）';
+COMMENT ON COLUMN pmis_job_alert_log.alert_type IS '告警类型: FAIL / TIMEOUT / SLOW / FAIL_RATE / DURATION_P95';
+COMMENT ON COLUMN pmis_job_alert_log.alert_level IS '告警级别: INFO / WARN / ERROR / CRITICAL';
+COMMENT ON COLUMN pmis_job_alert_log.trigger_value IS '触发时的实际值（如失败率 85.5、耗时 5000）';
+COMMENT ON COLUMN pmis_job_alert_log.threshold IS '规则阈值（冗余）';
+COMMENT ON COLUMN pmis_job_alert_log.channels IS '实际发送通道（JSON 数组）';
+COMMENT ON COLUMN pmis_job_alert_log.status IS '告警状态: PENDING 派发中 / SUCCESS 全部成功 / PARTIAL 部分成功 / FAILED 全部失败';
+COMMENT ON COLUMN pmis_job_alert_log.error_message IS '错误信息（部分通道失败时记录）';
+COMMENT ON COLUMN pmis_job_alert_log.trace_id IS '链路追踪 ID（分布式排障）';
+COMMENT ON COLUMN pmis_job_alert_log.trigger_log_id IS '触发该告警的任务日志 ID（关联 pmis_job_log.id）';
+COMMENT ON COLUMN pmis_job_alert_log.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job_alert_log.created_at IS '告警发送时间';
+COMMENT ON COLUMN pmis_job_alert_log.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_job_alert_log.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_job_alert_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_job_alert_log.tenant_id IS '租户 ID';
+
+-- 索引: 按规则 ID 查询去重判断（冷却期内是否已告警）
+CREATE INDEX IF NOT EXISTS idx_pjal_rule_id
+    ON pmis_job_alert_log (rule_id, created_at DESC) WHERE deleted = 0;
+-- 索引: 按任务 ID 查询告警历史（任务详情页）
+CREATE INDEX IF NOT EXISTS idx_pjal_job_id
+    ON pmis_job_alert_log (job_id, created_at DESC) WHERE deleted = 0;
+-- 索引: 按告警级别筛选（告警中心）
+CREATE INDEX IF NOT EXISTS idx_pjal_alert_level
+    ON pmis_job_alert_log (alert_level, created_at DESC) WHERE deleted = 0;
+-- 索引: 按租户 + 创建时间倒序（告警中心列表）
+CREATE INDEX IF NOT EXISTS idx_pjal_tenant_created
+    ON pmis_job_alert_log (tenant_id, created_at DESC) WHERE deleted = 0;
+-- 索引: 链路追踪 ID（分布式排障）
+CREATE INDEX IF NOT EXISTS idx_pjal_trace_id
+    ON pmis_job_alert_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
+
 -- --------------------------------------------------------------------
 
 -- ============================ [007] init pmis message schema ============================

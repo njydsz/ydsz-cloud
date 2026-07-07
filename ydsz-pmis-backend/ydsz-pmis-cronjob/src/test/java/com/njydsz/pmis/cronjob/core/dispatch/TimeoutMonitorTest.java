@@ -1,6 +1,7 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.core.alert.AlertTrigger;
 import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.LocalDateTime;
@@ -50,6 +52,8 @@ class TimeoutMonitorTest {
     private LeaderElector leaderElector;
     @Mock
     private StringRedisTemplate redisTemplate;
+    @Mock
+    private ObjectProvider<AlertTrigger> alertTriggerProvider;
 
     private CronjobProperties cronjobProperties;
 
@@ -68,6 +72,8 @@ class TimeoutMonitorTest {
         }
         monitor.init();
         lenient().when(leaderElector.isLeader(anyString())).thenReturn(true);
+        // P5: AlertTrigger 默认不可用（告警触发器在测试中不启用）
+        lenient().when(alertTriggerProvider.getIfAvailable()).thenReturn(null);
     }
 
     @Test

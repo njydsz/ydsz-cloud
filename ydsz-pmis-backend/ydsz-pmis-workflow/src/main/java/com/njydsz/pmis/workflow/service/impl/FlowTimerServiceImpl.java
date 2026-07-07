@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
+import com.njydsz.pmis.workflow.engine.FlowClusterLockHelper;
 import com.njydsz.pmis.workflow.engine.FlowNotificationHelper;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
@@ -49,6 +50,8 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     private final FlowNodeMapper nodeMapper;
     private final FlowAdvancer advancer;
     private final FlowNotificationHelper notificationHelper;
+    /** P0-2: 集群调度分布式锁辅助 */
+    private final FlowClusterLockHelper clusterLockHelper;
 
     /** 单次扫描上限，避免大表全表扫描 */
     private static final int SCAN_BATCH_SIZE = 200;
@@ -290,7 +293,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
      */
     @Scheduled(fixedDelay = 30_000L, initialDelay = 60_000L)
     public void scheduledScan() {
-        scanAndFire();
+        clusterLockHelper.tryRun("timer:scan", 25, this::scanAndFire);
     }
 
     // ============== 内部辅助 ==============

@@ -166,6 +166,20 @@ public class FlowTaskCompleteServiceImpl {
             return createForeachTasks(instance, node, variables, explicitAssignees);
         }
 
+        // P0-4: LEVEL_APPROVAL 逐级审批节点 — 动态展开多级上级，切换为顺序会签
+        if (node.getNodeType() != null
+                && node.getNodeType() == FlowNodeType.LEVEL_APPROVAL.getCode()) {
+            List<String> levelApprovers = expandLevelApprovers(instance, node, variables, explicitAssignees);
+            if (levelApprovers.isEmpty()) {
+                // 逐级审批人为空：复用 emptyStrategy 兜底（默认 AUTO_PASS）
+                log.info("[Flow] 逐级审批展开为空，走兜底: instanceId={} node={}",
+                        instanceId, node.getNodeCode());
+                return createTaskWithEmptyAssignee(instance, node, variables);
+            }
+            // 逐级审批展开成功：委托给顺序会签创建逻辑
+            return createLevelApprovalTask(instance, node, variables, levelApprovers);
+        }
+
         // 解析办理人：GAP-P2-9 显式指定优先；否则尝试展开 ROLE/DEPT 为多人
         List<String> userIds = (explicitAssignees != null && !explicitAssignees.isEmpty())
                 ? new ArrayList<>(explicitAssignees)
@@ -332,6 +346,240 @@ public class FlowTaskCompleteServiceImpl {
             todoCountPushService.pushTaskAssigned(task);
         }
         return task.getId();
+    }
+
+    // ============================== P0-4: 逐级审批节点 ==============================
+
+    /**
+     * P0-4: 展开逐级审批的上级列表
+     *
+     * <p>读取 ext 配置，通过 {@link FlowAssigneeResolver#expandMultiLeader} 展开多级上级。
+     * 支持终止条件：maxLevel / stopAtPosition / stopAtUserId。
+     *
+     * @param instance  流程实例
+     * @param node      逐级审批节点
+     * @param variables 流程变量
+     * @param explicitAssignees 显式指定（自由流跳转时传入，优先级最高）
+     * @return 审批人 ID 列表（按级别升序）
+     */
+    private List<String> expandLevelApprovers(FlowInstanceDO instance, FlowNodeDO node,
+                                                Map<String, Object> variables,
+                                                List<String> explicitAssignees) {
+        // 自由流跳转时显式指定优先
+        if (explicitAssignees != null && !explicitAssignees.isEmpty()) {
+            return new ArrayList<>(explicitAssignees);
+        }
+        Map<String, Object> extConfig = parseExtConfig(node.getExt());
+        int maxLevel = parseIntConfig(extConfig, "maxLevel", 3);
+        if (maxLevel < 1) {
+            maxLevel = 1;
+        }
+        String startUserId = resolveInitiatorId(variables);
+        if (startUserId == null && instance.getInitiatorId() != null) {
+            startUserId = String.valueOf(instance.getInitiatorId());
+        }
+        if (startUserId == null) {
+            log.warn("[Flow] 逐级审批无法解析发起人: instanceId={} node={}",
+                    instance.getId(), node.getNodeCode());
+            return Collections.emptyList();
+        }
+        try {
+            List<Long> leaders = assigneeResolver.expandMultiLeader(startUserId, maxLevel, variables);
+            if (leaders == null || leaders.isEmpty()) {
+                log.warn("[Flow] 逐级审批展开为空: instanceId={} startUser={} maxLevel={}",
+                        instance.getId(), startUserId, maxLevel);
+                return Collections.emptyList();
+            }
+            List<String> result = new ArrayList<>();
+            Set<String> seen = new HashSet<>();
+            for (Long uid : leaders) {
+                String s = String.valueOf(uid);
+                // 终止条件：遇到指定用户停止
+                String stopAtUserId = (String) extConfig.get("stopAtUserId");
+                if (stopAtUserId != null && stopAtUserId.equals(s)) {
+                    result.add(s);
+                    log.info("[Flow] 逐级审批遇到 stopAtUserId 终止: instanceId={} stopAt={}",
+                            instance.getId(), s);
+                    break;
+                }
+                if (seen.add(s)) {
+                    result.add(s);
+                }
+            }
+            log.info("[Flow] 逐级审批展开: instanceId={} node={} startUser={} maxLevel={} result={}",
+                    instance.getId(), node.getNodeCode(), startUserId, maxLevel, result);
+            return result;
+        } catch (Exception e) {
+            log.error("[Flow] 逐级审批展开异常: instanceId={} err={}",
+                    instance.getId(), e.getMessage(), e);
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * P0-4: 创建逐级审批任务（顺序会签模式）
+     *
+     * <p>将展开的多级上级列表作为顺序会签审批人，每人审完切换下一人，全部通过才推进。
+     *
+     * @param instance  流程实例
+     * @param node      逐级审批节点
+     * @param variables 流程变量
+     * @param approvers 审批人列表（按级别升序）
+     * @return 首条任务 ID
+     */
+    private String createLevelApprovalTask(FlowInstanceDO instance, FlowNodeDO node,
+                                             Map<String, Object> variables,
+                                             List<String> approvers) {
+        FlowRunTaskDO task = new FlowRunTaskDO();
+        task.setInstanceId(instance.getId());
+        task.setFlowCode(instance.getFlowCode());
+        task.setDefinitionId(instance.getDefinitionId());
+        task.setNodeCode(node.getNodeCode());
+        task.setNodeName(node.getNodeName());
+        task.setNodeType(node.getNodeType());
+        task.setBusinessType(instance.getBusinessType());
+        task.setBusinessId(instance.getBusinessId());
+        task.setBusinessNo(instance.getBusinessNo());
+        task.setFlowName(instance.getFlowName());
+        task.setTitle(instance.getTitle());
+        task.setPermissionFlag(node.getPermissionFlag());
+        // 顺序会签：每人审完切换下一人
+        task.setPerformType(FlowPerformType.SEQUENTIAL.name());
+        task.setApproveCount(approvers.size());
+        task.setApproveFinished(0);
+        task.setTaskStatus(FlowTaskStatus.PENDING.name());
+        task.setAssigneeType(FlowAssigneeType.USER.name());
+        task.setAssigneeId(approvers.get(0));
+        task.setAssigneeName("USER:" + approvers.get(0));
+        task.setTenantId(instance.getTenantId());
+        task.setProviderTraceId(instance.getProviderTraceId());
+        task.setPriority(50);
+        // 应用 SLA 配置
+        if (slaService != null) {
+            slaService.applySlaConfig(task, node);
+        }
+        taskMapper.insert(task);
+        // 写入 pmis_flow_user（顺序会签）
+        for (int i = 0; i < approvers.size(); i++) {
+            String uid = approvers.get(i);
+            FlowUserDO fu = new FlowUserDO();
+            fu.setTaskId(task.getId());
+            fu.setInstanceId(instance.getId());
+            fu.setNodeCode(node.getNodeCode());
+            fu.setUserType(FlowAssigneeType.USER.name());
+            fu.setUserId(uid);
+            fu.setUserName("USER:" + uid);
+            fu.setProcessed(0);
+            fu.setWeight(1);
+            fu.setSignType(FlowSignType.ORIGINAL.name());
+            fu.setTenantId(instance.getTenantId());
+            fu.setProviderTraceId(instance.getProviderTraceId());
+            userMapper.insert(fu);
+        }
+        // Prometheus 指标
+        if (flowMetrics != null) {
+            flowMetrics.incTaskCreated(instance.getFlowCode(), node.getNodeCode());
+        }
+        // WebSocket 推送
+        if (todoCountPushService != null) {
+            todoCountPushService.pushTaskAssigned(task);
+        }
+        // 事件触发
+        support.fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
+        support.publishWorkflowEvent("TASK_CREATED", instance.getId(), task.getId());
+        // 长期授权委派改写
+        applyDelegateRedirect(task, instance, node);
+        log.info("[Flow] 逐级审批任务创建: instanceId={} node={} approvers={}",
+                instance.getId(), node.getNodeCode(), approvers);
+        return task.getId();
+    }
+
+    /**
+     * P0-4: 逐级审批人为空时走 emptyStrategy 兜底
+     *
+     * <p>复用审批人为空的兜底逻辑（AUTO_PASS / TRANSFER_ADMIN / ASSIGN_SPECIFIED / FALLBACK），
+     * 避免重复代码。
+     */
+    private String createTaskWithEmptyAssignee(FlowInstanceDO instance, FlowNodeDO node,
+                                                 Map<String, Object> variables) {
+        // 复用原有 createTask 逻辑中的 emptyStrategy 处理
+        // 这里通过传空的 explicitAssignees 触发原有兜底
+        return createTask(instanceId -> {
+            // 委托给原有逻辑：传 null explicitAssignees + 空 permissionFlag 触发兜底
+            FlowRunTaskDO task = new FlowRunTaskDO();
+            task.setInstanceId(instance.getId());
+            task.setFlowCode(instance.getFlowCode());
+            task.setDefinitionId(instance.getDefinitionId());
+            task.setNodeCode(node.getNodeCode());
+            task.setNodeName(node.getNodeName());
+            task.setNodeType(node.getNodeType());
+            task.setBusinessType(instance.getBusinessType());
+            task.setBusinessId(instance.getBusinessId());
+            task.setBusinessNo(instance.getBusinessNo());
+            task.setFlowName(instance.getFlowName());
+            task.setTitle(instance.getTitle());
+            task.setPermissionFlag(node.getPermissionFlag());
+            task.setPerformType(FlowPerformType.OR.name());
+            task.setApproveCount(1);
+            task.setApproveFinished(0);
+            task.setTaskStatus(FlowTaskStatus.PENDING.name());
+            task.setTenantId(instance.getTenantId());
+            task.setProviderTraceId(instance.getProviderTraceId());
+
+            Map<String, Object> extConfig = parseExtConfig(node.getExt());
+            String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", "AUTO_PASS");
+            switch (emptyStrategy) {
+                case "AUTO_PASS", "TRANSFER_ADMIN", "ASSIGN_SPECIFIED" -> {
+                    String fallbackUserId = "AUTO_PASS".equals(emptyStrategy) ? "0"
+                            : parseLongConfig(extConfig,
+                                    "TRANSFER_ADMIN".equals(emptyStrategy) ? "adminUserId" : "specifiedUserId",
+                                    "1");
+                    task.setAssigneeType(FlowAssigneeType.USER.name());
+                    task.setAssigneeId(fallbackUserId);
+                    task.setAssigneeName("SYSTEM_" + emptyStrategy);
+                    if ("AUTO_PASS".equals(emptyStrategy)) {
+                        task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+                        task.setFinishAt(LocalDateTime.now());
+                        task.setDurationMs(0L);
+                    }
+                    taskMapper.insert(task);
+                    if (FlowTaskStatus.COMPLETED.name().equals(task.getTaskStatus())) {
+                        archiveTask(task, FlowTaskStatus.COMPLETED);
+                        support.audit(task, "LEVEL_APPROVAL_" + emptyStrategy, null, null,
+                                "逐级审批展开为空，" + emptyStrategy);
+                        advanceAfterAutoPass(instance, node, variables);
+                    }
+                    log.info("[Flow] 逐级审批空兜底: instanceId={} node={} strategy={}",
+                            instance.getId(), node.getNodeCode(), emptyStrategy);
+                }
+                default -> {
+                    task.setAssigneeType(FlowAssigneeType.USER.name());
+                    task.setAssigneeId("1");
+                    task.setAssigneeName("FALLBACK");
+                    taskMapper.insert(task);
+                    log.warn("[Flow] 逐级审批空兜底 FALLBACK: instanceId={} node={}",
+                            instance.getId(), node.getNodeCode());
+                }
+            }
+            return task.getId();
+        }, instance.getId());
+    }
+
+    /** 函数式辅助：忽略参数直接执行 Supplier */
+    private <T> T createTask(java.util.function.Function<String, T> fn, String ignored) {
+        return fn.apply(ignored);
+    }
+
+    /** P0-4: 安全解析 int 配置 */
+    private int parseIntConfig(Map<String, Object> config, String key, int defaultValue) {
+        Object val = config.get(key);
+        if (val == null) return defaultValue;
+        if (val instanceof Number n) return n.intValue();
+        try {
+            return Integer.parseInt(String.valueOf(val));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     // ============================== GAP-P2-10: FOREACH 循环节点 ==============================

@@ -49,6 +49,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     /** 已注册规则列表（按优先级排序） */
     private final CopyOnWriteArrayList<Rule> rules = new CopyOnWriteArrayList<>();
 
+    /** 规则索引器（P0-1：大规则量场景索引优化） */
+    private final RuleIndexer ruleIndexer = new RuleIndexer();
+
     /** 是否启用统计（对应 pmis.literule.statsEnabled 配置） */
     private volatile boolean statsEnabled = true;
 
@@ -92,6 +95,12 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         // 增量保序插入（P2-10）：二分查找插入位置，避免全量 sort
         int insertIdx = binarySearchInsertIndex(rule.getPriority());
         rules.add(insertIdx, rule);
+        // 增量更新索引
+        ruleIndexer.addToIndex(rule);
+        // 当规则数首次超过阈值时，重建索引启用索引模式
+        if (!ruleIndexer.isIndexEnabled() && rules.size() >= 200) {
+            ruleIndexer.rebuildIndex(rules);
+        }
         recordRegisteredRules();
         log.info("[LiteRule] 规则已注册: code={}, name={}, priority={}, total={}",
                 rule.getCode(), rule.getName(), rule.getPriority(), rules.size());
@@ -127,6 +136,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     public void unregister(String ruleCode) {
         if (ruleCode == null) return;
         rules.removeIf(r -> ruleCode.equals(r.getCode()));
+        ruleIndexer.removeFromIndex(ruleCode);
         recordRegisteredRules();
     }
 
@@ -147,18 +157,28 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         String scenario = context.getScenario();
         String contextTenantId = context.getTenantId();
         int evaluatedCount = 0;
-        for (Rule rule : rules) {
-            // 租户隔离（1.5.0）：仅评估与上下文租户匹配的规则
-            if (!java.util.Objects.equals(rule.getTenantId(), contextTenantId)) {
-                continue;
-            }
 
-            // 场景过滤：非 DEFAULT 场景下，跳过 scope 不匹配的规则
-            if (!shouldEvaluate(rule, scenario)) {
-                continue;
+        // P0-1：使用索引查找候选规则（大规则量场景性能优化）
+        List<Rule> candidateRules = ruleIndexer.isIndexEnabled()
+                ? ruleIndexer.findCandidates(contextTenantId, scenario, triggeredGroups)
+                : rules;
+
+        // 遍历候选规则（索引模式下已按租户+场景+互斥组过滤）
+        for (Rule rule : candidateRules) {
+            // 索引未启用时仍需租户和场景过滤
+            if (!ruleIndexer.isIndexEnabled()) {
+                // 租户隔离（1.5.0）：仅评估与上下文租户匹配的规则
+                if (!java.util.Objects.equals(rule.getTenantId(), contextTenantId)) {
+                    continue;
+                }
+                // 场景过滤：非 DEFAULT 场景下，跳过 scope 不匹配的规则
+                if (!shouldEvaluate(rule, scenario)) {
+                    continue;
+                }
             }
 
             // 互斥组短路：同组内已有规则命中，跳过评估
+            // 索引模式可能已排除了互斥组，但运行时 triggeredGroups 是动态更新的，仍需检查
             String mutexGroup = rule.getMutexGroup();
             if (mutexGroup != null && !mutexGroup.isBlank() && triggeredGroups.contains(mutexGroup)) {
                 if (log.isDebugEnabled()) {

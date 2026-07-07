@@ -97,6 +97,11 @@ public final class PermissionCodes {
     public static final String CRONJOB_JOB_DELETE = "cronjob:job:delete";
     public static final String CRONJOB_JOB_TRIGGER = "cronjob:job:trigger";
     public static final String CRONJOB_JOB_RELOAD = "cronjob:job:reload";
+    /** 告警规则管理（P5 告警 + 监控） */
+    public static final String CRONJOB_ALERT_CREATE = "cronjob:alert:create";
+    public static final String CRONJOB_ALERT_UPDATE = "cronjob:alert:update";
+    public static final String CRONJOB_ALERT_DELETE = "cronjob:alert:delete";
+    public static final String CRONJOB_ALERT_VIEW = "cronjob:alert:view";
 
     // ==================== 通知 ====================
 

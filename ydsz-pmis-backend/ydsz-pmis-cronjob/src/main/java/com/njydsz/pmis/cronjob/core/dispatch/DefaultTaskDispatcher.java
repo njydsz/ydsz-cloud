@@ -8,6 +8,10 @@ import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.common.job.ShardingContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.core.alert.AlertContext;
+import com.njydsz.pmis.cronjob.core.alert.AlertTrigger;
+import com.njydsz.pmis.cronjob.core.alert.AlertType;
+import com.njydsz.pmis.cronjob.core.dag.TaskCompletedEvent;
 import com.njydsz.pmis.cronjob.core.executor.JobNodeHeartbeat;
 import com.njydsz.pmis.cronjob.core.sharding.ShardAssignment;
 import com.njydsz.pmis.cronjob.core.sharding.ShardingStrategy;
@@ -22,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -37,7 +42,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
@@ -79,7 +83,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     /** P3: 分片策略（可选注入，未配置时 fallback 到非分片模式） */
     private final ObjectProvider<ShardingStrategy> shardingStrategyProvider;
     /** P4: 事件发布器，任务完成后发布事件触发后继依赖 */
-    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final ApplicationEventPublisher eventPublisher;
+    /** P5: 告警触发器（可选注入，未配置时不触发告警） */
+    private final ObjectProvider<AlertTrigger> alertTriggerProvider;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -260,6 +266,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 jobNodeHeartbeat.onTaskComplete();
             }
         }
+        // P5: 触发告警（分片级别，失败告警 + 慢任务告警）
+        triggerAlerts(job, success, log0);
         return log0.getId();
     }
 
@@ -381,6 +389,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         }
         // P4: 发布任务完成事件，触发后继依赖任务（DagExecutor 异步监听）
         publishTaskCompleted(job, success, log0.getId());
+        // P5: 触发告警（失败告警 + 慢任务告警）
+        triggerAlerts(job, success, log0);
         return log0.getId();
     }
 
@@ -391,12 +401,53 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      */
     private void publishTaskCompleted(JobDO job, boolean success, String logId) {
         try {
-            com.njydsz.pmis.cronjob.core.dag.TaskCompletedEvent event =
-                    new com.njydsz.pmis.cronjob.core.dag.TaskCompletedEvent(
-                            job.getId(), job.getJobKey(), success, logId);
+            TaskCompletedEvent event = new TaskCompletedEvent(
+                    job.getId(), job.getJobKey(), success, logId);
             eventPublisher.publishEvent(event);
         } catch (Exception e) {
             log.warn("[Dispatcher] 发布任务完成事件失败(不影响主流程): key={} reason={}",
+                    job.getJobKey(), e.getMessage());
+        }
+    }
+
+    /**
+     * P5: 触发告警。
+     *
+     * <p>根据任务执行结果触发相应告警：
+     * <ul>
+     *   <li>失败时触发 {@link AlertType#FAIL} 告警</li>
+     *   <li>成功时触发 {@link AlertType#SLOW} 告警（triggerValue=耗时毫秒，由规则阈值判定是否实际告警）</li>
+     * </ul>
+     *
+     * <p>使用 try-catch 包裹，确保告警触发失败不影响主流程。
+     *
+     * @param job     任务定义
+     * @param success 是否执行成功
+     * @param log0    任务日志（含耗时信息）
+     */
+    private void triggerAlerts(JobDO job, boolean success, JobLogDO log0) {
+        AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
+        if (alertTrigger == null) {
+            return;
+        }
+        try {
+            String triggerValue = log0.getDurationMs() != null
+                    ? String.valueOf(log0.getDurationMs())
+                    : null;
+            AlertContext context = new AlertContext(
+                    success ? AlertType.SLOW : AlertType.FAIL,
+                    job.getId(),
+                    job.getJobKey(),
+                    job.getJobName(),
+                    log0.getId(),
+                    triggerValue,
+                    log0.getErrorMessage(),
+                    log0.getTraceId(),
+                    job.getTenantId()
+            );
+            alertTrigger.trigger(context);
+        } catch (Exception e) {
+            log.warn("[Dispatcher] 触发告警失败(不影响主流程): key={} reason={}",
                     job.getJobKey(), e.getMessage());
         }
     }
@@ -420,9 +471,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             CronTrigger trigger = new CronTrigger(cron,
                     TimeZone.getTimeZone("Asia/Shanghai"));
             TriggerContext ctx = new SimpleTriggerContext();
-            Optional<Instant> next = trigger.nextExecution(ctx);
-            return next.map(instant -> LocalDateTime.ofInstant(instant,
-                    ZoneId.systemDefault())).orElse(null);
+            Instant next = trigger.nextExecution(ctx);
+            return next == null ? null : LocalDateTime.ofInstant(next,
+                    ZoneId.systemDefault());
         } catch (IllegalArgumentException e) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
         }

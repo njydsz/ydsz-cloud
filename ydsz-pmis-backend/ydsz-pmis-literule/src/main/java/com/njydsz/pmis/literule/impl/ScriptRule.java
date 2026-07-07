@@ -14,9 +14,13 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 脚本规则：基于 JSR-223 多语言脚本动态评估
@@ -84,6 +88,9 @@ public class ScriptRule implements Rule {
     private final boolean sandboxEnabled;
     private final CompiledScript compiledScript;
     private final ScriptEngine scriptEngine;
+
+    /** 沙箱模式脚本执行超时时间（毫秒），防止死循环 */
+    private static final long SANDBOX_TIMEOUT_MS = 5000;
 
     /** ScriptEngine 缓存（按语言名，全局共享，线程安全） */
     private static final Map<String, ScriptEngine> ENGINE_CACHE = new ConcurrentHashMap<>();
@@ -242,7 +249,32 @@ public class ScriptRule implements Rule {
             bindings.put("title", null);
             bindings.put("description", null);
 
-            Object result = compiledScript.eval(bindings);
+            Object result;
+            // 第三层防御：沙箱模式下使用 FutureTask + 超时中断，防止死循环
+            if (sandboxEnabled) {
+                FutureTask<Object> future = new FutureTask<>((Callable<Object>) () -> compiledScript.eval(bindings));
+                Thread evalThread = new Thread(future, "literule-script-" + code);
+                evalThread.setDaemon(true);
+                evalThread.start();
+                try {
+                    result = future.get(SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException te) {
+                    future.cancel(true);
+                    evalThread.interrupt();
+                    log.warn("[LiteRule] 脚本规则 {} 执行超时（{}ms），已中断", code, SANDBOX_TIMEOUT_MS);
+                    return RuleResult.builder()
+                            .ruleCode(code)
+                            .ruleName(name)
+                            .category(category)
+                            .triggered(false)
+                            .description("脚本执行超时（" + SANDBOX_TIMEOUT_MS + "ms），可能存在死循环")
+                            .triggeredAt(LocalDateTime.now())
+                            .elapsedMs(elapsedMs(start))
+                            .build();
+                }
+            } else {
+                result = compiledScript.eval(bindings);
+            }
             boolean triggered = Boolean.TRUE.equals(result);
 
             if (!triggered) {
@@ -395,8 +427,25 @@ public class ScriptRule implements Rule {
         "Eval\\s*\\.|Thread\\s*\\.\\s*sleep)"
     );
 
+    /** 字符串拼接绕过检测正则（如 "Sy"+"stem" 拼接绕过黑名单） */
+    private static final Pattern CONCAT_BYPASS_PATTERN = Pattern.compile(
+        "['\"](?:Sy|Sys|Syst|Syste|System)['\"]\\s*\\+\\s*['\"](?:tem|em|m|n|exit|\\.exit|\\.getRuntime)"
+    );
+
+    /** Groovy GString 插值绕过检测正则（如 "${'Sys'+'tem'}.exit(0)"） */
+    private static final Pattern GSTRING_BYPASS_PATTERN = Pattern.compile(
+        "\\$\\{[^}]*['\"](?:Sy|Sys|Syst|Syste|System)['\"]"
+    );
+
     /**
      * 检查脚本安全性（沙箱模式下调用）
+     *
+     * <p>P2-9 增强三层防御：
+     * <ol>
+     *   <li>正则黑名单：拦截危险 API 调用</li>
+     *   <li>字符串拼接绕过检测：拦截 "Sy"+"stem" 式拼接</li>
+     *   <li>Groovy GString 插值绕过检测：拦截 ${...} 动态拼接</li>
+     * </ol>
      *
      * @param script 脚本内容
      * @throws SecurityException 检测到危险 API
@@ -406,6 +455,18 @@ public class ScriptRule implements Rule {
         if (matcher.find()) {
             throw new SecurityException("脚本包含被禁止的 API 调用: " + matcher.group()
                     + "（沙箱模式禁止 System.exit/Runtime.exec/反射/文件I/O/网络访问等）");
+        }
+        // 检测字符串拼接绕过尝试
+        Matcher concatMatcher = CONCAT_BYPASS_PATTERN.matcher(script);
+        if (concatMatcher.find()) {
+            throw new SecurityException("脚本检测到字符串拼接绕过尝试: " + concatMatcher.group()
+                    + "（沙箱模式禁止拼接危险 API 类名）");
+        }
+        // 检测 GString 插值绕过尝试
+        Matcher gstringMatcher = GSTRING_BYPASS_PATTERN.matcher(script);
+        if (gstringMatcher.find()) {
+            throw new SecurityException("脚本检测到 GString 插值绕过尝试: " + gstringMatcher.group()
+                    + "（沙箱模式禁止动态拼接危险 API 类名）");
         }
     }
 

@@ -78,4 +78,37 @@ public interface ExpressionEvaluator {
     default List<ExpressionFunctionDef> registeredFunctionDefs() {
         return ExpressionFunctionDef.defaults();
     }
+
+    /**
+     * 带追踪的布尔表达式求值（P1-4 表达式级追踪/归因）
+     *
+     * <p>对标 QLExpress4 的 ExpressionTrace 能力，将表达式执行过程转换为计算树。
+     * 用于规则归因分析、短路排查和中间结果可视化。
+     *
+     * <p>默认实现降级为普通求值（不生成追踪树），具体实现类应 override 本方法提供追踪能力。
+     *
+     * @param expression 表达式字符串
+     * @param context    规则上下文
+     * @return 求值结果 + 追踪树
+     * @since 1.6.0
+     */
+    default TraceResult evalBooleanWithTrace(String expression, RuleContext context) {
+        long start = System.nanoTime();
+        boolean result = evalBoolean(expression, context);
+        long elapsed = System.nanoTime() - start;
+        ExpressionTraceNode root = ExpressionTraceNode.builder()
+                .nodeType(ExpressionTraceNode.NodeType.ROOT)
+                .expression(expression)
+                .result(result)
+                .elapsedNanos(elapsed)
+                .build();
+        return new TraceResult(result, root);
+    }
+
+    /**
+     * 表达式追踪结果
+     *
+     * @since 1.6.0
+     */
+    record TraceResult(boolean result, ExpressionTraceNode traceTree) {}
 }

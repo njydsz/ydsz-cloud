@@ -1,6 +1,9 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.core.alert.AlertContext;
+import com.njydsz.pmis.cronjob.core.alert.AlertTrigger;
+import com.njydsz.pmis.cronjob.core.alert.AlertType;
 import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
@@ -8,6 +11,7 @@ import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -60,12 +64,11 @@ public class TimeoutMonitor {
     private final LeaderElector leaderElector;
     private final StringRedisTemplate redisTemplate;
     private final CronjobProperties cronjobProperties;
+    /** P5: 告警触发器（可选注入，未配置时不触发告警） */
+    private final ObjectProvider<AlertTrigger> alertTriggerProvider;
 
     /** 任务锁 key 前缀（与 DefaultTaskDispatcher 保持一致） */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
-
-    /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete） */
-    private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
 
     /** 单批最多扫描超时日志数 */
     private static final int BATCH_SIZE = 100;
@@ -152,6 +155,35 @@ public class TimeoutMonitor {
         } catch (Exception e) {
             log.error("[TimeoutMonitor] 更新任务统计失败: jobId={} reason={}",
                     log0.getJobId(), e.getMessage());
+        }
+        // P5: 触发超时告警
+        triggerTimeoutAlert(log0, durationMs);
+    }
+
+    /**
+     * P5: 触发超时告警。
+     */
+    private void triggerTimeoutAlert(JobLogDO log0, long durationMs) {
+        AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
+        if (alertTrigger == null) {
+            return;
+        }
+        try {
+            AlertContext context = new AlertContext(
+                    AlertType.TIMEOUT,
+                    log0.getJobId(),
+                    log0.getJobKey(),
+                    null,
+                    log0.getId(),
+                    String.valueOf(durationMs),
+                    "Task timed out",
+                    log0.getTraceId(),
+                    null
+            );
+            alertTrigger.trigger(context);
+        } catch (Exception e) {
+            log.warn("[TimeoutMonitor] 触发超时告警失败(不影响主流程): logId={} reason={}",
+                    log0.getId(), e.getMessage());
         }
     }
 }

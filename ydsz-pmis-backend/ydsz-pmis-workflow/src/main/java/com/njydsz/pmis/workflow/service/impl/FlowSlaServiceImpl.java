@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.service.impl;
 
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.engine.FlowClusterLockHelper;
 import com.njydsz.pmis.workflow.engine.FlowNotificationHelper;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
@@ -53,6 +54,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     private final FlowNotificationHelper notificationHelper;
     /** P2-3: Prometheus 指标（可能为 null：测试环境） */
     private final FlowMetrics flowMetrics;
+    /** P0-2: 集群调度分布式锁辅助 */
+    private final FlowClusterLockHelper clusterLockHelper;
 
     /** 单次扫描上限（避免大表全表扫描） */
     private static final int SCAN_BATCH_SIZE = 500;
@@ -396,10 +399,13 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
     /**
      * 每 60s 扫描一次（与 FlowTimerService 错峰 — FlowTimerService 30s, FlowSlaService 60s）
+     *
+     * <p>P0-2: 使用 Redisson 分布式锁包装，多节点部署时只有一个节点执行扫描。
+     * 锁持有时间 55s（略小于 fixedDelay 60s），保证下次扫描前锁已释放。
      */
     @Scheduled(fixedDelay = 60_000L, initialDelay = 90_000L)
     public void scheduledScan() {
-        scanAndProcess();
+        clusterLockHelper.tryRun("sla:scan", 55, this::scanAndProcess);
     }
 
     // ============================== 辅助方法 ==============================

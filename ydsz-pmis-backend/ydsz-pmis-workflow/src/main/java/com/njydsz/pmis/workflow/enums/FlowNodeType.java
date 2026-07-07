@@ -54,7 +54,29 @@ public enum FlowNodeType {
      *   <li>{@code emptyStrategy}：集合为空兜底策略（FALLBACK/AUTO_PASS/TRANSFER_ADMIN/ASSIGN_SPECIFIED）</li>
      * </ul>
      */
-    FOREACH(9, "循环节点");
+    FOREACH(9, "循环节点"),
+    /**
+     * P0-4: 逐级审批节点 — 从发起人直属上级开始，逐级向上审批，直到达到 maxLevel 或遇到终止条件
+     *
+     * <p>对标钉钉/飞书"逐级审批"节点类型。与 {@link #APPROVAL} + performType=SEQUENTIAL 的区别：
+     * <ul>
+     *   <li>顺序会签：办理人在流程定义时固定（permissionFlag 配置），按序逐一处理</li>
+     *   <li>逐级审批：办理人在运行时动态计算（从发起人上级开始逐级向上），无需预配置具体审批人</li>
+     * </ul>
+     *
+     * <p>ext JSON 配置：
+     * <ul>
+     *   <li>{@code maxLevel}：最大审批级数（如 3 表示直属上级 → 上上级 → 上上上级）</li>
+     *   <li>{@code stopAtPosition}：遇到指定岗位时停止（如 "GM" 表示遇到总经理就停）</li>
+     *   <li>{@code stopAtUserId}：遇到指定用户时停止（如 "1001"）</li>
+     *   <li>{@code includeCurrentLevel}：是否包含发起人本级（默认 false）</li>
+     *   <li>{@code startFromInitiator}：是否从发起人开始（默认 false，从直属上级开始）</li>
+     * </ul>
+     *
+     * <p>实现：创建任务时通过 {@link FlowAssigneeResolver#expandMultiLeader} 展开多级上级列表，
+     * 切换为 SEQUENTIAL 顺序会签模式，每人审完切换下一级。
+     */
+    LEVEL_APPROVAL(10, "逐级审批");
 
     private final int code;
     private final String desc;

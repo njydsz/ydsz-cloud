@@ -332,12 +332,10 @@ public class RuleChain {
                                      ExecutorService parallelExecutor,
                                      long timeoutMs) {
         Objects.requireNonNull(context, "context 不能为 null");
-        // 保存并行参数供 evaluateWhen 使用
-        this.currentParallelExecutor = parallelExecutor;
-        this.currentTimeoutMs = timeoutMs;
+        // 并行参数通过方法栈传递（不再使用 transient 实例字段，消除线程安全隐患）
         return switch (chainType) {
             case THEN -> evaluateThen(context, evaluator, statsRecorder);
-            case WHEN -> evaluateWhen(context, evaluator, statsRecorder);
+            case WHEN -> evaluateWhen(context, evaluator, statsRecorder, parallelExecutor, timeoutMs);
             case IF -> evaluateIf(context, evaluator, statsRecorder);
             case ELIF -> evaluateElif(context, evaluator, statsRecorder);
             case SWITCH -> evaluateSwitch(context, evaluator, statsRecorder);
@@ -347,9 +345,13 @@ public class RuleChain {
         };
     }
 
-    /** 当前并行线程池（WHEN 链执行时使用） */
+    /** 已废弃：使用 transient 字段传递并行参数，存在线程安全隐患 */
+    @Deprecated(since = "1.6.0", forRemoval = true)
+    @SuppressWarnings("unused")
     private transient ExecutorService currentParallelExecutor;
-    /** 当前超时（毫秒） */
+    /** 已废弃：使用 transient 字段传递超时参数，存在线程安全隐患 */
+    @Deprecated(since = "1.6.0", forRemoval = true)
+    @SuppressWarnings("unused")
     private transient long currentTimeoutMs;
 
     /**
@@ -380,13 +382,14 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateWhen(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateWhen(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder,
+                                           ExecutorService parallelExecutor, long timeoutMs) {
         List<RuleResult> results = new ArrayList<>();
         if (nodes == null || nodes.isEmpty()) {
             return results;
         }
-        // 使用自定义线程池或默认 ForkJoinPool
-        ExecutorService executor = currentParallelExecutor;
+        // 使用传入的并行参数（不再依赖 transient 实例字段）
+        ExecutorService executor = parallelExecutor;
         // 并行执行所有节点
         List<CompletableFuture<List<RuleResult>>> futures = new ArrayList<>();
         for (RuleNode node : nodes) {
@@ -401,13 +404,13 @@ public class RuleChain {
         // 等待全部完成（带超时控制）
         CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         try {
-            if (currentTimeoutMs > 0) {
-                allOf.get(currentTimeoutMs, TimeUnit.MILLISECONDS);
+            if (timeoutMs > 0) {
+                allOf.get(timeoutMs, TimeUnit.MILLISECONDS);
             } else {
                 allOf.join();
             }
         } catch (TimeoutException e) {
-            log.warn("[LiteRule-Chain] WHEN 并行执行超时: timeoutMs={}", currentTimeoutMs);
+            log.warn("[LiteRule-Chain] WHEN 并行执行超时: timeoutMs={}", timeoutMs);
             // 超时后取消未完成的任务
             futures.forEach(f -> f.cancel(true));
         } catch (Exception e) {

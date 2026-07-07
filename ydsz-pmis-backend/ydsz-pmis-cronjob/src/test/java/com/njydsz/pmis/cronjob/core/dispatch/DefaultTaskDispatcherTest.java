@@ -2,6 +2,7 @@ package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.core.alert.AlertTrigger;
 import com.njydsz.pmis.cronjob.core.executor.JobNodeHeartbeat;
 import com.njydsz.pmis.cronjob.core.sharding.ShardingStrategy;
 import com.njydsz.pmis.cronjob.entity.JobDO;
@@ -20,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -79,7 +81,9 @@ class DefaultTaskDispatcherTest {
     @Mock
     private ObjectProvider<ShardingStrategy> shardingStrategyProvider;
     @Mock
-    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private ObjectProvider<AlertTrigger> alertTriggerProvider;
 
     private CronjobProperties cronjobProperties;
 
@@ -97,6 +101,18 @@ class DefaultTaskDispatcherTest {
         } catch (Exception e) {
             throw new IllegalStateException("注入 cronjobProperties 失败", e);
         }
+        // P5: 手动注入 ObjectProvider 字段，避免 @InjectMocks 因类型擦除将
+        // shardingStrategyProvider 与 alertTriggerProvider 互相错位注入
+        try {
+            java.lang.reflect.Field f1 = DefaultTaskDispatcher.class.getDeclaredField("shardingStrategyProvider");
+            f1.setAccessible(true);
+            f1.set(dispatcher, shardingStrategyProvider);
+            java.lang.reflect.Field f2 = DefaultTaskDispatcher.class.getDeclaredField("alertTriggerProvider");
+            f2.setAccessible(true);
+            f2.set(dispatcher, alertTriggerProvider);
+        } catch (Exception e) {
+            throw new IllegalStateException("注入 ObjectProvider 失败", e);
+        }
 
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);
         lenient().when(applicationContext.getBean(anyString(), eq(JobHandler.class))).thenReturn(jobHandler);
@@ -107,6 +123,8 @@ class DefaultTaskDispatcherTest {
         });
         // 默认非分片模式：ShardingStrategy 不可用
         lenient().when(shardingStrategyProvider.getIfAvailable()).thenReturn(null);
+        // P5: AlertTrigger 默认不可用（告警触发器在测试中不启用）
+        lenient().when(alertTriggerProvider.getIfAvailable()).thenReturn(null);
     }
 
     @Test

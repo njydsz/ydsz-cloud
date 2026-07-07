@@ -306,4 +306,188 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
     public boolean isSandboxEnabled() {
         return sandboxEnabled;
     }
+
+    /**
+     * 带追踪的布尔表达式求值（P1-4 表达式级追踪/归因）
+     *
+     * <p>利用 Aviator AST 解析能力，将表达式拆解为子表达式并逐步求值，
+     * 构建表达式执行追踪树，用于归因分析和可视化。
+     *
+     * <p>追踪粒度：
+     * <ul>
+     *   <li>逻辑运算符（&&/||）：拆解左右操作数，记录短路信息</li>
+     *   <li>比较运算符（&gt;/&lt;/&gt;=/&lt;=/==/!=）：记录变量值和比较结果</li>
+     *   <li>变量引用：记录变量名和实际值</li>
+     *   <li>字面值：记录字面值</li>
+     * </ul>
+     */
+    @Override
+    public TraceResult evalBooleanWithTrace(String expression, RuleContext context) {
+        if (expression == null || expression.isBlank()) {
+            ExpressionTraceNode root = ExpressionTraceNode.builder()
+                    .nodeType(ExpressionTraceNode.NodeType.ROOT)
+                    .expression(expression)
+                    .result(false)
+                    .error("表达式为空")
+                    .build();
+            return new TraceResult(false, root);
+        }
+        long start = System.nanoTime();
+        try {
+            sandboxCheck(expression);
+            boolean result = evalBoolean(expression, context);
+            long elapsed = System.nanoTime() - start;
+            // 构建追踪树
+            ExpressionTraceNode traceTree = buildTraceTree(expression, context, result, elapsed);
+            return new TraceResult(result, traceTree);
+        } catch (SecurityException e) {
+            long elapsed = System.nanoTime() - start;
+            ExpressionTraceNode root = ExpressionTraceNode.builder()
+                    .nodeType(ExpressionTraceNode.NodeType.ROOT)
+                    .expression(expression)
+                    .result(false)
+                    .error("沙箱拦截: " + e.getMessage())
+                    .elapsedNanos(elapsed)
+                    .build();
+            return new TraceResult(false, root);
+        } catch (Exception e) {
+            long elapsed = System.nanoTime() - start;
+            ExpressionTraceNode root = ExpressionTraceNode.builder()
+                    .nodeType(ExpressionTraceNode.NodeType.ROOT)
+                    .expression(expression)
+                    .result(false)
+                    .error("求值异常: " + e.getMessage())
+                    .elapsedNanos(elapsed)
+                    .build();
+            return new TraceResult(false, root);
+        }
+    }
+
+    /** 逻辑运算符正则（按优先级：|| 最低，&& 次低） */
+    private static final Pattern OR_PATTERN = Pattern.compile("\\s\\|\\|\\s");
+    private static final Pattern AND_PATTERN = Pattern.compile("\\s&&\\s");
+    /** 比较运算符正则 */
+    private static final Pattern COMPARISON_PATTERN = Pattern.compile(
+            "^([a-zA-Z_]\\w*)\\s*(>=|<=|>|<|==|!=)\\s*(.+)$");
+
+    /**
+     * 构建表达式追踪树
+     *
+     * <p>采用正则拆解 + 递归构建方式，支持 AND/OR 短路追踪。
+     *
+     * @param expression 表达式
+     * @param context    规则上下文
+     * @param finalResult 最终求值结果
+     * @param elapsedNanos 执行耗时
+     * @return 追踪树根节点
+     */
+    private ExpressionTraceNode buildTraceTree(String expression, RuleContext context,
+                                                 boolean finalResult, long elapsedNanos) {
+        String trimmed = expression.trim();
+
+        // 1. 尝试拆解 OR (||)
+        Matcher orMatcher = OR_PATTERN.matcher(trimmed);
+        if (orMatcher.find()) {
+            return buildLogicalTrace("||", trimmed, context, finalResult, elapsedNanos, orMatcher);
+        }
+
+        // 2. 尝试拆解 AND (&&)
+        Matcher andMatcher = AND_PATTERN.matcher(trimmed);
+        if (andMatcher.find()) {
+            return buildLogicalTrace("&&", trimmed, context, finalResult, elapsedNanos, andMatcher);
+        }
+
+        // 3. 尝试解析比较表达式
+        Matcher compMatcher = COMPARISON_PATTERN.matcher(trimmed);
+        if (compMatcher.matches()) {
+            String varName = compMatcher.group(1);
+            String operator = compMatcher.group(2);
+            String rightExpr = compMatcher.group(3).trim();
+            Object varValue = context.getFacts().get(varName);
+            Object rightValue = parseLiteral(rightExpr, context);
+            boolean compResult = finalResult; // 单个比较表达式结果就是最终结果
+            return ExpressionTraceNode.comparison(operator, varName, varValue, rightExpr, rightValue, compResult);
+        }
+
+        // 4. 单个变量或字面值
+        Object value = context.getFacts().get(trimmed);
+        if (value != null) {
+            return ExpressionTraceNode.variable(trimmed, value);
+        }
+
+        // 5. 兜底：根节点
+        return ExpressionTraceNode.builder()
+                .nodeType(ExpressionTraceNode.NodeType.ROOT)
+                .expression(expression)
+                .result(finalResult)
+                .elapsedNanos(elapsedNanos)
+                .build();
+    }
+
+    /**
+     * 构建逻辑运算追踪节点
+     */
+    private ExpressionTraceNode buildLogicalTrace(String operator, String expression,
+                                                    RuleContext context, boolean finalResult,
+                                                    long elapsedNanos, Matcher matcher) {
+        String left = expression.substring(0, matcher.start()).trim();
+        String right = expression.substring(matcher.end()).trim();
+        // 分别求值左右表达式
+        boolean leftResult = evalBoolean(left, context);
+        boolean shortCircuited = false;
+        boolean rightResult = false;
+        // 短路分析
+        if ("&&".equals(operator) && !leftResult) {
+            // AND 短路：左侧 false，右侧不执行
+            shortCircuited = true;
+        } else if ("||".equals(operator) && leftResult) {
+            // OR 短路：左侧 true，右侧不执行
+            shortCircuited = true;
+        } else {
+            rightResult = evalBoolean(right, context);
+        }
+
+        ExpressionTraceNode leftNode = buildTraceTree(left, context, leftResult, 0);
+        ExpressionTraceNode rightNode = shortCircuited
+                ? ExpressionTraceNode.builder()
+                        .nodeType(ExpressionTraceNode.NodeType.ROOT)
+                        .expression(right)
+                        .shortCircuited(true)
+                        .error("短路跳过")
+                        .build()
+                : buildTraceTree(right, context, rightResult, 0);
+
+        return ExpressionTraceNode.builder()
+                .nodeType(ExpressionTraceNode.NodeType.LOGICAL)
+                .operator(operator)
+                .expression(expression)
+                .result(finalResult)
+                .shortCircuited(shortCircuited)
+                .elapsedNanos(elapsedNanos)
+                .children(List.of(leftNode, rightNode))
+                .build();
+    }
+
+    /**
+     * 解析字面值（从表达式或上下文中获取）
+     */
+    private Object parseLiteral(String expr, RuleContext context) {
+        if (expr == null || expr.isBlank()) return null;
+        // 尝试从上下文中获取变量值
+        Object ctxValue = context.getFacts().get(expr);
+        if (ctxValue != null) return ctxValue;
+        // 尝试解析数字
+        try {
+            if (expr.contains(".")) {
+                return Double.parseDouble(expr);
+            } else {
+                return Integer.parseInt(expr);
+            }
+        } catch (NumberFormatException e) {
+            // 尝试解析布尔值
+            if ("true".equalsIgnoreCase(expr)) return true;
+            if ("false".equalsIgnoreCase(expr)) return false;
+            return expr; // 字符串字面值
+        }
+    }
 }

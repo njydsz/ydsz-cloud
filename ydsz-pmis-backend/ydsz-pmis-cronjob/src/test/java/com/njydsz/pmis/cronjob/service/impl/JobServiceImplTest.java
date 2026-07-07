@@ -92,7 +92,6 @@ class JobServiceImplTest {
         try {
             java.lang.reflect.Field f = JobServiceImpl.class.getDeclaredField("taskDispatcherProvider");
             f.setAccessible(true);
-            @SuppressWarnings("unchecked")
             ObjectProvider<TaskDispatcher> emptyProvider =
                     (ObjectProvider<TaskDispatcher>) org.mockito.Mockito.mock(ObjectProvider.class);
             org.mockito.Mockito.when(emptyProvider.getIfAvailable()).thenReturn(null);
