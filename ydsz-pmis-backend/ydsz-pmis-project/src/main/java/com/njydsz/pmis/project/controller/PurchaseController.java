@@ -52,7 +52,7 @@ public class PurchaseController {
     @PrePermission("execution:purchase:create")
     @Idempotent(key = "purchase:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody PurchaseCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody PurchaseCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

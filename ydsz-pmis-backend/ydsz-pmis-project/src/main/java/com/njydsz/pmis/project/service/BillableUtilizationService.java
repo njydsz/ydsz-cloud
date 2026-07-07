@@ -47,7 +47,7 @@ public interface BillableUtilizationService {
      * @param to         截止日期（含）
      * @return 个人利用率数据
      */
-    Map<String, Object> personal(Long employeeId, LocalDate from, LocalDate to);
+    Map<String, Object> personal(String employeeId, LocalDate from, LocalDate to);
 
     /**
      * 排行榜（按 utilizationPct 降序，取前 N）

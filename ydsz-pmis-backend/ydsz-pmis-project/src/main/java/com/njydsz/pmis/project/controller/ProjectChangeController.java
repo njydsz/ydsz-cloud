@@ -57,7 +57,7 @@ public class ProjectChangeController {
     @PrePermission("project:change:create")
     @Idempotent(key = "project-change:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

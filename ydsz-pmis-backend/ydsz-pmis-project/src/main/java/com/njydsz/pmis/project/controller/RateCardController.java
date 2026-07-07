@@ -55,7 +55,7 @@ public class RateCardController {
     @PrePermission("execution:rate-card:create")
     @Idempotent(key = "rate-card:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody RateCardCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody RateCardCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

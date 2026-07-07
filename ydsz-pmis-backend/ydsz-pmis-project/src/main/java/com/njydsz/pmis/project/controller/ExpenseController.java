@@ -52,7 +52,7 @@ public class ExpenseController {
     @PrePermission("execution:expense:create")
     @Idempotent(key = "expense:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody ExpenseCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody ExpenseCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

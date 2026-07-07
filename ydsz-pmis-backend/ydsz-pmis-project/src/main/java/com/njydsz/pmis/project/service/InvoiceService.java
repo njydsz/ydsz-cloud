@@ -20,7 +20,7 @@ public interface InvoiceService {
     /**
      * 创建发票申请（草稿）
      */
-    Long create(InvoiceCreateDTO dto);
+    String create(InvoiceCreateDTO dto);
 
     /**
      * 提交审批 (DRAFT → SUBMITTED)

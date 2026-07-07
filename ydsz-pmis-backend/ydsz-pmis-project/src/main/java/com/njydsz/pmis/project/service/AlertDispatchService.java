@@ -26,7 +26,7 @@ public interface AlertDispatchService {
      * @param dto 预警请求
      * @return 预警记录 ID
      */
-    Long submit(AlertDispatchDTO dto);
+    String submit(AlertDispatchDTO dto);
 
     /**
      * 立即发送（占位：与通知中心解耦，本地仅标记 SENT）

@@ -49,7 +49,7 @@ public class OpportunityController {
     @PrePermission("project:opportunity:create")
     @Idempotent(key = "opportunity:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody OpportunityCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody OpportunityCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

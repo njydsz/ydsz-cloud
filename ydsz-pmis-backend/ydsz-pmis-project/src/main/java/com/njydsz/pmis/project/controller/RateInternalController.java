@@ -55,7 +55,7 @@ public class RateInternalController {
     @PrePermission("execution:rate-internal:create")
     @Idempotent(key = "rate-internal:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody RateInternalCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody RateInternalCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

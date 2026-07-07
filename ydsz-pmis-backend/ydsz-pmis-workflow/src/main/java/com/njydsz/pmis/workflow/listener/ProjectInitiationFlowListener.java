@@ -86,7 +86,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (task == null) {
             return;
         }
-        Long assigneeId = parseUserId(task.getAssigneeId());
+        String assigneeId = parseUserId(task.getAssigneeId());
         if (assigneeId == null) {
             return;
         }
@@ -318,7 +318,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (task == null) {
             return;
         }
-        Long assigneeId = parseUserId(task.getAssigneeId());
+        String assigneeId = parseUserId(task.getAssigneeId());
         if (assigneeId == null) {
             return;
         }
@@ -409,7 +409,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
      * @param content    内容
      * @param taskId     任务 ID
      */
-    private void pushImNotification(Long assigneeId, String title, String content, Long taskId) {
+    private void pushImNotification(String assigneeId, String title, String content, Long taskId) {
         if (assigneeId == null) {
             return;
         }

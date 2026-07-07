@@ -54,7 +54,7 @@ public class RevenueController {
     @PrePermission("execution:revenue:create")
     @Idempotent(key = "revenue:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody RevenueCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody RevenueCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

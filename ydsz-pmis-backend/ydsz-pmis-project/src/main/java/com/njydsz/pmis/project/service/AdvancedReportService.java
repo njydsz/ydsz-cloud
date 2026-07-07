@@ -60,7 +60,7 @@ public interface AdvancedReportService {
      * @param to         结束日期（含）
      * @return 利用率数据
      */
-    Map<String, Object> utilizationOf(Long employeeId, LocalDate from, LocalDate to);
+    Map<String, Object> utilizationOf(String employeeId, LocalDate from, LocalDate to);
 
     /**
      * 事业部级可计费利用率

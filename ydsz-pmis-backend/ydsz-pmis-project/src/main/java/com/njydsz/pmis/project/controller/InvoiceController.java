@@ -59,7 +59,7 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "创建发票申请", bizType = "INVOICE", saveResult = true)
     @Idempotent(key = "invoice:create", ttlSeconds = 10, message = "请勿重复提交发票申请")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody InvoiceCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody InvoiceCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

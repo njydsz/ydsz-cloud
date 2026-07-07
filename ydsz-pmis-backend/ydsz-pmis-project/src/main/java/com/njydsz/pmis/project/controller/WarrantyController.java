@@ -46,7 +46,7 @@ public class WarrantyController {
     @PrePermission("aftersales:warranty:create")
     @Idempotent(key = "warranty:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody WarrantyCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody WarrantyCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

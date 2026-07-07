@@ -67,7 +67,7 @@ public interface DeliveryService {
      * @param dto 实例创建参数
      * @return 实例ID
      */
-    Long createItem(DeliveryItemCreateDTO dto);
+    String createItem(DeliveryItemCreateDTO dto);
 
     /**
      * 变更交付物实例状态

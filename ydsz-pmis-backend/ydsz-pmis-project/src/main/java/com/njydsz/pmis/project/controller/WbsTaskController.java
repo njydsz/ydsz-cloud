@@ -57,7 +57,7 @@ public class WbsTaskController {
     @PrePermission("execution:wbs:create")
     @Idempotent(key = "wbs-task:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 

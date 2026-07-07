@@ -46,7 +46,7 @@ public class OpsTicketController {
     @PrePermission("aftersales:ops-ticket:create")
     @Idempotent(key = "ops-ticket:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody OpsTicketCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody OpsTicketCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 
@@ -91,7 +91,7 @@ public class OpsTicketController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String priority,
             @RequestParam(required = false) String initiationId,
-            @RequestParam(required = false) Long assigneeId,
+            @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) String keyword) {
         return Result.ok(PageResult.ofPage(service.page(page, size, status, priority,
                 initiationId, assigneeId, keyword)));

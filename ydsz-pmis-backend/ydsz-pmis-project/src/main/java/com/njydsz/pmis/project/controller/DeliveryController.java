@@ -56,7 +56,7 @@ public class DeliveryController {
     @PrePermission("execution:delivery:create")
     @Idempotent(key = "delivery:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/standard")
-    public Result<Long> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
+    public Result<String> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
         return Result.ok(service.createStandard(dto));
     }
 
@@ -130,7 +130,7 @@ public class DeliveryController {
     @Operation(summary = "创建项目交付物实例")
     @PrePermission("execution:delivery:create")
     @PostMapping("/item")
-    public Result<Long> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
+    public Result<String> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
         return Result.ok(service.createItem(dto));
     }
 

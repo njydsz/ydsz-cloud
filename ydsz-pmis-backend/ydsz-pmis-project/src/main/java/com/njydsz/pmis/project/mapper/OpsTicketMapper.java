@@ -49,7 +49,7 @@ public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
      * @param status     工单状态
      * @return 工单列表
      */
-    List<OpsTicketDO> selectByAssignee(@Param("assigneeId") Long assigneeId,
+    List<OpsTicketDO> selectByAssignee(@Param("assigneeId") String assigneeId,
                                        @Param("status") String status);
 
     /**
@@ -79,7 +79,7 @@ public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
      * @param acceptedAt   受理时间
      * @return 受影响行数
      */
-    int updateAssignee(@Param("id") String id, @Param("assigneeId") Long assigneeId,
+    int updateAssignee(@Param("id") String id, @Param("assigneeId") String assigneeId,
                        @Param("assigneeName") String assigneeName,
                        @Param("status") String status,
                        @Param("acceptedAt") LocalDateTime acceptedAt);

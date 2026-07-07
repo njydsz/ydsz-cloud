@@ -58,7 +58,7 @@ public class TimeEntryController {
     @PrePermission("execution:time:create")
     @Idempotent(key = "time-entry:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 
