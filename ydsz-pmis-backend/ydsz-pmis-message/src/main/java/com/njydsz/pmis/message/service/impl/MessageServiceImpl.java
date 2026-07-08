@@ -31,6 +31,7 @@ import com.njydsz.pmis.message.mapper.MsgLogMapper;
 import com.njydsz.pmis.message.metric.MessageMetrics;
 import com.njydsz.pmis.message.service.AggregateService;
 import com.njydsz.pmis.message.service.CanaryService;
+import com.njydsz.pmis.message.service.DedupService;
 import com.njydsz.pmis.message.service.MessageService;
 import com.njydsz.pmis.message.service.PreferenceService;
 import com.njydsz.pmis.message.service.RateLimitService;
@@ -51,7 +52,7 @@ import java.util.Map;
  * 消息发送核心编排服务实现。
  *
  * <p>发送流程：通道校验 → 路由 → 灰度(P0-7 差异化) → 订阅校验(P0-5) → 偏好(DND/locale/digest, P0-6) →
- * 限流 → 模板加载(偏好 locale) → 渲染 → 落库 PENDING → 通道分发 →
+ * 去重(P2-1 SET NX EX) → 限流 → 模板加载(偏好 locale) → 渲染 → 落库 PENDING → 通道分发 →
  * 成功 SUCCESS / 失败降级 fallback(P0-4) / 失败重试 RETRY(P0-3) → 频率计数。
  *
  * @author ydsz-pmis-team
@@ -76,6 +77,7 @@ public class MessageServiceImpl implements MessageService {
     private final AggregateService aggregateService;
     private final SensitiveWordFilter sensitiveWordFilter;
     private final RetryStrategyResolver retryStrategyResolver;
+    private final DedupService dedupService;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -166,6 +168,14 @@ public class MessageServiceImpl implements MessageService {
         }
         String prefLocale = pref != null ? pref.getLocale() : null;
 
+        // ⑤-2 P2-1: 智能去重（SET NX EX）—— 相同 dedupKey 在 TTL 窗口内仅允许一次
+        String dedupKey = buildDedupKey(request);
+        if (StringUtils.hasText(dedupKey) && !dedupService.tryAcquire(dedupKey)) {
+            log.info("[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}", dedupKey, receiver);
+            messageMetrics.recordSend(channel, "DEDUPED", 0);
+            return MessageResult.fail(channel, "消息重复,已忽略");
+        }
+
         // ⑥ 限流 + 频率
         // ⑥-1 通道+bizType 维度令牌桶（全局配额）
         if (!rateLimitService.tryAcquire(buildRateLimitKey(channel, bizType), 1)) {
@@ -226,7 +236,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setTraceId(TraceIdUtil.getOrCreate());
         logDO.setMsgId(StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
                 : SnowflakeIdGenerator.nextIdStr());
-        logDO.setDedupKey(buildDedupKey(request));
+        logDO.setDedupKey(dedupKey);
         // P2-6: 级联发送时记录父消息 ID,用于追溯级联关系
         logDO.setParentMsgId(request.getParentMsgId());
         if (matchedRule != null) {

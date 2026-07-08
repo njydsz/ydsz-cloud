@@ -54,6 +54,9 @@ public class MessageProperties {
     /** P2-5: 多维度限流配置 */
     private RateLimitConfig rateLimit = new RateLimitConfig();
 
+    /** P2-1: 智能去重配置 */
+    private DedupConfig dedup = new DedupConfig();
+
     /** P0-1: 短信服务商配置 */
     private SmsConfig sms = new SmsConfig();
 
@@ -80,6 +83,23 @@ public class MessageProperties {
         private boolean tenantEnabled = true;
         /** tenant 维度每秒令牌数 */
         private int tenantPermits = 1000;
+    }
+
+    /**
+     * 智能去重配置（P2-1）。
+     *
+     * <p>基于 Redis {@code SET NX EX} 原子操作实现短窗口去重：相同 dedupKey 的消息
+     * 在 {@code ttlSeconds} 秒内仅允许发送一次，超时后自动释放（允许补发）。
+     * 适用于网络重试、上游重复触发、MQ 重投等场景，避免用户收到重复通知。
+     *
+     * <p>降级策略：Redis 不可用时自动放行（fail-open），避免阻断业务。
+     */
+    @Data
+    public static class DedupConfig {
+        /** 去重总开关（关闭后所有消息直接放行，不检查 Redis） */
+        private boolean enabled = true;
+        /** 去重窗口（秒）：同一 dedupKey 在此时间内视为重复，默认 60s */
+        private int ttlSeconds = 60;
     }
 
     /**

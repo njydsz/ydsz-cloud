@@ -1,5 +1,6 @@
 package com.njydsz.pmis.agent.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.agent.entity.DagDefinitionDO;
 import com.njydsz.pmis.agent.entity.DagInstanceDO;
@@ -349,11 +350,19 @@ class DagServiceTest {
         @Test
         @DisplayName("pageInstances 正常返回")
         void shouldPageInstances() {
-            when(instMapperProvider.getIfAvailable()).thenReturn(instMapper);
+            DagInstanceDO inst = new DagInstanceDO();
+            inst.setId("inst-1");
+            Page<DagInstanceDO> page = new Page<>(1, 10);
+            page.setRecords(List.of(inst));
+            page.setTotal(1);
+            when(instMapper.selectPage(any(Page.class), any())).thenReturn(page);
 
             PageResult<DagInstanceDO> result = service.pageInstances("dag-1", 1, 10);
 
             assertThat(result).isNotNull();
+            assertThat(result.getList()).hasSize(1);
+            assertThat(result.getList().get(0).getId()).isEqualTo("inst-1");
+            assertThat(result.getTotal()).isEqualTo(1L);
         }
 
         @Test

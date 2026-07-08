@@ -34,6 +34,9 @@ public final class MessageConstants {
     public static final String RATE_LIMIT_TEMPLATE_PREFIX = "pmis:msg:ratelimit:template:";
     public static final String RATE_LIMIT_TENANT_PREFIX = "pmis:msg:ratelimit:tenant:";
 
+    /** P2-1: 智能去重 key 前缀（SET NX EX 原子去重） */
+    public static final String DEDUP_KEY_PREFIX = "pmis:msg:dedup:";
+
     /** 聚合批次锁前缀 */
     public static final String AGGREGATE_LOCK_PREFIX = "pmis:msg:aggregate:lock:";
 

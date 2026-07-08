@@ -620,4 +620,42 @@ export const asyncRoutes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/message',
+    component: () => import('@/layout/default/index.vue'),
+    redirect: '/message/log',
+    meta: { title: 'route.messageCenter', icon: 'Message' },
+    children: [
+      {
+        path: 'log',
+        name: 'MessageLog',
+        component: () => import('@/views/message/log/index.vue'),
+        meta: { title: 'route.messageLog', icon: 'Document', keepAlive: true, permCode: PC.MESSAGE_LOG_VIEW },
+      },
+      {
+        path: 'template',
+        name: 'MessageTemplate',
+        component: () => import('@/views/message/template/index.vue'),
+        meta: { title: 'route.messageTemplate', icon: 'Files', keepAlive: true, permCode: PC.MESSAGE_TEMPLATE_LIST },
+      },
+      {
+        path: 'stats',
+        name: 'MessageStats',
+        component: () => import('@/views/message/stats/index.vue'),
+        meta: { title: 'route.messageStats', icon: 'DataLine', keepAlive: true, permCode: PC.MESSAGE_LOG_VIEW },
+      },
+      {
+        path: 'canary',
+        name: 'MessageCanary',
+        component: () => import('@/views/message/canary/index.vue'),
+        meta: { title: 'route.messageCanary', icon: 'Connection', keepAlive: true, permCode: PC.MESSAGE_CANARY_VIEW },
+      },
+      {
+        path: 'dead-letter',
+        name: 'MessageDeadLetter',
+        component: () => import('@/views/message/dead-letter/index.vue'),
+        meta: { title: 'route.messageDeadLetter', icon: 'WarningFilled', keepAlive: true, permCode: PC.MESSAGE_DEAD_LETTER_VIEW },
+      },
+    ],
+  },
 ]

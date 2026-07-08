@@ -409,6 +409,8 @@
                 <configuration>
                     <!-- 允许模块无测试用例,避免 CI/CD 阻断 -->
                     <failIfNoTests>false</failIfNoTests>
+                    <!-- Windows 下 classpath 含不同盘符根路径时禁用 URL 校验,避免 fork JVM 启动失败 -->
+                    <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
                     <includes>
                         <include>**/*Test.java</include>
                         <include>**/*Tests.java</include>
