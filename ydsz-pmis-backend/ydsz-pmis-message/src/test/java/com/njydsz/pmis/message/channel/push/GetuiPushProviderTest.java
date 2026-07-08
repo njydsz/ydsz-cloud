@@ -72,7 +72,6 @@ class GetuiPushProviderTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void send_returnsOkWhenGetuiReturnsSuccess() {
         MessageRequest request = new MessageRequest();
         request.setReceiver("cid-001");
@@ -95,7 +94,6 @@ class GetuiPushProviderTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void send_returnsFailWhenGetuiReturnsErrorCode() {
         MessageRequest request = new MessageRequest();
         request.setReceiver("cid-001");
@@ -114,7 +112,6 @@ class GetuiPushProviderTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void send_returnsFailOnAuthError() {
         MessageRequest request = new MessageRequest();
         request.setReceiver("cid-001");
@@ -146,7 +143,6 @@ class GetuiPushProviderTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void send_prioritizesDeviceTokenFromChannelMeta() {
         MessageRequest request = new MessageRequest();
         request.setReceiver("fallback-cid");
@@ -175,7 +171,6 @@ class GetuiPushProviderTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void send_usesDefaultTitleWhenSubjectBlank() {
         MessageRequest request = new MessageRequest();
         request.setReceiver("cid-001");
@@ -207,10 +202,8 @@ class GetuiPushProviderTest {
         MsgTemplateDO template = new MsgTemplateDO();
         template.setSubject("模板标题-不应使用");
 
-        @SuppressWarnings("unchecked")
         ResponseEntity<String> authResp = new ResponseEntity<>(
                 "{\"code\":\"10000\",\"data\":{\"token\":\"t\"}}", HttpStatus.OK);
-        @SuppressWarnings("unchecked")
         ResponseEntity<String> pushResp = new ResponseEntity<>(
                 "{\"code\":\"10000\",\"data\":\"t-5\"}", HttpStatus.OK);
         when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))

@@ -112,7 +112,6 @@ public class StructuredOutputValidator {
      * @param path   当前路径（用于错误信息）
      * @param errors 错误收集列表
      */
-    @SuppressWarnings("unchecked")
     private static void validateValue(Object value, Map<String, Object> schema,
                                        String path, List<String> errors) {
         if (schema == null) return;

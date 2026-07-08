@@ -222,7 +222,6 @@ class LogCleanerTest {
 
         LocalDateTime beforeClean = LocalDateTime.now();
         logCleaner.clean();
-        LocalDateTime afterClean = LocalDateTime.now();
 
         // 验证 batchSize 传入正确
         verify(jobLogMapper, times(1)).cleanExpiredLogs(any(), eq(500));

@@ -44,8 +44,11 @@ class McpTransportTest {
         void shouldStartDisconnected() {
             StdioMcpTransport transport = new StdioMcpTransport(
                     List.of("echo", "test"), null, null, 1000);
-
-            assertThat(transport.isConnected()).isFalse();
+            try {
+                assertThat(transport.isConnected()).isFalse();
+            } finally {
+                transport.close();
+            }
         }
 
         @Test
@@ -64,9 +67,12 @@ class McpTransportTest {
         void shouldThrowWhenSendBeforeConnect() {
             StdioMcpTransport transport = new StdioMcpTransport(
                     List.of("echo"), null, null, 1000);
-
-            assertThatThrownBy(() -> transport.send("{}"))
-                    .isInstanceOf(IllegalStateException.class);
+            try {
+                assertThatThrownBy(() -> transport.send("{}"))
+                        .isInstanceOf(IllegalStateException.class);
+            } finally {
+                transport.close();
+            }
         }
 
         @Test
@@ -74,9 +80,12 @@ class McpTransportTest {
         void shouldThrowWhenReceiveBeforeConnect() {
             StdioMcpTransport transport = new StdioMcpTransport(
                     List.of("echo"), null, null, 1000);
-
-            assertThatThrownBy(() -> transport.receive())
-                    .isInstanceOf(IllegalStateException.class);
+            try {
+                assertThatThrownBy(() -> transport.receive())
+                        .isInstanceOf(IllegalStateException.class);
+            } finally {
+                transport.close();
+            }
         }
     }
 
@@ -102,38 +111,49 @@ class McpTransportTest {
         @DisplayName("正常构造初始未连接")
         void shouldStartDisconnected() {
             HttpMcpTransport transport = new HttpMcpTransport("http://localhost:8080", 1000);
-
-            assertThat(transport.isConnected()).isFalse();
+            try {
+                assertThat(transport.isConnected()).isFalse();
+            } finally {
+                transport.close();
+            }
         }
 
         @Test
         @DisplayName("connect 后变为已连接")
         void shouldConnectSuccessfully() throws Exception {
             HttpMcpTransport transport = new HttpMcpTransport("http://localhost:8080", 1000);
-
-            transport.connect();
-
-            assertThat(transport.isConnected()).isTrue();
+            try {
+                transport.connect();
+                assertThat(transport.isConnected()).isTrue();
+            } finally {
+                transport.close();
+            }
         }
 
         @Test
         @DisplayName("connect 前调用 send 抛异常")
         void shouldThrowWhenSendBeforeConnect() {
             HttpMcpTransport transport = new HttpMcpTransport("http://localhost:8080", 1000);
-
-            assertThatThrownBy(() -> transport.send("{}"))
-                    .isInstanceOf(IllegalStateException.class);
+            try {
+                assertThatThrownBy(() -> transport.send("{}"))
+                        .isInstanceOf(IllegalStateException.class);
+            } finally {
+                transport.close();
+            }
         }
 
         @Test
         @DisplayName("receive 前未 send 抛异常")
         void shouldThrowWhenReceiveBeforeSend() throws Exception {
             HttpMcpTransport transport = new HttpMcpTransport("http://localhost:8080", 1000);
-            transport.connect();
-
-            assertThatThrownBy(() -> transport.receive())
-                    .isInstanceOf(java.io.IOException.class)
-                    .hasMessageContaining("没有待接收的响应");
+            try {
+                transport.connect();
+                assertThatThrownBy(() -> transport.receive())
+                        .isInstanceOf(java.io.IOException.class)
+                        .hasMessageContaining("没有待接收的响应");
+            } finally {
+                transport.close();
+            }
         }
 
         @Test
@@ -150,11 +170,13 @@ class McpTransportTest {
         @DisplayName("重复 connect 不抛异常")
         void shouldNotThrowOnDoubleConnect() throws Exception {
             HttpMcpTransport transport = new HttpMcpTransport("http://localhost:8080", 1000);
-
-            transport.connect();
-            transport.connect();
-
-            assertThat(transport.isConnected()).isTrue();
+            try {
+                transport.connect();
+                transport.connect();
+                assertThat(transport.isConnected()).isTrue();
+            } finally {
+                transport.close();
+            }
         }
     }
 }

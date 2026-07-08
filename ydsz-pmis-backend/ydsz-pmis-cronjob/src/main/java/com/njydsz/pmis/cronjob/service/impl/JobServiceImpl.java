@@ -115,6 +115,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     private final ObjectProvider<JobHistoryService> jobHistoryServiceProvider;
 
+    /**
+     * P2-7: 任务版本管理服务（可选注入）。
+     *
+     * <p>记录任务定义变更的版本快照，支持版本回溯和差异对比。
+     */
+    private final ObjectProvider<JobVersionService> jobVersionServiceProvider;
+
     /** 调度器 */
     private TaskScheduler taskScheduler;
 
@@ -289,6 +296,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log.info("[Cronjob] 创建任务: key={} scheduleType={} cron={} handler={} shardTotal={}",
                 job.getJobKey(), job.getScheduleType(), job.getCronExpression(),
                 job.getHandler(), job.getShardTotal());
+        // P2-7: 记录版本变更快照
+        JobVersionService versionService = jobVersionServiceProvider.getIfAvailable();
+        if (versionService != null) {
+            versionService.recordVersionChange(null, job, "CREATE",
+                    job.getCreatedBy(), "任务创建");
+        }
         return job.getId();
     }
 
@@ -363,6 +376,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (job.getShardTotal() != null && job.getShardTotal() >= 1) exists.setShardTotal(job.getShardTotal());
         // P6-3: 同步慢任务阈值（null 表示不检测，允许清空）
         exists.setSlowThresholdMs(job.getSlowThresholdMs());
+        // P3-12: 同步目标集群（允许清空为 null，使用本地集群）
+        exists.setCluster(job.getCluster());
+        // P4-8: 版本号 +1
+        int newVersion = (exists.getVersion() != null ? exists.getVersion() : 1) + 1;
+        exists.setVersion(newVersion);
         jobMapper.updateById(exists);
 
         // 重新调度：先注销旧的本地调度（CRON/FIXED_RATE/FIXED_DELAY 共用 scheduledMap）
@@ -373,6 +391,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             register(exists);
         }
         log.info("[Cronjob] 更新任务: key={} scheduleType={}", exists.getJobKey(), exists.getScheduleType());
+        // P2-7: 记录版本变更快照
+        JobVersionService versionService = jobVersionServiceProvider.getIfAvailable();
+        if (versionService != null) {
+            versionService.recordVersionChange(exists, exists, "UPDATE",
+                    job.getUpdatedBy(), "任务更新");
+        }
     }
 
     /**
@@ -392,6 +416,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         unregisterFromSecondLevel(j.getId());
         jobMapper.deleteById(id);
         log.info("[Cronjob] 删除任务: key={}", j.getJobKey());
+        // P2-7: 记录版本变更快照
+        JobVersionService versionService = jobVersionServiceProvider.getIfAvailable();
+        if (versionService != null) {
+            versionService.recordVersionChange(j, null, "DELETE",
+                    j.getUpdatedBy(), "任务删除");
+        }
     }
 
     /**

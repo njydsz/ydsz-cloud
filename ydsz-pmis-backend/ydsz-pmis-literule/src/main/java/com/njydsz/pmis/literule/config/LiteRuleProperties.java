@@ -220,6 +220,21 @@ public class LiteRuleProperties {
     private PerformanceConfig performance = new PerformanceConfig();
 
     /**
+     * 规则生命周期管理配置（P3-1）
+     *
+     * <p>控制退役检测的阈值参数，用于自动识别应退役的规则。
+     *
+     * @since 2.0.0
+     */
+    private LifecycleConfig lifecycle = new LifecycleConfig();
+
+    /**
+     * AI 增强配置
+     *
+     * <p>支持自然语言转规则表达式、规则推荐、健康度评分。
+     * LLM 客户端通过 OpenAI 兼容协议接入，可在不修改代码的情况下
+     * 切换 OpenAI / DeepSeek / 通义千问 / Ollama 等不同提供方。
+     */
     @Data
     public static class Ai {
 
@@ -264,44 +279,13 @@ public class LiteRuleProperties {
     }
 
     /**
-     * 高性能优化配置（P2-3）
+     * 分布式执行配置
      *
-     * <p>控制评估结果缓存与规则分组并行评估，提升大规则量场景下的评估吞吐。
+     * <p>启用后规则引擎按一致性 hash 将规则分片到集群节点，
+     * 每个节点只执行属于自己的规则，避免重复计算。
      *
-     * @since 2.0.0
+     * @since 1.5.0
      */
-    @Data
-    public static class PerformanceConfig {
-
-        /**
-         * 是否启用评估结果缓存
-         *
-         * <p>true：相同上下文（scenario+tenant+environment+facts）在 TTL 内复用缓存结果；
-         * false（默认）：每次评估都重新计算。
-         * 适用于批量回放、风控试运行等重复评估率高的场景。
-         */
-        private boolean cacheEnabled = false;
-
-        /** 缓存 TTL（秒），默认 300（5 分钟） */
-        private int cacheTtlSeconds = 300;
-
-        /** 缓存最大条目数，默认 10000 */
-        private int cacheMaxSize = 10_000;
-
-        /**
-         * 是否启用规则分组并行评估
-         *
-         * <p>true：将候选规则按互斥组分组，组间并行评估；
-         * false（默认）：串行评估。
-         * 适用于规则数 > 100 且评估耗时敏感的场景。
-         */
-        private boolean parallelEnabled = false;
-
-        /** 并行评估线程池大小，默认 CPU 核数 */
-        private int parallelPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
-    }
-
-    /**
     @Data
     public static class Distributed {
 
@@ -517,5 +501,110 @@ public class LiteRuleProperties {
          * 未配置时使用 MockModelInputProvider 默认值（riskScore=0.75, fraudProbability=0.05）。
          */
         private Map<String, Object> mockOutputs = new LinkedHashMap<>();
+    }
+
+    /**
+     * 高性能优化配置（P2-3）
+     *
+     * <p>控制评估结果缓存与规则分组并行评估，提升大规则量场景下的评估吞吐。
+     *
+     * @since 2.0.0
+     */
+    @Data
+    public static class PerformanceConfig {
+
+        /**
+         * 是否启用评估结果缓存
+         *
+         * <p>true：相同上下文（scenario+tenant+environment+facts）在 TTL 内复用缓存结果；
+         * false（默认）：每次评估都重新计算。
+         * 适用于批量回放、风控试运行等重复评估率高的场景。
+         */
+        private boolean cacheEnabled = false;
+
+        /** 缓存 TTL（秒），默认 300（5 分钟） */
+        private int cacheTtlSeconds = 300;
+
+        /** 缓存最大条目数，默认 10000 */
+        private int cacheMaxSize = 10_000;
+
+        /**
+         * 是否启用规则分组并行评估
+         *
+         * <p>true：将候选规则按互斥组分组，组间并行评估；
+         * false（默认）：串行评估。
+         * 适用于规则数 > 100 且评估耗时敏感的场景。
+         */
+        private boolean parallelEnabled = false;
+
+        /** 并行评估线程池大小，默认 CPU 核数 */
+        private int parallelPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
+    }
+
+    /**
+     * 规则生命周期管理配置（P3-1）
+     *
+     * <p>控制退役检测的阈值参数。当规则满足以下任一条件时，
+     * {@link com.njydsz.pmis.literule.core.RuleLifecycleService} 将生成退役建议：
+     * <ul>
+     *   <li>休眠规则：评估次数 ≥ {@link #dormantMinEvaluations} 且触发次数 = 0</li>
+     *   <li>高错误率：错误率 ≥ {@link #highErrorRateThreshold}</li>
+     *   <li>长期停用：已停用超过 {@link #staleDisabledDays} 天</li>
+     *   <li>低影响：触发率 &lt; {@link #lowImpactTriggerRate} 且评估次数 ≥ {@link #minSampleSize}</li>
+     * </ul>
+     *
+     * @since 2.0.0
+     */
+    @Data
+    public static class LifecycleConfig {
+
+        /**
+         * 是否启用退役检测
+         *
+         * <p>true（默认）：自动装配 {@link com.njydsz.pmis.literule.core.RuleLifecycleService}；
+         * false：不装配，退役检测功能不可用。
+         */
+        private boolean enabled = true;
+
+        /**
+         * 休眠规则最小评估次数
+         *
+         * <p>当规则评估次数达到此值且触发次数为 0 时，判定为休眠规则。
+         * 默认 1000 次。
+         */
+        private long dormantMinEvaluations = 1000;
+
+        /**
+         * 高错误率阈值（0~1.0）
+         *
+         * <p>当规则错误率 ≥ 此值时，判定为高错误率规则。
+         * 默认 0.30（30%）。
+         */
+        private double highErrorRateThreshold = 0.30;
+
+        /**
+         * 长期停用天数
+         *
+         * <p>规则处于 DISABLED 状态超过此天数时，判定为长期停用规则。
+         * 默认 90 天。
+         */
+        private int staleDisabledDays = 90;
+
+        /**
+         * 低影响触发率阈值（0~1.0）
+         *
+         * <p>当规则触发率 &lt; 此值且评估次数 ≥ minSampleSize 时，判定为低影响规则。
+         * 默认 0.001（0.1%）。
+         */
+        private double lowImpactTriggerRate = 0.001;
+
+        /**
+         * 最小样本量
+         *
+         * <p>评估次数低于此值的规则不参与退役判定（数据不足）。
+         * 长期停用检测不受此限制。
+         * 默认 500 次。
+         */
+        private long minSampleSize = 500;
     }
 }

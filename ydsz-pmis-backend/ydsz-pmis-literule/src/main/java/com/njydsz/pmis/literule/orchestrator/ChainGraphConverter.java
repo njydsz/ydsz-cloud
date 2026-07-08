@@ -102,6 +102,7 @@ public final class ChainGraphConverter {
                 // BREAK 链无子节点
             }
             case AGENT -> extractAgent(chain, parentId, nodeSeq, nodes, edges);
+            case CATCH, RETRY -> extractCatchOrRetry(chain, parentId, nodeSeq, nodes, edges);
         }
     }
 
@@ -368,6 +369,84 @@ public final class ChainGraphConverter {
                     .targetNodeId(nodeId)
                     .edgeType(ChainEdgeDTO.EdgeType.AGENT)
                     .label("agent")
+                    .build());
+        }
+    }
+
+    /**
+     * 提取 CATCH/RETRY 链：主节点 + 补偿/回滚节点（2.0.0）
+     *
+     * <p>CATCH 语义：执行主节点，异常时执行补偿节点。
+     * RETRY 语义：执行主节点失败时自动重试，重试耗尽后执行回滚补偿节点。
+     *
+     * <p>提取两个节点：
+     * <ul>
+     *   <li>主节点（primaryNode）- 使用 PRIMARY 边类型连接</li>
+     *   <li>补偿/回滚节点（catchNode）- 使用 CATCH_COMPENSATION / RETRY_ROLLBACK 边类型连接</li>
+     * </ul>
+     * RETRY 链会在主节点 metadata 中携带 maxRetries 与 retryIntervalMs，便于前端配置面板展示。
+     */
+    private static void extractCatchOrRetry(RuleChain chain, String parentId,
+                                              AtomicInteger nodeSeq,
+                                              List<ChainNodeDTO> nodes,
+                                              List<ChainEdgeDTO> edges) {
+        RuleNode primaryNode = chain.getPrimaryNode();
+        RuleNode catchNode = chain.getCatchNode();
+        boolean isRetry = chain.getChainType() == RuleChainType.RETRY;
+
+        // 提取主节点
+        if (primaryNode != null) {
+            String nodeId = "node-" + nodeSeq.incrementAndGet();
+            ChainNodeDTO node = ruleNodeToDTO(primaryNode, nodeId, parentId);
+            Map<String, Object> meta = node.getMetadata() != null
+                    ? new LinkedHashMap<>(node.getMetadata())
+                    : new LinkedHashMap<>();
+            meta.put("primary", true);
+            if (isRetry) {
+                int maxRetries = chain.getMaxRetries();
+                long retryIntervalMs = chain.getRetryIntervalMs();
+                if (maxRetries > 0) {
+                    meta.put("maxRetries", maxRetries);
+                }
+                if (retryIntervalMs > 0) {
+                    meta.put("retryIntervalMs", retryIntervalMs);
+                }
+            }
+            node.setMetadata(meta);
+            if (node.getLabel() == null) {
+                node.setLabel(isRetry ? "RETRY 主节点" : "CATCH 主节点");
+            }
+            nodes.add(node);
+            edges.add(ChainEdgeDTO.builder()
+                    .edgeId("edge-" + nodeSeq.incrementAndGet())
+                    .sourceNodeId(parentId)
+                    .targetNodeId(nodeId)
+                    .edgeType(ChainEdgeDTO.EdgeType.PRIMARY)
+                    .label("primary")
+                    .build());
+        }
+
+        // 提取补偿/回滚节点
+        if (catchNode != null) {
+            String nodeId = "node-" + nodeSeq.incrementAndGet();
+            ChainNodeDTO node = ruleNodeToDTO(catchNode, nodeId, parentId);
+            Map<String, Object> meta = node.getMetadata() != null
+                    ? new LinkedHashMap<>(node.getMetadata())
+                    : new LinkedHashMap<>();
+            meta.put(isRetry ? "rollback" : "compensation", true);
+            node.setMetadata(meta);
+            if (node.getLabel() == null) {
+                node.setLabel(isRetry ? "RETRY 回滚节点" : "CATCH 补偿节点");
+            }
+            nodes.add(node);
+            edges.add(ChainEdgeDTO.builder()
+                    .edgeId("edge-" + nodeSeq.incrementAndGet())
+                    .sourceNodeId(parentId)
+                    .targetNodeId(nodeId)
+                    .edgeType(isRetry
+                            ? ChainEdgeDTO.EdgeType.RETRY_ROLLBACK
+                            : ChainEdgeDTO.EdgeType.CATCH_COMPENSATION)
+                    .label(isRetry ? "rollback" : "compensation")
                     .build());
         }
     }

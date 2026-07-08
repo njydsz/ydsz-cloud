@@ -39,6 +39,14 @@ public class AgentContext {
      */
     private String sessionId;
 
+    /**
+     * 多模态输入（P4-9 落地）。
+     *
+     * <p>支持图片、文件等非文本输入，对标 OpenAI Vision / Coze 多模态。
+     * 为 null 时表示纯文本输入。
+     */
+    private MultimodalInput multimodalInput;
+
     /** 7 参构造器（兼容历史调用方） */
     public AgentContext(String bizType, String bizId, String bizRef,
                         String callerId, String callerName, String source,

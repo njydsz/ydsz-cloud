@@ -9,9 +9,7 @@ import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 评测结果（P4-8 落地）。
- *
- * <p>单个测试用例的评估结果，包含实际输出、得分、是否通过、耗时等信息。
+ * 单个评测用例的执行结果（P4-8 落地）。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0 (P4-8)
@@ -37,16 +35,16 @@ public class EvaluationResult implements Serializable {
     /** 实际输出 */
     private String actualOutput;
 
-    /** 得分（0.0 - 1.0） */
+    /** 评估分数（0.0 ~ 1.0） */
     private double score;
 
-    /** 是否通过 */
+    /** 是否通过（score >= passThreshold） */
     private boolean passed;
 
     /** 耗时（毫秒） */
     private long elapsedMs;
 
-    /** 评估器类型 */
+    /** 使用的评估器类型 */
     private EvaluationCase.EvaluatorType evaluatorType;
 
     /** 错误信息（执行异常时填充） */

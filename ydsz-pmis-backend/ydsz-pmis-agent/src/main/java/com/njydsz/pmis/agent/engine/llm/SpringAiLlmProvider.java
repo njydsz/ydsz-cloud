@@ -410,7 +410,6 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
     /**
      * 执行带 tools 参数的 OpenAI 兼容 API 调用。
      */
-    @SuppressWarnings("unchecked")
     protected LlmToolCallResponse doChatWithTools(String systemPrompt, String userPrompt,
                                                     List<Map<String, Object>> tools,
                                                     AgentContext context) throws Exception {

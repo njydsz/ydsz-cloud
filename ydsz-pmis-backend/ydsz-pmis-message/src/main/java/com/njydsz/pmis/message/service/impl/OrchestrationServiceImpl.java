@@ -184,7 +184,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
             if (!CollectionUtils.isEmpty(node.getDependsOn())) {
                 for (String dep : node.getDependsOn()) {
                     adjacency.computeIfAbsent(dep, k -> new ArrayList<>()).add(node.getNodeId());
-                    inDegree.merge(node.getNodeId(), 1, Integer::sum);
+                    inDegree.merge(node.getNodeId(), 1, (a, b) -> a + b);
                 }
             }
         }
@@ -199,7 +199,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
             String current = queue.poll();
             result.add(current);
             for (String next : adjacency.getOrDefault(current, List.of())) {
-                int newDegree = inDegree.merge(next, -1, Integer::sum);
+                int newDegree = inDegree.merge(next, -1, (a, b) -> a + b);
                 if (newDegree == 0) {
                     queue.add(next);
                 }

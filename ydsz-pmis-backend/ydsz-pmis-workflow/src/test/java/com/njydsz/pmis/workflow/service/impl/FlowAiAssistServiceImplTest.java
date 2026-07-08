@@ -506,7 +506,7 @@ class FlowAiAssistServiceImplTest {
             // mock insert 会通过 MyBatis-Plus 设置 ID（这里模拟不了，验证调用即可）
             when(feedbackMapper.insert(any(FlowAiFeedbackDO.class))).thenReturn(1);
 
-            String feedbackId = service.recordApproverFeedback(feedback);
+            service.recordApproverFeedback(feedback);
 
             // 验证 insert 被调用，且参数正确
             ArgumentCaptor<FlowAiFeedbackDO> captor = ArgumentCaptor.forClass(FlowAiFeedbackDO.class);

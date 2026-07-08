@@ -105,10 +105,12 @@ public class JobWebhookController {
             @RequestParam(required = false) String eventType,
             @RequestParam(required = false) String jobKey) {
         LambdaQueryWrapper<JobWebhookDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JobWebhookDO::getDeleted, 0)
-                .eq(eventType != null && !eventType.isBlank(), JobWebhookDO::getEventType, eventType)
-                .eq(jobKey != null && !jobKey.isBlank(), JobWebhookDO::getJobKey, jobKey)
-                .orderByDesc(JobWebhookDO::getCreatedAt);
+        wrapper.eq(w -> w.getDeleted(), 0)
+                .eq(eventType != null && !eventType.isBlank(),
+                        w -> w.getEventType(), eventType)
+                .eq(jobKey != null && !jobKey.isBlank(),
+                        w -> w.getJobKey(), jobKey)
+                .orderByDesc(w -> w.getCreatedAt());
         return Result.ok(webhookMapper.selectPage(new Page<>(page, size), wrapper));
     }
 

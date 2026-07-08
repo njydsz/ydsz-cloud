@@ -172,7 +172,6 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
     /**
      * 执行带 tools 参数的 DashScope 调用。
      */
-    @SuppressWarnings("unchecked")
     private LlmToolCallResponse invokeDashScopeWithTools(String systemPrompt, String userPrompt,
                                                           List<Map<String, Object>> tools,
                                                           AgentContext context) throws Exception {

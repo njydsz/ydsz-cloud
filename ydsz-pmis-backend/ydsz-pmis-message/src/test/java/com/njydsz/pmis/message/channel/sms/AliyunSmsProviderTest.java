@@ -77,7 +77,6 @@ class AliyunSmsProviderTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void send_returnsOkWhenAliyunReturnsOK() {
         MessageRequest request = new MessageRequest();
         request.setReceiver("13800000000");
@@ -98,7 +97,6 @@ class AliyunSmsProviderTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void send_returnsFailWhenAliyunReturnsError() {
         MessageRequest request = new MessageRequest();
         request.setReceiver("13800000000");
@@ -132,7 +130,6 @@ class AliyunSmsProviderTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void send_usesConfigSignNameWhenTemplateSignNameBlank() {
         MessageRequest request = new MessageRequest();
         request.setReceiver("13800000000");

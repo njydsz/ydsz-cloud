@@ -22,9 +22,11 @@ import com.njydsz.pmis.literule.core.BreakpointHook;
 import com.njydsz.pmis.literule.core.DefaultBreakpointHook;
 import com.njydsz.pmis.literule.core.DefaultRuleEngine;
 import com.njydsz.pmis.literule.core.MicrometerRuleMetrics;
+import com.njydsz.pmis.literule.core.EvaluationResultCache;
 import com.njydsz.pmis.literule.core.RuleCanaryRouter;
 import com.njydsz.pmis.literule.core.RuleCircuitBreaker;
 import com.njydsz.pmis.literule.core.RuleEffectivenessService;
+import com.njydsz.pmis.literule.core.ParallelRuleEvaluator;
 import com.njydsz.pmis.literule.core.RuleMetrics;
 import com.njydsz.pmis.literule.core.RuleTimeoutExecutor;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
@@ -887,6 +889,102 @@ public class LiteRuleAutoConfiguration {
     public RuleEffectivenessService ruleEffectivenessService() {
         RuleEffectivenessService service = new RuleEffectivenessService();
         log.info("[LiteRule-Effectiveness] 规则效果评估服务已初始化（window=7天）");
+        return service;
+    }
+
+    // ------------------------------------------------------------------
+    // P2-3 高性能优化（评估结果缓存 + 规则分组并行评估）
+    // ------------------------------------------------------------------
+
+    /**
+     * 评估结果缓存（P2-3）
+     *
+     * <p>当 {@code pmis.literule.performance.cache-enabled=true} 时装配，
+     * 缓存规则引擎评估结果，相同上下文在 TTL 内复用缓存结果。
+     *
+     * @param properties 配置属性
+     * @return EvaluationResultCache 实例
+     * @since 2.0.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.performance", name = "cache-enabled", havingValue = "true")
+    public EvaluationResultCache evaluationResultCache(LiteRuleProperties properties) {
+        LiteRuleProperties.PerformanceConfig cfg = properties.getPerformance();
+        EvaluationResultCache cache = new EvaluationResultCache(
+                cfg.getCacheTtlSeconds() * 1000L, cfg.getCacheMaxSize());
+        log.info("[LiteRule-Performance] 评估结果缓存已初始化（ttl={}s, maxSize={})",
+                cfg.getCacheTtlSeconds(), cfg.getCacheMaxSize());
+        return cache;
+    }
+
+    /**
+     * 规则分组并行评估器（P2-3）
+     *
+     * <p>当 {@code pmis.literule.performance.parallel-enabled=true} 时装配，
+     * 将候选规则按互斥组分组并行评估。
+     *
+     * @param properties 配置属性
+     * @return ParallelRuleEvaluator 实例
+     * @since 2.0.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.performance", name = "parallel-enabled", havingValue = "true")
+    public ParallelRuleEvaluator parallelRuleEvaluator(LiteRuleProperties properties) {
+        LiteRuleProperties.PerformanceConfig cfg = properties.getPerformance();
+        ParallelRuleEvaluator evaluator = new ParallelRuleEvaluator(cfg.getParallelPoolSize());
+        log.info("[LiteRule-Performance] 规则并行评估器已初始化（poolSize={})",
+                cfg.getParallelPoolSize());
+        return evaluator;
+    }
+
+    // ------------------------------------------------------------------
+    // P3-1 规则生命周期管理增强（退役检测 + 一键回滚）
+    // ------------------------------------------------------------------
+
+    /**
+     * 规则生命周期管理服务（P3-1）
+     *
+     * <p>当存在 {@link RuleConfigProvider} 和 {@link RuleAdminService} 时自动装配。
+     * 提供规则退役检测、回滚预览、一键退役等生命周期管理能力。
+     *
+     * <p>退役检测基于规则执行统计（{@link RuleEngine#getStats()}），
+     * 自动识别休眠规则、高错误率规则、长期停用规则和低影响规则，
+     * 生成 {@link com.njydsz.pmis.literule.api.RetirementSuggestion} 建议列表。
+     *
+     * <p>可通过 {@code pmis.literule.lifecycle.enabled=false} 关闭。
+     *
+     * @param ruleEngine       规则引擎
+     * @param configProvider   规则配置提供者
+     * @param ruleAdminService 规则管理服务
+     * @param versionRepoProvider 版本仓库（可选，未配置时不支持回滚预览）
+     * @param properties       配置属性
+     * @return RuleLifecycleService 实例
+     * @since 2.0.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(RuleConfigProvider.class)
+    @ConditionalOnProperty(
+            prefix = "pmis.literule.lifecycle", name = "enabled",
+            havingValue = "true", matchIfMissing = true)
+    public com.njydsz.pmis.literule.core.RuleLifecycleService ruleLifecycleService(
+            RuleEngine ruleEngine,
+            RuleConfigProvider configProvider,
+            RuleAdminService ruleAdminService,
+            ObjectProvider<RuleVersionRepository> versionRepoProvider,
+            LiteRuleProperties properties) {
+        com.njydsz.pmis.literule.core.RuleLifecycleService service =
+                new com.njydsz.pmis.literule.core.RuleLifecycleService(
+                        ruleEngine, configProvider, ruleAdminService,
+                        versionRepoProvider.getIfAvailable());
+        service.configure(properties.getLifecycle());
+        log.info("[LiteRule-Lifecycle] 规则生命周期管理服务已初始化（dormantMin={}, errorRateThreshold={}, staleDays={}, lowImpactRate={}）",
+                properties.getLifecycle().getDormantMinEvaluations(),
+                properties.getLifecycle().getHighErrorRateThreshold(),
+                properties.getLifecycle().getStaleDisabledDays(),
+                properties.getLifecycle().getLowImpactTriggerRate());
         return service;
     }
 }

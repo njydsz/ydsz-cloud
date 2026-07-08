@@ -46,6 +46,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     private final ChannelRouter channelRouter;
 
     @Override
+    @SuppressWarnings("rawtypes")
     public RocketMQLocalTransactionState executeLocalTransaction(Message message, Object arg) {
         MessageRequest req = resolveRequest(message, arg);
         if (req == null) {
@@ -70,6 +71,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public RocketMQLocalTransactionState checkLocalTransaction(Message message) {
         MessageRequest req = resolveRequest(message, null);
         if (req == null) {
@@ -98,7 +100,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
      * <p>优先从 arg（sendMessageInTransaction 的第三个参数）解析,
      * arg 为 null 时从 message payload 解析。
      */
-    private MessageRequest resolveRequest(Message message, Object arg) {
+    private MessageRequest resolveRequest(Message<?> message, Object arg) {
         if (arg instanceof MessageRequest req) {
             return req;
         }

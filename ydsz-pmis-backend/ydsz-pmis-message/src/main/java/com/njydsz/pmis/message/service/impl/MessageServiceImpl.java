@@ -42,7 +42,7 @@ import com.njydsz.pmis.message.template.TemplateEngine;
 import com.njydsz.pmis.message.producer.RocketMQMessageProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -83,8 +83,7 @@ public class MessageServiceImpl implements MessageService {
     private final DedupService dedupService;
 
     /** P2-3: RocketMQ 事务消息生产者（可选,未配置 RocketMQ 时为 null） */
-    @Autowired(required = false)
-    private RocketMQMessageProducer mqProducer;
+    private final ObjectProvider<RocketMQMessageProducer> mqProducerProvider;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -757,6 +756,7 @@ public class MessageServiceImpl implements MessageService {
         if (request == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "消息请求不能为空");
         }
+        RocketMQMessageProducer mqProducer = mqProducerProvider.getIfAvailable();
         if (mqProducer == null) {
             log.warn("[Message] RocketMQ 未配置,事务消息降级为同步发送: channel={}", request.getChannel());
             return send(request);
