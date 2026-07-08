@@ -99,6 +99,7 @@ public class CEPPattern implements Serializable {
     private Duration sessionGap;
 
     /** 计数窗口阈值（仅 COUNT 类型，事件数达到此值时触发并清空） */
+    @Builder.Default
     private int countWindow = 0;
 
     /** 触发阈值（TIME_WINDOW 模式下为次数，AGGREGATE 模式下为数值阈值） */

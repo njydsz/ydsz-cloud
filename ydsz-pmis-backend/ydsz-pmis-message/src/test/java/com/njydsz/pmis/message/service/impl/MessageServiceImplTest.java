@@ -11,6 +11,7 @@ import com.njydsz.pmis.message.config.RetryStrategyResolver;
 import com.njydsz.pmis.message.dto.MessageLogQueryDTO;
 import com.njydsz.pmis.message.dto.MessageSendDTO;
 import com.njydsz.pmis.message.entity.MsgLogDO;
+import com.njydsz.pmis.message.entity.MsgPreferenceDO;
 import com.njydsz.pmis.message.entity.MsgRouteRuleDO;
 import com.njydsz.pmis.message.entity.MsgTemplateDO;
 import com.njydsz.pmis.message.filter.SensitiveWordFilter;
@@ -39,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

@@ -21,14 +21,17 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
 
+import com.alibaba.fastjson2.JSON;
+
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -109,19 +112,18 @@ class ReActLoopTest {
         return d;
     }
 
-    /** mock LLM 多轮调用返回不同决策 */
+    /**
+     * mock LLM 多轮调用返回不同决策（P3-4：ReActLoop 改为调用 chat + JSON.parseObject）。
+     *
+     * <p>将 ReActDecision 序列化为 JSON 字符串，按顺序返回。调用超过 decisions
+     * 数量时返回 null（触发"空决策"失败分支）。
+     */
     private void mockLlmDecisions(ReActDecision... decisions) {
-        if (decisions.length == 1) {
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any())).thenReturn(decisions[0]);
-        } else {
-            // 注意：thenReturn(T first, T... rest) 支持顺序返回
-            ReActDecision first = decisions[0];
-            ReActDecision[] rest = new ReActDecision[decisions.length - 1];
-            System.arraycopy(decisions, 1, rest, 0, rest.length);
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any())).thenReturn(first, rest);
-        }
+        Iterator<String> it = Arrays.stream(decisions)
+                .map(JSON::toJSONString)
+                .iterator();
+        when(llmProvider.chat(anyString(), anyString(), any()))
+                .thenAnswer(inv -> it.hasNext() ? it.next() : null);
     }
 
     /** 构造 mock AgentTool */
@@ -246,8 +248,7 @@ class ReActLoopTest {
             org.mockito.ArgumentCaptor<String> captor =
                     org.mockito.ArgumentCaptor.forClass(String.class);
             org.mockito.Mockito.verify(llmProvider, org.mockito.Mockito.times(2))
-                    .chatForJson(anyString(), captor.capture(),
-                            eq(ReActDecision.class), any());
+                    .chat(anyString(), captor.capture(), any());
 
             // 第 2 次调用的 userPrompt 应包含 Observation
             String secondCallUserPrompt = captor.getAllValues().get(1);
@@ -266,10 +267,9 @@ class ReActLoopTest {
     class LlmExceptionTest {
 
         @Test
-        @DisplayName("chatForJson 抛异常时返回失败")
+        @DisplayName("chat 抛异常时返回失败")
         void shouldReturnFailureWhenLlmThrows() {
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any()))
+            when(llmProvider.chat(anyString(), anyString(), any()))
                     .thenThrow(new RuntimeException("LLM 服务不可用"));
 
             ReActResult result = reactLoop.run("sys", "user", ctx());
@@ -283,8 +283,7 @@ class ReActLoopTest {
         @Test
         @DisplayName("LLM 返回 null 决策时返回失败")
         void shouldReturnFailureWhenDecisionNull() {
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any())).thenReturn(null);
+            when(llmProvider.chat(anyString(), anyString(), any())).thenReturn(null);
 
             ReActResult result = reactLoop.run("sys", "user", ctx());
 
@@ -313,9 +312,8 @@ class ReActLoopTest {
             toolRegistry.register(tool);
 
             // 第 1 次成功，第 2 次抛异常
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any()))
-                    .thenReturn(callTool("ok", Map.of()))
+            when(llmProvider.chat(anyString(), anyString(), any()))
+                    .thenReturn(JSON.toJSONString(callTool("ok", Map.of())))
                     .thenThrow(new RuntimeException("第 2 轮失败"));
 
             ReActResult result = reactLoop.run("sys", "user", ctx());
@@ -409,8 +407,8 @@ class ReActLoopTest {
 
             ReActDecision loopDecision = callTool("loop_tool", Map.of());
             // 每次都返回相同的 loopDecision
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any())).thenReturn(loopDecision);
+            when(llmProvider.chat(anyString(), anyString(), any()))
+                    .thenReturn(JSON.toJSONString(loopDecision));
 
             ReActResult result = reactLoop.run("sys", "user", ctx(), 3);
 
@@ -426,8 +424,8 @@ class ReActLoopTest {
             toolRegistry.register(tool);
 
             ReActDecision loopDecision = callTool("loop_tool", Map.of());
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any())).thenReturn(loopDecision);
+            when(llmProvider.chat(anyString(), anyString(), any()))
+                    .thenReturn(JSON.toJSONString(loopDecision));
 
             ReActResult result = reactLoop.run("sys", "user", ctx(), 0);
 
@@ -469,8 +467,7 @@ class ReActLoopTest {
             reactLoop.run("你是 PMIS 助手", "你好", ctx());
 
             org.mockito.Mockito.verify(llmProvider)
-                    .chatForJson(captor.capture(), anyString(),
-                            eq(ReActDecision.class), any());
+                    .chat(captor.capture(), anyString(), any());
 
             String systemPrompt = captor.getValue();
             assertThat(systemPrompt).contains("你是 PMIS 助手");
@@ -490,8 +487,7 @@ class ReActLoopTest {
             reactLoop.run("sys", "user", ctx());
 
             org.mockito.Mockito.verify(llmProvider)
-                    .chatForJson(captor.capture(), anyString(),
-                            eq(ReActDecision.class), any());
+                    .chat(captor.capture(), anyString(), any());
 
             assertThat(captor.getValue()).contains("无可用工具");
         }
@@ -580,8 +576,7 @@ class ReActLoopTest {
             when(chatMemoryProvider.getIfAvailable()).thenReturn(realMemory);
 
             // LLM 抛异常 → 失败
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any()))
+            when(llmProvider.chat(anyString(), anyString(), any()))
                     .thenThrow(new RuntimeException("LLM 不可用"));
 
             AgentContext context = ctx();
@@ -614,8 +609,7 @@ class ReActLoopTest {
 
             // 验证 LLM 收到的 userPrompt 包含历史与当前问题
             org.mockito.Mockito.verify(llmProvider)
-                    .chatForJson(anyString(), captor.capture(),
-                            eq(ReActDecision.class), any());
+                    .chat(anyString(), captor.capture(), any());
             String userPromptSent = captor.getValue();
             assertThat(userPromptSent).contains("[对话历史]");
             assertThat(userPromptSent).contains("张三");
@@ -665,8 +659,7 @@ class ReActLoopTest {
             reactLoop.run("你是助手", "你好", ctx());
 
             org.mockito.Mockito.verify(llmProvider)
-                    .chatForJson(captor.capture(), anyString(),
-                            eq(ReActDecision.class), any());
+                    .chat(captor.capture(), anyString(), any());
 
             String systemPrompt = captor.getValue();
             // P1-7：system prompt 应包含防注入声明
@@ -692,8 +685,7 @@ class ReActLoopTest {
             org.mockito.ArgumentCaptor<String> captor =
                     org.mockito.ArgumentCaptor.forClass(String.class);
             org.mockito.Mockito.verify(llmProvider, org.mockito.Mockito.times(2))
-                    .chatForJson(anyString(), captor.capture(),
-                            eq(ReActDecision.class), any());
+                    .chat(anyString(), captor.capture(), any());
 
             String secondUserPrompt = captor.getAllValues().get(1);
             // 注入内容必须被 <observation> 标签隔离

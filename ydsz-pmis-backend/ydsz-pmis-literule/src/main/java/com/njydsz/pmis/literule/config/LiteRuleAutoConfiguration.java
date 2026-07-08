@@ -987,4 +987,45 @@ public class LiteRuleAutoConfiguration {
                 properties.getLifecycle().getLowImpactTriggerRate());
         return service;
     }
+
+    // ------------------------------------------------------------------
+    // P3-2 规则文档自动生成
+    // ------------------------------------------------------------------
+
+    /**
+     * 规则文档自动生成服务（P3-2）
+     *
+     * <p>当存在 {@link RuleConfigProvider} 时自动装配，
+     * 从规则元数据、版本历史、执行统计自动生成结构化文档，
+     * 支持 Markdown / HTML 输出格式。
+     *
+     * <p>可通过 {@code pmis.literule.lifecycle.enabled=false} 关闭（复用生命周期开关）。
+     *
+     * @param configProvider   规则配置提供者
+     * @param ruleEngine       规则引擎
+     * @param versionRepoProvider 版本仓库（可选）
+     * @param effectivenessServiceProvider 效果评估服务（可选）
+     * @return RuleDocumentationService 实例
+     * @since 2.0.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(RuleConfigProvider.class)
+    public com.njydsz.pmis.literule.core.RuleDocumentationService ruleDocumentationService(
+            RuleConfigProvider configProvider,
+            RuleEngine ruleEngine,
+            ObjectProvider<RuleVersionRepository> versionRepoProvider,
+            ObjectProvider<com.njydsz.pmis.literule.core.RuleEffectivenessService> effectivenessServiceProvider) {
+        com.njydsz.pmis.literule.core.RuleDocumentationService service =
+                new com.njydsz.pmis.literule.core.RuleDocumentationService(
+                        configProvider, ruleEngine, versionRepoProvider.getIfAvailable());
+        com.njydsz.pmis.literule.core.RuleEffectivenessService effectivenessService =
+                effectivenessServiceProvider.getIfAvailable();
+        if (effectivenessService != null) {
+            service.setEffectivenessService(effectivenessService);
+        }
+        log.info("[LiteRule-DocGen] 规则文档自动生成服务已初始化（versionRepo={}, effectiveness={}）",
+                versionRepoProvider.getIfAvailable() != null, effectivenessService != null);
+        return service;
+    }
 }

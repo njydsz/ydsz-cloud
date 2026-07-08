@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * Redis 持久化对话记忆（P4-3 落地）。
@@ -92,7 +92,7 @@ public class RedisChatMemory {
             history = ContextWindow.truncate(history, maxTokensPerSession, minRounds);
             // 写入 Redis
             String json = JSON.toJSONString(history);
-            redisTemplate.opsForValue().set(key, json, ttlHours, TimeUnit.HOURS);
+            redisTemplate.opsForValue().set(key, json, Duration.ofHours(ttlHours));
         } catch (Exception e) {
             log.warn("[RedisChatMemory] addMessage 失败, sessionId={}: {}", sessionId, e.getMessage());
         }

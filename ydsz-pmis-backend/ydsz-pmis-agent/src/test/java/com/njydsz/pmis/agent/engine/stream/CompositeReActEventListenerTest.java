@@ -250,7 +250,7 @@ class CompositeReActEventListenerTest {
         @Test
         @DisplayName("null 构造视为空数组，size()=0")
         void shouldHandleNullListeners() {
-            CompositeReActEventListener composite = new CompositeReActEventListener(null);
+            CompositeReActEventListener composite = new CompositeReActEventListener((ReActEventListener[]) null);
 
             assertThat(composite.size()).isZero();
         }

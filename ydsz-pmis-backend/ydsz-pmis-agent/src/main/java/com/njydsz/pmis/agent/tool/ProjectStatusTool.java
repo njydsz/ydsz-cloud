@@ -127,7 +127,7 @@ public class ProjectStatusTool implements AgentTool {
      * @throws UnsupportedOperationException 当未实现真实数据源时抛出
      */
     protected Map<String, Object> fetchRealData(String projectId, AgentContext ctx) {
-        // TODO P1-5: 接入真实项目指标服务（EVM 看板 Feign 调用）
+        // TO_DO P1-5: 接入真实项目指标服务（EVM 看板 Feign 调用）
         throw new UnsupportedOperationException(
                 "ProjectStatusTool 真实数据源未实现，请配置 pmis.agent.tool.mock-enabled=true 或实现 fetchRealData 方法");
     }

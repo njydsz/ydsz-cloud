@@ -114,7 +114,7 @@ public class TimesheetStatTool implements AgentTool {
      * @throws UnsupportedOperationException 当未实现真实数据源时抛出
      */
     protected Map<String, Object> fetchRealData(String projectId, String month, AgentContext ctx) {
-        // TODO P1-5: 接入真实工时数据源（execution 模块 Feign 调用）
+        // TO_DO P1-5: 接入真实工时数据源（execution 模块 Feign 调用）
         throw new UnsupportedOperationException(
                 "TimesheetStatTool 真实数据源未实现，请配置 pmis.agent.tool.mock-enabled=true 或实现 fetchRealData 方法");
     }

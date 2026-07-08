@@ -142,7 +142,7 @@ public class RiskEventQueryTool implements AgentTool {
      * @throws UnsupportedOperationException 当未实现真实数据源时抛出
      */
     protected List<Map<String, Object>> fetchRealData(String projectId, String severity, AgentContext ctx) {
-        // TODO P1-5: 接入真实风险事件数据源（execution 模块 Feign 调用）
+        // TO_DO P1-5: 接入真实风险事件数据源（execution 模块 Feign 调用）
         throw new UnsupportedOperationException(
                 "RiskEventQueryTool 真实数据源未实现，请配置 pmis.agent.tool.mock-enabled=true 或实现 fetchRealData 方法");
     }

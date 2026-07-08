@@ -52,7 +52,7 @@ public class McpToolDefinition {
         }
         JsonNode props = inputSchema.get("properties");
         Map<String, Class<?>> schema = new java.util.LinkedHashMap<>();
-        props.fields().forEachRemaining(entry -> {
+        props.properties().forEach(entry -> {
             String paramName = entry.getKey();
             JsonNode paramDef = entry.getValue();
             String typeStr = paramDef.has("type") ? paramDef.get("type").asText() : "string";

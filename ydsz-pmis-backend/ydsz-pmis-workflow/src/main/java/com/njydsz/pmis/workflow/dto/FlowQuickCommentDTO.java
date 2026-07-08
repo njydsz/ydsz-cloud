@@ -18,7 +18,7 @@ public class FlowQuickCommentDTO {
     @Schema(description = "ID（编辑时传）")
     private String id;
 
-    @Schema(description = "常用语内容", required = true)
+    @Schema(description = "常用语内容", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "常用语内容不能为空")
     @Size(max = 500, message = "常用语内容不能超过500字")
     private String content;

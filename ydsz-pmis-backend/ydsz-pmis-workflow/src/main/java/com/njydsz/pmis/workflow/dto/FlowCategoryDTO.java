@@ -18,12 +18,12 @@ public class FlowCategoryDTO {
     @Schema(description = "ID（编辑时传）")
     private String id;
 
-    @Schema(description = "分类编码", required = true)
+    @Schema(description = "分类编码", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "分类编码不能为空")
     @Size(max = 64, message = "分类编码不能超过64字")
     private String categoryCode;
 
-    @Schema(description = "分类名称", required = true)
+    @Schema(description = "分类名称", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "分类名称不能为空")
     @Size(max = 128, message = "分类名称不能超过128字")
     private String categoryName;

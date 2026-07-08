@@ -98,6 +98,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- P4-13: 精确 Token 计数（jtokkit，兼容 OpenAI tiktoken） -->
+        <dependency>
+            <groupId>com.knuddels</groupId>
+            <artifactId>jtokkit</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

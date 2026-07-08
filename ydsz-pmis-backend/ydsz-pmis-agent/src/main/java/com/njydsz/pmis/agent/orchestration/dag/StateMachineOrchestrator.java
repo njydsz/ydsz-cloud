@@ -186,7 +186,7 @@ public class StateMachineOrchestrator implements Serializable {
             return true;
         }
 
-        boolean success = result != null && result.isSuccess();
+        boolean success = result != null && result.getSuggestion() != null && !result.getSuggestion().isBlank();
         double score = result != null && result.getScore() != null ? result.getScore().doubleValue() : 0.0;
 
         if ("success".equals(condition)) return success;
