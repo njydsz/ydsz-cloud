@@ -76,6 +76,9 @@ public class MsgLogDO extends BaseDO {
     /** 是否灰度命中: 0 正式 / 1 灰度 */
     private Integer canary;
 
+    /** P1-6: 灰度实验键（命中时记录原始 canaryKey,用于 A/B 报表分组;未命中为 null） */
+    private String canaryKey;
+
     /** 幂等去重键(用于消费端幂等,Redis SET NX EX) */
     private String dedupKey;
 

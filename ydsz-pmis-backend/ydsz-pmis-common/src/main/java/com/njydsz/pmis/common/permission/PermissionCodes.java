@@ -190,11 +190,20 @@ public final class PermissionCodes {
 
     public static final String MESSAGE_CANARY_UPDATE = "message:canary:update";
     public static final String MESSAGE_CANARY_VIEW = "message:canary:view";
+    /** P1-6: 灰度 A/B 报表查看 */
+    public static final String MESSAGE_CANARY_REPORT = "message:canary:report";
 
     // ==================== 消息聚合 ====================
 
     public static final String MESSAGE_AGGREGATE_LIST = "message:aggregate:list";
     public static final String MESSAGE_AGGREGATE_REFRESH = "message:aggregate:refresh";
+
+    // ==================== 消息退订（P1-5） ====================
+
+    /** 退订管理查询（管理后台分页查看已退订用户） */
+    public static final String MESSAGE_UNSUBSCRIBE_VIEW = "message:unsubscribe:view";
+    /** 退订/重新订阅操作（含 token 一键退订与管理员恢复订阅） */
+    public static final String MESSAGE_UNSUBSCRIBE_ACT = "message:unsubscribe:act";
 
     // ==================== 文件 ====================
 

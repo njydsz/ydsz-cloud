@@ -205,4 +205,27 @@ public class MessageProperties {
         /** 告警冷却（分钟）：同一通道告警后多久内不重复告警 */
         private int cooldownMinutes = 30;
     }
+
+    /** P1-5: 退订中心配置 */
+    private UnsubscribeConfig unsubscribe = new UnsubscribeConfig();
+
+    /**
+     * P1-5: 退订中心配置。
+     *
+     * <p>支持 token-based 一键退订（RFC 8058 List-Unsubscribe-Post），
+     * token 采用 HMAC-SHA256 签名，{@code ttlDays} 控制链接有效期（默认 30 天，
+     * 符合邮件退订链接的最佳实践）。{@code secret} 必须配置为 ≥32 字节的随机串，
+     * 未配置时降级使用一个内置默认值（仅开发环境，生产必须覆盖）。
+     */
+    @Data
+    public static class UnsubscribeConfig {
+        /** 退订中心总开关（关闭后 token 一键退订接口拒绝执行） */
+        private boolean enabled = true;
+        /** token 签名密钥（Base64 编码，建议 ≥32 字节随机串；为空时使用内置默认值） */
+        private String secret;
+        /** token 有效期（天），默认 30 天 */
+        private int ttlDays = 30;
+        /** 退订链接 base URL（如 https://pmis.example.com/unsubscribe），用于拼接完整链接 */
+        private String baseUrl;
+    }
 }

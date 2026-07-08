@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.time.LocalDateTime;
 
 /**
  * 订阅关系表: 用户对主题(topic_code)在指定通道的订阅/退订状态
@@ -47,4 +48,7 @@ public class MsgSubscriptionDO extends BaseDO {
 
     /** 租户 ID(单租户部署默认 1) */
     private String tenantId;
+
+    /** 退订时间（P1-5：仅当 status=UNSUBSCRIBED 时有意义；SUBSCRIBED 时为 null） */
+    private LocalDateTime unsubscribedAt;
 }

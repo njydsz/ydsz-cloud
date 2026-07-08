@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -60,6 +61,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         existing.setStatus(status);
         existing.setRoleScope(dto.getRoleScope());
         existing.setExtra(dto.getExtra());
+        // P1-5: 恢复订阅时清空退订时间;退订时记录退订时间
+        if (SubscriptionStatusEnum.SUBSCRIBED.name().equals(status)) {
+            existing.setUnsubscribedAt(null);
+        } else if (SubscriptionStatusEnum.UNSUBSCRIBED.name().equals(status) && existing.getUnsubscribedAt() == null) {
+            existing.setUnsubscribedAt(LocalDateTime.now());
+        }
         msgSubscriptionMapper.updateById(existing);
         return existing;
     }
@@ -115,7 +122,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void unsubscribe(String userId, String topicCode, String channel) {
+    public MsgSubscriptionDO unsubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
@@ -125,9 +132,22 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .eq(MsgSubscriptionDO::getChannel, channel)
                 .last("LIMIT 1"));
         if (existing == null) {
-            return;
+            // P1-5: 无订阅记录时也要创建 UNSUBSCRIBED 记录,否则 isBlocked 永远返回 false,
+            // 用户点击退订后仍会被发送(默认订阅语义)。修复此 latent bug。
+            MsgSubscriptionDO entity = new MsgSubscriptionDO();
+            entity.setUserId(userId);
+            entity.setTopicCode(topicCode);
+            entity.setChannel(channel);
+            entity.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
+            entity.setUnsubscribedAt(LocalDateTime.now());
+            entity.setTenantId(TenantContext.getTenantId());
+            msgSubscriptionMapper.insert(entity);
+            log.info("[Subscription] 退订(新建记录): user={} topic={} channel={}", userId, topicCode, channel);
+            return entity;
         }
         existing.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
+        existing.setUnsubscribedAt(LocalDateTime.now());
         msgSubscriptionMapper.updateById(existing);
+        return existing;
     }
 }

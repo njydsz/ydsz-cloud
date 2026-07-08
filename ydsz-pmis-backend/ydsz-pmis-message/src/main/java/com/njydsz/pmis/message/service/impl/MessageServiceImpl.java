@@ -124,10 +124,13 @@ public class MessageServiceImpl implements MessageService {
 
         // ③ 灰度命中差异化处理（P0-7）：命中后切换实验模板/通道
         int canaryFlag = 0;
+        // P1-6: 命中时记录原始 canaryKey(=切换前 templateCode),用于 A/B 报表分组;未命中为 null
+        String canaryKeyForLog = null;
         if (StringUtils.hasText(templateCode) && StringUtils.hasText(receiver)) {
             MsgCanaryDO canary = canaryService.matchConfig(templateCode, receiver);
             if (canary != null) {
                 canaryFlag = 1;
+                canaryKeyForLog = templateCode;
                 if (StringUtils.hasText(canary.getExperimentTemplateCode())) {
                     log.info("[Message] 灰度命中切换模板: orig={} exp={}",
                             templateCode, canary.getExperimentTemplateCode());
@@ -216,6 +219,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setPriority(resolvePriority());
         logDO.setSenderId(SystemConstants.SYSTEM_USER_ID);
         logDO.setCanary(canaryFlag);
+        logDO.setCanaryKey(canaryKeyForLog);
         logDO.setRecallStatus(RecallStatusEnum.NONE.name());
         logDO.setReceiptStatus("NONE");
         logDO.setRetryCount(0);

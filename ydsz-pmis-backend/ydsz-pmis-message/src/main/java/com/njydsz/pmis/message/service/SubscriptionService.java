@@ -62,9 +62,13 @@ public interface SubscriptionService {
     /**
      * 退订指定主题 + 通道
      *
+     * <p>P1-5: 无订阅记录时新建 UNSUBSCRIBED 记录(修复默认订阅语义下的 latent bug),
+     * 并返回退订后的订阅实体。
+     *
      * @param userId    用户 ID
      * @param topicCode 主题编码
      * @param channel   通道
+     * @return 退订后的订阅实体
      */
-    void unsubscribe(String userId, String topicCode, String channel);
+    MsgSubscriptionDO unsubscribe(String userId, String topicCode, String channel);
 }

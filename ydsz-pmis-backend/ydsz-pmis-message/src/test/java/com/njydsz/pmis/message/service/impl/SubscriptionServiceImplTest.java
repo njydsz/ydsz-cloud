@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -65,7 +66,7 @@ class SubscriptionServiceImplTest {
     }
 
     @Test
-    @DisplayName("unsubscribe 更新状态为 UNSUBSCRIBED")
+    @DisplayName("unsubscribe 更新状态为 UNSUBSCRIBED 并记录退订时间")
     void unsubscribeShouldUpdateStatus() {
         MsgSubscriptionDO existing = new MsgSubscriptionDO();
         existing.setStatus(SubscriptionStatusEnum.SUBSCRIBED.name());
@@ -74,6 +75,18 @@ class SubscriptionServiceImplTest {
         subscriptionService.unsubscribe("u1", "RISK", "SMS");
 
         assertTrue(existing.getStatus().equals(SubscriptionStatusEnum.UNSUBSCRIBED.name()));
+        assertNotNull(existing.getUnsubscribedAt());
         verify(msgSubscriptionMapper).updateById(existing);
+    }
+
+    @Test
+    @DisplayName("unsubscribe 无订阅记录时新建 UNSUBSCRIBED 记录(P1-5 修复 latent bug)")
+    void unsubscribeShouldInsertWhenNotExists() {
+        when(msgSubscriptionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
+
+        subscriptionService.unsubscribe("u1", "RISK", "SMS");
+
+        verify(msgSubscriptionMapper).insert(any(MsgSubscriptionDO.class));
+        verify(msgSubscriptionMapper, org.mockito.Mockito.never()).updateById(any(MsgSubscriptionDO.class));
     }
 }

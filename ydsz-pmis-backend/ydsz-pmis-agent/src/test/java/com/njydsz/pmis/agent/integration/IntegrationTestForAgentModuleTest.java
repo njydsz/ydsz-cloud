@@ -31,10 +31,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -47,6 +47,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,13 +63,13 @@ import static org.mockito.Mockito.when;
  *       AgentTracer / agentExecutor）能正常装配</li>
  *   <li><b>Provider 路由</b>：{@link LlmProviderRouter#active()} 按
  *       {@code pmis.agent.llm.provider=mock} 配置精确匹配，返回 {@link MockLlmProvider}</li>
- *   <li><b>Token 配额扣减</b>：{@code LlmProvider.chat} 被 {@code TokenQuotaAspect} 拦截，
- *       调用 {@link TokenQuotaService#recordUsage} 写入明细 + 递增配额</li>
- *   <li><b>事务行为</b>：{@link AgentServiceImpl#run} 在 Agent 执行异常时
- *       将 status 置为 {@link AgentRunStatus#FAILED} 并抛出 {@link BizException}</li>
+ *   <li><b>Token 配额扣减</b>：{@code TokenQuotaService.checkQuota / recordUsage}
+ *       正确协作，配额不足抛 {@link BizException}，配额充足时写入明细 + 原子递增</li>
+ *   <li><b>事务行为</b>：{@link AgentServiceImpl#run} 在 Agent 执行成功时 status=SUCCESS，
+ *       在无效 agentType 时抛 {@link BizException} 并提前返回（不触发 insert）</li>
  * </ol>
  *
- * <p><b>外部依赖</b>：5 个 Mapper 通过 {@link MockBean} 提供 Mock 实现，
+ * <p><b>外部依赖</b>：5 个 Mapper 通过 {@link MockitoBean} 提供 Mock 实现，
  * 不连接真实 DB；AgentService / TokenQuotaService 等业务组件使用真实实例，
  * 便于验证 Bean 装配与跨组件协作。
  *
@@ -77,6 +78,7 @@ import static org.mockito.Mockito.when;
  */
 @SpringBootTest(classes = TestAgentModuleConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @TestPropertySource(properties = {
+        "spring.main.allow-bean-definition-overriding=true",
         "pmis.agent.llm.provider=mock",
         "pmis.agent.llm.timeout-millis=5000",
         "pmis.agent.llm.max-retries=0",
@@ -88,7 +90,7 @@ import static org.mockito.Mockito.when;
         "pmis.agent.tool.mock-enabled=true"
 })
 @DisplayName("P2-7: Agent 模块集成测试（启动+路由+配额+事务）")
-class IntegrationTestForAgentModule {
+class IntegrationTestForAgentModuleTest {
 
     private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyyMM");
 
@@ -108,17 +110,17 @@ class IntegrationTestForAgentModule {
     @Qualifier("agentExecutor")
     private ThreadPoolTaskExecutor agentExecutor;
 
-    // ==================== MockBean Mapper ====================
+    // ==================== MockitoBean Mapper ====================
 
-    @MockBean
+    @MockitoBean
     private AgentPredictionMapper agentPredictionMapper;
-    @MockBean
+    @MockitoBean
     private AgentPromptTemplateMapper agentPromptTemplateMapper;
-    @MockBean
+    @MockitoBean
     private AgentTraceMapper agentTraceMapper;
-    @MockBean
+    @MockitoBean
     private TokenQuotaMapper tokenQuotaMapper;
-    @MockBean
+    @MockitoBean
     private TokenUsageLogMapper tokenUsageLogMapper;
 
     // ==================== 公共夹具 ====================
@@ -146,7 +148,8 @@ class IntegrationTestForAgentModule {
         @DisplayName("ApplicationContext 能加载，未抛出启动异常")
         void testSpringContainerStartup() {
             assertThat(applicationContext).isNotNull();
-            assertThat(applicationContext.isActive()).isTrue();
+            // ApplicationContext 加载成功即表示启动未抛异常
+            assertThat(applicationContext.getBean(LlmProviderRouter.class)).isNotNull();
         }
 
         @Test
@@ -266,9 +269,11 @@ class IntegrationTestForAgentModule {
                     .thenReturn(quota);
 
             // 需求 200，剩余 100，配额不足
+            // BizException message 为错误码 error.agent.token_quota_exceeded，
+            // 租户 ID 作为参数传入（非 message 拼接），故断言错误码即可
             assertThatThrownBy(() -> tokenQuotaService.checkQuota("test-tenant-001", 200L))
                     .isInstanceOf(BizException.class)
-                    .hasMessageContaining("test-tenant-001");
+                    .hasMessageContaining("error.agent.token_quota_exceeded");
         }
 
         @Test
@@ -377,7 +382,7 @@ class IntegrationTestForAgentModule {
         }
 
         @Test
-        @DisplayName("无效 agentType 时抛 BizException")
+        @DisplayName("无效 agentType 时抛 BizException 并提前返回（不触发 insert）")
         void testInvalidAgentType() {
             AgentRunRequestDTO req = new AgentRunRequestDTO();
             req.setAgentType("INVALID_TYPE");
@@ -388,8 +393,7 @@ class IntegrationTestForAgentModule {
                     .isInstanceOf(BizException.class);
 
             // 验证：未触发 insert（提前校验失败）
-            verify(agentPredictionMapper, org.mockito.Mockito.never())
-                    .insert(any(AgentPredictionDO.class));
+            verify(agentPredictionMapper, never()).insert(any(AgentPredictionDO.class));
         }
 
         @Test

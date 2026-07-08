@@ -838,6 +838,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_subscription(
     status          VARCHAR(16)   NOT NULL DEFAULT 'SUBSCRIBED',
     role_scope      VARCHAR(128),
     extra           TEXT,
+    unsubscribed_at TIMESTAMPTZ,
     created_by      VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
@@ -856,9 +857,11 @@ COMMENT ON COLUMN pmis_msg_subscription.channel IS '通道';
 COMMENT ON COLUMN pmis_msg_subscription.status IS '订阅状态: SUBSCRIBED 已订阅 / UNSUBSCRIBED 已退订';
 COMMENT ON COLUMN pmis_msg_subscription.role_scope IS '角色范围(如 PM|MEMBER,限定角色内可见性)';
 COMMENT ON COLUMN pmis_msg_subscription.extra IS '扩展字段 JSON';
+COMMENT ON COLUMN pmis_msg_subscription.unsubscribed_at IS '退订时间(P1-5:仅 status=UNSUBSCRIBED 时有意义)';
 
 CREATE INDEX IF NOT EXISTS idx_pms_user ON pmis_msg_subscription(user_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pms_topic ON pmis_msg_subscription(topic_code, channel) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pms_unsub_status ON pmis_msg_subscription(status, unsubscribed_at) WHERE deleted = 0;
 
 -- ====================================================================
 -- 6. 系统配置
@@ -2325,6 +2328,8 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     batch_id          VARCHAR(20),
     route_rule_id     VARCHAR(20),
     canary            SMALLINT       NOT NULL DEFAULT 0,
+    -- P1-6: 灰度实验键(命中时记录原始 canaryKey=切换前 templateCode,用于 A/B 报表分组;未命中为 NULL)
+    canary_key        VARCHAR(64),
     dedup_key         VARCHAR(128),
     recall_status     VARCHAR(16)    NOT NULL DEFAULT 'NONE',
     recall_at         TIMESTAMPTZ,
@@ -2391,6 +2396,7 @@ COMMENT ON COLUMN pmis_msg_log.message_group IS '聚合组(同组消息可合并
 COMMENT ON COLUMN pmis_msg_log.batch_id IS '聚合批次 ID(关联 pmis_msg_aggregate.id)';
 COMMENT ON COLUMN pmis_msg_log.route_rule_id IS '命中的路由规则 ID(关联 pmis_msg_route_rule.id)';
 COMMENT ON COLUMN pmis_msg_log.canary IS '是否灰度命中: 0 正式 / 1 灰度';
+COMMENT ON COLUMN pmis_msg_log.canary_key IS 'P1-6: 灰度实验键(命中时记录原始 canaryKey=切换前 templateCode,用于 A/B 报表分组;未命中为 NULL)';
 COMMENT ON COLUMN pmis_msg_log.dedup_key IS '幂等去重键(用于消费端幂等,Redis SET NX EX)';
 COMMENT ON COLUMN pmis_msg_log.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
 COMMENT ON COLUMN pmis_msg_log.receipt_at IS '回执到达时间';
@@ -2433,6 +2439,9 @@ CREATE INDEX IF NOT EXISTS idx_pml_retry_due
 -- P2-6: 级联发送父子关系查询索引(按 parent_msg_id 查询某条消息触发的全部级联消息)
 CREATE INDEX IF NOT EXISTS idx_pml_parent
     ON pmis_msg_log (parent_msg_id) WHERE deleted = 0 AND parent_msg_id IS NOT NULL;
+-- P1-6: 灰度 A/B 报表查询索引(按 canary_key 分组统计实验组数据)
+CREATE INDEX IF NOT EXISTS idx_pml_canary_key
+    ON pmis_msg_log (canary_key) WHERE deleted = 0 AND canary_key IS NOT NULL;
 
 
 -- 消息模板表 pmis_msg_template（由原 pmis_message_template 重构升级，新增 i18n/版本/审核/分类/场景）
@@ -4567,6 +4576,256 @@ CREATE INDEX IF NOT EXISTS idx_patul_tenant_created
     WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_patul_trace
     ON pmis_agent_token_usage_log(trace_id)
+    WHERE deleted = 0;
+
+-- =====================================================
+-- 6.3 Agent RAG 知识库表（P3-1 落地）
+-- ---------------------------------------------------------------------
+--    pmis_agent_knowledge_base : 知识库（按租户隔离，一个租户可建多个知识库）
+--    pmis_agent_document        : 文档元数据（一个知识库包含多个文档）
+--    pmis_agent_document_chunk  : 文档分块 + 向量（pgvector，检索核心表）
+-- =====================================================
+
+-- pgvector 扩展：向量类型与检索算子（<=> 余弦 / <#> 内积 / <+> L2）
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE IF NOT EXISTS pmis_agent_knowledge_base(
+    id              VARCHAR(20)   NOT NULL,
+    tenant_id       VARCHAR(20)   NOT NULL DEFAULT '1',
+    name            VARCHAR(128)  NOT NULL,
+    description     VARCHAR(512),
+    status          VARCHAR(16)   NOT NULL DEFAULT 'ACTIVE',
+    doc_count       INT           NOT NULL DEFAULT 0,
+    chunk_count     INT           NOT NULL DEFAULT 0,
+    embedding_model VARCHAR(64)   NOT NULL DEFAULT 'mock',
+    embedding_dim   INT           NOT NULL DEFAULT 1536,
+    -- 审计字段
+    created_by      VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         INT           NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_pakb_tenant_name UNIQUE (tenant_id, name, deleted)
+);
+COMMENT ON TABLE  pmis_agent_knowledge_base IS 'Agent RAG 知识库表: 按租户隔离的知识库元数据';
+COMMENT ON COLUMN pmis_agent_knowledge_base.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_agent_knowledge_base.name IS '知识库名称: 同租户下唯一';
+COMMENT ON COLUMN pmis_agent_knowledge_base.status IS '状态: ACTIVE 可用 / ARCHIVED 归档';
+COMMENT ON COLUMN pmis_agent_knowledge_base.doc_count IS '文档数量: 冗余字段，文档增删时同步更新';
+COMMENT ON COLUMN pmis_agent_knowledge_base.chunk_count IS '分块数量: 冗余字段，入库/删除时同步更新';
+COMMENT ON COLUMN pmis_agent_knowledge_base.embedding_model IS 'Embedding 模型: mock/dashscope/qianfan/openai';
+COMMENT ON COLUMN pmis_agent_knowledge_base.embedding_dim IS '向量维度: 与 embedding_model 对齐（mock=8, dashscope=1536, openai=1536）';
+CREATE INDEX IF NOT EXISTS idx_pakb_tenant_status
+    ON pmis_agent_knowledge_base(tenant_id, status)
+    WHERE deleted = 0;
+
+CREATE TABLE IF NOT EXISTS pmis_agent_document(
+    id                  VARCHAR(20)   NOT NULL,
+    tenant_id           VARCHAR(20)   NOT NULL DEFAULT '1',
+    knowledge_base_id   VARCHAR(20)   NOT NULL,
+    name                VARCHAR(256)  NOT NULL,
+    source_type         VARCHAR(16)   NOT NULL DEFAULT 'TEXT',
+    source_uri          VARCHAR(1024),
+    content             TEXT,
+    chunk_count         INT           NOT NULL DEFAULT 0,
+    total_tokens        INT           NOT NULL DEFAULT 0,
+    status              VARCHAR(16)   NOT NULL DEFAULT 'PENDING',
+    -- 审计字段
+    created_by          VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             INT           NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_pad_knowledge_base
+        FOREIGN KEY (knowledge_base_id)
+        REFERENCES pmis_agent_knowledge_base(id)
+        ON DELETE CASCADE
+);
+COMMENT ON TABLE  pmis_agent_document IS 'Agent RAG 文档表: 知识库中的文档元数据与原始内容';
+COMMENT ON COLUMN pmis_agent_document.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_agent_document.knowledge_base_id IS '所属知识库 ID';
+COMMENT ON COLUMN pmis_agent_document.name IS '文档名称';
+COMMENT ON COLUMN pmis_agent_document.source_type IS '来源类型: TEXT/MARKDOWN/URL/PDF/DOCX';
+COMMENT ON COLUMN pmis_agent_document.source_uri IS '来源 URI: URL 或文件路径';
+COMMENT ON COLUMN pmis_agent_document.content IS '原始内容: 纯文本（PDF/DOCX 需先提取文本）';
+COMMENT ON COLUMN pmis_agent_document.chunk_count IS '分块数量: 入库时统计';
+COMMENT ON COLUMN pmis_agent_document.total_tokens IS '文档总 token 数: 入库时估算';
+COMMENT ON COLUMN pmis_agent_document.status IS '状态: PENDING 待处理 / INGESTED 已入库 / FAILED 入库失败';
+CREATE INDEX IF NOT EXISTS idx_pad_kb_status
+    ON pmis_agent_document(knowledge_base_id, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_created
+    ON pmis_agent_document(tenant_id, created_at DESC)
+    WHERE deleted = 0;
+
+CREATE TABLE IF NOT EXISTS pmis_agent_document_chunk(
+    id                  VARCHAR(20)   NOT NULL,
+    tenant_id           VARCHAR(20)   NOT NULL DEFAULT '1',
+    knowledge_base_id   VARCHAR(20)   NOT NULL,
+    document_id         VARCHAR(20)   NOT NULL,
+    chunk_index         INT           NOT NULL,
+    content             TEXT          NOT NULL,
+    -- pgvector 向量字段；维度由知识库 embedding_dim 决定
+    -- 默认 1536 维（DashScope/OpenAI text-embedding 标准），mock 用 8 维
+    embedding           vector(1536),
+    token_count         INT           NOT NULL DEFAULT 0,
+    -- 审计字段
+    created_by          VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             INT           NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_padc_document
+        FOREIGN KEY (document_id)
+        REFERENCES pmis_agent_document(id)
+        ON DELETE CASCADE,
+    CONSTRAINT uk_padc_doc_chunk UNIQUE (document_id, chunk_index)
+);
+COMMENT ON TABLE  pmis_agent_document_chunk IS 'Agent RAG 文档分块表: 向量检索核心表（pgvector）';
+COMMENT ON COLUMN pmis_agent_document_chunk.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_agent_document_chunk.knowledge_base_id IS '所属知识库 ID';
+COMMENT ON COLUMN pmis_agent_document_chunk.document_id IS '所属文档 ID';
+COMMENT ON COLUMN pmis_agent_document_chunk.chunk_index IS '分块序号: 同文档内从 0 开始递增';
+COMMENT ON COLUMN pmis_agent_document_chunk.content IS '分块文本内容';
+COMMENT ON COLUMN pmis_agent_document_chunk.embedding IS '向量: pgvector 类型，由 EmbeddingProvider 生成';
+COMMENT ON COLUMN pmis_agent_document_chunk.token_count IS '分块 token 数: 入库时估算';
+-- IVFFLAT 索引：pgvector 近似最近邻索引，加速余弦相似度检索
+-- lists = sqrt(rows) 经验值，probe = 10 平衡召回率与性能
+CREATE INDEX IF NOT EXISTS idx_padc_embedding
+    ON pmis_agent_document_chunk
+    USING ivfflat (embedding vector_cosine_ops)
+    WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_padc_kb_deleted
+    ON pmis_agent_document_chunk(knowledge_base_id, deleted)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_padc_doc
+    ON pmis_agent_document_chunk(document_id)
+    WHERE deleted = 0;
+
+-- =====================================================
+-- P3-2: DAG 编排引擎（pmis_agent_dag_*）
+--   pmis_agent_dag_definition    : DAG 定义（节点列表以 JSON 存储）
+--   pmis_agent_dag_instance      : DAG 执行实例（整体状态/汇总）
+--   pmis_agent_dag_node_instance : 节点执行实例（明细/输出/错误）
+-- =====================================================
+CREATE TABLE IF NOT EXISTS pmis_agent_dag_definition(
+    id                 VARCHAR(20)   NOT NULL,
+    tenant_id          VARCHAR(20)   NOT NULL DEFAULT '1',
+    name               VARCHAR(200)  NOT NULL,
+    description        VARCHAR(1000),
+    biz_type           VARCHAR(100),
+    version            VARCHAR(50),
+    definition_json    TEXT          NOT NULL,
+    failure_strategy   VARCHAR(20)   NOT NULL DEFAULT 'ABORT',
+    max_retries        INT           NOT NULL DEFAULT 3,
+    default_timeout_ms BIGINT        NOT NULL DEFAULT 0,
+    enabled            SMALLINT      NOT NULL DEFAULT 1,
+    created_by         VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by         VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            SMALLINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_dag_def_tenant_name UNIQUE (tenant_id, name, deleted)
+);
+
+COMMENT ON TABLE  pmis_agent_dag_definition IS 'Agent DAG 定义表: 持久化多智能体编排流程';
+COMMENT ON COLUMN pmis_agent_dag_definition.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_agent_dag_definition.name IS 'DAG 名称: 同租户下唯一';
+COMMENT ON COLUMN pmis_agent_dag_definition.description IS 'DAG 描述';
+COMMENT ON COLUMN pmis_agent_dag_definition.biz_type IS '业务类型: RISK_ASSESS/BUDGET_APPROVE 等';
+COMMENT ON COLUMN pmis_agent_dag_definition.version IS '版本号: 语义化版本 1.0.0';
+COMMENT ON COLUMN pmis_agent_dag_definition.definition_json IS 'DAG 定义 JSON: 节点列表+全局配置，反序列化为 DagDefinition';
+COMMENT ON COLUMN pmis_agent_dag_definition.failure_strategy IS '默认失败策略: CONTINUE/ABORT/RETRY';
+COMMENT ON COLUMN pmis_agent_dag_definition.max_retries IS '默认最大重试次数: RETRY 策略生效';
+COMMENT ON COLUMN pmis_agent_dag_definition.default_timeout_ms IS '默认节点超时(毫秒): 0=不超时';
+COMMENT ON COLUMN pmis_agent_dag_definition.enabled IS '是否启用: 1=启用 0=禁用';
+
+CREATE INDEX IF NOT EXISTS idx_dag_def_tenant
+    ON pmis_agent_dag_definition(tenant_id, deleted)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_dag_def_biz
+    ON pmis_agent_dag_definition(biz_type, deleted)
+    WHERE deleted = 0;
+
+CREATE TABLE IF NOT EXISTS pmis_agent_dag_instance(
+    id                 VARCHAR(20)   NOT NULL,
+    tenant_id          VARCHAR(20)   NOT NULL DEFAULT '1',
+    dag_definition_id  VARCHAR(20)   NOT NULL,
+    dag_name           VARCHAR(200),
+    biz_type           VARCHAR(100),
+    biz_ref            VARCHAR(200),
+    status             VARCHAR(20)   NOT NULL DEFAULT 'CREATED',
+    global_inputs_json TEXT,
+    node_outputs_json  TEXT,
+    total_cost_ms      BIGINT,
+    success_count      INT           NOT NULL DEFAULT 0,
+    failed_count       INT           NOT NULL DEFAULT 0,
+    skipped_count      INT           NOT NULL DEFAULT 0,
+    total_nodes        INT           NOT NULL DEFAULT 0,
+    note               VARCHAR(1000),
+    created_by         VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by         VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            SMALLINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_dag_inst_def FOREIGN KEY (dag_definition_id)
+        REFERENCES pmis_agent_dag_definition(id),
+    CONSTRAINT ck_dag_inst_status CHECK (status IN ('CREATED','RUNNING','SUCCESS','FAILED','CANCELLED','TIMEOUT'))
+);
+
+COMMENT ON TABLE  pmis_agent_dag_instance IS 'Agent DAG 执行实例表: 记录每次执行的整体状态';
+COMMENT ON COLUMN pmis_agent_dag_instance.status IS '实例状态: CREATED/RUNNING/SUCCESS/FAILED/CANCELLED/TIMEOUT';
+COMMENT ON COLUMN pmis_agent_dag_instance.global_inputs_json IS '全局输入参数 JSON';
+COMMENT ON COLUMN pmis_agent_dag_instance.node_outputs_json IS '节点输出汇总 JSON';
+COMMENT ON COLUMN pmis_agent_dag_instance.total_cost_ms IS '总耗时(毫秒)';
+COMMENT ON COLUMN pmis_agent_dag_instance.note IS '备注: 如中止原因';
+
+CREATE INDEX IF NOT EXISTS idx_dag_inst_def
+    ON pmis_agent_dag_instance(dag_definition_id, deleted)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_dag_inst_tenant_status
+    ON pmis_agent_dag_instance(tenant_id, status, deleted)
+    WHERE deleted = 0;
+
+CREATE TABLE IF NOT EXISTS pmis_agent_dag_node_instance(
+    id                 VARCHAR(20)   NOT NULL,
+    tenant_id          VARCHAR(20)   NOT NULL DEFAULT '1',
+    dag_instance_id    VARCHAR(20)   NOT NULL,
+    node_name          VARCHAR(200)  NOT NULL,
+    agent_type         VARCHAR(100),
+    status             VARCHAR(20)   NOT NULL DEFAULT 'PENDING',
+    output_json        TEXT,
+    error_message      VARCHAR(2000),
+    retry_count        INT           NOT NULL DEFAULT 0,
+    start_time         TIMESTAMP,
+    end_time           TIMESTAMP,
+    created_by         VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by         VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            SMALLINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_dag_node_inst FOREIGN KEY (dag_instance_id)
+        REFERENCES pmis_agent_dag_instance(id),
+    CONSTRAINT ck_dag_node_status CHECK (status IN ('PENDING','RUNNING','SUCCESS','FAILED','SKIPPED'))
+);
+
+COMMENT ON TABLE  pmis_agent_dag_node_instance IS 'Agent DAG 节点实例表: 每个节点一次执行的明细';
+COMMENT ON COLUMN pmis_agent_dag_node_instance.dag_instance_id IS '所属 DAG 实例 ID';
+COMMENT ON COLUMN pmis_agent_dag_node_instance.node_name IS '节点名: DAG 内唯一';
+COMMENT ON COLUMN pmis_agent_dag_node_instance.agent_type IS '关联 Agent 类型: 为空表示空节点';
+COMMENT ON COLUMN pmis_agent_dag_node_instance.status IS '节点状态: PENDING/RUNNING/SUCCESS/FAILED/SKIPPED';
+COMMENT ON COLUMN pmis_agent_dag_node_instance.output_json IS '节点输出 JSON';
+COMMENT ON COLUMN pmis_agent_dag_node_instance.error_message IS '错误消息';
+COMMENT ON COLUMN pmis_agent_dag_node_instance.retry_count IS '已重试次数';
+
+CREATE INDEX IF NOT EXISTS idx_dag_node_inst
+    ON pmis_agent_dag_node_instance(dag_instance_id, deleted)
     WHERE deleted = 0;
 
 -- =====================================================

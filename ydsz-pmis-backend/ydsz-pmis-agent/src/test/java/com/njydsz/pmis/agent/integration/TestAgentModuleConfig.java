@@ -1,6 +1,5 @@
 package com.njydsz.pmis.agent.integration;
 
-import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.njydsz.pmis.agent.aop.TokenQuotaAspect;
 import com.njydsz.pmis.agent.config.TokenQuotaProperties;
 import com.njydsz.pmis.agent.engine.RiskWarningAgent;
@@ -8,21 +7,13 @@ import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
 import com.njydsz.pmis.agent.engine.llm.MockLlmProvider;
 import com.njydsz.pmis.agent.engine.trace.AgentTracer;
-import com.njydsz.pmis.agent.engine.trace.NoOpAgentTracer;
 import com.njydsz.pmis.agent.service.impl.AgentServiceImpl;
 import com.njydsz.pmis.agent.service.impl.DefaultTokenQuotaService;
 import com.njydsz.pmis.common.config.AsyncThreadPoolConfig;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Agent 模块集成测试专用 Spring 配置（P2-7 落地）。
@@ -34,43 +25,26 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  *
  * <p><b>关键策略</b>：
  * <ol>
- *   <li>通过 {@link EnableAutoConfiguration#exclude()} 排除 DataSource / Redis /
- *       Flyway / Liquibase / MyBatis-Plus 自动配置，避免启动时拉取外部中间件</li>
- *   <li>Mapper Bean 由测试类通过 {@code @MockBean} 提供，避免真实 DB 调用</li>
- *   <li>显式 {@link Import} {@link AsyncThreadPoolConfig} 提供 {@code agentExecutor}，
- *       满足 {@link AgentServiceImpl} 的 {@code @Qualifier(AsyncExecutorNames.AGENT)} 依赖</li>
- *   <li>显式声明 {@link NoOpAgentTracer} 作为 {@link AgentTracer} Bean，
+ *   <li>使用 {@link SpringBootConfiguration} 替代 {@code @TestConfiguration}，
+ *       使本类成为 SpringBoot 主配置类（避免 SpringBoot 自动发现
+ *       {@code AgentApplication} 导致加载 Nacos / Feign 等外部依赖）</li>
+ *   <li><b>不启用</b> {@code @EnableAutoConfiguration}，避免 agent 模块依赖的
+ *       Druid / Seata / spring-ai / Resilience4j / dynamic-datasource 等第三方库的
+ *       自动配置在无中间件环境下启动失败</li>
+ *   <li>通过 {@link EnableConfigurationProperties} 注册 {@link TokenQuotaProperties}，
+ *       触发 {@code @ConfigurationProperties} 属性绑定</li>
+ *   <li>通过 {@link Import} 显式导入所需业务组件，Mapper 由 {@code @MockitoBean} 提供</li>
+ *   <li>显式声明 {@link AgentTracer#noOp()} 作为 {@link AgentTracer} Bean，
  *       避免加载 Tracing 组件需要的 Brave / OpenTelemetry 依赖</li>
- *   <li>仅 {@link Import} 必要的 {@link Agent} 实现（{@link RiskWarningAgent}），
- *       排除其他可能引入额外依赖的 Agent</li>
  * </ol>
- *
- * <p><b>覆盖范围</b>：
- * <ul>
- *   <li>容器启动：验证所有核心 Bean 能正常装配（无 UnsatisfiedDependency / NoUniqueBean）</li>
- *   <li>Provider 路由：{@link LlmProviderRouter#active()} 按 {@code pmis.agent.llm.provider=mock}
- *       正确返回 {@link MockLlmProvider}</li>
- *   <li>Token 配额扣减：{@link TokenQuotaAspect} 拦截 {@code LlmProvider.chat}，
- *       调用 {@code TokenQuotaService.recordUsage} 写入明细 + 递增配额</li>
- *   <li>事务行为：{@link AgentServiceImpl#run} 在异常时 status=FAILED 并回滚业务态</li>
- * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0 (P2-7)
  */
-@TestConfiguration
-@EnableAutoConfiguration(exclude = {
-        DataSourceAutoConfiguration.class,
-        DataSourceTransactionManagerAutoConfiguration.class,
-        RedisAutoConfiguration.class,
-        FlywayAutoConfiguration.class,
-        LiquibaseAutoConfiguration.class,
-        MybatisPlusAutoConfiguration.class
-})
-@EnableTransactionManagement
+@SpringBootConfiguration
+@EnableConfigurationProperties(TokenQuotaProperties.class)
 @Import({
         AsyncThreadPoolConfig.class,
-        TokenQuotaProperties.class,
         MockLlmProvider.class,
         RiskWarningAgent.class,
         LlmProviderRouter.class,
@@ -78,19 +52,19 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         TokenQuotaAspect.class,
         AgentServiceImpl.class
 })
-@ComponentScan(basePackages = "com.njydsz.pmis.common.config")
 public class TestAgentModuleConfig {
 
     /**
      * 显式声明 NoOpAgentTracer 作为 AgentTracer Bean。
      *
      * <p>避免加载 DefaultAgentTracer 依赖的 Brave / OpenTelemetry 等组件。
+     * 通过 {@link AgentTracer#noOp()} 工厂方法获取单例实例。
      *
      * @return NoOp tracer 实现
      */
     @Bean
     public AgentTracer agentTracer() {
-        return new NoOpAgentTracer();
+        return AgentTracer.noOp();
     }
 
     /**
