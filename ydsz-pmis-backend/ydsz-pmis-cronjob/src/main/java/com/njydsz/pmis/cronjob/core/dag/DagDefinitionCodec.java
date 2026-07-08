@@ -52,6 +52,10 @@ public class DagDefinitionCodec {
             n.put("conditionExpression", node.conditionExpression());
             n.put("loopCount", node.loopCount());
             n.put("parallelBranches", node.parallelBranches());
+            // P1-5/P1-6: 子工作流/审批节点扩展字段
+            n.put("subWorkflowDagKey", node.subWorkflowDagKey());
+            n.put("approvalUsers", node.approvalUsers());
+            n.put("approvalTimeoutMinutes", node.approvalTimeoutMinutes());
             nodesArr.add(n);
         }
         JSONArray edgesArr = new JSONArray();
@@ -112,7 +116,11 @@ public class DagDefinitionCodec {
                     n.getString("nodeType"),
                     n.getString("conditionExpression"),
                     n.getInteger("loopCount"),
-                    n.getInteger("parallelBranches")));
+                    n.getInteger("parallelBranches"),
+                    // P1-5/P1-6: 子工作流/审批节点扩展字段
+                    n.getString("subWorkflowDagKey"),
+                    n.getString("approvalUsers"),
+                    n.getInteger("approvalTimeoutMinutes")));
         }
 
         // 校验节点 jobKey 唯一

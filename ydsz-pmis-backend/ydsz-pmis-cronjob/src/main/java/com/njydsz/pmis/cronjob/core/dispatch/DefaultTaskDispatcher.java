@@ -122,6 +122,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ObjectProvider<CrossClusterDispatcher> crossClusterDispatcherProvider;
     /** P3-13: WebHook 事件分发器（可选注入，未配置时不推送事件通知） */
     private final ObjectProvider<WebhookEventDispatcher> webhookEventDispatcherProvider;
+    /** P0-1: Worker 节点选择器（调度器-执行器分离模式，可选注入） */
+    private final ObjectProvider<WorkerNodeSelector> workerNodeSelectorProvider;
+    /** P0-2: SSE 实时日志推送管理器（可选注入，未配置时仅写 DB） */
+    private final ObjectProvider<com.njydsz.pmis.cronjob.core.logger.LogStreamManager> logStreamManagerProvider;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -188,6 +192,15 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         // P3: 分片任务走分片执行路径
         if (isShardedJob(job)) {
             return executeShardedJob(job, holdLock, triggerType);
+        }
+        // P0-1: 调度器-执行器分离 — 非分片任务也走远程派发到 Worker 节点
+        if (isSchedulerExecutorSeparationEnabled()) {
+            String logId = dispatchToWorker(job, triggerType);
+            if (logId != null) {
+                return logId;
+            }
+            // 无可用 Worker 时降级本地执行
+            log.debug("[Dispatcher] 无可用 Worker, 降级本地执行: key={}", job.getJobKey());
         }
         // P1-7: MANUAL 触发同步执行（API 调用方需要 logId），其他触发类型异步执行（隔离调度线程）
         if (TRIGGER_MANUAL.equals(triggerType)) {
@@ -475,7 +488,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
         // P0-2: 初始化在线日志器（在 handler.execute 之前设置 ThreadLocal）
         JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
-                jobLogContentServiceProvider.getIfAvailable());
+                jobLogContentServiceProvider.getIfAvailable(),
+                logStreamManagerProvider.getIfAvailable());
         JobLoggerHolder.set(jobLogger);
         // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
         JobContextHolder.set(job.getId(), job.getJobKey());
@@ -620,6 +634,62 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
 
     /**
+     * P0-1: 判断调度器-执行器分离模式是否启用。
+     *
+     * <p>需同时满足：
+     * <ul>
+     *   <li>{@code schedulerExecutorSeparation.enabled=true}</li>
+     *   <li>{@code remote.enabled=true}（远程派发必须可用）</li>
+     *   <li>WorkerNodeSelector Bean 可用</li>
+     * </ul>
+     *
+     * @return true 启用分离模式
+     */
+    private boolean isSchedulerExecutorSeparationEnabled() {
+        return cronjobProperties.getSchedulerExecutorSeparation().isEnabled()
+                && cronjobProperties.getRemote().isEnabled()
+                && workerNodeSelectorProvider.getIfAvailable() != null;
+    }
+
+    /**
+     * P0-1: 将非分片任务远程派发到 Worker 节点执行。
+     *
+     * <p>调度器-执行器分离模式下，Leader 节点通过 WorkerNodeSelector 选定 Worker 节点，
+     * 通过 RemoteTaskClient HTTP 派发任务。Worker 节点收到请求后调用
+     * {@link #executeLocally} 在本地执行。
+     *
+     * <p>降级策略：无可用 Worker 或远程派发失败时返回 null，调用方降级为 Leader 本地执行。
+     *
+     * @param job         任务定义
+     * @param triggerType 触发类型
+     * @return 执行日志 ID；派发失败返回 null
+     */
+    private String dispatchToWorker(JobDO job, String triggerType) {
+        WorkerNodeSelector selector = workerNodeSelectorProvider.getIfAvailable();
+        if (selector == null) {
+            return null;
+        }
+        com.njydsz.pmis.cronjob.entity.JobNodeDO worker = selector.selectWorker();
+        if (worker == null) {
+            return null;
+        }
+        RemoteTaskClient client = remoteTaskClientProvider.getIfAvailable();
+        if (client == null) {
+            return null;
+        }
+        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TraceIdUtil.get());
+        String logId = client.dispatch(worker, request);
+        if (logId != null) {
+            log.debug("[Dispatcher] 调度器-执行器分离: 任务已派发到 Worker: key={} worker={} logId={}",
+                    job.getJobKey(), worker.getNodeId(), logId);
+        } else {
+            log.warn("[Dispatcher] 调度器-执行器分离: 远程派发失败, 降级本地执行: key={} worker={}",
+                    job.getJobKey(), worker.getNodeId());
+        }
+        return logId;
+    }
+
+    /**
      * P1-5/P1-2/P1-3: 根据任务类型解析处理器。
      *
      * <p>路由规则：
@@ -733,7 +803,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
         // P0-2: 初始化在线日志器（在 handler.execute 之前设置 ThreadLocal）
         JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
-                jobLogContentServiceProvider.getIfAvailable());
+                jobLogContentServiceProvider.getIfAvailable(),
+                logStreamManagerProvider.getIfAvailable());
         JobLoggerHolder.set(jobLogger);
 // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
 JobContextHolder.set(job.getId(), job.getJobKey());

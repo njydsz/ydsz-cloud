@@ -134,6 +134,8 @@ public class MessageProperties {
             m.put("DINGTALK", java.math.BigDecimal.ZERO);
             m.put("WECOM", java.math.BigDecimal.ZERO);
             m.put("FEISHU", java.math.BigDecimal.ZERO);
+            m.put("WX_MINI", java.math.BigDecimal.ZERO);
+            m.put("ALIPAY_MINI", java.math.BigDecimal.ZERO);
             return m;
         }
     }
@@ -173,6 +175,12 @@ public class MessageProperties {
 
     /** P0-2: APP 推送服务商配置 */
     private PushConfig push = new PushConfig();
+
+    /** P0-1: 微信小程序订阅消息配置 */
+    private WxMiniConfig wxMini = new WxMiniConfig();
+
+    /** P0-1: 支付宝小程序模板消息配置 */
+    private AlipayMiniConfig alipayMini = new AlipayMiniConfig();
 
     /**
      * P0-2: APP 推送服务商配置。
@@ -265,6 +273,54 @@ public class MessageProperties {
     /** P1-5: 退订中心配置 */
     private UnsubscribeConfig unsubscribe = new UnsubscribeConfig();
 
+    /**
+     * P0-1: 微信小程序订阅消息配置。
+     *
+     * <p>通过 {@code pmis.message.wx-mini.provider} 选择服务商（wechat/mock），
+     * 无凭证或选 mock 时降级为日志输出。
+     * 微信小程序订阅消息需要用户在小程序端主动订阅后才能下发，
+     * 每次发送消耗一次订阅配额。
+     */
+    @Data
+    public static class WxMiniConfig {
+        /** 服务商: wechat / mock（默认 mock 降级） */
+        private String provider = "mock";
+        /** 微信小程序 AppID */
+        private String appId;
+        /** 微信小程序 AppSecret */
+        private String appSecret;
+        /** 微信 API base URL */
+        private String baseUrl = "https://api.weixin.qq.com";
+        /** 连接超时（毫秒） */
+        private int connectTimeout = 5000;
+        /** 读取超时（毫秒） */
+        private int readTimeout = 10000;
+    }
+
+    /**
+     * P0-1: 支付宝小程序模板消息配置。
+     *
+     * <p>通过 {@code pmis.message.alipay-mini.provider} 选择服务商（alipay/mock），
+     * 无凭证或选 mock 时降级为日志输出。
+     */
+    @Data
+    public static class AlipayMiniConfig {
+        /** 服务商: alipay / mock（默认 mock 降级） */
+        private String provider = "mock";
+        /** 支付宝小程序 AppID */
+        private String appId;
+        /** 支付宝应用私钥 */
+        private String privateKey;
+        /** 支付宝公钥 */
+        private String alipayPublicKey;
+        /** 支付宝网关地址 */
+        private String gateway = "https://openapi.alipay.com/gateway.do";
+        /** 连接超时（毫秒） */
+        private int connectTimeout = 5000;
+        /** 读取超时（毫秒） */
+        private int readTimeout = 10000;
+    }
+
     /** P2-5: 智能定时配置 */
     private SmartTimingConfig smartTiming = new SmartTimingConfig();
 
@@ -306,7 +362,7 @@ public class MessageProperties {
         private boolean urgentBypassDnd = true;
         /** DND 生效的打扰型通道列表（默认 SMS/PUSH/DINGTALK/WECOM/FEISHU） */
         private List<String> disruptiveChannels = Arrays.asList(
-                "SMS", "PUSH", "DINGTALK", "WECOM", "FEISHU");
+                "SMS", "PUSH", "DINGTALK", "WECOM", "FEISHU", "WX_MINI", "ALIPAY_MINI");
         /** DND 延迟发送时附加的缓冲秒数（默认 60s，避免卡在 DND 结束瞬间的高峰） */
         private long dndBufferSeconds = 60L;
         /** DND 延迟消息最大延迟小时数（超过则降级为丢弃，防止消息过期太久失去意义，默认 72h） */

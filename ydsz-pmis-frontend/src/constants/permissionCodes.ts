@@ -323,6 +323,18 @@ export const PC = {
   AGENT_ORCHESTRATION_RUN: 'agent:orchestration:run',
   AGENT_ORCHESTRATION_VIEW: 'agent:orchestration:view',
   AGENT_PREDICTION_VIEW: 'agent:prediction:view',
+  AGENT_DEBUG_VIEW: 'agent:debug:view',
+  AGENT_DAG_VIEW: 'agent:dag:view',
+  AGENT_DAG_RUN: 'agent:dag:run',
+  AGENT_DAG_CREATE: 'agent:dag:create',
+  AGENT_PROMPT_VIEW: 'agent:prompt:view',
+  AGENT_PROMPT_MANAGE: 'agent:prompt:manage',
+  AGENT_HITL_LIST: 'agent:hitl:list',
+  AGENT_HITL_APPROVE: 'agent:hitl:approve',
+  AGENT_TOKEN_QUOTA_VIEW: 'agent:token-quota:view',
+  AGENT_TOKEN_QUOTA_RESET: 'agent:token-quota:reset',
+  AGENT_KB_VIEW: 'agent:kb:view',
+  AGENT_KB_MANAGE: 'agent:kb:manage',
 
   // ============= 工作流(workflow) =============
   WORKFLOW_DEFINITION_LIST: 'workflow:definition:list',

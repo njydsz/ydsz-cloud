@@ -1,6 +1,7 @@
 package com.njydsz.pmis.cronjob.core.logger;
 
 import com.njydsz.pmis.common.job.JobLogger;
+import com.njydsz.pmis.cronjob.core.logger.LogStreamManager;
 import com.njydsz.pmis.cronjob.entity.JobLogContentDO;
 import com.njydsz.pmis.cronjob.service.JobLogContentService;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,9 @@ public class JobLoggerImpl implements JobLogger {
     /** 日志内容 Service（可能为 null，降级时丢弃日志） */
     private final JobLogContentService jobLogContentService;
 
+    /** P0-2: SSE 实时推送管理器（可能为 null，降级时仅写 DB） */
+    private final LogStreamManager logStreamManager;
+
     /** 行号自增计数器（从 1 开始） */
     private final AtomicInteger lineNo = new AtomicInteger(0);
 
@@ -67,9 +71,23 @@ public class JobLoggerImpl implements JobLogger {
      * @param jobLogContentService 日志内容 Service；为 null 时日志将被丢弃（降级）
      */
     public JobLoggerImpl(String logId, String jobKey, JobLogContentService jobLogContentService) {
+        this(logId, jobKey, jobLogContentService, null);
+    }
+
+    /**
+     * P0-2: 构造任务日志器（含 SSE 实时推送）。
+     *
+     * @param logId               执行日志 ID
+     * @param jobKey              任务 KEY
+     * @param jobLogContentService 日志内容 Service；为 null 时日志将被丢弃（降级）
+     * @param logStreamManager     SSE 实时推送管理器；为 null 时仅写 DB（降级）
+     */
+    public JobLoggerImpl(String logId, String jobKey, JobLogContentService jobLogContentService,
+                          LogStreamManager logStreamManager) {
         this.logId = logId;
         this.jobKey = jobKey;
         this.jobLogContentService = jobLogContentService;
+        this.logStreamManager = logStreamManager;
     }
 
     // ==================== JobLogger 接口实现 ====================
@@ -161,6 +179,15 @@ public class JobLoggerImpl implements JobLogger {
         synchronized (buffer) {
             buffer.add(line);
             needFlush = buffer.size() >= FLUSH_THRESHOLD;
+        }
+        // P0-2: 实时推送到 SSE 订阅者（不影响主流程）
+        if (logStreamManager != null) {
+            try {
+                logStreamManager.pushLogLine(logId, line);
+            } catch (Exception e) {
+                log.debug("[JobLogger] SSE 推送失败(不影响主流程): logId={} lineNo={} reason={}",
+                        logId, line.getLineNo(), e.getMessage());
+            }
         }
         if (needFlush) {
             flush();

@@ -4,6 +4,9 @@ import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.cronjob.core.dag.DagDefinition;
+import com.njydsz.pmis.cronjob.core.dag.DagDefinitionCodec;
+import com.njydsz.pmis.cronjob.core.dag.DagDefinitionValidator;
 import com.njydsz.pmis.cronjob.dto.JobDagSaveDTO;
 import com.njydsz.pmis.cronjob.dto.JobDagTriggerDTO;
 import com.njydsz.pmis.cronjob.entity.JobDagDO;
@@ -31,6 +34,8 @@ import java.util.List;
 public class JobDagController {
 
     private final JobDagService jobDagService;
+    private final DagDefinitionValidator dagDefinitionValidator;
+    private final DagDefinitionCodec dagDefinitionCodec;
 
     @Operation(summary = "创建 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_CREATE)
@@ -102,5 +107,23 @@ public class JobDagController {
     @PostMapping("/trigger")
     public Result<String> triggerDag(@Valid @RequestBody JobDagTriggerDTO dto) {
         return Result.ok(jobDagService.triggerDag(dto.getDagKey(), dto.getTriggerBy()));
+    }
+
+    /**
+     * P0-3: 校验 DAG 定义 JSON（可视化编辑器保存前校验）。
+     *
+     * <p>校验规则：节点完整性、边完整性、无自环、无环、根节点存在、节点类型约束、规模限制。
+     * 校验通过返回 true，失败返回错误信息。
+     *
+     * @param dagDefinitionJson DAG 定义 JSON 字符串
+     * @return 校验结果（true=通过）
+     */
+    @Operation(summary = "校验 DAG 定义")
+    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @PostMapping("/validate")
+    public Result<Boolean> validateDag(@RequestBody String dagDefinitionJson) {
+        DagDefinition definition = dagDefinitionCodec.fromJson(dagDefinitionJson);
+        dagDefinitionValidator.validate(definition);
+        return Result.ok(true);
     }
 }

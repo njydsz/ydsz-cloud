@@ -213,6 +213,120 @@ public class DagInstanceControlService {
     }
 
     /**
+     * P1-7: 跳过指定节点（单节点级控制）。
+     *
+     * <p>将节点状态从 PENDING 或 FAILED 改为 SKIPPED，然后推进后继节点。
+     * 仅非终态节点可跳过。跳过后后继节点的前置条件检查会跳过该节点。
+     *
+     * @param dagInstanceId DAG 实例 ID
+     * @param jobKey        节点 jobKey
+     * @return true 跳过成功；false 节点不存在或已终态
+     */
+    public boolean skipNode(String dagInstanceId, String jobKey) {
+        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        if (instance == null) {
+            log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
+            return false;
+        }
+        if (DagInstanceStatus.parse(instance.getStatus()) != null
+                && DagInstanceStatus.parse(instance.getStatus()).isTerminal()) {
+            log.warn("[DagControl] DAG 实例已终态, 无法跳过节点: instanceId={} status={}",
+                    dagInstanceId, instance.getStatus());
+            return false;
+        }
+        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        for (JobDagNodeInstanceDO node : nodes) {
+            if (jobKey.equals(node.getJobKey())
+                    && !DagNodeStatus.parse(node.getNodeStatus()).isTerminal()) {
+                dagNodeInstanceMapper.markSkipped(node.getId());
+                log.info("[DagControl] 节点已跳过: instanceId={} jobKey={}", dagInstanceId, jobKey);
+                // 触发后继节点检查
+                dagInstanceExecutor.execute(dagInstanceId);
+                return true;
+            }
+        }
+        log.warn("[DagControl] 未找到可跳过的节点: instanceId={} jobKey={}", dagInstanceId, jobKey);
+        return false;
+    }
+
+    /**
+     * P1-7: 强制完成指定节点（单节点级控制）。
+     *
+     * <p>将节点状态从 PENDING/RUNNING/FAILED 改为 SUCCESS，然后推进后继节点。
+     * 适用于"已知可忽略"的失败节点，强制标记成功后继续执行后继。
+     *
+     * @param dagInstanceId DAG 实例 ID
+     * @param jobKey        节点 jobKey
+     * @return true 强制成功；false 节点不存在或已终态
+     */
+    public boolean forceCompleteNode(String dagInstanceId, String jobKey) {
+        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        if (instance == null) {
+            log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
+            return false;
+        }
+        if (DagInstanceStatus.parse(instance.getStatus()) != null
+                && DagInstanceStatus.parse(instance.getStatus()).isTerminal()) {
+            log.warn("[DagControl] DAG 实例已终态, 无法强制完成节点: instanceId={} status={}",
+                    dagInstanceId, instance.getStatus());
+            return false;
+        }
+        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        for (JobDagNodeInstanceDO node : nodes) {
+            if (jobKey.equals(node.getJobKey())
+                    && !DagNodeStatus.parse(node.getNodeStatus()).isTerminal()) {
+                dagNodeInstanceMapper.markFinished(node.getId(),
+                        DagNodeStatus.SUCCESS.name(), LocalDateTime.now(), 0, null, "手动强制完成", null);
+                log.info("[DagControl] 节点已强制完成: instanceId={} jobKey={}", dagInstanceId, jobKey);
+                // 触发后继节点检查
+                dagInstanceExecutor.execute(dagInstanceId);
+                return true;
+            }
+        }
+        log.warn("[DagControl] 未找到可强制完成的节点: instanceId={} jobKey={}", dagInstanceId, jobKey);
+        return false;
+    }
+
+    /**
+     * P1-6: 审批指定节点（APPROVAL 节点）。
+     *
+     * <p>将 WAITING_FOR_APPROVAL 状态的节点改为 SUCCESS（通过）或 APPROVAL_REJECTED（拒绝）。
+     * 审批通过后推进后继节点；审批拒绝后按 DAG 级 failStrategy 处理。
+     *
+     * @param dagInstanceId DAG 实例 ID
+     * @param jobKey        节点 jobKey
+     * @param approved      true=审批通过, false=审批拒绝
+     * @param comment       审批意见（可为 null）
+     * @return true 审批成功；false 节点不存在或非 WAITING_FOR_APPROVAL 状态
+     */
+    public boolean approveNode(String dagInstanceId, String jobKey, boolean approved, String comment) {
+        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        if (instance == null) {
+            log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
+            return false;
+        }
+        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        for (JobDagNodeInstanceDO node : nodes) {
+            if (jobKey.equals(node.getJobKey())
+                    && DagNodeStatus.WAITING_FOR_APPROVAL.name().equals(node.getNodeStatus())) {
+                DagNodeStatus newStatus = approved ? DagNodeStatus.SUCCESS : DagNodeStatus.APPROVAL_REJECTED;
+                String resultJson = comment != null ? "{\"comment\":\"" + comment + "\"}" : null;
+                dagNodeInstanceMapper.markFinished(node.getId(),
+                        newStatus.name(), LocalDateTime.now(), 0, null,
+                        approved ? "审批通过" : "审批拒绝", resultJson);
+                log.info("[DagControl] 节点审批{}: instanceId={} jobKey={} comment={}",
+                        approved ? "通过" : "拒绝", dagInstanceId, jobKey, comment);
+                // 触发后继节点检查
+                dagInstanceExecutor.execute(dagInstanceId);
+                return true;
+            }
+        }
+        log.warn("[DagControl] 未找到 WAITING_FOR_APPROVAL 状态的节点: instanceId={} jobKey={}",
+                dagInstanceId, jobKey);
+        return false;
+    }
+
+    /**
      * 恢复后重新派发所有 PENDING 状态的节点。
      */
     private void redeliverPendingNodes(String dagInstanceId) {

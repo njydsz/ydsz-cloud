@@ -103,8 +103,11 @@ public final class MessageConstants {
     /** P0-4: 离线消息缓存最大条数（防止内存溢出，FIFO 淘汰） */
     public static final int WS_OFFLINE_MAX_CACHE = 100;
 
-    /** P0-4: 离线消息缓存 TTL（秒），默认 7 天 */
-    public static final long WS_OFFLINE_TTL_SECONDS = 7 * 24 * 3600L;
+    /** P0-4: 离线消息缓存 TTL（秒），默认 30 天（P0-3 从 7 天升级到 30 天） */
+    public static final long WS_OFFLINE_TTL_SECONDS = 30 * 24 * 3600L;
+
+    /** P0-3: Redis 离线消息溢出后的数据库持久化阈值（超过此数量时写入数据库） */
+    public static final int WS_OFFLINE_DB_PERSIST_THRESHOLD = 50;
 
     /** P0-4: WebSocket 握手属性中的 userId key */
     public static final String WS_ATTR_USER_ID = "userId";

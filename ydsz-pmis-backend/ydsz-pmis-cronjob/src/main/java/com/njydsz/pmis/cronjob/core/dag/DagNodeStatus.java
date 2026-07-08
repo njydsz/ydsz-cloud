@@ -31,13 +31,19 @@ public enum DagNodeStatus {
     SKIPPED,
 
     /** 重试中（FAILED → RETRYING → PENDING） */
-    RETRYING;
+    RETRYING,
+
+    /** P1-6: 等待审批（APPROVAL 节点执行后进入此状态，审批通过后变为 SUCCESS） */
+    WAITING_FOR_APPROVAL,
+
+    /** P1-6: 审批拒绝（审批人拒绝后进入此终态，DAG 可按策略中止或继续） */
+    APPROVAL_REJECTED;
 
     /**
      * 判断是否为终态。
      */
     public boolean isTerminal() {
-        return this == SUCCESS || this == FAILED || this == SKIPPED;
+        return this == SUCCESS || this == FAILED || this == SKIPPED || this == APPROVAL_REJECTED;
     }
 
     /**
@@ -48,10 +54,10 @@ public enum DagNodeStatus {
     }
 
     /**
-     * 判断是否为失败终态（含跳过）。
+     * 判断是否为失败终态（含跳过和审批拒绝）。
      */
     public boolean isFailed() {
-        return this == FAILED || this == SKIPPED;
+        return this == FAILED || this == SKIPPED || this == APPROVAL_REJECTED;
     }
 
     /**

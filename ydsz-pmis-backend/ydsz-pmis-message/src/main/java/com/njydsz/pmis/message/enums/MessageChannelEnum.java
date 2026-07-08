@@ -25,7 +25,11 @@ public enum MessageChannelEnum {
     /** 企业微信群机器人 */
     WECOM,
     /** 飞书群机器人 */
-    FEISHU;
+    FEISHU,
+    /** 微信小程序订阅消息 */
+    WX_MINI,
+    /** 支付宝小程序模板消息 */
+    ALIPAY_MINI;
 
     /**
      * 安全解析通道字符串（大小写无关），非法时抛出 IllegalArgumentException。

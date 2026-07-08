@@ -33,6 +33,7 @@ import com.njydsz.pmis.message.service.AggregateService;
 import com.njydsz.pmis.message.service.CanaryService;
 import com.njydsz.pmis.message.service.DedupService;
 import com.njydsz.pmis.message.service.MessageService;
+import com.njydsz.pmis.message.service.MessageTraceService;
 import com.njydsz.pmis.message.service.PreferenceService;
 import com.njydsz.pmis.message.service.RateLimitService;
 import com.njydsz.pmis.message.service.RouteRuleService;
@@ -81,6 +82,7 @@ public class MessageServiceImpl implements MessageService {
     private final SensitiveWordFilter sensitiveWordFilter;
     private final RetryStrategyResolver retryStrategyResolver;
     private final DedupService dedupService;
+    private final MessageTraceService messageTraceService;
 
     /** P2-3: RocketMQ 事务消息生产者（可选,未配置 RocketMQ 时为 null） */
     private final ObjectProvider<RocketMQMessageProducer> mqProducerProvider;
@@ -120,6 +122,13 @@ public class MessageServiceImpl implements MessageService {
             log.warn("[Message] 通道未启用: {}", channel);
             return MessageResult.fail(channel, "通道未启用: " + channel);
         }
+        // P0-2: 记录接收节点轨迹
+        messageTraceService.recordTrace(
+                StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
+                        : (StringUtils.hasText(request.getBizId()) ? request.getBizId() : "unknown"),
+                com.njydsz.pmis.message.entity.MsgTraceDO.Node.RECEIVED, "SUCCESS", channel,
+                "消息已接收: channel=" + channel + " receiver=" + request.getReceiver());
+
         // ② 路由（命中则覆盖 channel）
         MsgRouteRuleDO matchedRule = routeRuleService.match(request);
         if (matchedRule != null && StringUtils.hasText(matchedRule.getTargetChannel())) {
@@ -304,6 +313,11 @@ public class MessageServiceImpl implements MessageService {
             return MessageResult.ok(channel, logDO.getMsgId());
         }
 
+        // P0-2: 记录落库轨迹
+        messageTraceService.recordTrace(logDO.getMsgId(),
+                com.njydsz.pmis.message.entity.MsgTraceDO.Node.PERSISTED, "SUCCESS", channel,
+                "消息已落库: status=" + logDO.getStatus());
+
         // ⑩ 通道分发
         MessageResult result = doDispatch(logDO, matchedRule, receiver);
         // P2-6: 父消息发送成功后触发级联发送(聚合消息不触发级联,由聚合 flush 时自行处理)
@@ -357,6 +371,10 @@ public class MessageServiceImpl implements MessageService {
         try {
             logDO.setStatus(MessageStatusEnum.SENDING.name());
             msgLogMapper.updateById(logDO);
+            // P0-2: 记录分发开始轨迹
+            messageTraceService.recordTrace(logDO.getMsgId(),
+                    com.njydsz.pmis.message.entity.MsgTraceDO.Node.DISPATCH_START,
+                    "SUCCESS", channel, "通道分发开始");
             String providerTraceId = channelRouter.dispatch(logDO);
             long cost = System.currentTimeMillis() - start;
             logDO.setStatus(MessageStatusEnum.SUCCESS.name());
@@ -368,6 +386,10 @@ public class MessageServiceImpl implements MessageService {
                 rateLimitService.recordFrequency(receiver, channel, logDO.getBizType());
             }
             messageMetrics.recordSend(channel, "SUCCESS", cost);
+            // P0-2: 记录分发成功轨迹
+            messageTraceService.recordTrace(logDO.getMsgId(),
+                    com.njydsz.pmis.message.entity.MsgTraceDO.Node.DISPATCH_SUCCESS,
+                    "SUCCESS", channel, "发送成功: cost=" + cost + "ms");
             log.info("[Message] 发送成功: msgId={} channel={} receiver={} cost={}ms",
                     logDO.getMsgId(), channel, receiver, cost);
             return MessageResult.ok(channel, providerTraceId);

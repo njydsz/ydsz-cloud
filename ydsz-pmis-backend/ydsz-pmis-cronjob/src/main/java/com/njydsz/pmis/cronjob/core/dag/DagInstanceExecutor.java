@@ -60,13 +60,15 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class DagInstanceExecutor {
 
-    private final JobDagInstanceMapper dagInstanceMapper;
-    private final JobDagNodeInstanceMapper dagNodeInstanceMapper;
-    private final JobDagMapper dagMapper;
-    private final JobMapper jobMapper;
-    private final JobLogMapper jobLogMapper;
-    private final DagDefinitionCodec dagDefinitionCodec;
-    private final TaskDispatcher taskDispatcher;
+private final JobDagInstanceMapper dagInstanceMapper;
+private final JobDagNodeInstanceMapper dagNodeInstanceMapper;
+private final JobDagMapper dagMapper;
+private final JobMapper jobMapper;
+private final JobLogMapper jobLogMapper;
+private final DagDefinitionCodec dagDefinitionCodec;
+private final TaskDispatcher taskDispatcher;
+/** P1-8: SpEL 条件表达式引擎 */
+private final SpELConditionEvaluator spELConditionEvaluator;
 
     /**
      * 异步执行 DAG 实例。
@@ -489,40 +491,8 @@ public class DagInstanceExecutor {
      * @return 评估结果；表达式为空或解析失败时返回 false
      */
     public boolean evaluateCondition(String expression, Map<String, Object> context) {
-        if (expression == null || expression.isBlank()) {
-            return false;
-        }
-        // 解析 ${nodeId.field=='value'} 格式（nodeId 支持字母/数字/下划线/连字符）
-        Pattern pattern = Pattern.compile(
-                "\\$\\{\\s*([\\w-]+)\\s*\\.\\s*(\\w+)\\s*(==|!=)\\s*'([^']*)'\\s*\\}");
-        Matcher matcher = pattern.matcher(expression.trim());
-        if (!matcher.matches()) {
-            // 尝试双引号格式 ${nodeId.field=="value"}
-            Pattern doubleQuotePattern = Pattern.compile(
-                    "\\$\\{\\s*([\\w-]+)\\s*\\.\\s*(\\w+)\\s*(==|!=)\\s*\"([^\"]*)\"\\s*\\}");
-            matcher = doubleQuotePattern.matcher(expression.trim());
-            if (!matcher.matches()) {
-                log.warn("[DagInstance] 条件表达式格式非法, 返回 false: expr={}", expression);
-                return false;
-            }
-        }
-
-        String nodeId = matcher.group(1);
-        String field = matcher.group(2);
-        String operator = matcher.group(3);
-        String expectedValue = matcher.group(4);
-
-        // 从上下文获取实际值
-        Object nodeObj = context == null ? null : context.get(nodeId);
-        String actualValue = extractFieldValue(nodeObj, field);
-        if (actualValue == null) {
-            log.warn("[DagInstance] 条件评估: 上下文中未找到节点字段, 返回 false: nodeId={} field={}",
-                    nodeId, field);
-            return false;
-        }
-
-        boolean equals = actualValue.equals(expectedValue);
-        return "==".equals(operator) ? equals : !equals;
+        // P1-8: 优先使用 SpEL 引擎评估条件表达式
+        return spELConditionEvaluator.evaluate(expression, context);
     }
 
     /**

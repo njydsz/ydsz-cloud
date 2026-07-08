@@ -87,6 +87,9 @@ public class CronjobProperties {
     /** P3-11: 脚本执行沙箱配置 */
     private Sandbox sandbox = new Sandbox();
 
+    /** P0-1: 调度器-执行器分离配置 */
+    private SchedulerExecutorSeparation schedulerExecutorSeparation = new SchedulerExecutorSeparation();
+
     /**
      * 校验并规整化 TTL 值。
      *
@@ -459,6 +462,36 @@ public class CronjobProperties {
 
         /** 沙箱工作目录 */
         private String workDir = "./data/sandbox";
+    }
+
+    /**
+     * P0-1: 调度器-执行器分离配置。
+     *
+     * <p>启用后，Leader 节点仅负责调度扫描和任务派发，不再在本地执行任务。
+     * 非分片任务也会通过 RemoteTaskClient 派发到选定的 Worker 节点执行。
+     *
+     * <h3>对标</h3>
+     * <ul>
+     *   <li>XXL-Job: 调度中心与执行器完全分离</li>
+     *   <li>PowerJob: Server 与 Worker 分离</li>
+     * </ul>
+     *
+     * <p>启用条件：
+     * <ul>
+     *   <li>remote.enabled = true（远程派发必须可用）</li>
+     *   <li>至少 2 个在线节点（否则 Leader 仍需本地执行）</li>
+     * </ul>
+     */
+    @Data
+    public static class SchedulerExecutorSeparation {
+        /** 是否启用调度器-执行器分离（false=Leader 本地执行，向后兼容） */
+        private boolean enabled = false;
+
+        /** Worker 节点选择策略: round_robin(轮询) / least_load(最小负载) */
+        private String workerSelectionStrategy = "round_robin";
+
+        /** 单节点最大并行任务数（用于 least_load 策略的负载评估） */
+        private int maxConcurrentPerWorker = 16;
     }
 }
 
