@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.dto.ChannelStatsVO;
+import com.njydsz.pmis.message.dto.CostStatsVO;
 import com.njydsz.pmis.message.dto.FunnelStatsVO;
 import com.njydsz.pmis.message.dto.MessageStatsVO;
 import com.njydsz.pmis.message.dto.ReceiptStatsVO;
@@ -109,5 +110,23 @@ public class MessageStatsController {
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String templateCode) {
         return Result.ok(messageStatsService.getFunnel(start, end, channel, templateCode));
+    }
+
+    /**
+     * P2-4: 成本看板。
+     *
+     * <p>按通道维度统计发送成本：单条成本 × 成功发送数 = 通道总成本。
+     *
+     * @param start 起始时间（可选）
+     * @param end   结束时间（可选）
+     * @return 成本统计
+     */
+    @Operation(summary = "成本看板")
+    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @GetMapping("/cost")
+    public Result<CostStatsVO> cost(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        return Result.ok(messageStatsService.getCostStats(start, end));
     }
 }

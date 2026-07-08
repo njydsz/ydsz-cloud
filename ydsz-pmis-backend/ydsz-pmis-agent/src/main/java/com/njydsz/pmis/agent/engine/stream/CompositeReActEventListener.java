@@ -46,6 +46,18 @@ public class CompositeReActEventListener implements ReActEventListener {
     }
 
     @Override
+    public void onToken(int stepIndex, String tokenDelta) {
+        for (ReActEventListener l : listeners) {
+            try {
+                l.onToken(stepIndex, tokenDelta);
+            } catch (Exception e) {
+                log.warn("[CompositeListener] onToken 异常: listener={} err={}",
+                        l.getClass().getSimpleName(), e.getMessage());
+            }
+        }
+    }
+
+    @Override
     public void onThought(int stepIndex, String thought) {
         for (ReActEventListener l : listeners) {
             try {

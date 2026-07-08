@@ -53,6 +53,65 @@ public interface AgentTool {
     Map<String, Class<?>> parameterSchema();
 
     /**
+     * 工具参数的 JSON Schema（P4-2 落地）。
+     *
+     * <p>对标 OpenAI Function Calling 的 parameters JSON Schema 规范，
+     * 支持嵌套结构、枚举值、必填/可选约束等。
+     *
+     * <p>默认实现基于 {@link #parameterSchema()} 生成简单的 properties schema：
+     * <pre>
+     * {
+     *   "type": "object",
+     *   "properties": {
+     *     "projectId": { "type": "string", "description": "项目ID" }
+     *   },
+     *   "required": ["projectId"]
+     * }
+     * </pre>
+     *
+     * <p>有复杂参数需求的工具应重写此方法以提供完整的 JSON Schema。
+     *
+     * @return JSON Schema 对象（Map 形式）；null 表示无参数
+     */
+    default Map<String, Object> jsonSchema() {
+        Map<String, Class<?>> schema = parameterSchema();
+        if (schema == null || schema.isEmpty()) {
+            return null;
+        }
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("type", "object");
+        Map<String, Object> properties = new java.util.LinkedHashMap<>();
+        java.util.List<String> required = new java.util.ArrayList<>();
+        for (Map.Entry<String, Class<?>> entry : schema.entrySet()) {
+            Map<String, Object> prop = new java.util.LinkedHashMap<>();
+            prop.put("type", jsonTypeOf(entry.getValue()));
+            prop.put("description", entry.getKey());
+            properties.put(entry.getKey(), prop);
+            required.add(entry.getKey());
+        }
+        result.put("properties", properties);
+        result.put("required", required);
+        return result;
+    }
+
+    /**
+     * 将 Java 类型映射为 JSON Schema 类型字符串。
+     */
+    private static String jsonTypeOf(Class<?> clazz) {
+        if (clazz == null) return "object";
+        if (clazz == String.class || clazz == char.class || clazz == Character.class) return "string";
+        if (clazz == int.class || clazz == Integer.class
+                || clazz == long.class || clazz == Long.class
+                || clazz == short.class || clazz == Short.class) return "integer";
+        if (clazz == float.class || clazz == Float.class
+                || clazz == double.class || clazz == Double.class
+                || clazz == java.math.BigDecimal.class) return "number";
+        if (clazz == boolean.class || clazz == Boolean.class) return "boolean";
+        if (java.util.Collection.class.isAssignableFrom(clazz)) return "array";
+        return "object";
+    }
+
+    /**
      * 执行工具调用。
      *
      * @param parameters 输入参数（与 {@link #parameterSchema()} 对应）

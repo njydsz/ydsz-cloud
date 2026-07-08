@@ -9,7 +9,6 @@ import com.njydsz.pmis.cronjob.core.executor.TenantAwareExecutorPool;
 import com.njydsz.pmis.cronjob.core.sharding.ShardingStrategy;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
-import com.njydsz.pmis.cronjob.entity.JobNodeDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;

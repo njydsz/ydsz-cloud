@@ -1,5 +1,9 @@
 package com.njydsz.pmis.literule.config;
 
+import com.njydsz.pmis.literule.adaptive.AdaptiveThresholdService;
+import com.njydsz.pmis.literule.agent.AgentRuleNode;
+import com.njydsz.pmis.literule.agent.AgentRuleNodeFactory;
+import com.njydsz.pmis.literule.agent.ReActAgentExecutor;
 import com.njydsz.pmis.literule.ai.LLMClient;
 import com.njydsz.pmis.literule.ai.MockLLMClient;
 import com.njydsz.pmis.literule.ai.OpenAICompatibleLLMClient;
@@ -11,7 +15,11 @@ import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.approval.ApprovalPermissionChecker;
 import com.njydsz.pmis.literule.approval.ApprovalRecordRepository;
 import com.njydsz.pmis.literule.approval.RuleApprovalService;
+import com.njydsz.pmis.literule.cache.CachingRuleConfigProvider;
+import com.njydsz.pmis.literule.cep.CEPEngine;
 import com.njydsz.pmis.literule.core.AsyncTraceRecorder;
+import com.njydsz.pmis.literule.core.BreakpointHook;
+import com.njydsz.pmis.literule.core.DefaultBreakpointHook;
 import com.njydsz.pmis.literule.core.DefaultRuleEngine;
 import com.njydsz.pmis.literule.core.MicrometerRuleMetrics;
 import com.njydsz.pmis.literule.core.RuleCanaryRouter;
@@ -19,20 +27,28 @@ import com.njydsz.pmis.literule.core.RuleCircuitBreaker;
 import com.njydsz.pmis.literule.core.RuleMetrics;
 import com.njydsz.pmis.literule.core.RuleTimeoutExecutor;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
+import com.njydsz.pmis.literule.expr.EmptyVariableRegistry;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.expr.ExpressionValidationService;
+import com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator;
+import com.njydsz.pmis.literule.expr.VariableRegistry;
 import com.njydsz.pmis.literule.model.ModelInputProvider;
 import com.njydsz.pmis.literule.model.ModelInputRegistry;
 import com.njydsz.pmis.literule.model.MockModelInputProvider;
 import com.njydsz.pmis.literule.spi.DecisionTableConfigProvider;
 import com.njydsz.pmis.literule.spi.DecisionTreeConfigProvider;
+import com.njydsz.pmis.literule.spi.FileRuleSource;
 import com.njydsz.pmis.literule.spi.RuleConfigBroadcaster;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleVersionRepository;
 import com.njydsz.pmis.literule.spi.ScorecardConfigProvider;
 import com.njydsz.pmis.literule.spi.ScriptConfigProvider;
+import com.njydsz.pmis.literule.spi.TraceDataProvider;
 import com.njydsz.pmis.literule.spi.TraceRecorder;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -40,6 +56,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.util.List;
 import java.util.Map;
@@ -65,7 +82,7 @@ public class LiteRuleAutoConfiguration {
      * <p>根据 {@code pmis.literule.evaluator} 配置选择实现：
      * <ul>
      *   <li>{@code aviator}（默认）- {@link AviatorExpressionEvaluator}，高性能、AST 缓存</li>
-     *   <li>{@code qlexpress} - {@link com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator}，
+     *   <li>{@code qlexpress} - {@link QLExpressExpressionEvaluator}，
      *       阿里 QLExpress，语法接近 Java，支持流程控制</li>
      * </ul>
      *
@@ -79,7 +96,7 @@ public class LiteRuleAutoConfiguration {
         switch (type) {
             case "qlexpress" -> {
                 log.info("[LiteRule] QLExpress 表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
-                return new com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator();
+                return new QLExpressExpressionEvaluator();
             }
             case "aviator" -> {
                 log.info("[LiteRule] Aviator 表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
@@ -115,14 +132,14 @@ public class LiteRuleAutoConfiguration {
     public RuleEngine ruleEngine(LiteRuleProperties properties,
                                   ObjectProvider<TraceRecorder> traceDelegateProvider,
                                   ObjectProvider<ExpressionEvaluator> evaluatorProvider,
-                                  ObjectProvider<com.njydsz.pmis.literule.core.BreakpointHook> breakpointHookProvider,
+                                  ObjectProvider<BreakpointHook> breakpointHookProvider,
                                   ObjectProvider<ModelInputRegistry> modelRegistryProvider,
                                   ApplicationContext applicationContext) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
 
         // 断点调试 Hook（P2-3）：可选注入，仅当应用层提供实现时生效
-        com.njydsz.pmis.literule.core.BreakpointHook bpHook = breakpointHookProvider.getIfAvailable();
+        BreakpointHook bpHook = breakpointHookProvider.getIfAvailable();
         if (bpHook != null) {
             engine.setBreakpointHook(bpHook);
         }
@@ -241,8 +258,8 @@ public class LiteRuleAutoConfiguration {
      * 表达式校验服务（1.4.0 起支持）
      *
      * <p>面向前端表达式编辑器的校验 API，提供结构化的错误信息。
-     * 当 classpath 中存在 {@link com.njydsz.pmis.literule.expr.VariableRegistry} Bean 时，
-     * 启用 UNDEFINED_VARIABLE 校验；否则使用 {@link com.njydsz.pmis.literule.expr.EmptyVariableRegistry} 跳过。
+     * 当 classpath 中存在 {@link VariableRegistry} Bean 时，
+     * 启用 UNDEFINED_VARIABLE 校验；否则使用 {@link EmptyVariableRegistry} 跳过。
      *
      * @param evaluator 表达式求值器
      * @param registryProvider 变量注册表（可选）
@@ -251,18 +268,18 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public com.njydsz.pmis.literule.expr.ExpressionValidationService expressionValidationService(
+    public ExpressionValidationService expressionValidationService(
             ExpressionEvaluator evaluator,
-            org.springframework.beans.factory.ObjectProvider<com.njydsz.pmis.literule.expr.VariableRegistry> registryProvider) {
-        com.njydsz.pmis.literule.expr.VariableRegistry registry = registryProvider.getIfAvailable();
+            ObjectProvider<VariableRegistry> registryProvider) {
+        VariableRegistry registry = registryProvider.getIfAvailable();
         if (registry == null) {
-            registry = new com.njydsz.pmis.literule.expr.EmptyVariableRegistry();
+            registry = new EmptyVariableRegistry();
             log.info("[LiteRule] 表达式校验服务已初始化（变量空间校验未启用）");
         } else {
             log.info("[LiteRule] 表达式校验服务已初始化（变量空间校验已启用，已注册 {} 个变量）",
                     registry.listAll().size());
         }
-        return new com.njydsz.pmis.literule.expr.ExpressionValidationService(evaluator, registry);
+        return new ExpressionValidationService(evaluator, registry);
     }
 
     /**
@@ -282,14 +299,14 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleConfigProvider.class)
+    @ConditionalOnBean(RuleConfigProvider.class)
     public RuleHotReloader ruleHotReloader(RuleEngine ruleEngine,
                                             ExpressionEvaluator evaluator,
                                             RuleConfigProvider configProvider,
-                                            org.springframework.beans.factory.ObjectProvider<DecisionTableConfigProvider> dtConfigProvider,
-                                            org.springframework.beans.factory.ObjectProvider<ScorecardConfigProvider> scConfigProvider,
-                                            org.springframework.beans.factory.ObjectProvider<DecisionTreeConfigProvider> trConfigProvider,
-                                            org.springframework.beans.factory.ObjectProvider<ScriptConfigProvider> scriptConfigProvider,
+                                            ObjectProvider<DecisionTableConfigProvider> dtConfigProvider,
+                                            ObjectProvider<ScorecardConfigProvider> scConfigProvider,
+                                            ObjectProvider<DecisionTreeConfigProvider> trConfigProvider,
+                                            ObjectProvider<ScriptConfigProvider> scriptConfigProvider,
                                             LiteRuleProperties properties) {
         RuleHotReloader reloader = new RuleHotReloader(ruleEngine, evaluator, configProvider, properties);
 
@@ -330,10 +347,10 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(DecisionTableConfigProvider.class)
+    @ConditionalOnBean(DecisionTableConfigProvider.class)
     public DecisionTableAdminService decisionTableAdminService(RuleEngine ruleEngine,
                                                                 DecisionTableConfigProvider dtConfigProvider,
-                                                                org.springframework.beans.factory.ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
+                                                                ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
                                                                 ApplicationEventPublisher eventPublisher) {
         DecisionTableAdminService service = new DecisionTableAdminService(ruleEngine, dtConfigProvider, eventPublisher);
         RuleConfigBroadcaster broadcaster = broadcasterProvider.getIfAvailable();
@@ -356,12 +373,12 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleConfigProvider.class)
+    @ConditionalOnBean(RuleConfigProvider.class)
     public RuleAdminService ruleAdminService(RuleEngine ruleEngine,
                                               ExpressionEvaluator evaluator,
                                               RuleConfigProvider configProvider,
-                                              org.springframework.beans.factory.ObjectProvider<RuleVersionRepository> versionRepoProvider,
-                                              org.springframework.beans.factory.ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
+                                              ObjectProvider<RuleVersionRepository> versionRepoProvider,
+                                              ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
                                               ApplicationEventPublisher eventPublisher,
                                               LiteRuleProperties properties) {
         RuleAdminService service = new RuleAdminService(ruleEngine, evaluator, configProvider,
@@ -406,11 +423,11 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleConfigProvider.class)
+    @ConditionalOnBean(RuleConfigProvider.class)
     public RuleApprovalService ruleApprovalService(
             RuleConfigProvider configProvider,
-            org.springframework.beans.factory.ObjectProvider<ApprovalRecordRepository> recordRepoProvider,
-            org.springframework.beans.factory.ObjectProvider<ApprovalPermissionChecker> permissionCheckerProvider) {
+            ObjectProvider<ApprovalRecordRepository> recordRepoProvider,
+            ObjectProvider<ApprovalPermissionChecker> permissionCheckerProvider) {
         RuleApprovalService service = new RuleApprovalService(configProvider);
         ApprovalRecordRepository recordRepo = recordRepoProvider.getIfAvailable();
         if (recordRepo != null) {
@@ -468,7 +485,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
     public RuleLLMService ruleLLMService(LLMClient llmClient,
-                                          com.njydsz.pmis.literule.expr.ExpressionValidationService expressionValidationService) {
+                                          ExpressionValidationService expressionValidationService) {
         log.info("[LiteRule-AI] 规则 LLM 服务已初始化（provider={}, model={}）",
                 llmClient.provider(), llmClient.model());
         return new RuleLLMService(llmClient, expressionValidationService);
@@ -505,7 +522,7 @@ public class LiteRuleAutoConfiguration {
      * ReAct Agent 执行器（P3-5 AI Agent 规则编排）
      *
      * <p>依赖 {@link LLMClient}，仅当 AI 增强启用且 LLMClient Bean 存在时装配。
-     * 提供 ReAct 推理循环能力，供 {@link com.njydsz.pmis.literule.agent.AgentRuleNode} 调用。
+     * 提供 ReAct 推理循环能力，供 {@link AgentRuleNode} 调用。
      *
      * @param llmClient LLM 客户端
      * @return ReActAgentExecutor 实例
@@ -513,18 +530,18 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(LLMClient.class)
-    public com.njydsz.pmis.literule.agent.ReActAgentExecutor reActAgentExecutor(LLMClient llmClient) {
+    @ConditionalOnBean(LLMClient.class)
+    public ReActAgentExecutor reActAgentExecutor(LLMClient llmClient) {
         log.info("[LiteRule-Agent] ReAct Agent 执行器已初始化（provider={}, model={}）",
                 llmClient.provider(), llmClient.model());
-        return new com.njydsz.pmis.literule.agent.ReActAgentExecutor(llmClient);
+        return new ReActAgentExecutor(llmClient);
     }
 
     /**
      * AgentRuleNode 工厂（P3-5）
      *
-     * <p>依赖 {@link com.njydsz.pmis.literule.agent.ReActAgentExecutor}，
-     * 提供快速创建 {@link com.njydsz.pmis.literule.agent.AgentRuleNode} 的便捷方法。
+     * <p>依赖 {@link ReActAgentExecutor}，
+     * 提供快速创建 {@link AgentRuleNode} 的便捷方法。
      *
      * @param executor ReAct 执行器
      * @return AgentRuleNodeFactory 实例
@@ -532,11 +549,11 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(com.njydsz.pmis.literule.agent.ReActAgentExecutor.class)
-    public com.njydsz.pmis.literule.agent.AgentRuleNodeFactory agentRuleNodeFactory(
-            com.njydsz.pmis.literule.agent.ReActAgentExecutor executor) {
+    @ConditionalOnBean(ReActAgentExecutor.class)
+    public AgentRuleNodeFactory agentRuleNodeFactory(
+            ReActAgentExecutor executor) {
         log.info("[LiteRule-Agent] AgentRuleNode 工厂已初始化");
-        return new com.njydsz.pmis.literule.agent.AgentRuleNodeFactory(executor);
+        return new AgentRuleNodeFactory(executor);
     }
 
     /**
@@ -552,10 +569,10 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleAdminService.class)
+    @ConditionalOnBean(RuleAdminService.class)
     public RuleAttributionService ruleAttributionService(
             RuleAdminService ruleAdminService,
-            org.springframework.beans.factory.ObjectProvider<LLMClient> llmClientProvider) {
+            ObjectProvider<LLMClient> llmClientProvider) {
         LLMClient llmClient = llmClientProvider.getIfAvailable();
         log.info("[LiteRule-AI] 规则归因分析服务已初始化（llmEnabled={}）", llmClient != null);
         return new RuleAttributionService(ruleAdminService, llmClient);
@@ -570,7 +587,7 @@ public class LiteRuleAutoConfiguration {
      *
      * <p>当 classpath 存在 {@link RuleConfigProvider} 实现且
      * {@code pmis.literule.cache.enabled=true}（默认 true）时，
-     * 自动装饰委托 Provider 为 {@link com.njydsz.pmis.literule.cache.CachingRuleConfigProvider}，
+     * 自动装饰委托 Provider 为 {@link CachingRuleConfigProvider}，
      * 启用 Caffeine（L1 本地）+ Redis（L2 分布式）两级缓存，减少 DB 压力。
      *
      * <p>L2 启用条件：
@@ -580,7 +597,7 @@ public class LiteRuleAutoConfiguration {
      * </ul>
      * 任一不满足则仅启用 L1。
      *
-     * <p>使用 {@link org.springframework.context.annotation.Primary} 确保其他组件
+     * <p>使用 {@link Primary} 确保其他组件
      * （{@link RuleHotReloader} / {@link RuleAdminService}）注入的是缓存装饰器而非原始 Provider。
      *
      * @param providers           所有 RuleConfigProvider Bean（过滤掉 CachingRuleConfigProvider 自身）
@@ -590,23 +607,23 @@ public class LiteRuleAutoConfiguration {
      * @since 1.6.0
      */
     @Bean
-    @ConditionalOnMissingBean(com.njydsz.pmis.literule.cache.CachingRuleConfigProvider.class)
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleConfigProvider.class)
+    @ConditionalOnMissingBean(CachingRuleConfigProvider.class)
+    @ConditionalOnBean(RuleConfigProvider.class)
     @ConditionalOnProperty(prefix = "pmis.literule.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
-    @org.springframework.context.annotation.Primary
-    public com.njydsz.pmis.literule.cache.CachingRuleConfigProvider cachingRuleConfigProvider(
+    @Primary
+    public CachingRuleConfigProvider cachingRuleConfigProvider(
             java.util.List<RuleConfigProvider> providers,
-            org.springframework.beans.factory.ObjectProvider<org.redisson.api.RedissonClient> redissonClientProvider,
+            ObjectProvider<RedissonClient> redissonClientProvider,
             LiteRuleProperties properties) {
         // 过滤掉 CachingRuleConfigProvider 自身（避免循环装饰），取第一个作为委托
         RuleConfigProvider delegate = providers.stream()
-                .filter(p -> !(p instanceof com.njydsz.pmis.literule.cache.CachingRuleConfigProvider))
+                .filter(p -> !(p instanceof CachingRuleConfigProvider))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("未找到可装饰的 RuleConfigProvider 委托实现"));
-        org.redisson.api.RedissonClient redissonClient = redissonClientProvider.getIfAvailable();
+        RedissonClient redissonClient = redissonClientProvider.getIfAvailable();
         log.info("[LiteRule-Cache] 多级缓存 RuleConfigProvider 已初始化 (delegate={}, L2={})",
                 delegate.getClass().getSimpleName(), redissonClient != null);
-        return new com.njydsz.pmis.literule.cache.CachingRuleConfigProvider(delegate, redissonClient, properties);
+        return new CachingRuleConfigProvider(delegate, redissonClient, properties);
     }
 
     // ------------------------------------------------------------------
@@ -616,8 +633,8 @@ public class LiteRuleAutoConfiguration {
     /**
      * CEP 引擎 Bean
      *
-     * <p>默认装配为单例，业务侧通过 {@link com.njydsz.pmis.literule.cep.CEPEngine#feed}
-     * 投递事件、通过 {@link com.njydsz.pmis.literule.cep.CEPEngine#registerPattern}
+     * <p>默认装配为单例，业务侧通过 {@link CEPEngine#feed}
+     * 投递事件、通过 {@link CEPEngine#registerPattern}
      * 注册模式。命中模式后通过 Listener 回调触发关联规则。
      *
      * <p>可通过 {@code pmis.literule.cep.enabled=false} 关闭。
@@ -627,10 +644,10 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+    @ConditionalOnProperty(
             prefix = "pmis.literule.cep", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public com.njydsz.pmis.literule.cep.CEPEngine cepEngine() {
-        com.njydsz.pmis.literule.cep.CEPEngine engine = new com.njydsz.pmis.literule.cep.CEPEngine();
+    public CEPEngine cepEngine() {
+        CEPEngine engine = new CEPEngine();
         log.info("[LiteRule-CEP] 复杂事件处理引擎已初始化");
         return engine;
     }
@@ -642,7 +659,7 @@ public class LiteRuleAutoConfiguration {
     /**
      * 默认断点调试器 Bean
      *
-     * <p>装配后自动注入到 {@link com.njydsz.pmis.literule.core.DefaultRuleEngine}，
+     * <p>装配后自动注入到 {@link DefaultRuleEngine}，
      * 业务侧可通过 {@code /execution/rules/breakpoints} REST API 管理断点与下发调试指令。
      *
      * <p>可通过 {@code pmis.literule.debug.enabled=false} 关闭。
@@ -652,11 +669,11 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+    @ConditionalOnProperty(
             prefix = "pmis.literule.debug", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public com.njydsz.pmis.literule.core.DefaultBreakpointHook defaultBreakpointHook(LiteRuleProperties properties) {
-        com.njydsz.pmis.literule.core.DefaultBreakpointHook hook =
-                new com.njydsz.pmis.literule.core.DefaultBreakpointHook();
+    public DefaultBreakpointHook defaultBreakpointHook(LiteRuleProperties properties) {
+        DefaultBreakpointHook hook =
+                new DefaultBreakpointHook();
         log.info("[LiteRule-Debug] 断点调试器已初始化（suspendTimeout={}s）",
                 60);
         return hook;
@@ -696,8 +713,8 @@ public class LiteRuleAutoConfiguration {
     /**
      * 自适应阈值分析服务（P3-4）
      *
-     * <p>当存在 {@link com.njydsz.pmis.literule.spi.RuleConfigProvider} 和
-     * {@link com.njydsz.pmis.literule.spi.TraceDataProvider} 时自动装配，
+     * <p>当存在 {@link RuleConfigProvider} 和
+     * {@link TraceDataProvider} 时自动装配，
      * 提供基于历史触发数据的规则阈值自适应调整能力。
      *
      * <p>对标字节巨量引擎"规则 2.0"的自适应阈值能力：
@@ -717,17 +734,17 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean({RuleConfigProvider.class,
-            com.njydsz.pmis.literule.spi.TraceDataProvider.class})
-    public com.njydsz.pmis.literule.adaptive.AdaptiveThresholdService adaptiveThresholdService(
+    @ConditionalOnBean({RuleConfigProvider.class,
+            TraceDataProvider.class})
+    public AdaptiveThresholdService adaptiveThresholdService(
             RuleConfigProvider configProvider,
-            com.njydsz.pmis.literule.spi.TraceDataProvider traceDataProvider,
-            org.springframework.beans.factory.ObjectProvider<RuleAdminService> ruleAdminServiceProvider,
-            org.springframework.beans.factory.ObjectProvider<LLMClient> llmClientProvider) {
+            TraceDataProvider traceDataProvider,
+            ObjectProvider<RuleAdminService> ruleAdminServiceProvider,
+            ObjectProvider<LLMClient> llmClientProvider) {
         RuleAdminService ruleAdminService = ruleAdminServiceProvider.getIfAvailable();
         LLMClient llmClient = llmClientProvider.getIfAvailable();
-        com.njydsz.pmis.literule.adaptive.AdaptiveThresholdService service =
-                new com.njydsz.pmis.literule.adaptive.AdaptiveThresholdService(
+        AdaptiveThresholdService service =
+                new AdaptiveThresholdService(
                         configProvider, traceDataProvider, ruleAdminService, llmClient);
         log.info("[LiteRule-Adaptive] 自适应阈值分析服务已初始化（ruleAdmin={}, llm={}）",
                 ruleAdminService != null, llmClient != null);
@@ -742,7 +759,7 @@ public class LiteRuleAutoConfiguration {
      * 文件规则数据源 Bean（P2-3）
      *
      * <p>当 {@code pmis.literule.file-source.enabled=true} 时自动装配
-     * {@link com.njydsz.pmis.literule.spi.FileRuleSource}，从 classpath 或文件系统
+     * {@link FileRuleSource}，从 classpath 或文件系统
      * 加载 YAML/JSON 规则文件。加载后可配合 {@link RuleHotReloader} 注册到引擎。
      *
      * <p>Bean 初始化时调用 {@code init()}，销毁时调用 {@code destroy()} 释放 WatchService。
@@ -753,12 +770,12 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+    @ConditionalOnProperty(
             prefix = "pmis.literule.file-source", name = "enabled", havingValue = "true")
-    public com.njydsz.pmis.literule.spi.FileRuleSource fileRuleSource(LiteRuleProperties properties) {
+    public FileRuleSource fileRuleSource(LiteRuleProperties properties) {
         LiteRuleProperties.FileSourceConfig cfg = properties.getFileSource();
-        com.njydsz.pmis.literule.spi.FileRuleSource source =
-                new com.njydsz.pmis.literule.spi.FileRuleSource(cfg.getLocation(), cfg.isWatch());
+        FileRuleSource source =
+                new FileRuleSource(cfg.getLocation(), cfg.isWatch());
         try {
             source.init();
             log.info("[LiteRule-FileSource] 文件规则源已初始化（location={}, watch={}, rules={}）",

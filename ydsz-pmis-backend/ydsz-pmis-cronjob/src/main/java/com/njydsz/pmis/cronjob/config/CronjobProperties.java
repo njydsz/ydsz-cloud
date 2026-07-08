@@ -50,6 +50,9 @@ public class CronjobProperties {
     /** 任务扫描器配置（P1 阶段新增） */
     private Scanner scanner = new Scanner();
 
+    /** P0-2: 精准调度配置 */
+    private PreciseScheduling preciseScheduling = new PreciseScheduling();
+
     /** 执行器配置（P1 阶段新增） */
     private Executor executor = new Executor();
 
@@ -375,6 +378,37 @@ public class CronjobProperties {
 
         /** 远程子任务派发失败时是否降级本地执行 */
         private boolean fallbackToLocal = true;
+    }
+
+    /**
+     * P0-2: 精准调度配置。
+     *
+     * <p>通过时间轮预加载机制提升 CRON 任务调度精度：
+     * <ul>
+     *   <li>{@link #isEnabled}: 是否启用精准调度（false=仅依赖 JobScanner 轮询，向后兼容）</li>
+     *   <li>{@link #getPreLoadWindowSeconds}: 预加载窗口（秒），提前加载窗口内到期的任务</li>
+     *   <li>{@link #getFastScanIntervalMs}: 快速扫描间隔（毫秒，默认 1s）</li>
+     *   <li>{@link #getTimeWheelSlots}: 时间轮槽数（默认 60，对应 60 秒）</li>
+     * </ul>
+     *
+     * <p>启用后，CRON 任务的触发精度从 ±5s（扫描间隔）提升到 ±0.1s（时间轮精度）。
+     */
+    @Data
+    public static class PreciseScheduling {
+        /** 是否启用精准调度（false=仅依赖 JobScanner 轮询，向后兼容） */
+        private boolean enabled = false;
+
+        /** 预加载窗口（秒），提前加载窗口内到期的任务到时间轮 */
+        private int preLoadWindowSeconds = 10;
+
+        /** 快速扫描间隔（毫秒，默认 1s） */
+        private long fastScanIntervalMs = 1000;
+
+        /** 时间轮槽数（默认 60，对应 60 秒一圈） */
+        private int timeWheelSlots = 60;
+
+        /** 精准调度线程池大小 */
+        private int poolSize = 4;
     }
 }
 

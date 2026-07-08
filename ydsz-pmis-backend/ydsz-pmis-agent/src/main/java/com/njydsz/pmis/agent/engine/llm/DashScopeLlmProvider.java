@@ -1,6 +1,7 @@
 package com.njydsz.pmis.agent.engine.llm;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +66,8 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
     private final String model;
     /** HTTP 客户端 */
     private final RestClient http;
+    /** Base URL（用于流式调用时构造完整 URL，P4-1） */
+    private final String baseUrl;
 
     public DashScopeLlmProvider(
             @Value("${pmis.agent.llm.api-key:}") String apiKey,
@@ -92,12 +95,30 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
      */
     DashScopeLlmProvider(String apiKey, String model, long timeoutMillis,
                           int maxRetries, boolean fallback, RestClient http) {
+        this(apiKey, model, timeoutMillis, maxRetries, fallback, http,
+                "https://dashscope.aliyuncs.com/compatible-mode");
+    }
+
+    /**
+     * 测试用构造函数（注入 RestClient + baseUrl，便于单测 mock）。
+     *
+     * @param apiKey        API Key
+     * @param model         模型名称
+     * @param timeoutMillis 调用超时
+     * @param maxRetries    最大重试次数
+     * @param fallback      是否降级到 mock
+     * @param http          注入的 RestClient 实例
+     * @param baseUrl       base URL（用于流式调用）
+     */
+    DashScopeLlmProvider(String apiKey, String model, long timeoutMillis,
+                          int maxRetries, boolean fallback, RestClient http, String baseUrl) {
         this.apiKey = apiKey;
         this.model = model;
         this.timeoutMillis = timeoutMillis;
         this.maxRetries = maxRetries;
         this.fallbackToMockOnError = fallback;
         this.http = http;
+        this.baseUrl = baseUrl != null ? baseUrl : "https://dashscope.aliyuncs.com/compatible-mode";
     }
 
     @Override
@@ -107,6 +128,11 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
 
     @Override
     public boolean supportsStreaming() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsFunctionCalling() {
         return true;
     }
 
@@ -282,7 +308,6 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
      * @param tokenConsumer token 增量消费者
      * @return 完整推理结果（所有 delta 拼接后的全文）
      */
-    @SuppressWarnings("unchecked")
     private String invokeDashScopeStream(String systemPrompt, String userPrompt,
                                           AgentContext context,
                                           java.util.function.Consumer<String> tokenConsumer) throws Exception {
@@ -297,29 +322,17 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
         body.put("stream", true);
 
         StringBuilder fullText = new StringBuilder();
+        String streamUrl = baseUrl;
+        if (streamUrl.endsWith("/")) streamUrl = streamUrl.substring(0, streamUrl.length() - 1);
+        streamUrl += "/v1/chat/completions";
 
-        // 使用 RestClient 的流式 API 逐行读取 SSE 响应
-        http.post()
-                .uri("/v1/chat/completions")
-                .header("Authorization", "Bearer " + apiKey)
-                .header("Content-Type", "application/json")
-                .header("Accept", "text/event-stream")
-                .body(body)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, this::handleErrorResponse)
-                .onStatus(HttpStatusCode::is5xxServerError, this::handleErrorResponse)
-                .toEntity(String.class);
-
-        // 由于 RestClient 不原生支持 SSE 逐行流式读取，
-        // 这里使用 java.net.http.HttpClient 作为流式降级方案
+        // 使用 java.net.http.HttpClient 逐行读取 SSE 流
         java.net.http.HttpClient streamClient = java.net.http.HttpClient.newBuilder()
                 .connectTimeout(java.time.Duration.ofSeconds(5))
                 .build();
 
         java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-                .uri(java.net.URI.create(http.getUriFactory().toString().isEmpty()
-                        ? "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
-                        : http.getUriFactory().toString() + "/v1/chat/completions"))
+                .uri(java.net.URI.create(streamUrl))
                 .timeout(java.time.Duration.ofMillis(timeoutMillis))
                 .header("Authorization", "Bearer " + apiKey)
                 .header("Content-Type", "application/json")

@@ -6,6 +6,8 @@ import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,6 +36,42 @@ public interface LlmProvider {
      * @return Provider 标识（如 "mock"、"spring-ai-openai"）
      */
     String name();
+
+    /**
+     * 判断当前 Provider 是否支持原生 Function Calling（P4-2 落地）。
+     *
+     * <p>支持时调用方可使用 {@link #chatWithTools} 传入 tools 参数，
+     * 让 LLM 原生理解工具 schema 并决定是否调用工具。
+     *
+     * @return true 表示支持；false 时调用方应降级为文本 ReAct 模式
+     */
+    default boolean supportsFunctionCalling() {
+        return false;
+    }
+
+    /**
+     * 带工具的 LLM 调用（原生 Function Calling，P4-2 落地）。
+     *
+     * <p>对标 OpenAI / DashScope 的 tools + tool_choice 参数：
+     * <ul>
+     *   <li>tools: 工具定义列表（OpenAI function calling 格式）</li>
+     *   <li>LLM 根据用户问题自主决定是否调用工具</li>
+     *   <li>返回的 LlmToolCallResponse 包含 tool_calls 列表（可能并行多个）</li>
+     * </ul>
+     *
+     * <p>默认实现降级为不支持（返回 null），调用方应检查返回值并降级为文本 ReAct。
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt   用户提示词
+     * @param tools        OpenAI 格式工具列表
+     * @param context      Agent 上下文
+     * @return 工具调用响应（含 tool_calls 或纯文本）；null 表示不支持
+     */
+    default com.njydsz.pmis.agent.engine.llm.LlmToolCallResponse chatWithTools(
+            String systemPrompt, String userPrompt,
+            List<Map<String, Object>> tools, AgentContext context) {
+        return null;
+    }
 
     /**
      * 调用 LLM 推理（同步）。

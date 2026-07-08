@@ -9,7 +9,6 @@ import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.service.impl.JobServiceImpl;
-import com.njydsz.pmis.cronjob.service.JobHistoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

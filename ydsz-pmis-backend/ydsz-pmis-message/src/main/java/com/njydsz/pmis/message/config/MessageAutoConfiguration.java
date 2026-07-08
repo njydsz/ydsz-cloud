@@ -4,6 +4,7 @@ import com.njydsz.pmis.message.channel.ChannelRouter;
 import com.njydsz.pmis.message.realtime.OfflineMessageService;
 import com.njydsz.pmis.message.realtime.OnlineUserService;
 import com.njydsz.pmis.message.realtime.RealtimePushService;
+import com.njydsz.pmis.message.realtime.WebSocketClusterPublisher;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -66,16 +67,19 @@ public class MessageAutoConfiguration {
     /**
      * 兜底注册实时推送服务。
      *
-     * @param messagingTemplate    STOMP 消息模板
-     * @param onlineUserService    在线用户状态服务
+     * @param messagingTemplate     STOMP 消息模板
+     * @param clusterPublisher      集群广播发布者
+     * @param onlineUserService     在线用户状态服务
      * @param offlineMessageService 离线消息补偿服务
      * @return RealtimePushService
      */
     @Bean
     @ConditionalOnMissingBean(RealtimePushService.class)
     public RealtimePushService realtimePushService(SimpMessagingTemplate messagingTemplate,
+                                                   WebSocketClusterPublisher clusterPublisher,
                                                    OnlineUserService onlineUserService,
                                                    OfflineMessageService offlineMessageService) {
-        return new RealtimePushService(messagingTemplate, onlineUserService, offlineMessageService);
+        return new RealtimePushService(messagingTemplate, clusterPublisher,
+                onlineUserService, offlineMessageService);
     }
 }

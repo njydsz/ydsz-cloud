@@ -1,14 +1,20 @@
 package com.njydsz.pmis.cronjob.core.map;
 
+import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.job.JobLoggerHolder;
 import com.njydsz.pmis.common.job.MapContext;
 import com.njydsz.pmis.common.job.MapProcessor;
 import com.njydsz.pmis.common.job.MapReduceProcessor;
 import com.njydsz.pmis.common.job.MapTask;
 import com.njydsz.pmis.common.job.ProcessResult;
-import com.njydsz.pmis.common.job.TaskResult;
+import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.cronjob.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.core.dispatch.RemoteSubTaskRequest;
+import com.njydsz.pmis.cronjob.core.dispatch.RemoteTaskClient;
+import com.njydsz.pmis.cronjob.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
+import com.njydsz.pmis.cronjob.entity.JobNodeDO;
 import com.njydsz.pmis.cronjob.entity.JobTaskDO;
 import com.njydsz.pmis.cronjob.mapper.JobTaskMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +25,14 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * MapReduce 任务执行器（P0-4）。
+ * MapReduce 任务执行器（P0-4, P0-1 分布式并行执行）。
  *
  * <p>负责执行 {@link MapProcessor} / {@link MapReduceProcessor} 类型的任务，
  * 支持动态产生子任务的分布式批处理：
@@ -30,10 +41,20 @@ import java.util.List;
  *   <li>创建 ROOT TaskDO 记录，构造 root {@link MapContext}（isRootTask=true）</li>
  *   <li>调用 {@link MapProcessor#process(MapContext)} 处理 root task</li>
  *   <li>读取 {@link MapContext#getSubTasks()}，为每个子任务创建 TaskDO 记录</li>
- *   <li>顺序执行每个子任务（构造子 {@link MapContext}，isRootTask=false）</li>
+ *   <li><b>P0-1:</b> 将子任务分发到多个执行器节点并行执行（通过 RemoteTaskClient HTTP 派发）</li>
  *   <li>若 processor 是 {@link MapReduceProcessor} 且有子任务，调用 reduce 汇总</li>
  *   <li>更新 ROOT TaskDO 状态为最终结果，返回 {@link ProcessResult}</li>
  * </ol>
+ *
+ * <h3>分布式并行执行（P0-1）</h3>
+ * <p>当 {@code pmis.cronjob.map-reduce.enabled=true} 时，子任务将被分发到多个在线节点并行执行：
+ * <ul>
+ *   <li>子任务按 round-robin 分配到在线节点列表</li>
+ *   <li>本地节点执行子任务时直接调用 processor.process()</li>
+ *   <li>远程节点通过 HTTP POST {@code /cronjob/internal/execute-sub-task} 派发</li>
+ *   <li>使用 CompletableFuture + Semaphore 控制最大并行度</li>
+ *   <li>远程派发失败时降级本地执行（可配置）</li>
+ * </ul>
  *
  * <h3>容错策略</h3>
  * <ul>
@@ -41,9 +62,6 @@ import java.util.List;
  *   <li>子任务失败：记录 FAILED 状态，继续执行其他子任务（默认非 fail-fast）</li>
  *   <li>reduce 失败：整体返回失败，但子任务结果已持久化</li>
  * </ul>
- *
- * <p>对标 PowerJob 的 MapReduceProcessorDemo，本执行器在单节点顺序执行子任务；
- * 分布式并行执行留作后续扩展（通过 RemoteTaskClient 派发子任务到多节点）。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -68,6 +86,23 @@ public class MapTaskExecutor {
 
     private final JobTaskMapper jobTaskMapper;
     private final ApplicationContext applicationContext;
+    private final CronjobProperties cronjobProperties;
+    private final NodeDiscoveryStrategy nodeDiscoveryStrategy;
+    private final RemoteTaskClient remoteTaskClient;
+
+    /**
+     * P0-1: 子任务并行执行线程池。
+     *
+     * <p>使用固定大小线程池控制并行度，避免子任务过多时创建过多线程。
+     * 线程池大小由 {@code pmis.cronjob.map-reduce.max-parallel-sub-tasks} 控制。
+     */
+    private final ExecutorService subTaskExecutor = Executors.newFixedThreadPool(
+            Math.max(4, Runtime.getRuntime().availableProcessors() * 2),
+            r -> {
+                Thread t = new Thread(r, "mapreduce-subtask");
+                t.setDaemon(true);
+                return t;
+            });
 
     /**
      * 执行 MapReduce 任务。
@@ -124,29 +159,25 @@ public class MapTaskExecutor {
         log.info("[MapTaskExecutor] root task 产生 {} 个子任务: key={} logId={}",
                 subTasks.size(), jobKey, logId);
 
-        // 6. 为每个子任务创建 TaskDO 记录并顺序执行
-        List<ProcessResult> subTaskResults = new ArrayList<>(subTasks.size());
-        List<TaskResult> taskResults = new ArrayList<>(subTasks.size());
+        // 6. P0-1: 分布式并行执行子任务
+        List<ProcessResult> subTaskResults;
+        CronjobProperties.MapReduce mrConfig = cronjobProperties.getMapReduce();
+        if (mrConfig.isEnabled()) {
+            subTaskResults = executeSubTasksDistributed(job, processor, subTasks, jobId, logId, jobKey);
+        } else {
+            subTaskResults = executeSubTasksSequentially(processor, subTasks, jobId, logId, jobKey);
+        }
+
+        // 统计成功/失败数
         int successCount = 0;
         int failCount = 0;
-        for (int i = 0; i < subTasks.size(); i++) {
-            MapTask subTask = subTasks.get(i);
-            JobTaskDO subTaskDO = createTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
-                    subTask.getTaskParams(), TASK_TYPE_SUB_TASK, STATUS_PENDING);
-            jobTaskMapper.insert(subTaskDO);
-
-            MapContext subContext = new MapContext(jobId, logId, jobKey, subTask.getTaskName(),
-                    subTask.getTaskParams(), false);
-            ProcessResult subResult = executeTask(processor, subContext, subTaskDO, jobKey, logId);
-            subTaskResults.add(subResult);
-            taskResults.add(new TaskResult(subTask.getTaskName(), subResult));
-            if (subResult.isSuccess()) {
+        for (ProcessResult r : subTaskResults) {
+            if (r.isSuccess()) {
                 successCount++;
             } else {
                 failCount++;
             }
         }
-
         log.info("[MapTaskExecutor] 子任务执行完成: key={} logId={} total={} success={} fail={}",
                 jobKey, logId, subTasks.size(), successCount, failCount);
 
@@ -166,6 +197,220 @@ public class MapTaskExecutor {
 
         // 8. 非 MapReduceProcessor：root task 成功即整体成功
         return rootResult;
+    }
+
+    /**
+     * P0-1: 分布式并行执行子任务。
+     *
+     * <p>将子任务分发到多个在线节点并行执行：
+     * <ol>
+     *   <li>获取在线节点列表</li>
+     *   <li>为每个子任务创建 TaskDO 记录</li>
+     *   <li>按 round-robin 分配到节点，本地节点直接执行，远程节点通过 HTTP 派发</li>
+     *   <li>使用 CompletableFuture + Semaphore 控制最大并行度</li>
+     *   <li>等待所有子任务完成，收集结果</li>
+     * </ol>
+     *
+     * @param job       任务定义
+     * @param processor MapProcessor（本地执行用）
+     * @param subTasks  子任务列表
+     * @param jobId     任务 ID
+     * @param logId     日志 ID
+     * @param jobKey    任务 KEY
+     * @return 子任务结果列表（顺序与 subTasks 一致）
+     */
+    private List<ProcessResult> executeSubTasksDistributed(JobDO job, MapProcessor processor,
+                                                            List<MapTask> subTasks,
+                                                            String jobId, String logId, String jobKey) {
+        // 获取在线节点列表
+        List<JobNodeDO> onlineNodes = nodeDiscoveryStrategy.getOnlineNodes();
+        String localNodeId = nodeDiscoveryStrategy.getLocalNodeId();
+
+        if (onlineNodes.isEmpty()) {
+            log.warn("[MapTaskExecutor] 无在线节点, 降级为本地顺序执行: key={} logId={}", jobKey, logId);
+            return executeSubTasksSequentially(processor, subTasks, jobId, logId, jobKey);
+        }
+
+        log.info("[MapTaskExecutor] 分布式并行执行: key={} logId={} subTaskCount={} nodeCount={} localNodeId={}",
+                jobKey, logId, subTasks.size(), onlineNodes.size(), localNodeId);
+
+        int maxParallel = cronjobProperties.getMapReduce().getMaxParallelSubTasks();
+        Semaphore semaphore = new Semaphore(maxParallel);
+        String traceId = TraceIdUtil.get();
+
+        // 为每个子任务创建 TaskDO 并提交并行执行
+        List<CompletableFuture<ProcessResult>> futures = new ArrayList<>(subTasks.size());
+        AtomicInteger nodeIndex = new AtomicInteger(0);
+
+        for (MapTask subTask : subTasks) {
+            // 创建 TaskDO
+            JobTaskDO subTaskDO = createTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
+                    subTask.getTaskParams(), TASK_TYPE_SUB_TASK, STATUS_PENDING);
+            jobTaskMapper.insert(subTaskDO);
+
+            // 选择目标节点（round-robin）
+            JobNodeDO targetNode = onlineNodes.get(
+                    nodeIndex.getAndIncrement() % onlineNodes.size());
+            boolean isLocal = targetNode.getNodeId().equals(localNodeId);
+
+            CompletableFuture<ProcessResult> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    semaphore.acquire();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    ProcessResult failResult = ProcessResult.failed("线程中断等待信号量");
+                    updateTaskStatus(subTaskDO, failResult);
+                    return failResult;
+                }
+                try {
+                    ProcessResult result;
+                    if (isLocal) {
+                        // 本地执行
+                        result = executeTaskRemotely(processor, subTask, subTaskDO,
+                                jobId, logId, jobKey);
+                    } else {
+                        // 远程派发
+                        result = dispatchSubTaskToNode(targetNode, job, subTask, subTaskDO, traceId);
+                        // 远程失败时降级本地执行
+                        if (!result.isSuccess() && cronjobProperties.getMapReduce().isFallbackToLocal()) {
+                            log.warn("[MapTaskExecutor] 远程执行失败, 降级本地: key={} taskName={} nodeId={} error={}",
+                                    jobKey, subTask.getTaskName(), targetNode.getNodeId(),
+                                    result.getErrorMessage());
+                            result = executeTaskRemotely(processor, subTask, subTaskDO,
+                                    jobId, logId, jobKey);
+                        }
+                    }
+                    return result;
+                } finally {
+                    semaphore.release();
+                }
+            }, subTaskExecutor);
+
+            futures.add(future);
+        }
+
+        // 等待所有子任务完成
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        // 收集结果（保持顺序）
+        List<ProcessResult> results = new ArrayList<>(futures.size());
+        for (CompletableFuture<ProcessResult> f : futures) {
+            try {
+                results.add(f.get());
+            } catch (Exception e) {
+                log.error("[MapTaskExecutor] 获取子任务结果异常: key={} logId={} reason={}",
+                        jobKey, logId, e.getMessage(), e);
+                results.add(ProcessResult.failed("获取子任务结果异常: " + e.getMessage()));
+            }
+        }
+        return results;
+    }
+
+    /**
+     * 顺序执行子任务（向后兼容模式）。
+     *
+     * @param processor MapProcessor
+     * @param subTasks  子任务列表
+     * @param jobId     任务 ID
+     * @param logId     日志 ID
+     * @param jobKey    任务 KEY
+     * @return 子任务结果列表
+     */
+    private List<ProcessResult> executeSubTasksSequentially(MapProcessor processor,
+                                                             List<MapTask> subTasks,
+                                                             String jobId, String logId, String jobKey) {
+        List<ProcessResult> results = new ArrayList<>(subTasks.size());
+        for (MapTask subTask : subTasks) {
+            JobTaskDO subTaskDO = createTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
+                    subTask.getTaskParams(), TASK_TYPE_SUB_TASK, STATUS_PENDING);
+            jobTaskMapper.insert(subTaskDO);
+
+            MapContext subContext = new MapContext(jobId, logId, jobKey, subTask.getTaskName(),
+                    subTask.getTaskParams(), false);
+            ProcessResult subResult = executeTask(processor, subContext, subTaskDO, jobKey, logId);
+            results.add(subResult);
+        }
+        return results;
+    }
+
+    /**
+     * P0-1: 将子任务派发到远程节点执行。
+     *
+     * @param targetNode 目标节点
+     * @param job        任务定义
+     * @param subTask    子任务定义
+     * @param subTaskDO  子任务 DO（用于状态更新）
+     * @param traceId    链路追踪 ID
+     * @return 处理结果
+     */
+    private ProcessResult dispatchSubTaskToNode(JobNodeDO targetNode, JobDO job,
+                                                 MapTask subTask, JobTaskDO subTaskDO,
+                                                 String traceId) {
+        // 更新状态为 RUNNING
+        jobTaskMapper.updateStatus(subTaskDO.getId(), STATUS_RUNNING, null, null, LocalDateTime.now());
+        jobTaskMapper.updateExecNodeId(subTaskDO.getId(), targetNode.getNodeId(), LocalDateTime.now());
+        subTaskDO.setExecNodeId(targetNode.getNodeId());
+
+        RemoteSubTaskRequest request = new RemoteSubTaskRequest(
+                job.getId(), subTaskDO.getLogId(), job.getJobKey(),
+                job.getHandler(), subTask.getTaskName(), subTask.getTaskParams(), traceId);
+
+        ProcessResult result;
+        try {
+            String responseJson = remoteTaskClient.dispatchSubTask(targetNode, request);
+            if (responseJson == null) {
+                result = ProcessResult.failed("远程派发失败: 响应为空");
+            } else {
+                // ProcessResult 使用 final 字段，手动解析避免反射问题
+                com.alibaba.fastjson2.JSONObject jsonObj = JSON.parseObject(responseJson);
+                boolean success = jsonObj.getBooleanValue("success");
+                String res = jsonObj.getString("result");
+                String errMsg = jsonObj.getString("errorMessage");
+                result = new ProcessResult(success, res, errMsg);
+            }
+        } catch (Exception e) {
+            log.error("[MapTaskExecutor] 远程子任务派发异常: key={} taskName={} nodeId={} reason={}",
+                    job.getJobKey(), subTask.getTaskName(), targetNode.getNodeId(), e.getMessage(), e);
+            result = ProcessResult.failed("远程派发异常: " + e.getMessage());
+        }
+
+        // 更新 TaskDO 状态
+        updateTaskStatus(subTaskDO, result);
+        return result;
+    }
+
+    /**
+     * P0-1: 本地执行子任务（带状态更新）。
+     *
+     * <p>用于分布式模式下本地节点执行子任务，复用 {@link #executeTask} 逻辑。
+     *
+     * @param processor MapProcessor
+     * @param subTask   子任务定义
+     * @param subTaskDO 子任务 DO
+     * @param jobId     任务 ID
+     * @param logId     日志 ID
+     * @param jobKey    任务 KEY
+     * @return 处理结果
+     */
+    private ProcessResult executeTaskRemotely(MapProcessor processor, MapTask subTask,
+                                               JobTaskDO subTaskDO,
+                                               String jobId, String logId, String jobKey) {
+        MapContext subContext = new MapContext(jobId, logId, jobKey, subTask.getTaskName(),
+                subTask.getTaskParams(), false);
+        return executeTask(processor, subContext, subTaskDO, jobKey, logId);
+    }
+
+    /**
+     * 更新 TaskDO 状态为最终结果。
+     *
+     * @param taskDO 子任务 DO
+     * @param result 处理结果
+     */
+    private void updateTaskStatus(JobTaskDO taskDO, ProcessResult result) {
+        LocalDateTime now = LocalDateTime.now();
+        String status = result.isSuccess() ? STATUS_SUCCESS : STATUS_FAILED;
+        jobTaskMapper.updateStatus(taskDO.getId(), status, result.getResult(),
+                result.getErrorMessage(), now);
     }
 
     /**

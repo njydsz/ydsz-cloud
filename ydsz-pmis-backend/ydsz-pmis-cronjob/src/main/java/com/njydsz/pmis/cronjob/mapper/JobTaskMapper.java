@@ -88,6 +88,20 @@ public interface JobTaskMapper extends BaseMapper<JobTaskDO> {
                      @Param("now") LocalDateTime now);
 
     /**
+     * P0-1: 更新子任务执行节点 ID（分布式并行执行时记录子任务在哪个节点执行）。
+     *
+     * @param id       子任务 ID
+     * @param execNodeId 执行节点 ID
+     * @param now      更新时间
+     * @return 受影响行数
+     */
+    @Update("UPDATE pmis_job_task SET exec_node_id = #{execNodeId}, updated_at = #{now} "
+            + "WHERE id = #{id} AND deleted = 0")
+    int updateExecNodeId(@Param("id") String id,
+                         @Param("execNodeId") String execNodeId,
+                         @Param("now") java.time.LocalDateTime now);
+
+    /**
      * P2-2: 批量清理过期 MapReduce 子任务记录（硬删除）。
      *
      * @param before 过期分界时间

@@ -57,6 +57,9 @@ public class MessageProperties {
     /** P2-1: 智能去重配置 */
     private DedupConfig dedup = new DedupConfig();
 
+    /** P2-4: 成本看板配置 */
+    private CostConfig cost = new CostConfig();
+
     /** P0-1: 短信服务商配置 */
     private SmsConfig sms = new SmsConfig();
 
@@ -100,6 +103,35 @@ public class MessageProperties {
         private boolean enabled = true;
         /** 去重窗口（秒）：同一 dedupKey 在此时间内视为重复，默认 60s */
         private int ttlSeconds = 60;
+    }
+
+    /**
+     * 成本看板配置（P2-4）。
+     *
+     * <p>按通道配置单条消息成本（元），用于发送成本统计与看板展示。
+     * SMS/EMAIL/PUSH 有实际服务商计费,IN_APP/WEBHOOK/IM 通道免费。
+     * 关闭后不记录成本字段（cost 始终为 0）。
+     */
+    @Data
+    public static class CostConfig {
+        /** 成本追踪开关（关闭后 cost 始终为 0） */
+        private boolean enabled = true;
+        /** 通道单条成本（元），key 为通道大写名 */
+        private Map<String, java.math.BigDecimal> unitPrices = defaultUnitPrices();
+
+        private static Map<String, java.math.BigDecimal> defaultUnitPrices() {
+            // 使用 LinkedHashMap 保持插入顺序,使成本看板输出顺序稳定且可测试
+            Map<String, java.math.BigDecimal> m = new java.util.LinkedHashMap<>();
+            m.put("SMS", new java.math.BigDecimal("0.0450"));
+            m.put("EMAIL", new java.math.BigDecimal("0.0010"));
+            m.put("PUSH", new java.math.BigDecimal("0.0001"));
+            m.put("IN_APP", java.math.BigDecimal.ZERO);
+            m.put("WEBHOOK", java.math.BigDecimal.ZERO);
+            m.put("DINGTALK", java.math.BigDecimal.ZERO);
+            m.put("WECOM", java.math.BigDecimal.ZERO);
+            m.put("FEISHU", java.math.BigDecimal.ZERO);
+            return m;
+        }
     }
 
     /**

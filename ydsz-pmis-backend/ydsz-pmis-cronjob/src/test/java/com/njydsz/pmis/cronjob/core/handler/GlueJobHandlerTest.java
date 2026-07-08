@@ -1,7 +1,6 @@
 package com.njydsz.pmis.cronjob.core.handler;
 
 import com.njydsz.pmis.common.job.JobContextHolder;
-import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.entity.GlueCodeDO;
 import com.njydsz.pmis.cronjob.service.GlueCodeService;
 import org.junit.jupiter.api.AfterEach;
@@ -16,7 +15,6 @@ import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;

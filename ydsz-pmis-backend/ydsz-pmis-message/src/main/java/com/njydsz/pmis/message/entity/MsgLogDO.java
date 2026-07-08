@@ -126,4 +126,7 @@ public class MsgLogDO extends BaseDO {
 
     /** P2-6: 父消息 ID(级联发送时自动填充,用于追溯级联关系) */
     private String parentMsgId;
+
+    /** P0-3: 定时发送时间(非空时 status=SCHEDULED, 到期后由调度器触发发送) */
+    private LocalDateTime scheduledAt;
 }

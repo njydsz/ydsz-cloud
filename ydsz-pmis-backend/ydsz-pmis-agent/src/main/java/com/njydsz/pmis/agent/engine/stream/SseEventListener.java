@@ -113,6 +113,19 @@ public class SseEventListener implements ReActEventListener {
         send(StreamEvent.of(StreamEvent.Type.STEP_START, stepIndex));
     }
 
+    /**
+     * LLM 流式 token 增量推送（P4-1 落地）。
+     *
+     * <p>每收到一个 token 片段即推送 LLM_DELTA 事件，
+     * 前端可基于此实现打字机效果。
+     */
+    @Override
+    public void onToken(int stepIndex, String tokenDelta) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("delta", tokenDelta == null ? "" : tokenDelta);
+        send(StreamEvent.of(StreamEvent.Type.LLM_DELTA, stepIndex, payload));
+    }
+
     @Override
     public void onThought(int stepIndex, String thought) {
         Map<String, Object> payload = new LinkedHashMap<>();

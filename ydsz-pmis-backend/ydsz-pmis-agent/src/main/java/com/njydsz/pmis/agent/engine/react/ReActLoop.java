@@ -177,8 +177,24 @@ public class ReActLoop {
                 // 1. 调用 LLM，获取决策
                 ReActDecision decision;
                 try {
-                    decision = llm.chatForJson(fullSystemPrompt,
-                            currentUserPrompt.toString(), ReActDecision.class, ctx);
+                    // P4-1：当 LLM Provider 支持流式时，使用 chatStream 逐 token 回调
+                    LlmProvider llm = llmProviderRouter.active();
+                    // 追加 JSON 格式指令（替代原 chatForJson 的默认行为）
+                    String enhancedPrompt = currentUserPrompt.toString()
+                            + "\n\n请严格输出 JSON 格式（不要使用 markdown 代码块包裹）。";
+                    String llmRaw;
+                    final int stepForCallback = currentStep;
+                    if (llm.supportsStreaming()) {
+                        llmRaw = llm.chatStream(fullSystemPrompt,
+                                enhancedPrompt, ctx,
+                                delta -> safeNotify(listener, l -> l.onToken(stepForCallback, delta)));
+                    } else {
+                        llmRaw = llm.chat(fullSystemPrompt,
+                                enhancedPrompt, ctx);
+                    }
+                    // 解析 JSON 为 ReActDecision
+                    String json = LlmProvider.stripMarkdownCodeFence(llmRaw);
+                    decision = com.alibaba.fastjson2.JSON.parseObject(json, ReActDecision.class);
                 } catch (Exception e) {
                     log.warn("[ReAct] step={} LLM 调用或 JSON 解析异常: {}", currentStep, e.getMessage());
                     stepRecord.setThought("[LLM 异常] " + e.getMessage());

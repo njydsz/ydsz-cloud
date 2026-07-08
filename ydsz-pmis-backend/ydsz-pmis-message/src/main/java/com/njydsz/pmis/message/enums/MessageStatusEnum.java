@@ -24,7 +24,9 @@ public enum MessageStatusEnum {
     /** 死信（终态） */
     DEAD,
     /** 已撤回（终态） */
-    RECALLED;
+    RECALLED,
+    /** P0-3: 定时发送（等待 scheduledAt 到期后触发） */
+    SCHEDULED;
 
     /**
      * 校验状态流转是否合法。
@@ -37,7 +39,8 @@ public enum MessageStatusEnum {
             return true;
         }
         return switch (this) {
-            case PENDING -> target == SENDING || target == FAILED || target == RECALLED;
+            case PENDING -> target == SENDING || target == FAILED || target == RECALLED || target == SCHEDULED;
+            case SCHEDULED -> target == SENDING || target == FAILED || target == RECALLED;
             case SENDING -> target == SUCCESS || target == FAILED || target == RETRY || target == RECALLED;
             case RETRY -> target == SENDING || target == SUCCESS || target == FAILED || target == DEAD;
             case SUCCESS -> target == RECALLED;

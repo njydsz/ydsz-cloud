@@ -2,6 +2,7 @@ package com.njydsz.pmis.message.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.message.dto.ChannelStatsVO;
+import com.njydsz.pmis.message.dto.CostStatsVO;
 import com.njydsz.pmis.message.dto.FunnelStatsVO;
 import com.njydsz.pmis.message.dto.MessageStatsVO;
 import com.njydsz.pmis.message.dto.ReceiptStatsVO;
@@ -13,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -145,5 +147,42 @@ class MessageStatsControllerTest {
         assertTrue(result.isSuccess());
         assertEquals("SMS", result.getData().getChannel());
         verify(messageStatsService).getFunnel(null, null, "SMS", "TPL_ALERT");
+    }
+
+    @Test
+    @DisplayName("P2-4: cost 委托 service 并返回成本看板数据")
+    void costShouldDelegateToService() {
+        CostStatsVO vo = new CostStatsVO();
+        vo.setTotalCost(new BigDecimal("4.80"));
+        CostStatsVO.ChannelCost cc = new CostStatsVO.ChannelCost();
+        cc.setChannel("SMS");
+        cc.setMessageCount(100L);
+        cc.setUnitPrice(new BigDecimal("0.0450"));
+        cc.setTotalCost(new BigDecimal("4.500"));
+        vo.setChannels(List.of(cc));
+        when(messageStatsService.getCostStats(null, null)).thenReturn(vo);
+
+        Result<CostStatsVO> result = messageStatsController.cost(null, null);
+
+        assertTrue(result.isSuccess());
+        assertEquals(0, new BigDecimal("4.80").compareTo(result.getData().getTotalCost()));
+        assertEquals(1, result.getData().getChannels().size());
+        assertEquals("SMS", result.getData().getChannels().get(0).getChannel());
+        verify(messageStatsService).getCostStats(null, null);
+    }
+
+    @Test
+    @DisplayName("P2-4: cost 带时间参数正确传递")
+    void costShouldPassTimeParams() {
+        LocalDateTime start = LocalDateTime.now().minusHours(12);
+        LocalDateTime end = LocalDateTime.now();
+        CostStatsVO vo = new CostStatsVO();
+        vo.setTotalCost(BigDecimal.ZERO);
+        when(messageStatsService.getCostStats(start, end)).thenReturn(vo);
+
+        Result<CostStatsVO> result = messageStatsController.cost(start, end);
+
+        assertTrue(result.isSuccess());
+        verify(messageStatsService).getCostStats(start, end);
     }
 }

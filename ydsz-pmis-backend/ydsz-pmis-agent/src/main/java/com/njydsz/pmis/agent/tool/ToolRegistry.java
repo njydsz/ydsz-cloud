@@ -138,4 +138,57 @@ public class ToolRegistry {
         String name = type.getSimpleName();
         return name;
     }
+
+    /**
+     * 生成 OpenAI Function Calling 格式的 tools 数组（P4-2 落地）。
+     *
+     * <p>格式对标 OpenAI Chat Completions API 的 tools 参数：
+     * <pre>
+     * [
+     *   {
+     *     "type": "function",
+     *     "function": {
+     *       "name": "project_status",
+     *       "description": "查询项目指标",
+     *       "parameters": { "type":"object","properties":{...},"required":[...] }
+     *     }
+     *   }
+     * ]
+     * </pre>
+     *
+     * @return tools 列表（每项为 Map 形式的 function 定义）；空列表表示无工具
+     */
+    public List<Map<String, Object>> formatToolsForOpenAi() {
+        if (tools.isEmpty()) {
+            return List.of();
+        }
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (AgentTool tool : tools.values()) {
+            Map<String, Object> fn = new java.util.LinkedHashMap<>();
+            fn.put("type", "function");
+            Map<String, Object> function = new java.util.LinkedHashMap<>();
+            function.put("name", tool.name());
+            function.put("description", tool.description());
+            Map<String, Object> schema = tool.jsonSchema();
+            if (schema != null) {
+                function.put("parameters", schema);
+            } else {
+                function.put("parameters", Map.of("type", "object", "properties", Map.of()));
+            }
+            fn.put("function", function);
+            result.add(fn);
+        }
+        return result;
+    }
+
+    /**
+     * 判断是否有任何已注册工具支持原生 Function Calling（P4-2）。
+     *
+     * <p>当前所有工具均可通过 JSON Schema 描述参数，因此只要有工具注册即返回 true。
+     *
+     * @return true 表示存在可用于 Function Calling 的工具
+     */
+    public boolean hasFunctionCallingTools() {
+        return !tools.isEmpty();
+    }
 }

@@ -232,7 +232,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setTemplateParams(JsonUtils.toJson(request.getParams()));
         logDO.setContent(content);
         logDO.setStatus(MessageStatusEnum.PENDING.name());
-        logDO.setPriority(resolvePriority());
+        logDO.setPriority(resolvePriority(request));
         logDO.setSenderId(SystemConstants.SYSTEM_USER_ID);
         logDO.setCanary(canaryFlag);
         logDO.setCanaryKey(canaryKeyForLog);
@@ -245,10 +245,22 @@ public class MessageServiceImpl implements MessageService {
         logDO.setDedupKey(dedupKey);
         // P2-6: 级联发送时记录父消息 ID,用于追溯级联关系
         logDO.setParentMsgId(request.getParentMsgId());
+        // P0-3: 定时发送时间
+        logDO.setScheduledAt(request.getScheduledAt());
         if (matchedRule != null) {
             logDO.setRouteRuleId(matchedRule.getId());
         }
         logDO.setTenantId(TenantContext.getTenantId());
+        // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
+        if (request.getScheduledAt() != null
+                && request.getScheduledAt().isAfter(java.time.LocalDateTime.now())) {
+            logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
+            msgLogMapper.insert(logDO);
+            log.info("[Message] 定时消息已入库: msgId={} scheduledAt={} channel={}",
+                    logDO.getMsgId(), logDO.getScheduledAt(), channel);
+            return MessageResult.ok(channel, logDO.getMsgId());
+        }
+
         msgLogMapper.insert(logDO);
 
         // ⑨ 聚合判断（P0-6）：digestEnabled=1 时追加到聚合批次,不立即发送
@@ -321,6 +333,7 @@ public class MessageServiceImpl implements MessageService {
             logDO.setStatus(MessageStatusEnum.SUCCESS.name());
             logDO.setProviderTraceId(providerTraceId);
             logDO.setCostMs(cost);
+            logDO.setCost(calculateCost(channel));
             msgLogMapper.updateById(logDO);
             if (StringUtils.hasText(receiver)) {
                 rateLimitService.recordFrequency(receiver, channel, logDO.getBizType());
@@ -409,6 +422,7 @@ public class MessageServiceImpl implements MessageService {
                 logDO.setStatus(MessageStatusEnum.SUCCESS.name());
                 logDO.setProviderTraceId(providerTraceId);
                 logDO.setCostMs(accumulatedCost + cost);
+                logDO.setCost(calculateCost(fallbackChannel));
                 msgLogMapper.updateById(logDO);
                 messageMetrics.recordSend(fallbackChannel, "SUCCESS", cost);
                 log.info("[Message] 降级发送成功: msgId={} chain={} final={} cost={}ms",
@@ -587,8 +601,32 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    /**
+     * P0-3: 解析发送优先级,优先使用请求中的 priority,回退全局配置。
+     */
+    private String resolvePriority(MessageRequest request) {
+        if (request != null && StringUtils.hasText(request.getPriority())) {
+            return request.getPriority().trim().toUpperCase();
+        }
+        return resolvePriority();
+    }
+
     private String buildRateLimitKey(String channel, String bizType) {
         return (channel == null ? "unknown" : channel) + ":" + (bizType == null ? "default" : bizType);
+    }
+
+    /**
+     * P2-4: 按通道计算单条消息成本。
+     *
+     * @param channel 通道
+     * @return 单条成本（元），未配置或关闭时返回 ZERO
+     */
+    private java.math.BigDecimal calculateCost(String channel) {
+        MessageProperties.CostConfig cfg = messageProperties.getCost();
+        if (cfg == null || !cfg.isEnabled() || cfg.getUnitPrices() == null) {
+            return java.math.BigDecimal.ZERO;
+        }
+        return cfg.getUnitPrices().getOrDefault(channel, java.math.BigDecimal.ZERO);
     }
 
     private String buildDedupKey(MessageRequest request) {

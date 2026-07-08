@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.message.dto.ReceiptCallbackDTO;
 import com.njydsz.pmis.message.entity.MsgReceiptDO;
 import com.njydsz.pmis.message.mapper.MsgReceiptMapper;
@@ -78,7 +79,7 @@ class ReceiptServiceImplTest {
         ReceiptCallbackDTO dto = new ReceiptCallbackDTO();
         dto.setLogId("log-x");
         dto.setReceiptType("READ");
-        org.mockito.Mockito.doThrow(new com.njydsz.pmis.common.exception.BizException("not found"))
+        org.mockito.Mockito.doThrow(new BizException("not found"))
                 .when(messageLogService).updateReceipt(anyString(), anyString(), any());
 
         receiptService.callback(dto); // 不应抛出

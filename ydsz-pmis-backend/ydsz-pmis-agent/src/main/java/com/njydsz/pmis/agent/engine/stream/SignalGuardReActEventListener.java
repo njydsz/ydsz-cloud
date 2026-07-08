@@ -61,6 +61,11 @@ public class SignalGuardReActEventListener implements ReActEventListener {
     }
 
     @Override
+    public void onToken(int stepIndex, String tokenDelta) {
+        delegate.onToken(stepIndex, tokenDelta);
+    }
+
+    @Override
     public void onThought(int stepIndex, String thought) {
         delegate.onThought(stepIndex, thought);
     }

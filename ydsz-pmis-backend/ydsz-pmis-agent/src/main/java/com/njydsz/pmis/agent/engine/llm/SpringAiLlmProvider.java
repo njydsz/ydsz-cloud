@@ -159,6 +159,11 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
     }
 
     @Override
+    public boolean supportsStreaming() {
+        return true;
+    }
+
+    @Override
     public String chat(String systemPrompt, String userPrompt, AgentContext context) {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("[SpringAiLlm] API Key 未配置, 降级到 mock");
@@ -270,5 +275,100 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
         m.put("role", role);
         m.put("content", content);
         return m;
+    }
+
+    /**
+     * SSE 流式调用 OpenAI 兼容 API（P4-1 落地）。
+     *
+     * <p>使用 stream=true 参数，服务端以 SSE 格式逐 chunk 推送 delta.content，
+     * 每收到一个 chunk 即回调 tokenConsumer，同时累积完整文本作为返回值。
+     */
+    @Override
+    public String chatStream(String systemPrompt, String userPrompt,
+                             AgentContext context,
+                             java.util.function.Consumer<String> tokenConsumer) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("[SpringAiLlm] API Key 未配置, 降级到 mock");
+            return new MockLlmProvider().chat(systemPrompt, userPrompt, context);
+        }
+        if (tokenConsumer == null) {
+            return chat(systemPrompt, userPrompt, context);
+        }
+        Callable<String> call = () -> doChatStream(systemPrompt, userPrompt, context, tokenConsumer);
+        return executeWithGuard(call, context);
+    }
+
+    /**
+     * 执行 OpenAI 兼容协议 SSE 流式调用。
+     */
+    protected String doChatStream(String systemPrompt, String userPrompt,
+                                   AgentContext context,
+                                   java.util.function.Consumer<String> tokenConsumer) throws Exception {
+        JSONObject body = new JSONObject();
+        body.put("model", model);
+        body.put("temperature", temperature);
+        body.put("stream", true);
+
+        JSONArray messages = new JSONArray();
+        if (systemPrompt != null && !systemPrompt.isEmpty()) {
+            messages.add(msg("system", systemPrompt));
+        }
+        messages.add(msg("user", userPrompt == null ? "" : userPrompt));
+        body.put("messages", messages);
+
+        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                .uri(URI.create(apiUrl))
+                .timeout(Duration.ofMillis(timeoutMillis))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Accept", "text/event-stream")
+                .POST(HttpRequest.BodyPublishers.ofString(body.toJSONString()))
+                .build();
+
+        java.net.http.HttpResponse<java.util.stream.Stream<String>> response =
+                httpClient.send(request, java.net.http.HttpResponse.BodyHandlers.ofLines());
+
+        if (response.statusCode() / 100 != 2) {
+            String respBody = response.body() == null ? "" :
+                    response.body().reduce("", (a, b) -> a + b);
+            String snippet = respBody.length() > 200 ? respBody.substring(0, 200) : respBody;
+            throw new RuntimeException("LLM stream HTTP " + response.statusCode() + ": " + snippet);
+        }
+
+        StringBuilder fullText = new StringBuilder();
+        for (String line : response.body().toList()) {
+            if (line == null || line.isBlank()) continue;
+            if (line.startsWith("data: ")) {
+                String data = line.substring(6).trim();
+                if ("[DONE]".equals(data)) break;
+                try {
+                    JSONObject chunk = JSON.parseObject(data);
+                    // 提取 id 作为 providerTraceId
+                    if (context != null) {
+                        String id = chunk.getString("id");
+                        if (id != null && !id.isEmpty()) {
+                            context.setProviderTraceId(id);
+                        }
+                    }
+                    JSONArray choices = chunk.getJSONArray("choices");
+                    if (choices != null && !choices.isEmpty()) {
+                        JSONObject first = choices.getJSONObject(0);
+                        JSONObject delta = first.getJSONObject("delta");
+                        if (delta != null) {
+                            String content = delta.getString("content");
+                            if (content != null && !content.isEmpty()) {
+                                fullText.append(content);
+                                tokenConsumer.accept(content);
+                            }
+                        }
+                    }
+                } catch (Exception parseEx) {
+                    log.debug("[SpringAiLlm-Stream] 解析 chunk 失败: {}", parseEx.getMessage());
+                }
+            }
+        }
+
+        log.debug("[SpringAiLlm-Stream] 流式完成, totalLen={}", fullText.length());
+        return fullText.toString();
     }
 }

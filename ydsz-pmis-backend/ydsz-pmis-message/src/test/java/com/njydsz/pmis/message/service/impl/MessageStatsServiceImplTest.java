@@ -1,10 +1,13 @@
 package com.njydsz.pmis.message.service.impl;
 
+import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.dto.ChannelStatsVO;
+import com.njydsz.pmis.message.dto.CostStatsVO;
 import com.njydsz.pmis.message.dto.FunnelStatsVO;
 import com.njydsz.pmis.message.dto.MessageStatsVO;
 import com.njydsz.pmis.message.dto.ReceiptStatsVO;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,7 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,8 +39,23 @@ class MessageStatsServiceImplTest {
     @Mock
     private MsgLogMapper msgLogMapper;
 
+    @Mock
+    private MessageProperties messageProperties;
+
     @InjectMocks
     private MessageStatsServiceImpl messageStatsService;
+
+    /**
+     * P2-4: 为成本统计测试准备默认单价配置。
+     *
+     * <p>非成本相关测试不需要 messageProperties,Mockito 会返回 null,
+     * getCostStats 内部已做空值降级处理。
+     */
+    @BeforeEach
+    void setUpCostConfig() {
+        MessageProperties.CostConfig costCfg = new MessageProperties.CostConfig();
+        when(messageProperties.getCost()).thenReturn(costCfg);
+    }
 
     @Test
     @DisplayName("getOverview 正确聚合各状态计数与比率")
@@ -245,5 +265,107 @@ class MessageStatsServiceImplTest {
         assertEquals(1L, vo.getSent());
         assertNotNull(vo.getStart());
         assertNotNull(vo.getEnd());
+    }
+
+    // ============ P2-4: 成本看板测试 ============
+
+    @Test
+    @DisplayName("getCostStats 正确按通道单价计算总成本")
+    void getCostStatsShouldCalculateCostByChannelUnitPrice() {
+        // 默认 8 通道(LinkedHashMap 保证顺序),selectCount 调用顺序:
+        // SMS, EMAIL, PUSH, IN_APP, WEBHOOK, DINGTALK, WECOM, FEISHU
+        when(msgLogMapper.selectCount(any())).thenReturn(
+                100L,  // SMS × 0.045 = 4.50
+                200L,  // EMAIL × 0.001 = 0.20
+                1000L, // PUSH × 0.0001 = 0.10
+                50L,   // IN_APP × 0 = 0
+                10L,   // WEBHOOK × 0 = 0
+                0L,    // DINGTALK × 0 = 0
+                0L,    // WECOM × 0 = 0
+                0L     // FEISHU × 0 = 0
+        );
+
+        CostStatsVO vo = messageStatsService.getCostStats(null, null);
+
+        // 4.50 + 0.20 + 0.10 = 4.80 (用 compareTo 避免 scale 差异)
+        assertEquals(0, new BigDecimal("4.80").compareTo(vo.getTotalCost()),
+                "总成本 = 4.80");
+        assertEquals(8, vo.getChannels().size());
+
+        // 校验 SMS 通道明细
+        CostStatsVO.ChannelCost sms = vo.getChannels().stream()
+                .filter(c -> "SMS".equals(c.getChannel())).findFirst().orElseThrow();
+        assertEquals(100L, sms.getMessageCount());
+        assertEquals(0, new BigDecimal("0.0450").compareTo(sms.getUnitPrice()));
+        assertEquals(0, new BigDecimal("4.500").compareTo(sms.getTotalCost()));
+
+        // 校验 EMAIL 通道明细
+        CostStatsVO.ChannelCost email = vo.getChannels().stream()
+                .filter(c -> "EMAIL".equals(c.getChannel())).findFirst().orElseThrow();
+        assertEquals(200L, email.getMessageCount());
+        assertEquals(0, new BigDecimal("0.0010").compareTo(email.getUnitPrice()));
+        assertEquals(0, new BigDecimal("0.200").compareTo(email.getTotalCost()));
+
+        // 校验 PUSH 通道明细
+        CostStatsVO.ChannelCost push = vo.getChannels().stream()
+                .filter(c -> "PUSH".equals(c.getChannel())).findFirst().orElseThrow();
+        assertEquals(1000L, push.getMessageCount());
+        assertEquals(0, new BigDecimal("0.0001").compareTo(push.getUnitPrice()));
+        assertEquals(0, new BigDecimal("0.100").compareTo(push.getTotalCost()));
+
+        assertNotNull(vo.getStart());
+        assertNotNull(vo.getEnd());
+    }
+
+    @Test
+    @DisplayName("getCostStats 无消息时总成本为 0")
+    void getCostStatsShouldReturnZeroCostWhenNoMessages() {
+        when(msgLogMapper.selectCount(any())).thenReturn(0L);
+
+        CostStatsVO vo = messageStatsService.getCostStats(null, null);
+
+        assertEquals(0, BigDecimal.ZERO.compareTo(vo.getTotalCost()));
+        assertEquals(8, vo.getChannels().size());
+        // 每个通道 messageCount = 0,totalCost = 0
+        assertTrue(vo.getChannels().stream().allMatch(c -> c.getMessageCount() == 0L));
+        assertTrue(vo.getChannels().stream().allMatch(c -> c.getTotalCost().compareTo(BigDecimal.ZERO) == 0));
+    }
+
+    @Test
+    @DisplayName("getCostStats null 时间参数时默认最近 24h")
+    void getCostStatsShouldDefaultToLast24hWhenNullParams() {
+        when(msgLogMapper.selectCount(any())).thenReturn(0L);
+
+        CostStatsVO vo = messageStatsService.getCostStats(null, null);
+
+        assertEquals(0, BigDecimal.ZERO.compareTo(vo.getTotalCost()));
+        assertNotNull(vo.getStart());
+        assertNotNull(vo.getEnd());
+    }
+
+    @Test
+    @DisplayName("getCostStats 带时间参数正确传递")
+    void getCostStatsShouldPassTimeParams() {
+        when(msgLogMapper.selectCount(any())).thenReturn(0L);
+        LocalDateTime start = LocalDateTime.now().minusHours(12);
+        LocalDateTime end = LocalDateTime.now();
+
+        CostStatsVO vo = messageStatsService.getCostStats(start, end);
+
+        assertEquals(start.toString(), vo.getStart());
+        assertEquals(end.toString(), vo.getEnd());
+    }
+
+    @Test
+    @DisplayName("getCostStats unitPrices 为空时返回 0 成本")
+    void getCostStatsShouldReturnZeroWhenUnitPricesEmpty() {
+        MessageProperties.CostConfig emptyCfg = new MessageProperties.CostConfig();
+        emptyCfg.setUnitPrices(new HashMap<>());
+        when(messageProperties.getCost()).thenReturn(emptyCfg);
+
+        CostStatsVO vo = messageStatsService.getCostStats(null, null);
+
+        assertEquals(0, BigDecimal.ZERO.compareTo(vo.getTotalCost()));
+        assertTrue(vo.getChannels().isEmpty());
     }
 }

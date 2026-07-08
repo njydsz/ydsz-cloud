@@ -136,8 +136,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     private static final Duration JOB_LOCK_TTL_DEFAULT = Duration.ofMinutes(5);
 
     /** 调度时区（多时区部署时统一为 Asia/Shanghai，避免触发时间漂移） */
-    private static final TimeZone SCHEDULE_TIMEZONE =
-            TimeZone.getTimeZone("Asia/Shanghai");
+    private static final TimeZone SCHEDULE_TIMEZONE = TimeZone.getTimeZone("Asia/Shanghai");
 
     /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
     private static final String INSTANCE_ID = initInstanceId();

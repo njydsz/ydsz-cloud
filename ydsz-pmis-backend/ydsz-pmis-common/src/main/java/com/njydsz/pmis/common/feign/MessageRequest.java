@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -80,4 +81,23 @@ public class MessageRequest {
      * @since 1.1.0
      */
     private Map<String, String> channelMeta;
-}
+
+    /**
+     * P0-3: 定时发送时间。
+     *
+     * <p>非空时消息将延迟到该时间点发送：引擎落库 status=SCHEDULED,
+     * 由 {@code ScheduledMessageScanner} 定时扫描到期后触发发送。
+     * 为空时立即发送（默认行为）。
+     *
+     * @since 1.2.0
+     */
+    private LocalDateTime scheduledAt;
+
+    /**
+     * P0-3: 发送优先级（LOW/NORMAL/HIGH/URGENT）。
+     *
+     * <p>影响发送排队顺序，URGENT 可跳过部分限流。为空时使用引擎默认优先级。
+     *
+     * @since 1.2.0
+     */
+    private String priority;

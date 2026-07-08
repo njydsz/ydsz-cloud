@@ -1,9 +1,7 @@
 package com.njydsz.pmis.agent.mcp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.agent.mcp.model.JsonRpcResponse;
 import com.njydsz.pmis.agent.mcp.model.McpCallToolResult;
-import com.njydsz.pmis.agent.mcp.model.McpContent;
 import com.njydsz.pmis.agent.mcp.model.McpInitializeResult;
 import com.njydsz.pmis.agent.mcp.model.McpToolDefinition;
 import com.njydsz.pmis.agent.mcp.transport.McpTransport;
@@ -24,7 +22,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 

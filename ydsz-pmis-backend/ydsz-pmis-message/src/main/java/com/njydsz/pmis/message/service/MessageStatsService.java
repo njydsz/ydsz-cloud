@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.service;
 
 import com.njydsz.pmis.message.dto.ChannelStatsVO;
+import com.njydsz.pmis.message.dto.CostStatsVO;
 import com.njydsz.pmis.message.dto.FunnelStatsVO;
 import com.njydsz.pmis.message.dto.MessageStatsVO;
 import com.njydsz.pmis.message.dto.ReceiptStatsVO;
@@ -57,4 +58,16 @@ public interface MessageStatsService {
      * @return 漏斗统计（含各阶段数量与转化率）
      */
     FunnelStatsVO getFunnel(LocalDateTime start, LocalDateTime end, String channel, String templateCode);
+
+    /**
+     * P2-4: 成本看板统计。
+     *
+     * <p>按通道维度统计发送成本：单条成本 × 成功发送数 = 通道总成本。
+     * 通道单价由 {@code pmis.message.cost.unit-prices} 配置。
+     *
+     * @param start 起始时间（含），null 则默认最近 24h
+     * @param end   结束时间（含），null 则当前时间
+     * @return 成本统计（含各通道明细与总成本）
+     */
+    CostStatsVO getCostStats(LocalDateTime start, LocalDateTime end);
 }

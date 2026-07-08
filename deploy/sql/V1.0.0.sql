@@ -2366,6 +2366,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     CONSTRAINT ck_pml_receipt_enum      CHECK (receipt_status IN ('NONE', 'DELIVERED', 'READ', 'CLICKED', 'FAILED', 'TIMEOUT')),
     CONSTRAINT ck_pml_canary_enum       CHECK (canary IN (0, 1)),
     CONSTRAINT ck_pml_cost_nonneg       CHECK (cost_ms IS NULL OR cost_ms >= 0),
+    CONSTRAINT ck_pml_money_nonneg      CHECK (cost IS NULL OR cost >= 0),
     CONSTRAINT ck_pml_reconsume_nonneg  CHECK (reconsume_times >= 0),
     CONSTRAINT ck_pml_retry_nonneg      CHECK (retry_count >= 0),
     CONSTRAINT ck_pml_deleted_enum      CHECK (deleted IN (0, 1))
@@ -2407,6 +2408,7 @@ COMMENT ON COLUMN pmis_msg_log.retry_count IS '已重试次数';
 COMMENT ON COLUMN pmis_msg_log.next_retry_at IS '下次重试时间(退避调度)';
 COMMENT ON COLUMN pmis_msg_log.provider_trace_id IS '三方服务商回执 ID';
 COMMENT ON COLUMN pmis_msg_log.cost_ms IS '发送耗时(毫秒)';
+COMMENT ON COLUMN pmis_msg_log.cost IS 'P2-4: 发送成本(元),按通道单价计算(SMS/EMAIL/PUSH 有成本,IM/IN_APP 免费)';
 COMMENT ON COLUMN pmis_msg_log.trace_id IS '系统链路追踪 ID';
 COMMENT ON COLUMN pmis_msg_log.msg_id IS 'RocketMQ 消息 ID';
 COMMENT ON COLUMN pmis_msg_log.topic IS 'RocketMQ Topic(DLQ 消息填充原 Topic)';

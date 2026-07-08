@@ -1,7 +1,9 @@
 package com.njydsz.pmis.message.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.dto.ChannelStatsVO;
+import com.njydsz.pmis.message.dto.CostStatsVO;
 import com.njydsz.pmis.message.dto.FunnelStatsVO;
 import com.njydsz.pmis.message.dto.MessageStatsVO;
 import com.njydsz.pmis.message.dto.ReceiptStatsVO;
@@ -17,7 +19,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 消息统计服务实现（P1-2 可观测看板）。
@@ -34,6 +38,7 @@ import java.util.List;
 public class MessageStatsServiceImpl implements MessageStatsService {
 
     private final MsgLogMapper msgLogMapper;
+    private final MessageProperties messageProperties;
 
     @Override
     public MessageStatsVO getOverview(LocalDateTime start, LocalDateTime end) {
@@ -196,6 +201,50 @@ public class MessageStatsServiceImpl implements MessageStatsService {
         vo.setOverallConversionRate(sent > 0 ? round2(clicked * 100.0 / sent) : 0.0);
         vo.setChannel(channel);
         vo.setTemplateCode(templateCode);
+        vo.setStart(actualStart.toString());
+        vo.setEnd(actualEnd.toString());
+        return vo;
+    }
+
+    @Override
+    public CostStatsVO getCostStats(LocalDateTime start, LocalDateTime end) {
+        LocalDateTime[] range = normalizeRange(start, end);
+        LocalDateTime actualStart = range[0];
+        LocalDateTime actualEnd = range[1];
+
+        MessageProperties.CostConfig costCfg = messageProperties.getCost();
+        Map<String, BigDecimal> unitPrices = costCfg != null && costCfg.getUnitPrices() != null
+                ? costCfg.getUnitPrices() : java.util.Collections.emptyMap();
+
+        List<CostStatsVO.ChannelCost> channelCosts = new ArrayList<>();
+        BigDecimal totalCost = BigDecimal.ZERO;
+
+        for (Map.Entry<String, BigDecimal> entry : unitPrices.entrySet()) {
+            String channel = entry.getKey();
+            BigDecimal unitPrice = entry.getValue();
+            // 统计该通道 SUCCESS 消息数
+            LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
+            w.eq(MsgLogDO::getChannel, channel);
+            w.eq(MsgLogDO::getStatus, MessageStatusEnum.SUCCESS.name());
+            w.ge(MsgLogDO::getCreatedAt, actualStart);
+            w.le(MsgLogDO::getCreatedAt, actualEnd);
+            Long count = msgLogMapper.selectCount(w);
+            long msgCount = count == null ? 0L : count;
+
+            BigDecimal channelCost = unitPrice.multiply(BigDecimal.valueOf(msgCount));
+
+            CostStatsVO.ChannelCost cc = new CostStatsVO.ChannelCost();
+            cc.setChannel(channel);
+            cc.setMessageCount(msgCount);
+            cc.setUnitPrice(unitPrice);
+            cc.setTotalCost(channelCost);
+            channelCosts.add(cc);
+            totalCost = totalCost.add(channelCost);
+        }
+
+        CostStatsVO vo = new CostStatsVO();
+        vo.setTotalCost(totalCost);
+        vo.setChannels(channelCosts);
         vo.setStart(actualStart.toString());
         vo.setEnd(actualEnd.toString());
         return vo;
