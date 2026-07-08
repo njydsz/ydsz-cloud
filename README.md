@@ -5,7 +5,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 项目代号:   YDSZ PMIS
 所属公司:   南京云顶数字科技有限公司
 版本:       v1.3.0-SNAPSHOT
-最近更新:   2026-07-04
+最近更新:   2026-07-08
 维护团队:   PMIS 研发部
 文档密级:   内部受控 · 禁止外传
 
@@ -14,6 +14,7 @@ YDSZ PMIS · 项目运营管理系统 · README
   2. 包含什么（仓库结构 / 模块拓扑）
   3. 怎么跑（环境要求 / 本地启动 / 测试命令 / 部署流程）
   4. 怎么查（文档导航）
+  5. **2026-07-08 更新**：端口重排 + Nacos 配置规范统一（详见 4.2 / 11）
 
 变更需走 PR + Code Review。
 ================================================================================
@@ -49,8 +50,9 @@ YDSZ PMIS · 项目运营管理系统 · README
 - [八、批次交付总览](#八批次交付总览)
 - [九、质量与可观测性](#九质量与可观测性)
 - [十、文档导航](#十文档导航)
-- [十一、团队](#十一团队)
-- [十二、版本与许可](#十二版本与许可)
+- [十一、子模块快速上手](#十一子模块快速上手)
+- [十二、团队](#十二团队)
+- [十三、版本与许可](#十三版本与许可)
 
 ---
 
@@ -62,7 +64,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 
 | 维度 | 数字 | 说明 |
 |---|---|---|
-| 后端微服务 | **9 模块（7 部署 + 2 库）** | gateway / userinfo / workflow / project / agent / system / cronjob（部署）+ common / literule（库）+ 父 pom |
+| 后端微服务 | **8 部署单元 + 2 库** | gateway / userinfo / system / project / message / cronjob / workflow / agent（部署）+ common / literule（库） |
 | 后端测试类 | **111 个** | 覆盖 common/userinfo/project/workflow/system/agent/cronjob/literule 8 模块 |
 | 前端页面 | **57 个** | 业务页面 + 设计器 + 监控中心 |
 | 前端测试 | **7 个测试文件** | vitest 单元测试（composables/store/utils） |
@@ -125,19 +127,20 @@ YDSZ PMIS · 项目运营管理系统 · README
 | 调度 | XXL-JOB | 2.4+ | 分布式任务 |
 | AI | Spring AI + AgentScope | - | 多智能体编排 |
 
-### 4.2 微服务清单（7 部署单元 + 2 库）
+### 4.2 微服务清单（8 部署单元 + 2 库，按 pom.xml 构建顺序排列）
 
-| 模块 | artifactId | 端口 | 职责 |
-|---|---|---|---|
-| API 网关 | ydsz-pmis-gateway | **9000** | 路由 + 鉴权 + 限流 + CORS |
-| 系统基础 | ydsz-pmis-system | **9001** | 文件 / 配置 / 审计 / 通知 / 消息模板 |
-| 用户信息 | ydsz-pmis-userinfo | **9002** | 登录 / Token / 2FA / 登录审计 / 二次认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签 |
-| 项目 | ydsz-pmis-project | **9003** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润 |
-| 调度 | ydsz-pmis-cronjob | **9004** | XXL-JOB 调度 + JobHandler 注册 |
-| 工作流 | ydsz-pmis-workflow | **9005** | 自研 `pmis_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 |
-| AI Agent | ydsz-pmis-agent | **9006** | 5 Agent + 4 编排 + 5 LLM Provider |
-| 公共（库） | ydsz-pmis-common | — | 统一响应 / AOP / 注解 / Feign / 敏感数据 / JobHandler / Sentry / I18n / 权限码 / 混沌（不独立部署） |
-| 轻量规则引擎（库） | ydsz-pmis-literule | — | 表达式驱动 + 规则链 + 阈值注入 + dry-run（不独立部署） |
+| # | 模块 | artifactId | 端口 | 职责 |
+|---|---|---|---|---|
+| 1 | API 网关 | ydsz-pmis-gateway | **9000** | 路由 + 鉴权 + 限流 + CORS |
+| 2 | 用户信息 | ydsz-pmis-userinfo | **9001** | 登录 / Token / 2FA / 登录审计 / 二次认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签 |
+| 3 | 系统基础 | ydsz-pmis-system | **9002** | 文件 / 配置 / 审计 |
+| 4 | 项目 | ydsz-pmis-project | **9003** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润 |
+| 5 | 消息中心 | ydsz-pmis-message | **9004** | 多渠道发送（SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU）+ 模板 + 偏好 + 订阅 + 限流 + 撤回 + 聚合 + 回执 |
+| 6 | 调度 | ydsz-pmis-cronjob | **9005** | Leader 选举 + DB 行锁 + Redis 分布式锁 + 故障转移 + 租户隔离 + 告警通道 |
+| 7 | 工作流 | ydsz-pmis-workflow | **9006** | 自研 `pmis_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 ⚠️ **仅 PC 端** |
+| 8 | AI Agent | ydsz-pmis-agent | **9007** | 5 Agent + 4 编排 + 5 LLM Provider |
+| — | 公共（库） | ydsz-pmis-common | — | 统一响应 / AOP / 注解 / Feign / 敏感数据 / JobHandler / Sentry / I18n / 权限码 / 混沌（不独立部署） |
+| — | 轻量规则引擎（库） | ydsz-pmis-literule | — | 表达式驱动 + 规则链 + 阈值注入 + dry-run（不独立部署） |
 
 ### 4.3 模块依赖拓扑
 
@@ -230,16 +233,17 @@ mvn -DskipDependencyCheck=false org.owasp:dependency-check-maven:check  # OWASP
 
 ```text
 ydsz-pmis/
-├── ydsz-pmis-backend/          # 后端 9 模块聚合工程（7 部署 + 2 库）
+├── ydsz-pmis-backend/          # 后端 8 部署单元 + 2 库
+│   ├── ydsz-pmis-common/       # 公共组件库 + nacos-config 共享配置模板（不独立部署）
 │   ├── ydsz-pmis-gateway/      # 9000 API 网关
-│   ├── ydsz-pmis-common/       # 公共组件库 (不独立部署)
-│   ├── ydsz-pmis-system/       # 9001 文件/配置/审计/通知/消息模板
-│   ├── ydsz-pmis-userinfo/     # 9002 用户信息/RBAC/部门/人员/职级/字典/资源池/Bench/员工标签
+│   ├── ydsz-pmis-literule/     # --  轻量规则引擎 (库, 不独立部署)
+│   ├── ydsz-pmis-userinfo/     # 9001 用户信息/RBAC/部门/人员/职级/字典/资源池/Bench/员工标签
+│   ├── ydsz-pmis-system/       # 9002 文件/配置/审计
 │   ├── ydsz-pmis-project/      # 9003 项目/执行/财务/报表 (商机→售后全生命周期)
-│   ├── ydsz-pmis-cronjob/      # 9004 XXL-JOB
-│   ├── ydsz-pmis-workflow/     # 9005 自研工作流 + BPMN
-│   ├── ydsz-pmis-agent/        # 9006 AI Agent
-│   └── ydsz-pmis-literule/     # --  轻量规则引擎 (库, 不独立部署)
+│   ├── ydsz-pmis-message/      # 9004 消息中心(多渠道/模板/偏好/订阅/限流/回执)
+│   ├── ydsz-pmis-cronjob/      # 9005 分布式任务调度
+│   ├── ydsz-pmis-workflow/     # 9006 自研工作流 + BPMN
+│   └── ydsz-pmis-agent/        # 9007 AI Agent
 ├── ydsz-pmis-frontend/         # 前端 (Vue 3.5 + Vite 5.4)
 │   ├── src/api/                # 1:1 后端 Controller 封装
 │   ├── src/views/              # 57 个业务页面
@@ -435,10 +439,16 @@ ydsz-pmis/
 | AI 工程师（三期+） | 1 | Agent + LLM Provider |
 | 运维工程师（SRE） | 1 | 部署 / 监控 |
 
-## 十二、版本与许可
+## 十三、版本与许可
 
 - **当前版本**: v1.3.0-SNAPSHOT（批次 28 完成，2026-07-04）
 - **首发版本**: v1.0.0 GA（2026-06-30）
+- **本次更新（2026-07-08）**:
+  - 端口按 pom.xml 构建顺序重排（userinfo 9001, system 9002, project 9003, message 9004, cronjob 9005, workflow 9006, agent 9007）
+  - 8 个 bootstrap.yml（Nacos 连接 + 端口 + shared-configs 引用）
+  - 21 套 Nacos 配置模板（7 服务 × 3 环境）放置在 `src/main/resources/nacos-config/`
+  - `ydsz-pmis-common` 模块下集中维护 Nacos 共享配置 `ydsz-pmis-common.yaml`
+  - 10 个子模块独立 README（快速上手 + 配置 + 启动 + 常见问题）
 - **文档密级**: 内部受控
 - **仓库地址**: `https://gitlab.njydsz.com/ydsz/oursource/ydsz-pmis`
 - **许可**: 南京云顶数字科技有限公司内部使用

@@ -117,15 +117,16 @@ if [[ "$1" != "--frontend" && "$1" != "--infra" ]]; then
   log "步骤 5/6 - 启动 7 个后端微服务（后台）"
 
   # 启动顺序：依赖在前
-  # gateway(9000) → userinfo(9002) / system(9001) / project(9003) / workflow(9005) → cronjob(9004) / agent(9006)
+  # gateway(9000) → userinfo(9001) / system(9002) / project(9003) / message(9004) → cronjob(9005) / workflow(9006) / agent(9007)
   declare -A SERVICES=(
     ["ydsz-pmis-gateway"]="9000"
-    ["ydsz-pmis-system"]="9001"
-    ["ydsz-pmis-userinfo"]="9002"
+    ["ydsz-pmis-userinfo"]="9001"
+    ["ydsz-pmis-system"]="9002"
     ["ydsz-pmis-project"]="9003"
-    ["ydsz-pmis-cronjob"]="9004"
-    ["ydsz-pmis-workflow"]="9005"
-    ["ydsz-pmis-agent"]="9006"
+    ["ydsz-pmis-message"]="9004"
+    ["ydsz-pmis-cronjob"]="9005"
+    ["ydsz-pmis-workflow"]="9006"
+    ["ydsz-pmis-agent"]="9007"
   )
 
   for module in "${!SERVICES[@]}"; do
@@ -138,7 +139,7 @@ if [[ "$1" != "--frontend" && "$1" != "--infra" ]]; then
     echo $! > "$LOG_DIR/${module}.pid"
   done
 
-  ok "7 个后端服务已在后台启动，日志：$LOG_DIR/{module}.log"
+  ok "8 个后端服务已在后台启动，日志：$LOG_DIR/{module}.log"
 
   log "等待所有服务健康（约 60-120s）..."
   for i in {1..24}; do

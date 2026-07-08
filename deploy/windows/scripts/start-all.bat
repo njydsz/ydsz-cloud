@@ -112,8 +112,8 @@ if /I not "%1"=="frontend" if /I not "%1"=="infra" (
   REM 用 PowerShell 启动（命令行参数最稳的方式）
   powershell -NoProfile -Command ^
     "$ErrorActionPreference = 'SilentlyContinue';" ^
-    "$modules = @('ydsz-pmis-gateway','ydsz-pmis-system','ydsz-pmis-userinfo','ydsz-pmis-project','ydsz-pmis-cronjob','ydsz-pmis-workflow','ydsz-pmis-agent');" ^
-    "$ports = @(9000,9001,9002,9003,9004,9005,9006);" ^
+    "$modules = @('ydsz-pmis-gateway','ydsz-pmis-userinfo','ydsz-pmis-system','ydsz-pmis-project','ydsz-pmis-message','ydsz-pmis-cronjob','ydsz-pmis-workflow','ydsz-pmis-agent');" ^
+    "$ports = @(9000,9001,9002,9003,9004,9005,9006,9007);" ^
     "$logDir = '%LOG_DIR%';" ^
     "$backendDir = '%BACKEND_DIR%';" ^
     "foreach ($m in $modules) {" ^
@@ -127,7 +127,7 @@ if /I not "%1"=="frontend" if /I not "%1"=="infra" (
 
   echo [%TIMESTAMP%] [INFO] 等待服务健康（60-120s）...
   timeout /t 90 /nobreak >nul
-  echo [%TIMESTAMP%] [OK] 7 个后端服务已在后台启动
+  echo [%TIMESTAMP%] [OK] 8 个后端服务已在后台启动
 )
 
 REM -----------------------------------------------------------------------------
