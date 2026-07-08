@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.constant;
 
+
 /**
  * 消息通知引擎常量集中定义。
  *

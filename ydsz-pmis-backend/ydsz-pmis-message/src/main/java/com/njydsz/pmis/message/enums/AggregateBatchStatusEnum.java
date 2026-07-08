@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.enums;
 
+
 /**
  * 聚合批次状态枚举。
  *

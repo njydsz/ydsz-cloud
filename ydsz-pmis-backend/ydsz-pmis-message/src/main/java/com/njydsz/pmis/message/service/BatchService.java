@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.service;
 
+
 import com.njydsz.pmis.message.dto.BatchProgressVO;
 import com.njydsz.pmis.message.dto.BatchSendRequestDTO;
 import com.njydsz.pmis.message.entity.MsgBatchDO;

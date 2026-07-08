@@ -1,0 +1,75 @@
+package com.njydsz.pmis.workflow.controller;
+
+import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.workflow.dto.FlowQuickCommentDTO;
+import com.njydsz.pmis.workflow.entity.FlowQuickCommentDO;
+import com.njydsz.pmis.workflow.service.FlowQuickCommentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 审批常用语 Controller
+ *
+ * <p>P1-2: 对标钉钉/飞书审批的"常用语"能力。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.8.0
+ */
+@Slf4j
+@Validated
+@RestController
+@RequestMapping("/api/workflow/quick-comments")
+@RequiredArgsConstructor
+@Tag(name = "审批常用语", description = "常用审批意见管理")
+public class FlowQuickCommentController {
+
+    private final FlowQuickCommentService quickCommentService;
+
+    @GetMapping
+    @Operation(summary = "查询当前用户的常用语列表")
+    public Result<List<FlowQuickCommentDO>> list() {
+        String userId = SecurityContext.getUserId();
+        String tenantId = TenantContext.getTenantId();
+        return Result.ok(quickCommentService.listByUser(userId, tenantId));
+    }
+
+    @PostMapping
+    @Operation(summary = "新增常用语")
+    public Result<String> create(@Valid @RequestBody FlowQuickCommentDTO dto) {
+        String userId = SecurityContext.getUserId();
+        String tenantId = TenantContext.getTenantId();
+        return Result.ok(quickCommentService.create(dto, userId, tenantId));
+    }
+
+    @PutMapping
+    @Operation(summary = "编辑常用语")
+    public Result<Void> update(@Valid @RequestBody FlowQuickCommentDTO dto) {
+        String userId = SecurityContext.getUserId();
+        quickCommentService.update(dto, userId);
+        return Result.ok();
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除常用语")
+    public Result<Void> delete(@PathVariable String id) {
+        String userId = SecurityContext.getUserId();
+        quickCommentService.delete(id, userId);
+        return Result.ok();
+    }
+
+    @PostMapping("/{id}/use")
+    @Operation(summary = "增加使用次数（审批时调用）")
+    public Result<Void> incrementUseCount(@PathVariable String id) {
+        quickCommentService.incrementUseCount(id);
+        return Result.ok();
+    }
+}

@@ -41,6 +41,18 @@ public class RuleNode {
     /** 所包装的子链（仅当 nodeType = CHAIN 时有效） */
     private final RuleChain chain;
 
+    /** 节点级超时（毫秒，0=不超时，2.0.0） */
+    private final long timeoutMs;
+
+    /** 节点级重试次数（0=不重试，2.0.0） */
+    private final int retryCount;
+
+    /** 节点级重试间隔（毫秒，2.0.0） */
+    private final long retryIntervalMs;
+
+    /** 节点名称（用于日志和调试，可选） */
+    private final String name;
+
     /**
      * 私有构造，统一通过工厂方法创建
      *
@@ -52,11 +64,24 @@ public class RuleNode {
      */
     private RuleNode(NodeType nodeType, Rule rule, List<RuleNode> children,
                      RuleChainType chainType, RuleChain chain) {
+        this(nodeType, rule, children, chainType, chain, 0, 0, 0, null);
+    }
+
+    /**
+     * 全参数私有构造（2.0.0 增加超时/重试/名称）
+     */
+    private RuleNode(NodeType nodeType, Rule rule, List<RuleNode> children,
+                     RuleChainType chainType, RuleChain chain,
+                     long timeoutMs, int retryCount, long retryIntervalMs, String name) {
         this.nodeType = nodeType;
         this.rule = rule;
         this.children = children;
         this.chainType = chainType;
         this.chain = chain;
+        this.timeoutMs = timeoutMs;
+        this.retryCount = retryCount;
+        this.retryIntervalMs = retryIntervalMs;
+        this.name = name;
     }
 
     /**
@@ -67,7 +92,22 @@ public class RuleNode {
      */
     public static RuleNode of(Rule rule) {
         Objects.requireNonNull(rule, "rule 不能为 null");
-        return new RuleNode(NodeType.SINGLE, rule, null, null, null);
+        return new RuleNode(NodeType.SINGLE, rule, null, null, null, 0, 0, 0, null);
+    }
+
+    /**
+     * 构建单条规则节点（带超时和重试配置，2.0.0）
+     *
+     * @param rule            规则
+     * @param timeoutMs       超时毫秒（0=不超时）
+     * @param retryCount      重试次数（0=不重试）
+     * @param retryIntervalMs 重试间隔毫秒
+     * @return SINGLE 类型节点
+     * @since 2.0.0
+     */
+    public static RuleNode of(Rule rule, long timeoutMs, int retryCount, long retryIntervalMs) {
+        Objects.requireNonNull(rule, "rule 不能为 null");
+        return new RuleNode(NodeType.SINGLE, rule, null, null, null, timeoutMs, retryCount, retryIntervalMs, null);
     }
 
     /**
@@ -78,7 +118,22 @@ public class RuleNode {
      */
     public static RuleNode of(RuleChain chain) {
         Objects.requireNonNull(chain, "chain 不能为 null");
-        return new RuleNode(NodeType.CHAIN, null, null, chain.getChainType(), chain);
+        return new RuleNode(NodeType.CHAIN, null, null, chain.getChainType(), chain, 0, 0, 0, null);
+    }
+
+    /**
+     * 构建子链节点（带超时和重试配置，2.0.0）
+     *
+     * @param chain           规则链
+     * @param timeoutMs       超时毫秒
+     * @param retryCount      重试次数
+     * @param retryIntervalMs 重试间隔毫秒
+     * @return CHAIN 类型节点
+     * @since 2.0.0
+     */
+    public static RuleNode of(RuleChain chain, long timeoutMs, int retryCount, long retryIntervalMs) {
+        Objects.requireNonNull(chain, "chain 不能为 null");
+        return new RuleNode(NodeType.CHAIN, null, null, chain.getChainType(), chain, timeoutMs, retryCount, retryIntervalMs, null);
     }
 
     /**
@@ -90,7 +145,7 @@ public class RuleNode {
     public static RuleNode group(List<RuleNode> children) {
         Objects.requireNonNull(children, "children 不能为 null");
         return new RuleNode(NodeType.GROUP, null,
-                Collections.unmodifiableList(new ArrayList<>(children)), null, null);
+                Collections.unmodifiableList(new ArrayList<>(children)), null, null, 0, 0, 0, null);
     }
 
     /**
@@ -136,6 +191,66 @@ public class RuleNode {
      */
     public RuleChain getChain() {
         return chain;
+    }
+
+    /**
+     * 获取节点级超时（毫秒）
+     *
+     * @return 超时毫秒；0 表示不超时
+     * @since 2.0.0
+     */
+    public long getTimeoutMs() {
+        return timeoutMs;
+    }
+
+    /**
+     * 获取节点级重试次数
+     *
+     * @return 重试次数；0 表示不重试
+     * @since 2.0.0
+     */
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    /**
+     * 获取节点级重试间隔（毫秒）
+     *
+     * @return 重试间隔毫秒
+     * @since 2.0.0
+     */
+    public long getRetryIntervalMs() {
+        return retryIntervalMs;
+    }
+
+    /**
+     * 获取节点名称
+     *
+     * @return 节点名称；可能为 null
+     * @since 2.0.0
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * 是否配置了超时
+     *
+     * @return true=有超时配置
+     * @since 2.0.0
+     */
+    public boolean hasTimeout() {
+        return timeoutMs > 0;
+    }
+
+    /**
+     * 是否配置了重试
+     *
+     * @return true=有重试配置
+     * @since 2.0.0
+     */
+    public boolean hasRetry() {
+        return retryCount > 0;
     }
 
     /**

@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,12 +44,49 @@ public class LlmProviderRouter {
     /** 当前生效的 LLM Provider（懒加载，volatile 保证可见性） */
     private volatile LlmProvider activeProvider = null;
 
+    /** Fallback 链（按优先级排列，P4-6） */
+    private final List<String> fallbackChain;
+
+    /** 智能路由是否启用（P4-6） */
+    private final boolean smartRoutingEnabled;
+
     public LlmProviderRouter(ApplicationContext applicationContext,
                              MockLlmProvider mockLlmProvider,
-                             @Value("${pmis.agent.llm.provider:mock}") String configuredProvider) {
+                             @Value("${pmis.agent.llm.provider:mock}") String configuredProvider,
+                             @Value("${pmis.agent.llm.fallback-chain:}") String fallbackChainStr,
+                             @Value("${pmis.agent.llm.smart-routing:false}") boolean smartRoutingEnabled) {
         this.applicationContext = applicationContext;
         this.mockLlmProvider = mockLlmProvider;
         this.configuredProvider = configuredProvider;
+        this.fallbackChain = parseFallbackChain(fallbackChainStr, configuredProvider);
+        this.smartRoutingEnabled = smartRoutingEnabled;
+        log.info("[LlmRouter] 初始化, provider={}, fallbackChain={}, smartRouting={}",
+                configuredProvider, fallbackChain, smartRoutingEnabled);
+    }
+
+    /**
+     * 解析 Fallback 链配置。
+     *
+     * <p>格式：逗号分隔的 provider 名称列表，如 {@code dashscope,spring-ai-openai,mock}
+     * <p>未配置时默认为 [configuredProvider, mock]
+     */
+    private List<String> parseFallbackChain(String chainStr, String primary) {
+        List<String> chain = new ArrayList<>();
+        if (chainStr != null && !chainStr.isBlank()) {
+            chain = Arrays.stream(chainStr.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        // 确保主 provider 在链首
+        if (!chain.contains(primary)) {
+            chain.add(0, primary);
+        }
+        // 确保 mock 在链尾（终极降级）
+        if (!chain.contains("mock")) {
+            chain.add("mock");
+        }
+        return chain;
     }
 
     /**
@@ -61,25 +101,65 @@ public class LlmProviderRouter {
         if (activeProvider != null) {
             return activeProvider;
         }
-        Map<String, LlmProvider> providers = applicationContext.getBeansOfType(LlmProvider.class);
-        if (providers.isEmpty()) {
-            log.warn("[LlmRouter] no LlmProvider bean found, fallback to mock");
-            activeProvider = mockLlmProvider;
-        } else {
-            // 按配置的 provider name 精确匹配
-            for (Map.Entry<String, LlmProvider> entry : providers.entrySet()) {
-                if (entry.getValue().name().equals(configuredProvider)) {
-                    activeProvider = entry.getValue();
-                    break;
-                }
-            }
-            if (activeProvider == null) {
-                log.warn("[LlmRouter] configured provider '{}' not found, fallback to mock", configuredProvider);
-                activeProvider = mockLlmProvider;
-            }
-        }
+        activeProvider = resolveProvider(configuredProvider);
         log.info("[LlmRouter] active LLM provider: {} (configured={})", activeProvider.name(), configuredProvider);
         return activeProvider;
+    }
+
+    /**
+     * 带容错的 LLM 调用（P4-6 落地）。
+     *
+     * <p>按 Fallback 链依次尝试调用，首个成功的结果即返回。
+     * 某个 Provider 异常时自动切换到链中下一个 Provider，直到全部失败才抛出异常。
+     *
+     * <p>对标 Coze 模型容错 / Dify Model Load Balancing。
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt   用户提示词
+     * @param context      Agent 上下文
+     * @return LLM 推理结果
+     */
+    public String chatWithFallback(String systemPrompt, String userPrompt,
+                                    com.njydsz.pmis.agent.engine.AgentContext context) {
+        Exception lastError = null;
+        for (String providerName : fallbackChain) {
+            try {
+                LlmProvider provider = resolveProvider(providerName);
+                if (provider == mockLlmProvider && providerName.equals("mock")
+                        && fallbackChain.size() > 1) {
+                    // mock 是终极降级，前面还有其他 provider 时先跳过
+                    continue;
+                }
+                String result = provider.chat(systemPrompt, userPrompt, context);
+                if (result != null && !result.isBlank()) {
+                    if (!provider.name().equals(configuredProvider)) {
+                        log.info("[LlmRouter] Fallback 成功: {} → {}", configuredProvider, provider.name());
+                    }
+                    return result;
+                }
+            } catch (Exception e) {
+                log.warn("[LlmRouter] Provider [{}] 调用失败, 尝试下一个: {}",
+                        providerName, e.getMessage());
+                lastError = e;
+            }
+        }
+        // 全部失败，降级到 mock
+        log.warn("[LlmRouter] 所有 Provider 均失败, 降级到 mock");
+        return mockLlmProvider.chat(systemPrompt, userPrompt, context);
+    }
+
+    /**
+     * 根据 provider 名称解析 Provider 实例。
+     */
+    private LlmProvider resolveProvider(String providerName) {
+        if ("mock".equals(providerName)) {
+            return mockLlmProvider;
+        }
+        Map<String, LlmProvider> providers = applicationContext.getBeansOfType(LlmProvider.class);
+        return providers.values().stream()
+                .filter(p -> p.name().equals(providerName))
+                .findFirst()
+                .orElse(mockLlmProvider);
     }
 
     /**

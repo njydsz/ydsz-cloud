@@ -160,6 +160,119 @@ public class RuleAdminService {
     }
 
     /**
+     * 全文搜索规则（2.0.0）
+     *
+     * <p>在规则编码、名称、描述、条件表达式、分类路径、标签等字段中搜索关键词。
+     * 支持多关键词空格分隔（AND 语义），大小写不敏感。
+     * 可按状态、分类、启停状态过滤。
+     *
+     * <h3>搜索字段</h3>
+     * <ul>
+     *   <li>code - 规则编码</li>
+     *   <li>name - 规则名称</li>
+     *   <li>description - 规则描述</li>
+     *   <li>conditionExpression - 条件表达式</li>
+     *   <li>category / categoryPath - 分类/分类路径</li>
+     *   <li>owner - 责任人</li>
+     *   <li>tags - 标签</li>
+     * </ul>
+     *
+     * @param query    搜索关键词（空格分隔为 AND 条件，null/空返回全部）
+     * @param status   状态过滤（null=不过滤）
+     * @param category 分类过滤（null=不过滤）
+     * @param enabled  启停过滤（null=不过滤）
+     * @param offset   分页偏移
+     * @param limit    分页大小
+     * @return 搜索结果列表
+     * @since 2.0.0
+     */
+    public List<RuleDefinition> search(String query, String status, String category,
+                                        Boolean enabled, int offset, int limit) {
+        List<RuleDefinition> all = configProvider.loadAllRules();
+        // 1. 关键词分词
+        String[] keywords = null;
+        if (query != null && !query.isBlank()) {
+            keywords = query.trim().toLowerCase().split("\\s+");
+        }
+        // 2. 过滤
+        List<RuleDefinition> filtered = new java.util.ArrayList<>();
+        for (RuleDefinition def : all) {
+            // 状态过滤
+            if (status != null && !status.isBlank()) {
+                if (!status.equalsIgnoreCase(def.getStatus())) continue;
+            }
+            // 分类过滤
+            if (category != null && !category.isBlank()) {
+                if (!category.equalsIgnoreCase(def.getCategory())) continue;
+            }
+            // 启停过滤
+            if (enabled != null) {
+                if (def.isEnabled() != enabled) continue;
+            }
+            // 关键词全文匹配
+            if (keywords != null && keywords.length > 0) {
+                String searchText = buildSearchableText(def);
+                boolean allMatched = true;
+                for (String kw : keywords) {
+                    if (!searchText.contains(kw)) {
+                        allMatched = false;
+                        break;
+                    }
+                }
+                if (!allMatched) continue;
+            }
+            filtered.add(def);
+        }
+        // 3. 排序（按名称排序）
+        filtered.sort((a, b) -> {
+            String na = a.getName() != null ? a.getName() : "";
+            String nb = b.getName() != null ? b.getName() : "";
+            return na.compareToIgnoreCase(nb);
+        });
+        // 4. 分页
+        if (offset < 0) offset = 0;
+        if (limit <= 0) limit = 50;
+        if (offset >= filtered.size()) return java.util.Collections.emptyList();
+        int end = Math.min(offset + limit, filtered.size());
+        return filtered.subList(offset, end);
+    }
+
+    /**
+     * 统计搜索结果总数（不分页）
+     *
+     * @param query    搜索关键词
+     * @param status   状态过滤
+     * @param category 分类过滤
+     * @param enabled  启停过滤
+     * @return 匹配的规则总数
+     * @since 2.0.0
+     */
+    public int searchCount(String query, String status, String category, Boolean enabled) {
+        return search(query, status, category, enabled, 0, Integer.MAX_VALUE).size();
+    }
+
+    /**
+     * 构建规则的可搜索文本（拼接所有可搜索字段，小写化）
+     */
+    private String buildSearchableText(RuleDefinition def) {
+        StringBuilder sb = new StringBuilder(256);
+        appendIfNotNull(sb, def.getCode());
+        appendIfNotNull(sb, def.getName());
+        appendIfNotNull(sb, def.getDescription());
+        appendIfNotNull(sb, def.getConditionExpression());
+        appendIfNotNull(sb, def.getSeverityExpression());
+        appendIfNotNull(sb, def.getCategory());
+        appendIfNotNull(sb, def.getCategoryPath());
+        appendIfNotNull(sb, def.getOwner());
+        appendIfNotNull(sb, def.getScope());
+        return sb.toString().toLowerCase();
+    }
+
+    private void appendIfNotNull(StringBuilder sb, String s) {
+        if (s != null) sb.append(" ").append(s);
+    }
+
+    /**
      * 新增/更新规则（自动保存版本快照）
      *
      * @param definition 规则定义

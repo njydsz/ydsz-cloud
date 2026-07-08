@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.enums;
 
+
 /**
  * 消息发送状态枚举。
  *

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.enums;
 
+
 /**
  * 消息撤回状态枚举。
  *

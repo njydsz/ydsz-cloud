@@ -52,6 +52,24 @@ public class PushChannel implements MessageChannel {
     }
 
     /**
+     * P1-10: 批量推送到多个设备（委托给 provider 的原生批量接口）。
+     *
+     * @param requests 消息请求列表
+     * @return 发送结果列表
+     */
+    public List<MessageResult> batchSend(List<MessageRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return List.of();
+        }
+        PushProvider provider = selectProvider();
+        List<MessageResult> results = provider.batchSend(requests, null);
+        log.info("[PushChannel] 批量推送: provider={} count={} success={}",
+                provider.providerType(), requests.size(),
+                results.stream().filter(MessageResult::isSuccess).count());
+        return results;
+    }
+
+    /**
      * 根据配置选择 provider，无匹配时降级到 mock。
      *
      * @return 推送服务商
