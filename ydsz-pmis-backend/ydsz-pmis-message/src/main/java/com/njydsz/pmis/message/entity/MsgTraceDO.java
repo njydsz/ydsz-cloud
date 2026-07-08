@@ -9,7 +9,6 @@ import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 /**
  * 消息轨迹记录表: 记录消息从接入到投递全链路的每个关键节点。

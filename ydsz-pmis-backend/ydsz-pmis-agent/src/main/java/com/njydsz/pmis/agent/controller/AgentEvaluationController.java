@@ -1,9 +1,12 @@
 package com.njydsz.pmis.agent.controller;
 
 import com.njydsz.pmis.agent.engine.Agent;
+import com.njydsz.pmis.agent.engine.AgentContext;
+import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.engine.eval.AgentEvaluationFramework;
 import com.njydsz.pmis.agent.engine.eval.EvaluationCase;
 import com.njydsz.pmis.agent.engine.eval.EvaluationReport;
+import com.njydsz.pmis.agent.engine.eval.EvaluableAgent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -70,9 +74,30 @@ public class AgentEvaluationController {
                     .build());
         }
 
-        AgentEvaluationFramework framework = new AgentEvaluationFramework(agent, req.getParallelism() > 0 ? req.getParallelism() : 1);
+        AgentEvaluationFramework framework = new AgentEvaluationFramework(
+                toEvaluable(agent), null, req.getParallelism() > 0 ? req.getParallelism() : 1);
         EvaluationReport report = framework.run(cases);
         return Result.ok(report);
+    }
+
+    /**
+     * 将 {@link Agent}（{@code execute(AgentContext)}）适配为 {@link EvaluableAgent}（{@code execute(String, AgentContext)}）。
+     *
+     * <p>用户输入通过 {@code AgentContext.params["userInput"]} 传入，由具体 Agent 自行解释；
+     * 输出取 {@link AgentResult#getSuggestion()}，为空时回退到 {@code toString()}。
+     */
+    private EvaluableAgent toEvaluable(Agent agent) {
+        return (input, ctx) -> {
+            AgentContext context = ctx != null ? ctx : new AgentContext();
+            Map<String, Object> params = context.getParams();
+            if (params == null) {
+                params = new HashMap<>();
+                context.setParams(params);
+            }
+            params.put("userInput", input);
+            AgentResult result = agent.execute(context);
+            return result.getSuggestion() != null ? result.getSuggestion() : result.toString();
+        };
     }
 
     /**

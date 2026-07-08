@@ -132,7 +132,6 @@ public class AgentEvaluationFramework implements AutoCloseable {
      * @param parallelism 并行度
      * @return 评测框架实例
      */
-    @SuppressWarnings("deprecation")
     public static AgentEvaluationFramework forObject(Object agentObject, LlmProvider llmProvider, int parallelism) {
         EvaluableAgent adapter = (input, ctx) -> {
             try {

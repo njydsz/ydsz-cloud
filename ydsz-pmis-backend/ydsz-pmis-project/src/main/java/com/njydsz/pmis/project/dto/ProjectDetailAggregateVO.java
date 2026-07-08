@@ -3,9 +3,6 @@ package com.njydsz.pmis.project.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * 项目详情聚合 VO（BFF 聚合接口返回值）。
  *

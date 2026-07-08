@@ -142,7 +142,7 @@ public class ShardRebalanceListener {
 
             // 清理过旧的历史记录
             if (changeHistory.size() > MAX_HISTORY) {
-                long oldest = changeHistory.keySet().stream().min(Long::compare).orElse(0L);
+                long oldest = changeHistory.keySet().stream().min((a, b) -> Long.compare(a, b)).orElse(0L);
                 if (oldest > 0) {
                     changeHistory.remove(oldest);
                 }

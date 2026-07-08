@@ -77,7 +77,7 @@ public class GrpcTaskClient extends RemoteTaskClient {
      */
     @Override
     public String dispatch(JobNodeDO node, RemoteTaskRequest request) {
-        // TODO: 添加 gRPC 依赖后替换为真实 gRPC 调用
+        // TO_DO: 添加 gRPC 依赖后替换为真实 gRPC 调用
         // 目前降级为 HTTP 派发
         return httpFallback.dispatch(node, request);
     }
@@ -87,7 +87,7 @@ public class GrpcTaskClient extends RemoteTaskClient {
      */
     @Override
     public String dispatchSubTask(JobNodeDO node, RemoteSubTaskRequest request) {
-        // TODO: 添加 gRPC 依赖后替换为真实 gRPC 调用
+        // TO_DO: 添加 gRPC 依赖后替换为真实 gRPC 调用
         return httpFallback.dispatchSubTask(node, request);
     }
 }

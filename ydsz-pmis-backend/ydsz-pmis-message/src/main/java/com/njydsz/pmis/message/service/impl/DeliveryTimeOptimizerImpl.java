@@ -43,9 +43,6 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
     private static final String ACTIVITY_HOURLY_PREFIX = "pmis:activity:hourly:";
     private static final String ACTIVITY_COUNT_PREFIX = "pmis:activity:count:";
 
-    /** 一周 7 天 * 24 小时 = 168 个时段 */
-    private static final int SLOTS_PER_WEEK = 168;
-
     /** 默认活跃评分有效期（天） */
     private static final int ACTIVITY_EXPIRE_DAYS = 7;
 

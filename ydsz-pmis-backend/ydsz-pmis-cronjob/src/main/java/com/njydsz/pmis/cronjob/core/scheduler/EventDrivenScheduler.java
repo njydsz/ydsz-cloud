@@ -7,9 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
-
 /**
  * P2-13: 事件驱动调度（MQ 消息触发）。
  *
@@ -116,8 +113,9 @@ public class EventDrivenScheduler {
     private boolean acquireDedupLock(String jobKey, String msgId) {
         try {
             String key = EVENT_DEDUP_PREFIX + jobKey + ":" + msgId;
+            // 使用 setIfAbsent(K, V, Duration) 替代已弃用的 setIfAbsent(K, V, long, TimeUnit)（Spring Data Redis 4.1+）
             Boolean acquired = redisTemplate.opsForValue()
-                    .setIfAbsent(key, "1", DEDUP_TTL_MINUTES, TimeUnit.MINUTES);
+                    .setIfAbsent(key, "1", java.time.Duration.ofMinutes(DEDUP_TTL_MINUTES));
             return Boolean.TRUE.equals(acquired);
         } catch (Exception e) {
             log.warn("[EventScheduler] 去重锁获取异常, 放行: jobKey={} msgId={} reason={}",

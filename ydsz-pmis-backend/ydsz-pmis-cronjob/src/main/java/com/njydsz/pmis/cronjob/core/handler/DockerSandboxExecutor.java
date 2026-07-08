@@ -108,9 +108,13 @@ public class DockerSandboxExecutor {
                 return new SandboxResult(false, "执行超时", -1, "");
             }
 
-            String output = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))
-                    .lines().collect(Collectors.joining("\n"));
+            // 读取 stdout 并显式关闭输入流以释放资源
+            String output;
+            try (java.io.InputStream inputStream = process.getInputStream()) {
+                output = new BufferedReader(
+                        new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+                        .lines().collect(Collectors.joining("\n"));
+            }
 
             int exitCode = process.exitValue();
             boolean success = exitCode == 0;

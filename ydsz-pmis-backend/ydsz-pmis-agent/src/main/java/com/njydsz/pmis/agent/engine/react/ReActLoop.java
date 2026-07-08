@@ -30,7 +30,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * ReAct 推理循环（P1-2 落地，P3-4 增加 HITL 暂停/恢复）

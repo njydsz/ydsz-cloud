@@ -1,7 +1,6 @@
 package com.njydsz.pmis.cronjob.core.logger;
 
 import com.njydsz.pmis.common.job.JobLogger;
-import com.njydsz.pmis.cronjob.core.logger.LogStreamManager;
 import com.njydsz.pmis.cronjob.entity.JobLogContentDO;
 import com.njydsz.pmis.cronjob.service.JobLogContentService;
 import lombok.extern.slf4j.Slf4j;

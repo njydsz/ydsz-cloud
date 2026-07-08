@@ -496,28 +496,6 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     }
 
     /**
-     * 从节点对象中提取字段值（result / status）。
-     *
-     * @param nodeObj 节点对象（JSONObject 或其他）
-     * @param field  字段名（result / status）
-     * @return 字段值字符串；不存在返回 null
-     */
-    private String extractFieldValue(Object nodeObj, String field) {
-        if (nodeObj == null) {
-            return null;
-        }
-        if (nodeObj instanceof JSONObject jo) {
-            Object value = jo.get(field);
-            return value == null ? null : value.toString();
-        }
-        // 非 JSONObject 时，仅支持 result 字段（直接作为字符串）
-        if ("result".equals(field)) {
-            return nodeObj.toString();
-        }
-        return null;
-    }
-
-    /**
      * P2-1: 获取节点的有效 Job ID。
      *
      * <p>控制节点（CONDITION/LOOP/PARALLEL_GATEWAY）的 jobId 可能为 null，

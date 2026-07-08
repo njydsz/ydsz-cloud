@@ -47,9 +47,6 @@ public class LlmResponseCache {
     /** LRU 缓存（通过 accessOrder=true 实现 LRU 淘汰） */
     private final LinkedHashMap<String, CacheEntry> cache;
 
-    /** 最大缓存条目数 */
-    private final int maxSize;
-
     /** TTL 过期时间（毫秒） */
     private final long ttlMs;
 
@@ -73,7 +70,6 @@ public class LlmResponseCache {
      * @param ttlMs   TTL 过期时间（毫秒）
      */
     public LlmResponseCache(int maxSize, long ttlMs) {
-        this.maxSize = maxSize;
         this.ttlMs = ttlMs;
         this.cache = new LinkedHashMap<>(maxSize, 0.75f, true) {
             @Override

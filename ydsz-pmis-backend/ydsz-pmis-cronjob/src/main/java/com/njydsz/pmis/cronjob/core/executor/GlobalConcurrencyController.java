@@ -7,7 +7,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 /**
  * P2-16: 全局并发控制（Redis 全局并发计数器）。
