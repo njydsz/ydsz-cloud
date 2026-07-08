@@ -44,7 +44,7 @@ public class RuleABPolicyDO implements Serializable {
     /** 监控窗口（分钟） */
     private Integer checkWindowMinutes;
 
-    /** 通知渠道：IN_APP / EMAIL / SMS / WEBHOOK（逗号分隔） */
+    /** 通知渠道：INAPP / EMAIL / SMS / WEBHOOK（逗号分隔） */
     private String notifyChannels;
 
     /** 描述 */

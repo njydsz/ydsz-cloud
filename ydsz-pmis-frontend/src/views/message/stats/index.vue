@@ -58,7 +58,7 @@ const channelLabelMap: Record<MessageChannel, string> = {
   SMS: t('message.channelSms'),
   EMAIL: t('message.channelEmail'),
   PUSH: t('message.channelPush'),
-  IN_APP: t('message.channelInApp'),
+  INAPP: t('message.channelInApp'),
   WEBHOOK: t('message.channelWebhook'),
   DINGTALK: t('message.channelDingtalk'),
   WECOM: t('message.channelWecom'),
@@ -70,7 +70,7 @@ const channelTagType: Record<MessageChannel, TagType> = {
   SMS: 'primary',
   EMAIL: 'success',
   PUSH: 'warning',
-  IN_APP: 'info',
+  INAPP: 'info',
   WEBHOOK: 'info',
   DINGTALK: 'primary',
   WECOM: 'success',
@@ -342,7 +342,7 @@ onMounted(() => {
               <el-option label="SMS" value="SMS" />
               <el-option label="EMAIL" value="EMAIL" />
               <el-option label="PUSH" value="PUSH" />
-              <el-option label="IN_APP" value="IN_APP" />
+              <el-option label="INAPP" value="INAPP" />
               <el-option label="WEBHOOK" value="WEBHOOK" />
               <el-option label="DINGTALK" value="DINGTALK" />
               <el-option label="WECOM" value="WECOM" />

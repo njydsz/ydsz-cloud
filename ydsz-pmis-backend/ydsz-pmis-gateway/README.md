@@ -24,6 +24,21 @@
 6. **灰度路由**：基于 `X-Gray-Tag` 头 + Nacos `metadata.version` 元数据
 7. **WebSocket**：转发到 `message` 服务的通知推送通道
 
+## 数据库表设计
+
+本模块为**纯路由网关**，**不直接访问任何业务数据库**，仅作为流量入口与横切关注点（限流/熔断/灰度）的执行点。
+
+- ✅ 注册中心：Nacos（仅做服务发现 + 配置中心）
+- ✅ 缓存：Redis（限流计数 / IP 白名单缓存）
+- ❌ 业务 DB：**不持有任何 `pmis_*` 表**
+- ❌ 业务实体：模块内**不定义 `*DO.java`**，所有业务数据均通过路由转发到下游服务（userinfo / system / project / message / workflow / cronjob / agent）
+
+> **设计原则**：
+> - 网关注入业务表会带来分布式事务与数据一致性风险，违反"网关无状态"约束；
+> - 所有审计 / 操作日志下沉到 `ydsz-pmis-system` 的 `pmis_operation_log`（由下游业务服务经 Feign 写入）；
+> - 限流统计写入 Redis（`pmis:gateway:ratelimit:*`），不落库；
+> - 灰度标签仅作为请求头/Metadata 透传，不持久化。
+
 ## 启动顺序
 
 ```
@@ -59,9 +74,8 @@ ydsz-pmis-gateway/
     │       ├── GrayLoadBalancer.java
     │       └── GrayLoadBalancerConfig.java
     └── resources/
-        ├── bootstrap.yml                 # Nacos 连接 + 端口
-        ├── application.yml               # 兜底配置
-        └── nacos-config/                 # Nacos 端配置模板
+        ├── bootstrap.yml                 # Nacos 连接 + 端口（9000）
+        └── config/                       # 原 nacos-config（已重命名）
             ├── ydsz-pmis-gateway-dev.yaml
             ├── ydsz-pmis-gateway-sit.yaml
             └── ydsz-pmis-gateway-uat.yaml
@@ -72,10 +86,9 @@ ydsz-pmis-gateway/
 | 文件 | 用途 |
 |---|---|
 | `bootstrap.yml` | Nacos 连接 + 端口（9000）+ shared-configs 引用 |
-| `application.yml` | 本地兜底配置（CORS / Sentinel / LoadBalancer） |
-| `nacos-config/ydsz-pmis-gateway-dev.yaml` | dev 环境 Nacos 配置（DEBUG 日志 / 文档 UI 开） |
-| `nacos-config/ydsz-pmis-gateway-sit.yaml` | sit 环境（INFO 日志 / 文档 UI 关） |
-| `nacos-config/ydsz-pmis-gateway-uat.yaml` | uat 环境（INFO 日志 / 文档 UI 关） |
+| `config/ydsz-pmis-gateway-dev.yaml` | dev 环境 Nacos 配置（DEBUG 日志 / 文档 UI 开） |
+| `config/ydsz-pmis-gateway-sit.yaml` | sit 环境（INFO 日志 / 文档 UI 关） |
+| `config/ydsz-pmis-gateway-uat.yaml` | uat 环境（INFO 日志 / 文档 UI 关） |
 
 **环境变量覆盖**：
 

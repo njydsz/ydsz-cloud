@@ -17,7 +17,7 @@ public enum MessageChannelEnum {
     /** App 推送 */
     PUSH,
     /** 站内信 */
-    IN_APP,
+    INAPP,
     /** Webhook */
     WEBHOOK,
     /** 钉钉群机器人 */

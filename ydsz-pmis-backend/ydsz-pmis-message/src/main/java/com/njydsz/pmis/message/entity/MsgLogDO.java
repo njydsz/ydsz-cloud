@@ -30,7 +30,7 @@ public class MsgLogDO extends BaseDO {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 发送通道: SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU */
+    /** 发送通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU */
     private String channel;
 
     /** 业务类型 */
@@ -106,7 +106,7 @@ public class MsgLogDO extends BaseDO {
     /** 发送耗时(毫秒) */
     private Long costMs;
 
-    /** P2-4: 发送成本(元),按通道单价计算,SMS/EMAIL/PUSH 有成本,IM/IN_APP 免费 */
+    /** P2-4: 发送成本(元),按通道单价计算,SMS/EMAIL/PUSH 有成本,IM/INAPP 免费 */
     private java.math.BigDecimal cost;
 
     /** 系统链路追踪 ID */

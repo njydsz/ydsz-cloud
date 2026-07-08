@@ -135,7 +135,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 | 2 | 用户信息 | ydsz-pmis-userinfo | **9001** | 登录 / Token / 2FA / 登录审计 / 二次认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签 |
 | 3 | 系统基础 | ydsz-pmis-system | **9002** | 文件 / 配置 / 审计 |
 | 4 | 项目 | ydsz-pmis-project | **9003** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润 |
-| 5 | 消息中心 | ydsz-pmis-message | **9004** | 多渠道发送（SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU）+ 模板 + 偏好 + 订阅 + 限流 + 撤回 + 聚合 + 回执 |
+| 5 | 消息中心 | ydsz-pmis-message | **9004** | 多渠道发送（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU）+ 模板 + 偏好 + 订阅 + 限流 + 撤回 + 聚合 + 回执 |
 | 6 | 调度 | ydsz-pmis-cronjob | **9005** | Leader 选举 + DB 行锁 + Redis 分布式锁 + 故障转移 + 租户隔离 + 告警通道 |
 | 7 | 工作流 | ydsz-pmis-workflow | **9006** | 自研 `pmis_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 ⚠️ **仅 PC 端** |
 | 8 | AI Agent | ydsz-pmis-agent | **9007** | 5 Agent + 4 编排 + 5 LLM Provider |

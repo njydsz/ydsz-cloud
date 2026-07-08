@@ -228,7 +228,7 @@ public class ABTestAutoRollbackService {
             return "SKIPPED";
         }
         // 2. 构造通知
-        String channels = policy.getNotifyChannels() != null ? policy.getNotifyChannels() : "IN_APP,EMAIL";
+        String channels = policy.getNotifyChannels() != null ? policy.getNotifyChannels() : "INAPP,EMAIL";
         String action = rolledBack ? "已自动回滚" : "需要人工介入";
         String subject = String.format("[规则 AB Test %s] %s", action, ruleCode);
         String content = String.format(
@@ -271,7 +271,7 @@ public class ABTestAutoRollbackService {
         p.setErrorRateThreshold(new BigDecimal("0.3000"));
         p.setMinSampleSize(100);
         p.setCheckWindowMinutes(60);
-        p.setNotifyChannels("IN_APP,EMAIL");
+        p.setNotifyChannels("INAPP,EMAIL");
         return p;
     }
 
@@ -348,7 +348,7 @@ public class ABTestAutoRollbackService {
             if (policy.getErrorRateThreshold() == null) policy.setErrorRateThreshold(new BigDecimal("0.3000"));
             if (policy.getMinSampleSize() == null) policy.setMinSampleSize(100);
             if (policy.getCheckWindowMinutes() == null) policy.setCheckWindowMinutes(60);
-            if (policy.getNotifyChannels() == null) policy.setNotifyChannels("IN_APP,EMAIL");
+            if (policy.getNotifyChannels() == null) policy.setNotifyChannels("INAPP,EMAIL");
             policy.setCreatedBy(operator);
             policy.setCreatedAt(now);
             policyMapper.insert(policy);

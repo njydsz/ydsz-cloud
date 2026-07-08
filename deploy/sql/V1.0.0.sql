@@ -803,7 +803,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_preference(
     deleted           SMALLINT     NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmp_user_chan_biz UNIQUE (user_id, channel, biz_type, tenant_id, deleted),
-    CONSTRAINT ck_pmp_channel_enum  CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmp_channel_enum  CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pmp_enabled_enum  CHECK (enabled IN (0, 1)),
     CONSTRAINT ck_pmp_dnd_enum      CHECK (dnd_enabled IN (0, 1)),
     CONSTRAINT ck_pmp_digest_enum   CHECK (digest_enabled IN (0, 1)),
@@ -813,7 +813,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_preference(
 );
 COMMENT ON TABLE pmis_msg_preference IS '用户消息偏好表: 免打扰时段 / 频率上限 / 聚合开关 / 偏好语言';
 COMMENT ON COLUMN pmis_msg_preference.user_id IS '用户 ID(关联 pmis_employee.id)';
-COMMENT ON COLUMN pmis_msg_preference.channel IS '通道: SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU';
+COMMENT ON COLUMN pmis_msg_preference.channel IS '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
 COMMENT ON COLUMN pmis_msg_preference.biz_type IS '业务类型(__DEFAULT__ 表示该通道全局默认偏好)';
 COMMENT ON COLUMN pmis_msg_preference.enabled IS '是否启用该通道: 0 关闭 / 1 开启(关闭后不发送)';
 COMMENT ON COLUMN pmis_msg_preference.dnd_enabled IS '免打扰开关: 0 关闭 / 1 开启';
@@ -846,7 +846,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_subscription(
     deleted         SMALLINT     NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT uk_pms_user_topic_chan UNIQUE (user_id, topic_code, channel, tenant_id, deleted),
-    CONSTRAINT ck_pms_channel_enum    CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pms_channel_enum    CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pms_status_enum     CHECK (status IN ('SUBSCRIBED', 'UNSUBSCRIBED')),
     CONSTRAINT ck_pms_deleted_enum    CHECK (deleted IN (0, 1))
 );
@@ -2490,7 +2490,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     -- 复合主键(分区表要求分区键 created_at 必须在主键中)
     CONSTRAINT pk_pml PRIMARY KEY (id, created_at),
     -- 数据完整性约束
-    CONSTRAINT ck_pml_channel_enum      CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pml_channel_enum      CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pml_status_enum       CHECK (status IN ('PENDING', 'SENDING', 'SUCCESS', 'FAILED', 'RETRY', 'DEAD', 'RECALLED', 'SCHEDULED')),
     CONSTRAINT ck_pml_priority_enum     CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'URGENT')),
     CONSTRAINT ck_pml_recall_enum       CHECK (recall_status IN ('NONE', 'RECALLED')),
@@ -2522,7 +2522,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m12 PARTITION OF pmis_msg_log FOR V
 CREATE TABLE IF NOT EXISTS pmis_msg_log_default PARTITION OF pmis_msg_log DEFAULT;
 
 COMMENT ON TABLE pmis_msg_log IS '消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度';
-COMMENT ON COLUMN pmis_msg_log.channel IS '发送通道: SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU';
+COMMENT ON COLUMN pmis_msg_log.channel IS '发送通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
 COMMENT ON COLUMN pmis_msg_log.status IS '发送状态: PENDING 待发送 / SENDING 发送中 / SUCCESS 成功 / FAILED 失败 / RETRY 重试中 / DEAD 死信 / RECALLED 已撤回';
 COMMENT ON COLUMN pmis_msg_log.priority IS '发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与并发)';
 COMMENT ON COLUMN pmis_msg_log.sender_id IS '触发发送的用户 ID(系统发送为 SYSTEM)';
@@ -2539,7 +2539,7 @@ COMMENT ON COLUMN pmis_msg_log.retry_count IS '已重试次数';
 COMMENT ON COLUMN pmis_msg_log.next_retry_at IS '下次重试时间(退避调度)';
 COMMENT ON COLUMN pmis_msg_log.provider_trace_id IS '三方服务商回执 ID';
 COMMENT ON COLUMN pmis_msg_log.cost_ms IS '发送耗时(毫秒)';
-COMMENT ON COLUMN pmis_msg_log.cost IS 'P2-4: 发送成本(元),按通道单价计算(SMS/EMAIL/PUSH 有成本,IM/IN_APP 免费)';
+COMMENT ON COLUMN pmis_msg_log.cost IS 'P2-4: 发送成本(元),按通道单价计算(SMS/EMAIL/PUSH 有成本,IM/INAPP 免费)';
 COMMENT ON COLUMN pmis_msg_log.trace_id IS '系统链路追踪 ID';
 COMMENT ON COLUMN pmis_msg_log.msg_id IS 'RocketMQ 消息 ID';
 COMMENT ON COLUMN pmis_msg_log.topic IS 'RocketMQ Topic(DLQ 消息填充原 Topic)';
@@ -2606,7 +2606,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_template(
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmt_code_chan_locale_tenant UNIQUE (template_code, channel, locale, tenant_id, deleted),
-    CONSTRAINT ck_pmt_channel_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmt_channel_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pmt_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pmt_audit_enum     CHECK (audit_status IN ('DRAFT', 'AUDITING', 'APPROVED', 'REJECTED')),
     CONSTRAINT ck_pmt_deleted_enum   CHECK (deleted IN (0, 1))
@@ -2657,9 +2657,9 @@ CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
     deleted           SMALLINT     NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmrr_code UNIQUE (rule_code, tenant_id, deleted),
-    CONSTRAINT ck_pmrr_chan_enum   CHECK (channel IS NULL OR channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmrr_target_enum CHECK (target_channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmrr_fb_enum     CHECK (fallback_channel IS NULL OR fallback_channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmrr_chan_enum   CHECK (channel IS NULL OR channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmrr_target_enum CHECK (target_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmrr_fb_enum     CHECK (fallback_channel IS NULL OR fallback_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pmrr_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pmrr_deleted_enum CHECK (deleted IN (0, 1)),
     CONSTRAINT ck_pmrr_priority_nonneg CHECK (priority >= 0)
@@ -2668,7 +2668,7 @@ COMMENT ON TABLE pmis_msg_route_rule IS '消息路由规则表: 按 biz_type/cha
 COMMENT ON COLUMN pmis_msg_route_rule.condition_expr IS '路由条件(SpEL 表达式,如 #request.bizType==''ALERT'' and #request.priority==''URGENT'')';
 COMMENT ON COLUMN pmis_msg_route_rule.target_channel IS '命中后目标通道';
 COMMENT ON COLUMN pmis_msg_route_rule.fallback_channel IS '目标通道发送失败时降级通道(单通道,兼容旧版)';
-COMMENT ON COLUMN pmis_msg_route_rule.fallback_chain IS 'P1-8: 多级降级链(逗号分隔通道列表,如 SMS,EMAIL,IN_APP),按顺序逐个尝试,优先于 fallback_channel';
+COMMENT ON COLUMN pmis_msg_route_rule.fallback_chain IS 'P1-8: 多级降级链(逗号分隔通道列表,如 SMS,EMAIL,INAPP),按顺序逐个尝试,优先于 fallback_channel';
 
 CREATE INDEX IF NOT EXISTS idx_pmrt_biz ON pmis_msg_route_rule(biz_type) WHERE deleted = 0 AND status = 'ENABLED';
 CREATE INDEX IF NOT EXISTS idx_pmrt_sort ON pmis_msg_route_rule(status, sort_order) WHERE deleted = 0;
@@ -2720,7 +2720,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT     NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
-    CONSTRAINT ck_pmag_chan_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmag_chan_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pmag_status_enum CHECK (batch_status IN ('PENDING', 'READY', 'SENT', 'CANCELLED')),
     CONSTRAINT ck_pmag_count_nonneg CHECK (message_count >= 0),
     CONSTRAINT ck_pmag_deleted_enum CHECK (deleted IN (0, 1))
@@ -2755,7 +2755,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_canary(
     CONSTRAINT ck_pmc_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pmc_pct_range   CHECK (percentage >= 0 AND percentage <= 100),
     CONSTRAINT ck_pmc_bucket_pos  CHECK (bucket_total > 0),
-    CONSTRAINT ck_pmc_exp_chan_enum CHECK (experiment_channel IS NULL OR experiment_channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmc_exp_chan_enum CHECK (experiment_channel IS NULL OR experiment_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
     CONSTRAINT ck_pmc_deleted_enum CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_msg_canary IS '灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布,命中后可切换实验模板/通道';
@@ -6718,7 +6718,7 @@ CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     content             TEXT,
     target_role         VARCHAR(64)  NOT NULL,
     target_user_ids     VARCHAR(1024),
-    push_channels       VARCHAR(64)  NOT NULL DEFAULT 'IN_APP',
+    push_channels       VARCHAR(64)  NOT NULL DEFAULT 'INAPP',
     dispatched_at       TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dispatched_by       VARCHAR(64),
     status              VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
@@ -6734,7 +6734,7 @@ CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     CONSTRAINT ck_pad_alert_type       CHECK (alert_type  IN ('BUDGET','EVM','SLA','RISK','PROFIT','BENCH','UTILIZATION','OTHER')),
     CONSTRAINT ck_pad_alert_level      CHECK (alert_level IN ('YELLOW','RED')),
     CONSTRAINT ck_pad_source_type      CHECK (source_type IN ('PROJECT','EVM','TICKET','BENCH','CONFIG','OTHER')),
-    CONSTRAINT ck_pad_push_channels    CHECK (push_channels ~ '^(IN_APP|EMAIL|SMS|WECHAT)(,(IN_APP|EMAIL|SMS|WECHAT))*$'),
+    CONSTRAINT ck_pad_push_channels    CHECK (push_channels ~ '^(INAPP|EMAIL|SMS|WECHAT)(,(INAPP|EMAIL|SMS|WECHAT))*$'),
     CONSTRAINT ck_pad_status_enum      CHECK (status IN ('PENDING','SENT','FAILED','RETRYING')),
     CONSTRAINT ck_pad_retry_count      CHECK (retry_count >= 0 AND retry_count <= 10),
     CONSTRAINT ck_pad_deleted          CHECK (deleted IN (0, 1))
@@ -6749,7 +6749,7 @@ COMMENT ON COLUMN pmis_alert_dispatch.title IS '预警标题';
 COMMENT ON COLUMN pmis_alert_dispatch.content IS '预警内容（已渲染的模板）';
 COMMENT ON COLUMN pmis_alert_dispatch.target_role IS '目标角色: PM/PMO/CFO 等';
 COMMENT ON COLUMN pmis_alert_dispatch.target_user_ids IS '目标用户 ID 列表: 逗号分隔,精确触达';
-COMMENT ON COLUMN pmis_alert_dispatch.push_channels IS '推送渠道: IN_APP 站内信 / EMAIL 邮件 / SMS 短信 / WECHAT 微信,逗号分隔';
+COMMENT ON COLUMN pmis_alert_dispatch.push_channels IS '推送渠道: INAPP 站内信 / EMAIL 邮件 / SMS 短信 / WECHAT 微信,逗号分隔';
 COMMENT ON COLUMN pmis_alert_dispatch.dispatched_at IS '派发时间';
 COMMENT ON COLUMN pmis_alert_dispatch.dispatched_by IS '派发人: 定时任务 / 系统 / 用户';
 COMMENT ON COLUMN pmis_alert_dispatch.status IS '发送状态: PENDING 待发送 / SENT 已发送 / FAILED 失败 / RETRYING 重试中';
@@ -7033,11 +7033,11 @@ VALUES (
 
 -- 预算黄色预警
 INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
-SELECT 'ALERT_BUDGET_YELLOW', 'IN_APP',
+SELECT 'ALERT_BUDGET_YELLOW', 'INAPP',
        '【预算黄色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%',
-       'IN_APP', 'PMIS', 'ENABLED', '预算黄色预警(80%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'IN_APP');
+       'INAPP', 'PMIS', 'ENABLED', '预算黄色预警(80%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'INAPP');
 
 INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'EMAIL',
@@ -7048,11 +7048,11 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALE
 
 -- 预算红色预警
 INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
-SELECT 'ALERT_BUDGET_RED', 'IN_APP',
+SELECT 'ALERT_BUDGET_RED', 'INAPP',
        '【预算红色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%，已触及红色阈值(95%)，请立即关注',
-       'IN_APP', 'PMIS', 'ENABLED', '预算红色预警(95%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'IN_APP');
+       'INAPP', 'PMIS', 'ENABLED', '预算红色预警(95%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'INAPP');
 
 INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'EMAIL',
@@ -7063,11 +7063,11 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALE
 
 -- EVM 红色预警
 INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
-SELECT 'ALERT_EVM_RED', 'IN_APP',
+SELECT 'ALERT_EVM_RED', 'INAPP',
        '【EVM 红色预警】${title}',
        '${content}',
-       'IN_APP', 'PMIS', 'ENABLED', 'EVM 红色预警(CPI<0.85 或 SPI<0.85)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'IN_APP');
+       'INAPP', 'PMIS', 'ENABLED', 'EVM 红色预警(CPI<0.85 或 SPI<0.85)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'INAPP');
 
 INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'EMAIL',
@@ -7078,19 +7078,19 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALE
 
 -- SLA 红色预警（工单超时）
 INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
-SELECT 'ALERT_SLA_RED', 'IN_APP',
+SELECT 'ALERT_SLA_RED', 'INAPP',
        '【SLA 红色预警】工单 ${alertCode} 超时',
        '${content}',
-       'IN_APP', 'PMIS', 'ENABLED', '运维工单 SLA 超时红色预警', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'IN_APP');
+       'INAPP', 'PMIS', 'ENABLED', '运维工单 SLA 超时红色预警', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'INAPP');
 
 -- 通用黄色预警兜底
 INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
-SELECT 'ALERT_OTHER_YELLOW', 'IN_APP',
+SELECT 'ALERT_OTHER_YELLOW', 'INAPP',
        '【黄色预警】${title}',
        '${content}',
-       'IN_APP', 'PMIS', 'ENABLED', '黄色预警通用兜底模板', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'IN_APP');
+       'INAPP', 'PMIS', 'ENABLED', '黄色预警通用兜底模板', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
+WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'INAPP');
 
 -- --------------------------------------------------------------------
 
@@ -8428,7 +8428,7 @@ COMMENT ON COLUMN pmis_report_subscription.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_report_subscription.subscriber_id IS '订阅人ID';
 COMMENT ON COLUMN pmis_report_subscription.report_type IS '报表类型 (COCKPIT/EVM/PROFIT/UTILIZATION/BENCH_COST/RISK)';
 COMMENT ON COLUMN pmis_report_subscription.frequency IS '推送频率 (DAILY/WEEKLY/MONTHLY/REALTIME)';
-COMMENT ON COLUMN pmis_report_subscription.channels IS '推送渠道，逗号分隔 (EMAIL/DINGTALK/IN_APP)';
+COMMENT ON COLUMN pmis_report_subscription.channels IS '推送渠道，逗号分隔 (EMAIL/DINGTALK/INAPP)';
 COMMENT ON COLUMN pmis_report_subscription.recipients IS '接收人邮箱，逗号分隔';
 COMMENT ON COLUMN pmis_report_subscription.enabled IS '是否启用 (1=启用, 0=停用)';
 
@@ -9837,7 +9837,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
     task_id             VARCHAR(20),                                 -- 任务 ID（便于按任务查询）
     -- 消息内容
     payload             TEXT            NOT NULL,               -- JSON 载荷（接收方解析）
-    target_channels     VARCHAR(128),                           -- 投递通道: IN_APP / IM / EMAIL / SMS（逗号分隔，空表示按 event_type 默认）
+    target_channels     VARCHAR(128),                           -- 投递通道: INAPP / IM / EMAIL / SMS（逗号分隔，空表示按 event_type 默认）
     target_user_ids     VARCHAR(512),                           -- 接收用户 ID 列表（逗号分隔，空表示由 payload 自行决定）
     -- 投递状态
     status              VARCHAR(16)     NOT NULL DEFAULT 'PENDING', -- PENDING / SENT / DEAD
@@ -9871,7 +9871,7 @@ COMMENT ON TABLE pmis_flow_notify_outbox IS '工作流通知外发箱 — 可靠
 COMMENT ON COLUMN pmis_flow_notify_outbox.event_type IS '事件类型: TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等';
 COMMENT ON COLUMN pmis_flow_notify_outbox.biz_type IS '业务类型: WORKFLOW_TASK / WORKFLOW_INSTANCE / WORKFLOW_CC';
 COMMENT ON COLUMN pmis_flow_notify_outbox.payload IS 'JSON 载荷，由接收方解析';
-COMMENT ON COLUMN pmis_flow_notify_outbox.target_channels IS '投递通道: IN_APP / IM / EMAIL / SMS（逗号分隔）';
+COMMENT ON COLUMN pmis_flow_notify_outbox.target_channels IS '投递通道: INAPP / IM / EMAIL / SMS（逗号分隔）';
 COMMENT ON COLUMN pmis_flow_notify_outbox.target_user_ids IS '接收用户 ID 列表（逗号分隔）';
 COMMENT ON COLUMN pmis_flow_notify_outbox.status IS '投递状态: PENDING 待投递 / SENT 已投递 / DEAD 死信';
 COMMENT ON COLUMN pmis_flow_notify_outbox.retry_count IS '已重试次数';
@@ -10894,7 +10894,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_channel (
     updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
-    CONSTRAINT ck_pfnc_channel_type        CHECK (channel_type IN ('IN_APP','EMAIL','SMS','WEBHOOK','DINGTALK','WECHAT','FEISHU')),
+    CONSTRAINT ck_pfnc_channel_type        CHECK (channel_type IN ('INAPP','EMAIL','SMS','WEBHOOK','DINGTALK','WECHAT','FEISHU')),
     CONSTRAINT ck_pfnc_enabled             CHECK (enabled IN (0, 1)),
     CONSTRAINT ck_pfnc_deleted             CHECK (deleted IN (0, 1))
 );
@@ -10903,10 +10903,10 @@ CREATE INDEX IF NOT EXISTS idx_pfnc_tenant_type_enabled
     ON pmis_flow_notify_channel (tenant_id, channel_type, enabled)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_flow_notify_channel IS 'P3-3: 工作流通知通道配置表 (IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
+COMMENT ON TABLE  pmis_flow_notify_channel IS 'P3-3: 工作流通知通道配置表 (INAPP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
 COMMENT ON COLUMN pmis_flow_notify_channel.id IS '主键 ID';
 COMMENT ON COLUMN pmis_flow_notify_channel.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_flow_notify_channel.channel_type IS '通道类型 (IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT/FEISHU)';
+COMMENT ON COLUMN pmis_flow_notify_channel.channel_type IS '通道类型 (INAPP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT/FEISHU)';
 COMMENT ON COLUMN pmis_flow_notify_channel.channel_name IS '通道名称';
 COMMENT ON COLUMN pmis_flow_notify_channel.config IS '配置 JSON (Webhook URL, 短信模板编码等)';
 COMMENT ON COLUMN pmis_flow_notify_channel.enabled IS '是否启用 1=启用 0=禁用';
@@ -12170,7 +12170,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code       VARCHAR(64)     NOT NULL,               -- 模板编码: TASK_CREATED / TASK_URGED / TASK_TIMEOUT 等
     template_name       VARCHAR(128)    NOT NULL,               -- 模板名称
-    channel             VARCHAR(32)     NOT NULL DEFAULT 'IN_APP', -- 通道: IN_APP / EMAIL / SMS / WEBHOOK
+    channel             VARCHAR(32)     NOT NULL DEFAULT 'INAPP', -- 通道: INAPP / EMAIL / SMS / WEBHOOK
     locale              VARCHAR(10)     NOT NULL DEFAULT 'zh_CN', -- P1-5: 语言区域: zh_CN / en_US 等
     title               VARCHAR(256)    NOT NULL,               -- 标题模板（支持 ${var} 占位符）
     content             TEXT            NOT NULL,               -- 内容模板（支持 ${var} 占位符）
@@ -12186,14 +12186,14 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
     version             INTEGER        NOT NULL DEFAULT 0,
     -- 约束
     CONSTRAINT uk_pfnt_tenant_code_channel_locale UNIQUE (tenant_id, template_code, channel, locale, deleted),
-    CONSTRAINT ck_pfnt_channel CHECK (channel IN ('IN_APP','EMAIL','SMS','WEBHOOK','DINGTALK','FEISHU','WECOM')),
+    CONSTRAINT ck_pfnt_channel CHECK (channel IN ('INAPP','EMAIL','SMS','WEBHOOK','DINGTALK','FEISHU','WECOM')),
     CONSTRAINT ck_pfnt_enabled CHECK (enabled IN (0, 1)),
     CONSTRAINT ck_pfnt_deleted CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_flow_notify_template IS 'P1-2: 工作流通知模板表 — 通知内容模板化管理，支持 ${var} 变量占位符。P1-5: locale 字段支持多语言';
 COMMENT ON COLUMN pmis_flow_notify_template.template_code IS '模板编码: TASK_CREATED / TASK_COMPLETED / TASK_REJECTED / TASK_URGED / TASK_TIMEOUT / INSTANCE_TERMINATED / CC_CREATED 等';
-COMMENT ON COLUMN pmis_flow_notify_template.channel IS '通知通道: IN_APP / EMAIL / SMS / WEBHOOK / DINGTALK / FEISHU / WECOM';
+COMMENT ON COLUMN pmis_flow_notify_template.channel IS '通知通道: INAPP / EMAIL / SMS / WEBHOOK / DINGTALK / FEISHU / WECOM';
 COMMENT ON COLUMN pmis_flow_notify_template.locale IS 'P1-5: 语言区域（zh_CN / en_US 等），同一 templateCode+channel 可配置多语言模板，默认 zh_CN';
 COMMENT ON COLUMN pmis_flow_notify_template.title IS '标题模板（支持 ${flowName} ${nodeName} ${assigneeName} ${instanceId} ${taskId} 等占位符）';
 COMMENT ON COLUMN pmis_flow_notify_template.content IS '内容模板（支持与 title 相同的占位符）';
@@ -12212,60 +12212,60 @@ CREATE INDEX IF NOT EXISTS idx_pfnt_trace
 -- 初始化默认模板（P1-5: locale 默认 zh_CN）
 INSERT INTO pmis_flow_notify_template (id, tenant_id, template_code, template_name, channel, locale, title, content, description)
 VALUES
-    ('1', '1', 'TASK_CREATED', '任务创建通知', 'IN_APP', 'zh_CN',
+    ('1', '1', 'TASK_CREATED', '任务创建通知', 'INAPP', 'zh_CN',
      '您有一个新的审批待办',
      '流程【${flowName}】节点【${nodeName}】需要您处理，请尽快审批。',
      '任务创建时通知办理人'),
-    ('2', '1', 'TASK_COMPLETED', '任务通过通知', 'IN_APP', 'zh_CN',
+    ('2', '1', 'TASK_COMPLETED', '任务通过通知', 'INAPP', 'zh_CN',
      '审批已通过',
      '流程【${flowName}】节点【${nodeName}】已由 ${operatorName} 通过审批。',
      '任务通过时通知发起人'),
-    ('3', '1', 'TASK_REJECTED', '任务驳回通知', 'IN_APP', 'zh_CN',
+    ('3', '1', 'TASK_REJECTED', '任务驳回通知', 'INAPP', 'zh_CN',
      '审批被驳回',
      '流程【${flowName}】节点【${nodeName}】被 ${operatorName} 驳回，请查看并修改后重新提交。',
      '任务驳回时通知发起人'),
-    ('4', '1', 'TASK_URGED', '催办通知', 'IN_APP', 'zh_CN',
+    ('4', '1', 'TASK_URGED', '催办通知', 'INAPP', 'zh_CN',
      '您有待办被催办',
      '流程【${flowName}】的审批任务被催办，请尽快处理。${comment}',
      '催办时通知办理人'),
-    ('5', '1', 'TASK_TIMEOUT', '任务超时提醒', 'IN_APP', 'zh_CN',
+    ('5', '1', 'TASK_TIMEOUT', '任务超时提醒', 'INAPP', 'zh_CN',
      '审批任务即将超时',
      '【${flowName}】${nodeName} 已超过截止时间 ${dueAt}，请尽快处理（第 ${reminderCount}/${maxReminders} 次提醒）。',
      'SLA 超时提醒办理人'),
-    ('6', '1', 'INSTANCE_TERMINATED', '流程终止通知', 'IN_APP', 'zh_CN',
+    ('6', '1', 'INSTANCE_TERMINATED', '流程终止通知', 'INAPP', 'zh_CN',
      '流程已终止',
      '流程【${flowName}】已被终止，原因：${reason}。',
      '实例终止时通知发起人'),
-    ('7', '1', 'CC_CREATED', '抄送通知', 'IN_APP', 'zh_CN',
+    ('7', '1', 'CC_CREATED', '抄送通知', 'INAPP', 'zh_CN',
      '您有新的抄送',
      '流程【${flowName}】节点【${nodeName}】抄送给您，请查阅。',
      '抄送时通知接收人'),
     -- P1-5: 英文模板（en_US）
-    ('101', '1', 'TASK_CREATED', 'Task Created', 'IN_APP', 'en_US',
+    ('101', '1', 'TASK_CREATED', 'Task Created', 'INAPP', 'en_US',
      'You have a new approval task',
      'Workflow [${flowName}] node [${nodeName}] requires your action. Please review promptly.',
      'Notify assignee when task is created'),
-    ('102', '1', 'TASK_COMPLETED', 'Task Approved', 'IN_APP', 'en_US',
+    ('102', '1', 'TASK_COMPLETED', 'Task Approved', 'INAPP', 'en_US',
      'Approval passed',
      'Workflow [${flowName}] node [${nodeName}] has been approved by ${operatorName}.',
      'Notify initiator when task is approved'),
-    ('103', '1', 'TASK_REJECTED', 'Task Rejected', 'IN_APP', 'en_US',
+    ('103', '1', 'TASK_REJECTED', 'Task Rejected', 'INAPP', 'en_US',
      'Approval rejected',
      'Workflow [${flowName}] node [${nodeName}] has been rejected by ${operatorName}. Please review and resubmit.',
      'Notify initiator when task is rejected'),
-    ('104', '1', 'TASK_URGED', 'Task Urged', 'IN_APP', 'en_US',
+    ('104', '1', 'TASK_URGED', 'Task Urged', 'INAPP', 'en_US',
      'You have an urged task',
      'Workflow [${flowName}] approval task has been urged. Please process it ASAP. ${comment}',
      'Notify assignee when task is urged'),
-    ('105', '1', 'TASK_TIMEOUT', 'Task Timeout Reminder', 'IN_APP', 'en_US',
+    ('105', '1', 'TASK_TIMEOUT', 'Task Timeout Reminder', 'INAPP', 'en_US',
      'Approval task is about to timeout',
      '[${flowName}] ${nodeName} has exceeded the deadline ${dueAt}. Please process it ASAP (reminder ${reminderCount}/${maxReminders}).',
      'SLA timeout reminder for assignee'),
-    ('106', '1', 'INSTANCE_TERMINATED', 'Instance Terminated', 'IN_APP', 'en_US',
+    ('106', '1', 'INSTANCE_TERMINATED', 'Instance Terminated', 'INAPP', 'en_US',
      'Workflow terminated',
      'Workflow [${flowName}] has been terminated. Reason: ${reason}.',
      'Notify initiator when instance is terminated'),
-    ('107', '1', 'CC_CREATED', 'CC Notification', 'IN_APP', 'en_US',
+    ('107', '1', 'CC_CREATED', 'CC Notification', 'INAPP', 'en_US',
      'You have a new CC',
      'Workflow [${flowName}] node [${nodeName}] has been CC-ed to you for your reference.',
      'Notify receiver when CC is created')

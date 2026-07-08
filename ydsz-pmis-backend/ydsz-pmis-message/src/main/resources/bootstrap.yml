@@ -3,7 +3,7 @@
 #  --------------------------------------------------------------------
 #  端口：9004
 #  职责：
-#    - 多渠道发送（SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU）
+#    - 多渠道发送（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU）
 #    - 模板管理（i18n/版本/审核/场景）
 #    - 站内通知（优先级/聚合/撤回/跳转）
 #    - 用户偏好（免打扰/频率上限/聚合/语言）

@@ -3,7 +3,7 @@
  * @description 与后端 message 模块的 VO/DTO/Query 对齐。
  *   - 所有 ID 类型为 string（后端 VARCHAR(20) 雪花算法字符串）
  *   - status 发送状态：PENDING/SENDING/SUCCESS/FAILED/RETRY/DEAD/RECALLED
- *   - channel 通道：SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU
+ *   - channel 通道：SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU
  *   - priority 优先级：LOW/NORMAL/HIGH/URGENT
  *   - recallStatus 撤回状态：NONE/RECALLED
  *   - receiptStatus 回执状态：NONE/DELIVERED/READ/CLICKED/FAILED
@@ -27,7 +27,7 @@ export type MessageChannel =
   | 'SMS'
   | 'EMAIL'
   | 'PUSH'
-  | 'IN_APP'
+  | 'INAPP'
   | 'WEBHOOK'
   | 'DINGTALK'
   | 'WECOM'
@@ -573,7 +573,7 @@ export interface MsgPreferenceVO {
   id: string
   /** 用户 ID */
   userId: string
-  /** 通道: SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU */
+  /** 通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU */
   channel: string
   /** 业务类型（__DEFAULT__ 表示该通道全局默认偏好） */
   bizType: string

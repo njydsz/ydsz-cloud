@@ -113,7 +113,7 @@ public class MessageProperties {
      * 成本看板配置（P2-4）。
      *
      * <p>按通道配置单条消息成本（元），用于发送成本统计与看板展示。
-     * SMS/EMAIL/PUSH 有实际服务商计费,IN_APP/WEBHOOK/IM 通道免费。
+     * SMS/EMAIL/PUSH 有实际服务商计费,INAPP/WEBHOOK/IM 通道免费。
      * 关闭后不记录成本字段（cost 始终为 0）。
      */
     @Data
@@ -129,7 +129,7 @@ public class MessageProperties {
             m.put("SMS", new java.math.BigDecimal("0.0450"));
             m.put("EMAIL", new java.math.BigDecimal("0.0010"));
             m.put("PUSH", new java.math.BigDecimal("0.0001"));
-            m.put("IN_APP", java.math.BigDecimal.ZERO);
+            m.put("INAPP", java.math.BigDecimal.ZERO);
             m.put("WEBHOOK", java.math.BigDecimal.ZERO);
             m.put("DINGTALK", java.math.BigDecimal.ZERO);
             m.put("WECOM", java.math.BigDecimal.ZERO);
@@ -295,7 +295,7 @@ public class MessageProperties {
      * <ul>
      *   <li>DND 命中时不再丢弃消息，而是<strong>延迟到 DND 结束后</strong>自动重发</li>
      *   <li>URGENT 优先级消息可绕过 DND 立即发送</li>
-     *   <li>DND 仅对"打扰型"通道生效（SMS/PUSH/IM），EMAIL/IN_APP/Webhook 不受 DND 限制</li>
+     *   <li>DND 仅对"打扰型"通道生效（SMS/PUSH/IM），EMAIL/INAPP/Webhook 不受 DND 限制</li>
      * </ul>
      */
     @Data

@@ -41,6 +41,28 @@
 | `/audit/operation` | 操作审计 |
 | `/audit/data-export` | 数据导出审计 |
 
+## 数据库表设计
+
+本模块在 `deploy/sql/V1.0.0.sql` 中持有 **12 张表**，聚焦"横切关注点"：文件、配置、审计、跨服务公共表。
+
+| 业务域 | 表名 | 说明 |
+|---|---|---|
+| **文件管理** | `pmis_file` | 文件元信息（bucket、key、大小、MIME、上传者、md5） |
+| **系统配置** | `pmis_config` | 系统参数（key-value，支持租户维度） |
+| | `pmis_dict_version` | 字典版本（多环境字典版本控制） |
+| **审计日志** | `pmis_login_audit` | 登录审计（与 userinfo 共享物理表） |
+| | `pmis_operation_log` | 操作审计（DDL+CRUD 统一审计，支持按月分区） |
+| | `pmis_operation_log_default` | 操作审计默认分区 |
+| | `pmis_operation_log_yYYYYmMM` | 操作审计月度分区模板（按需创建） |
+| | `pmis_data_export_audit` | 数据导出审计（导出人、表、行数、用途） |
+| | `pmis_sensitive_operation` | 敏感操作审计（金额/合同/权限变更） |
+| **跨服务公共** | `pmis_report_subscription` | 报表订阅（用户×报表×频率） |
+| | `pmis_export_record` | 异步导出记录（异步导出到 MinIO） |
+| | `pmis_meta_schema_version` | DB Schema 版本号（启动校验） |
+
+> **分区说明**：`pmis_operation_log` 为 PostgreSQL 范围分区表（按月分区），历史月份可走 `pg_partman` 或手动 `DETACH` 归档。
+> **脱敏约束**：`pmis_sensitive_operation`、`pmis_data_export_audit` 写入时自动 `SensitiveSerializer` 脱敏。
+
 ## 启动顺序
 
 依赖 `common` + `nacos`，**应在 `gateway` 之后**启动，可与 `userinfo` / `project` 并行。
@@ -69,12 +91,11 @@ ydsz-pmis-system/
     │   └── config/
     ├── resources/
     │   ├── bootstrap.yml
-    │   ├── application.yml
     │   ├── mapper/
     │   │   ├── ConfigMapper.xml
     │   │   ├── FileMapper.xml
     │   │   └── LoginAuditMapper.xml
-    │   └── nacos-config/
+    │   └── config/            # 原 nacos-config（已重命名）
     │       ├── ydsz-pmis-system-dev.yaml
     │       ├── ydsz-pmis-system-sit.yaml
     │       └── ydsz-pmis-system-uat.yaml

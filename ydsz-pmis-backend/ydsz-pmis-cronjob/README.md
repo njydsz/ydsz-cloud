@@ -57,6 +57,41 @@
 | `/job/dag` | DAG 可视化数据 API |
 | `/job/node` | 执行器节点管理 |
 
+## 数据库表设计
+
+本模块在 `deploy/sql/V1.0.0.sql` 中持有 **20 张表**，覆盖任务定义/调度/执行/日志/告警/告警规则/版本历史/SLA/节点/分片关系/统计/产物/胶水代码/租户配额/DAG。
+
+| 业务域 | 表名 | 说明 |
+|---|---|---|
+| **任务定义** | `pmis_job` | 任务主表（cron/频率/分片/隔离策略） |
+| | `pmis_job_glue` | 胶水代码（Groovy/Java/Python/Shell） |
+| | `pmis_job_relation` | 父子任务依赖 |
+| | `pmis_job_version_history` | 任务版本历史（回滚） |
+| **调度** | `pmis_job_task` | 调度任务（待派发/运行中） |
+| | `pmis_job_history` | 历史任务（已完成） |
+| **DAG** | `pmis_job_dag` | DAG 定义 |
+| | `pmis_job_dag_instance` | DAG 实例 |
+| | `pmis_job_dag_node_instance` | DAG 节点实例 |
+| **执行日志** | `pmis_job_log` | 执行日志（分页） |
+| | `pmis_job_log_content` | 日志详情（TOAST 大字段） |
+| | `pmis_job_slow_log` | 慢执行记录 |
+| **告警** | `pmis_job_alert_log` | 告警日志 |
+| | `pmis_job_alert_rule` | 告警规则（失败/超时/阻塞） |
+| **SLA** | `pmis_job_sla` | SLA 规则（P1-P4 + 飞书/钉钉/邮件） |
+| **执行器** | `pmis_job_node` | 执行器节点（注册/心跳） |
+| **Webhook** | `pmis_job_webhook` | 任务完成回调 |
+| **产物** | `pmis_job_artifact` | 任务产物（报表/MinIO） |
+| **统计** | `pmis_job_daily_stats` | 每日统计（成功率/平均耗时） |
+| **配额** | `pmis_tenant_quota` | 租户级任务数/并发/日执行量 |
+
+> **索引关键点**：
+> - `pmis_job(job_group, trigger_type, status)` 调度扫描
+> - `pmis_job_task(job_id, status, trigger_time)` 待执行/运行中
+> - `pmis_job_log(job_id, trigger_time)` 日志分页
+> - `pmis_job_dag_instance(dag_id, status)` DAG 监控
+> - `pmis_job_dag_node_instance(instance_id, status)` 节点依赖检查
+> - `pmis_tenant_quota(tenant_id, quota_type)` 配额检查
+
 ## 启动顺序
 
 依赖 `common` + `nacos`，**应在 `project` 之后**启动（通过 Feign 拉取任务数据）。
@@ -85,10 +120,8 @@ ydsz-pmis-cronjob/
     │   └── config/
     ├── resources/
     │   ├── bootstrap.yml
-    │   ├── application.yml
-    │   ├── mapper/
-    │   │   └── JobMapper.xml
-    │   └── nacos-config/
+    │   ├── mapper/            # JobMapper.xml + 后续按需扩展
+    │   └── config/            # 原 nacos-config（已重命名）
     │       ├── ydsz-pmis-cronjob-dev.yaml
     │       ├── ydsz-pmis-cronjob-sit.yaml
     │       └── ydsz-pmis-cronjob-uat.yaml

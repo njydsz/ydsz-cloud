@@ -21,7 +21,7 @@ class MsgAggregateDOTest {
         entity.setId("a-1");
         entity.setAggregateGroup("RISK:contract-1");
         entity.setReceiver("u-1");
-        entity.setChannel("IN_APP");
+        entity.setChannel("INAPP");
         entity.setBatchStatus("PENDING");
         entity.setMessageCount(3);
         entity.setFirstMessageAt(LocalDateTime.now());
@@ -30,7 +30,7 @@ class MsgAggregateDOTest {
         assertEquals("a-1", entity.getId());
         assertEquals("RISK:contract-1", entity.getAggregateGroup());
         assertEquals("u-1", entity.getReceiver());
-        assertEquals("IN_APP", entity.getChannel());
+        assertEquals("INAPP", entity.getChannel());
         assertEquals("PENDING", entity.getBatchStatus());
         assertEquals(3, entity.getMessageCount());
         assertNotNull(entity.getFirstMessageAt());

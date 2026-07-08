@@ -150,7 +150,7 @@ public class DagExecutionContext {
      * @return 当前已重试次数
      */
     public int incrementRetry(String nodeName) {
-        return nodeRetryCounts.merge(nodeName, 1, (a, b) -> a + b);
+        return nodeRetryCounts.merge(nodeName, 1, Integer::sum);
     }
 
     /**

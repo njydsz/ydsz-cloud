@@ -28,7 +28,7 @@ import java.util.Map;
  *
  * <p>三个通道均已对接真实投递，统一遵循"尽力而为"语义（异常 try-catch 吞掉，不拖垮主流程事务）：
  * <ul>
- *   <li>IN_APP  — 通过 NotificationClient Feign 调用 notification 服务写入站内信（channel=PUSH）</li>
+ *   <li>INAPP  — 通过 NotificationClient Feign 调用 notification 服务写入站内信（channel=PUSH）</li>
  *   <li>EMAIL   — 同样通过 NotificationClient 投递（channel=EMAIL），由 notification 服务负责实际邮件发送</li>
  *   <li>WEBHOOK — 通过 RestTemplate POST 发送到 extra.webhookUrl 指定的企业微信/钉钉机器人</li>
  * </ul>
@@ -46,11 +46,11 @@ import java.util.Map;
 public class FlowNotificationServiceImpl implements FlowNotificationService {
 
     /** 通知通道常量 */
-    private static final String CHANNEL_IN_APP = "IN_APP";
+    private static final String CHANNEL_INAPP = "INAPP";
     private static final String CHANNEL_EMAIL = "EMAIL";
     private static final String CHANNEL_WEBHOOK = "WEBHOOK";
 
-    /** Feign 通知客户端（IN_APP / EMAIL 通道），由 @RequiredArgsConstructor 注入 */
+    /** Feign 通知客户端（INAPP / EMAIL 通道），由 @RequiredArgsConstructor 注入 */
     private final NotificationClient notificationClient;
 
     /** P1-2: 通知模板解析器（可选注入，不可用时回退到硬编码） */
@@ -86,7 +86,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             vars.put("instanceId", instanceId);
             vars.put("taskId", taskId);
             vars.put("assigneeName", assigneeName);
-            String[] tc = resolveOrDefault("TASK_CREATED", CHANNEL_IN_APP, vars,
+            String[] tc = resolveOrDefault("TASK_CREATED", CHANNEL_INAPP, vars,
                     "您有一个新的审批待办",
                     "流程实例[" + instanceId + "] 任务[" + taskId + "] 需要您处理");
             Map<String, Object> extra = new HashMap<>();
@@ -94,7 +94,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             extra.put("instanceId", instanceId);
             extra.put("taskId", taskId);
             extra.put("assigneeName", assigneeName);
-            send(CHANNEL_IN_APP, assigneeId, tc[0], tc[1], extra);
+            send(CHANNEL_INAPP, assigneeId, tc[0], tc[1], extra);
             log.debug("[FlowNotify] 任务创建通知: instanceId={} taskId={} assigneeId={}",
                     instanceId, taskId, assigneeId);
         } catch (Exception e) {
@@ -126,7 +126,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
                 extra.put("instanceId", instanceId);
                 extra.put("taskId", taskId);
                 extra.put("comment", comment);
-                send(CHANNEL_IN_APP, userId, title, content, extra);
+                send(CHANNEL_INAPP, userId, title, content, extra);
             }
             log.debug("[FlowNotify] 催办通知: instanceId={} taskId={} targets={}",
                     instanceId, taskId, assigneeIds.size());
@@ -148,7 +148,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
                 extra.put("bizType", "WORKFLOW_CC");
                 extra.put("instanceId", instanceId);
                 extra.put("nodeCode", nodeCode);
-                send(CHANNEL_IN_APP, String.valueOf(userId), title, content, extra);
+                send(CHANNEL_INAPP, String.valueOf(userId), title, content, extra);
             }
             log.debug("[FlowNotify] 抄送通知: instanceId={} nodeCode={} targets={}",
                     instanceId, nodeCode, ccUserIds.size());
@@ -169,7 +169,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             Map<String, Object> extra = new HashMap<>();
             extra.put("bizType", "WORKFLOW_COMPLETED");
             extra.put("instanceId", instanceId);
-            send(CHANNEL_IN_APP, initiatorId, title, content, extra);
+            send(CHANNEL_INAPP, initiatorId, title, content, extra);
             log.debug("[FlowNotify] 流程完成通知: instanceId={} initiatorId={}",
                     instanceId, initiatorId);
         } catch (Exception e) {
@@ -193,7 +193,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             extra.put("bizType", "WORKFLOW_REJECTED");
             extra.put("instanceId", instanceId);
             extra.put("reason", reason);
-            send(CHANNEL_IN_APP, initiatorId, title, content, extra);
+            send(CHANNEL_INAPP, initiatorId, title, content, extra);
             log.debug("[FlowNotify] 流程驳回通知: instanceId={} initiatorId={} reason={}",
                     instanceId, initiatorId, reason);
         } catch (Exception e) {
@@ -217,7 +217,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             extra.put("taskId", taskId);
             extra.put("action", action);
             // SLA 超时同时走站内信 + 邮件
-            send(CHANNEL_IN_APP, userId, title, content, extra);
+            send(CHANNEL_INAPP, userId, title, content, extra);
             send(CHANNEL_EMAIL, userId, title, content, extra);
             log.debug("[FlowNotify] SLA 超时通知: instanceId={} taskId={} assigneeId={} action={}",
                     instanceId, taskId, assigneeId, action);
@@ -234,7 +234,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
                 return;
             }
             // P1-7: 免打扰时段 + 聚合模式 → 跳过站内推送（EMAIL/WEBHOOK 不受影响，SLA 超时等紧急通知仍走邮件）
-            if (CHANNEL_IN_APP.equals(channel) && preferenceService != null
+            if (CHANNEL_INAPP.equals(channel) && preferenceService != null
                     && preferenceService.shouldDefer(TenantContext.getTenantId(), userId)) {
                 log.debug("[FlowNotify] 免打扰时段内跳过站内推送: userId={} title={}", userId, title);
                 return;
@@ -243,7 +243,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             Object bizType = extra == null ? null : extra.get("bizType");
 
             switch (channel) {
-                case CHANNEL_IN_APP -> sendInApp(userId, title, content, bizType, extra, traceId);
+                case CHANNEL_INAPP -> sendInApp(userId, title, content, bizType, extra, traceId);
                 case CHANNEL_EMAIL -> sendEmail(userId, title, content, bizType, extra, traceId);
                 case CHANNEL_WEBHOOK -> sendWebhook(userId, title, content, extra, traceId);
                 default -> log.warn("[FlowNotify] 未知通知通道: channel={} userId={} title={}",
@@ -256,7 +256,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
 
     /**
-     * IN_APP 通道：通过 NotificationClient Feign 调用 notification 服务写入站内信。
+     * INAPP 通道：通过 NotificationClient Feign 调用 notification 服务写入站内信。
      * channel=PUSH，Feign 异常由 fallbackFactory 兜底，再叠加 try-catch 双保险。
      */
     private void sendInApp(String userId, String title, String content,
@@ -274,10 +274,10 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             notificationClient.send(toFeignDTO(payload));
         } catch (Exception e) {
             // fallbackFactory 已兜底，此处再 catch 防御非 Feign 异常，降级为日志
-            log.warn("[FlowNotify][IN_APP] Feign 调用降级为日志: userId={} title={} err={}",
+            log.warn("[FlowNotify][INAPP] Feign 调用降级为日志: userId={} title={} err={}",
                     userId, title, e.getMessage());
         }
-        log.debug("[FlowNotify][IN_APP] userId={} title={} content={} traceId={}",
+        log.debug("[FlowNotify][INAPP] userId={} title={} content={} traceId={}",
                 userId, title, content, traceId);
     }
 

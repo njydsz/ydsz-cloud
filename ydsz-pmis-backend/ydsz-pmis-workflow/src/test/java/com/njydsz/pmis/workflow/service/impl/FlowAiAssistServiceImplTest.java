@@ -194,12 +194,12 @@ class FlowAiAssistServiceImplTest {
             params.put("taskId", "task-001");
             params.put("assigneeId", "user-001");
             when(agentClient.execute(any()))
-                    .thenReturn(Result.ok(payload(remindPayload("AFTERNOON", "IN_APP"))));
+                    .thenReturn(Result.ok(payload(remindPayload("AFTERNOON", "INAPP"))));
 
             Map<String, Object> result = service.smartRemind(params);
 
             assertEquals("AFTERNOON", result.get("bestTime"));
-            assertEquals("IN_APP", result.get("channel"));
+            assertEquals("INAPP", result.get("channel"));
             assertNotNull(result.get("message"));
             // 验证 Agent 调用参数
             ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
@@ -215,7 +215,7 @@ class FlowAiAssistServiceImplTest {
             Map<String, Object> result = service.smartRemind(null);
 
             assertEquals("IMMEDIATE", result.get("bestTime"));
-            assertEquals("IN_APP", result.get("channel"));
+            assertEquals("INAPP", result.get("channel"));
             verify(agentClient, never()).execute(any());
         }
 
@@ -386,7 +386,7 @@ class FlowAiAssistServiceImplTest {
             params.put("taskId", "task-cache-001");
             params.put("assigneeId", "user-001");
             when(agentClient.execute(any()))
-                    .thenReturn(Result.ok(payload(remindPayload("AFTERNOON", "IN_APP"))));
+                    .thenReturn(Result.ok(payload(remindPayload("AFTERNOON", "INAPP"))));
 
             Map<String, Object> r1 = service.smartRemind(params);
             Map<String, Object> r2 = service.smartRemind(params);

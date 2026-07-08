@@ -170,10 +170,10 @@ class ReceiptPullerTest {
     void shouldSkipWhenChannelNotSupportPull() throws InterruptedException {
         when(lock.tryLock(0, 60, TimeUnit.SECONDS)).thenReturn(true);
         when(lock.isHeldByCurrentThread()).thenReturn(true);
-        MsgLogDO logDO = buildLog("log-3", "IN_APP", 10);
+        MsgLogDO logDO = buildLog("log-3", "INAPP", 10);
         when(msgLogMapper.selectList(any())).thenReturn(List.of(logDO));
         MessageChannel channel = org.mockito.Mockito.mock(MessageChannel.class);
-        when(channelRouter.route("IN_APP")).thenReturn(channel);
+        when(channelRouter.route("INAPP")).thenReturn(channel);
         when(channel.queryReceipt(logDO)).thenReturn(Optional.empty());
 
         puller.scan();
@@ -206,13 +206,13 @@ class ReceiptPullerTest {
         when(lock.isHeldByCurrentThread()).thenReturn(true);
         MsgLogDO timeoutLog = buildLog("log-timeout", "SMS", 45);
         MsgLogDO pullableLog = buildLog("log-pull", "SMS", 8);
-        MsgLogDO unsupportedLog = buildLog("log-unsupported", "IN_APP", 8);
+        MsgLogDO unsupportedLog = buildLog("log-unsupported", "INAPP", 8);
         when(msgLogMapper.selectList(any())).thenReturn(List.of(timeoutLog, pullableLog, unsupportedLog));
 
         MessageChannel smsChannel = org.mockito.Mockito.mock(MessageChannel.class);
         MessageChannel inAppChannel = org.mockito.Mockito.mock(MessageChannel.class);
         when(channelRouter.route("SMS")).thenReturn(smsChannel);
-        when(channelRouter.route("IN_APP")).thenReturn(inAppChannel);
+        when(channelRouter.route("INAPP")).thenReturn(inAppChannel);
         when(smsChannel.queryReceipt(pullableLog))
                 .thenReturn(Optional.of(ReceiptResult.of(ReceiptStatusEnum.READ)));
         when(inAppChannel.queryReceipt(unsupportedLog)).thenReturn(Optional.empty());

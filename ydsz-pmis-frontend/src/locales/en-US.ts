@@ -1431,7 +1431,7 @@ export default {
       enable: 'Enable',
       disable: 'Disable',
       types: {
-        IN_APP: 'In-App',
+        INAPP: 'In-App',
         EMAIL: 'Email',
         SMS: 'SMS',
         WEBHOOK: 'Webhook',

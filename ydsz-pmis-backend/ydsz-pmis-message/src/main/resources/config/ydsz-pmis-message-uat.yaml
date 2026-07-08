@@ -1,7 +1,7 @@
 # =====================================================================
-#  YDSZ PMIS · Message · DEV 环境配置（Nacos DataId）
-#  DataId:    ydsz-pmis-message-dev.yaml
-#  Group:     dev
+#  YDSZ PMIS · Message · UAT 环境配置（Nacos DataId）
+#  DataId:    ydsz-pmis-message-uat.yaml
+#  Group:     uat
 #  端口:      9004
 # =====================================================================
 
@@ -11,7 +11,7 @@ server:
     context-path: /
 
 spring:
-  profiles: dev
+  profiles: uat
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -34,14 +34,13 @@ spring:
           timeout: 10000
           writetimeout: 10000
 
-# PMIS 消息引擎配置
 pmis:
   message:
     channel-enabled:
       SMS: true
       EMAIL: true
       PUSH: true
-      IN_APP: true
+      INAPP: true
       WEBHOOK: true
       DINGTALK: true
       WECOM: true
@@ -49,54 +48,18 @@ pmis:
     default-priority: NORMAL
     aggregate-scan-interval-ms: 60000
     retry-scan-interval-ms: 30000
-    global-daily-limit: 0
-    global-hourly-limit: 0
     sms:
       provider: ${PMIS_SMS_PROVIDER:mock}
-      aliyun:
-        access-key-id: ${PMIS_SMS_ALIYUN_AK:}
-        access-key-secret: ${PMIS_SMS_ALIYUN_SK:}
-        sign-name: ${PMIS_SMS_ALIYUN_SIGN:}
-        endpoint: dysmsapi.aliyuncs.com
-        connect-timeout: 5000
-        read-timeout: 10000
     push:
       provider: ${PMIS_PUSH_PROVIDER:mock}
-      getui:
-        app-id: ${PMIS_PUSH_GETUI_APPID:}
-        app-key: ${PMIS_PUSH_GETUI_APPKEY:}
-        master-secret: ${PMIS_PUSH_GETUI_MASTER:}
-        base-url: https://restapi.getui.com
-        connect-timeout: 5000
-        read-timeout: 10000
-  webhook:
-    default-url: ${PMIS_WEBHOOK_DEFAULT_URL:}
-    connect-timeout: 5000
-    read-timeout: 10000
-  channel:
-    dingtalk:
-      default-token: ${PMIS_DINGTALK_TOKEN:}
-      secret: ${PMIS_DINGTALK_SECRET:}
-      connect-timeout: 5000
-      read-timeout: 10000
-    wechat-work:
-      default-key: ${PMIS_WECOM_KEY:}
-      connect-timeout: 5000
-      read-timeout: 10000
-    feishu:
-      default-hook: ${PMIS_FEISHU_HOOK:}
-      secret: ${PMIS_FEISHU_SECRET:}
-      connect-timeout: 5000
-      read-timeout: 10000
 
-# RocketMQ
 rocketmq:
   name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
   producer:
-    group: ${ROCKETMQ_PRODUCER_GROUP:pmis-message-producer-group}
+    group: pmis-message-producer-group
     send-message-timeout: 5000
   consumer:
-    enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
+    enabled: true
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
@@ -113,7 +76,6 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# Resilience4j 限流
 resilience4j:
   ratelimiter:
     instances:
@@ -129,13 +91,17 @@ resilience4j:
 springdoc:
   api-docs:
     path: /v3/api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
+    enabled: false
+knife4j:
+  production: true
 
 logging:
   level:
     root: INFO
-    "[com.njydsz.pmis]": DEBUG
+    "[com.njydsz.pmis]": INFO
 
 management:
   endpoints:

@@ -335,7 +335,7 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
     private static Map<String, Object> defaultRemindResult(String reason) {
         Map<String, Object> r = new LinkedHashMap<>();
         r.put("bestTime", "IMMEDIATE");
-        r.put("channel", "IN_APP");
+        r.put("channel", "INAPP");
         r.put("message", "您有待审批任务，请尽快处理。");
         r.put("reasons", List.of(reason));
         return r;

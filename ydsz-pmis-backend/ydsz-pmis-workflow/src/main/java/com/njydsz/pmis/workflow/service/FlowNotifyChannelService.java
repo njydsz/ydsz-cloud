@@ -57,7 +57,7 @@ public interface FlowNotifyChannelService {
     /**
      * 按通道类型查询配置 JSON 字符串
      *
-     * @param channelType 通道类型（IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT）
+     * @param channelType 通道类型（INAPP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT）
      * @param tenantId    租户 ID
      * @return 配置 JSON 字符串，未配置时返回 null
      */

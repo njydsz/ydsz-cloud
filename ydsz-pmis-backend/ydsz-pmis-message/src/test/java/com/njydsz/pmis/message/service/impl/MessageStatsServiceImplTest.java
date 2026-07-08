@@ -115,7 +115,7 @@ class MessageStatsServiceImplTest {
                 50L, 5L, 2L, 1L,       // SMS
                 0L, 0L, 0L, 0L,        // EMAIL
                 0L, 0L, 0L, 0L,        // PUSH
-                0L, 0L, 0L, 0L,        // IN_APP
+                0L, 0L, 0L, 0L,        // INAPP
                 0L, 0L, 0L, 0L,        // WEBHOOK
                 0L, 0L, 0L, 0L,        // DINGTALK
                 0L, 0L, 0L, 0L,        // WECOM
@@ -273,12 +273,12 @@ class MessageStatsServiceImplTest {
     @DisplayName("getCostStats 正确按通道单价计算总成本")
     void getCostStatsShouldCalculateCostByChannelUnitPrice() {
         // 默认 8 通道(LinkedHashMap 保证顺序),selectCount 调用顺序:
-        // SMS, EMAIL, PUSH, IN_APP, WEBHOOK, DINGTALK, WECOM, FEISHU
+        // SMS, EMAIL, PUSH, INAPP, WEBHOOK, DINGTALK, WECOM, FEISHU
         when(msgLogMapper.selectCount(any())).thenReturn(
                 100L,  // SMS × 0.045 = 4.50
                 200L,  // EMAIL × 0.001 = 0.20
                 1000L, // PUSH × 0.0001 = 0.10
-                50L,   // IN_APP × 0 = 0
+                50L,   // INAPP × 0 = 0
                 10L,   // WEBHOOK × 0 = 0
                 0L,    // DINGTALK × 0 = 0
                 0L,    // WECOM × 0 = 0

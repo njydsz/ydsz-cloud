@@ -47,6 +47,41 @@
 | `/overtime` | 加班 |
 | `/attendance` | 考勤 |
 
+## 数据库表设计
+
+本模块在 `deploy/sql/V1.0.0.sql` 中持有 **22 张表**，覆盖登录认证、RBAC、组织架构、考勤、资源池 5 大域。
+
+| 业务域 | 表名 | 说明 |
+|---|---|---|
+| **登录认证** | `pmis_user_account` | 用户账号（密码哈希、状态、最后登录时间） |
+| | `pmis_user_session` | 在线会话（token、IP、UA、过期时间） |
+| | `pmis_user_2fa` | TOTP 2FA 二次认证密钥 |
+| | `pmis_login_audit` | 登录审计（成功/失败/锁定/异地） |
+| **RBAC** | `pmis_role` | 角色 |
+| | `pmis_permission` | 权限码（`pmis:user:add` 等） |
+| | `pmis_user_role` | 用户-角色关联 |
+| | `pmis_role_permission` | 角色-权限关联 |
+| **组织架构** | `pmis_department` | 部门（树形结构） |
+| | `pmis_position` | 岗位 |
+| | `pmis_employee` | 员工档案 |
+| | `pmis_employee_tag` | 员工标签（多对多） |
+| | `pmis_job_level` | 职级（L1-L13） |
+| | `pmis_job_level_rate` | 职级-费率映射 |
+| **数据字典** | `pmis_dict_type` | 字典类型 |
+| | `pmis_dict_item` | 字典项 |
+| **考勤** | `pmis_attendance` | 考勤记录 |
+| | `pmis_overtime` | 加班申请 |
+| | `pmis_leave` | 请假申请 |
+| **资源池** | `pmis_resource_pool` | 资源池（总部/事业部/备用） |
+| | `pmis_resource_assignment` | 资源分配记录 |
+| | `pmis_bench_record` | Bench 闲置记录（含闲置成本） |
+
+> **索引关键点**：
+> - `pmis_user_account.username` 唯一索引
+> - `pmis_user_session.token` 唯一索引
+> - `pmis_department.parent_id` 树查询索引
+> - `pmis_bench_record(employee_id, status)` 复合索引
+
 ## 启动顺序
 
 依赖 `common` 库 + `nacos`，**应在 `gateway` 之后、`message` 之前**启动。
@@ -68,9 +103,8 @@ ydsz-pmis-userinfo/
     │   └── config/
     ├── resources/
     │   ├── bootstrap.yml
-    │   ├── application.yml
     │   ├── mapper/            # XML 映射文件
-    │   └── nacos-config/
+    │   └── config/            # 原 nacos-config（已重命名）
     │       ├── ydsz-pmis-userinfo-dev.yaml
     │       ├── ydsz-pmis-userinfo-sit.yaml
     │       └── ydsz-pmis-userinfo-uat.yaml
@@ -83,10 +117,9 @@ ydsz-pmis-userinfo/
 | 文件 | 用途 |
 |---|---|
 | `bootstrap.yml` | Nacos 连接 + 端口 9001 |
-| `application.yml` | 本地兜底 |
-| `nacos-config/ydsz-pmis-userinfo-dev.yaml` | dev（DEBUG / 文档 UI 开） |
-| `nacos-config/ydsz-pmis-userinfo-sit.yaml` | sit（INFO / 文档 UI 关） |
-| `nacos-config/ydsz-pmis-userinfo-uat.yaml` | uat |
+| `config/ydsz-pmis-userinfo-dev.yaml` | dev（DEBUG / 文档 UI 开） |
+| `config/ydsz-pmis-userinfo-sit.yaml` | sit（INFO / 文档 UI 关） |
+| `config/ydsz-pmis-userinfo-uat.yaml` | uat |
 
 **环境变量**：
 

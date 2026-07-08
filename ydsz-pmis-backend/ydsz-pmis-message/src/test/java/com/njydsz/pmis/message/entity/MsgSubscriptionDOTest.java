@@ -19,13 +19,13 @@ class MsgSubscriptionDOTest {
         entity.setId("s-1");
         entity.setUserId("u-1");
         entity.setTopicCode("RISK_ALERT");
-        entity.setChannel("IN_APP");
+        entity.setChannel("INAPP");
         entity.setStatus("SUBSCRIBED");
 
         assertEquals("s-1", entity.getId());
         assertEquals("u-1", entity.getUserId());
         assertEquals("RISK_ALERT", entity.getTopicCode());
-        assertEquals("IN_APP", entity.getChannel());
+        assertEquals("INAPP", entity.getChannel());
         assertEquals("SUBSCRIBED", entity.getStatus());
         assertNotNull(entity);
     }

@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * <p>职责：
  * <ul>
- *   <li>多渠道发送：SMS / EMAIL / PUSH / IN_APP / WEBHOOK / DINGTALK / WECOM / FEISHU</li>
+ *   <li>多渠道发送：SMS / EMAIL / PUSH / INAPP / WEBHOOK / DINGTALK / WECOM / FEISHU</li>
  *   <li>模板管理：${var} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 场景</li>
  *   <li>站内通知：优先级 / 聚合 / 撤回 / 业务跳转</li>
  *   <li>用户偏好：免打扰 / 频率上限 / 聚合开关 / 偏好语言</li>

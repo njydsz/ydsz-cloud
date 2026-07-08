@@ -26,7 +26,7 @@ class InAppChannelTest {
 
     @Test
     void channelType_isInApp() {
-        assertEquals("IN_APP", channel.channelType());
+        assertEquals("INAPP", channel.channelType());
     }
 
     @Test
@@ -39,8 +39,8 @@ class InAppChannelTest {
         MessageResult result = channel.send(request);
 
         assertTrue(result.isSuccess());
-        assertEquals("IN_APP", result.getChannel());
-        assertTrue(result.getProviderTraceId().startsWith("IN_APP-"));
+        assertEquals("INAPP", result.getChannel());
+        assertTrue(result.getProviderTraceId().startsWith("INAPP-"));
     }
 
     @Test

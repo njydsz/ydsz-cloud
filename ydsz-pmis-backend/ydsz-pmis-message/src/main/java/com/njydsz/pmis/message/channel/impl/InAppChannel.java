@@ -21,12 +21,12 @@ import org.springframework.stereotype.Component;
 public class InAppChannel implements MessageChannel {
 
     /** 通道类型 */
-    private static final String CHANNEL_TYPE = "IN_APP";
+    private static final String CHANNEL_TYPE = "INAPP";
 
     /**
      * 通道类型。
      *
-     * @return IN_APP
+     * @return INAPP
      */
     @Override
     public String channelType() {
@@ -44,8 +44,8 @@ public class InAppChannel implements MessageChannel {
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {
             return MessageResult.fail(CHANNEL_TYPE, "站内信接收人不能为空");
         }
-        String traceId = "IN_APP-" + SnowflakeIdGenerator.nextTraceId();
-        log.info("[IN_APP] 站内信 receiver={} bizType={} content={}",
+        String traceId = "INAPP-" + SnowflakeIdGenerator.nextTraceId();
+        log.info("[INAPP] 站内信 receiver={} bizType={} content={}",
                 request.getReceiver(), request.getBizType(), request.getContent());
         return MessageResult.ok(CHANNEL_TYPE, traceId);
     }

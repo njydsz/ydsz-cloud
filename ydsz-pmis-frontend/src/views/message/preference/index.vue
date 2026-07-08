@@ -35,7 +35,7 @@ const channelOptions: { label: string; value: MessageChannel }[] = [
   { label: 'SMS', value: 'SMS' },
   { label: 'EMAIL', value: 'EMAIL' },
   { label: 'PUSH', value: 'PUSH' },
-  { label: 'IN_APP', value: 'IN_APP' },
+  { label: 'INAPP', value: 'INAPP' },
   { label: 'WEBHOOK', value: 'WEBHOOK' },
   { label: 'DINGTALK', value: 'DINGTALK' },
   { label: 'WECOM', value: 'WECOM' },

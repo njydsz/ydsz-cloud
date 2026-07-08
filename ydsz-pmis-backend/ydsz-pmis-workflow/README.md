@@ -53,6 +53,57 @@
 | `/flow/sla` | SLA 规则 |
 | `/flow/simulator` | 流程模拟器 |
 
+## 数据库表设计
+
+本模块在 `deploy/sql/V1.0.0.sql` 中持有 **34 张表**，覆盖流程定义/实例/任务/历史/通知/委托/评论/审批/审计/AI 反馈/触发器。
+
+| 业务域 | 表名 | 说明 |
+|---|---|---|
+| **流程定义** | `pmis_flow_definition` | 流程定义主表（PMIS-Flow XML/JSON/BPMN 2.0） |
+| | `pmis_flow_template` | 流程模板（版本管理 + 复制/导入/导出） |
+| | `pmis_flow_category` | 流程分类（树形） |
+| | `pmis_flow_node` | 流程节点（审批/加签/转交/抄送） |
+| | `pmis_flow_skip` | 跳过规则 |
+| | `pmis_flow_timer` | 节点/流程超时定时器（cron） |
+| | `pmis_flow_dmn_table` | DMN 决策表 |
+| **实例** | `pmis_flow_instance` | 流程实例（运行中） |
+| | `pmis_flow_his_instance` | 历史实例（已结束） |
+| **任务** | `pmis_flow_run_task` | 待办/运行任务 |
+| | `pmis_flow_his_task` | 已办/历史任务 |
+| | `pmis_flow_his_variable` | 历史变量快照 |
+| **审批/评论** | `pmis_flow_comment` | 审批意见 |
+| | `pmis_flow_task_comment` | 任务评论 |
+| | `pmis_flow_quick_comment` | 常用意见 |
+| **抄送/委派** | `pmis_flow_cc` | 抄送记录 |
+| | `pmis_flow_cc_rule` | 抄送规则 |
+| | `pmis_flow_delegate_auth` | 委托授权（代理人/时间窗） |
+| | `pmis_flow_delegate_log` | 委托日志 |
+| | `pmis_flow_delegate_message` | 委托消息（IM 通知） |
+| **附件** | `pmis_flow_attachment` | 流程附件 |
+| **审计日志** | `pmis_flow_audit_log` | 流程审计（按月分区） |
+| | `pmis_flow_audit_log_default` | 审计默认分区 |
+| **事件/触发** | `pmis_flow_event_subscription` | 事件订阅（开始/结束/节点进出） |
+| | `pmis_flow_auto_trigger` | 自动触发器（业务事件→发起流程） |
+| **通知** | `pmis_flow_notify_channel` | 通知渠道（飞书/钉钉/邮件） |
+| | `pmis_flow_notify_outbox` | 通知发件箱（异步发送） |
+| | `pmis_flow_notify_preference` | 通知偏好 |
+| | `pmis_flow_notify_template` | 通知模板 |
+| **第三方** | `pmis_flow_third_party_account` | 第三方账号（企业微信/钉钉/飞书） |
+| | `pmis_flow_third_party_log` | 第三方交互日志 |
+| **AI 增强** | `pmis_flow_ai_feedback` | AI 辅助审批反馈（用于学习） |
+| **用户** | `pmis_flow_user` | 流程用户（含离职/兼职） |
+| **Webhook** | `pmis_flow_webhook_subscription` | Webhook 订阅（流程事件回调） |
+
+> **索引关键点**：
+> - `pmis_flow_definition(template_key, version)` 唯一（最新版查找）
+> - `pmis_flow_instance(definition_id, status)` 监控
+> - `pmis_flow_run_task(assignee, status, due_date)` 待办列表 + SLA
+> - `pmis_flow_his_instance(definition_id, end_time)` 历史归档
+> - `pmis_flow_cc(recipient_id, read_flag)` 抄送分页
+> - `pmis_flow_event_subscription(event_type, listener)` 事件分发
+>
+> **分区说明**：`pmis_flow_audit_log` 为 PostgreSQL 范围分区表（按月分区），历史月份可走 `pg_partman` 归档。
+
 ## ⚠️ 平台适配硬约束
 
 > 自 2026-07-06 起明确：**本模块永远不适配移动端 App 与独立 H5 应用**。
@@ -109,9 +160,8 @@ ydsz-pmis-workflow/
     │   └── config/
     ├── resources/
     │   ├── bootstrap.yml
-    │   ├── application.yml
     │   ├── mapper/            # classpath*:mapper/flow/**/*.xml
-    │   └── nacos-config/
+    │   └── config/            # 原 nacos-config（已重命名）
     │       ├── ydsz-pmis-workflow-dev.yaml
     │       ├── ydsz-pmis-workflow-sit.yaml
     │       └── ydsz-pmis-workflow-uat.yaml

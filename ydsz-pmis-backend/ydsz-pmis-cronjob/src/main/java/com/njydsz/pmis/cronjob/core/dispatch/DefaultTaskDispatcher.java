@@ -160,6 +160,15 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     /** P0-2: 故障转移触发（JobNodeReaper 重建派发时使用） */
     public static final String TRIGGER_FAILOVER = "FAILOVER";
 
+    /**
+     * P0-4: 暴露全局执行线程池引用，供 ThreadPoolHotUpdateListener 动态调整参数。
+     *
+     * @return 全局执行线程池；未初始化时返回 null
+     */
+    public java.util.concurrent.ThreadPoolExecutor getTaskExecutorPool() {
+        return taskExecutorPool;
+    }
+
     @Override
     public String dispatch(JobDO job, String executorNode, String triggerType) {
         // P3-12: 跨集群调度 — 任务指定了目标集群时，通过 CrossClusterDispatcher 派发

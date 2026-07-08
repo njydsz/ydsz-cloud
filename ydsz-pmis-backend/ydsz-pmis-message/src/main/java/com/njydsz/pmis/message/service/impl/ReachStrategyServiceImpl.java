@@ -48,7 +48,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
 
     /** 通道成本权重（越低成本越高分） */
     private static final Map<String, Double> CHANNEL_COST = Map.of(
-            "IN_APP", 0.1,
+            "INAPP", 0.1,
             "WEBHOOK", 0.2,
             "DINGTALK", 0.3,
             "WECOM", 0.3,

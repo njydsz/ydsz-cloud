@@ -48,7 +48,7 @@ public class AlertDispatchDO implements Serializable {
     private String targetRole;
     /** 指定接收人 ID 列表（逗号分隔） */
     private String targetUserIds;
-    /** 推送渠道 IN_APP/EMAIL/SMS，逗号分隔 */
+    /** 推送渠道 INAPP/EMAIL/SMS，逗号分隔 */
     private String pushChannels;
     /** 分发时间 */
     private LocalDateTime dispatchedAt;

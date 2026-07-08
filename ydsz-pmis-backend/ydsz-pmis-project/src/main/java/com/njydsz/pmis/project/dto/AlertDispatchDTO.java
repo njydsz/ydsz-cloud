@@ -26,7 +26,7 @@ public class AlertDispatchDTO {
     private String targetRole;
     /** 指定接收人 ID 列表 */
     private String targetUserIds;
-    /** 推送渠道 IN_APP/EMAIL/SMS，逗号分隔 */
+    /** 推送渠道 INAPP/EMAIL/SMS，逗号分隔 */
     private String pushChannels;
     /** 触发人/任务名 */
     private String dispatchedBy;

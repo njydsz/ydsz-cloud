@@ -1,19 +1,8 @@
 # =====================================================================
-#  PMIS 消息通知引擎（ydsz-pmis-message - 独立自研大厂级统一通知中心）
-#  --------------------------------------------------------------------
-#  端口：9004（按构建顺序 5/7）
-#  职责：
-#    - 多渠道发送（SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU）
-#    - 模板管理（i18n/版本/审核/场景）
-#    - 站内通知（优先级/聚合/撤回/跳转）
-#    - 用户偏好（免打扰/频率上限/聚合/语言）
-#    - 订阅管理（主题级订阅/退订）
-#    - 消息路由（条件路由/通道降级）
-#    - 限流（Redisson 令牌桶）
-#    - 回执（送达/已读/点击/失败）
-#    - 撤回 / 聚合 / 监控 / 灰度
-#    - 异步（RocketMQ 生产/消费/死信 + Redis SET NX EX 幂等）
-#  依赖：Nacos、PostgreSQL、Redis、RocketMQ、Mail（SMTP）
+#  YDSZ PMIS · Message · DEV 环境配置（Nacos DataId）
+#  DataId:    ydsz-pmis-message-dev.yaml
+#  Group:     dev
+#  端口:      9004
 # =====================================================================
 
 server:
@@ -22,53 +11,16 @@ server:
     context-path: /
 
 spring:
-  application:
-    name: ydsz-pmis-message
-  profiles:
-    active: dev
-  main:
-    web-application-type: servlet
+  profiles: dev
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
     default-property-inclusion: NON_NULL
-  cloud:
-    nacos:
-      discovery:
-        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:pmis}
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:}
-      config:
-        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:pmis}
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:}
-        group: ${spring.profiles.active}
-        refresh-enabled: true
-        file-extension: yaml
-        shared-configs:
-          - data-id: ydsz-pmis-common.yaml
-            group: ${spring.profiles.active}
-            refresh: true
-  datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:}
-  data:
-    redis:
-      host: ${REDIS_HOST:127.0.0.1}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
-      database: 0
-      timeout: 5s
   mail:
     host: ${MAIL_HOST:smtp.example.com}
     port: ${MAIL_PORT:465}
     username: ${MAIL_USER:no-reply@example.com}
-    password: ${MAIL_PASSWORD}
+    password: ${MAIL_PASSWORD:}
     default-encoding: UTF-8
     properties:
       mail:
@@ -82,30 +34,23 @@ spring:
           timeout: 10000
           writetimeout: 10000
 
-# ---------- PMIS 消息引擎配置 ----------
+# PMIS 消息引擎配置
 pmis:
   message:
-    # 渠道全局开关（可按需关闭某通道）
     channel-enabled:
       SMS: true
       EMAIL: true
       PUSH: true
-      IN_APP: true
+      INAPP: true
       WEBHOOK: true
       DINGTALK: true
       WECOM: true
       FEISHU: true
-    # 默认发送优先级
     default-priority: NORMAL
-    # 聚合扫描间隔（毫秒）
     aggregate-scan-interval-ms: 60000
-    # 重试扫描间隔（毫秒）
     retry-scan-interval-ms: 30000
-    # 全局每日发送上限（单用户单通道，0 表示不限）
     global-daily-limit: 0
-    # 全局每小时发送上限（单用户单通道，0 表示不限）
     global-hourly-limit: 0
-    # P0-1: 短信服务商配置（provider=mock 降级日志 / aliyun 真实发送）
     sms:
       provider: ${PMIS_SMS_PROVIDER:mock}
       aliyun:
@@ -115,7 +60,6 @@ pmis:
         endpoint: dysmsapi.aliyuncs.com
         connect-timeout: 5000
         read-timeout: 10000
-    # P0-2: APP 推送服务商配置（provider=mock 降级日志 / getui 真实推送）
     push:
       provider: ${PMIS_PUSH_PROVIDER:mock}
       getui:
@@ -125,12 +69,10 @@ pmis:
         base-url: https://restapi.getui.com
         connect-timeout: 5000
         read-timeout: 10000
-  # Webhook 通道兜底配置
   webhook:
     default-url: ${PMIS_WEBHOOK_DEFAULT_URL:}
     connect-timeout: 5000
     read-timeout: 10000
-  # 钉钉群机器人
   channel:
     dingtalk:
       default-token: ${PMIS_DINGTALK_TOKEN:}
@@ -147,7 +89,7 @@ pmis:
       connect-timeout: 5000
       read-timeout: 10000
 
-# ---------- RocketMQ ----------
+# RocketMQ
 rocketmq:
   name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
   producer:
@@ -156,7 +98,6 @@ rocketmq:
   consumer:
     enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
 
-# ---------- MyBatis-Plus ----------
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.njydsz.pmis.message.entity
@@ -172,21 +113,7 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# ---------- Actuator / Prometheus ----------
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
-
-# ---------- Resilience4j 限流 ----------
+# Resilience4j 限流
 resilience4j:
   ratelimiter:
     instances:
@@ -199,17 +126,26 @@ resilience4j:
         limit-refresh-period: 1s
         timeout-duration: 0
 
-# ---------- SpringDoc ----------
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
 
-# ---------- 日志 ----------
 logging:
   level:
     root: INFO
     "[com.njydsz.pmis]": DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

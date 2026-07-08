@@ -1432,7 +1432,7 @@ export default {
       enable: '启用',
       disable: '停用',
       types: {
-        IN_APP: '站内信',
+        INAPP: '站内信',
         EMAIL: '邮件',
         SMS: '短信',
         WEBHOOK: 'Webhook',

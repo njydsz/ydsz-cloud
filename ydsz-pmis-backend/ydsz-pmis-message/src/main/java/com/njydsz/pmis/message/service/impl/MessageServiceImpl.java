@@ -172,7 +172,7 @@ public class MessageServiceImpl implements MessageService {
             boolean urgentBypass = stc != null && stc.isUrgentBypassDnd()
                     && "URGENT".equals(resolvePriority(request));
             if (!channelDisruptive) {
-                // 非打扰型通道（EMAIL/IN_APP/Webhook）绕过 DND
+                // 非打扰型通道（EMAIL/INAPP/Webhook）绕过 DND
                 log.debug("[Message] 非打扰型通道绕过 DND: channel={}", channel);
             } else if (urgentBypass) {
                 log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", receiver, channel);

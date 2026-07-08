@@ -80,7 +80,7 @@ public interface FlowAiAssistService {
      * @return Map(bestTime, channel, message, reasons)
      *         <ul>
      *           <li>bestTime: IMMEDIATE / MORNING / AFTERNOON / EVENING（降级为 IMMEDIATE）</li>
-     *           <li>channel: IN_APP / SMS / EMAIL / WEBHOOK（降级为 IN_APP）</li>
+     *           <li>channel: INAPP / SMS / EMAIL / WEBHOOK（降级为 INAPP）</li>
      *           <li>message: 催办话术</li>
      *           <li>reasons: 建议依据</li>
      *         </ul>

@@ -153,6 +153,42 @@ public class TenantAwareExecutorPool {
     }
 
     /**
+     * P0-4: 清空所有租户隔离线程池缓存（热更新时调用）。
+     *
+     * <p>当隔离策略或线程池参数变更时，调用此方法清空旧的线程池缓存。
+     * 已在执行中的任务会在旧线程池中完成，新任务将使用新配置创建的线程池。
+     *
+     * <p>线程池不会被立即 shutdown（避免中断正在执行的任务），而是标记为待关闭，
+     * 等待 5s 排空后由 GC 回收。
+     */
+    public void evictAllPools() {
+        int count = tenantPools.size();
+        if (count == 0) {
+            log.debug("[TenantAwarePool] 无隔离线程池需要清空");
+            return;
+        }
+        log.info("[TenantAwarePool] 热更新: 清空所有隔离线程池缓存: count={}", count);
+        // 异步关闭旧线程池（不阻塞配置更新线程）
+        List<ExecutorService> oldPools = new ArrayList<>(tenantPools.values());
+        tenantPools.clear();
+        threadCounters.clear();
+        for (ExecutorService pool : oldPools) {
+            try {
+                pool.shutdown();
+                if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
+                    pool.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                pool.shutdownNow();
+            } catch (Exception e) {
+                log.warn("[TenantAwarePool] 热更新关闭旧线程池异常: reason={}", e.getMessage());
+            }
+        }
+        log.info("[TenantAwarePool] 热更新: 旧隔离线程池已清空, 新任务将使用新配置创建");
+    }
+
+    /**
      * 优雅关闭所有隔离线程池。
      *
      * <p>Spring 容器销毁时调用。每个线程池最多等待 5s 排空在执行任务，

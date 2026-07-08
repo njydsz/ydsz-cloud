@@ -88,7 +88,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
             d.setAlertCode(AlertCodeGen.next(dto.getAlertType(), level));
         }
         if (!StringUtils.hasText(d.getPushChannels())) {
-            d.setPushChannels(level.equals("RED") ? "IN_APP,EMAIL" : "IN_APP");
+            d.setPushChannels(level.equals("RED") ? "INAPP,EMAIL" : "INAPP");
         }
         if (!StringUtils.hasText(d.getTargetRole())) {
             d.setTargetRole(String.join(",", resolveTargetRoles(level)));
@@ -238,7 +238,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     }
 
     private String resolveReceiver(AlertDispatchDO d) {
-        // 简化: 接收人 = targetRole (IN_APP 时展示给所有目标角色)
+        // 简化: 接收人 = targetRole (INAPP 时展示给所有目标角色)
         // 真实环境会通过 UserServiceClient 解析 targetUserIds
         if (StringUtils.hasText(d.getTargetUserIds())) {
             return d.getTargetUserIds();
@@ -248,7 +248,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
 
     private List<String> splitChannels(String channels) {
         if (!StringUtils.hasText(channels)) {
-            return List.of("IN_APP");
+            return List.of("INAPP");
         }
         return Arrays.stream(channels.split(","))
                 .map(String::trim)

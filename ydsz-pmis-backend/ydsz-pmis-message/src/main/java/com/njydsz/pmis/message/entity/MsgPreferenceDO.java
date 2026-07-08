@@ -30,7 +30,7 @@ public class MsgPreferenceDO extends BaseDO {
     /** 用户 ID(关联 pmis_employee.id) */
     private String userId;
 
-    /** 通道: SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU */
+    /** 通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU */
     private String channel;
 
     /** 业务类型(__DEFAULT__ 表示该通道全局默认偏好) */

@@ -2,13 +2,14 @@
 
 ## 用途
 
-本目录集中存放**所有微服务共用的 Nacos 共享配置**模板，与 `ydsz-pmis-common` 模块同源，
+本目录集中存放**所有微服务共用的 Nacos 共享配置**模板（原 `nacos-config/`，已重命名为 `config/`），
+与 `ydsz-pmis-common` 模块同源，
 业务变更只需修改一处，deploy 脚本会自动同步到 Nacos 各环境。
 
 ## 目录约定
 
 ```
-ydsz-pmis-common/src/main/resources/nacos-config/
+ydsz-pmis-common/src/main/resources/config/
 ├── ydsz-pmis-common.yaml          # 所有服务共用的共享配置（数据源/Redis/MP/SpringDoc 等）
 ├── ydsz-pmis-gateway-dev.yaml     # gateway 服务的 dev 环境配置（可选覆盖）
 ├── ydsz-pmis-userinfo-dev.yaml
@@ -70,7 +71,7 @@ Windows 等价命令：
 deploy\windows\scripts\import-nacos-config.bat pmis dev
 ```
 
-> **重要**：脚本现在优先从 `ydsz-pmis-common/src/main/resources/nacos-config/` 读取配置，
+> **重要**：脚本现在优先从 `ydsz-pmis-common/src/main/resources/config/` 读取配置（原 `nacos-config/`，已重命名），
 > 向后兼容 `deploy/common/nacos/`。建议团队统一以 common 模块为唯一来源。
 
 ## 单一来源原则

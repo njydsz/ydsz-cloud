@@ -54,7 +54,7 @@ public class FlowNotifyOutboxDO extends BaseDO {
     /** JSON 载荷，由接收方解析 */
     private String payload;
 
-    /** 投递通道: IN_APP / IM / EMAIL / SMS（逗号分隔，空表示按 event_type 默认） */
+    /** 投递通道: INAPP / IM / EMAIL / SMS（逗号分隔，空表示按 event_type 默认） */
     private String targetChannels;
 
     /** 接收用户 ID 列表（逗号分隔，空表示由 payload 自行决定） */

@@ -27,7 +27,7 @@ export interface AlertDispatchVO {
   targetRole: string
   /** 目标用户 ID 列表（逗号分隔） */
   targetUserIds?: string
-  /** 推送渠道：IN_APP/EMAIL/SMS（逗号分隔） */
+  /** 推送渠道：INAPP/EMAIL/SMS（逗号分隔） */
   pushChannels: string
   /** 分发时间 */
   dispatchedAt?: string
@@ -65,7 +65,7 @@ export interface AlertDispatchDTO {
   targetRole?: string
   /** 目标用户 ID 列表（逗号分隔） */
   targetUserIds?: string
-  /** 推送渠道：IN_APP/EMAIL/SMS（逗号分隔） */
+  /** 推送渠道：INAPP/EMAIL/SMS（逗号分隔） */
   pushChannels?: string
   /** 分发操作人 */
   dispatchedBy?: string

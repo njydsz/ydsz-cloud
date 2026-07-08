@@ -10,7 +10,7 @@ import java.util.Map;
  * 与 {@link com.njydsz.pmis.workflow.engine.FlowNotificationHelper} 的区别：
  * <ul>
  *   <li>FlowNotificationHelper — 通过 Feign 调用通知中心微服务（跨服务）</li>
- *   <li>FlowNotificationService — 本地通知服务，支持多通道（IN_APP/EMAIL/WEBHOOK），可独立扩展</li>
+ *   <li>FlowNotificationService — 本地通知服务，支持多通道（INAPP/EMAIL/WEBHOOK），可独立扩展</li>
  * </ul>
  *
  * <p>所有方法均为"尽力而为"语义：内部 try-catch 吞异常，不拖垮主流程事务。
@@ -80,7 +80,7 @@ public interface FlowNotificationService {
     /**
      * 通用发送
      *
-     * @param channel 通知通道：IN_APP / EMAIL / WEBHOOK
+     * @param channel 通知通道：INAPP / EMAIL / WEBHOOK
      * @param userId  接收人 ID
      * @param title   通知标题
      * @param content 通知内容

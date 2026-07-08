@@ -10,7 +10,7 @@ import java.util.Optional;
 /**
  * 消息通道 SPI 接口。
  *
- * <p>不同通道（SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU）实现此接口，
+ * <p>不同通道（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU）实现此接口，
  * 由 {@link ChannelRouter} 统一收集、路由与分发。通道类型字符串需与
  * {@link com.njydsz.pmis.message.enums.MessageChannelEnum} 枚举名保持一致（大写）。
  *
@@ -41,7 +41,7 @@ public interface MessageChannel {
      * {@code ReceiptPuller} 会定时调用此方法向服务商查询最新回执状态。
      *
      * <p>默认返回 {@link Optional#empty()} 表示该渠道不支持主动拉取回执
-     * （如 IN_APP 站内信、WEBHOOK 等无需回执的渠道），实现类按需覆盖。
+     * （如 INAPP 站内信、WEBHOOK 等无需回执的渠道），实现类按需覆盖。
      *
      * @param logDO 消息日志实体（含 providerTraceId 用于查询）
      * @return 回执结果；空表示渠道不支持或暂无回执

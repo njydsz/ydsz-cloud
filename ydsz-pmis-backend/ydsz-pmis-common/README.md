@@ -82,12 +82,12 @@ ydsz-pmis-common/src/main/resources/
 ├── messages_en_US.properties
 ├── validation-messages.properties
 ├── validation-messages_en_US.properties
-└── nacos-config/                 # ⭐ 部署到 Nacos 的共享配置模板
+└── config/                       # ⭐ 部署到 Nacos 的共享配置模板（原 nacos-config）
     ├── README.md
     └── ydsz-pmis-common.yaml     # 数据源/Redis/MyBatis-Plus/SpringDoc 等共享配置
 ```
 
-> **单一来源原则**：所有 7 个部署单元的公共配置，**只能**在 `nacos-config/ydsz-pmis-common.yaml` 维护。
+> **单一来源原则**：所有 7 个部署单元的公共配置，**只能**在 `config/ydsz-pmis-common.yaml` 维护。
 > 各服务 `bootstrap.yml` 通过 `spring.cloud.nacos.config.shared-configs` 引用此 dataId。
 
 ## 目录结构
@@ -127,7 +127,7 @@ ydsz-pmis-common/
 │   └── util/            # 14 个工具类
 └── src/main/resources/
     ├── application.yml
-    └── nacos-config/    # ⭐ Nacos 共享配置模板
+    └── config/    # ⭐ Nacos 共享配置模板（原 nacos-config）
 ```
 
 ## 配置文件
@@ -137,7 +137,7 @@ ydsz-pmis-common/
 | `application.yml` | common 模块本地配置（关闭 web 容器） | Maven 单元测试 |
 | `application-sentry.yml` | Sentry 异常聚合 | 由 `spring.profiles.active` 激活 |
 | `logback-spring.xml` | Logback 日志配置 | 应用启动 |
-| `nacos-config/ydsz-pmis-common.yaml` | **Nacos 共享配置**（数据源/Redis/MP 等） | 通过 `bootstrap.yml` 拉取 |
+| `config/ydsz-pmis-common.yaml` | **Nacos 共享配置**（数据源/Redis/MP 等） | 通过 `bootstrap.yml` 拉取 |
 
 > **重要**：`application.yml` 中的 `web-application-type: none` 表示本模块**不启动** Tomcat，
 > 不会被独立部署，仅作为依赖 jar 提供能力。
@@ -180,7 +180,7 @@ Windows 等价：
 deploy\windows\scripts\import-nacos-config.bat pmis dev
 ```
 
-> 脚本优先从 `ydsz-pmis-common/src/main/resources/nacos-config/` 读取，向后兼容 `deploy/common/nacos/`。
+> 脚本优先从 `ydsz-pmis-common/src/main/resources/config/` 读取（原 nacos-config，向后兼容 `deploy/common/nacos/`）。
 
 ## 版本与变更
 

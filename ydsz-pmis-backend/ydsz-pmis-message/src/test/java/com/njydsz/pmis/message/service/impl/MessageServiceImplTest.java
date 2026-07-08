@@ -400,8 +400,8 @@ class MessageServiceImplTest {
     @DisplayName("P1-8: 降级链首个通道成功 → 返回成功")
     void fallbackChainShouldSucceedOnFirstFallback() {
         MessageRequest req = buildRequest();
-        // 路由命中,目标通道 EMAIL,降级链 SMS,PUSH,IN_APP
-        MsgRouteRuleDO rule = buildRuleWithFallbackChain("EMAIL", "SMS,PUSH,IN_APP");
+        // 路由命中,目标通道 EMAIL,降级链 SMS,PUSH,INAPP
+        MsgRouteRuleDO rule = buildRuleWithFallbackChain("EMAIL", "SMS,PUSH,INAPP");
         when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
         when(routeRuleService.match(any())).thenReturn(rule);
         when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);
@@ -425,7 +425,7 @@ class MessageServiceImplTest {
     @DisplayName("P1-8: 降级链首个失败、第二个成功 → 返回成功")
     void fallbackChainShouldSucceedOnSecondFallback() {
         MessageRequest req = buildRequest();
-        MsgRouteRuleDO rule = buildRuleWithFallbackChain("EMAIL", "SMS,PUSH,IN_APP");
+        MsgRouteRuleDO rule = buildRuleWithFallbackChain("EMAIL", "SMS,PUSH,INAPP");
         when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
         when(routeRuleService.match(any())).thenReturn(rule);
         when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);

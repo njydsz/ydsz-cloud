@@ -51,7 +51,7 @@ public class FlowNotifyTemplateResolver {
      *
      * @param tenantId     租户 ID
      * @param templateCode 模板编码（如 TASK_CREATED）
-     * @param channel      通知通道（如 IN_APP）
+     * @param channel      通知通道（如 INAPP）
      * @param variables    变量上下文
      * @return 解析后的 [title, content]，模板不存在返回 null
      */
@@ -83,7 +83,7 @@ public class FlowNotifyTemplateResolver {
             return null;
         }
         String effectiveTenant = tenantId == null ? "1" : tenantId;
-        String effectiveChannel = channel == null ? "IN_APP" : channel;
+        String effectiveChannel = channel == null ? "INAPP" : channel;
         String effectiveLocale = (locale == null || locale.isBlank()) ? DEFAULT_LOCALE : locale;
 
         try {

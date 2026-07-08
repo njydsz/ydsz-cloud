@@ -59,6 +59,35 @@
 | `/agent/trace` | 调用链追踪（含 `provider_trace_id`） |
 | `/agent/quota` | Token 配额管理 |
 
+## 数据库表设计
+
+本模块在 `deploy/sql/V1.0.0.sql` 中持有 **12 张表**，覆盖智能体编排 + RAG + MCP + 配额 + 链路追踪 + HITL 人工介入。
+
+| 业务域 | 表名 | 说明 |
+|---|---|---|
+| **DAG 编排** | `pmis_agent_dag_definition` | DAG 定义（多智能体编排图） |
+| | `pmis_agent_dag_instance` | DAG 实例 |
+| | `pmis_agent_dag_node_instance` | DAG 节点实例 |
+| **RAG 知识库** | `pmis_agent_knowledge_base` | 知识库元信息 |
+| | `pmis_agent_document` | 文档元信息（MinIO path / 分块数） |
+| | `pmis_agent_document_chunk` | 文档切片（含向量化结果） |
+| **Prompt** | `pmis_agent_prompt_template` | Prompt 模板（含变量校验） |
+| **业务预测** | `pmis_agent_prediction` | 预测结果（成本/利润/工期） |
+| **HITL 人工介入** | `pmis_agent_hitl_approval` | 人工审批（ReAct/多步推理中的卡点） |
+| **Token 配额** | `pmis_agent_token_quota` | 租户级配额（按 LLM Provider） |
+| | `pmis_agent_token_usage_log` | Token 用量流水（按日聚合） |
+| **链路追踪** | `pmis_agent_trace` | 调用链追踪（含 `provider_trace_id`） |
+
+> **索引关键点**：
+> - `pmis_agent_trace(trace_id)` 唯一
+> - `pmis_agent_dag_instance(dag_id, status)` 监控
+> - `pmis_agent_dag_node_instance(instance_id, status)` 节点依赖
+> - `pmis_agent_document_chunk(knowledge_base_id, document_id)` 向量检索
+> - `pmis_agent_token_usage_log(tenant_id, provider, usage_date)` 配额结算
+> - `pmis_agent_hitl_approval(approval_id, status, due_date)` 待审批 SLA
+>
+> **依赖说明**：RAG 文档向量检索依赖 `literule` + `pgvector` 扩展，详见根 README 数据库依赖章节。
+
 ## 启动顺序
 
 依赖 `common` + `nacos` + LLM Provider，**应在所有业务服务之后**启动。
@@ -87,11 +116,8 @@ ydsz-pmis-agent/
     │   └── config/
     ├── resources/
     │   ├── bootstrap.yml
-    │   ├── application.yml
-    │   ├── mapper/
-    │   │   ├── AgentTraceMapper.xml
-    │   │   └── TokenQuotaMapper.xml
-    │   └── nacos-config/
+    │   ├── mapper/                         # AgentTraceMapper / TokenQuotaMapper
+    │   └── config/                         # 原 nacos-config（已重命名）
     │       ├── ydsz-pmis-agent-dev.yaml
     │       ├── ydsz-pmis-agent-sit.yaml
     │       └── ydsz-pmis-agent-uat.yaml

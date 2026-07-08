@@ -4,7 +4,8 @@
 #  作用:   所有 7 个微服务都通过 spring.cloud.nacos.config.shared-configs
 #          引用此 dataId，实现"一处修改全集群生效"
 #
-#  位置:   ydsz-pmis-common/src/main/resources/nacos-config/ydsz-pmis-common.yaml
+# 位置:   ydsz-pmis-common/src/main/resources/config/ydsz-pmis-common.yaml
+#          （原 nacos-config/，已重命名为 config/）
 #          保持和 common 模块同源，便于：
 #            1. 业务变更时一处修改；
 #            2. 单元测试 / 本地开发可复用相同配置；

@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * <p>把工作流关键事件（任务创建/催办/驳回/转办/委派/超时/完成/撤回/终止）转写为
  * 通知中心可消费的 payload 并通过 {@link FlowNotificationService} 投递。所有方法
- * 委托给 FlowNotificationService 统一处理通道分发（IN_APP/EMAIL/WEBHOOK），
+ * 委托给 FlowNotificationService 统一处理通道分发（INAPP/EMAIL/WEBHOOK），
  * 任何异常被 try-catch 吞掉，主流程事务不被拖垮。
  *
  * <p>P0-1: 站内信打通（对标钉钉/飞书审批的实时通知能力）。
@@ -29,9 +29,9 @@ import java.util.Map;
 public class FlowNotificationHelper {
 
     /** 默认通知通道：站内信 */
-    private static final String CHANNEL_IN_APP = "IN_APP";
+    private static final String CHANNEL_INAPP = "INAPP";
 
-    /** 工作流通知服务，统一管理多通道投递（IN_APP/EMAIL/WEBHOOK） */
+    /** 工作流通知服务，统一管理多通道投递（INAPP/EMAIL/WEBHOOK） */
     private final FlowNotificationService notificationService;
     /** P0-1: 敏感字段脱敏器 */
     private final FlowSensitiveMasker sensitiveMasker;
@@ -54,7 +54,7 @@ public class FlowNotificationHelper {
         try {
             Map<String, Object> extra = buildExtra(bizType, level);
             extra.put("taskId", taskId);
-            notificationService.send(CHANNEL_IN_APP, receiverId,
+            notificationService.send(CHANNEL_INAPP, receiverId,
                     sensitiveMasker.mask(title), sensitiveMasker.mask(content), extra);
         } catch (Exception e) {
             log.warn("[FlowNotify] 任务待办通知异常 receiverId={} taskId={} err={}",
@@ -78,7 +78,7 @@ public class FlowNotificationHelper {
             try {
                 Map<String, Object> extra = buildExtra("WORKFLOW_URGE", "URGENT");
                 extra.put("instanceId", instanceId);
-                notificationService.send(CHANNEL_IN_APP, receiverId,
+                notificationService.send(CHANNEL_INAPP, receiverId,
                         sensitiveMasker.mask(title), sensitiveMasker.mask(content), extra);
             } catch (Exception e) {
                 log.warn("[FlowNotify] 催办通知异常 receiverId={} instanceId={} err={}",
@@ -97,7 +97,7 @@ public class FlowNotificationHelper {
         try {
             Map<String, Object> extra = buildExtra("WORKFLOW_COMPLETED", "INFO");
             extra.put("instanceId", instanceId);
-            notificationService.send(CHANNEL_IN_APP, receiverId,
+            notificationService.send(CHANNEL_INAPP, receiverId,
                     sensitiveMasker.mask(title), sensitiveMasker.mask(content), extra);
         } catch (Exception e) {
             log.warn("[FlowNotify] 流程完成通知异常 receiverId={} instanceId={} err={}",
@@ -115,7 +115,7 @@ public class FlowNotificationHelper {
         try {
             Map<String, Object> extra = buildExtra("WORKFLOW_REJECTED", "WARN");
             extra.put("instanceId", instanceId);
-            notificationService.send(CHANNEL_IN_APP, receiverId,
+            notificationService.send(CHANNEL_INAPP, receiverId,
                     sensitiveMasker.mask(title), sensitiveMasker.mask(content), extra);
         } catch (Exception e) {
             log.warn("[FlowNotify] 流程驳回通知异常 receiverId={} instanceId={} err={}",
@@ -134,7 +134,7 @@ public class FlowNotificationHelper {
             try {
                 Map<String, Object> extra = buildExtra("WORKFLOW_RECALLED", "WARN");
                 extra.put("instanceId", instanceId);
-                notificationService.send(CHANNEL_IN_APP, receiverId,
+                notificationService.send(CHANNEL_INAPP, receiverId,
                         sensitiveMasker.mask(title), sensitiveMasker.mask(content), extra);
             } catch (Exception e) {
                 log.warn("[FlowNotify] 流程撤回通知异常 receiverId={} instanceId={} err={}",
@@ -153,7 +153,7 @@ public class FlowNotificationHelper {
         try {
             Map<String, Object> extra = buildExtra("WORKFLOW_TERMINATED", "WARN");
             extra.put("instanceId", instanceId);
-            notificationService.send(CHANNEL_IN_APP, receiverId,
+            notificationService.send(CHANNEL_INAPP, receiverId,
                     sensitiveMasker.mask(title), sensitiveMasker.mask(content), extra);
         } catch (Exception e) {
             log.warn("[FlowNotify] 流程终止通知异常 receiverId={} instanceId={} err={}",
@@ -171,7 +171,7 @@ public class FlowNotificationHelper {
         try {
             Map<String, Object> extra = buildExtra("WORKFLOW_TRANSFERRED", "INFO");
             extra.put("taskId", taskId);
-            notificationService.send(CHANNEL_IN_APP, receiverId,
+            notificationService.send(CHANNEL_INAPP, receiverId,
                     sensitiveMasker.mask(title), sensitiveMasker.mask(content), extra);
         } catch (Exception e) {
             log.warn("[FlowNotify] 任务转办通知异常 receiverId={} taskId={} err={}",
@@ -189,7 +189,7 @@ public class FlowNotificationHelper {
         try {
             Map<String, Object> extra = buildExtra("WORKFLOW_DELEGATED", "INFO");
             extra.put("taskId", taskId);
-            notificationService.send(CHANNEL_IN_APP, receiverId,
+            notificationService.send(CHANNEL_INAPP, receiverId,
                     sensitiveMasker.mask(title), sensitiveMasker.mask(content), extra);
         } catch (Exception e) {
             log.warn("[FlowNotify] 任务委派通知异常 receiverId={} taskId={} err={}",
@@ -207,7 +207,7 @@ public class FlowNotificationHelper {
         try {
             Map<String, Object> extra = buildExtra("WORKFLOW_TIMEOUT", "WARN");
             extra.put("taskId", taskId);
-            notificationService.send(CHANNEL_IN_APP, receiverId,
+            notificationService.send(CHANNEL_INAPP, receiverId,
                     sensitiveMasker.mask(title), sensitiveMasker.mask(content), extra);
         } catch (Exception e) {
             log.warn("[FlowNotify] 任务超时通知异常 receiverId={} taskId={} err={}",

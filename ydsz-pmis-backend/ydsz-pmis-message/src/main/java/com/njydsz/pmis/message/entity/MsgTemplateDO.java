@@ -31,7 +31,7 @@ public class MsgTemplateDO extends BaseDO {
     /** 模板编码(同 code 不同 channel/locale 形成多版本) */
     private String templateCode;
 
-    /** 通道: SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU */
+    /** 通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU */
     private String channel;
 
     /** 语言区域(如 zh-CN / en-US),影响 i18n 模板选择 */

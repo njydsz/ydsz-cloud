@@ -92,7 +92,7 @@ public class FlowAiGenerateController {
      * P3-1: 智能催办。
      *
      * <p>请求体：{ "taskId": "...", "assigneeId": "...", "flowCode": "...", "nodeCode": "..." }
-     * 响应体：{ "bestTime": "IMMEDIATE", "channel": "IN_APP", "message": "...", "reasons": [...] }
+     * 响应体：{ "bestTime": "IMMEDIATE", "channel": "INAPP", "message": "...", "reasons": [...] }
      *
      * @param body 请求体，需包含 taskId 与 assigneeId
      * @return 智能催办建议

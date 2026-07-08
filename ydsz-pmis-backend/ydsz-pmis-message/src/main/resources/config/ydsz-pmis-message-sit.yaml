@@ -1,7 +1,7 @@
 # =====================================================================
-#  YDSZ PMIS · Message · UAT 环境配置（Nacos DataId）
-#  DataId:    ydsz-pmis-message-uat.yaml
-#  Group:     uat
+#  YDSZ PMIS · Message · SIT 环境配置（Nacos DataId）
+#  DataId:    ydsz-pmis-message-sit.yaml
+#  Group:     sit
 #  端口:      9004
 # =====================================================================
 
@@ -11,7 +11,7 @@ server:
     context-path: /
 
 spring:
-  profiles: uat
+  profiles: sit
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -40,7 +40,7 @@ pmis:
       SMS: true
       EMAIL: true
       PUSH: true
-      IN_APP: true
+      INAPP: true
       WEBHOOK: true
       DINGTALK: true
       WECOM: true
@@ -88,6 +88,7 @@ resilience4j:
         limit-refresh-period: 1s
         timeout-duration: 0
 
+# SIT 关闭文档 UI
 springdoc:
   api-docs:
     path: /v3/api-docs

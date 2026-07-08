@@ -9,7 +9,7 @@ package com.njydsz.pmis.common.constant;
  *
  * <h3>Topic 命名规范</h3>
  * <ul>
- *   <li>业务消息：{@code pmis-message-topic}（通道发送：SMS/EMAIL/PUSH/IN_APP/WEBHOOK）</li>
+ *   <li>业务消息：{@code pmis-message-topic}（通道发送：SMS/EMAIL/PUSH/INAPP/WEBHOOK）</li>
  *   <li>工作流事件：{@code pmis-workflow-event-topic}（任务创建/通过/驳回等）</li>
  *   <li>预算告警：{@code pmis-budget-alert-topic}（YELLOW/RED 告警分发）</li>
  *   <li>死信队列：{@code %DLQ%pmis-message-consumer}（RocketMQ 内置 DLQ 前缀）</li>
@@ -30,7 +30,7 @@ public final class PmisMessageTopics {
 
     // ==================== Topic ====================
 
-    /** 通知消息 Topic：通道发送（SMS/EMAIL/PUSH/IN_APP/WEBHOOK） */
+    /** 通知消息 Topic：通道发送（SMS/EMAIL/PUSH/INAPP/WEBHOOK） */
     public static final String TOPIC_MESSAGE = "pmis-message-topic";
 
     /** 工作流事件 Topic：任务创建/通过/驳回/转办/委派/催办/超时/实例终止等 */

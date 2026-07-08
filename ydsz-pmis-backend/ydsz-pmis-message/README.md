@@ -24,7 +24,7 @@
 | **SMS** 短信 | 阿里云 / 腾讯云 / 华为云 | `mock`（开发） / `aliyun`（生产） |
 | **EMAIL** 邮件 | SMTP（SSL/STARTTLS） | 内置 |
 | **PUSH** 推送 | 个推 Getui / 极光 / 友盟 | `mock` / `getui` |
-| **IN_APP** 站内 | WebSocket | 内置 |
+| **INAPP** 站内 | WebSocket | 内置 |
 | **WEBHOOK** 通用 | HTTP/HTTPS | 内置 |
 | **DINGTALK** 钉钉 | 群机器人 + 加签 | 内置 |
 | **WECOM** 企业微信 | 群机器人 | 内置 |
@@ -59,6 +59,35 @@
 | `/message/dead-letter` | 死信队列 |
 | `/notification/inbox` | 前端通知中心（V2 路由） |
 
+## 数据库表设计
+
+本模块在 `deploy/sql/V1.0.0.sql` 中持有 **24 张表**，覆盖消息生命周期 + 模板 + 偏好 + 订阅 + 灰度 + 站内 + 回执。
+
+| 业务域 | 表名 | 说明 |
+|---|---|---|
+| **消息日志** | `pmis_msg_log` | 消息发送主日志（按月分区） |
+| | `pmis_msg_log_default` | 消息日志默认分区 |
+| | `pmis_msg_log_yYYYYmMM` | 消息日志月度分区模板 |
+| **批量发送** | `pmis_msg_batch` | 批量发送批次（聚合任务） |
+| **聚合** | `pmis_msg_aggregate` | 站内通知聚合（同类合并） |
+| **站内通知** | `pmis_msg_notification` | 站内收件箱（前端通知中心） |
+| **回执** | `pmis_msg_receipt` | 消息回执（送达/已读/点击/失败/超时） |
+| **模板** | `pmis_msg_template` | 消息模板（含 i18n/场景/审核） |
+| | `pmis_msg_template_version` | 模板版本历史 |
+| **用户偏好** | `pmis_msg_preference` | 用户偏好（免打扰/频率/语言） |
+| **订阅** | `pmis_msg_subscription` | 主题订阅（用户×主题×渠道） |
+| **路由规则** | `pmis_msg_route_rule` | 条件路由 + 通道降级 |
+| **灰度** | `pmis_msg_canary` | 灰度发布策略（按用户标签/比例） |
+
+> **索引关键点**：
+> - `pmis_msg_log(trace_id)` 链路追踪
+> - `pmis_msg_log(recipient_id, send_time)` 收件箱查询
+> - `pmis_msg_notification(user_id, read_flag, created_at)` 未读/已读分页
+> - `pmis_msg_template(template_code, version)` 唯一
+> - `pmis_msg_receipt(msg_log_id)` 唯一
+>
+> **分区说明**：`pmis_msg_log` 为 PostgreSQL 范围分区表（按月分区），与 `pmis_operation_log` 同样可走 `pg_partman` 归档历史月份。
+
 ## 启动顺序
 
 依赖 `common` + `nacos` + `rocketmq`，**应在 `userinfo` / `system` / `project` 之后**启动（业务服务通过 Feign 调用本服务）。
@@ -77,7 +106,7 @@ ydsz-pmis-message/
     │   │   ├── template/      # 模板引擎
     │   │   ├── preference/    # 偏好
     │   │   ├── receipt/       # 回执拉取（ReceiptPuller）
-    │   │   ├── retry/         # 重试调度
+    │   │   ├── retry/         # 重试扫描
     │   │   ├── aggregate/     # 聚合
     │   │   └── canary/        # 灰度
     │   ├── consumer/          # RocketMQ 消费者
@@ -88,9 +117,8 @@ ydsz-pmis-message/
     │   └── config/
     ├── resources/
     │   ├── bootstrap.yml
-    │   ├── application.yml
-    │   ├── mapper/            # MsgLogMapper / MsgCanaryMapper
-    │   └── nacos-config/
+    │   ├── mapper/            # 8 个 XML：MsgLog / MsgNotification / MsgReceipt / ...
+    │   └── config/            # 原 nacos-config（已重命名）
     │       ├── ydsz-pmis-message-dev.yaml
     │       ├── ydsz-pmis-message-sit.yaml
     │       └── ydsz-pmis-message-uat.yaml

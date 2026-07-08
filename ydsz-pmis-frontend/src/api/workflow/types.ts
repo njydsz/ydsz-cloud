@@ -676,7 +676,7 @@ export interface FlowTemplateDTO {
 export interface NotifyChannelDTO {
   id?: number
   tenantId?: number
-  /** 通道类型：IN_APP / EMAIL / SMS / WEBHOOK / DINGTALK / WECHAT */
+  /** 通道类型：INAPP / EMAIL / SMS / WEBHOOK / DINGTALK / WECHAT */
   channelType: string
   channelName: string
   /** JSON 配置（webhook URL / SMS 模板编码等） */

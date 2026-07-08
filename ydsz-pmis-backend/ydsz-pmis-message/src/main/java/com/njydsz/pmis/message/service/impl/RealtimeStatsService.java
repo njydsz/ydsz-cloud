@@ -129,7 +129,7 @@ public class RealtimeStatsService {
     public Map<String, Long> getDailyErrorCounts() {
         String daySuffix = LocalDateTime.now().format(DAY_FMT);
         Map<String, Long> result = new HashMap<>();
-        for (String channel : new String[]{"SMS", "EMAIL", "PUSH", "IN_APP", "DINGTALK", "WECOM", "FEISHU", "WEBHOOK"}) {
+        for (String channel : new String[]{"SMS", "EMAIL", "PUSH", "INAPP", "DINGTALK", "WECOM", "FEISHU", "WEBHOOK"}) {
             String key = "pmis:stats:errors:" + channel + ":" + daySuffix;
             String val = redisTemplate.opsForValue().get(key);
             if (val != null) {

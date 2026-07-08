@@ -80,7 +80,7 @@ class MessagePropertiesTest {
     }
 
     @Test
-    @DisplayName("isDisruptive: SMS/PUSH/DINGTALK/WECOM/FEISHU → true；EMAIL/IN_APP/WEBHOOK/null → false")
+    @DisplayName("isDisruptive: SMS/PUSH/DINGTALK/WECOM/FEISHU → true；EMAIL/INAPP/WEBHOOK/null → false")
     void smartTiming_isDisruptive_shouldMatchDefaultChannels() {
         MessageProperties.SmartTimingConfig stc = new MessageProperties.SmartTimingConfig();
 
@@ -93,7 +93,7 @@ class MessagePropertiesTest {
         assertTrue(stc.isDisruptive("sms"));
         // 非打扰型通道
         assertFalse(stc.isDisruptive("EMAIL"));
-        assertFalse(stc.isDisruptive("IN_APP"));
+        assertFalse(stc.isDisruptive("INAPP"));
         assertFalse(stc.isDisruptive("WEBHOOK"));
         // null 安全
         assertFalse(stc.isDisruptive(null));
