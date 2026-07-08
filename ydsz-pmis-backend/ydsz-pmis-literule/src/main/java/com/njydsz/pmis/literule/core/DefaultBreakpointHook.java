@@ -54,6 +54,12 @@ public class DefaultBreakpointHook implements BreakpointHook {
     /** 每个规则编码的挂起 latch + 待下发指令（CONTINUE / STEP_OVER） */
     private final Map<String, SuspendState> suspendStates = new ConcurrentHashMap<>();
 
+    /** 条件断点表达式（2.0.0）：ruleCode → 条件表达式（满足时才挂起） */
+    private final Map<String, String> conditionalBreakpoints = new ConcurrentHashMap<>();
+
+    /** Watch 表达式列表（2.0.0）：在断点挂起时求值并返回给调试端 */
+    private final List<String> watchExpressions = Collections.synchronizedList(new ArrayList<>());
+
     /**
      * 添加断点
      *
@@ -66,6 +72,69 @@ public class DefaultBreakpointHook implements BreakpointHook {
     }
 
     /**
+     * 添加条件断点（2.0.0）
+     *
+     * <p>仅当条件表达式求值为 true 时才挂起执行。
+     * 条件表达式可访问 facts 中的变量。
+     *
+     * @param ruleCode  规则编码
+     * @param condition 条件表达式（null 或空表示无条件断点）
+     * @since 2.0.0
+     */
+    public void addConditionalBreakpoint(String ruleCode, String condition) {
+        if (ruleCode != null && !ruleCode.isBlank()) {
+            breakpoints.add(ruleCode);
+            if (condition != null && !condition.isBlank()) {
+                conditionalBreakpoints.put(ruleCode, condition);
+            } else {
+                conditionalBreakpoints.remove(ruleCode);
+            }
+        }
+    }
+
+    /**
+     * 添加 Watch 表达式（2.0.0）
+     *
+     * @param expression 表达式
+     * @since 2.0.0
+     */
+    public void addWatch(String expression) {
+        if (expression != null && !expression.isBlank()) {
+            watchExpressions.add(expression);
+        }
+    }
+
+    /**
+     * 移除 Watch 表达式（2.0.0）
+     *
+     * @param expression 表达式
+     * @since 2.0.0
+     */
+    public void removeWatch(String expression) {
+        watchExpressions.remove(expression);
+    }
+
+    /**
+     * 获取 Watch 表达式列表（2.0.0）
+     *
+     * @return 不可修改的 Watch 表达式列表
+     * @since 2.0.0
+     */
+    public List<String> getWatchExpressions() {
+        return Collections.unmodifiableList(watchExpressions);
+    }
+
+    /**
+     * 获取条件断点映射（2.0.0）
+     *
+     * @return 不可修改的条件断点映射
+     * @since 2.0.0
+     */
+    public Map<String, String> getConditionalBreakpoints() {
+        return Collections.unmodifiableMap(conditionalBreakpoints);
+    }
+
+    /**
      * 移除断点
      *
      * @param ruleCode 规则编码
@@ -73,6 +142,7 @@ public class DefaultBreakpointHook implements BreakpointHook {
     public void removeBreakpoint(String ruleCode) {
         if (ruleCode != null) {
             breakpoints.remove(ruleCode);
+            conditionalBreakpoints.remove(ruleCode);
             // 清理可能残留的挂起状态
             SuspendState state = suspendStates.remove(ruleCode);
             if (state != null) {
@@ -86,6 +156,7 @@ public class DefaultBreakpointHook implements BreakpointHook {
      */
     public void clearBreakpoints() {
         breakpoints.clear();
+        conditionalBreakpoints.clear();
         // 唤醒所有挂起的线程
         for (SuspendState state : suspendStates.values()) {
             state.latch.countDown();

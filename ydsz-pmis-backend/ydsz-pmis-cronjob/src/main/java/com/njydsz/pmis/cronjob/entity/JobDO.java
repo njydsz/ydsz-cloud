@@ -190,6 +190,14 @@ public class JobDO extends BaseDO {
      */
     private String timezone;
 
+    /**
+     * 目标集群名称（P3-12 跨集群调度）。
+     *
+     * <p>null 或空表示本地集群（默认）；
+     * 非 null 时任务通过 {@code CrossClusterDispatcher} 派发到指定集群执行。
+     */
+    private String cluster;
+
     /** 租户 ID */
     private String tenantId;
 }

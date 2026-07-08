@@ -2,6 +2,7 @@ package com.njydsz.pmis.message.channel.impl;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.message.service.ReadReceiptService;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +36,8 @@ class EmailChannelTest {
     @BeforeEach
     void setUp() {
         mailSender = mock(JavaMailSender.class);
-        channel = new EmailChannel(mailSender);
+        ReadReceiptService readReceiptService = mock(ReadReceiptService.class);
+        channel = new EmailChannel(mailSender, readReceiptService);
         ReflectionTestUtils.setField(channel, "from", "noreply@example.com");
     }
 
@@ -69,7 +71,7 @@ class EmailChannelTest {
 
     @Test
     void send_returnsFailWhenMailSenderNull() {
-        EmailChannel noMail = new EmailChannel(null);
+        EmailChannel noMail = new EmailChannel(null, null);
         ReflectionTestUtils.setField(noMail, "from", "noreply@example.com");
 
         MessageRequest request = new MessageRequest();

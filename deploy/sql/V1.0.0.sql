@@ -2349,6 +2349,8 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     reconsume_times   INTEGER        NOT NULL DEFAULT 0,
     -- P2-6: 级联发送父消息 ID(用于追溯级联关系,顶层消息为 NULL)
     parent_msg_id     VARCHAR(64),
+    -- P0-3: 定时发送时间(非空时 status=SCHEDULED, 到期后由调度器触发发送)
+    scheduled_at      TIMESTAMPTZ,
     -- 审计字段统一
     created_by        VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2360,7 +2362,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     CONSTRAINT pk_pml PRIMARY KEY (id, created_at),
     -- 数据完整性约束
     CONSTRAINT ck_pml_channel_enum      CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pml_status_enum       CHECK (status IN ('PENDING', 'SENDING', 'SUCCESS', 'FAILED', 'RETRY', 'DEAD', 'RECALLED')),
+    CONSTRAINT ck_pml_status_enum       CHECK (status IN ('PENDING', 'SENDING', 'SUCCESS', 'FAILED', 'RETRY', 'DEAD', 'RECALLED', 'SCHEDULED')),
     CONSTRAINT ck_pml_priority_enum     CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'URGENT')),
     CONSTRAINT ck_pml_recall_enum       CHECK (recall_status IN ('NONE', 'RECALLED')),
     CONSTRAINT ck_pml_receipt_enum      CHECK (receipt_status IN ('NONE', 'DELIVERED', 'READ', 'CLICKED', 'FAILED', 'TIMEOUT')),
@@ -6974,6 +6976,35 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALE
 -- 设计参考: Dromara Warm-Flow / FlowLong
 -- 适用场景: 立项审批、合同变更、销项审批等线性/会签流程
 -- =====================================================
+
+-- -----------------------------------------------------
+-- 0. 流程分类表（P1-6: 对标钉钉/飞书审批的分类管理）
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS pmis_flow_category (
+    id                  VARCHAR(20)       PRIMARY KEY,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
+    category_code       VARCHAR(64)       NOT NULL,
+    category_name       VARCHAR(128)      NOT NULL,
+    parent_id           VARCHAR(20),
+    sort_num            INTEGER           NOT NULL DEFAULT 0,
+    icon                VARCHAR(64),
+    remark              VARCHAR(500),
+    deleted             SMALLINT          NOT NULL DEFAULT 0,
+    created_at          TIMESTAMP         NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMP         NOT NULL DEFAULT NOW(),
+    created_by          VARCHAR(20),
+    updated_by          VARCHAR(20)
+);
+
+COMMENT ON TABLE  pmis_flow_category IS 'P1-6: 流程分类表';
+COMMENT ON COLUMN pmis_flow_category.category_code IS '分类编码';
+COMMENT ON COLUMN pmis_flow_category.category_name IS '分类名称';
+COMMENT ON COLUMN pmis_flow_category.parent_id IS '父分类 ID';
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfc_code
+    ON pmis_flow_category (tenant_id, category_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfc_parent
+    ON pmis_flow_category (parent_id) WHERE parent_id IS NOT NULL AND deleted = 0;
 
 -- -----------------------------------------------------
 -- 1. 流程定义表（对标 Warm-Flow flow_definition）
@@ -12445,6 +12476,64 @@ CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_user_action
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT
 -- ====================================================================
+
+-- ====================================================================
+-- P0-2: 消息批次表（异步批量发送）
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS pmis_msg_batch(
+    id                VARCHAR(20)    NOT NULL,
+    batch_id          VARCHAR(64)    NOT NULL,
+    batch_name        VARCHAR(128),
+    channel           VARCHAR(32),
+    template_code     VARCHAR(128),
+    biz_type          VARCHAR(64),
+    total             INTEGER        NOT NULL DEFAULT 0,
+    success           INTEGER        NOT NULL DEFAULT 0,
+    failed            INTEGER        NOT NULL DEFAULT 0,
+    skipped           INTEGER        NOT NULL DEFAULT 0,
+    status            VARCHAR(16)    NOT NULL DEFAULT 'PENDING',
+    audience_source   VARCHAR(128),
+    error_message     TEXT,
+    started_at        TIMESTAMPTZ,
+    completed_at      TIMESTAMPTZ,
+    sender_id         VARCHAR(20),
+    created_by        VARCHAR(20)    NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(20)    NOT NULL DEFAULT 'SYSTEM',
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         VARCHAR(20)    NOT NULL DEFAULT '1',
+    CONSTRAINT pk_pmb PRIMARY KEY (id),
+    CONSTRAINT uk_pmb_batch_id UNIQUE (batch_id),
+    CONSTRAINT ck_pmb_status CHECK (status IN ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'))
+);
+CREATE INDEX IF NOT EXISTS idx_pmb_batch_id ON pmis_msg_batch(batch_id);
+CREATE INDEX IF NOT EXISTS idx_pmb_status ON pmis_msg_batch(status);
+CREATE INDEX IF NOT EXISTS idx_pmb_created_at ON pmis_msg_batch(created_at);
+
+-- ====================================================================
+-- P1-6: 消息模板版本历史表
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS pmis_msg_template_version(
+    id                VARCHAR(20)    NOT NULL,
+    template_code     VARCHAR(128)   NOT NULL,
+    version           INTEGER        NOT NULL,
+    content           TEXT,
+    variable_defs     TEXT,
+    audit_status      VARCHAR(16)    NOT NULL DEFAULT 'APPROVED',
+    auditor           VARCHAR(20),
+    audit_remark      VARCHAR(512),
+    created_by        VARCHAR(20)    NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(20)    NOT NULL DEFAULT 'SYSTEM',
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         VARCHAR(20)    NOT NULL DEFAULT '1',
+    CONSTRAINT pk_pmtv PRIMARY KEY (id),
+    CONSTRAINT uk_pmtv_code_version UNIQUE (template_code, version),
+    CONSTRAINT ck_pmtv_audit_status CHECK (audit_status IN ('APPROVED', 'REJECTED'))
+);
+CREATE INDEX IF NOT EXISTS idx_pmtv_template_code ON pmis_msg_template_version(template_code);
 
 -- ====================================================================
 -- All DDL has been applied. Commit the transaction. If any DDL above

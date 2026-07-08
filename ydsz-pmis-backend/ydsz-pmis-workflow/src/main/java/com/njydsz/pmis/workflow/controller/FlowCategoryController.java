@@ -1,0 +1,61 @@
+package com.njydsz.pmis.workflow.controller;
+
+import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.workflow.dto.FlowCategoryDTO;
+import com.njydsz.pmis.workflow.entity.FlowCategoryDO;
+import com.njydsz.pmis.workflow.service.FlowCategoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 流程分类管理 Controller
+ *
+ * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.8.0
+ */
+@Slf4j
+@Validated
+@RestController
+@RequestMapping("/api/workflow/categories")
+@RequiredArgsConstructor
+@Tag(name = "流程分类管理", description = "流程分类的增删改查")
+public class FlowCategoryController {
+
+    private final FlowCategoryService categoryService;
+
+    @GetMapping
+    @Operation(summary = "查询全部分类")
+    public Result<List<FlowCategoryDO>> list() {
+        return Result.ok(categoryService.listAll(TenantContext.getTenantId()));
+    }
+
+    @PostMapping
+    @Operation(summary = "新增分类")
+    public Result<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
+        return Result.ok(categoryService.create(dto, TenantContext.getTenantId()));
+    }
+
+    @PutMapping
+    @Operation(summary = "编辑分类")
+    public Result<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
+        categoryService.update(dto);
+        return Result.ok();
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除分类")
+    public Result<Void> delete(@PathVariable String id) {
+        categoryService.delete(id);
+        return Result.ok();
+    }
+}

@@ -168,10 +168,38 @@ public class MessageServiceImpl implements MessageService {
         MsgPreferenceDO pref = StringUtils.hasText(receiver)
                 ? preferenceService.getByUser(receiver, channel, bizType) : null;
         if (pref != null && isInDndPeriod(pref)) {
-            log.info("[Message] 命中免打扰时段,跳过发送: receiver={} dnd={}~{}",
-                    receiver, pref.getDndStart(), pref.getDndEnd());
-            messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
-            return MessageResult.fail(channel, "当前为免打扰时段");
+            MessageProperties.SmartTimingConfig stc = messageProperties.getSmartTiming();
+            boolean channelDisruptive = stc != null && stc.isDisruptive(channel);
+            boolean urgentBypass = stc != null && stc.isUrgentBypassDnd()
+                    && "URGENT".equals(resolvePriority(request));
+            if (!channelDisruptive) {
+                // 非打扰型通道（EMAIL/IN_APP/Webhook）绕过 DND
+                log.debug("[Message] 非打扰型通道绕过 DND: channel={}", channel);
+            } else if (urgentBypass) {
+                log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", receiver, channel);
+            } else if (stc != null && stc.isEnabled()) {
+                // P2-5: 智能定时 —— 延迟到 DND 结束后发送
+                LocalDateTime nextTime = calculateDndEndTime(pref);
+                if (nextTime == null) {
+                    messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
+                    return MessageResult.fail(channel, "当前为免打扰时段");
+                }
+                long deferHours = java.time.Duration.between(LocalDateTime.now(), nextTime).toHours();
+                if (deferHours > stc.getMaxDeferHours()) {
+                    log.info("[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}h max={}h",
+                            receiver, deferHours, stc.getMaxDeferHours());
+                    messageMetrics.recordSend(channel, "DND_DROPPED", 0);
+                    return MessageResult.fail(channel, "免打扰时段消息延迟过久,已丢弃");
+                }
+                log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
+                        receiver, pref.getDndStart(), pref.getDndEnd(), nextTime);
+                messageMetrics.recordSend(channel, "DND_DEFERRED", 0);
+                request.setScheduledAt(nextTime);
+            } else {
+                // 智能定时未启用,走旧的丢弃策略
+                messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
+                return MessageResult.fail(channel, "当前为免打扰时段");
+            }
         }
         String prefLocale = pref != null ? pref.getLocale() : null;
 
@@ -536,6 +564,23 @@ public class MessageServiceImpl implements MessageService {
             w.eq(StringUtils.hasText(query.getPriority()), MsgLogDO::getPriority, query.getPriority());
             w.eq(StringUtils.hasText(query.getRecallStatus()), MsgLogDO::getRecallStatus, query.getRecallStatus());
             w.eq(StringUtils.hasText(query.getTenantId()), MsgLogDO::getTenantId, query.getTenantId());
+            // P2-13: 全文搜索（模糊匹配 content / receiver / templateCode）
+            if (StringUtils.hasText(query.getKeyword())) {
+                String kw = query.getKeyword().trim();
+                w.and(wrapper -> wrapper
+                        .like(MsgLogDO::getContent, kw)
+                        .or().like(MsgLogDO::getReceiver, kw)
+                        .or().like(MsgLogDO::getTemplateCode, kw)
+                        .or().like(MsgLogDO::getMsgId, kw)
+                        .or().like(MsgLogDO::getBizId, kw));
+            }
+            // P2-13: 时间范围
+            if (StringUtils.hasText(query.getStartTime())) {
+                w.ge(MsgLogDO::getCreatedAt, java.time.LocalDateTime.parse(query.getStartTime()));
+            }
+            if (StringUtils.hasText(query.getEndTime())) {
+                w.le(MsgLogDO::getCreatedAt, java.time.LocalDateTime.parse(query.getEndTime()));
+            }
         }
         w.orderByDesc(MsgLogDO::getCreatedAt);
         return msgLogMapper.selectPage(page, w);
@@ -591,6 +636,58 @@ public class MessageServiceImpl implements MessageService {
             log.warn("[Message] DND 时段解析失败: start={} end={} err={}",
                     start, end, ex.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * P2-5: 计算免打扰时段的结束时间（即下次可发送时间，不含 buffer）。
+     *
+     * <p>支持跨天时段（如 22:00-08:00）：
+     * <ul>
+     *   <li>同日 DND（09:00-18:00）：结束时间为当天 end</li>
+     *   <li>跨天 DND（22:00-08:00），当前在 start 之后：结束时间为次日 end</li>
+     *   <li>跨天 DND（22:00-08:00），当前在 end 之前：结束时间为当天 end</li>
+     * </ul>
+     *
+     * @param pref 偏好配置（须已确认在 DND 时段内）
+     * @return DND 结束时间 + buffer，解析失败返回 null
+     */
+    private LocalDateTime calculateDndEndTime(MsgPreferenceDO pref) {
+        if (pref == null) {
+            return null;
+        }
+        String startStr = pref.getDndStart();
+        String endStr = pref.getDndEnd();
+        if (!StringUtils.hasText(startStr) || !StringUtils.hasText(endStr)) {
+            return null;
+        }
+        try {
+            LocalTime now = LocalTime.now();
+            LocalTime start = LocalTime.parse(startStr);
+            LocalTime end = LocalTime.parse(endStr);
+            LocalDateTime todayEnd = LocalDateTime.now().toLocalDate().atTime(end);
+            LocalDateTime nextEnd;
+            if (start.isBefore(end)) {
+                // 同日 DND（如 09:00-18:00）：结束时间为当天 end
+                nextEnd = todayEnd;
+            } else {
+                // 跨天 DND（如 22:00-08:00）
+                if (now.isBefore(end)) {
+                    // 当前在 end 之前（凌晨段）：结束时间为当天 end
+                    nextEnd = todayEnd;
+                } else {
+                    // 当前在 start 之后（夜晚段）：结束时间为次日 end
+                    nextEnd = todayEnd.plusDays(1);
+                }
+            }
+            // 附加 buffer 避免卡在 DND 结束瞬间的高峰
+            MessageProperties.SmartTimingConfig stc = messageProperties.getSmartTiming();
+            long buffer = (stc != null) ? stc.getDndBufferSeconds() : 0L;
+            return nextEnd.plusSeconds(buffer);
+        } catch (Exception e) {
+            log.warn("[Message] DND 结束时间计算失败: start={} end={} err={}",
+                    startStr, endStr, e.getMessage());
+            return null;
         }
     }
 

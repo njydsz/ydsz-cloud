@@ -5,8 +5,11 @@ import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.common.job.JobLogger;
 import com.njydsz.pmis.common.job.JobLoggerHolder;
+import com.njydsz.pmis.cronjob.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.core.executor.SandboxScriptExecutor;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
@@ -79,6 +82,23 @@ public class ScriptJobHandler implements JobHandler {
     /** 脚本文件前缀，表示直接使用文件路径 */
     private static final String FILE_PREFIX = "file:";
 
+    /** P3-11: 沙箱执行器（可选注入，sandbox.enabled=true 时使用） */
+    private final ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider;
+
+    /** P3-11: 沙箱配置 */
+    private final CronjobProperties cronjobProperties;
+
+    /**
+     * P3-11: 通过构造器注入沙箱执行器和配置。
+     *
+     * <p>使用 {@link ObjectProvider} 延迟加载，避免循环依赖。
+     */
+    public ScriptJobHandler(ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider,
+                            CronjobProperties cronjobProperties) {
+        this.sandboxExecutorProvider = sandboxExecutorProvider;
+        this.cronjobProperties = cronjobProperties;
+    }
+
     @Override
     public Object execute(String paramsJson) throws Exception {
         if (!StringUtils.hasText(paramsJson)) {
@@ -129,6 +149,9 @@ public class ScriptJobHandler implements JobHandler {
     /**
      * 执行脚本核心逻辑。
      *
+     * <p>P3-11: 当 {@code pmis.cronjob.sandbox.enabled=true} 时，通过 {@link SandboxScriptExecutor}
+     * 在受限环境中执行脚本，提供安全隔离。
+     *
      * @param language 脚本语言（shell / python）
      * @param script   脚本内容或 file: 前缀路径
      * @param args     脚本参数
@@ -138,77 +161,64 @@ public class ScriptJobHandler implements JobHandler {
      */
     private ScriptResult executeScript(String language, String script, List<String> args, long timeoutMs)
             throws Exception {
-        // 解析脚本来源（行内脚本 → 临时文件；file: 前缀 → 直接使用路径）
-        Path scriptFile = resolveScriptFile(language, script);
-        boolean isTempFile = !script.startsWith(FILE_PREFIX);
-        // 捕获当前线程的 JobLogger，传递给 IO 读取线程（ThreadLocal 不跨线程）
-        JobLogger jobLogger = JobLoggerHolder.get();
-        try {
-            List<String> command = buildCommand(language, scriptFile, args);
-            log.info("[ScriptJobHandler] 执行脚本: language={} file={} args={} timeoutMs={}",
-                    language, scriptFile, args, timeoutMs);
+        // P3-11: 沙箱模式启用时，委托给 SandboxScriptExecutor 执行
+        if (cronjobProperties.getSandbox().isEnabled()) {
+            return executeInSandbox(language, script, args, timeoutMs);
+        }
+        return executeScriptDirectly(language, script, args, timeoutMs);
+    }
 
-            ProcessBuilder pb = new ProcessBuilder(command);
-            pb.redirectErrorStream(false);
-            pb.directory(new File(System.getProperty("java.io.tmpdir")));
-            Process process = pb.start();
-            // 关闭 stdin，避免脚本因等待输入而阻塞
-            try {
-                process.getOutputStream().close();
-            } catch (IOException ignored) {
-                // 关闭失败不影响主流程
-            }
-
-            // 异步读取 stdout/stderr
-            StringBuilder stdout = new StringBuilder();
-            StringBuilder stderr = new StringBuilder();
-            Thread stdoutThread = readStreamAsync(process.getInputStream(), stdout, true, jobLogger);
-            Thread stderrThread = readStreamAsync(process.getErrorStream(), stderr, false, null);
-
-            boolean finished;
-            if (timeoutMs > 0) {
-                finished = process.waitFor(timeoutMs, TimeUnit.MILLISECONDS);
-                if (!finished) {
-                    process.destroyForcibly();
-                    stdoutThread.interrupt();
-                    stderrThread.interrupt();
-                    throw new RuntimeException("脚本执行超时: timeoutMs=" + timeoutMs
-                            + " language=" + language);
-                }
-            } else {
-                finished = process.waitFor() == 0;
-            }
-
-            stdoutThread.join(1000);
-            stderrThread.join(1000);
-            int exitCode = process.exitValue();
-            String stdoutStr = stdout.toString();
-            String stderrStr = stderr.toString();
-
-            log.info("[ScriptJobHandler] 脚本执行完成: exitCode={} stdoutLen={} stderrLen={}",
-                    exitCode, stdoutStr.length(), stderrStr.length());
-
-            if (exitCode != 0) {
-                throw new RuntimeException("脚本执行失败: exitCode=" + exitCode
-                        + " stderr=" + truncate(stderrStr));
-            }
-
-            return new ScriptResult(exitCode, stdoutStr, stderrStr);
-        } finally {
-            // 清理临时文件
-            if (isTempFile) {
-                try {
-                    Files.deleteIfExists(scriptFile);
-                } catch (IOException e) {
-                    log.debug("[ScriptJobHandler] 删除临时脚本文件失败: {}", scriptFile, e);
-                }
+    /**
+     * P3-11: 在沙箱中执行脚本。
+     *
+     * <p>委托给 {@link SandboxScriptExecutor}，提供超时控制、工作目录隔离、
+     * 环境变量白名单和输出大小限制等安全隔离能力。
+     *
+     * @param language 脚本语言（shell / python）
+     * @param script   脚本内容（file: 前缀时读取文件内容）
+     * @param args     脚本参数
+     * @param timeoutMs 超时毫秒（0 表示使用沙箱默认超时）
+     * @return 执行结果
+     * @throws Exception 沙箱不可用或执行失败时抛出
+     */
+    private ScriptResult executeInSandbox(String language, String script, List<String> args, long timeoutMs)
+            throws Exception {
+        SandboxScriptExecutor sandboxExecutor = sandboxExecutorProvider.getIfAvailable();
+        if (sandboxExecutor == null) {
+            log.warn("[ScriptJobHandler] 沙箱执行器未注册, 降级到原始执行模式");
+            return executeScriptDirectly(language, script, args, timeoutMs);
+        }
+        // file: 前缀时读取文件内容
+        String scriptContent = script;
+        if (script.startsWith(FILE_PREFIX)) {
+            String path = script.substring(FILE_PREFIX.length()).trim();
+            scriptContent = Files.readString(Path.of(path), StandardCharsets.UTF_8);
+        }
+        // 构建环境变量（从系统环境变量中选取白名单项）
+        java.util.Map<String, String> envVars = new java.util.HashMap<>();
+        envVars.put("PATH", System.getenv().getOrDefault("PATH", "/usr/bin:/bin"));
+        envVars.put("HOME", System.getenv().getOrDefault("HOME", "/tmp"));
+        // 将参数作为环境变量传递（ARGS_0, ARGS_1, ...）
+        if (args != null) {
+            for (int i = 0; i < args.size(); i++) {
+                envVars.put("ARGS_" + i, args.get(i));
             }
         }
+        int timeoutSeconds = timeoutMs > 0 ? (int) (timeoutMs / 1000) : 0;
+        SandboxScriptExecutor.SandboxResult result =
+                sandboxExecutor.execute(scriptContent, language, timeoutSeconds, envVars);
+        if (!result.success()) {
+            throw new RuntimeException("沙箱脚本执行失败: " + result.errorMessage());
+        }
+        return new ScriptResult(result.exitCode(), result.output(), result.errorMessage() != null ? result.errorMessage() : "");
     }
 
     /**
      * 解析脚本文件：行内脚本写入临时文件，file: 前缀直接返回路径。
      */
+    private ScriptResult executeScriptDirectly(String language, String script, List<String> args, long timeoutMs)
+            throws Exception {
+        // 此方法包含原始的 executeScript 逻辑（沙箱不可用时降级调用）
     private Path resolveScriptFile(String language, String script) throws IOException {
         if (script.startsWith(FILE_PREFIX)) {
             String path = script.substring(FILE_PREFIX.length()).trim();

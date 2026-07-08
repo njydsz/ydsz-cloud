@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
+import java.util.Map;
 
 /**
  * 定时任务调度服务配置属性。
@@ -79,6 +80,12 @@ public class CronjobProperties {
 
     /** P0-1: MapReduce 分布式并行执行配置 */
     private MapReduce mapReduce = new MapReduce();
+
+    /** P3-12: 跨集群调度配置 */
+    private Clusters clusters = new Clusters();
+
+    /** P3-11: 脚本执行沙箱配置 */
+    private Sandbox sandbox = new Sandbox();
 
     /**
      * 校验并规整化 TTL 值。
@@ -409,6 +416,49 @@ public class CronjobProperties {
 
         /** 精准调度线程池大小 */
         private int poolSize = 4;
+    }
+
+    /**
+     * P3-12: 跨集群调度配置。
+     *
+     * <p>支持将任务派发到其他集群的执行器节点，实现多集群统一调度。
+     * 任务的 {@code cluster} 字段指定目标集群（null=本地集群）。
+     *
+     * <p>配置示例（application.yml）:
+     * <pre>{@code
+     * pmis:
+     *   cronjob:
+     *     clusters:
+     *       endpoints:
+     *         cluster-bj: http://10.0.1.10:8080
+     *         cluster-sh: http://10.0.2.10:8080
+     * }</pre>
+     */
+    @Data
+    public static class Clusters {
+        /** 集群端点配置: clusterName -> baseUrl */
+        private Map<String, String> endpoints = new java.util.HashMap<>();
+    }
+
+    /**
+     * P3-11: 脚本执行沙箱配置。
+     *
+     * <p>控制 {@code SandboxScriptExecutor} 的安全隔离行为。
+     * 启用后，SHELL/GLUE 类型任务的脚本将在受限环境中执行。
+     */
+    @Data
+    public static class Sandbox {
+        /** 是否启用沙箱模式（false=使用 ScriptJobHandler 原始执行逻辑） */
+        private boolean enabled = false;
+
+        /** 默认超时时间（秒） */
+        private int timeoutSeconds = 300;
+
+        /** 最大输出大小（字节，默认 1MB） */
+        private int maxOutputSize = 1048576;
+
+        /** 沙箱工作目录 */
+        private String workDir = "./data/sandbox";
     }
 }
 

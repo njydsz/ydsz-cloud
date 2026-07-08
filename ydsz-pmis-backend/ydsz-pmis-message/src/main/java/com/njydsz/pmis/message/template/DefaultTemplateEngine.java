@@ -48,9 +48,6 @@ public class DefaultTemplateEngine implements TemplateEngine {
     /** 变量占位符正则：匹配 ${var} / ${a.b.c} / ${this} / ${@index} / ${var|filter:arg} */
     private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
 
-    /** 管道分隔符 */
-    private static final String PIPE = "|";
-
     /** if-else 块正则：{{#if var}}truePart{{else}}falsePart{{/if}} */
     private static final Pattern IF_ELSE_PATTERN = Pattern.compile(
             "\\{\\{#if\\s+([\\w.]+)\\}\\}(.*?)\\{\\{else\\}\\}(.*?)\\{\\{/if\\}\\}",
@@ -140,7 +137,6 @@ public class DefaultTemplateEngine implements TemplateEngine {
      * @param parentParams 父级参数（用于继承非循环变量）
      * @return 拼接后的渲染结果
      */
-    @SuppressWarnings("unchecked")
     private String renderEachBody(String body, Object listValue, Map<String, Object> parentParams) {
         if (!(listValue instanceof Iterable<?> iterable)) {
             return "";

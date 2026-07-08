@@ -1,6 +1,7 @@
 package com.njydsz.pmis.agent.aop;
 
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.agent.config.TokenQuotaProperties;
 import com.njydsz.pmis.agent.dto.TokenUsage;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
@@ -45,6 +46,8 @@ import org.springframework.stereotype.Component;
 public class TokenQuotaAspect {
 
     private final TokenQuotaService tokenQuotaService;
+    /** Token 配额配置（控制是否启用配额限制） */
+    private final TokenQuotaProperties tokenQuotaProperties;
 
     /**
      * 拦截 LlmProvider.chat 与 chatForJson 方法，自动统计 token（P1-2 修复）。
@@ -85,9 +88,11 @@ public class TokenQuotaAspect {
         String tenantId = resolveTenantId(context);
         String provider = resolveProviderName(pjp.getTarget());
 
-        // 1. 调用前检查配额
+        // 1. 调用前检查配额（enabled=false 时降级为仅记录明细，不做配额限制）
         int promptTokens = TokenCounter.estimate(systemPrompt) + TokenCounter.estimate(userPrompt);
-        tokenQuotaService.checkQuota(tenantId, promptTokens);
+        if (tokenQuotaProperties != null && tokenQuotaProperties.isEnabled()) {
+            tokenQuotaService.checkQuota(tenantId, promptTokens);
+        }
 
         // 2. 执行 LLM 调用
         long startMs = System.currentTimeMillis();
