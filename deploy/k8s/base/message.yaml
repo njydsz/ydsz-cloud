@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ydsz-pmis-system
+  name: ydsz-pmis-message
   namespace: pmis
   labels:
-    app: ydsz-pmis-system
+    app: ydsz-pmis-message
     tier: backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: ydsz-pmis-system
+      app: ydsz-pmis-message
   template:
     metadata:
       labels:
-        app: ydsz-pmis-system
+        app: ydsz-pmis-message
         tier: backend
     spec:
       containers:
-        - name: system
-          image: ydsz-pmis/system:IMAGE_TAG
+        - name: message
+          image: ydsz-pmis/message:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 9002
+              containerPort: 9004
           envFrom:
             - configMapRef:
                 name: pmis-common-config
@@ -37,13 +37,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 9002
+              port: 9004
             initialDelaySeconds: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 9002
+              port: 9004
             initialDelaySeconds: 60
             periodSeconds: 20
             failureThreshold: 5
@@ -51,13 +51,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ydsz-pmis-system
+  name: ydsz-pmis-message
   namespace: pmis
 spec:
   type: ClusterIP
   selector:
-    app: ydsz-pmis-system
+    app: ydsz-pmis-message
   ports:
   - name: http
-    port: 9002
-    targetPort: 9002
+    port: 9004
+    targetPort: 9004

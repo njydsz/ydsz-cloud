@@ -25,7 +25,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 9004
+              containerPort: 9005
           envFrom:
             - configMapRef:
                 name: pmis-common-config
@@ -44,13 +44,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 9004
+              port: 9005
             initialDelaySeconds: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 9004
+              port: 9005
             initialDelaySeconds: 60
             periodSeconds: 20
             failureThreshold: 5
@@ -65,6 +65,6 @@ spec:
   selector:
     app: ydsz-pmis-cronjob
   ports:
-    - name: http
-      port: 9004
-      targetPort: 9004
+  - name: http
+    port: 9005
+    targetPort: 9005

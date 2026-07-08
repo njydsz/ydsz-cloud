@@ -52,6 +52,8 @@ scrape_configs:
   # ----------------------------------------------------------------------
   # 2. PMIS 微服务(通过 host.docker.internal 访问宿主机应用)
   #    Linux 部署需在 docker-compose 中配置 extra_hosts: host-gateway
+  #    端口分配: 9000 gateway / 9001 userinfo / 9002 system / 9003 project
+  #             9004 message / 9005 cronjob / 9006 workflow / 9007 agent
   # ----------------------------------------------------------------------
   - job_name: pmis-gateway
     metrics_path: /actuator/prometheus
@@ -60,19 +62,19 @@ scrape_configs:
         labels:
           service: pmis-gateway
 
-  - job_name: pmis-system
+  - job_name: pmis-userinfo
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9001']
         labels:
-          service: pmis-system
+          service: pmis-userinfo
 
-  - job_name: pmis-userinfo
+  - job_name: pmis-system
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9002']
         labels:
-          service: pmis-userinfo
+          service: pmis-system
 
   - job_name: pmis-project
     metrics_path: /actuator/prometheus
@@ -81,17 +83,31 @@ scrape_configs:
         labels:
           service: pmis-project
 
-  - job_name: pmis-workflow
+  - job_name: pmis-message
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:9004']
+        labels:
+          service: pmis-message
+
+  - job_name: pmis-cronjob
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:9005']
+        labels:
+          service: pmis-cronjob
+
+  - job_name: pmis-workflow
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:9006']
         labels:
           service: pmis-workflow
 
   - job_name: pmis-agent
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['host.docker.internal:9006']
+      - targets: ['host.docker.internal:9007']
         labels:
           service: pmis-agent
 

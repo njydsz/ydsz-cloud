@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# 公共 base:包含 7 个微服务的 Deployment+Service + namespace + configmap + secret
+# 公共 base:包含 8 个微服务的 Deployment+Service + namespace + configmap + secret
 # 通过 overlays/{dev,sit,uat,prod}/kustomization.yaml 引用本 base 做环境差异
 
 namespace: pmis
@@ -12,9 +12,10 @@ resources:
   - secret-db.yaml
   - secret-jasypt.yaml
   - gateway.yaml
-  - system.yaml
   - userinfo.yaml
+  - system.yaml
   - project.yaml
+  - message.yaml
   - cronjob.yaml
   - workflow.yaml
   - agent.yaml
@@ -26,11 +27,13 @@ resources:
 images:
   - name: ydsz-pmis/gateway
     newTag: IMAGE_TAG
-  - name: ydsz-pmis/system
-    newTag: IMAGE_TAG
   - name: ydsz-pmis/userinfo
     newTag: IMAGE_TAG
+  - name: ydsz-pmis/system
+    newTag: IMAGE_TAG
   - name: ydsz-pmis/project
+    newTag: IMAGE_TAG
+  - name: ydsz-pmis/message
     newTag: IMAGE_TAG
   - name: ydsz-pmis/cronjob
     newTag: IMAGE_TAG

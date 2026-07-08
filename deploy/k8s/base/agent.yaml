@@ -23,7 +23,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 9006
+              containerPort: 9007
           envFrom:
             - configMapRef:
                 name: pmis-common-config
@@ -37,9 +37,16 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 9006
+              port: 9007
             initialDelaySeconds: 30
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9007
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 5
 ---
 apiVersion: v1
 kind: Service
@@ -51,6 +58,6 @@ spec:
   selector:
     app: ydsz-pmis-agent
   ports:
-    - name: http
-      port: 9006
-      targetPort: 9006
+  - name: http
+    port: 9007
+    targetPort: 9007

@@ -1,7 +1,7 @@
 # =============================================================================
 # PMIS 持续部署 (CD) 流水线
 # -----------------------------------------------------------------------------
-# 作用:  构建并推送 7 个后端 + 1 个前端镜像到阿里云 ACR，再通过 kubectl 部署到 K8s
+# 作用:  构建并推送 8 个后端 + 1 个前端镜像到阿里云 ACR，再通过 kubectl 部署到 K8s
 # 触发:  push 到 main (自动部署 staging)  /  workflow_dispatch (手动选择 staging|production)
 # 镜像仓库: registry.cn-hangzhou.aliyuncs.com/ydsz
 # 镜像 tag: ${{ github.sha }} (commit SHA) + latest
@@ -52,15 +52,17 @@ jobs:
       fail-fast: false
       matrix:
         service:
-          # 端口分配（2026-07-03 修订）: 9000 gateway / 9001 system / 9002 userinfo
-          #                              9003 project / 9004 cronjob / 9005 workflow / 9006 agent
+          # 端口分配（2026-07-08 统一）: 9000 gateway / 9001 userinfo / 9002 system
+          #                              9003 project / 9004 message / 9005 cronjob
+          #                              9006 workflow / 9007 agent
           - { name: gateway,   port: 9000,  module: ydsz-pmis-gateway }
-          - { name: system,    port: 9001,  module: ydsz-pmis-system }
-          - { name: userinfo,  port: 9002,  module: ydsz-pmis-userinfo }
+          - { name: userinfo,  port: 9001,  module: ydsz-pmis-userinfo }
+          - { name: system,    port: 9002,  module: ydsz-pmis-system }
           - { name: project,   port: 9003,  module: ydsz-pmis-project }
-          - { name: cronjob,   port: 9004,  module: ydsz-pmis-cronjob }
-          - { name: workflow,  port: 9005,  module: ydsz-pmis-workflow }
-          - { name: agent,     port: 9006,  module: ydsz-pmis-agent }
+          - { name: message,   port: 9004,  module: ydsz-pmis-message }
+          - { name: cronjob,   port: 9005,  module: ydsz-pmis-cronjob }
+          - { name: workflow,  port: 9006,  module: ydsz-pmis-workflow }
+          - { name: agent,     port: 9007,  module: ydsz-pmis-agent }
     steps:
       - uses: actions/checkout@v4
 
@@ -128,7 +130,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [gateway, system, userinfo, project, cronjob, workflow, agent, frontend]
+        service: [gateway, userinfo, system, project, message, cronjob, workflow, agent, frontend]
     steps:
       - uses: actions/checkout@v4
 
@@ -212,7 +214,7 @@ jobs:
       - name: Deploy to Staging
         run: |
           # 更新所有微服务镜像（命名空间统一为 pmis，与 deploy/k8s/base/namespace.yaml 一致）
-          for svc in gateway userinfo workflow project agent system cronjob; do
+          for svc in gateway userinfo system project message cronjob workflow agent; do
             kubectl set image deployment/pmis-${svc} \
               pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
@@ -224,7 +226,7 @@ jobs:
 
       - name: Wait for Rollout
         run: |
-          for svc in gateway userinfo workflow project agent system cronjob frontend; do
+          for svc in gateway userinfo system project message cronjob workflow agent frontend; do
             echo "Waiting for pmis-${svc} rollout..."
             kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
           done
@@ -254,7 +256,7 @@ jobs:
         run: |
           # 错误率阈值：5 分钟窗口内 5xx 比例 > 1% 即判定失败并回滚
           ERROR_RATE_THRESHOLD=0.01
-          for svc in gateway userinfo workflow project agent system cronjob frontend; do
+          for svc in gateway userinfo system project message cronjob workflow agent frontend; do
             echo "==> 开始滚动更新: pmis-${svc}"
 
             # 更新镜像触发滚动更新
@@ -328,7 +330,7 @@ jobs:
 
       - name: Rollback Production
         run: |
-          for svc in gateway userinfo workflow project agent system cronjob frontend; do
+          for svc in gateway userinfo system project message cronjob workflow agent frontend; do
             echo "==> 回滚 pmis-${svc} 到上一版本"
             kubectl rollout undo deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
             kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
