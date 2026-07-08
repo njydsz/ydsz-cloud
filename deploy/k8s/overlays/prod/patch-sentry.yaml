@@ -1,0 +1,36 @@
+# =============================================================================
+# 生产环境 Sentry 错误监控配置（P1-3 落地）
+# -----------------------------------------------------------------------------
+# 通过 K8s ConfigMap 补丁为所有微服务注入 Sentry 配置
+# Sentry DSN 通过 Secret 引用，避免明文暴露
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pmis-common-config
+  namespace: pmis
+data:
+  # 启用 Sentry
+  PMIS_SENTRY_ENABLED: "true"
+  # 环境标识
+  PMIS_SENTRY_ENVIRONMENT: "prod"
+  # 性能采样率（生产环境 10%）
+  PMIS_SENTRY_TRACES_SAMPLE_RATE: "0.1"
+  # 错误采样率（生产环境 100%）
+  PMIS_SENTRY_SAMPLE_RATE: "1.0"
+  # 发布版本（由 CD 流水线通过 IMAGE_TAG 覆盖）
+  PMIS_SENTRY_RELEASE: "pmis-1.0.0"
+---
+# Sentry DSN 通过 Secret 注入（避免明文暴露在 ConfigMap 中）
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pmis-sentry-secret
+  namespace: pmis
+type: Opaque
+stringData:
+  # 实际 DSN 通过 kubectl create secret 或 CI/CD 注入
+  # kubectl create secret generic pmis-sentry-secret \
+  #   --from-literal=PMIS_SENTRY_DSN='https://xxx@sentry.example.com/1' \
+  #   -n pmis
+  PMIS_SENTRY_DSN: "REPLACE_VIA_CI_CD"

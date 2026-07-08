@@ -21,12 +21,17 @@
 
 import dagre from 'dagre'
 import type Modeler from 'bpmn-js/lib/Modeler'
-import type Modeling from 'bpmn-js/lib/features/modeling/Modeling'
 import type { Element as BpmnElement, Shape, Connection } from 'bpmn-js/lib/model/Types'
 
 /** bpmn-js elementRegistry 服务类型（仅声明 autoLayout 所需方法，避免 unknown） */
 interface BpmnElementRegistry {
   getAll(): BpmnElement[]
+}
+
+/** bpmn-js modeling 服务类型（仅声明 autoLayout 所需方法，避免 unknown） */
+interface BpmnModeling {
+  moveShape(shape: Shape, delta: { x: number; y: number }): void
+  layoutConnection(connection: Connection): void
 }
 
 /** dagre 节点最小宽度兜底（防止 0 宽度导致布局异常） */
@@ -54,7 +59,7 @@ export function autoLayout(
   options?: AutoLayoutOptions,
 ): void {
   const elementRegistry = modeler.get('elementRegistry') as unknown as BpmnElementRegistry
-  const modeling = modeler.get('modeling') as unknown as Modeling
+  const modeling = modeler.get('modeling') as unknown as BpmnModeling
 
   const allElements = elementRegistry.getAll()
   const shapes = allElements.filter((el: BpmnElement): el is Shape => el.type !== 'label' && !el.waypoints)

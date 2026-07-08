@@ -243,7 +243,9 @@ public class GlobalExceptionHandler {
     public Result<Void> handleException(Exception e, HttpServletRequest req) {
         log.error("[SystemError] {} {}", req.getMethod(), req.getRequestURI(), e);
         String traceId = TraceIdUtil.get();
-        String message = resolveMessage(BizErrorCode.INTERNAL_ERROR) + " (TraceId: " + traceId + ")";
+        String message = resolveMessage("error.internal_error_with_traceid",
+                new Object[]{traceId},
+                resolveMessage(BizErrorCode.INTERNAL_ERROR) + " (TraceId: " + traceId + ")");
         Result<Void> r = Result.failed(BizErrorCode.INTERNAL_ERROR.getCode(), message);
         r.setTraceId(traceId);
         return r;
@@ -311,7 +313,9 @@ public class GlobalExceptionHandler {
         log.warn("[DB-OptimisticLock] {} {} - {}", req.getMethod(), req.getRequestURI(), e.getMessage());
         // 乐观锁冲突映射到 DB_LOCK_CONTENTION，提示用户"数据已被他人修改，请刷新后重试"
         Result<Void> r = Result.failed(BizErrorCode.DB_LOCK_CONTENTION.getCode(),
-                resolveMessage(BizErrorCode.DB_LOCK_CONTENTION) + "：数据已被他人修改，请刷新后重试");
+                resolveMessage("error.db_lock_contention_retry",
+                        null,
+                        resolveMessage(BizErrorCode.DB_LOCK_CONTENTION) + "：数据已被他人修改，请刷新后重试"));
         r.setTraceId(TraceIdUtil.get());
         return r;
     }
@@ -369,7 +373,9 @@ public class GlobalExceptionHandler {
         String traceId = TraceIdUtil.get();
         log.error("[DB-Error] {} {} - traceId={} - {}", req.getMethod(), req.getRequestURI(), traceId, e.getMessage());
         // H9.3 修复：不向客户端暴露 SQL 细节，仅返回 traceId 供排查
-        String message = resolveMessage(BizErrorCode.INTERNAL_ERROR) + " (TraceId: " + traceId + ")";
+        String message = resolveMessage("error.internal_error_with_traceid",
+                new Object[]{traceId},
+                resolveMessage(BizErrorCode.INTERNAL_ERROR) + " (TraceId: " + traceId + ")");
         Result<Void> r = Result.failed(BizErrorCode.INTERNAL_ERROR.getCode(), message);
         r.setTraceId(traceId);
         return r;

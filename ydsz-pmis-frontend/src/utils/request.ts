@@ -96,27 +96,58 @@ declare module 'axios' {
 let loadingCount = 0
 /** 全局 loading 实例 */
 let loadingInstance: { close: () => void } | null = null
+/** loading 显示延迟计时器（P3-2：延迟显示，快速请求不闪烁） */
+let loadingDelayTimer: ReturnType<typeof setTimeout> | null = null
+/** loading 最早可关闭时间（P3-2：最小显示时间，避免闪烁） */
+let loadingMinDisplayTime: number = 0
 
-/** 开启全局 loading（并发计数） */
+/** 延迟显示 loading 的等待时间（ms），快速完成的请求不会显示 loading */
+const LOADING_DELAY_MS = 200
+/** loading 最小显示时间（ms），避免 loading 一闪而过 */
+const LOADING_MIN_DISPLAY_MS = 300
+
+/** 开启全局 loading（并发计数 + 延迟显示，P3-2 优化） */
 function showLoading(): void {
   loadingCount++
   if (loadingCount === 1) {
-    loadingInstance = ElLoading.service({
-      lock: true,
-      text: i18n.global.t('request.loading'),
-      background: 'rgba(0, 0, 0, 0.05)',
-    })
+    // P3-2：延迟 200ms 显示 loading，快速请求（< 200ms）不会触发 loading
+    loadingDelayTimer = setTimeout(() => {
+      loadingInstance = ElLoading.service({
+        lock: true,
+        text: i18n.global.t('request.loading'),
+        background: 'rgba(0, 0, 0, 0.05)',
+      })
+      // 记录最早可关闭时间（当前时间 + 最小显示时间）
+      loadingMinDisplayTime = Date.now() + LOADING_MIN_DISPLAY_MS
+    }, LOADING_DELAY_MS)
   }
 }
 
-/** 关闭全局 loading（并发计数归零时关闭） */
+/** 关闭全局 loading（并发计数归零时关闭，P3-2 优化） */
 function hideLoading(): void {
   if (loadingCount > 0) {
     loadingCount--
   }
-  if (loadingCount === 0 && loadingInstance) {
-    loadingInstance.close()
-    loadingInstance = null
+  if (loadingCount === 0) {
+    // P3-2：取消延迟显示计时器（如果 loading 还未实际显示）
+    if (loadingDelayTimer) {
+      clearTimeout(loadingDelayTimer)
+      loadingDelayTimer = null
+    }
+    if (loadingInstance) {
+      // P3-2：确保最小显示时间已过，避免 loading 一闪而过
+      const now = Date.now()
+      if (now < loadingMinDisplayTime) {
+        const remaining = loadingMinDisplayTime - now
+        setTimeout(() => {
+          loadingInstance?.close()
+          loadingInstance = null
+        }, remaining)
+      } else {
+        loadingInstance.close()
+        loadingInstance = null
+      }
+    }
   }
 }
 

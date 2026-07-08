@@ -42,6 +42,9 @@ public class EvaluationCase implements Serializable {
     /** 用例标签（用于分类统计） */
     private String tag;
 
+    /** 自定义评测器（仅当 evaluator=CUSTOM 时使用，P1-1 落地） */
+    private transient CustomEvaluator customEvaluator;
+
     /**
      * 评估器类型枚举。
      */
@@ -54,7 +57,7 @@ public class EvaluationCase implements Serializable {
         COSINE_SIMILARITY,
         /** LLM 作为评审 */
         LLM_AS_JUDGE,
-        /** 自定义评估器 */
+        /** 自定义评估器（通过 customEvaluator 函数式接口注入） */
         CUSTOM
     }
 }

@@ -1,17 +1,24 @@
 package com.njydsz.pmis.agent.engine.eval;
 
+import com.njydsz.pmis.agent.engine.AgentContext;
+import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
- * Agent 评测框架（P4-8 落地）。
+ * Agent 评测框架（P4-8 落地，P1-1 重构）。
  *
  * <p>对标 Coze 模型评估 / Dify 应用评估 / LangSmith Evaluation：
  * <ul>
@@ -21,9 +28,25 @@ import java.util.stream.Collectors;
  *   <li>生成评测报告，便于横向对比不同 Prompt / 模型 / 配置</li>
  * </ul>
  *
+ * <p><b>P1-1 重构要点</b>：
+ * <ol>
+ *   <li>使用 {@link EvaluableAgent} 接口替代反射调用，编译期类型安全</li>
+ *   <li>LLM-as-Judge 接入真实 LLM（通过 {@link LlmProvider}），不再返回硬编码分数</li>
+ *   <li>共享线程池，避免每次 run() 创建/销毁线程池的开销</li>
+ *   <li>支持自定义评测器（{@link CustomEvaluator} 函数式接口）</li>
+ * </ol>
+ *
  * <p>典型用法：
  * <pre>
- * AgentEvaluationFramework framework = new AgentEvaluationFramework(agent);
+ * // 方式1: 使用 EvaluableAgent 接口（推荐）
+ * AgentEvaluationFramework framework = new AgentEvaluationFramework(
+ *     (input, ctx) -> agent.execute(input, ctx),
+ *     llmProvider,
+ *     4  // 并行度
+ * );
+ *
+ * // 方式2: 兼容旧代码（反射适配，不推荐）
+ * AgentEvaluationFramework framework = AgentEvaluationFramework.forObject(agent, null, 1);
  *
  * // 定义测试用例
  * List&lt;EvaluationCase&gt; cases = List.of(
@@ -41,32 +64,92 @@ import java.util.stream.Collectors;
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P4-8)
+ * @since 1.0.0 (P4-8), 1.1.0 (P1-1 重构)
  */
 @Slf4j
-public class AgentEvaluationFramework {
+public class AgentEvaluationFramework implements AutoCloseable {
 
-    private final Object agent;
+    /** 被评测的 Agent（接口化，P1-1） */
+    private final EvaluableAgent agent;
+
+    /** LLM Provider（用于 LLM_AS_JUDGE 评测器，可为 null） */
+    private final LlmProvider llmProvider;
+
+    /** 并行度 */
     private final int parallelism;
 
+    /** 共享线程池（P1-1：避免每次 run 创建/销毁） */
+    private final ExecutorService executor;
+
+    /** LLM-as-Judge 系统提示词 */
+    private static final String LLM_JUDGE_SYSTEM_PROMPT = """
+            你是一个严格的评估器。请根据以下信息对 Agent 的回答进行评分。
+            
+            用户问题: %s
+            期望回答: %s
+            实际回答: %s
+            
+            评分标准（0.0 ~ 1.0）：
+            - 1.0: 完全正确，包含所有关键信息
+            - 0.8: 基本正确，缺少少量细节
+            - 0.5: 部分正确，有重要遗漏或轻微错误
+            - 0.2: 存在明显错误
+            - 0.0: 完全错误或无关
+            
+            请只输出一个数字（0.0 到 1.0），不要输出其他内容。
+            """;
+
     /**
-     * 构造评测框架。
+     * 构造评测框架（指定 LLM Provider，P1-1 推荐）。
      *
-     * @param agent 被评测的 Agent（需实现 execute 方法）
+     * @param agent       被评测的 Agent（实现 {@link EvaluableAgent} 接口）
+     * @param llmProvider LLM Provider（用于 LLM_AS_JUDGE，可为 null 则降级为长度启发式）
+     * @param parallelism 并行度（1 表示串行）
      */
-    public AgentEvaluationFramework(Object agent) {
-        this(agent, 1); // 默认串行执行
+    public AgentEvaluationFramework(EvaluableAgent agent, LlmProvider llmProvider, int parallelism) {
+        this.agent = agent;
+        this.llmProvider = llmProvider;
+        this.parallelism = parallelism > 0 ? parallelism : 1;
+        this.executor = createExecutor(this.parallelism);
     }
 
     /**
-     * 构造评测框架（指定并行度）。
+     * 构造评测框架（串行执行，无 LLM Provider）。
      *
-     * @param agent      被评测的 Agent
-     * @param parallelism 并行度（1 表示串行）
+     * @param agent 被评测的 Agent
      */
-    public AgentEvaluationFramework(Object agent, int parallelism) {
-        this.agent = agent;
-        this.parallelism = parallelism > 0 ? parallelism : 1;
+    public AgentEvaluationFramework(EvaluableAgent agent) {
+        this(agent, null, 1);
+    }
+
+    /**
+     * 兼容旧代码的工厂方法：通过反射适配任意具有 execute(String, AgentContext) 方法的对象。
+     *
+     * <p><b>不推荐使用</b>，请优先实现 {@link EvaluableAgent} 接口。
+     *
+     * @param agentObject 任意 Agent 对象（需有 execute 方法）
+     * @param llmProvider LLM Provider（可为 null）
+     * @param parallelism 并行度
+     * @return 评测框架实例
+     */
+    @SuppressWarnings("deprecation")
+    public static AgentEvaluationFramework forObject(Object agentObject, LlmProvider llmProvider, int parallelism) {
+        EvaluableAgent adapter = (input, ctx) -> {
+            try {
+                var executeMethod = agentObject.getClass().getMethod("execute",
+                        String.class, AgentContext.class);
+                Object result = executeMethod.invoke(agentObject, input, ctx);
+                if (result instanceof com.njydsz.pmis.agent.engine.AgentResult ar) {
+                    return ar.getSuggestion() != null ? ar.getSuggestion() : ar.toString();
+                }
+                return result == null ? "" : result.toString();
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException("Agent 未实现 execute(String, AgentContext) 方法", e);
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                throw e.getCause() != null ? (Exception) e.getCause() : e;
+            }
+        };
+        return new AgentEvaluationFramework(adapter, llmProvider, parallelism);
     }
 
     /**
@@ -90,23 +173,13 @@ public class AgentEvaluationFramework {
                 results.add(evaluateOne(testCase));
             }
         } else {
-            // 并行执行
-            ExecutorService executor = Executors.newFixedThreadPool(parallelism,
-                    r -> {
-                        Thread t = new Thread(r, "eval-worker");
-                        t.setDaemon(true);
-                        return t;
-                    });
-            try {
-                List<CompletableFuture<EvaluationResult>> futures = cases.stream()
-                        .map(tc -> CompletableFuture.supplyAsync(() -> evaluateOne(tc), executor))
-                        .collect(Collectors.toList());
-                results = futures.stream()
-                        .map(CompletableFuture::join)
-                        .collect(Collectors.toList());
-            } finally {
-                executor.shutdown();
-            }
+            // 并行执行（使用共享线程池）
+            List<CompletableFuture<EvaluationResult>> futures = cases.stream()
+                    .map(tc -> CompletableFuture.supplyAsync(() -> evaluateOne(tc), executor))
+                    .collect(Collectors.toList());
+            results = futures.stream()
+                    .map(CompletableFuture::join)
+                    .collect(Collectors.toList());
         }
 
         // 生成报告
@@ -122,7 +195,7 @@ public class AgentEvaluationFramework {
         long startTime = System.currentTimeMillis();
         try {
             // 调用 Agent 执行
-            String actualOutput = callAgent(testCase.getUserInput());
+            String actualOutput = agent.execute(testCase.getUserInput(), null);
             long elapsed = System.currentTimeMillis() - startTime;
 
             // 评估
@@ -154,23 +227,6 @@ public class AgentEvaluationFramework {
     }
 
     /**
-     * 调用 Agent 执行（通过反射适配不同 Agent 类型）。
-     */
-    private String callAgent(String userInput) throws Exception {
-        try {
-            var executeMethod = agent.getClass().getMethod("execute",
-                    String.class, com.njydsz.pmis.agent.engine.AgentContext.class);
-            Object result = executeMethod.invoke(agent, userInput, null);
-            if (result instanceof com.njydsz.pmis.agent.engine.AgentResult ar) {
-                return ar.getSuggestion() != null ? ar.getSuggestion() : ar.toString();
-            }
-            return result == null ? "" : result.toString();
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException("Agent 未实现 execute(String, AgentContext) 方法", e);
-        }
-    }
-
-    /**
      * 根据评估器类型计算分数。
      */
     private double evaluate(EvaluationCase testCase, String actualOutput) {
@@ -190,15 +246,73 @@ public class AgentEvaluationFramework {
                 return jaccardSimilarity(actualOutput, expected);
 
             case LLM_AS_JUDGE:
-                // 需要 LLM 评分，此处返回简化分数
-                return actualOutput.length() > 10 ? 0.8 : 0.3;
+                return evaluateWithLlm(testCase, actualOutput);
 
             case CUSTOM:
-                // 自定义评估器，通过 testCase.getCustomEvaluator() 调用
-                return 0.5; // 默认中性分数
+                // P1-1: 使用注入的自定义评测器
+                if (testCase.getCustomEvaluator() != null) {
+                    return testCase.getCustomEvaluator().evaluate(expected, actualOutput);
+                }
+                log.warn("[EvalFramework] 用例 {} 使用 CUSTOM 评估器但未注入 customEvaluator，返回中性分数 0.5", testCase.getId());
+                return 0.5;
 
             default:
                 return 0.0;
+        }
+    }
+
+    /**
+     * 使用真实 LLM 进行 LLM-as-Judge 评估（P1-1 重构）。
+     *
+     * <p>当配置了 LlmProvider 时，构造评估 prompt 调用 LLM 打分。
+     * 未配置时降级为长度启发式（向后兼容）。
+     */
+    private double evaluateWithLlm(EvaluationCase testCase, String actualOutput) {
+        if (llmProvider == null) {
+            // 降级：LLM 未配置时使用长度启发式
+            log.debug("[EvalFramework] LLM Provider 未配置，降级为长度启发式评分");
+            return actualOutput.length() > 10 ? 0.8 : 0.3;
+        }
+
+        try {
+            String prompt = String.format(LLM_JUDGE_SYSTEM_PROMPT,
+                    testCase.getUserInput(),
+                    testCase.getExpectedOutput(),
+                    actualOutput);
+
+            String llmResponse = llmProvider.chat(
+                    "你是一个专业的 AI 评估器，请严格按照评分标准打分。",
+                    prompt,
+                    null  // 无 AgentContext
+            );
+
+            // 解析 LLM 返回的分数（提取第一个浮点数）
+            double score = parseScore(llmResponse);
+            log.debug("[EvalFramework] LLM-as-Judge 用例={}, LLM输出={}, 评分={}",
+                    testCase.getId(), llmResponse, score);
+            return score;
+        } catch (Exception e) {
+            log.warn("[EvalFramework] LLM-as-Judge 评估失败，降级为长度启发式: {}", e.getMessage());
+            return actualOutput.length() > 10 ? 0.8 : 0.3;
+        }
+    }
+
+    /**
+     * 从 LLM 输出中解析分数（0.0 ~ 1.0）。
+     */
+    private double parseScore(String llmResponse) {
+        if (llmResponse == null || llmResponse.isBlank()) return 0.0;
+        // 提取第一个浮点数
+        String trimmed = llmResponse.trim()
+                .replaceAll("[^0-9.]", " ")
+                .trim();
+        if (trimmed.isEmpty()) return 0.0;
+        try {
+            double score = Double.parseDouble(trimmed.split("\\s+")[0]);
+            return Math.max(0.0, Math.min(1.0, score));
+        } catch (NumberFormatException e) {
+            log.warn("[EvalFramework] 无法解析 LLM 评分: {}", llmResponse);
+            return 0.0;
         }
     }
 
@@ -207,14 +321,14 @@ public class AgentEvaluationFramework {
      */
     private double jaccardSimilarity(String a, String b) {
         if (a == null || b == null) return 0.0;
-        Set<String> setA = java.util.Arrays.stream(a.toLowerCase().split("[\\s\\p{Punct}]+"))
-                .filter(s -> s.length() > 0).collect(java.util.stream.Collectors.toSet());
-        Set<String> setB = java.util.Arrays.stream(b.toLowerCase().split("[\\s\\p{Punct}]+"))
-                .filter(s -> s.length() > 0).collect(java.util.stream.Collectors.toSet());
+        Set<String> setA = Arrays.stream(a.toLowerCase().split("[\\s\\p{Punct}]+"))
+                .filter(s -> !s.isEmpty()).collect(Collectors.toSet());
+        Set<String> setB = Arrays.stream(b.toLowerCase().split("[\\s\\p{Punct}]+"))
+                .filter(s -> !s.isEmpty()).collect(Collectors.toSet());
         if (setA.isEmpty() && setB.isEmpty()) return 1.0;
-        java.util.Set<String> intersection = new java.util.HashSet<>(setA);
+        Set<String> intersection = new HashSet<>(setA);
         intersection.retainAll(setB);
-        java.util.Set<String> union = new java.util.HashSet<>(setA);
+        Set<String> union = new HashSet<>(setA);
         union.addAll(setB);
         return (double) intersection.size() / union.size();
     }
@@ -240,5 +354,50 @@ public class AgentEvaluationFramework {
                 .summary(String.format("通过率: %.1f%% (%d/%d), 平均分: %.2f, 平均耗时: %.0fms",
                         passRate * 100, passed, total, avgScore, avgElapsed))
                 .build();
+    }
+
+    /**
+     * 创建共享线程池（P1-1：避免每次 run 创建/销毁）。
+     */
+    private static ExecutorService createExecutor(int parallelism) {
+        if (parallelism <= 1) {
+            // 串行模式使用同线程执行器
+            return Executors.newSingleThreadExecutor(new EvalThreadFactory());
+        }
+        return Executors.newFixedThreadPool(parallelism, new EvalThreadFactory());
+    }
+
+    /** 评测线程工厂 */
+    private static class EvalThreadFactory implements ThreadFactory {
+        private final AtomicInteger counter = new AtomicInteger(0);
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "eval-worker-" + counter.incrementAndGet());
+            t.setDaemon(true);
+            return t;
+        }
+    }
+
+    /**
+     * 关闭共享线程池（P1-1）。
+     *
+     * <p>实现 {@link AutoCloseable}，支持 try-with-resources 语法。
+     * 也可由 Spring 容器管理生命周期。
+     */
+    @Override
+    public void close() {
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            log.info("[EvalFramework] 线程池已关闭");
+        }
     }
 }

@@ -22,10 +22,15 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * ReAct 推理循环（P1-2 落地，P3-4 增加 HITL 暂停/恢复）
@@ -92,6 +97,39 @@ public class ReActLoop {
      * 对话记忆（可选依赖，P1-1）。
      */
     private final ObjectProvider<ChatMemory> chatMemoryProvider;
+
+    /**
+     * 共享工具并行执行线程池（P3-1：避免每次多工具调用创建/销毁线程池）。
+     *
+     * <p>使用 CachedThreadPool：
+     * <ul>
+     *   <li>线程按需创建，空闲 60s 自动回收</li>
+     *   <li>同一 ReActLoop 实例的所有并行工具调用复用同一线程池</li>
+     *   <li>守护线程，JVM 退出时不阻塞</li>
+     * </ul>
+     */
+    private final ExecutorService toolExecutor = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "react-parallel-tool");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /**
+     * 销毁时关闭共享线程池（P3-1）。
+     */
+    @PreDestroy
+    public void destroy() {
+        toolExecutor.shutdown();
+        try {
+            if (!toolExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                toolExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            toolExecutor.shutdownNow();
+        }
+        log.info("[ReActLoop] 工具并行执行线程池已关闭");
+    }
 
     /**
      * 运行 ReAct 推理循环（使用配置的最大步数，P2-4）。
@@ -495,26 +533,19 @@ public class ReActLoop {
             }
         }
 
-        // 多工具并行执行
+        // 多工具并行执行（P3-1：使用共享线程池）
         log.info("[ReAct] step={} 并行执行 {} 个工具", currentStep, toolCalls.size());
         List<java.util.concurrent.Future<String>> futures = new java.util.ArrayList<>();
-        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(
-                Math.min(toolCalls.size(), 4),
-                r -> {
-                    Thread t = new Thread(r, "react-parallel-tool-" + currentStep);
-                    t.setDaemon(true);
-                    return t;
-                });
 
         try {
             for (var tc : toolCalls) {
                 if (tc.getFunction() == null) {
-                    futures.add(executor.submit(() -> "工具调用缺少 function 信息"));
+                    futures.add(toolExecutor.submit(() -> "工具调用缺少 function 信息"));
                     continue;
                 }
                 String toolName = tc.getFunction().getName();
                 Map<String, Object> params = tc.getFunction().getArgumentsAsMap();
-                futures.add(executor.submit(() -> {
+                futures.add(toolExecutor.submit(() -> {
                     try {
                         return executeToolDirect(toolName, params, ctx);
                     } catch (Exception e) {
@@ -536,7 +567,12 @@ public class ReActLoop {
             }
             return combined.toString().trim();
         } finally {
-            executor.shutdownNow();
+            // P3-1：不再 shutdown 共享线程池，仅取消未完成的任务
+            for (var f : futures) {
+                if (!f.isDone()) {
+                    f.cancel(true);
+                }
+            }
         }
     }
 

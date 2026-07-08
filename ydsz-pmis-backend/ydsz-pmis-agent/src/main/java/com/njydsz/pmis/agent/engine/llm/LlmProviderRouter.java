@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * LLM Provider 路由器（批次 19 P3-1 落地）
+ * LLM Provider 路由器（批次 19 P3-1 落地，P1-2 增强熔断+缓存）
  *
  * <p>根据配置 {@code pmis.agent.llm.provider} 选择实际 LLM 实现：
  * <ul>
@@ -21,6 +21,12 @@ import java.util.Map;
  *   <li>{@code qianfan} - {@link QianfanLlmProvider}（百度千帆）</li>
  * </ul>
  *
+ * <p><b>P1-2 增强</b>：
+ * <ul>
+ *   <li>熔断器（{@link LlmCircuitBreaker}）：连续失败的 Provider 自动熔断，冷却期后试探恢复</li>
+ *   <li>响应缓存（{@link LlmResponseCache}）：相同 prompt 的 LRU 缓存，避免重复调用</li>
+ * </ul>
+ *
  * <p>切换方式（生产环境热更新）：
  * <pre>
  *   # 修改配置 pmis.agent.llm.provider=mock → spring-ai-openai
@@ -28,7 +34,7 @@ import java.util.Map;
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @since 1.0.0, 1.1.0 (P1-2)
  */
 @Slf4j
 @Component
@@ -47,6 +53,12 @@ public class LlmProviderRouter {
     /** Fallback 链（按优先级排列，P4-6） */
     private final List<String> fallbackChain;
 
+    /** LLM 熔断器（P1-2） */
+    private final LlmCircuitBreaker circuitBreaker;
+
+    /** LLM 响应缓存（P1-2） */
+    private final LlmResponseCache responseCache;
+
     public LlmProviderRouter(ApplicationContext applicationContext,
                              MockLlmProvider mockLlmProvider,
                              @Value("${pmis.agent.llm.provider:mock}") String configuredProvider,
@@ -56,6 +68,8 @@ public class LlmProviderRouter {
         this.mockLlmProvider = mockLlmProvider;
         this.configuredProvider = configuredProvider;
         this.fallbackChain = parseFallbackChain(fallbackChainStr, configuredProvider);
+        this.circuitBreaker = new LlmCircuitBreaker();
+        this.responseCache = new LlmResponseCache();
         log.info("[LlmRouter] 初始化, provider={}, fallbackChain={}, smartRouting={}",
                 configuredProvider, fallbackChain, smartRoutingEnabled);
     }
@@ -117,7 +131,20 @@ public class LlmProviderRouter {
      */
     public String chatWithFallback(String systemPrompt, String userPrompt,
                                     com.njydsz.pmis.agent.engine.AgentContext context) {
+        // P1-2: 先查响应缓存
+        String cached = responseCache.get(systemPrompt, userPrompt);
+        if (cached != null) {
+            log.debug("[LlmRouter] 响应缓存命中");
+            return cached;
+        }
+
         for (String providerName : fallbackChain) {
+            // P1-2: 熔断器检查——跳过熔断中的 Provider
+            if (!circuitBreaker.allowCall(providerName)) {
+                log.debug("[LlmRouter] Provider [{}] 熔断中, 跳过", providerName);
+                continue;
+            }
+
             try {
                 LlmProvider provider = resolveProvider(providerName);
                 if (provider == mockLlmProvider && providerName.equals("mock")
@@ -127,12 +154,16 @@ public class LlmProviderRouter {
                 }
                 String result = provider.chat(systemPrompt, userPrompt, context);
                 if (result != null && !result.isBlank()) {
+                    circuitBreaker.recordSuccess(providerName);
                     if (!provider.name().equals(configuredProvider)) {
                         log.info("[LlmRouter] Fallback 成功: {} → {}", configuredProvider, provider.name());
                     }
+                    // P1-2: 写入响应缓存
+                    responseCache.put(systemPrompt, userPrompt, result);
                     return result;
                 }
             } catch (Exception e) {
+                circuitBreaker.recordFailure(providerName);
                 log.warn("[LlmRouter] Provider [{}] 调用失败, 尝试下一个: {}",
                         providerName, e.getMessage());
             }
@@ -180,5 +211,40 @@ public class LlmProviderRouter {
      */
     public String getActiveProviderName() {
         return active().name();
+    }
+
+    /**
+     * 获取指定 Provider 的熔断器状态（P1-2 新增，供监控使用）。
+     *
+     * @param providerName Provider 名称
+     * @return 状态（CLOSED / OPEN / HALF_OPEN）
+     */
+    public String getCircuitBreakerState(String providerName) {
+        return circuitBreaker.getState(providerName);
+    }
+
+    /**
+     * 手动重置指定 Provider 的熔断器（P1-2 新增）。
+     *
+     * @param providerName Provider 名称
+     */
+    public void resetCircuitBreaker(String providerName) {
+        circuitBreaker.reset(providerName);
+    }
+
+    /**
+     * 获取响应缓存命中率（P1-2 新增，供监控使用）。
+     *
+     * @return 命中率（0.0 ~ 1.0）
+     */
+    public double getCacheHitRate() {
+        return responseCache.getHitRate();
+    }
+
+    /**
+     * 清空响应缓存（P1-2 新增）。
+     */
+    public void clearCache() {
+        responseCache.clear();
     }
 }

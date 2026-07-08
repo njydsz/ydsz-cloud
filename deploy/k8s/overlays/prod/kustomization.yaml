@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# PROD 环境:多副本 + HPA + 严格资源限制 + PDB
+# PROD 环境:多副本 + HPA + 严格资源限制 + PDB + Sentry 监控
 # 用法:kubectl apply -k deploy/k8s/overlays/prod
 
 namespace: pmis
@@ -12,11 +12,13 @@ resources:
 images:
   - name: ydsz-pmis/gateway
     newTag: v1.3.0
-  - name: ydsz-pmis/system
-    newTag: v1.3.0
   - name: ydsz-pmis/userinfo
     newTag: v1.3.0
+  - name: ydsz-pmis/system
+    newTag: v1.3.0
   - name: ydsz-pmis/project
+    newTag: v1.3.0
+  - name: ydsz-pmis/message
     newTag: v1.3.0
   - name: ydsz-pmis/cronjob
     newTag: v1.3.0
@@ -30,3 +32,8 @@ patches:
   - path: patch-resources.yaml
   - path: patch-hpa.yaml
   - path: patch-pdb.yaml
+
+# P1-3: 生产环境 Sentry 错误监控配置
+resources:
+  - ../../base
+  - patch-sentry.yaml

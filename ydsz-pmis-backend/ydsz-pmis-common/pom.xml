@@ -180,6 +180,12 @@
             <groupId>com.github.ulisesbocchio</groupId>
             <artifactId>jasypt-spring-boot-starter</artifactId>
         </dependency>
+        <!-- Sentry 错误监控（P1-3：生产环境异常上报，通过 pmis.sentry.enabled=true 开启） -->
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-spring-boot-starter-jakarta</artifactId>
+            <version>${sentry.version}</version>
+        </dependency>
 
         <!-- 单元测试 -->
         <dependency>
