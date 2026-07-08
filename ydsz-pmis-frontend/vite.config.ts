@@ -193,7 +193,10 @@ export default defineConfig(({ mode }) => {
 
     build: {
       outDir: 'dist', // 产物输出目录
-      sourcemap: false, // 生产环境不输出 sourcemap, 减小产物体积
+      // 生产环境生成 hidden sourcemap（不引用到 HTML 中，避免暴露源码）
+      // 配合 CI/CD 中 sentry-cli 上传 sourcemap 到 Sentry，实现错误堆栈还原
+      // 开发环境 sourcemap 由 Vite 默认开启
+      sourcemap: mode === 'production' ? 'hidden' : true,
       target: 'es2020', // 编译目标: ES2020 (可选链 / 空值合并等原生支持)
       minify: 'esbuild', // 使用 esbuild 压缩, 速度优于 terser
       chunkSizeWarningLimit: 1500, // chunk 体积告警阈值 (kB), 兼容 vxe-table 等大依赖

@@ -13,7 +13,7 @@
  *
  * 批次 21 / P2 - 迁移原始 echarts.init() 到 useECharts composable
  */
-import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue'
 import type { EChartsOption } from '@/utils/echarts'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
@@ -24,6 +24,8 @@ import type { KpiTrendVO } from '@/api/execution/cockpit'
 import { getCockpitAlertTopN } from '@/api/execution/alert'
 import { useECharts } from '@/composables/useECharts'
 import { isHandledError } from '@/utils/error'
+import SkeletonCard from '@/components/common/SkeletonCard.vue'
+import SkeletonTable from '@/components/common/SkeletonTable.vue'
 
 const { t } = useI18n()
 
@@ -45,8 +47,20 @@ interface CockpitKpi {
   redProjects: number
 }
 
-/** 全局加载状态 */
-const loading = ref(false)
+/** KPI 区域加载状态 */
+const kpiLoading = ref(false)
+/** 趋势图区域加载状态 */
+const trendLoading = ref(false)
+/** 预警区域加载状态 */
+const alertLoading = ref(false)
+/** KPI 区域加载失败 */
+const kpiError = ref(false)
+/** 趋势图区域加载失败 */
+const trendError = ref(false)
+/** 预警区域加载失败 */
+const alertError = ref(false)
+/** 整体 loading（仅用于刷新按钮状态） */
+const loading = computed(() => kpiLoading.value || trendLoading.value || alertLoading.value)
 /** KPI 数据 */
 const kpi = ref<CockpitKpi | null>(null)
 /** 查询期间（YYYY-MM） */
@@ -257,51 +271,63 @@ const alertTopNOption = computed<EChartsOption>(() => ({
 }))
 
 // ===== 数据加载 =====
-/** 拉取 Cockpit 总览 KPI 数据 */
+/** 拉取 Cockpit 总览 KPI 数据（静默请求，不触发全局 loading） */
 async function loadOverview() {
-  loading.value = true
+  kpiLoading.value = true
+  kpiError.value = false
   try {
-    const { data } = await getCockpitOverview(period.value)
+    const { data } = await getCockpitOverview(period.value, { silent: true } as any)
     kpi.value = data as CockpitKpi
   } catch (e) {
     kpi.value = null
+    kpiError.value = true
     if (!isHandledError(e)) {
       ElMessage.error(t('dashboard.messages.loadFailed'))
     }
   } finally {
-    loading.value = false
+    kpiLoading.value = false
   }
 }
 
-/** 拉取预警 TOP 5 项目列表 */
+/** 拉取预警 TOP 5 项目列表（静默请求，不触发全局 loading） */
 async function loadAlertTopN() {
+  alertLoading.value = true
+  alertError.value = false
   try {
-    const { data } = await getCockpitAlertTopN(period.value, 5)
+    const { data } = await getCockpitAlertTopN(period.value, 5, { silent: true } as any)
     alertTopN.value = (data as AlertTopNItem[]) || []
   } catch (e) {
     alertTopN.value = []
+    alertError.value = true
     if (!isHandledError(e)) {
       ElMessage.error(t('dashboard.messages.alertLoadFailed'))
     }
+  } finally {
+    alertLoading.value = false
   }
 }
 
-/** 拉取近 6 月收入/毛利趋势数据并更新图表 */
+/** 拉取近 6 月收入/毛利趋势数据并更新图表（静默请求，不触发全局 loading） */
 async function loadTrendData() {
+  trendLoading.value = true
+  trendError.value = false
   try {
-    const { data } = await getKpiTrend(6)
+    const { data } = await getKpiTrend(6, { silent: true } as any)
     trendData.value = data ?? null
   } catch (e) {
     trendData.value = null
+    trendError.value = true
     if (!isHandledError(e)) {
       ElMessage.error(t('dashboard.messages.trendLoadFailed'))
     }
+  } finally {
+    trendLoading.value = false
   }
 }
 
-/** 并发刷新所有数据并重绘所有图表 */
+/** 并发刷新所有数据并重绘所有图表（allSettled 确保单个失败不阻塞其他区域） */
 async function refreshAll() {
-  await Promise.all([loadOverview(), loadAlertTopN(), loadTrendData()])
+  await Promise.allSettled([loadOverview(), loadAlertTopN(), loadTrendData()])
   await nextTick()
   // useECharts 自动绑定实例, 只需 setOption
   setHealthOption(healthOption.value)
@@ -378,7 +404,8 @@ onMounted(async () => {
     <el-row :gutter="16" class="metric-row">
       <el-col v-for="m in metrics" :key="m.title" :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
         <el-card class="metric-card" shadow="hover">
-          <div class="metric-content">
+          <SkeletonCard v-if="kpiLoading" :rows="3" />
+          <div v-else class="metric-content">
             <div class="metric-icon" :style="{ background: m.color }">
               <el-icon :size="24"><component :is="m.icon" /></el-icon>
             </div>
@@ -398,13 +425,25 @@ onMounted(async () => {
     <!-- 第一行图表: 健康度 + 趋势 -->
     <el-row :gutter="16">
       <el-col :xs="24" :sm="12" :md="8">
-        <el-card shadow="never" v-loading="loading">
-          <div ref="healthRef" class="chart-area" />
+        <el-card shadow="never">
+          <div v-if="kpiLoading" class="chart-skeleton"><SkeletonTable :rows="6" /></div>
+          <div v-else-if="kpiError" class="chart-error" @click="loadOverview">
+            <el-icon :size="32"><WarningFilled /></el-icon>
+            <p>{{ t('dashboard.messages.loadFailed') }}</p>
+            <el-button text type="primary" @click="loadOverview">{{ t('common.retry') }}</el-button>
+          </div>
+          <div v-else ref="healthRef" class="chart-area" />
         </el-card>
       </el-col>
       <el-col :xs="24" :sm="12" :md="10">
-        <el-card shadow="never" v-loading="loading">
-          <div ref="trendRef" class="chart-area" />
+        <el-card shadow="never">
+          <div v-if="trendLoading" class="chart-skeleton"><SkeletonTable :rows="6" /></div>
+          <div v-else-if="trendError" class="chart-error" @click="loadTrendData">
+            <el-icon :size="32"><WarningFilled /></el-icon>
+            <p>{{ t('dashboard.messages.trendLoadFailed') }}</p>
+            <el-button text type="primary" @click="loadTrendData">{{ t('common.retry') }}</el-button>
+          </div>
+          <div v-else ref="trendRef" class="chart-area" />
         </el-card>
       </el-col>
       <el-col :xs="24" :sm="12" :md="6">
@@ -443,13 +482,25 @@ onMounted(async () => {
     <!-- 第二行图表: EVM 柱图 + 预警 TOP 5 -->
     <el-row :gutter="16">
       <el-col :xs="24" :sm="12" :md="10">
-        <el-card shadow="never" v-loading="loading">
-          <div ref="evmRef" class="chart-area" />
+        <el-card shadow="never">
+          <div v-if="kpiLoading" class="chart-skeleton"><SkeletonTable :rows="6" /></div>
+          <div v-else-if="kpiError" class="chart-error" @click="loadOverview">
+            <el-icon :size="32"><WarningFilled /></el-icon>
+            <p>{{ t('dashboard.messages.loadFailed') }}</p>
+            <el-button text type="primary" @click="loadOverview">{{ t('common.retry') }}</el-button>
+          </div>
+          <div v-else ref="evmRef" class="chart-area" />
         </el-card>
       </el-col>
       <el-col :xs="24" :sm="12" :md="14">
-        <el-card shadow="never" v-loading="loading">
-          <div ref="alertTopNRef" class="chart-area" />
+        <el-card shadow="never">
+          <div v-if="alertLoading" class="chart-skeleton"><SkeletonTable :rows="6" /></div>
+          <div v-else-if="alertError" class="chart-error" @click="loadAlertTopN">
+            <el-icon :size="32"><WarningFilled /></el-icon>
+            <p>{{ t('dashboard.messages.alertLoadFailed') }}</p>
+            <el-button text type="primary" @click="loadAlertTopN">{{ t('common.retry') }}</el-button>
+          </div>
+          <div v-else ref="alertTopNRef" class="chart-area" />
         </el-card>
       </el-col>
     </el-row>
@@ -567,6 +618,35 @@ onMounted(async () => {
   // 最小宽度：保证图表在窄列下仍有可读的渲染区域；1366px 下最小图表列约 455px，不会触发横向溢出
   min-width: 280px;
   height: 320px;
+}
+
+.chart-skeleton {
+  width: 100%;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md;
+}
+
+.chart-error {
+  width: 100%;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  color: $text-secondary;
+  cursor: pointer;
+
+  .el-icon {
+    color: $warning-color;
+  }
+
+  p {
+    font-size: $font-size-sm;
+  }
 }
 
 .kpi-mini {

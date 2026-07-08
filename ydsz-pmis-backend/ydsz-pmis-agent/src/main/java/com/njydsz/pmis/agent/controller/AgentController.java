@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -316,12 +317,23 @@ public class AgentController {
      * <p>与 {@link #inMemory} 区别：直接接收 Map 形式参数，内部构造 AgentContext，
      * 方便跨模块调用，避免各业务方都去学习 AgentContext 结构。
      *
-     * @param body 必填字段：agentType / bizType / bizId；可选：bizRef / params
+     * <p><b>安全加固</b>：校验 {@code X-Internal-Sig} 请求头，确保请求来自网关或内部 Feign 调用，
+     * 拦截外部直接访问。Feign 拦截器 {@code PmisFeignInterceptor} 会自动透传该头。
+     *
+     * @param dto          必填字段：agentType / bizType / bizId；可选：bizRef / params
+     * @param internalSig  内部签名头（由网关注入或 Feign 拦截器透传）
      * @return Agent 执行结果（payload 字段承载结构化输出）
      */
     @Operation(summary = "[内部] 同步执行 Agent（Feign 入口）")
     @PostMapping("/internal/execute")
-    public Result<Map<String, Object>> internalExecute(@Valid @RequestBody AgentInternalExecuteDTO dto) {
+    public Result<Map<String, Object>> internalExecute(
+            @Valid @RequestBody AgentInternalExecuteDTO dto,
+            @RequestHeader(value = "X-Internal-Sig", required = false) String internalSig) {
+        // 安全加固：校验内部签名头，拦截绕过网关/Feign 的外部直接调用
+        if (internalSig == null || internalSig.isBlank()) {
+            log.warn("[Security] internal/execute 被外部直接调用，缺少 X-Internal-Sig 头");
+            return Result.failed(403, "禁止外部直接访问内部接口");
+        }
         // @NotBlank 已校验 agentType 非空，移除手动校验
         String agentType = dto.getAgentType();
         String bizType = dto.getBizType() == null ? "INTERNAL" : dto.getBizType();

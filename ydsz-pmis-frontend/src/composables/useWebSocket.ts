@@ -154,6 +154,43 @@ function ensureConnected(): void {
 }
 
 /**
+ * Token 刷新后重建 STOMP 连接。
+ *
+ * 问题：STOMP 连接初始化时通过 connectHeaders 携带 JWT Token，
+ * Token 刷新后旧连接仍持有过期 Token，导致后续消息推送鉴权失败。
+ *
+ * 方案：监听全局 `token-refreshed` 自定义事件（由 request.ts 中
+ * doRefreshToken 成功后 dispatch），主动断开旧连接并用新 Token 重建。
+ */
+function reconnectWithNewToken(): void {
+  if (!stompClient) return
+  // 更新 connectHeaders 中的 Token
+  stompClient.connectHeaders = {
+    Authorization: getToken() || '',
+  }
+  // 先停用旧连接，再重新激活（STOMP 客户端会使用更新后的 headers 重连）
+  stompClient.deactivate().then(() => {
+    if (stompClient) {
+      stompClient.activate()
+    }
+  }).catch(() => {
+    // deactivate 失败时强制重建
+    if (stompClient) {
+      stompClient.forceDisconnect()
+    }
+    stompClient = null
+    stompSubscription = null
+    globalConnected.value = false
+    ensureConnected()
+  })
+}
+
+// 监听 Token 刷新事件，自动重建 STOMP 连接
+if (typeof window !== 'undefined') {
+  window.addEventListener('token-refreshed', reconnectWithNewToken)
+}
+
+/**
  * WebSocket 实时推送 composable（全局单例）。
  *
  * 多个组件调用时共享同一个 STOMP 连接，组件卸载时自动移除该组件注册的 handler。

@@ -46,6 +46,8 @@
     "openapi:gen": "node scripts/openapi-gen.mjs",
     "openapi:gen:gateway": "node scripts/openapi-gen.mjs http://localhost:9000/v3/api-docs",
     "analyze": "ANALYZE=true vite build",
+    "sentry:upload": "sentry-cli sourcemaps upload --org $SENTRY_ORG --project $SENTRY_PROJECT --release $npm_package_version dist/assets --strip-prefix dist/",
+    "build:sentry": "npm run build:prod && npm run sentry:upload",
     "prepare": "husky install"
   },
   "dependencies": {

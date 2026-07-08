@@ -10,6 +10,7 @@ import { useI18n } from 'vue-i18n'
 import { approve, cancel, page, pending, reject } from '@/api/agent/hitl'
 import type { HitlApprovalRequest } from '@/api/agent/hitl/types'
 import { PC } from '@/constants/permissionCodes'
+import type { PageResult } from '@/utils/request'
 
 const { t } = useI18n()
 
@@ -49,7 +50,7 @@ async function loadList() {
       status: filter.status || undefined,
       agentType: filter.agentType || undefined,
     })
-    const result = data as any
+    const result = data as PageResult<HitlApprovalRequest> | undefined
     list.value = result?.records ?? result?.list ?? []
     total.value = result?.total ?? 0
   } catch (e: any) {
@@ -72,10 +73,85 @@ function onSizeChange(s: number) { pageSize.value = s; pageNo.value = 1; loadLis
 
 // ============= 审批操作 =============
 const actionDialogVisible = ref(false)
-const actionType = ref<'approve' | 'reject' | 'cancel'>('approve')
+const actionType = ref<'approve' | 'reject' | 'cancel' | 'batch-approve' | 'batch-reject'>('approve')
 const currentRow = ref<HitlApprovalRequest | null>(null)
 const comment = ref('')
 const actionLoading = ref(false)
+
+// ============= 批量审批 =============
+/** 选中的待审批行 */
+const selectedRows = ref<HitlApprovalRequest[]>([])
+/** 批量操作 loading */
+const batchLoading = ref(false)
+/** vxe-table ref */
+const tableRef = ref<any>(null)
+
+/** 表格选择变更事件 */
+function onCheckboxChange({ records }: { records: HitlApprovalRequest[] }) {
+  selectedRows.value = (records || []).filter(r => r.status === 'PENDING')
+}
+
+/** 批量批准 */
+function openBatchApprove() {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning(t('agent.hitl.messages.selectFirst'))
+    return
+  }
+  actionType.value = 'batch-approve'
+  comment.value = ''
+  actionDialogVisible.value = true
+}
+
+/** 批量拒绝 */
+function openBatchReject() {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning(t('agent.hitl.messages.selectFirst'))
+    return
+  }
+  actionType.value = 'batch-reject'
+  comment.value = ''
+  actionDialogVisible.value = true
+}
+
+/** 执行批量操作 */
+async function handleBatchAction() {
+  if (selectedRows.value.length === 0) return
+  batchLoading.value = true
+  actionLoading.value = true
+  const dto = {
+    approverId: 'current-user',
+    approverName: 'current-user',
+    comment: comment.value,
+  }
+  const isApprove = actionType.value === 'batch-approve'
+  const action = isApprove ? approve : reject
+  const successKey = isApprove ? 'agent.hitl.messages.batchApproveSuccess' : 'agent.hitl.messages.batchRejectSuccess'
+  const failKey = isApprove ? 'agent.hitl.messages.batchApproveFail' : 'agent.hitl.messages.batchRejectFail'
+  try {
+    const results = await Promise.allSettled(
+      selectedRows.value.map(r => action(r.id, dto)),
+    )
+    const succeeded = results.filter(r => r.status === 'fulfilled').length
+    const failed = results.filter(r => r.status === 'rejected').length
+    if (failed > 0) {
+      ElMessage.warning(t(failKey, { succeeded, failed }))
+    } else {
+      ElMessage.success(t(successKey, { count: succeeded }))
+    }
+    actionDialogVisible.value = false
+    selectedRows.value = []
+    if (tableRef.value) {
+      tableRef.value.clearCheckboxRow()
+    }
+    loadList()
+    loadPendingCount()
+  } catch (e: any) {
+    ElMessage.error(e?.message || t('agent.hitl.messages.actionFailed'))
+  } finally {
+    batchLoading.value = false
+    actionLoading.value = false
+  }
+}
 
 function openActionDialog(row: HitlApprovalRequest, type: 'approve' | 'reject' | 'cancel') {
   currentRow.value = row
@@ -86,6 +162,11 @@ function openActionDialog(row: HitlApprovalRequest, type: 'approve' | 'reject' |
 
 async function handleAction() {
   if (!currentRow.value) return
+  // 批量操作走单独路径
+  if (actionType.value === 'batch-approve' || actionType.value === 'batch-reject') {
+    await handleBatchAction()
+    return
+  }
   actionLoading.value = true
   try {
     const dto = {
@@ -177,7 +258,20 @@ onMounted(() => {
 
     <!-- 列表 -->
     <el-card shadow="never" style="margin-top: 16px">
-      <vxe-table :data="list" :loading="loading" stripe>
+      <div class="table-toolbar">
+        <el-button-group>
+          <el-button v-permission="[PC.AGENT_HITL_APPROVE]" type="success" size="small" :icon="'Check'"
+            :disabled="selectedRows.length === 0" :loading="batchLoading" @click="openBatchApprove">
+            {{ t('agent.hitl.buttons.batchApprove') }} ({{ selectedRows.length }})
+          </el-button>
+          <el-button v-permission="[PC.AGENT_HITL_APPROVE]" type="danger" size="small" :icon="'Close'"
+            :disabled="selectedRows.length === 0" :loading="batchLoading" @click="openBatchReject">
+            {{ t('agent.hitl.buttons.batchReject') }} ({{ selectedRows.length }})
+          </el-button>
+        </el-button-group>
+      </div>
+      <vxe-table ref="tableRef" :data="list" :loading="loading" stripe :checkbox-config="{ highlight: true }" @checkbox-change="onCheckboxChange" @checkbox-all="onCheckboxChange">
+        <vxe-column type="checkbox" width="48" />
         <vxe-column type="seq" width="56" title="#" />
         <vxe-column field="agentType" :title="t('agent.hitl.columns.agentType')" width="160">
           <template #default="{ row }">
@@ -230,6 +324,9 @@ onMounted(() => {
 
     <!-- 审批操作对话框 -->
     <el-dialog v-model="actionDialogVisible" :title="t(`agent.hitl.action.${actionType}`)" width="500px">
+      <el-alert v-if="actionType.startsWith('batch')" type="info" :closable="false" style="margin-bottom: 12px">
+        {{ t('agent.hitl.action.batchHint', { count: selectedRows.length }) }}
+      </el-alert>
       <el-form label-width="80px">
         <el-form-item :label="t('agent.hitl.action.comment')">
           <el-input v-model="comment" type="textarea" :rows="4"
@@ -238,7 +335,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="actionDialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button :type="actionType === 'approve' ? 'success' : actionType === 'reject' ? 'danger' : 'info'"
+        <el-button :type="actionType === 'approve' || actionType === 'batch-approve' ? 'success' : actionType === 'reject' || actionType === 'batch-reject' ? 'danger' : 'info'"
           :loading="actionLoading" @click="handleAction">
           {{ t('common.confirm') }}
         </el-button>
@@ -280,6 +377,12 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .hitl-page {
+  .table-toolbar {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
   .kpi-row { margin-bottom: 0; }
   .kpi-card {
     text-align: center;

@@ -9,7 +9,7 @@
   @since 1.0.0
 -->
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import {
@@ -28,6 +28,7 @@ import type {
   DagNodeStatus,
 } from '@/api/agent/dag/types'
 import { PC } from '@/constants/permissionCodes'
+import type { PageResult } from '@/utils/request'
 
 const { t } = useI18n()
 
@@ -42,7 +43,7 @@ async function loadList() {
   loading.value = true
   try {
     const { data } = await pageDefinitions(pageNo.value, pageSize.value)
-    const result = data as any
+    const result = data as PageResult<DagDefinitionDO> | undefined
     list.value = result?.list ?? result?.records ?? []
     total.value = result?.total ?? 0
   } catch (e: any) {
@@ -64,10 +65,225 @@ const createForm = reactive({
 })
 const creating = ref(false)
 
+// ============= DAG 可视化设计器 =============
+/** 设计器模式：visual / json */
+const designerMode = ref<'visual' | 'json'>('visual')
+/** DAG 节点定义（可视化设计器用） */
+interface DagNodeDef {
+  id: string
+  name: string
+  agentType: string
+  x: number
+  y: number
+  dependencies: string[]
+  inputs: Record<string, unknown>
+}
+/** 设计器节点列表 */
+const designerNodes = ref<DagNodeDef[]>([])
+/** 选中的节点 ID */
+const selectedNodeId = ref<string | null>(null)
+/** 连线模式：点击源节点后进入连线模式，再点击目标节点完成连线 */
+const linkingFrom = ref<string | null>(null)
+/** 拖拽中的节点 ID */
+const draggingNodeId = ref<string | null>(null)
+/** 拖拽偏移量 */
+const dragOffset = reactive({ x: 0, y: 0 })
+/** 画布 SVG ref */
+const canvasRef = ref<SVGSVGElement | null>(null)
+
+/** 生成唯一节点 ID */
+function genNodeId(): string {
+  return `node-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+}
+
+/** 添加新节点 */
+function addNode() {
+  const node: DagNodeDef = {
+    id: genNodeId(),
+    name: `node${designerNodes.value.length + 1}`,
+    agentType: 'RISK_WARNING',
+    x: 80 + (designerNodes.value.length % 4) * 200,
+    y: 60 + Math.floor(designerNodes.value.length / 4) * 120,
+    dependencies: [],
+    inputs: {},
+  }
+  designerNodes.value.push(node)
+  selectedNodeId.value = node.id
+  syncDesignerToJson()
+}
+
+/** 删除节点 */
+function removeNode(id: string) {
+  designerNodes.value = designerNodes.value.filter(n => n.id !== id && n.dependencies.indexOf(id) === -1)
+  designerNodes.value.forEach(n => {
+    n.dependencies = n.dependencies.filter(d => d !== id)
+  })
+  if (selectedNodeId.value === id) selectedNodeId.value = null
+  syncDesignerToJson()
+}
+
+/** 选中节点 */
+function selectNode(id: string) {
+  // 如果在连线模式，完成连线
+  if (linkingFrom.value && linkingFrom.value !== id) {
+    const target = designerNodes.value.find(n => n.id === id)
+    if (target && !target.dependencies.includes(linkingFrom.value)) {
+      target.dependencies.push(linkingFrom.value)
+      syncDesignerToJson()
+    }
+    linkingFrom.value = null
+    return
+  }
+  selectedNodeId.value = id
+}
+
+/** 开始连线模式 */
+function startLink(id: string) {
+  linkingFrom.value = id
+}
+
+/** 取消连线模式 */
+function cancelLink() {
+  linkingFrom.value = null
+}
+
+/** 删除连线 */
+function removeDependency(nodeId: string, depId: string) {
+  const node = designerNodes.value.find(n => n.id === nodeId)
+  if (node) {
+    node.dependencies = node.dependencies.filter(d => d !== depId)
+    syncDesignerToJson()
+  }
+}
+
+/** SVG 画布鼠标移动：拖拽节点 */
+function onCanvasMouseMove(e: MouseEvent) {
+  if (!draggingNodeId.value || !canvasRef.value) return
+  const rect = canvasRef.value.getBoundingClientRect()
+  const x = e.clientX - rect.left - dragOffset.x
+  const y = e.clientY - rect.top - dragOffset.y
+  const node = designerNodes.value.find(n => n.id === draggingNodeId.value)
+  if (node) {
+    node.x = Math.max(10, Math.min(x, rect.width - 120))
+    node.y = Math.max(10, Math.min(y, rect.height - 60))
+  }
+}
+
+/** SVG 画布鼠标松开：结束拖拽 */
+function onCanvasMouseUp() {
+  draggingNodeId.value = null
+}
+
+/** 节点鼠标按下：开始拖拽 */
+function onNodeMouseDown(e: MouseEvent, node: DagNodeDef) {
+  if (linkingFrom.value) return // 连线模式不拖拽
+  draggingNodeId.value = node.id
+  const rect = canvasRef.value?.getBoundingClientRect()
+  if (rect) {
+    dragOffset.x = e.clientX - rect.left - node.x
+    dragOffset.y = e.clientY - rect.top - node.y
+  }
+  e.preventDefault()
+}
+
+/** 计算连线路径（贝塞尔曲线） */
+function edgePath(from: DagNodeDef, to: DagNodeDef): string {
+  const x1 = from.x + 120
+  const y1 = from.y + 25
+  const x2 = to.x
+  const y2 = to.y + 25
+  const cx = (x1 + x2) / 2
+  return `M ${x1},${y1} C ${cx},${y1} ${cx},${y2} ${x2},${y2}`
+}
+
+/** 将可视化设计器同步到 JSON */
+function syncDesignerToJson() {
+  const dag = {
+    name: createForm.name,
+    description: createForm.description,
+    nodes: designerNodes.value.map(n => ({
+      name: n.name,
+      agentType: n.agentType,
+      dependencies: n.dependencies.map(depId => {
+        const dep = designerNodes.value.find(d => d.id === depId)
+        return dep ? dep.name : depId
+      }),
+      inputs: n.inputs,
+    })),
+    failureStrategy: 'ABORT',
+    defaultTimeoutMs: 30000,
+    maxRetries: 3,
+  }
+  createForm.dagJson = JSON.stringify(dag, null, 2)
+}
+
+/** 从 JSON 同步到可视化设计器 */
+function syncJsonToDesigner() {
+  try {
+    const dag = JSON.parse(createForm.dagJson)
+    if (!dag.nodes || !Array.isArray(dag.nodes)) return
+    // 先创建所有节点（无依赖），再填充依赖
+    const nameToId = new Map<string, string>()
+    designerNodes.value = dag.nodes.map((n: any, idx: number) => {
+      const id = genNodeId()
+      nameToId.set(n.name, id)
+      return {
+        id,
+        name: n.name || `node${idx + 1}`,
+        agentType: n.agentType || 'RISK_WARNING',
+        x: 80 + (idx % 4) * 200,
+        y: 60 + Math.floor(idx / 4) * 120,
+        dependencies: [],
+        inputs: n.inputs || {},
+      }
+    })
+    // 填充依赖
+    dag.nodes.forEach((n: any) => {
+      const node = designerNodes.value.find(d => d.name === n.name)
+      if (node && n.dependencies) {
+        node.dependencies = (n.dependencies as string[])
+          .map(depName => nameToId.get(depName))
+          .filter((id): id is string => !!id)
+      }
+    })
+  } catch {
+    // JSON 无效时不做同步
+  }
+}
+
+/** 监听 JSON 变化（仅在 json 模式编辑时同步到设计器） */
+watch(() => createForm.dagJson, () => {
+  if (designerMode.value === 'json') {
+    // 延迟同步，避免频繁解析
+  }
+})
+
+/** 切换设计器模式时同步 */
+function switchDesignerMode(mode: 'visual' | 'json') {
+  if (mode === 'json' && designerMode.value === 'visual') {
+    syncDesignerToJson()
+  } else if (mode === 'visual' && designerMode.value === 'json') {
+    syncJsonToDesigner()
+  }
+  designerMode.value = mode
+}
+
+/** 当前选中的节点对象 */
+const selectedNode = computed(() => {
+  return designerNodes.value.find(n => n.id === selectedNodeId.value) || null
+})
+
+/** Agent 类型选项 */
+const AGENT_TYPES = ['RISK_WARNING', 'RESOURCE_RECOMMEND', 'PROFIT_FORECAST', 'WIN_RATE_PREDICT', 'TIMESHEET_ANOMALY', 'APPROVER_RECOMMEND', 'COMMENT_DRAFT', 'FLOW_GENERATOR']
+
 async function handleCreate() {
   if (!createForm.name) {
     ElMessage.warning(t('agent.dag.messages.nameRequired'))
     return
+  }
+  // 从可视化模式创建时，先同步到 JSON
+  if (designerMode.value === 'visual') {
+    syncDesignerToJson()
   }
   let dagDef
   try {
@@ -95,20 +311,15 @@ async function handleCreate() {
 }
 
 function openCreateDialog() {
-  createForm.dagJson = JSON.stringify({
-    name: '',
-    nodes: [
-      {
-        name: 'node1',
-        agentType: 'RISK_WARNING',
-        dependencies: [],
-        inputs: {},
-      },
-    ],
-    failureStrategy: 'ABORT',
-    defaultTimeoutMs: 30000,
-    maxRetries: 3,
-  }, null, 2)
+  designerNodes.value = []
+  selectedNodeId.value = null
+  linkingFrom.value = null
+  designerMode.value = 'visual'
+  createForm.name = ''
+  createForm.description = ''
+  createForm.dagJson = ''
+  // 添加一个示例节点
+  addNode()
   createDialogVisible.value = true
 }
 
@@ -162,7 +373,7 @@ async function loadInstances() {
   instanceLoading.value = true
   try {
     const { data } = await pageInstances(currentDefinitionId.value, instancePageNo.value, 20)
-    const result = data as any
+    const result = data as PageResult<DagInstanceDO> | undefined
     instanceList.value = result?.list ?? result?.records ?? []
     instanceTotal.value = result?.total ?? 0
   } catch (e: any) {
@@ -275,7 +486,7 @@ onMounted(() => {
     </el-card>
 
     <!-- 创建 DAG 对话框 -->
-    <el-dialog v-model="createDialogVisible" :title="t('agent.dag.create.title')" width="700px">
+    <el-dialog v-model="createDialogVisible" :title="t('agent.dag.create.title')" width="900px" top="5vh">
       <el-form label-width="100px">
         <el-form-item :label="t('agent.dag.create.name')">
           <el-input v-model="createForm.name" :placeholder="t('agent.dag.create.namePlaceholder')" />
@@ -284,7 +495,92 @@ onMounted(() => {
           <el-input v-model="createForm.description" type="textarea" :rows="2" />
         </el-form-item>
         <el-form-item :label="t('agent.dag.create.json')">
-          <el-input v-model="createForm.dagJson" type="textarea" :rows="15"
+          <el-radio-group v-model="designerMode" @change="switchDesignerMode(designerMode.value)" style="margin-bottom: 8px">
+            <el-radio-button value="visual">{{ t('agent.dag.designer.visual') }}</el-radio-button>
+            <el-radio-button value="json">{{ t('agent.dag.designer.json') }}</el-radio-button>
+          </el-radio-group>
+          <!-- 可视化设计器 -->
+          <div v-if="designerMode === 'visual'" class="dag-designer">
+            <div class="designer-toolbar">
+              <el-button type="primary" size="small" :icon="'Plus'" @click="addNode">{{ t('agent.dag.designer.addNode') }}</el-button>
+              <el-button v-if="linkingFrom" type="warning" size="small" @click="cancelLink">{{ t('agent.dag.designer.cancelLink') }}</el-button>
+              <span v-if="linkingFrom" class="link-hint">{{ t('agent.dag.designer.linkHint') }}</span>
+            </div>
+            <div class="designer-body">
+              <!-- SVG 画布 -->
+              <svg
+                ref="canvasRef"
+                class="dag-canvas"
+                @mousemove="onCanvasMouseMove"
+                @mouseup="onCanvasMouseUp"
+                @mouseleave="onCanvasMouseUp"
+                @click.self="selectedNodeId = null; linkingFrom = null"
+              >
+                <!-- 连线 -->
+                <g v-for="node in designerNodes" :key="`edges-${node.id}`">
+                  <template v-for="depId in node.dependencies" :key="`${depId}-${node.id}`">
+                    <path
+                      v-if="designerNodes.find(d => d.id === depId)"
+                      :d="edgePath(designerNodes.find(d => d.id === depId)!, node)"
+                      class="dag-edge"
+                      @click="removeDependency(node.id, depId)"
+                    />
+                  </template>
+                </g>
+                <!-- 节点 -->
+                <g
+                  v-for="node in designerNodes"
+                  :key="node.id"
+                  :transform="`translate(${node.x}, ${node.y})`"
+                  :class="['dag-node-group', { selected: selectedNodeId === node.id, linking: linkingFrom === node.id }]"
+                  @mousedown="onNodeMouseDown($event, node)"
+                  @click.stop="selectNode(node.id)"
+                >
+                  <rect width="120" height="50" rx="6" class="dag-node-rect" />
+                  <text x="60" y="20" text-anchor="middle" class="dag-node-name">{{ node.name }}</text>
+                  <text x="60" y="38" text-anchor="middle" class="dag-node-type">{{ node.agentType }}</text>
+                  <!-- 连线按钮 -->
+                  <circle cx="120" cy="25" r="5" class="dag-link-dot" @click.stop="startLink(node.id)" />
+                  <!-- 删除按钮 -->
+                  <text x="110" y="12" class="dag-delete-btn" @click.stop="removeNode(node.id)">✕</text>
+                </g>
+              </svg>
+              <!-- 属性面板 -->
+              <div class="property-panel">
+                <div v-if="selectedNode" class="property-form">
+                  <h4>{{ t('agent.dag.designer.nodeProps') }}</h4>
+                  <el-form size="small" label-width="80px">
+                    <el-form-item label="Name">
+                      <el-input v-model="selectedNode.name" @input="syncDesignerToJson" />
+                    </el-form-item>
+                    <el-form-item label="AgentType">
+                      <el-select v-model="selectedNode.agentType" @change="syncDesignerToJson" style="width: 100%">
+                        <el-option v-for="at in AGENT_TYPES" :key="at" :value="at" :label="at" />
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label="Deps">
+                      <div v-if="selectedNode.dependencies.length === 0" class="empty-deps">无依赖</div>
+                      <el-tag
+                        v-for="depId in selectedNode.dependencies"
+                        :key="depId"
+                        closable
+                        size="small"
+                        style="margin: 2px"
+                        @close="removeDependency(selectedNode.id, depId)"
+                      >
+                        {{ designerNodes.find(d => d.id === depId)?.name || depId }}
+                      </el-tag>
+                    </el-form-item>
+                  </el-form>
+                </div>
+                <div v-else class="property-empty">
+                  <el-empty :description="t('agent.dag.designer.selectNode')" :image-size="60" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- JSON 编辑器 -->
+          <el-input v-else v-model="createForm.dagJson" type="textarea" :rows="15"
             :placeholder="SAMPLE_DAG_TEMPLATE" style="font-family: monospace; font-size: 12px" />
         </el-form-item>
       </el-form>
@@ -462,6 +758,114 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+  .dag-designer {
+    border: 1px solid var(--el-border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    .designer-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--el-fill-color-light);
+      border-bottom: 1px solid var(--el-border-color-lighter);
+      .link-hint {
+        font-size: 12px;
+        color: var(--el-color-warning);
+      }
+    }
+    .designer-body {
+      display: flex;
+      height: 400px;
+    }
+    .dag-canvas {
+      flex: 1;
+      background: var(--el-fill-color-blank);
+      background-image: radial-gradient(circle, var(--el-border-color-lighter) 1px, transparent 1px);
+      background-size: 20px 20px;
+      cursor: default;
+    }
+    .dag-node-group {
+      cursor: move;
+      .dag-node-rect {
+        fill: var(--el-color-primary-light-9);
+        stroke: var(--el-color-primary);
+        stroke-width: 1.5;
+        rx: 6;
+      }
+      .dag-node-name {
+        font-size: 12px;
+        font-weight: 600;
+        fill: var(--el-text-color-primary);
+        pointer-events: none;
+        user-select: none;
+      }
+      .dag-node-type {
+        font-size: 10px;
+        fill: var(--el-text-color-secondary);
+        pointer-events: none;
+        user-select: none;
+      }
+      .dag-link-dot {
+        fill: var(--el-color-success);
+        stroke: white;
+        stroke-width: 1;
+        cursor: crosshair;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .dag-delete-btn {
+        font-size: 10px;
+        fill: var(--el-color-danger);
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      &:hover .dag-link-dot,
+      &:hover .dag-delete-btn {
+        opacity: 1;
+      }
+      &.selected .dag-node-rect {
+        stroke-width: 2.5;
+        filter: drop-shadow(0 0 4px var(--el-color-primary));
+      }
+      &.linking .dag-node-rect {
+        stroke: var(--el-color-warning);
+        fill: var(--el-color-warning-light-9);
+      }
+    }
+    .dag-edge {
+      fill: none;
+      stroke: var(--el-color-primary-light-5);
+      stroke-width: 2;
+      cursor: pointer;
+      marker-end: url(#arrowhead);
+      &:hover {
+        stroke: var(--el-color-danger);
+        stroke-width: 2.5;
+      }
+    }
+    .property-panel {
+      width: 280px;
+      border-left: 1px solid var(--el-border-color-lighter);
+      padding: 12px;
+      overflow-y: auto;
+      .property-form h4 {
+        margin: 0 0 12px;
+        font-size: 14px;
+      }
+      .empty-deps {
+        font-size: 12px;
+        color: var(--el-text-color-placeholder);
+      }
+      .property-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+      }
+    }
   }
   .kpi-row { margin-bottom: 8px; }
   .kpi-card {

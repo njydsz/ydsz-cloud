@@ -76,3 +76,56 @@ export function maskIdCard(idCard: string | null | undefined): string {
   if (!idCard) return '-'
   return idCard.replace(/(\d{4})\d+(\d{4})/, '$1***********$2')
 }
+
+/**
+ * 脱敏邮箱（保留首字母 + @ 域名）
+ * @param email - 邮箱地址
+ * @returns 形如 'z***@example.com' 的字符串
+ */
+export function maskEmail(email: string | null | undefined): string {
+  if (!email) return '-'
+  const at = email.indexOf('@')
+  if (at <= 1) return email
+  return email[0] + '***' + email.substring(at)
+}
+
+/**
+ * 脱敏银行卡号（保留前 4 + 后 4 位）
+ * @param bankCard - 银行卡号
+ * @returns 形如 '6228 **** **** 1234' 的字符串
+ */
+export function maskBankCard(bankCard: string | null | undefined): string {
+  if (!bankCard) return '-'
+  const s = bankCard.replace(/\s/g, '')
+  if (s.length < 8) return '****'
+  return s.substring(0, 4) + ' **** **** ' + s.substring(s.length - 4)
+}
+
+/**
+ * 脱敏姓名（保留姓氏，名字以 * 代替）
+ * @param name - 中文或英文姓名
+ * @returns 形如 '张**' / 'J***' 的字符串
+ */
+export function maskName(name: string | null | undefined): string {
+  if (!name) return '-'
+  if (name.length <= 1) return '*'
+  if (name.length === 2) return name[0] + '*'
+  return name[0] + '*'.repeat(name.length - 1)
+}
+
+/**
+ * 通用脱敏函数（根据类型自动选择脱敏策略）
+ * @param value - 原始值
+ * @param type - 脱敏类型：phone / idCard / email / bankCard / name
+ * @returns 脱敏后的字符串
+ */
+export function mask(value: string | null | undefined, type: 'phone' | 'idCard' | 'email' | 'bankCard' | 'name'): string {
+  switch (type) {
+    case 'phone': return maskPhone(value)
+    case 'idCard': return maskIdCard(value)
+    case 'email': return maskEmail(value)
+    case 'bankCard': return maskBankCard(value)
+    case 'name': return maskName(value)
+    default: return value || '-'
+  }
+}

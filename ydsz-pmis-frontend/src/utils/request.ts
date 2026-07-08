@@ -189,7 +189,12 @@ function getRetryDelay(retryCount: number): number {
 const service: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 30000,
-  headers: { 'Content-Type': 'application/json;charset=UTF-8' },
+  headers: {
+    'Content-Type': 'application/json;charset=UTF-8',
+    // CSRF 双重防护：X-Requested-With 使请求变为非简单请求，触发 CORS 预检，
+    // 阻止跨域简单请求绕过预检的 CSRF 攻击向量
+    'X-Requested-With': 'XMLHttpRequest',
+  },
 })
 
 // 请求拦截器：注入 Token + TraceId + 全局 loading + 性能监控 + 请求取消管理
@@ -415,6 +420,11 @@ async function doRefreshToken(): Promise<string> {
     userStore.refreshToken = newRefreshToken
   } catch (_e) {
     // permission store 未初始化等场景忽略
+  }
+
+  // 通知 WebSocket 等 STOMP 连接使用新 Token 重建
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('token-refreshed', { detail: { token: newToken } }))
   }
 
   return newToken

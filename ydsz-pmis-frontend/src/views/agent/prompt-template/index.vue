@@ -13,6 +13,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { activate, create, page, remove } from '@/api/agent/prompt-template'
 import type { PromptTemplate, PromptTemplateQueryDTO } from '@/api/agent/prompt-template/types'
+import type { PageResult } from '@/utils/request'
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()
@@ -32,7 +33,7 @@ async function loadList() {
   loading.value = true
   try {
     const { data } = await page(query)
-    const result = data as any
+    const result = data as PageResult<PromptTemplate> | undefined
     list.value = result?.list ?? result?.records ?? []
     total.value = result?.total ?? 0
   } catch (e: any) {

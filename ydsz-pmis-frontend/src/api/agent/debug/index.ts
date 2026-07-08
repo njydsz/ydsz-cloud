@@ -42,8 +42,8 @@ export async function executeStream(
   onError?: (err: Error) => void,
   signal?: AbortSignal,
 ): Promise<() => void> {
-  const baseURL = (import.meta as any).env?.VITE_API_BASE_URL || '/api'
-  const token = localStorage.getItem('token') || ''
+  const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
+  const token = localStorage.getItem(import.meta.env.VITE_TOKEN_KEY || 'pmis_token') || ''
   const controller = new AbortController()
 
   if (signal) {

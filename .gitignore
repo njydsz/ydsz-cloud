@@ -101,6 +101,8 @@ log/
 .cache/
 .tmp/
 .temp/
+# 前端 TypeScript 编译错误诊断输出（临时文件，不应入库）
+vue-tsc-errors.txt
 
 # ========================
 # 环境与敏感信息

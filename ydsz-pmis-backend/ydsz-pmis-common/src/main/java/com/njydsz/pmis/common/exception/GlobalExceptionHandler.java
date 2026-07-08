@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +47,18 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * BizErrorCode 快速查找索引（O(1) HashMap 查找，替代 O(n) 遍历）。
+     *
+     * <p>类加载时一次性构建，线程安全（Map.of 返回不可变 Map）。
+     */
+    private static final Map<Integer, BizErrorCode> ERROR_CODE_INDEX =
+            java.util.Arrays.stream(BizErrorCode.values())
+                    .collect(Collectors.toUnmodifiableMap(
+                            BizErrorCode::getCode,
+                            ec -> ec,
+                            (existing, replacement) -> existing));
 
     /**
      * 国际化消息源（可选注入）。
@@ -433,17 +446,12 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 根据错误码数值查找对应的 {@link BizErrorCode}
+     * 根据错误码数值查找对应的 {@link BizErrorCode}（O(1) HashMap 查找）
      *
      * @param code 业务错误码数值
      * @return 匹配的枚举值，未匹配返回 null
      */
     private BizErrorCode findErrorCode(int code) {
-        for (BizErrorCode ec : BizErrorCode.values()) {
-            if (ec.getCode() == code) {
-                return ec;
-            }
-        }
-        return null;
+        return ERROR_CODE_INDEX.get(code);
     }
 }

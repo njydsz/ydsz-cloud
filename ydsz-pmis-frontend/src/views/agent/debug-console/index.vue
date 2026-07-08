@@ -19,14 +19,35 @@
  * - 打字机效果，逐 token 展示
  * - 历史步骤折叠展示
  */
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { executeInMemory, executeStream } from '@/api/agent/debug'
 import type { ReActStep, SseEvent } from '@/api/agent/debug/types'
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()
+
+/** localStorage 存储键 */
+const HISTORY_STORAGE_KEY = 'agent-debug-history'
+/** 最大保存历史记录数 */
+const MAX_HISTORY_SIZE = 50
+
+/** 历史会话记录结构 */
+interface DebugSessionHistory {
+  id: string
+  timestamp: number
+  agentType: string
+  bizType: string
+  bizId: string
+  bizRef: string
+  userInput: string
+  facts: string
+  steps: ReActStep[]
+  finalAnswer: string
+  elapsed: number
+  mode: 'stream' | 'sync'
+}
 
 const AGENT_TYPE_OPTIONS = computed(() => [
   { code: 'RISK_WARNING', desc: t('agent.debug.agentType.RISK_WARNING') },
@@ -61,6 +82,120 @@ let startTime = 0
 let timer: ReturnType<typeof setInterval> | null = null
 
 const isStreaming = computed(() => streaming.value)
+
+// ===== 会话历史持久化 =====
+/** 历史会话列表 */
+const sessionHistory = ref<DebugSessionHistory[]>([])
+/** 当前查看的历史记录 ID */
+const viewingHistoryId = ref<string | null>(null)
+
+/** 从 localStorage 加载历史记录 */
+function loadHistory(): void {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY)
+    if (raw) {
+      sessionHistory.value = JSON.parse(raw) as DebugSessionHistory[]
+    }
+  } catch {
+    // localStorage 不可用或 JSON 解析失败，忽略
+  }
+}
+
+/** 保存历史记录到 localStorage */
+function saveHistory(): void {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(sessionHistory.value))
+  } catch {
+    // localStorage 满或不可用，忽略
+  }
+}
+
+/** 将当前调试会话保存到历史 */
+function saveCurrentSession(mode: 'stream' | 'sync'): void {
+  if (steps.value.length === 0 && !finalAnswer.value) return
+  const session: DebugSessionHistory = {
+    id: `s-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    timestamp: Date.now(),
+    agentType: form.agentType,
+    bizType: form.bizType,
+    bizId: form.bizId,
+    bizRef: form.bizRef,
+    userInput: form.userInput,
+    facts: form.facts,
+    steps: [...steps.value],
+    finalAnswer: finalAnswer.value,
+    elapsed: elapsed.value,
+    mode,
+  }
+  sessionHistory.value.unshift(session)
+  if (sessionHistory.value.length > MAX_HISTORY_SIZE) {
+    sessionHistory.value = sessionHistory.value.slice(0, MAX_HISTORY_SIZE)
+  }
+  saveHistory()
+}
+
+/** 查看历史会话详情 */
+function viewHistory(session: DebugSessionHistory): void {
+  viewingHistoryId.value = session.id
+  resetExecution()
+  steps.value = [...session.steps]
+  finalAnswer.value = session.finalAnswer
+  elapsed.value = session.elapsed
+}
+
+/** 恢复历史会话的配置到表单 */
+function restoreHistoryConfig(session: DebugSessionHistory): void {
+  form.agentType = session.agentType
+  form.bizType = session.bizType
+  form.bizId = session.bizId
+  form.bizRef = session.bizRef
+  form.userInput = session.userInput
+  form.facts = session.facts
+  ElMessage.success(t('agent.debug.messages.configRestored'))
+}
+
+/** 删除单条历史记录 */
+async function deleteHistory(id: string): Promise<void> {
+  try {
+    await ElMessageBox.confirm(t('agent.debug.messages.confirmDelete'), t('common.confirm'), {
+      type: 'warning',
+    })
+    sessionHistory.value = sessionHistory.value.filter(s => s.id !== id)
+    if (viewingHistoryId.value === id) {
+      viewingHistoryId.value = null
+      resetExecution()
+    }
+    saveHistory()
+  } catch {
+    // 用户取消
+  }
+}
+
+/** 清空全部历史记录 */
+async function clearAllHistory(): Promise<void> {
+  if (sessionHistory.value.length === 0) return
+  try {
+    await ElMessageBox.confirm(t('agent.debug.messages.confirmClearAll'), t('common.confirm'), {
+      type: 'warning',
+    })
+    sessionHistory.value = []
+    viewingHistoryId.value = null
+    resetExecution()
+    saveHistory()
+  } catch {
+    // 用户取消
+  }
+}
+
+/** 格式化时间戳为可读字符串 */
+function formatTimestamp(ts: number): string {
+  const d = new Date(ts)
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mi = String(d.getMinutes()).padStart(2, '0')
+  return `${mm}-${dd} ${hh}:${mi}`
+}
 
 function buildContext(): Record<string, unknown> {
   const ctx: Record<string, unknown> = {
@@ -168,6 +303,7 @@ function handleSseEvent(eventType: string, data: string) {
     case 'DONE':
       streaming.value = false
       if (timer) clearInterval(timer)
+      saveCurrentSession('stream')
       break
     case 'ERROR':
       ElMessage.error(typeof parsed === 'string' ? parsed : (parsed.message || 'Execution error'))
@@ -192,10 +328,11 @@ async function runSync() {
   try {
     const ctx = buildContext()
     const { data } = await executeInMemory(form.agentType, ctx)
-    const result = data as any
+    const result = data as Record<string, unknown> | undefined
     if (result) {
-      finalAnswer.value = result.suggestion || JSON.stringify(result, null, 2)
+      finalAnswer.value = (result.suggestion as string) || JSON.stringify(result, null, 2)
     }
+    saveCurrentSession('sync')
   } catch (e: any) {
     ElMessage.error(e?.message || t('agent.debug.messages.syncFailed'))
   } finally {
@@ -241,7 +378,7 @@ function formatTime(ms: number): string {
 }
 
 onMounted(() => {
-  // 初始化
+  loadHistory()
 })
 </script>
 
@@ -336,6 +473,44 @@ onMounted(() => {
               </el-button>
             </el-form-item>
           </el-form>
+
+          <!-- 会话历史 -->
+          <el-divider content-position="left">{{ t('agent.debug.history.title') }}</el-divider>
+          <div v-if="sessionHistory.length === 0" class="history-empty">
+            {{ t('agent.debug.history.empty') }}
+          </div>
+          <div v-else class="history-list">
+            <div class="history-toolbar">
+              <el-button text type="danger" size="small" :icon="'Delete'" @click="clearAllHistory">
+                {{ t('agent.debug.history.clearAll') }}
+              </el-button>
+            </div>
+            <div
+              v-for="s in sessionHistory"
+              :key="s.id"
+              class="history-item"
+              :class="{ active: viewingHistoryId === s.id }"
+              @click="viewHistory(s)"
+            >
+              <div class="history-item-header">
+                <el-tag size="small" type="primary">{{ s.agentType }}</el-tag>
+                <el-tag size="small" :type="s.mode === 'stream' ? 'warning' : 'success'">{{ s.mode }}</el-tag>
+                <span class="history-time">{{ formatTimestamp(s.timestamp) }}</span>
+              </div>
+              <div class="history-item-meta">
+                <span v-if="s.steps.length > 0">{{ t('agent.debug.console.steps') }}: {{ s.steps.length }}</span>
+                <span>{{ formatTime(s.elapsed) }}</span>
+              </div>
+              <div class="history-item-actions">
+                <el-button text size="small" type="primary" @click.stop="restoreHistoryConfig(s)">
+                  {{ t('agent.debug.history.restoreConfig') }}
+                </el-button>
+                <el-button text size="small" type="danger" @click.stop="deleteHistory(s.id)">
+                  {{ t('common.delete') }}
+                </el-button>
+              </div>
+            </div>
+          </div>
         </el-card>
       </el-col>
 
@@ -567,6 +742,65 @@ onMounted(() => {
   @keyframes blink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
+  }
+
+  .history-empty {
+    text-align: center;
+    color: var(--el-text-color-placeholder);
+    font-size: 12px;
+    padding: 16px 0;
+  }
+
+  .history-list {
+    .history-toolbar {
+      text-align: right;
+      margin-bottom: 8px;
+    }
+
+    .history-item {
+      background: var(--el-fill-color-light);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: border-color 0.2s;
+
+      &:hover {
+        border-color: var(--el-color-primary-light-5);
+      }
+
+      &.active {
+        border-color: var(--el-color-primary);
+        background: var(--el-color-primary-light-9);
+      }
+
+      .history-item-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 4px;
+
+        .history-time {
+          margin-left: auto;
+          font-size: 11px;
+          color: var(--el-text-color-secondary);
+        }
+      }
+
+      .history-item-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--el-text-color-secondary);
+        margin-bottom: 4px;
+      }
+
+      .history-item-actions {
+        display: flex;
+        gap: 4px;
+      }
+    }
   }
 }
 </style>

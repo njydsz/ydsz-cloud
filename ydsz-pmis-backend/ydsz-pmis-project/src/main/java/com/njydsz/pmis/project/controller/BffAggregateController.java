@@ -3,6 +3,8 @@ package com.njydsz.pmis.project.controller;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.project.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.project.dto.CockpitKpiVO;
+import com.njydsz.pmis.project.dto.ProjectDetailAggregateVO;
+import com.njydsz.pmis.project.dto.ProjectDetailAggregateVO.AggregateSection;
 import com.njydsz.pmis.project.service.CockpitReportService;
 import com.njydsz.pmis.project.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +30,9 @@ import java.util.Map;
  * 聚合多维度数据（立项 / EVM / 合同 / WBS / KPI / 告警 / 待办），
  * 各维度独立 try-catch，单维度异常不影响其他维度返回。
  *
+ * <p>强类型返回：项目详情聚合接口返回 {@link ProjectDetailAggregateVO}，
+ * 前端可通过 OpenAPI 自动生成 TypeScript 类型定义。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -45,37 +50,37 @@ public class BffAggregateController {
     @GetMapping("/project-detail/{initiationId}")
     @RateLimit(key = "bff", qps = 20, windowSeconds = 60)
     @Operation(summary = "项目详情聚合", description = "一次返回立项+合同+WBS概览+EVM摘要")
-    public Map<String, Object> projectDetailAggregate(
+    public ProjectDetailAggregateVO projectDetailAggregate(
             @PathVariable @NotNull(message = "{validation.execution.msg_1d72f14c}") String initiationId) {
-        Map<String, Object> result = new HashMap<>();
+        ProjectDetailAggregateVO result = new ProjectDetailAggregateVO();
         // 聚合多维度数据，减少前端多次请求
         try {
             // 立项信息（全生命周期台账：商机 → 立项 → 合同 → 变更 → 结项）
-            result.put("initiation", reportService.projectLifecycleReport(initiationId));
+            result.setInitiation(AggregateSection.ok(reportService.projectLifecycleReport(initiationId)));
         } catch (Exception e) {
             log.warn("聚合查询立项信息失败, initiationId={}", initiationId, e);
-            result.put("initiation", Map.of("error", e.getMessage()));
+            result.setInitiation(AggregateSection.fail(e.getMessage()));
         }
         try {
             // EVM 摘要（利润表含 CPI/SPI 等挣值指标）
-            result.put("evm", reportService.projectProfitReport(initiationId, null));
+            result.setEvm(AggregateSection.ok(reportService.projectProfitReport(initiationId, null)));
         } catch (Exception e) {
             log.warn("聚合查询 EVM 数据失败, initiationId={}", initiationId, e);
-            result.put("evm", Map.of("error", e.getMessage()));
+            result.setEvm(AggregateSection.fail(e.getMessage()));
         }
         try {
             // 合同 / 回款台账列表
-            result.put("contracts", reportService.paymentLedgerReport(initiationId));
+            result.setContracts(AggregateSection.ok(reportService.paymentLedgerReport(initiationId)));
         } catch (Exception e) {
             log.warn("聚合查询合同台账失败, initiationId={}", initiationId, e);
-            result.put("contracts", List.of());
+            result.setContracts(AggregateSection.fail(e.getMessage()));
         }
         try {
             // WBS 概览（成本归集明细含人力/采购/费用/分摊拆解）
-            result.put("wbsOverview", reportService.costDetailReport(initiationId, null));
+            result.setWbsOverview(AggregateSection.ok(reportService.costDetailReport(initiationId, null)));
         } catch (Exception e) {
             log.warn("聚合查询 WBS 概览失败, initiationId={}", initiationId, e);
-            result.put("wbsOverview", Map.of("error", e.getMessage()));
+            result.setWbsOverview(AggregateSection.fail(e.getMessage()));
         }
         return result;
     }

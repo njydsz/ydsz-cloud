@@ -269,6 +269,20 @@ function toggleAutoRefresh() {
   else stopPolling()
 }
 
+/** 标签页可见性变化处理：隐藏时暂停轮询，恢复时立即刷新并重启轮询 */
+function handleVisibilityChange() {
+  if (document.hidden) {
+    // 标签页隐藏：暂停轮询，避免不必要的网络请求
+    stopPolling()
+  } else {
+    // 标签页恢复：立即刷新一次数据，然后重启轮询定时器
+    if (autoRefresh.value) {
+      refresh()
+      startPolling()
+    }
+  }
+}
+
 // ========== 计算属性 ==========
 /** 预警 banner 颜色基调：error-红色预警 / warning-黄色预警 / success-无预警 / info-未加载 */
 const alertTone = computed<'success' | 'warning' | 'info' | 'error'>(() => {
@@ -312,8 +326,13 @@ function fmtPct(v: unknown) {
 onMounted(() => {
   refresh()
   startPolling()
+  // 标签页可见性检测：隐藏时暂停轮询，恢复时立即刷新并重启轮询
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
-onBeforeUnmount(() => stopPolling())
+onBeforeUnmount(() => {
+  stopPolling()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+})
 </script>
 
 <template>

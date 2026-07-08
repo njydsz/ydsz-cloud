@@ -16,8 +16,21 @@ import {
 } from '@/api/agent/knowledge-base'
 import type { AgentDocument, KnowledgeBase, RetrievedChunk } from '@/api/agent/knowledge-base/types'
 import { PC } from '@/constants/permissionCodes'
+import { useWebSocket } from '@/composables/useWebSocket'
+import type { PageResult } from '@/utils/request'
 
 const { t } = useI18n()
+const { on: wsOn, off: wsOff } = useWebSocket()
+
+/** 上传进度信息 */
+interface UploadProgress {
+  documentId: string
+  documentName: string
+  status: 'UPLOADING' | 'CHUNKING' | 'EMBEDDING' | 'INDEXING' | 'READY' | 'FAILED'
+  progress: number
+  step: string
+  message?: string
+}
 
 // ============= 知识库列表 =============
 const loading = ref(false)
@@ -30,7 +43,7 @@ async function loadList() {
   loading.value = true
   try {
     const { data } = await page(pageNo.value, pageSize.value)
-    const result = data as any
+    const result = data as PageResult<KnowledgeBase> | undefined
     list.value = result?.list ?? result?.records ?? []
     total.value = result?.total ?? 0
   } catch (e: any) {
@@ -90,6 +103,36 @@ const uploadDialogVisible = ref(false)
 const uploadForm = reactive({ name: '', sourceType: 'TEXT', content: '' })
 const uploading = ref(false)
 
+// ============= 上传进度追踪 =============
+/** 当前上传进度 */
+const uploadProgress = ref<UploadProgress | null>(null)
+/** 正在处理中的文档进度 Map（documentId -> progress） */
+const processingDocs = ref<Map<string, UploadProgress>>(new Map())
+
+/** WebSocket 消息处理函数引用（用于组件卸载时移除） */
+const wsProgressHandler = (data: unknown) => {
+  const progress = data as UploadProgress
+  if (!progress?.documentId) return
+  processingDocs.value.set(progress.documentId, progress)
+  // 如果是当前上传对话框中的文档，更新进度条
+  if (uploadProgress.value && progress.documentId === uploadProgress.value.documentId) {
+    uploadProgress.value = progress
+  }
+  // 当状态为 READY 或 FAILED 时，刷新文档列表
+  if (progress.status === 'READY' || progress.status === 'FAILED') {
+    if (currentKb.value) {
+      loadDocuments(currentKb.value.id)
+    }
+    // 延迟清除处理状态
+    setTimeout(() => {
+      processingDocs.value.delete(progress.documentId)
+    }, 3000)
+  }
+}
+
+// 注册 WebSocket 进度推送监听
+wsOn('KB_UPLOAD_PROGRESS', wsProgressHandler)
+
 // 检索
 const searchQuery = ref('')
 const searchResults = ref<RetrievedChunk[]>([])
@@ -127,13 +170,32 @@ async function handleUpload() {
   }
   if (!currentKb.value) return
   uploading.value = true
+  uploadProgress.value = {
+    documentId: '',
+    documentName: uploadForm.name,
+    status: 'UPLOADING',
+    progress: 0,
+    step: t('agent.kb.upload.steps.uploading'),
+  }
   try {
-    await uploadDocument(currentKb.value.id, { ...uploadForm })
+    const { data } = await uploadDocument(currentKb.value.id, { ...uploadForm })
+    const docId = (data as any)?.id || ''
+    if (docId) {
+      uploadProgress.value.documentId = docId
+    }
     ElMessage.success(t('agent.kb.messages.uploadSuccess'))
-    uploadDialogVisible.value = false
-    loadDocuments(currentKb.value.id)
+    // 不关闭对话框，等待 WebSocket 进度推送完成后再关闭
+    // 如果 5 秒内没有收到 WebSocket 进度，自动关闭对话框
+    setTimeout(() => {
+      if (uploadProgress.value && uploadProgress.value.status !== 'READY' && uploadProgress.value.status !== 'FAILED') {
+        uploadDialogVisible.value = false
+        uploadProgress.value = null
+        loadDocuments(currentKb.value!.id)
+      }
+    }, 5000)
   } catch (e: any) {
     ElMessage.error(e?.message || t('agent.kb.messages.uploadFailed'))
+    uploadProgress.value = null
   } finally {
     uploading.value = false
   }
@@ -155,6 +217,12 @@ async function handleSearch() {
 
 onMounted(() => {
   loadList()
+})
+
+// 组件卸载时移除 WebSocket 监听
+import { onBeforeUnmount } from 'vue'
+onBeforeUnmount(() => {
+  wsOff('KB_UPLOAD_PROGRESS', wsProgressHandler)
 })
 </script>
 
@@ -280,13 +348,13 @@ onMounted(() => {
     </el-drawer>
 
     <!-- 上传文档对话框 -->
-    <el-dialog v-model="uploadDialogVisible" :title="t('agent.kb.upload.title')" width="700px">
+    <el-dialog v-model="uploadDialogVisible" :title="t('agent.kb.upload.title')" width="700px" :close-on-click-modal="!uploading && !uploadProgress">
       <el-form label-width="80px">
         <el-form-item :label="t('agent.kb.upload.name')">
-          <el-input v-model="uploadForm.name" :placeholder="t('agent.kb.upload.namePlaceholder')" />
+          <el-input v-model="uploadForm.name" :placeholder="t('agent.kb.upload.namePlaceholder')" :disabled="uploading" />
         </el-form-item>
         <el-form-item :label="t('agent.kb.upload.sourceType')">
-          <el-select v-model="uploadForm.sourceType" style="width: 100%">
+          <el-select v-model="uploadForm.sourceType" style="width: 100%" :disabled="uploading">
             <el-option value="TEXT" label="文本" />
             <el-option value="URL" label="URL" />
             <el-option value="FILE" label="文件" />
@@ -294,12 +362,29 @@ onMounted(() => {
         </el-form-item>
         <el-form-item :label="t('agent.kb.upload.content')">
           <el-input v-model="uploadForm.content" type="textarea" :rows="10"
-            :placeholder="t('agent.kb.upload.contentPlaceholder')" style="font-family: monospace; font-size: 13px" />
+            :placeholder="t('agent.kb.upload.contentPlaceholder')" style="font-family: monospace; font-size: 13px" :disabled="uploading" />
         </el-form-item>
       </el-form>
+      <!-- 上传进度条 -->
+      <div v-if="uploadProgress" class="upload-progress">
+        <div class="progress-header">
+          <el-tag :type="uploadProgress.status === 'FAILED' ? 'danger' : uploadProgress.status === 'READY' ? 'success' : 'warning'" size="small">
+            {{ uploadProgress.status }}
+          </el-tag>
+          <span class="progress-step">{{ uploadProgress.step }}</span>
+          <span class="progress-percent">{{ uploadProgress.progress }}%</span>
+        </div>
+        <el-progress
+          :percentage="uploadProgress.progress"
+          :status="uploadProgress.status === 'FAILED' ? 'exception' : uploadProgress.status === 'READY' ? 'success' : undefined"
+          :stroke-width="10"
+          :duration="0.3"
+        />
+        <p v-if="uploadProgress.message" class="progress-message">{{ uploadProgress.message }}</p>
+      </div>
       <template #footer>
-        <el-button @click="uploadDialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="uploading" @click="handleUpload">{{ t('common.confirm') }}</el-button>
+        <el-button @click="uploadDialogVisible = false" :disabled="uploading">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="uploading" @click="handleUpload" :disabled="uploading">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -309,6 +394,33 @@ onMounted(() => {
 .kb-page {
   .toolbar-card { margin-bottom: 0; }
   .toolbar { display: flex; justify-content: flex-end; gap: 8px; }
+  .upload-progress {
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--el-fill-color-light);
+    border-radius: 8px;
+    .progress-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      .progress-step {
+        font-size: 13px;
+        color: var(--el-text-color-regular);
+      }
+      .progress-percent {
+        margin-left: auto;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--el-color-primary);
+      }
+    }
+    .progress-message {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+  }
   .search-results { margin-top: 12px; }
   .result-chunk {
     background: var(--el-fill-color-light);
