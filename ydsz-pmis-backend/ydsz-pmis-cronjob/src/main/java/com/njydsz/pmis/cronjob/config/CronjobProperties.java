@@ -74,6 +74,9 @@ public class CronjobProperties {
     /** P2-2: 日志归档清理配置 */
     private LogRetention logRetention = new LogRetention();
 
+    /** P0-1: MapReduce 分布式并行执行配置 */
+    private MapReduce mapReduce = new MapReduce();
+
     /**
      * 校验并规整化 TTL 值。
      *
@@ -347,6 +350,31 @@ public class CronjobProperties {
 
         /** 定时清理 cron 表达式（默认每天凌晨 3 点：0 0 3 * * ?） */
         private String cron = "0 0 3 * * ?";
+    }
+
+    /**
+     * P0-1: MapReduce 分布式并行执行配置。
+     *
+     * <p>控制 MapReduce 子任务的分布式并行执行行为：
+     * <ul>
+     *   <li>{@link #isEnabled}: 是否启用分布式并行执行（false=单节点顺序执行，向后兼容）</li>
+     *   <li>{@link #getMaxParallelSubTasks}: 最大并行子任务数（控制并行度，防止资源耗尽）</li>
+     *   <li>{@link #getSubTaskTimeoutSeconds}: 单个子任务远程执行超时时间</li>
+     * </ul>
+     */
+    @Data
+    public static class MapReduce {
+        /** 是否启用分布式并行执行（false=单节点顺序执行，向后兼容） */
+        private boolean enabled = true;
+
+        /** 最大并行子任务数（默认 8，控制并行度） */
+        private int maxParallelSubTasks = 8;
+
+        /** 单个子任务远程执行超时时间（秒，默认 120s） */
+        private int subTaskTimeoutSeconds = 120;
+
+        /** 远程子任务派发失败时是否降级本地执行 */
+        private boolean fallbackToLocal = true;
     }
 }
 

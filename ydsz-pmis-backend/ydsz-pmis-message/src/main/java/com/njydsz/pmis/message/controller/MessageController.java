@@ -105,6 +105,22 @@ public class MessageController {
     }
 
     /**
+     * P2-3: 事务消息发送（RocketMQ 半消息）。
+     *
+     * <p>通过 RocketMQ 事务消息机制,确保通知请求仅在本地事务校验（通道/模板有效性）通过后才投递。
+     * 未配置 RocketMQ 时降级为同步发送。
+     *
+     * @param request 消息请求
+     * @return 发送结果
+     */
+    @Operation(summary = "事务消息发送(RocketMQ 半消息)")
+    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @PostMapping("/send-transactional")
+    public Result<MessageResult> sendTransactionally(@RequestBody MessageRequest request) {
+        return Result.ok(messageService.sendTransactionally(request));
+    }
+
+    /**
      * 批量发送消息（同步循环,限制 100 条/批）。
      *
      * @param requests 消息请求列表

@@ -12,6 +12,7 @@ import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -97,6 +98,38 @@ public class RocketMQMessageProducer {
     private void ensureMessageId(MessageRequest req) {
         if (!StringUtils.hasText(req.getMessageId())) {
             req.setMessageId(SnowflakeIdGenerator.nextIdStr());
+        }
+    }
+
+    /**
+     * P2-3: 发送事务消息（半消息）。
+     *
+     * <p>发送半消息后,RocketMQ 会回调 {@link com.njydsz.pmis.message.producer.MessageTransactionListener}
+     * 执行本地事务（校验模板/通道）,根据结果 COMMIT / ROLLBACK。
+     * 适用于业务侧需要确保通知请求仅在本地事务成功后才投递的场景。
+     *
+     * @param req 消息请求
+     * @return RocketMQ 半消息 ID（后续 commit/rollback 由 TransactionListener 决定）
+     */
+    public String sendTransactionMessage(MessageRequest req) {
+        if (req == null) {
+            throw new IllegalArgumentException("MessageRequest must not be null");
+        }
+        ensureMessageId(req);
+        String payload = JsonUtils.toJson(req);
+        try {
+            org.apache.rocketmq.client.producer.TransactionSendResult result =
+                    rocketMQTemplate.sendMessageInTransaction(
+                            PmisMessageTopics.TOPIC_MESSAGE,
+                            MessageBuilder.withPayload(payload).build(),
+                            req);
+            log.info("[Producer] sendTransactionMessage: msgId={} messageId={} state={}",
+                    result.getMsgId(), req.getMessageId(), result.getLocalTransactionState());
+            return result.getMsgId();
+        } catch (Exception e) {
+            log.error("[Producer] sendTransactionMessage 失败: messageId={} err={}",
+                    req.getMessageId(), e.getMessage());
+            throw new RuntimeException("RocketMQ sendTransactionMessage failed: " + e.getMessage(), e);
         }
     }
 }

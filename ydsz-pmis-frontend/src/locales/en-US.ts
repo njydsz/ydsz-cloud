@@ -663,6 +663,15 @@ export default {
     upsertSuccess: 'Saved',
     // Dead letter
     deadLetterTitle: 'Dead Letters',
+    // P2-2: Funnel analysis
+    funnelAnalysis: 'Conversion Funnel',
+    funnelSent: 'Sent',
+    funnelDelivered: 'Delivered',
+    funnelRead: 'Read',
+    funnelClicked: 'Clicked',
+    funnelDeliveredToRead: 'Delivered→Read Rate',
+    funnelReadToClick: 'Read→Click Rate',
+    funnelOverallConversion: 'Overall Conversion',
   },
   login: {
     slogan: 'Project Operations Management System',

@@ -1,9 +1,14 @@
 package com.njydsz.pmis.cronjob.controller;
 
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.job.MapContext;
+import com.njydsz.pmis.common.job.MapProcessor;
+import com.njydsz.pmis.common.job.ProcessResult;
 import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.cronjob.core.dispatch.RemoteSubTaskRequest;
 import com.njydsz.pmis.cronjob.core.dispatch.RemoteTaskRequest;
 import com.njydsz.pmis.cronjob.core.dispatch.TaskDispatcher;
+import org.springframework.context.ApplicationContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +52,8 @@ public class InternalJobController {
 
     /** 任务派发器 */
     private final TaskDispatcher taskDispatcher;
+    /** P0-1: Spring 应用上下文（用于获取 MapProcessor Bean） */
+    private final ApplicationContext applicationContext;
 
     /**
      * 接收远程派发请求并在本地执行。
@@ -92,6 +99,66 @@ public class InternalJobController {
                     request.getJob().getJobKey(), e.getMessage(), e);
             // 执行异常时返回 null（执行器端已记录 FAILED 日志，或锁被持有）
             return Result.ok(null);
+        } finally {
+            TraceIdUtil.clear();
+        }
+    }
+
+    /**
+     * P0-1: 接收 MapReduce 子任务远程派发请求并在本地执行。
+     *
+     * <p>Leader 节点将 MapReduce 子任务通过 HTTP 派发到本节点，本方法接收后：
+     * <ol>
+     *   <li>从请求中恢复 traceId 到 MDC</li>
+     *   <li>从 ApplicationContext 获取 MapProcessor Bean</li>
+     *   <li>构造子任务 MapContext，调用 processor.process()</li>
+     *   <li>返回执行结果（含 success/result/errorMessage）</li>
+     * </ol>
+     *
+     * @param request 子任务派发请求
+     * @return 统一响应结果，data 为子任务执行结果对象
+     */
+    @Operation(summary = "接收 MapReduce 子任务远程派发并本地执行")
+    @PostMapping("/execute-sub-task")
+    public Result<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
+        if (request == null || request.getJobKey() == null || request.getHandler() == null) {
+            log.warn("[InternalJob] 子任务请求参数为空");
+            return Result.failed(400, "请求参数为空");
+        }
+        String traceId = request.getTraceId();
+        if (traceId != null && !traceId.isBlank()) {
+            TraceIdUtil.set(traceId);
+        } else {
+            TraceIdUtil.getOrCreate();
+        }
+        try {
+            log.info("[InternalJob] 接收子任务派发: key={} taskName={} handler={} traceId={}",
+                    request.getJobKey(), request.getTaskName(), request.getHandler(), TraceIdUtil.get());
+            // 获取 MapProcessor Bean
+            MapProcessor processor;
+            try {
+                processor = applicationContext.getBean(request.getHandler(), MapProcessor.class);
+            } catch (Exception e) {
+                log.error("[InternalJob] 获取 MapProcessor Bean 失败: handler={} reason={}",
+                        request.getHandler(), e.getMessage());
+                return Result.ok(ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage()));
+            }
+            // 构造子任务上下文并执行
+            MapContext context = new MapContext(
+                    request.getJobId(), request.getLogId(), request.getJobKey(),
+                    request.getTaskName(), request.getTaskParams(), false);
+            ProcessResult result;
+            try {
+                result = processor.process(context);
+                if (result == null) {
+                    result = ProcessResult.success();
+                }
+            } catch (Exception e) {
+                log.error("[InternalJob] 子任务执行异常: key={} taskName={} reason={}",
+                        request.getJobKey(), request.getTaskName(), e.getMessage(), e);
+                result = ProcessResult.failed(e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
+            return Result.ok(result);
         } finally {
             TraceIdUtil.clear();
         }

@@ -46,6 +46,48 @@ public interface LlmProvider {
     String chat(String systemPrompt, String userPrompt, AgentContext context);
 
     /**
+     * 判断当前 Provider 是否支持 SSE 流式输出（P4-1 落地）。
+     *
+     * <p>支持流式时，调用方可使用 {@link #chatStream} 获取逐 token 增量输出，
+     * 实现 Coze / Dify 式的实时打字机效果。
+     *
+     * @return true 表示支持 {@link #chatStream}；false 时调用方应降级为 {@link #chat}
+     */
+    default boolean supportsStreaming() {
+        return false;
+    }
+
+    /**
+     * 流式调用 LLM 推理，逐 token 回调（P4-1 落地）。
+     *
+     * <p>对标 OpenAI / DashScope 的 SSE stream=true 模式：服务端逐 chunk 推送，
+     * 客户端实时收到 delta token，无需等待完整响应。
+     *
+     * <p>实现策略（默认降级为同步调用后整体回调）：
+     * <ol>
+     *   <li>调用 {@link #chat} 获取完整响应</li>
+     *   <li>将完整响应作为单个 tokenDelta 回调给 consumer</li>
+     * </ol>
+     *
+     * <p>子类应重写此方法以提供真正的 SSE 流式实现。
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt   用户提示词
+     * @param context      Agent 上下文
+     * @param tokenConsumer token 增量消费者（每收到一个 chunk 调用一次）
+     * @return 完整推理结果（所有 token 拼接后的全文）
+     */
+    default String chatStream(String systemPrompt, String userPrompt,
+                              AgentContext context,
+                              java.util.function.Consumer<String> tokenConsumer) {
+        String full = chat(systemPrompt, userPrompt, context);
+        if (tokenConsumer != null && full != null && !full.isEmpty()) {
+            tokenConsumer.accept(full);
+        }
+        return full;
+    }
+
+    /**
      * 调用 LLM 并直接返回结构化 Java 对象（P1-4 新增）。
      *
      * <p>实现策略：

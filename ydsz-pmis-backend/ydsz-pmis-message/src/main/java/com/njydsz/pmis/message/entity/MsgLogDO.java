@@ -106,6 +106,9 @@ public class MsgLogDO extends BaseDO {
     /** 发送耗时(毫秒) */
     private Long costMs;
 
+    /** P2-4: 发送成本(元),按通道单价计算,SMS/EMAIL/PUSH 有成本,IM/IN_APP 免费 */
+    private java.math.BigDecimal cost;
+
     /** 系统链路追踪 ID */
     private String traceId;
 

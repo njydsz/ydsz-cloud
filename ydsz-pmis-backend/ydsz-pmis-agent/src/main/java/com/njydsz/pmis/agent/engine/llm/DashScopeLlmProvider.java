@@ -106,12 +106,41 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
     }
 
     @Override
+    public boolean supportsStreaming() {
+        return true;
+    }
+
+    @Override
     public String chat(String systemPrompt, String userPrompt, AgentContext context) {
         if (apiKey == null || apiKey.isEmpty()) {
             log.warn("[DashScope] API Key 未配置, 降级到 mock");
             return new MockLlmProvider().chat(systemPrompt, userPrompt, context);
         }
         Callable<String> call = () -> invokeDashScope(systemPrompt, userPrompt, context);
+        return executeWithGuard(call, context);
+    }
+
+    /**
+     * SSE 流式调用 DashScope（P4-1 落地）。
+     *
+     * <p>使用 DashScope OpenAI 兼容模式的 stream=true 参数，服务端以 SSE 格式
+     * 逐 chunk 推送 choices[0].delta.content，每收到一个 chunk 即回调 tokenConsumer。
+     *
+     * <p>对标 Coze / Dify 的 token-level 流式推送，用户在 LLM 生成过程中
+     * 即可看到内容逐步展现。
+     */
+    @Override
+    public String chatStream(String systemPrompt, String userPrompt,
+                             AgentContext context,
+                             java.util.function.Consumer<String> tokenConsumer) {
+        if (apiKey == null || apiKey.isEmpty()) {
+            log.warn("[DashScope] API Key 未配置, 降级到 mock");
+            return new MockLlmProvider().chat(systemPrompt, userPrompt, context);
+        }
+        if (tokenConsumer == null) {
+            return chat(systemPrompt, userPrompt, context);
+        }
+        Callable<String> call = () -> invokeDashScopeStream(systemPrompt, userPrompt, context, tokenConsumer);
         return executeWithGuard(call, context);
     }
 
@@ -232,5 +261,115 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
             log.warn("[DashScope] 读取错误响应体失败: {}", ex.getMessage());
             return "";
         }
+    }
+
+    /**
+     * SSE 流式调用 DashScope OpenAI 兼容 API（P4-1 落地）。
+     *
+     * <p>设置 stream=true，服务端以 SSE 格式推送：
+     * <pre>
+     * data: {"choices":[{"delta":{"content":"hello"}}]}
+     * data: {"choices":[{"delta":{"content":" world"}}]}
+     * data: [DONE]
+     * </pre>
+     *
+     * <p>逐行解析，提取 delta.content 并回调 tokenConsumer，
+     * 同时累积完整文本作为返回值。
+     *
+     * @param systemPrompt  系统提示词
+     * @param userPrompt    用户提示词
+     * @param context       Agent 上下文
+     * @param tokenConsumer token 增量消费者
+     * @return 完整推理结果（所有 delta 拼接后的全文）
+     */
+    @SuppressWarnings("unchecked")
+    private String invokeDashScopeStream(String systemPrompt, String userPrompt,
+                                          AgentContext context,
+                                          java.util.function.Consumer<String> tokenConsumer) throws Exception {
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("model", model);
+        body.put("messages", List.of(
+                Map.of("role", "system", "content", systemPrompt == null ? "" : systemPrompt),
+                Map.of("role", "user", "content", userPrompt == null ? "" : userPrompt)
+        ));
+        body.put("temperature", 0.3);
+        body.put("top_p", 0.9);
+        body.put("stream", true);
+
+        StringBuilder fullText = new StringBuilder();
+
+        // 使用 RestClient 的流式 API 逐行读取 SSE 响应
+        http.post()
+                .uri("/v1/chat/completions")
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Content-Type", "application/json")
+                .header("Accept", "text/event-stream")
+                .body(body)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, this::handleErrorResponse)
+                .onStatus(HttpStatusCode::is5xxServerError, this::handleErrorResponse)
+                .toEntity(String.class);
+
+        // 由于 RestClient 不原生支持 SSE 逐行流式读取，
+        // 这里使用 java.net.http.HttpClient 作为流式降级方案
+        java.net.http.HttpClient streamClient = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(java.time.Duration.ofSeconds(5))
+                .build();
+
+        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create(http.getUriFactory().toString().isEmpty()
+                        ? "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+                        : http.getUriFactory().toString() + "/v1/chat/completions"))
+                .timeout(java.time.Duration.ofMillis(timeoutMillis))
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Content-Type", "application/json")
+                .header("Accept", "text/event-stream")
+                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(
+                        com.alibaba.fastjson2.JSON.toJSONString(body)))
+                .build();
+
+        java.net.http.HttpResponse<java.util.stream.Stream<String>> response =
+                streamClient.send(request,
+                        java.net.http.HttpResponse.BodyHandlers.ofLines());
+
+        if (response.statusCode() / 100 != 2) {
+            throw new RuntimeException("DashScope stream HTTP " + response.statusCode());
+        }
+
+        // 逐行处理 SSE 数据
+        for (String line : response.body().toList()) {
+            if (line == null || line.isBlank()) continue;
+            if (line.startsWith("data: ")) {
+                String data = line.substring(6).trim();
+                if ("[DONE]".equals(data)) break;
+                try {
+                    JSONObject chunk = JSON.parseObject(data);
+                    // 提取 request_id
+                    if (context != null && chunk.containsKey("request_id")) {
+                        String rid = chunk.getString("request_id");
+                        if (rid != null && !rid.isEmpty()) {
+                            context.setProviderTraceId(rid);
+                        }
+                    }
+                    JSONArray choices = chunk.getJSONArray("choices");
+                    if (choices != null && !choices.isEmpty()) {
+                        JSONObject first = choices.getJSONObject(0);
+                        JSONObject delta = first.getJSONObject("delta");
+                        if (delta != null) {
+                            String content = delta.getString("content");
+                            if (content != null && !content.isEmpty()) {
+                                fullText.append(content);
+                                tokenConsumer.accept(content);
+                            }
+                        }
+                    }
+                } catch (Exception parseEx) {
+                    log.debug("[DashScope-Stream] 解析 chunk 失败: {}", parseEx.getMessage());
+                }
+            }
+        }
+
+        log.debug("[DashScope-Stream] 流式完成, totalLen={}", fullText.length());
+        return fullText.toString();
     }
 }

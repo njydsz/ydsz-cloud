@@ -52,6 +52,8 @@ public class RemoteTaskClient {
 
     /** 内部执行接口路径 */
     private static final String INTERNAL_EXECUTE_PATH = "/cronjob/internal/execute";
+    /** P0-1: 子任务执行接口路径 */
+    private static final String INTERNAL_SUB_TASK_PATH = "/cronjob/internal/execute-sub-task";
 
     private final CronjobProperties cronjobProperties;
 
@@ -114,6 +116,93 @@ public class RemoteTaskClient {
             return null;
         } catch (Exception e) {
             log.warn("[RemoteClient] 远程派发异常: url={} reason={}", url, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * P0-1: 派发 MapReduce 子任务到远程执行器节点。
+     *
+     * <p>Leader 节点将子任务通过 HTTP POST 派发到执行器节点，
+     * 执行器节点在本地调用 MapProcessor.process() 执行子任务，返回执行结果。
+     *
+     * @param node    执行器节点（含 host 和 port）
+     * @param request 子任务派发请求（jobId/logId/jobKey/handler/taskName/taskParams/traceId）
+     * @return 子任务执行结果 JSON（含 success/result/errorMessage）；派发失败返回 null
+     */
+    public String dispatchSubTask(JobNodeDO node, RemoteSubTaskRequest request) {
+        if (node == null || node.getHost() == null || node.getPort() == null) {
+            log.warn("[RemoteClient] 子任务节点地址不完整, 跳过远程派发: nodeId={}",
+                    node == null ? "null" : node.getNodeId());
+            return null;
+        }
+        String url = buildSubTaskUrl(node.getHost(), node.getPort());
+        String requestBody = JSON.toJSONString(request);
+        CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
+
+        try {
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(remoteConfig.getRequestTimeoutSeconds()))
+                    .header("Content-Type", "application/json; charset=UTF-8")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            int status = response.statusCode();
+            String body = response.body();
+
+            if (status == 200) {
+                return parseSubTaskResultFromBody(body);
+            }
+            log.warn("[RemoteClient] 子任务远程派发 HTTP {}: url={} body={}", status, url,
+                    body == null ? "" : (body.length() > 200 ? body.substring(0, 200) : body));
+            return null;
+        } catch (java.net.ConnectException e) {
+            log.warn("[RemoteClient] 子任务连接拒绝(节点可能已下线): url={} reason={}", url, e.getMessage());
+            return null;
+        } catch (java.net.http.HttpTimeoutException e) {
+            log.warn("[RemoteClient] 子任务请求超时: url={} timeout={}s", url, remoteConfig.getRequestTimeoutSeconds());
+            return null;
+        } catch (Exception e) {
+            log.warn("[RemoteClient] 子任务远程派发异常: url={} reason={}", url, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 构造子任务执行接口 URL。
+     */
+    private String buildSubTaskUrl(String host, int port) {
+        return "http://" + host + ":" + port + INTERNAL_SUB_TASK_PATH;
+    }
+
+    /**
+     * P0-1: 从子任务响应体解析执行结果。
+     *
+     * <p>响应格式为 {@code {"code":0,"data":{"success":true,"result":"...","errorMessage":null},"message":"success"}}。
+     *
+     * @param body HTTP 响应体
+     * @return 子任务结果 JSON 字符串；解析失败返回 null
+     */
+    private String parseSubTaskResultFromBody(String body) {
+        if (body == null || body.isBlank()) {
+            return null;
+        }
+        try {
+            JSONObject json = JSON.parseObject(body);
+            int code = json.getIntValue("code", -1);
+            if (code != 0) {
+                log.warn("[RemoteClient] 子任务远程执行业务失败: code={} message={}",
+                        code, json.getString("message"));
+                return null;
+            }
+            // data 是子任务执行结果对象（含 success/result/errorMessage）
+            Object data = json.get("data");
+            return data == null ? null : JSON.toJSONString(data);
+        } catch (Exception e) {
+            log.warn("[RemoteClient] 子任务响应解析失败: body={} reason={}",
+                    body.length() > 200 ? body.substring(0, 200) : body, e.getMessage());
             return null;
         }
     }

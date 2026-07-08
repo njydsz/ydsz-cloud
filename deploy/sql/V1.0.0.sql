@@ -2340,6 +2340,8 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     -- 三方服务商回执 + 链路追踪
     provider_trace_id VARCHAR(128),
     cost_ms           BIGINT,
+    -- P2-4: 发送成本(元),按通道单价计算
+    cost              NUMERIC(10,4) DEFAULT 0,
     trace_id          VARCHAR(64),
     -- MQ 投递元信息
     msg_id            VARCHAR(64),
@@ -4826,6 +4828,61 @@ COMMENT ON COLUMN pmis_agent_dag_node_instance.retry_count IS '已重试次数';
 
 CREATE INDEX IF NOT EXISTS idx_dag_node_inst
     ON pmis_agent_dag_node_instance(dag_instance_id, deleted)
+    WHERE deleted = 0;
+
+-- =====================================================
+-- 6.5 Agent HITL 人工审批请求表 pmis_agent_hitl_approval（P3-4）
+--     当 ReAct 循环遇到需人工审批的工具时创建审批请求并暂停，
+--     审批通过后通过 snapshot_json 恢复循环。
+-- =====================================================
+CREATE TABLE IF NOT EXISTS pmis_agent_hitl_approval(
+    id               VARCHAR(20)   PRIMARY KEY,
+    tenant_id        VARCHAR(20)   NOT NULL DEFAULT '1',
+    trace_id        VARCHAR(64)   NOT NULL DEFAULT '',
+    agent_type      VARCHAR(32)   NOT NULL,
+    biz_type        VARCHAR(32),
+    biz_id          VARCHAR(20),
+    biz_ref         VARCHAR(256),
+    tool_name       VARCHAR(128)   NOT NULL,
+    parameters_json TEXT,
+    description     VARCHAR(512),
+    status          VARCHAR(16)   NOT NULL DEFAULT 'PENDING',  -- PENDING/APPROVED/REJECTED/TIMEOUT/CANCELLED
+    snapshot_json   TEXT,                                     -- ReAct 循环快照 JSON（用于恢复）
+    requester_id    VARCHAR(20),
+    requester_name  VARCHAR(64),
+    approver_id     VARCHAR(20),
+    approver_name   VARCHAR(64),
+    approver_comment TEXT,
+    timeout_at      TIMESTAMPTZ,
+    resolved_at     TIMESTAMPTZ,
+    created_by      VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT      NOT NULL DEFAULT 0,
+    CONSTRAINT ck_hitla_status   CHECK (status IN ('PENDING','APPROVED','REJECTED','TIMEOUT','CANCELLED')),
+    CONSTRAINT ck_hitla_deleted  CHECK (deleted IN (0, 1))
+);
+COMMENT ON TABLE  pmis_agent_hitl_approval IS 'Agent HITL 人工审批请求表: ReAct 循环暂停后的审批请求';
+COMMENT ON COLUMN pmis_agent_hitl_approval.trace_id IS '链路追踪 ID: 与 AgentContext.traceId 对齐';
+COMMENT ON COLUMN pmis_agent_hitl_approval.agent_type IS 'Agent 类型';
+COMMENT ON COLUMN pmis_agent_hitl_approval.tool_name IS '需审批的工具名';
+COMMENT ON COLUMN pmis_agent_hitl_approval.parameters_json IS '工具参数 JSON: 审批人查看将要执行的操作';
+COMMENT ON COLUMN pmis_agent_hitl_approval.status IS '审批状态: PENDING/APPROVED/REJECTED/TIMEOUT/CANCELLED';
+COMMENT ON COLUMN pmis_agent_hitl_approval.snapshot_json IS 'ReAct 循环快照 JSON: 审批后用于恢复执行';
+COMMENT ON COLUMN pmis_agent_hitl_approval.requester_id IS '请求人 ID: 触发 Agent 的用户';
+COMMENT ON COLUMN pmis_agent_hitl_approval.approver_id IS '审批人 ID';
+COMMENT ON COLUMN pmis_agent_hitl_approval.approver_comment IS '审批意见: 批准/拒绝理由';
+COMMENT ON COLUMN pmis_agent_hitl_approval.timeout_at IS '审批超时时间: 超过此时间自动标记 TIMEOUT';
+COMMENT ON COLUMN pmis_agent_hitl_approval.resolved_at IS '审批结果时间: 批准/拒绝/超时/取消的时间';
+CREATE INDEX IF NOT EXISTS idx_hitla_tenant_status
+    ON pmis_agent_hitl_approval(tenant_id, status, created_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_hitla_trace
+    ON pmis_agent_hitl_approval(trace_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_hitla_biz
+    ON pmis_agent_hitl_approval(biz_type, biz_id, created_at DESC)
     WHERE deleted = 0;
 
 -- =====================================================

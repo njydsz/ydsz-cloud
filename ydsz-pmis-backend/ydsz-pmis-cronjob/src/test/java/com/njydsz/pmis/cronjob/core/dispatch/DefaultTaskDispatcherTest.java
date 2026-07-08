@@ -3,11 +3,17 @@ package com.njydsz.pmis.cronjob.core.dispatch;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.common.job.ShardingContext;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.alert.AlertTrigger;
 import com.njydsz.pmis.cronjob.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.pmis.cronjob.core.executor.JobNodeHeartbeat;
 import com.njydsz.pmis.cronjob.core.executor.TenantAwareExecutorPool;
+import com.njydsz.pmis.cronjob.core.handler.GlueJobHandler;
+import com.njydsz.pmis.cronjob.core.handler.HttpJobHandler;
+import com.njydsz.pmis.cronjob.core.handler.ScriptJobHandler;
+import com.njydsz.pmis.cronjob.core.map.MapTaskExecutor;
+import com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy;
 import com.njydsz.pmis.cronjob.core.sharding.ShardingStrategy;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
@@ -22,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,6 +41,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.util.List;
 
@@ -106,17 +114,17 @@ class DefaultTaskDispatcherTest {
     @Mock
     private TenantQuotaService tenantQuotaService;
     @Mock
-    private ObjectProvider<com.njydsz.pmis.cronjob.core.handler.HttpJobHandler> httpJobHandlerProvider;
+    private ObjectProvider<HttpJobHandler> httpJobHandlerProvider;
     @Mock
-    private ObjectProvider<com.njydsz.pmis.cronjob.core.handler.GlueJobHandler> glueJobHandlerProvider;
+    private ObjectProvider<GlueJobHandler> glueJobHandlerProvider;
     @Mock
-    private ObjectProvider<com.njydsz.pmis.cronjob.core.handler.ScriptJobHandler> scriptJobHandlerProvider;
+    private ObjectProvider<ScriptJobHandler> scriptJobHandlerProvider;
     @Mock
     private ObjectProvider<RemoteTaskClient> remoteTaskClientProvider;
     @Mock
     private ObjectProvider<JobLogContentService> jobLogContentServiceProvider;
     @Mock
-    private ObjectProvider<com.njydsz.pmis.cronjob.core.map.MapTaskExecutor> mapTaskExecutorProvider;
+    private ObjectProvider<MapTaskExecutor> mapTaskExecutorProvider;
     @Mock
     private ObjectProvider<TenantAwareExecutorPool> tenantAwareExecutorPoolProvider;
 
@@ -130,7 +138,7 @@ class DefaultTaskDispatcherTest {
         cronjobProperties = new CronjobProperties();
         // 通过反射注入 cronjobProperties（@RequiredArgsConstructor 不识别非 @Mock 字段）
         try {
-            java.lang.reflect.Field f = DefaultTaskDispatcher.class.getDeclaredField("cronjobProperties");
+            Field f = DefaultTaskDispatcher.class.getDeclaredField("cronjobProperties");
             f.setAccessible(true);
             f.set(dispatcher, cronjobProperties);
         } catch (Exception e) {
@@ -139,53 +147,53 @@ class DefaultTaskDispatcherTest {
         // P5/P6-2: 手动注入 ObjectProvider 字段，避免 @InjectMocks 因类型擦除将
         // shardingStrategyProvider / alertTriggerProvider / cronjobMetricsProvider 互相错位注入
         try {
-            java.lang.reflect.Field f1 = DefaultTaskDispatcher.class.getDeclaredField("shardingStrategyProvider");
+            Field f1 = DefaultTaskDispatcher.class.getDeclaredField("shardingStrategyProvider");
             f1.setAccessible(true);
             f1.set(dispatcher, shardingStrategyProvider);
-            java.lang.reflect.Field f2 = DefaultTaskDispatcher.class.getDeclaredField("alertTriggerProvider");
+            Field f2 = DefaultTaskDispatcher.class.getDeclaredField("alertTriggerProvider");
             f2.setAccessible(true);
             f2.set(dispatcher, alertTriggerProvider);
-            java.lang.reflect.Field f3 = DefaultTaskDispatcher.class.getDeclaredField("cronjobMetricsProvider");
+            Field f3 = DefaultTaskDispatcher.class.getDeclaredField("cronjobMetricsProvider");
             f3.setAccessible(true);
             f3.set(dispatcher, cronjobMetricsProvider);
             // P7-3: 注入 TenantQuotaService ObjectProvider
-            java.lang.reflect.Field f4 = DefaultTaskDispatcher.class.getDeclaredField("tenantQuotaServiceProvider");
+            Field f4 = DefaultTaskDispatcher.class.getDeclaredField("tenantQuotaServiceProvider");
             f4.setAccessible(true);
             f4.set(dispatcher, tenantQuotaServiceProvider);
             // P1-5: 注入 HttpJobHandler ObjectProvider
-            java.lang.reflect.Field f5 = DefaultTaskDispatcher.class.getDeclaredField("httpJobHandlerProvider");
+            Field f5 = DefaultTaskDispatcher.class.getDeclaredField("httpJobHandlerProvider");
             f5.setAccessible(true);
             f5.set(dispatcher, httpJobHandlerProvider);
             // P1-2: 注入 GlueJobHandler ObjectProvider
-            java.lang.reflect.Field f5b = DefaultTaskDispatcher.class.getDeclaredField("glueJobHandlerProvider");
+            Field f5b = DefaultTaskDispatcher.class.getDeclaredField("glueJobHandlerProvider");
             f5b.setAccessible(true);
             f5b.set(dispatcher, glueJobHandlerProvider);
             // P1-3: 注入 ScriptJobHandler ObjectProvider
-            java.lang.reflect.Field f5c = DefaultTaskDispatcher.class.getDeclaredField("scriptJobHandlerProvider");
+            Field f5c = DefaultTaskDispatcher.class.getDeclaredField("scriptJobHandlerProvider");
             f5c.setAccessible(true);
             f5c.set(dispatcher, scriptJobHandlerProvider);
             // P1-4: 注入 RemoteTaskClient ObjectProvider
-            java.lang.reflect.Field f6 = DefaultTaskDispatcher.class.getDeclaredField("remoteTaskClientProvider");
+            Field f6 = DefaultTaskDispatcher.class.getDeclaredField("remoteTaskClientProvider");
             f6.setAccessible(true);
             f6.set(dispatcher, remoteTaskClientProvider);
             // P0-2: 注入 JobLogContentService ObjectProvider
-            java.lang.reflect.Field f7 = DefaultTaskDispatcher.class.getDeclaredField("jobLogContentServiceProvider");
+            Field f7 = DefaultTaskDispatcher.class.getDeclaredField("jobLogContentServiceProvider");
             f7.setAccessible(true);
             f7.set(dispatcher, jobLogContentServiceProvider);
             // P0-4: 注入 MapTaskExecutor ObjectProvider
-            java.lang.reflect.Field f8 = DefaultTaskDispatcher.class.getDeclaredField("mapTaskExecutorProvider");
+            Field f8 = DefaultTaskDispatcher.class.getDeclaredField("mapTaskExecutorProvider");
             f8.setAccessible(true);
             f8.set(dispatcher, mapTaskExecutorProvider);
             // P2-5: 注入 TenantAwareExecutorPool ObjectProvider（默认不启用，使用全局池）
-            java.lang.reflect.Field f11 = DefaultTaskDispatcher.class.getDeclaredField("tenantAwareExecutorPoolProvider");
+            Field f11 = DefaultTaskDispatcher.class.getDeclaredField("tenantAwareExecutorPoolProvider");
             f11.setAccessible(true);
             f11.set(dispatcher, tenantAwareExecutorPoolProvider);
             // P1-1: 注入 JobNodeHeartbeat ObjectProvider（type=db 时可用）
-            java.lang.reflect.Field f9 = DefaultTaskDispatcher.class.getDeclaredField("jobNodeHeartbeatProvider");
+            Field f9 = DefaultTaskDispatcher.class.getDeclaredField("jobNodeHeartbeatProvider");
             f9.setAccessible(true);
             f9.set(dispatcher, jobNodeHeartbeatProvider);
             // P1-1: 注入 NodeDiscoveryStrategy ObjectProvider（默认不启用，回退到 DB 查询）
-            java.lang.reflect.Field f10 = DefaultTaskDispatcher.class.getDeclaredField("nodeDiscoveryStrategyProvider");
+            Field f10 = DefaultTaskDispatcher.class.getDeclaredField("nodeDiscoveryStrategyProvider");
             f10.setAccessible(true);
             f10.set(dispatcher, nodeDiscoveryStrategyProvider);
         } catch (Exception e) {
@@ -230,7 +238,7 @@ class DefaultTaskDispatcherTest {
                     command.run();
                 }
             };
-            java.lang.reflect.Field f6 = DefaultTaskDispatcher.class.getDeclaredField("taskExecutorPool");
+            Field f6 = DefaultTaskDispatcher.class.getDeclaredField("taskExecutorPool");
             f6.setAccessible(true);
             f6.set(dispatcher, syncPool);
         } catch (Exception e) {
@@ -384,16 +392,16 @@ class DefaultTaskDispatcherTest {
     void dispatch_shardedNoOnlineNodes_executesAllShardsLocally() throws Exception {
         JobDO job = buildJob("shard-no-nodes", null);
         job.setShardTotal(3);
-        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new AverageShardingStrategy());
         when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
         when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        when(jobHandler.execute(any(), any(ShardingContext.class))).thenReturn("ok");
 
         String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
 
         assertNotNull(logId);
         // 应执行 3 个分片（无锁，因为是 MANUAL）
-        verify(jobHandler, times(3)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(jobHandler, times(3)).execute(any(), any(ShardingContext.class));
         verify(jobLogMapper, times(3)).insert(any(JobLogDO.class));
         verify(jobNodeHeartbeat, times(3)).onTaskStart();
         verify(jobNodeHeartbeat, times(3)).onTaskComplete();
@@ -404,12 +412,12 @@ class DefaultTaskDispatcherTest {
     void dispatch_shardedCron_acquiresShardLevelLocks() throws Exception {
         JobDO job = buildJob("shard-cron", null);
         job.setShardTotal(2);
-        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new AverageShardingStrategy());
         when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
         when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
         when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
                 .thenReturn(Boolean.TRUE);
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        when(jobHandler.execute(any(), any(ShardingContext.class))).thenReturn("ok");
 
         String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
 
@@ -424,20 +432,20 @@ class DefaultTaskDispatcherTest {
     void dispatch_shardedLockHeld_skipsShard() throws Exception {
         JobDO job = buildJob("shard-held", null);
         job.setShardTotal(2);
-        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new AverageShardingStrategy());
         when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
         when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
         // 第一个分片锁获取失败，第二个成功
         when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
                 .thenReturn(Boolean.FALSE)
                 .thenReturn(Boolean.TRUE);
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        when(jobHandler.execute(any(), any(ShardingContext.class))).thenReturn("ok");
 
         String logId = dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
 
         assertNotNull(logId);
         // 只执行了第二个分片
-        verify(jobHandler, times(1)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(jobHandler, times(1)).execute(any(), any(ShardingContext.class));
     }
 
     @Test
@@ -445,18 +453,18 @@ class DefaultTaskDispatcherTest {
     void dispatch_sharded_handlerReceivesCorrectContext() throws Exception {
         JobDO job = buildJob("shard-ctx", null);
         job.setShardTotal(2);
-        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new AverageShardingStrategy());
         when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
         when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        when(jobHandler.execute(any(), any(ShardingContext.class))).thenReturn("ok");
 
         dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
 
         // 验证 handler 被调用时传入了正确的 ShardingContext
-        org.mockito.ArgumentCaptor<com.njydsz.pmis.common.job.ShardingContext> captor =
-                org.mockito.ArgumentCaptor.forClass(com.njydsz.pmis.common.job.ShardingContext.class);
+        ArgumentCaptor<ShardingContext> captor =
+                ArgumentCaptor.forClass(ShardingContext.class);
         verify(jobHandler, times(2)).execute(any(), captor.capture());
-        List<com.njydsz.pmis.common.job.ShardingContext> contexts = captor.getAllValues();
+        List<ShardingContext> contexts = captor.getAllValues();
         // 第一个分片
         assertEquals(2, contexts.get(0).getShardTotal());
         assertEquals(0, contexts.get(0).getShardIndex());
@@ -471,11 +479,11 @@ class DefaultTaskDispatcherTest {
     void dispatch_shardedOneFails_othersStillExecute() throws Exception {
         JobDO job = buildJob("shard-partial-fail", null);
         job.setShardTotal(2);
-        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+        when(shardingStrategyProvider.getIfAvailable()).thenReturn(new AverageShardingStrategy());
         when(jobNodeMapper.selectList(any())).thenReturn(java.util.Collections.emptyList());
         when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
         // 第一个分片失败，第二个成功
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class)))
+        when(jobHandler.execute(any(), any(ShardingContext.class)))
                 .thenThrow(new RuntimeException("shard0 failed"))
                 .thenReturn("ok");
 
@@ -483,7 +491,7 @@ class DefaultTaskDispatcherTest {
 
         assertNotNull(logId);
         // 两个分片都被尝试执行
-        verify(jobHandler, times(2)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(jobHandler, times(2)).execute(any(), any(ShardingContext.class));
     }
 
     // ==================== P1-4 远程派发测试 ====================
@@ -494,13 +502,13 @@ class DefaultTaskDispatcherTest {
         JobDO job = buildJob("shard-remote", null);
         job.setShardTotal(2);
         when(shardingStrategyProvider.getIfAvailable())
-                .thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+                .thenReturn(new AverageShardingStrategy());
         // 2 个在线节点：local + remote（按 nodeId 升序，local-node < remote-node）
         JobNodeDO localNode = buildNode("local-node", "127.0.0.1", 8080);
         JobNodeDO remoteNode = buildNode("remote-node", "10.0.0.2", 8080);
         when(jobNodeMapper.selectList(any())).thenReturn(java.util.List.of(localNode, remoteNode));
         when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        when(jobHandler.execute(any(), any(ShardingContext.class))).thenReturn("ok");
         // Mock RemoteTaskClient
         RemoteTaskClient mockClient = mock(RemoteTaskClient.class);
         when(remoteTaskClientProvider.getIfAvailable()).thenReturn(mockClient);
@@ -510,7 +518,7 @@ class DefaultTaskDispatcherTest {
 
         assertNotNull(logId);
         // 本地分片执行 1 次，远程分片通过 HTTP 派发 1 次
-        verify(jobHandler, times(1)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(jobHandler, times(1)).execute(any(), any(ShardingContext.class));
         verify(mockClient, times(1)).dispatch(any(JobNodeDO.class), any(RemoteTaskRequest.class));
     }
 
@@ -520,12 +528,12 @@ class DefaultTaskDispatcherTest {
         JobDO job = buildJob("shard-remote-fail", null);
         job.setShardTotal(2);
         when(shardingStrategyProvider.getIfAvailable())
-                .thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+                .thenReturn(new AverageShardingStrategy());
         JobNodeDO localNode = buildNode("local-node", "127.0.0.1", 8080);
         JobNodeDO remoteNode = buildNode("remote-node", "10.0.0.2", 8080);
         when(jobNodeMapper.selectList(any())).thenReturn(java.util.List.of(localNode, remoteNode));
         when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        when(jobHandler.execute(any(), any(ShardingContext.class))).thenReturn("ok");
         RemoteTaskClient mockClient = mock(RemoteTaskClient.class);
         when(remoteTaskClientProvider.getIfAvailable()).thenReturn(mockClient);
         // 远程派发返回 null（失败），fallbackToLocal 默认 true
@@ -535,7 +543,7 @@ class DefaultTaskDispatcherTest {
 
         assertNotNull(logId);
         // 远程派发失败后降级本地执行，所以本地 handler 执行 2 次（本地分片 + 降级的远程分片）
-        verify(jobHandler, times(2)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(jobHandler, times(2)).execute(any(), any(ShardingContext.class));
         verify(mockClient, times(1)).dispatch(any(JobNodeDO.class), any(RemoteTaskRequest.class));
     }
 
@@ -546,17 +554,17 @@ class DefaultTaskDispatcherTest {
         JobDO job = buildJob("shard-remote-disabled", null);
         job.setShardTotal(2);
         when(shardingStrategyProvider.getIfAvailable())
-                .thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+                .thenReturn(new AverageShardingStrategy());
         JobNodeDO localNode = buildNode("local-node", "127.0.0.1", 8080);
         JobNodeDO remoteNode = buildNode("remote-node", "10.0.0.2", 8080);
         when(jobNodeMapper.selectList(any())).thenReturn(java.util.List.of(localNode, remoteNode));
         when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        when(jobHandler.execute(any(), any(ShardingContext.class))).thenReturn("ok");
 
         dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
 
         // 所有分片本地执行，不调用 RemoteTaskClient
-        verify(jobHandler, times(2)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(jobHandler, times(2)).execute(any(), any(ShardingContext.class));
     }
 
     @Test
@@ -575,12 +583,12 @@ class DefaultTaskDispatcherTest {
     @DisplayName("P1-4: executeLocally 分片任务执行指定分片")
     void executeLocally_sharded_executesSpecifiedShard() throws Exception {
         JobDO job = buildJob("exec-locally-shard", null);
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        when(jobHandler.execute(any(), any(ShardingContext.class))).thenReturn("ok");
 
         String logId = dispatcher.executeLocally(job, DefaultTaskDispatcher.TRIGGER_MANUAL, 0, 3);
 
         assertNotNull(logId);
-        verify(jobHandler, times(1)).execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class));
+        verify(jobHandler, times(1)).execute(any(), any(ShardingContext.class));
     }
 
     @Test
@@ -589,12 +597,12 @@ class DefaultTaskDispatcherTest {
         JobDO job = buildJob("shard-trace", null);
         job.setShardTotal(2);
         when(shardingStrategyProvider.getIfAvailable())
-                .thenReturn(new com.njydsz.pmis.cronjob.core.sharding.AverageShardingStrategy());
+                .thenReturn(new AverageShardingStrategy());
         JobNodeDO localNode = buildNode("local-node", "127.0.0.1", 8080);
         JobNodeDO remoteNode = buildNode("remote-node", "10.0.0.2", 8080);
         when(jobNodeMapper.selectList(any())).thenReturn(java.util.List.of(localNode, remoteNode));
         when(jobNodeHeartbeat.getNodeId()).thenReturn("local-node");
-        when(jobHandler.execute(any(), any(com.njydsz.pmis.common.job.ShardingContext.class))).thenReturn("ok");
+        when(jobHandler.execute(any(), any(ShardingContext.class))).thenReturn("ok");
         RemoteTaskClient mockClient = mock(RemoteTaskClient.class);
         when(remoteTaskClientProvider.getIfAvailable()).thenReturn(mockClient);
         when(mockClient.dispatch(any(JobNodeDO.class), any(RemoteTaskRequest.class))).thenReturn("remote-log-1");
@@ -602,8 +610,8 @@ class DefaultTaskDispatcherTest {
         dispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_MANUAL);
 
         // 验证 RemoteTaskRequest 中包含 job 和 triggerType
-        org.mockito.ArgumentCaptor<RemoteTaskRequest> captor =
-                org.mockito.ArgumentCaptor.forClass(RemoteTaskRequest.class);
+        ArgumentCaptor<RemoteTaskRequest> captor =
+                ArgumentCaptor.forClass(RemoteTaskRequest.class);
         verify(mockClient).dispatch(any(JobNodeDO.class), captor.capture());
         RemoteTaskRequest request = captor.getValue();
         assertEquals("shard-trace", request.getJob().getJobKey());

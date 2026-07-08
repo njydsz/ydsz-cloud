@@ -39,8 +39,10 @@ import com.njydsz.pmis.message.service.RouteRuleService;
 import com.njydsz.pmis.message.service.SubscriptionService;
 import com.njydsz.pmis.message.service.TemplateService;
 import com.njydsz.pmis.message.template.TemplateEngine;
+import com.njydsz.pmis.message.producer.RocketMQMessageProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -78,6 +80,10 @@ public class MessageServiceImpl implements MessageService {
     private final SensitiveWordFilter sensitiveWordFilter;
     private final RetryStrategyResolver retryStrategyResolver;
     private final DedupService dedupService;
+
+    /** P2-3: RocketMQ 事务消息生产者（可选,未配置 RocketMQ 时为 null） */
+    @Autowired(required = false)
+    private RocketMQMessageProducer mqProducer;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -595,5 +601,38 @@ public class MessageServiceImpl implements MessageService {
                     + request.getTemplateCode() + ":" + request.getReceiver();
         }
         return null;
+    }
+
+    /**
+     * P2-3: 事务消息发送。
+     *
+     * <p>通过 RocketMQ 半消息机制,确保通知请求仅在本地事务校验（通道/模板有效性）通过后才投递。
+     * 半消息发送后由 {@link com.njydsz.pmis.message.producer.MessageTransactionListener}
+     * 执行校验,COMMIT 后消费端异步调用 {@link #send} 完成实际发送。
+     *
+     * <p>降级策略：未配置 RocketMQ 时直接走同步 {@link #send}。
+     *
+     * @param request 消息发送请求
+     * @return 发送结果
+     */
+    @Override
+    public MessageResult sendTransactionally(MessageRequest request) {
+        if (request == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "消息请求不能为空");
+        }
+        if (mqProducer == null) {
+            log.warn("[Message] RocketMQ 未配置,事务消息降级为同步发送: channel={}", request.getChannel());
+            return send(request);
+        }
+        try {
+            String msgId = mqProducer.sendTransactionMessage(request);
+            log.info("[Message] 事务消息半消息已提交: messageId={} msgId={} channel={}",
+                    request.getMessageId(), msgId, request.getChannel());
+            return MessageResult.ok(request.getChannel(), msgId);
+        } catch (Exception e) {
+            log.error("[Message] 事务消息发送失败,降级同步发送: channel={} err={}",
+                    request.getChannel(), e.getMessage());
+            return send(request);
+        }
     }
 }

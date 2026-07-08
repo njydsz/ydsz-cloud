@@ -10,6 +10,7 @@ import com.njydsz.pmis.agent.enums.AgentAlertLevel;
 import com.njydsz.pmis.agent.enums.AgentType;
 import com.njydsz.pmis.agent.mapper.AgentPredictionMapper;
 import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
+import com.njydsz.pmis.common.exception.BizException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -190,7 +191,7 @@ class AgentServiceImplStreamTest {
             ReActEventListener listener = mock(ReActEventListener.class);
 
             assertThatThrownBy(() -> service.executeStream("INVALID_TYPE", ctx(), listener))
-                    .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class);
+                    .isInstanceOf(BizException.class);
 
             verify(listener, times(1)).onError(eq(0), any());
             verify(listener, times(1)).onComplete(any());
@@ -201,7 +202,7 @@ class AgentServiceImplStreamTest {
         void shouldThrowBizExceptionForNullAgentType() {
             assertThatThrownBy(() -> service.executeStream(null, ctx(),
                     NoOpReActEventListener.getInstance()))
-                    .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class);
+                    .isInstanceOf(BizException.class);
         }
     }
 

@@ -1,11 +1,15 @@
 package com.njydsz.pmis.message.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.channel.ChannelRouter;
 import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.config.RetryStrategyResolver;
+import com.njydsz.pmis.message.dto.MessageLogQueryDTO;
+import com.njydsz.pmis.message.dto.MessageSendDTO;
 import com.njydsz.pmis.message.entity.MsgLogDO;
 import com.njydsz.pmis.message.entity.MsgRouteRuleDO;
 import com.njydsz.pmis.message.entity.MsgTemplateDO;
@@ -21,6 +25,7 @@ import com.njydsz.pmis.message.service.RouteRuleService;
 import com.njydsz.pmis.message.service.SubscriptionService;
 import com.njydsz.pmis.message.service.TemplateService;
 import com.njydsz.pmis.message.template.TemplateEngine;
+import com.njydsz.pmis.message.producer.RocketMQMessageProducer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +37,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,7 +45,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -160,7 +168,7 @@ class MessageServiceImplTest {
         when(routeRuleService.match(any())).thenReturn(null);
         when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(false);
 
-        org.junit.jupiter.api.Assertions.assertThrows(com.njydsz.pmis.common.exception.BizException.class,
+        assertThrows(BizException.class,
                 () -> messageService.send(req));
     }
 
@@ -203,7 +211,7 @@ class MessageServiceImplTest {
     @Test
     @DisplayName("sendDirect 委托 send")
     void sendDirectShouldDelegate() {
-        com.njydsz.pmis.message.dto.MessageSendDTO dto = new com.njydsz.pmis.message.dto.MessageSendDTO();
+        MessageSendDTO dto = new MessageSendDTO();
         dto.setChannel("SMS");
         dto.setReceiver("u1");
         dto.setContent("hi");
@@ -222,17 +230,17 @@ class MessageServiceImplTest {
     @Test
     @DisplayName("pageLog 分页查询")
     void pageLogShouldReturnPage() {
-        com.njydsz.pmis.message.dto.MessageLogQueryDTO query = new com.njydsz.pmis.message.dto.MessageLogQueryDTO();
+        MessageLogQueryDTO query = new MessageLogQueryDTO();
         query.setPage(1);
         query.setSize(10);
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<MsgLogDO> mockPage = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>();
-        when(msgLogMapper.selectPage(any(com.baomidou.mybatisplus.extension.plugins.pagination.Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+        Page<MsgLogDO> mockPage = new Page<>();
+        when(msgLogMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
 
         assertNotNullPage(messageService.pageLog(query));
     }
 
-    private void assertNotNullPage(com.baomidou.mybatisplus.extension.plugins.pagination.Page<MsgLogDO> p) {
-        org.junit.jupiter.api.Assertions.assertNotNull(p);
+    private void assertNotNullPage(Page<MsgLogDO> p) {
+        assertNotNull(p);
     }
 
     // ============ P2-6: 级联发送测试 ============
@@ -534,7 +542,7 @@ class MessageServiceImplTest {
         verify(msgLogMapper, never()).insert(any(MsgLogDO.class));
         verify(channelRouter, never()).dispatch(any(MsgLogDO.class));
         // 验证记录了 DEDUPED 指标
-        verify(messageMetrics).recordSend(eq("EMAIL"), eq("DEDUPED"), org.mockito.ArgumentMatchers.eq(0L));
+        verify(messageMetrics).recordSend(eq("EMAIL"), eq("DEDUPED"), eq(0L));
     }
 
     @Test
@@ -556,6 +564,73 @@ class MessageServiceImplTest {
         MessageResult result = messageService.send(req);
 
         assertTrue(result.isSuccess());
+        verify(msgLogMapper).insert(any(MsgLogDO.class));
+    }
+
+    // ============ P2-3: 事务消息测试 ============
+
+    @Test
+    @DisplayName("P2-3: mqProducer 为 null → 降级同步发送")
+    void sendTransactionallyShouldFallbackToSyncWhenNoProducer() {
+        // mqProducer 默认为 null(未注入 mock)
+        MessageRequest req = buildRequest();
+        when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
+        when(routeRuleService.match(any())).thenReturn(null);
+        when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);
+        when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
+        when(dedupService.tryAcquire(anyString())).thenReturn(true);
+        MsgTemplateDO tpl = new MsgTemplateDO();
+        tpl.setContent("hi");
+        when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(tpl);
+        when(templateEngine.render(anyString(), any())).thenReturn("rendered");
+        when(channelRouter.dispatch(any(MsgLogDO.class))).thenReturn("trace-tx");
+
+        MessageResult result = messageService.sendTransactionally(req);
+
+        assertTrue(result.isSuccess(), "降级同步发送应成功");
+        verify(msgLogMapper).insert(any(MsgLogDO.class));
+    }
+
+    @Test
+    @DisplayName("P2-3: mqProducer 可用 → 委托生产者发送事务消息")
+    void sendTransactionallyShouldDelegateToProducer() {
+        MessageRequest req = buildRequest();
+        RocketMQMessageProducer mockProducer = Mockito.mock(RocketMQMessageProducer.class);
+        ReflectionTestUtils.setField(messageService, "mqProducer", mockProducer);
+        when(mockProducer.sendTransactionMessage(any(MessageRequest.class))).thenReturn("rocketmq-msg-id-001");
+
+        MessageResult result = messageService.sendTransactionally(req);
+
+        assertTrue(result.isSuccess());
+        assertEquals("rocketmq-msg-id-001", result.getProviderTraceId());
+        verify(mockProducer).sendTransactionMessage(any(MessageRequest.class));
+        // 不应走同步发送(不落库)
+        verify(msgLogMapper, never()).insert(any(MsgLogDO.class));
+    }
+
+    @Test
+    @DisplayName("P2-3: 生产者异常 → 降级同步发送")
+    void sendTransactionallyShouldFallbackOnProducerException() {
+        MessageRequest req = buildRequest();
+        RocketMQMessageProducer mockProducer = Mockito.mock(RocketMQMessageProducer.class);
+        ReflectionTestUtils.setField(messageService, "mqProducer", mockProducer);
+        when(mockProducer.sendTransactionMessage(any(MessageRequest.class)))
+                .thenThrow(new RuntimeException("rocketmq down"));
+        // 降级后走同步发送
+        when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
+        when(routeRuleService.match(any())).thenReturn(null);
+        when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);
+        when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
+        when(dedupService.tryAcquire(anyString())).thenReturn(true);
+        MsgTemplateDO tpl = new MsgTemplateDO();
+        tpl.setContent("hi");
+        when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(tpl);
+        when(templateEngine.render(anyString(), any())).thenReturn("rendered");
+        when(channelRouter.dispatch(any(MsgLogDO.class))).thenReturn("trace-fallback");
+
+        MessageResult result = messageService.sendTransactionally(req);
+
+        assertTrue(result.isSuccess(), "降级同步发送应成功");
         verify(msgLogMapper).insert(any(MsgLogDO.class));
     }
 }

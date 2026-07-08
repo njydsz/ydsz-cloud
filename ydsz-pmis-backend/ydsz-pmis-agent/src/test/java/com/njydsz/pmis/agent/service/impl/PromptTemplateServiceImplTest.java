@@ -9,7 +9,6 @@ import com.njydsz.pmis.agent.entity.AgentPromptTemplateDO;
 import com.njydsz.pmis.agent.mapper.AgentPromptTemplateMapper;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.exception.BizException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

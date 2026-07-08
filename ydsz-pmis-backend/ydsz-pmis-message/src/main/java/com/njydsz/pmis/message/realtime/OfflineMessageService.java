@@ -72,7 +72,6 @@ public class OfflineMessageService {
      * @param userId 用户 ID
      * @return 离线消息 JSON 列表（最旧在前），无则返回空列表
      */
-    @SuppressWarnings("unchecked")
     public List<String> drainOffline(String userId) {
         if (userId == null) {
             return List.of();

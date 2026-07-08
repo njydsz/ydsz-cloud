@@ -36,6 +36,22 @@ public interface ReActEventListener {
     }
 
     /**
+     * LLM 流式输出增量 token（P4-1 落地）。
+     *
+     * <p>当 LLM Provider 支持 SSE 流式输出时，每收到一个 token 片段即触发此回调。
+     * 对标 Coze / Dify 的 Chat Stream token-level 推送，让用户在 LLM 生成过程中
+     * 即可看到内容逐步展现，而非等待整个响应完成后才看到结果。
+     *
+     * <p>注意：此回调可能在高频率下被调用（每秒数十次），实现方应确保处理轻量。
+     *
+     * @param stepIndex  步骤序号
+     * @param tokenDelta 本次增量 token 文本片段
+     */
+    default void onToken(int stepIndex, String tokenDelta) {
+        // 默认空实现
+    }
+
+    /**
      * LLM 思考完成（拿到 ReActDecision.thought 后触发）。
      *
      * @param stepIndex 步骤序号

@@ -3,6 +3,7 @@ package com.njydsz.pmis.agent.mcp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.agent.config.McpProperties;
 import com.njydsz.pmis.agent.mcp.transport.McpTransport;
+import com.njydsz.pmis.agent.tool.AgentTool;
 import com.njydsz.pmis.agent.tool.ToolRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -184,10 +185,10 @@ class McpClientManagerTest {
             assertThat(manager.getRegisteredToolCount()).isEqualTo(1);
 
             // 验证：ToolRegistry.register 被调用，且注册的是 McpToolBridge
-            ArgumentCaptor<com.njydsz.pmis.agent.tool.AgentTool> captor =
-                    ArgumentCaptor.forClass(com.njydsz.pmis.agent.tool.AgentTool.class);
+            ArgumentCaptor<AgentTool> captor =
+                    ArgumentCaptor.forClass(AgentTool.class);
             verify(toolRegistry, atLeastOnce()).register(captor.capture());
-            com.njydsz.pmis.agent.tool.AgentTool registered = captor.getValue();
+            AgentTool registered = captor.getValue();
             assertThat(registered).isInstanceOf(McpToolBridge.class);
             assertThat(registered.name()).isEqualTo("filesystem.read_file");
         }

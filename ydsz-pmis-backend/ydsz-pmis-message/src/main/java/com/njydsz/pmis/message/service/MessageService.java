@@ -51,4 +51,16 @@ public interface MessageService {
      * @return 分页结果
      */
     Page<MsgLogDO> pageLog(MessageLogQueryDTO query);
+
+    /**
+     * P2-3: 事务消息发送（RocketMQ 半消息）。
+     *
+     * <p>发送半消息后,由 {@link com.njydsz.pmis.message.producer.MessageTransactionListener}
+     * 执行本地事务校验（通道/模板有效性）,COMMIT 后消费端异步处理。
+     * 适用于业务侧需要确保通知请求仅在本地校验通过后才投递的场景。
+     *
+     * @param request 消息发送请求
+     * @return 发送结果（success=true 表示半消息已提交,实际发送由消费端异步完成）
+     */
+    MessageResult sendTransactionally(MessageRequest request);
 }
