@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.service.impl;
 
 import com.njydsz.pmis.message.dto.ChannelStatsVO;
+import com.njydsz.pmis.message.dto.FunnelStatsVO;
 import com.njydsz.pmis.message.dto.MessageStatsVO;
 import com.njydsz.pmis.message.dto.ReceiptStatsVO;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
@@ -156,5 +157,93 @@ class MessageStatsServiceImplTest {
         assertEquals(0L, vo.getTotal());
         assertEquals(0.0, vo.getDeliveryRate());
         assertEquals(0.0, vo.getReadRate());
+    }
+
+    // ============ P2-2: 漏斗分析测试 ============
+
+    @Test
+    @DisplayName("getFunnel 正确计算漏斗各阶段与转化率")
+    void getFunnelShouldCalculateStagesAndRates() {
+        // selectCount 调用顺序: sent, delivered, read, clicked
+        when(msgLogMapper.selectCount(any())).thenReturn(100L, 80L, 50L, 20L);
+
+        FunnelStatsVO vo = messageStatsService.getFunnel(null, null, null, null);
+
+        assertEquals(100L, vo.getSent(), "已发送 = 100");
+        assertEquals(80L, vo.getDelivered(), "已送达 = 80");
+        assertEquals(50L, vo.getRead(), "已读 = 50");
+        assertEquals(20L, vo.getClicked(), "已点击 = 20");
+        // 80/100*100 = 80.0
+        assertEquals(80.0, vo.getDeliveryRate(), 0.01, "送达率");
+        // 50/100*100 = 50.0
+        assertEquals(50.0, vo.getReadRate(), 0.01, "已读率");
+        // 20/100*100 = 20.0
+        assertEquals(20.0, vo.getClickRate(), 0.01, "点击率");
+        // 50/80*100 = 62.5
+        assertEquals(62.5, vo.getDeliveredToReadRate(), 0.01, "送达→已读转化率");
+        // 20/50*100 = 40.0
+        assertEquals(40.0, vo.getReadToClickRate(), 0.01, "已读→点击转化率");
+        // 20/100*100 = 20.0
+        assertEquals(20.0, vo.getOverallConversionRate(), 0.01, "整体转化率");
+    }
+
+    @Test
+    @DisplayName("getFunnel sent=0 时所有比率为 0")
+    void getFunnelShouldReturnZeroRatesWhenNoSent() {
+        when(msgLogMapper.selectCount(any())).thenReturn(0L, 0L, 0L, 0L);
+
+        FunnelStatsVO vo = messageStatsService.getFunnel(null, null, null, null);
+
+        assertEquals(0L, vo.getSent());
+        assertEquals(0.0, vo.getDeliveryRate());
+        assertEquals(0.0, vo.getOverallConversionRate());
+    }
+
+    @Test
+    @DisplayName("getFunnel delivered=0 时 deliveredToReadRate 为 0(不除零)")
+    void getFunnelShouldNotDivideByZeroWhenDeliveredIsZero() {
+        when(msgLogMapper.selectCount(any())).thenReturn(100L, 0L, 0L, 0L);
+
+        FunnelStatsVO vo = messageStatsService.getFunnel(null, null, null, null);
+
+        assertEquals(100L, vo.getSent());
+        assertEquals(0L, vo.getDelivered());
+        assertEquals(0.0, vo.getDeliveredToReadRate(), "delivered=0 时 deliveredToReadRate 应为 0");
+    }
+
+    @Test
+    @DisplayName("getFunnel read=0 时 readToClickRate 为 0(不除零)")
+    void getFunnelShouldNotDivideByZeroWhenReadIsZero() {
+        when(msgLogMapper.selectCount(any())).thenReturn(100L, 80L, 0L, 0L);
+
+        FunnelStatsVO vo = messageStatsService.getFunnel(null, null, null, null);
+
+        assertEquals(0.0, vo.getReadToClickRate(), "read=0 时 readToClickRate 应为 0");
+    }
+
+    @Test
+    @DisplayName("getFunnel 带通道和模板过滤参数")
+    void getFunnelShouldAcceptChannelAndTemplateFilters() {
+        when(msgLogMapper.selectCount(any())).thenReturn(50L, 40L, 30L, 10L);
+
+        FunnelStatsVO vo = messageStatsService.getFunnel(null, null, "SMS", "TPL_ALERT");
+
+        assertEquals(50L, vo.getSent());
+        assertEquals("SMS", vo.getChannel());
+        assertEquals("TPL_ALERT", vo.getTemplateCode());
+        // 10/50*100 = 20.0
+        assertEquals(20.0, vo.getOverallConversionRate(), 0.01);
+    }
+
+    @Test
+    @DisplayName("getFunnel null 时间参数时默认最近 24h")
+    void getFunnelShouldDefaultToLast24hWhenNullParams() {
+        when(msgLogMapper.selectCount(any())).thenReturn(1L, 1L, 1L, 1L);
+
+        FunnelStatsVO vo = messageStatsService.getFunnel(null, null, null, null);
+
+        assertEquals(1L, vo.getSent());
+        assertNotNull(vo.getStart());
+        assertNotNull(vo.getEnd());
     }
 }

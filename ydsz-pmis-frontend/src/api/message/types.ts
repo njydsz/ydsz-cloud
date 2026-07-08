@@ -517,3 +517,47 @@ export interface StatsQuery {
   /** 结束时间（yyyy-MM-dd） */
   end: string
 }
+
+/** 消息转化漏斗统计（对齐后端 FunnelStatsVO） */
+export interface FunnelStatsVO {
+  /** 已发送数(漏斗第1层) */
+  sent: number
+  /** 已送达数(漏斗第2层) */
+  delivered: number
+  /** 已读数(漏斗第3层) */
+  read: number
+  /** 已点击数(漏斗第4层) */
+  clicked: number
+  /** 送达率(%) */
+  deliveryRate: number
+  /** 已读率(%) */
+  readRate: number
+  /** 点击率(%) */
+  clickRate: number
+  /** 送达→已读转化率(%) */
+  deliveredToReadRate: number
+  /** 已读→点击转化率(%) */
+  readToClickRate: number
+  /** 整体转化率(%) */
+  overallConversionRate: number
+  /** 查询通道(可选过滤维度) */
+  channel?: string
+  /** 查询模板编码(可选过滤维度) */
+  templateCode?: string
+  /** 起始时间 */
+  start?: string
+  /** 结束时间 */
+  end?: string
+}
+
+/** 漏斗分析查询参数 */
+export interface FunnelQuery {
+  /** 起始时间 */
+  start?: string
+  /** 结束时间 */
+  end?: string
+  /** 通道过滤 */
+  channel?: string
+  /** 模板编码过滤 */
+  templateCode?: string
+}

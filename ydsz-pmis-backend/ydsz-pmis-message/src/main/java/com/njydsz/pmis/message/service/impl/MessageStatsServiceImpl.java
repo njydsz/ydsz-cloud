@@ -2,6 +2,7 @@ package com.njydsz.pmis.message.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.message.dto.ChannelStatsVO;
+import com.njydsz.pmis.message.dto.FunnelStatsVO;
 import com.njydsz.pmis.message.dto.MessageStatsVO;
 import com.njydsz.pmis.message.dto.ReceiptStatsVO;
 import com.njydsz.pmis.message.entity.MsgLogDO;
@@ -155,6 +156,83 @@ public class MessageStatsServiceImpl implements MessageStatsService {
                 .eq(MsgLogDO::getReceiptStatus, status.name())
                 .ge(MsgLogDO::getCreatedAt, start)
                 .le(MsgLogDO::getCreatedAt, end));
+        return count == null ? 0L : count;
+    }
+
+    @Override
+    public FunnelStatsVO getFunnel(LocalDateTime start, LocalDateTime end, String channel, String templateCode) {
+        LocalDateTime[] range = normalizeRange(start, end);
+        LocalDateTime actualStart = range[0];
+        LocalDateTime actualEnd = range[1];
+
+        // 漏斗第1层：已发送 = status = SUCCESS
+        long sent = countForFunnel(MessageStatusEnum.SUCCESS.name(), null, channel, templateCode,
+                actualStart, actualEnd);
+        // 漏斗第2层：已送达 = receiptStatus IN (DELIVERED, READ, CLICKED)（累积）
+        long delivered = countForFunnel(null,
+                java.util.Arrays.asList(ReceiptStatusEnum.DELIVERED.name(),
+                        ReceiptStatusEnum.READ.name(), ReceiptStatusEnum.CLICKED.name()),
+                channel, templateCode, actualStart, actualEnd);
+        // 漏斗第3层：已读 = receiptStatus IN (READ, CLICKED)（累积）
+        long read = countForFunnel(null,
+                java.util.Arrays.asList(ReceiptStatusEnum.READ.name(),
+                        ReceiptStatusEnum.CLICKED.name()),
+                channel, templateCode, actualStart, actualEnd);
+        // 漏斗第4层：已点击 = receiptStatus = CLICKED
+        long clicked = countForFunnel(null,
+                java.util.Collections.singletonList(ReceiptStatusEnum.CLICKED.name()),
+                channel, templateCode, actualStart, actualEnd);
+
+        FunnelStatsVO vo = new FunnelStatsVO();
+        vo.setSent(sent);
+        vo.setDelivered(delivered);
+        vo.setRead(read);
+        vo.setClicked(clicked);
+        vo.setDeliveryRate(sent > 0 ? round2(delivered * 100.0 / sent) : 0.0);
+        vo.setReadRate(sent > 0 ? round2(read * 100.0 / sent) : 0.0);
+        vo.setClickRate(sent > 0 ? round2(clicked * 100.0 / sent) : 0.0);
+        vo.setDeliveredToReadRate(delivered > 0 ? round2(read * 100.0 / delivered) : 0.0);
+        vo.setReadToClickRate(read > 0 ? round2(clicked * 100.0 / read) : 0.0);
+        vo.setOverallConversionRate(sent > 0 ? round2(clicked * 100.0 / sent) : 0.0);
+        vo.setChannel(channel);
+        vo.setTemplateCode(templateCode);
+        vo.setStart(actualStart.toString());
+        vo.setEnd(actualEnd.toString());
+        return vo;
+    }
+
+    /**
+     * P2-2: 漏斗通用计数查询。
+     *
+     * <p>按 status（精确）或 receiptStatus（IN 集合）过滤,同时支持可选的 channel / templateCode 维度过滤。
+     * status 与 receiptStatusList 互斥：status 非空时按 status 查,否则按 receiptStatusList 查。
+     *
+     * @param status            发送状态（非空时按此过滤）
+     * @param receiptStatusList 回执状态集合（status 为空时按此 IN 过滤）
+     * @param channel           通道过滤（可选）
+     * @param templateCode      模板编码过滤（可选）
+     * @param start             起始时间
+     * @param end               结束时间
+     * @return 计数
+     */
+    private long countForFunnel(String status, java.util.List<String> receiptStatusList,
+                                 String channel, String templateCode,
+                                 LocalDateTime start, LocalDateTime end) {
+        LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
+        if (status != null) {
+            w.eq(MsgLogDO::getStatus, status);
+        } else if (receiptStatusList != null && !receiptStatusList.isEmpty()) {
+            w.in(MsgLogDO::getReceiptStatus, receiptStatusList);
+        }
+        if (channel != null && !channel.isBlank()) {
+            w.eq(MsgLogDO::getChannel, channel);
+        }
+        if (templateCode != null && !templateCode.isBlank()) {
+            w.eq(MsgLogDO::getTemplateCode, templateCode);
+        }
+        w.ge(MsgLogDO::getCreatedAt, start);
+        w.le(MsgLogDO::getCreatedAt, end);
+        Long count = msgLogMapper.selectCount(w);
         return count == null ? 0L : count;
     }
 

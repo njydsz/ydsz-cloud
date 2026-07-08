@@ -664,6 +664,15 @@ export default {
     upsertSuccess: '保存成功',
     // 死信
     deadLetterTitle: '死信管理',
+    // P2-2: 漏斗分析
+    funnelAnalysis: '转化漏斗',
+    funnelSent: '已发送',
+    funnelDelivered: '已送达',
+    funnelRead: '已读',
+    funnelClicked: '已点击',
+    funnelDeliveredToRead: '送达→已读转化率',
+    funnelReadToClick: '已读→点击转化率',
+    funnelOverallConversion: '整体转化率',
   },
   login: {
     slogan: '项目运营管理系统',

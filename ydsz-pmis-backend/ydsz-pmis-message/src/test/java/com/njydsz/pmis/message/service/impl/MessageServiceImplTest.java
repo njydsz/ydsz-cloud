@@ -14,6 +14,7 @@ import com.njydsz.pmis.message.mapper.MsgLogMapper;
 import com.njydsz.pmis.message.metric.MessageMetrics;
 import com.njydsz.pmis.message.service.AggregateService;
 import com.njydsz.pmis.message.service.CanaryService;
+import com.njydsz.pmis.message.service.DedupService;
 import com.njydsz.pmis.message.service.PreferenceService;
 import com.njydsz.pmis.message.service.RateLimitService;
 import com.njydsz.pmis.message.service.RouteRuleService;
@@ -89,6 +90,8 @@ class MessageServiceImplTest {
     private SensitiveWordFilter sensitiveWordFilter;
     @Mock
     private RetryStrategyResolver retryStrategyResolver;
+    @Mock
+    private DedupService dedupService;
 
     @InjectMocks
     private MessageServiceImpl messageService;
@@ -100,6 +103,8 @@ class MessageServiceImplTest {
         // P2-5: 多维度限流默认放行,需要限流的测试单独覆盖
         // 用 any() 而非 anyString(),因为 templateCode 可能为 null(anyString 不匹配 null)
         when(rateLimitService.checkSendLimit(any(), any(), any(), any())).thenReturn(true);
+        // P2-1: 去重默认放行(非重复),需要去重拦截的测试单独覆盖
+        when(dedupService.tryAcquire(anyString())).thenReturn(true);
     }
 
     private MessageRequest buildRequest() {
@@ -509,5 +514,48 @@ class MessageServiceImplTest {
         assertEquals("SMS", result.getChannel());
         // 只调用 2 次:EMAIL(原始) + SMS(降级),不重复 EMAIL
         verify(channelRouter, times(2)).dispatch(any(MsgLogDO.class));
+    }
+
+    // ============ P2-1: 智能去重测试 ============
+
+    @Test
+    @DisplayName("P2-1: 命中去重(dedupKey 重复) → 跳过发送,不落库")
+    void sendShouldSkipWhenDedupHit() {
+        MessageRequest req = buildRequest();
+        when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
+        when(routeRuleService.match(any())).thenReturn(null);
+        // 去重命中：tryAcquire 返回 false
+        when(dedupService.tryAcquire(anyString())).thenReturn(false);
+
+        MessageResult result = messageService.send(req);
+
+        assertFalse(result.isSuccess(), "重复消息应返回失败");
+        // 验证不落库、不调用 dispatch
+        verify(msgLogMapper, never()).insert(any(MsgLogDO.class));
+        verify(channelRouter, never()).dispatch(any(MsgLogDO.class));
+        // 验证记录了 DEDUPED 指标
+        verify(messageMetrics).recordSend(eq("EMAIL"), eq("DEDUPED"), org.mockito.ArgumentMatchers.eq(0L));
+    }
+
+    @Test
+    @DisplayName("P2-1: 未命中去重 → 正常发送")
+    void sendShouldPassWhenDedupMiss() {
+        MessageRequest req = buildRequest();
+        when(channelRouter.isChannelEnabled(anyString())).thenReturn(true);
+        when(routeRuleService.match(any())).thenReturn(null);
+        when(rateLimitService.tryAcquire(anyString(), anyInt())).thenReturn(true);
+        when(rateLimitService.checkFrequency(anyString(), anyString(), anyString())).thenReturn(true);
+        // 去重未命中：tryAcquire 返回 true
+        when(dedupService.tryAcquire(anyString())).thenReturn(true);
+        MsgTemplateDO tpl = new MsgTemplateDO();
+        tpl.setContent("hi");
+        when(templateService.loadByCodeAndChannel(anyString(), anyString(), any(), anyString())).thenReturn(tpl);
+        when(templateEngine.render(anyString(), any())).thenReturn("rendered");
+        when(channelRouter.dispatch(any(MsgLogDO.class))).thenReturn("trace-1");
+
+        MessageResult result = messageService.send(req);
+
+        assertTrue(result.isSuccess());
+        verify(msgLogMapper).insert(any(MsgLogDO.class));
     }
 }

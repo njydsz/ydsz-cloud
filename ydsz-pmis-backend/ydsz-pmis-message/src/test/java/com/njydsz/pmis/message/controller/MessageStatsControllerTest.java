@@ -2,6 +2,7 @@ package com.njydsz.pmis.message.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.message.dto.ChannelStatsVO;
+import com.njydsz.pmis.message.dto.FunnelStatsVO;
 import com.njydsz.pmis.message.dto.MessageStatsVO;
 import com.njydsz.pmis.message.dto.ReceiptStatsVO;
 import com.njydsz.pmis.message.service.MessageStatsService;
@@ -110,5 +111,39 @@ class MessageStatsControllerTest {
         assertEquals(100, result.getData().getTotal());
         assertEquals(90.0, result.getData().getDeliveryRate(), 0.01);
         verify(messageStatsService).getReceiptStats(null, null);
+    }
+
+    @Test
+    @DisplayName("P2-2: funnel 委托 service 并返回漏斗数据")
+    void funnelShouldDelegateToService() {
+        FunnelStatsVO vo = new FunnelStatsVO();
+        vo.setSent(100);
+        vo.setDelivered(80);
+        vo.setRead(50);
+        vo.setClicked(20);
+        vo.setOverallConversionRate(20.0);
+        when(messageStatsService.getFunnel(null, null, null, null)).thenReturn(vo);
+
+        Result<FunnelStatsVO> result = messageStatsController.funnel(null, null, null, null);
+
+        assertTrue(result.isSuccess());
+        assertEquals(100, result.getData().getSent());
+        assertEquals(20.0, result.getData().getOverallConversionRate(), 0.01);
+        verify(messageStatsService).getFunnel(null, null, null, null);
+    }
+
+    @Test
+    @DisplayName("P2-2: funnel 带通道和模板参数正确传递")
+    void funnelShouldPassChannelAndTemplateParams() {
+        FunnelStatsVO vo = new FunnelStatsVO();
+        vo.setSent(50);
+        vo.setChannel("SMS");
+        when(messageStatsService.getFunnel(null, null, "SMS", "TPL_ALERT")).thenReturn(vo);
+
+        Result<FunnelStatsVO> result = messageStatsController.funnel(null, null, "SMS", "TPL_ALERT");
+
+        assertTrue(result.isSuccess());
+        assertEquals("SMS", result.getData().getChannel());
+        verify(messageStatsService).getFunnel(null, null, "SMS", "TPL_ALERT");
     }
 }

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.agent.engine.react;
 
+import com.njydsz.pmis.agent.hitl.ReActSnapshot;
 import lombok.Data;
 
 import java.io.Serial;
@@ -45,6 +46,15 @@ public class ReActResult implements Serializable {
     /** 失败原因（success=false 时填充） */
     private String failureReason;
 
+    /** 是否因等待人工审批而暂停（P3-4） */
+    private boolean paused;
+
+    /** 暂停时待审批的工具名（paused=true 时填充） */
+    private String pausedToolName;
+
+    /** 暂停快照（paused=true 时携带，供审批恢复使用，不参与 JSON 序列化存储） */
+    private transient ReActSnapshot pausedSnapshot;
+
     /** 构造成功结果 */
     public static ReActResult success(String finalAnswer, List<ReActStep> steps) {
         ReActResult r = new ReActResult();
@@ -60,6 +70,29 @@ public class ReActResult implements Serializable {
         ReActResult r = new ReActResult();
         r.success = false;
         r.failureReason = reason;
+        r.steps = steps == null ? new ArrayList<>() : new ArrayList<>(steps);
+        r.totalSteps = r.steps.size();
+        return r;
+    }
+
+    /**
+     * 构造暂停结果（P3-4 落地）。
+     *
+     * <p>当 ReAct 循环遇到需人工审批的工具时返回此结果。
+     * 调用方应从 {@link #pausedSnapshot} 获取快照并创建审批请求。
+     *
+     * @param toolName 待审批工具名
+     * @param snapshot  循环快照（含恢复所需全部状态）
+     * @param steps     已完成的步骤
+     * @return 暂停结果
+     */
+    public static ReActResult paused(String toolName, ReActSnapshot snapshot, List<ReActStep> steps) {
+        ReActResult r = new ReActResult();
+        r.success = false;
+        r.paused = true;
+        r.failureReason = "等待人工审批: 工具 [" + toolName + "] 需要人工确认";
+        r.pausedToolName = toolName;
+        r.pausedSnapshot = snapshot;
         r.steps = steps == null ? new ArrayList<>() : new ArrayList<>(steps);
         r.totalSteps = r.steps.size();
         return r;

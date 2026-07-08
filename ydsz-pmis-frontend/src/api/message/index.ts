@@ -31,6 +31,8 @@ import type {
   MessageStatsVO,
   ChannelStatsVO,
   ReceiptStatsVO,
+  FunnelStatsVO,
+  FunnelQuery,
   StatsQuery,
 } from './types'
 
@@ -271,3 +273,11 @@ export const getChannelStats = (params: StatsQuery) =>
  */
 export const getReceiptStats = (params: StatsQuery) =>
   request<ReceiptStatsVO>({ url: `${BASE}/stats/receipt`, method: 'GET', params, silent: true })
+
+/**
+ * 查询消息转化漏斗（P2-2）
+ * @param params 漏斗查询参数（含可选 channel/templateCode 过滤）
+ * @returns 漏斗统计
+ */
+export const getFunnelStats = (params: FunnelQuery) =>
+  request<FunnelStatsVO>({ url: `${BASE}/stats/funnel`, method: 'GET', params, silent: true })

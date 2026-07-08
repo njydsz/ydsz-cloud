@@ -60,4 +60,19 @@ public interface AgentTool {
      * @return 执行结果
      */
     ToolResult execute(Map<String, Object> parameters, AgentContext ctx);
+
+    /**
+     * 是否需要人工审批后才能执行（P3-4 落地）。
+     *
+     * <p>返回 {@code true} 时，ReAct 推理循环在执行此工具前会暂停并创建审批请求，
+     * 等待人工批准后恢复执行。适用于有副作用或高风险的工具（如发送邮件、修改数据、删除记录）。
+     *
+     * <p>默认返回 {@code false}（无需审批），查询类工具通常不需要覆盖此方法。
+     * 有副作用的工具应覆盖为 {@code return true;}。
+     *
+     * @return true 表示需要人工审批
+     */
+    default boolean requiresApproval() {
+        return false;
+    }
 }
