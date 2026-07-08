@@ -1,0 +1,67 @@
+# =====================================================================
+#  YDSZ PMIS · UserInfo · SIT 环境配置（Nacos DataId）
+#  DataId:    ydsz-pmis-userinfo-sit.yaml
+#  Group:     sit
+#  端口:      9001
+# =====================================================================
+
+server:
+  port: 9001
+  servlet:
+    context-path: /
+  max-http-request-header-size: 16KB
+
+spring:
+  profiles: sit
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: NON_NULL
+
+pmis:
+  jwt:
+    secret: ${JWT_SECRET:}
+    issuer: pmis
+  auth:
+    captcha-required: true
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      id-type: AUTO
+
+# SIT 环境关闭文档 UI
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: true
+knife4j:
+  production: true
+
+logging:
+  level:
+    root: INFO
+    com.njydsz.pmis: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: when-authorized

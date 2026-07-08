@@ -1,0 +1,69 @@
+# =====================================================================
+#  YDSZ PMIS · System · DEV 环境配置（Nacos DataId）
+#  DataId:    ydsz-pmis-system-dev.yaml
+#  Group:     dev
+#  端口:      9002
+# =====================================================================
+
+server:
+  port: 9002
+  servlet:
+    context-path: /
+
+spring:
+  profiles: dev
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: NON_NULL
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 500MB
+
+# MinIO 对象存储
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9100}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  default-bucket: ${MINIO_BUCKET:pmis}
+  url-expire-seconds: 3600
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.njydsz.pmis.system.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: AUTO
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    "[com.njydsz.pmis]": DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

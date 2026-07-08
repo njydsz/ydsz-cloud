@@ -37,16 +37,14 @@ public final class PreciseTokenCounter {
     private static final com.knuddels.jtokkit.api.Encoding O200K_ENCODING;
 
     static {
-        EncodingRegistry registry;
         com.knuddels.jtokkit.api.Encoding cl100k;
         com.knuddels.jtokkit.api.Encoding o200k;
         try {
-            registry = Encodings.newDefaultEncodingRegistry();
+            EncodingRegistry registry = Encodings.newDefaultEncodingRegistry();
             cl100k = registry.getEncoding(EncodingType.CL100K_BASE);
             o200k = registry.getEncoding(EncodingType.O200K_BASE);
         } catch (Exception e) {
             log.warn("[PreciseTokenCounter] jtokkit 初始化失败, 将降级到启发式估算: {}", e.getMessage());
-            registry = null;
             cl100k = null;
             o200k = null;
         }

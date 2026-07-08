@@ -22,7 +22,7 @@ public interface FlowOfflineAutoForwardService {
      *
      * <p>当用户新增代理授权或重新启用已停用的代理授权时调用：
      * <ol>
-     *   <li>查询授权人在生效区间内的全部 TO_DO/CLAIMED 待办</li>
+     *   <li>查询授权人在生效区间内的全部 PENDING/CLAIMED 待办</li>
      *   <li>按代理规则的 scope（flowCode/nodeCode）过滤</li>
      *   <li>逐一转办给被代理人</li>
      *   <li>记录转办日志</li>

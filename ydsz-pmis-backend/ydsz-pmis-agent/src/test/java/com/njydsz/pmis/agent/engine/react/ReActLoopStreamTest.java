@@ -1,5 +1,6 @@
 package com.njydsz.pmis.agent.engine.react;
 
+import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
@@ -24,7 +25,9 @@ import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -109,16 +112,11 @@ class ReActLoopStreamTest {
     }
 
     private void mockLlmDecisions(ReActDecision... decisions) {
-        if (decisions.length == 1) {
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any())).thenReturn(decisions[0]);
-        } else {
-            ReActDecision first = decisions[0];
-            ReActDecision[] rest = new ReActDecision[decisions.length - 1];
-            System.arraycopy(decisions, 1, rest, 0, rest.length);
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any())).thenReturn(first, rest);
-        }
+        Iterator<String> it = Arrays.stream(decisions)
+                .map(JSON::toJSONString)
+                .iterator();
+        when(llmProvider.chat(anyString(), anyString(), any()))
+                .thenAnswer(inv -> it.hasNext() ? it.next() : null);
     }
 
     private AgentTool mockTool(String name, ToolResult result) {
@@ -256,8 +254,7 @@ class ReActLoopStreamTest {
         @Test
         @DisplayName("LLM 异常时，监听器收到 onStepEnd + onComplete(失败)")
         void shouldNotifyOnLlmException() {
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any()))
+            when(llmProvider.chat(anyString(), anyString(), any()))
                     .thenThrow(new RuntimeException("LLM 网络异常"));
             RecordingListener listener = new RecordingListener();
 
@@ -277,8 +274,7 @@ class ReActLoopStreamTest {
         @Test
         @DisplayName("LLM 返回 null decision 时触发 onComplete(失败)")
         void shouldNotifyOnNullDecision() {
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any())).thenReturn(null);
+            when(llmProvider.chat(anyString(), anyString(), any())).thenReturn(null);
             RecordingListener listener = new RecordingListener();
 
             ReActResult result = reactLoop.runStream("sys", "user", ctx(),
@@ -411,8 +407,7 @@ class ReActLoopStreamTest {
         @Test
         @DisplayName("LLM 异常触发 onComplete 但不触发 onFinalAnswer")
         void shouldNotTriggerFinalAnswerOnLlmException() {
-            when(llmProvider.chatForJson(anyString(), anyString(),
-                    eq(ReActDecision.class), any()))
+            when(llmProvider.chat(anyString(), anyString(), any()))
                     .thenThrow(new RuntimeException("网络异常"));
             ReActEventListener mockListener = mock(ReActEventListener.class);
 

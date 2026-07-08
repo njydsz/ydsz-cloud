@@ -1,0 +1,73 @@
+# =====================================================================
+#  YDSZ PMIS · Agent · DEV 环境配置（Nacos DataId）
+#  DataId:    ydsz-pmis-agent-dev.yaml
+#  Group:     dev
+#  端口:      9007
+# =====================================================================
+
+server:
+  port: 9007
+  servlet:
+    context-path: /
+
+spring:
+  profiles: dev
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: NON_NULL
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.njydsz.pmis.agent.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: AUTO
+
+# AI 集成配置
+pmis:
+  agent:
+    llm:
+      provider: ${LLM_PROVIDER:mock}
+      timeout-millis: ${LLM_TIMEOUT_MILLIS:10000}
+      max-retries: ${LLM_MAX_RETRIES:2}
+      fallback-to-mock: ${LLM_FALLBACK_TO_MOCK:true}
+  openai-config:
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4o-mini}
+          temperature: 0.3
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    root: INFO
+    "[com.njydsz.pmis]": DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  endpoint:
+    health:
+      show-details: when-authorized

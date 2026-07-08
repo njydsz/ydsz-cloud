@@ -71,7 +71,10 @@ public enum HitlApprovalStatus {
      */
     public boolean canTransitTo(HitlApprovalStatus target) {
         if (target == null) return false;
-        if (this == target) return true;
+        if (this == target) {
+            // 终态自迁移不允许（如 APPROVED→APPROVED），非终态自迁移允许（PENDING→PENDING 等幂等场景）
+            return !this.isTerminal();
+        }
         if (this.isTerminal()) return false;
         // PENDING → APPROVED / REJECTED / TIMEOUT / CANCELLED
         return target.isTerminal();

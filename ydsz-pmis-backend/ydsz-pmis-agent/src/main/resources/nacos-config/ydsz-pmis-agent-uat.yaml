@@ -1,0 +1,68 @@
+# =====================================================================
+#  YDSZ PMIS · Agent · UAT 环境配置（Nacos DataId）
+#  DataId:    ydsz-pmis-agent-uat.yaml
+#  Group:     uat
+#  端口:      9007
+# =====================================================================
+
+server:
+  port: 9007
+  servlet:
+    context-path: /
+
+spring:
+  profiles: uat
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: NON_NULL
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.njydsz.pmis.agent.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: AUTO
+
+pmis:
+  agent:
+    llm:
+      provider: ${LLM_PROVIDER:mock}
+      timeout-millis: 10000
+      max-retries: 2
+      fallback-to-mock: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: false
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+knife4j:
+  production: true
+
+logging:
+  level:
+    root: INFO
+    "[com.njydsz.pmis]": INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  endpoint:
+    health:
+      show-details: when-authorized

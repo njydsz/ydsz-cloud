@@ -86,6 +86,7 @@ public class HitlApprovalServiceImpl implements HitlApprovalService {
     @Override
     public ReActResult approve(String id, String approverId, String approverName, String comment) {
         HitlApprovalRequestDO entity = loadAndValidate(id, HitlApprovalStatus.APPROVED);
+        entity.setStatus(HitlApprovalStatus.APPROVED.getCode());
         entity.setApproverId(approverId);
         entity.setApproverName(approverName);
         entity.setApproverComment(comment);
@@ -99,6 +100,7 @@ public class HitlApprovalServiceImpl implements HitlApprovalService {
     @Override
     public ReActResult reject(String id, String approverId, String approverName, String comment) {
         HitlApprovalRequestDO entity = loadAndValidate(id, HitlApprovalStatus.REJECTED);
+        entity.setStatus(HitlApprovalStatus.REJECTED.getCode());
         entity.setApproverId(approverId);
         entity.setApproverName(approverName);
         entity.setApproverComment(comment);
@@ -112,6 +114,7 @@ public class HitlApprovalServiceImpl implements HitlApprovalService {
     @Override
     public void cancel(String id, String approverId, String approverName, String reason) {
         HitlApprovalRequestDO entity = loadAndValidate(id, HitlApprovalStatus.CANCELLED);
+        entity.setStatus(HitlApprovalStatus.CANCELLED.getCode());
         entity.setApproverId(approverId);
         entity.setApproverName(approverName);
         entity.setApproverComment(reason);
