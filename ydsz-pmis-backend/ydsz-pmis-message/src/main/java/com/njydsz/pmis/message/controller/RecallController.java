@@ -44,6 +44,21 @@ public class RecallController {
         return Result.ok(recallService.recallMessage(logId));
     }
 
+    /**
+     * P0-4: 按 msgId 撤回已发送消息。
+     *
+     * <p>支持撤回时间窗口校验（默认 30 分钟内可撤回）。
+     *
+     * @param msgId 消息 ID
+     * @return 撤回结果
+     */
+    @Operation(summary = "按消息 ID 撤回消息")
+    @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
+    @PostMapping("/msg/{msgId}")
+    public Result<Boolean> recallByMsgId(@PathVariable String msgId) {
+        return Result.ok(recallService.recallByMsgId(msgId));
+    }
+
     @Operation(summary = "按业务类型+单据 ID 批量撤回")
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @PostMapping("/batch")

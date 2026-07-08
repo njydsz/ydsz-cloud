@@ -10,6 +10,11 @@ package com.njydsz.pmis.message.service;
 public interface RecallService {
 
     /**
+     * P0-4: 消息撤回时间窗口（分钟），超过此时间不可撤回
+     */
+    long RECALL_WINDOW_MINUTES = 30L;
+
+    /**
      * 撤回站内通知
      *
      * @param userId         用户 ID
@@ -25,6 +30,17 @@ public interface RecallService {
      * @return true 表示撤回成功
      */
     boolean recallMessage(String logId);
+
+    /**
+     * P0-4: 按 msgId 撤回已发送消息。
+     *
+     * <p>支持撤回时间窗口校验（默认 30 分钟内可撤回），
+     * 撤回后通过 WebSocket 推送撤回事件到前端。
+     *
+     * @param msgId 消息 ID（pmis_msg_log.msg_id）
+     * @return true 表示撤回成功
+     */
+    boolean recallByMsgId(String msgId);
 
     /**
      * 按业务类型 + 单据 ID 批量撤回

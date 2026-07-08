@@ -32,6 +32,7 @@ import com.njydsz.pmis.message.metric.MessageMetrics;
 import com.njydsz.pmis.message.service.AggregateService;
 import com.njydsz.pmis.message.service.CanaryService;
 import com.njydsz.pmis.message.service.DedupService;
+import com.njydsz.pmis.message.service.DeliveryTimeOptimizer;
 import com.njydsz.pmis.message.service.MessageService;
 import com.njydsz.pmis.message.service.MessageTraceService;
 import com.njydsz.pmis.message.service.PreferenceService;
@@ -39,6 +40,7 @@ import com.njydsz.pmis.message.service.RateLimitService;
 import com.njydsz.pmis.message.service.RouteRuleService;
 import com.njydsz.pmis.message.service.SubscriptionService;
 import com.njydsz.pmis.message.service.TemplateService;
+import com.njydsz.pmis.message.template.RichMediaRenderer;
 import com.njydsz.pmis.message.template.TemplateEngine;
 import com.njydsz.pmis.message.producer.RocketMQMessageProducer;
 import lombok.RequiredArgsConstructor;
@@ -83,6 +85,8 @@ public class MessageServiceImpl implements MessageService {
     private final RetryStrategyResolver retryStrategyResolver;
     private final DedupService dedupService;
     private final MessageTraceService messageTraceService;
+    private final DeliveryTimeOptimizer deliveryTimeOptimizer;
+    private final RichMediaRenderer richMediaRenderer;
 
     /** P2-3: RocketMQ 事务消息生产者（可选,未配置 RocketMQ 时为 null） */
     private final ObjectProvider<RocketMQMessageProducer> mqProducerProvider;
@@ -260,6 +264,23 @@ public class MessageServiceImpl implements MessageService {
             content = sensitiveWordFilter.filter(content);
         }
 
+        // P1-2: 富媒体消息渲染 —— 检查 params 中是否包含富媒体内容,按通道渲染
+        com.njydsz.pmis.message.dto.RichMediaContent richMedia = richMediaRenderer.extractFromParams(request.getParams());
+        if (richMedia != null) {
+            String renderedContent = switch (channel == null ? "" : channel.toUpperCase()) {
+                case "EMAIL" -> richMediaRenderer.renderHtml(richMedia);
+                case "INAPP", "DINGTALK", "WECOM", "FEISHU" -> richMediaRenderer.renderMarkdown(richMedia);
+                case "SMS" -> richMediaRenderer.renderPlainText(richMedia);
+                default -> richMediaRenderer.renderPlainText(richMedia);
+            };
+            if (StringUtils.hasText(renderedContent)) {
+                content = renderedContent;
+            }
+            if (!StringUtils.hasText(subject) && StringUtils.hasText(richMedia.getTitle())) {
+                subject = richMedia.getTitle();
+            }
+        }
+
         // ⑧ 落库 PENDING
         MsgLogDO logDO = new MsgLogDO();
         logDO.setChannel(channel);
@@ -297,6 +318,29 @@ public class MessageServiceImpl implements MessageService {
             log.info("[Message] 定时消息已入库: msgId={} scheduledAt={} channel={}",
                     logDO.getMsgId(), logDO.getScheduledAt(), channel);
             return MessageResult.ok(channel, logDO.getMsgId());
+        }
+
+        // P1-1: 智能推送时间优化 —— 非紧急且未设置定时时间的消息，使用用户活跃度画像推荐最佳推送时间
+        if (request.getScheduledAt() == null && StringUtils.hasText(receiver)
+                && !"URGENT".equals(resolvePriority(request))) {
+            try {
+                java.time.LocalDateTime optimalTime = deliveryTimeOptimizer.getOptimalDeliveryTime(receiver, channel);
+                if (optimalTime != null && optimalTime.isAfter(java.time.LocalDateTime.now().plusMinutes(5))) {
+                    request.setScheduledAt(optimalTime);
+                    logDO.setScheduledAt(optimalTime);
+                    logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
+                    msgLogMapper.insert(logDO);
+                    messageTraceService.recordTrace(logDO.getMsgId(),
+                            com.njydsz.pmis.message.entity.MsgTraceDO.Node.SCHEDULED,
+                            "SUCCESS", channel, "智能定时: optimalAt=" + optimalTime);
+                    log.info("[Message] 智能定时推送: msgId={} receiver={} optimalAt={}",
+                            logDO.getMsgId(), receiver, optimalTime);
+                    return MessageResult.ok(channel, logDO.getMsgId());
+                }
+            } catch (Exception e) {
+                log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver={} err={}",
+                        receiver, e.getMessage());
+            }
         }
 
         msgLogMapper.insert(logDO);
