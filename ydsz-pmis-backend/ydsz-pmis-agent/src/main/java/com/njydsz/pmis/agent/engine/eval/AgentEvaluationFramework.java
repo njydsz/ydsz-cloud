@@ -1,19 +1,13 @@
 package com.njydsz.pmis.agent.engine.eval;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -162,7 +156,6 @@ public class AgentEvaluationFramework {
     /**
      * 调用 Agent 执行（通过反射适配不同 Agent 类型）。
      */
-    @SuppressWarnings("unchecked")
     private String callAgent(String userInput) throws Exception {
         try {
             var executeMethod = agent.getClass().getMethod("execute",

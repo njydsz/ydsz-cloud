@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
@@ -102,11 +102,22 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
 
         switch (action) {
             case "PASS" -> {
-                taskService.pass(taskId, userId, comment, variables);
+                FlowTaskOperateDTO passDto = new FlowTaskOperateDTO();
+                passDto.setTaskId(taskId);
+                passDto.setUserId(userId);
+                passDto.setComment(comment);
+                passDto.setVariables(variables);
+                taskService.pass(passDto);
                 result.put("result", "PASSED");
             }
             case "REJECT" -> {
-                taskService.reject(taskId, userId, comment, targetNodeCode, variables);
+                FlowTaskOperateDTO rejectDto = new FlowTaskOperateDTO();
+                rejectDto.setTaskId(taskId);
+                rejectDto.setUserId(userId);
+                rejectDto.setComment(comment);
+                rejectDto.setTargetNodeCode(targetNodeCode);
+                rejectDto.setVariables(variables);
+                taskService.reject(rejectDto);
                 result.put("result", "REJECTED");
                 result.put("targetNodeCode", targetNodeCode);
             }
@@ -114,7 +125,13 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 String targetUserId = variables != null ? String.valueOf(variables.get("targetUserId")) : null;
                 String targetUserName = variables != null ? String.valueOf(variables.get("targetUserName")) : null;
                 if (StringUtils.hasText(targetUserId)) {
-                    taskService.transfer(taskId, userId, comment, targetUserId, targetUserName);
+                    FlowTaskOperateDTO transferDto = new FlowTaskOperateDTO();
+                    transferDto.setTaskId(taskId);
+                    transferDto.setUserId(userId);
+                    transferDto.setComment(comment);
+                    transferDto.setTargetUserId(targetUserId);
+                    transferDto.setTargetUserName(targetUserName);
+                    taskService.transfer(transferDto);
                     result.put("result", "TRANSFERRED");
                 } else {
                     throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_transfer_target_required");
@@ -124,7 +141,12 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 String delegateUserId = variables != null ? String.valueOf(variables.get("targetUserId")) : null;
                 String delegateUserName = variables != null ? String.valueOf(variables.get("targetUserName")) : null;
                 if (StringUtils.hasText(delegateUserId)) {
-                    taskService.delegate(taskId, userId, delegateUserId, delegateUserName);
+                    FlowTaskOperateDTO delegateDto = new FlowTaskOperateDTO();
+                    delegateDto.setTaskId(taskId);
+                    delegateDto.setUserId(userId);
+                    delegateDto.setTargetUserId(delegateUserId);
+                    delegateDto.setTargetUserName(delegateUserName);
+                    taskService.delegate(delegateDto);
                     result.put("result", "DELEGATED");
                 } else {
                     throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_delegate_target_required");

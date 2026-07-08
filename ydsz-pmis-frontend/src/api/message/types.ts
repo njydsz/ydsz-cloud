@@ -561,3 +561,80 @@ export interface FunnelQuery {
   /** 模板编码过滤 */
   templateCode?: string
 }
+
+// ==================== 用户消息偏好(P2-6) ====================
+
+/** 聚合频率 */
+export type DigestFrequency = 'HOURLY' | 'DAILY' | 'WEEKLY'
+
+/** 用户消息偏好 VO（对齐后端 MsgPreferenceDO） */
+export interface MsgPreferenceVO {
+  /** 主键 ID（雪花算法字符串） */
+  id: string
+  /** 用户 ID */
+  userId: string
+  /** 通道: SMS/EMAIL/PUSH/IN_APP/WEBHOOK/DINGTALK/WECOM/FEISHU */
+  channel: string
+  /** 业务类型（__DEFAULT__ 表示该通道全局默认偏好） */
+  bizType: string
+  /** 是否启用该通道: 0 关闭 / 1 开启 */
+  enabled: number
+  /** 免打扰开关: 0 关闭 / 1 开启 */
+  dndEnabled: number
+  /** 免打扰开始时间 HH:mm（如 22:00） */
+  dndStart?: string
+  /** 免打扰结束时间 HH:mm（如 08:00） */
+  dndEnd?: string
+  /** 每日发送上限（0 表示不限） */
+  dailyLimit?: number
+  /** 每小时发送上限（0 表示不限） */
+  hourlyLimit?: number
+  /** 聚合开关: 0 即时发送 / 1 聚合摘要 */
+  digestEnabled: number
+  /** 聚合频率: HOURLY / DAILY / WEEKLY */
+  digestFrequency?: string
+  /** 偏好语言（如 zh-CN / en-US） */
+  locale?: string
+  /** 扩展字段 JSON */
+  extra?: string
+  /** 租户 ID */
+  tenantId?: string
+  /** 创建人 */
+  createdBy?: string
+  /** 创建时间 */
+  createdAt?: string
+  /** 更新人 */
+  updatedBy?: string
+  /** 更新时间 */
+  updatedAt?: string
+}
+
+/** 用户消息偏好新增/更新 DTO（对齐后端 PreferenceUpsertDTO） */
+export interface PreferenceUpsertDTO {
+  /** 用户 ID */
+  userId: string
+  /** 通道 */
+  channel: string
+  /** 业务类型 */
+  bizType: string
+  /** 是否启用该通道: 0 关闭 / 1 开启 */
+  enabled?: number
+  /** 免打扰开关: 0 关闭 / 1 开启 */
+  dndEnabled?: number
+  /** 免打扰开始时间 HH:mm */
+  dndStart?: string
+  /** 免打扰结束时间 HH:mm */
+  dndEnd?: string
+  /** 每日发送上限 */
+  dailyLimit?: number
+  /** 每小时发送上限 */
+  hourlyLimit?: number
+  /** 聚合开关: 0 即时发送 / 1 聚合摘要 */
+  digestEnabled?: number
+  /** 聚合频率: HOURLY/DAILY/WEEKLY */
+  digestFrequency?: string
+  /** 偏好语言 */
+  locale?: string
+  /** 扩展字段 JSON */
+  extra?: string
+}

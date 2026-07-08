@@ -153,6 +153,9 @@ export const PC = {
   MESSAGE_AGGREGATE_REFRESH: 'message:aggregate:refresh',
   MESSAGE_UNSUBSCRIBE_VIEW: 'message:unsubscribe:view',
   MESSAGE_UNSUBSCRIBE_ACT: 'message:unsubscribe:act',
+  MESSAGE_PREFERENCE_VIEW: 'message:preference:view',
+  MESSAGE_PREFERENCE_UPDATE: 'message:preference:update',
+  MESSAGE_PREFERENCE_DELETE: 'message:preference:delete',
 
   // ============= 文件存储(file) =============
   FILE_STORAGE_UPLOAD: 'file:storage:upload',

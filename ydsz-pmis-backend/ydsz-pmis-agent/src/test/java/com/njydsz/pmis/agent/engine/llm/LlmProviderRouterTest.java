@@ -57,12 +57,7 @@ class LlmProviderRouterTest {
 
     /** 构造路由器，注入真实 MockLlmProvider + 指定配置的 provider name */
     private LlmProviderRouter routerWith(GenericApplicationContext ctx, String configuredProvider) {
-        return new LlmProviderRouter(ctx, new MockLlmProvider(), configuredProvider);
-    }
-
-    /** 构造路由器，默认配置 provider=mock */
-    private LlmProviderRouter routerWith(GenericApplicationContext ctx) {
-        return routerWith(ctx, "mock");
+        return new LlmProviderRouter(ctx, new MockLlmProvider(), configuredProvider, "", false);
     }
 
     // ==================== active() 测试 ====================

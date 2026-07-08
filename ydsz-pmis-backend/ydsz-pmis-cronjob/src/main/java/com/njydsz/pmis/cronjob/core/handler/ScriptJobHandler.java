@@ -218,7 +218,77 @@ public class ScriptJobHandler implements JobHandler {
      */
     private ScriptResult executeScriptDirectly(String language, String script, List<String> args, long timeoutMs)
             throws Exception {
-        // 此方法包含原始的 executeScript 逻辑（沙箱不可用时降级调用）
+        // 解析脚本来源（行内脚本 → 临时文件；file: 前缀 → 直接使用路径）
+        Path scriptFile = resolveScriptFile(language, script);
+        boolean isTempFile = !script.startsWith(FILE_PREFIX);
+        // 捕获当前线程的 JobLogger，传递给 IO 读取线程（ThreadLocal 不跨线程）
+        JobLogger jobLogger = JobLoggerHolder.get();
+        try {
+            List<String> command = buildCommand(language, scriptFile, args);
+            log.info("[ScriptJobHandler] 执行脚本: language={} file={} args={} timeoutMs={}",
+                    language, scriptFile, args, timeoutMs);
+
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(false);
+            pb.directory(new File(System.getProperty("java.io.tmpdir")));
+            Process process = pb.start();
+            // 关闭 stdin，避免脚本因等待输入而阻塞
+            try {
+                process.getOutputStream().close();
+            } catch (IOException ignored) {
+                // 关闭失败不影响主流程
+            }
+
+            // 异步读取 stdout/stderr
+            StringBuilder stdout = new StringBuilder();
+            StringBuilder stderr = new StringBuilder();
+            Thread stdoutThread = readStreamAsync(process.getInputStream(), stdout, true, jobLogger);
+            Thread stderrThread = readStreamAsync(process.getErrorStream(), stderr, false, null);
+
+            boolean finished;
+            if (timeoutMs > 0) {
+                finished = process.waitFor(timeoutMs, TimeUnit.MILLISECONDS);
+                if (!finished) {
+                    process.destroyForcibly();
+                    stdoutThread.interrupt();
+                    stderrThread.interrupt();
+                    throw new RuntimeException("脚本执行超时: timeoutMs=" + timeoutMs
+                            + " language=" + language);
+                }
+            } else {
+                finished = process.waitFor() == 0;
+            }
+
+            stdoutThread.join(1000);
+            stderrThread.join(1000);
+            int exitCode = process.exitValue();
+            String stdoutStr = stdout.toString();
+            String stderrStr = stderr.toString();
+
+            log.info("[ScriptJobHandler] 脚本执行完成: exitCode={} stdoutLen={} stderrLen={}",
+                    exitCode, stdoutStr.length(), stderrStr.length());
+
+            if (exitCode != 0) {
+                throw new RuntimeException("脚本执行失败: exitCode=" + exitCode
+                        + " stderr=" + truncate(stderrStr));
+            }
+
+            return new ScriptResult(exitCode, stdoutStr, stderrStr);
+        } finally {
+            // 清理临时文件
+            if (isTempFile) {
+                try {
+                    Files.deleteIfExists(scriptFile);
+                } catch (IOException e) {
+                    log.debug("[ScriptJobHandler] 删除临时脚本文件失败: {}", scriptFile, e);
+                }
+            }
+        }
+    }
+
+    /**
+     * 解析脚本文件：行内脚本写入临时文件，file: 前缀直接返回路径。
+     */
     private Path resolveScriptFile(String language, String script) throws IOException {
         if (script.startsWith(FILE_PREFIX)) {
             String path = script.substring(FILE_PREFIX.length()).trim();

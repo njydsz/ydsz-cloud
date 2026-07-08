@@ -10,6 +10,7 @@ import com.njydsz.pmis.workflow.entity.FlowDelegateLogDO;
 import com.njydsz.pmis.workflow.mapper.FlowDelegateAuthMapper;
 import com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
+import com.njydsz.pmis.workflow.service.FlowOfflineAutoForwardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,6 +36,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     private final FlowDelegateAuthMapper authMapper;
     private final FlowDelegateLogMapper logMapper;
+    /** P2-5: 离线代理自动转发（@Lazy 避免循环依赖） */
+    @org.springframework.context.annotation.Lazy
+    private final FlowOfflineAutoForwardService offlineAutoForwardService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -100,6 +104,18 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                 auth.getOwnerUserId(), auth.getDelegateUserId(), auth.getScopeType(),
                 auth.getFlowCode(), auth.getNodeCode(), auth.getRoleCode(),
                 auth.getStartTime(), auth.getEndTime());
+
+        // P2-5: 代理授权创建后，自动转发已有的在途待办
+        try {
+            int forwarded = offlineAutoForwardService.autoForwardByAuth(auth.getId());
+            if (forwarded > 0) {
+                log.info("[FlowDelegate] P2-5 离线自动转发: authId={} forwarded={}", auth.getId(), forwarded);
+            }
+        } catch (Exception e) {
+            // 自动转发失败不影响授权创建
+            log.warn("[FlowDelegate] P2-5 离线自动转发失败: authId={} err={}", auth.getId(), e.getMessage());
+        }
+
         return auth.getId();
     }
 

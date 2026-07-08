@@ -34,6 +34,8 @@ import type {
   FunnelStatsVO,
   FunnelQuery,
   StatsQuery,
+  MsgPreferenceVO,
+  PreferenceUpsertDTO,
 } from './types'
 
 /** message 接口路径前缀（baseURL 由 VITE_API_BASE_URL 注入） */
@@ -247,6 +249,41 @@ export const getDeadLetterPage = (params: MessageLogPageQuery) =>
  */
 export const resendDeadLetter = (logId: string) =>
   request<void>({ url: `${BASE}/dead-letter/${logId}/resend`, method: 'POST' })
+
+// ==================== 用户消息偏好(P2-6) ====================
+
+/**
+ * 查询用户所有偏好设置
+ * @param userId 用户 ID
+ * @returns 偏好列表
+ */
+export const getPreferences = (userId: string) =>
+  request<MsgPreferenceVO[]>({ url: `${BASE}/preference/${userId}`, method: 'GET', silent: true })
+
+/**
+ * 按用户+通道+业务类型查询单条偏好
+ * @param userId 用户 ID
+ * @param channel 通道
+ * @param bizType 业务类型
+ * @returns 偏好详情
+ */
+export const getPreference = (userId: string, channel: string, bizType: string) =>
+  request<MsgPreferenceVO>({ url: `${BASE}/preference/${userId}/${channel}/${bizType}`, method: 'GET', silent: true })
+
+/**
+ * 新增/更新用户偏好（upsert）
+ * @param data 偏好数据
+ * @returns 保存后的偏好
+ */
+export const upsertPreference = (data: PreferenceUpsertDTO) =>
+  request<MsgPreferenceVO>({ url: `${BASE}/preference`, method: 'POST', data })
+
+/**
+ * 删除偏好
+ * @param id 偏好 ID
+ */
+export const deletePreference = (id: string) =>
+  request<void>({ url: `${BASE}/preference/${id}`, method: 'DELETE' })
 
 // ==================== 统计看板 ====================
 

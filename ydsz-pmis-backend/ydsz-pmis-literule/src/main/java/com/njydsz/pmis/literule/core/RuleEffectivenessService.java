@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -140,14 +139,6 @@ public class RuleEffectivenessService {
             }
         }
 
-        Counters copy() {
-            Counters c = new Counters();
-            c.tp.set(tp.get());
-            c.fp.set(fp.get());
-            c.fn.set(fn.get());
-            c.tn.set(tn.get());
-            return c;
-        }
     }
 
     /**
@@ -316,7 +307,7 @@ public class RuleEffectivenessService {
         }
 
         // 排序
-        poorRules.sort(Comparator.comparingDouble(RuleEffectivenessMetrics::getF1Score));
+        poorRules.sort(Comparator.comparingDouble(m -> m.getF1Score()));
         topRules.sort((a, b) -> Double.compare(b.getF1Score(), a.getF1Score()));
 
         long now = System.currentTimeMillis();

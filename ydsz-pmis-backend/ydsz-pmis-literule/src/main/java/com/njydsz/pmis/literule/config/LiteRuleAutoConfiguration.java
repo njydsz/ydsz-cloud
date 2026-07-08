@@ -24,6 +24,7 @@ import com.njydsz.pmis.literule.core.DefaultRuleEngine;
 import com.njydsz.pmis.literule.core.MicrometerRuleMetrics;
 import com.njydsz.pmis.literule.core.RuleCanaryRouter;
 import com.njydsz.pmis.literule.core.RuleCircuitBreaker;
+import com.njydsz.pmis.literule.core.RuleEffectivenessService;
 import com.njydsz.pmis.literule.core.RuleMetrics;
 import com.njydsz.pmis.literule.core.RuleTimeoutExecutor;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
@@ -861,5 +862,31 @@ public class LiteRuleAutoConfiguration {
         }
         log.info("[LiteRule-Model] MockModelInputProvider 已初始化（默认输出）");
         return new MockModelInputProvider();
+    }
+
+    // ------------------------------------------------------------------
+    // P2-2 规则效果评估体系
+    // ------------------------------------------------------------------
+
+    /**
+     * 规则效果评估服务（P2-2）
+     *
+     * <p>提供基于人工反馈标注的规则 Precision/Recall/F1 指标计算，
+     * 支持滑动时间窗口、全局/单规则维度报告生成。
+     *
+     * <p>默认 7 天滑动窗口，可通过 {@code pmis.literule.effectiveness.window-days} 配置。
+     *
+     * @return RuleEffectivenessService 实例
+     * @since 2.0.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(
+            prefix = "pmis.literule.effectiveness", name = "enabled",
+            havingValue = "true", matchIfMissing = true)
+    public RuleEffectivenessService ruleEffectivenessService() {
+        RuleEffectivenessService service = new RuleEffectivenessService();
+        log.info("[LiteRule-Effectiveness] 规则效果评估服务已初始化（window=7天）");
+        return service;
     }
 }

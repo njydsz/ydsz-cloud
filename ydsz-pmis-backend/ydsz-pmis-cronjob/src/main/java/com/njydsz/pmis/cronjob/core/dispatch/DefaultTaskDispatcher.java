@@ -118,6 +118,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ObjectProvider<MapTaskExecutor> mapTaskExecutorProvider;
     /** P2-5: 租户感知线程池（可选注入，未配置或 isolation-strategy=none 时使用全局池） */
     private final ObjectProvider<TenantAwareExecutorPool> tenantAwareExecutorPoolProvider;
+    /** P3-12: 跨集群调度器（可选注入，未配置时跨集群任务降级到本地执行） */
+    private final ObjectProvider<CrossClusterDispatcher> crossClusterDispatcherProvider;
+    /** P3-13: WebHook 事件分发器（可选注入，未配置时不推送事件通知） */
+    private final ObjectProvider<WebhookEventDispatcher> webhookEventDispatcherProvider;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -158,6 +162,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
     @Override
     public String dispatch(JobDO job, String executorNode, String triggerType) {
+        // P3-12: 跨集群调度 — 任务指定了目标集群时，通过 CrossClusterDispatcher 派发
+        if (job.getCluster() != null && !job.getCluster().isBlank()) {
+            return dispatchToCluster(job, triggerType);
+        }
         // 当前实现：executorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发）
         boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
         // P1-2: CONCURRENT 策略不加锁
@@ -718,16 +726,19 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
                 jobLogContentServiceProvider.getIfAvailable());
         JobLoggerHolder.set(jobLogger);
-        // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
-        JobContextHolder.set(job.getId(), job.getJobKey());
+// P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
+JobContextHolder.set(job.getId(), job.getJobKey());
 
-        // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
-        recordExecutionStart(job.getTenantId());
+// P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
+recordExecutionStart(job.getTenantId());
 
-        boolean success = false;
-        Object result = null;
-        try {
-            // P0-4: MAP/MAP_REDUCE 类型走 MapTaskExecutor
+// P3-13: 推送 TASK_STARTED WebHook 事件
+dispatchWebhookEvent("TASK_STARTED", job, log0);
+
+boolean success = false;
+Object result = null;
+try {
+    // P0-4: MAP/MAP_REDUCE 类型走 MapTaskExecutor
             String jobType = job.getJobType();
             if ("MAP".equals(jobType) || "MAP_REDUCE".equals(jobType)) {
                 MapTaskExecutor mapExecutor = mapTaskExecutorProvider.getIfAvailable();
@@ -813,11 +824,99 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         publishTaskCompleted(job, success, log0.getId());
         // P5: 触发告警（失败告警 + 慢任务告警）
         triggerAlerts(job, success, log0);
+        // P3-13: 推送 WebHook 事件通知
+        dispatchWebhookEvent(success ? "TASK_SUCCESS" : "TASK_FAILED", job, log0);
         // P1-1: 失败重试（非 RETRY 触发且 maxRetries > 0 且 retryCount < maxRetries）
         if (!success) {
             scheduleRetryIfNeeded(job, holdLock, triggerType, retryCount);
         }
         return log0.getId();
+    }
+
+    /**
+     * P3-12: 跨集群派发任务。
+     *
+     * <p>当任务的 {@code cluster} 字段指定了目标集群时，通过 {@link CrossClusterDispatcher}
+     * 将任务 HTTP 派发到目标集群的执行器节点。
+     *
+     * <p>降级策略：CrossClusterDispatcher 不可用或目标集群端点未配置时，
+     * 降级到本地执行（记录警告日志）。
+     *
+     * @param job         任务定义（含 cluster 字段）
+     * @param triggerType 触发类型
+     * @return 执行日志 ID；降级本地执行时返回本地 logId
+     */
+    private String dispatchToCluster(JobDO job, String triggerType) {
+        CrossClusterDispatcher clusterDispatcher = crossClusterDispatcherProvider.getIfAvailable();
+        if (clusterDispatcher == null) {
+            log.warn("[Dispatcher] CrossClusterDispatcher 未注册, 降级本地执行: key={} cluster={}",
+                    job.getJobKey(), job.getCluster());
+            return dispatchLocalFallback(job, triggerType);
+        }
+        if (!clusterDispatcher.isClusterAvailable(job.getCluster())) {
+            log.warn("[Dispatcher] 集群端点未配置, 降级本地执行: key={} cluster={}",
+                    job.getJobKey(), job.getCluster());
+            return dispatchLocalFallback(job, triggerType);
+        }
+        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TraceIdUtil.get());
+        String logId = clusterDispatcher.dispatchToCluster(job.getCluster(), request);
+        if (logId == null) {
+            log.warn("[Dispatcher] 跨集群派发失败, 降级本地执行: key={} cluster={}",
+                    job.getJobKey(), job.getCluster());
+            return dispatchLocalFallback(job, triggerType);
+        }
+        log.info("[Dispatcher] 跨集群派发成功: key={} cluster={} logId={}",
+                job.getJobKey(), job.getCluster(), logId);
+        return logId;
+    }
+
+    /**
+     * P3-12: 跨集群降级时的本地执行入口。
+     */
+    private String dispatchLocalFallback(JobDO job, String triggerType) {
+        boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
+        if ("CONCURRENT".equals(job.getBlockStrategy())) {
+            holdLock = false;
+        }
+        if (isShardedJob(job)) {
+            return executeShardedJob(job, holdLock, triggerType);
+        }
+        if (TRIGGER_MANUAL.equals(triggerType)) {
+            return executeJob(job, holdLock, triggerType, 0);
+        }
+        return dispatchAsync(job, holdLock, triggerType, 0);
+    }
+
+    /**
+     * P3-13: 推送 WebHook 事件通知。
+     *
+     * <p>使用 try-catch 包裹，确保事件推送失败不影响主流程。
+     *
+     * @param eventType 事件类型: TASK_STARTED / TASK_SUCCESS / TASK_FAILED / TASK_TIMEOUT
+     * @param job       任务定义
+     * @param log0      任务日志
+     */
+    private void dispatchWebhookEvent(String eventType, JobDO job, JobLogDO log0) {
+        WebhookEventDispatcher dispatcher = webhookEventDispatcherProvider.getIfAvailable();
+        if (dispatcher == null) {
+            return;
+        }
+        try {
+            java.util.Map<String, Object> payload = new java.util.HashMap<>();
+            payload.put("jobKey", job.getJobKey());
+            payload.put("jobName", job.getJobName());
+            payload.put("logId", log0.getId());
+            payload.put("status", log0.getStatus());
+            payload.put("duration", log0.getDurationMs());
+            payload.put("triggerType", log0.getTriggerType());
+            if (log0.getErrorMessage() != null) {
+                payload.put("errorMessage", log0.getErrorMessage());
+            }
+            dispatcher.dispatchEvent(eventType, job.getJobKey(), payload);
+        } catch (Exception e) {
+            log.warn("[Dispatcher] WebHook 事件推送失败(不影响主流程): eventType={} key={} reason={}",
+                    eventType, job.getJobKey(), e.getMessage());
+        }
     }
 
     /**
