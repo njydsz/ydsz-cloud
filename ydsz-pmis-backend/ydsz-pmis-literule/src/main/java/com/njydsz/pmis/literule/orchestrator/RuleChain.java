@@ -934,19 +934,62 @@ public class RuleChain {
             switch (node.getNodeType()) {
                 case SINGLE -> {
                     long start = System.nanoTime();
-                    RuleResult result;
+                    RuleResult result = null;
                     boolean error = false;
-                    try {
-                        result = node.getRule().evaluate(context);
-                    } catch (Exception e) {
-                        result = null;
-                        error = true;
-                        log.warn("[LiteRule-Chain] 规则 {} 评估异常: {}", node.getRule().getCode(), e.getMessage());
+
+                    // 节点级重试（2.0.0）
+                    int maxAttempts = node.hasRetry() ? node.getRetryCount() + 1 : 1;
+                    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+                        try {
+                            // 节点级超时（2.0.0）
+                            if (node.hasTimeout()) {
+                                final RuleContext ctx = context;
+                                java.util.concurrent.CompletableFuture<RuleResult> future =
+                                        java.util.concurrent.CompletableFuture.supplyAsync(
+                                                () -> node.getRule().evaluate(ctx));
+                                try {
+                                    result = future.get(node.getTimeoutMs(), TimeUnit.MILLISECONDS);
+                                    error = false;
+                                    break; // 成功则跳出重试循环
+                                } catch (TimeoutException te) {
+                                    result = null;
+                                    error = true;
+                                    log.warn("[LiteRule-Chain] 规则 {} 执行超时 ({}ms), attempt={}/{}",
+                                            node.getRule().getCode(), node.getTimeoutMs(), attempt, maxAttempts);
+                                    future.cancel(true);
+                                } catch (Exception ex) {
+                                    result = null;
+                                    error = true;
+                                    log.warn("[LiteRule-Chain] 规则 {} 评估异常: {}, attempt={}/{}",
+                                            node.getRule().getCode(), ex.getMessage(), attempt, maxAttempts);
+                                }
+                            } else {
+                                result = node.getRule().evaluate(context);
+                                error = false;
+                                break; // 成功则跳出重试循环
+                            }
+                        } catch (Exception e) {
+                            result = null;
+                            error = true;
+                            log.warn("[LiteRule-Chain] 规则 {} 评估异常: {}, attempt={}/{}",
+                                    node.getRule().getCode(), e.getMessage(), attempt, maxAttempts);
+                        }
+                        // 重试前等待
+                        if (attempt < maxAttempts && node.getRetryIntervalMs() > 0) {
+                            try {
+                                Thread.sleep(node.getRetryIntervalMs());
+                            } catch (InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                                break;
+                            }
+                        }
                     }
+
                     long elapsed = (System.nanoTime() - start) / 1_000_000;
                     // 记录统计到引擎
                     if (statsRecorder != null) {
-                        statsRecorder.record(node.getRule().getCode(),
+                        String ruleCode = node.getRule() != null ? node.getRule().getCode() : "unknown";
+                        statsRecorder.record(ruleCode,
                                 result != null && result.isTriggered(), error, elapsed);
                     }
                     if (result != null && result.isTriggered()) {

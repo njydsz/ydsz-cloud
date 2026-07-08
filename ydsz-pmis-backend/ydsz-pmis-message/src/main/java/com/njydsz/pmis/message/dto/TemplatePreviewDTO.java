@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.dto;
 
+
 import lombok.Data;
 
 import java.util.Map;

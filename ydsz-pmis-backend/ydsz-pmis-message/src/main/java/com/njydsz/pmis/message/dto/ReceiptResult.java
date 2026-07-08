@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.dto;
 
+
 import com.njydsz.pmis.message.enums.ReceiptStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;

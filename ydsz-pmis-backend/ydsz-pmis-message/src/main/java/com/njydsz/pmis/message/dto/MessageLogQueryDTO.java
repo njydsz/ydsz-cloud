@@ -37,4 +37,16 @@ public class MessageLogQueryDTO extends PageQuery {
 
     /** 租户 ID */
     private String tenantId;
+
+    /** P2-13: 全文搜索关键词（模糊匹配 content / receiver / templateCode） */
+    private String keyword;
+
+    /** P2-13: 消息分组（按业务分组筛选） */
+    private String messageGroup;
+
+    /** P2-13: 时间范围开始 */
+    private String startTime;
+
+    /** P2-13: 时间范围结束 */
+    private String endTime;
 }

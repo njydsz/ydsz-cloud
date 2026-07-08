@@ -60,6 +60,12 @@ public class AdaptiveThresholdService {
     /** 高置信度样本量阈值 */
     private static final int HIGH_CONFIDENCE_SAMPLE_SIZE = 200;
 
+    /** 自动应用置信度阈值（2.0.0） */
+    private static final double AUTO_APPLY_CONFIDENCE_THRESHOLD = 0.75;
+
+    /** 自动应用前后效果观察天数（2.0.0） */
+    private static final int EFFECT_OBSERVATION_DAYS = 7;
+
     /** LLM 调整原因系统提示词 */
     private static final String LLM_REASON_SYSTEM_PROMPT = "你是规则引擎风控专家。"
             + "请基于给定的规则阈值分析数据，用 1~2 句中文解释为什么要调整阈值，"
@@ -79,6 +85,15 @@ public class AdaptiveThresholdService {
 
     /** 待处理建议缓存（ruleCode → 建议列表），仅内存缓存，重启后需重新分析 */
     private final Map<String, List<ThresholdAnalysis>> pendingSuggestions = new ConcurrentHashMap<>();
+
+    /** 已应用阈值的效果追踪记录（2.0.0）：ruleCode → 效果报告 */
+    private final Map<String, ThresholdEffectReport> effectReports = new ConcurrentHashMap<>();
+
+    /** 是否启用自动应用（2.0.0） */
+    private volatile boolean autoApplyEnabled = false;
+
+    /** 自动应用置信度阈值（2.0.0，可配置覆盖默认值） */
+    private volatile double autoApplyConfidenceThreshold = AUTO_APPLY_CONFIDENCE_THRESHOLD;
 
     /**
      * 构造自适应阈值分析服务
@@ -265,6 +280,185 @@ public class AdaptiveThresholdService {
         }
         // 过滤已应用的
         return list.stream().filter(a -> !a.isApplied()).toList();
+    }
+
+    // ==================== 自适应阈值闭环 (2.0.0) ====================
+
+    /**
+     * 设置是否启用自动应用
+     *
+     * @param autoApplyEnabled 是否启用
+     * @since 2.0.0
+     */
+    public void setAutoApplyEnabled(boolean autoApplyEnabled) {
+        this.autoApplyEnabled = autoApplyEnabled;
+        log.info("[AdaptiveThreshold] 自动应用已{}", autoApplyEnabled ? "启用" : "禁用");
+    }
+
+    /**
+     * 设置自动应用置信度阈值
+     *
+     * @param threshold 置信度阈值（0~1）
+     * @since 2.0.0
+     */
+    public void setAutoApplyConfidenceThreshold(double threshold) {
+        this.autoApplyConfidenceThreshold = Math.max(0, Math.min(1, threshold));
+    }
+
+    /**
+     * 定时分析任务（2.0.0 自适应阈值闭环入口）
+     *
+     * <p>此方法设计为被 Spring @Scheduled 或 XXL-Job 定时调度调用。
+     * 执行流程：
+     * <ol>
+     *   <li>分析全部规则最近 N 天的阈值</li>
+     *   <li>若启用自动应用，对高置信度建议自动应用</li>
+     *   <li>对已应用的阈值进行效果追踪</li>
+     * </ol>
+     *
+     * @param analysisDays 分析天数
+     * @param operator     操作人标识
+     * @return 分析结果摘要
+     * @since 2.0.0
+     */
+    public ScheduledAnalysisResult scheduledAnalyze(int analysisDays, String operator) {
+        log.info("[AdaptiveThreshold] 定时分析任务启动: days={}, autoApply={}, operator={}",
+                analysisDays, autoApplyEnabled, operator);
+
+        // 1. 分析全部规则
+        List<ThresholdAnalysis> allAnalyses = analyzeAllRules(analysisDays);
+
+        int totalRules = (int) allAnalyses.stream().map(ThresholdAnalysis::getRuleCode).distinct().count();
+        int totalSuggestions = allAnalyses.size();
+        int autoApplied = 0;
+        int autoApplyFailed = 0;
+
+        // 2. 自动应用高置信度建议
+        if (autoApplyEnabled) {
+            for (ThresholdAnalysis analysis : allAnalyses) {
+                if (!analysis.isApplied()
+                        && analysis.getConfidence() >= autoApplyConfidenceThreshold) {
+                    try {
+                        boolean success = applyThreshold(analysis.getRuleCode(), analysis, operator);
+                        if (success) {
+                            autoApplied++;
+                            // 记录效果追踪基线
+                            recordEffectBaseline(analysis);
+                        } else {
+                            autoApplyFailed++;
+                        }
+                    } catch (Exception e) {
+                        autoApplyFailed++;
+                        log.warn("[AdaptiveThreshold] 自动应用失败: ruleCode={}, variable={}, err={}",
+                                analysis.getRuleCode(), analysis.getVariable(), e.getMessage());
+                    }
+                }
+            }
+        }
+
+        // 3. 效果追踪（检查已应用的阈值）
+        int effectChecked = trackEffects(analysisDays, operator);
+
+        ScheduledAnalysisResult result = new ScheduledAnalysisResult(
+                totalRules, totalSuggestions, autoApplied, autoApplyFailed, effectChecked);
+        log.info("[AdaptiveThreshold] 定时分析任务完成: {}", result);
+        return result;
+    }
+
+    /**
+     * 记录阈值应用效果基线
+     */
+    private void recordEffectBaseline(ThresholdAnalysis analysis) {
+        ThresholdEffectReport report = ThresholdEffectReport.builder()
+                .ruleCode(analysis.getRuleCode())
+                .variable(analysis.getVariable())
+                .oldThreshold(analysis.getCurrentThreshold())
+                .newThreshold(analysis.getSuggestedThreshold())
+                .appliedAt(LocalDateTime.now().toString())
+                .baselineTriggerRate(analysis.getDistribution() != null
+                        ? analysis.getDistribution().getTriggerRate() : 0)
+                .baselineSampleSize(analysis.getDistribution() != null
+                        ? analysis.getDistribution().getTotalCount() : 0)
+                .build();
+        effectReports.put(analysis.getRuleCode() + ":" + analysis.getVariable(), report);
+    }
+
+    /**
+     * 追踪已应用阈值的效果
+     *
+     * <p>对每个已应用的阈值，重新分析最近 N 天的数据，
+     * 比较应用前后的触发率变化，生成效果报告。
+     *
+     * @param days 观察天数
+     * @param operator 操作人
+     * @return 已追踪效果的数量
+     */
+    private int trackEffects(int days, String operator) {
+        if (effectReports.isEmpty()) {
+            return 0;
+        }
+        int tracked = 0;
+        for (Map.Entry<String, ThresholdEffectReport> entry : effectReports.entrySet()) {
+            ThresholdEffectReport report = entry.getValue();
+            try {
+                // 重新分析当前效果
+                List<ThresholdAnalysis> currentAnalyses = analyzeRule(report.getRuleCode(), days);
+                for (ThresholdAnalysis current : currentAnalyses) {
+                    if (current.getVariable().equals(report.getVariable())) {
+                        report.setCurrentTriggerRate(current.getDistribution() != null
+                                ? current.getDistribution().getTriggerRate() : 0);
+                        report.setCurrentSampleSize(current.getDistribution() != null
+                                ? current.getDistribution().getTotalCount() : 0);
+                        report.setEffectEvaluatedAt(LocalDateTime.now().toString());
+                        // 计算效果：触发率变化
+                        double rateDelta = report.getCurrentTriggerRate() - report.getBaselineTriggerRate();
+                        report.setTriggerRateDelta(rateDelta);
+                        if (Math.abs(rateDelta) < 0.02) {
+                            report.setEffectLevel("NEUTRAL");
+                        } else if (rateDelta < 0 && report.getBaselineTriggerRate() > HIGH_TRIGGER_RATE) {
+                            report.setEffectLevel("POSITIVE");
+                        } else if (rateDelta > 0 && report.getBaselineTriggerRate() < LOW_TRIGGER_RATE) {
+                            report.setEffectLevel("POSITIVE");
+                        } else {
+                            report.setEffectLevel("NEEDS_REVIEW");
+                        }
+                        tracked++;
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[AdaptiveThreshold] 效果追踪失败: ruleCode={}, err={}",
+                        report.getRuleCode(), e.getMessage());
+            }
+        }
+        return tracked;
+    }
+
+    /**
+     * 获取阈值应用效果报告
+     *
+     * @param ruleCode 规则编码
+     * @return 效果报告列表；无记录时返回空列表
+     * @since 2.0.0
+     */
+    public List<ThresholdEffectReport> getEffectReports(String ruleCode) {
+        if (ruleCode == null || ruleCode.isBlank()) {
+            return List.of();
+        }
+        return effectReports.entrySet().stream()
+                .filter(e -> e.getKey().startsWith(ruleCode + ":"))
+                .map(Map.Entry::getValue)
+                .toList();
+    }
+
+    /**
+     * 获取全部效果报告
+     *
+     * @return 全部效果报告列表
+     * @since 2.0.0
+     */
+    public List<ThresholdEffectReport> getAllEffectReports() {
+        return List.copyOf(effectReports.values());
     }
 
     // ==================== 内部分析逻辑 ====================

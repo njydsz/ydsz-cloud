@@ -12335,6 +12335,59 @@ CREATE INDEX IF NOT EXISTS idx_pfc_trace
     ON pmis_flow_comment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
 
 -- ====================================================================
+-- ===================== P1-2: 审批常用语表 ===========================
+-- ====================================================================
+-- P1-2: 对标钉钉/飞书审批的"常用语"能力，用户可预设常用审批意见。
+-- 系统预设（is_system=1）全局共享，用户自定义（is_system=0）按用户隔离。
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS pmis_flow_quick_comment (
+    id                  VARCHAR(20)       PRIMARY KEY,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
+    user_id             VARCHAR(20)       NOT NULL,               -- 所属用户（系统预设时为 'SYSTEM'）
+    content             VARCHAR(500)      NOT NULL,               -- 常用语内容
+    comment_type        VARCHAR(20),                              -- 意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE
+    sort_num            INTEGER           NOT NULL DEFAULT 0,     -- 排序号（越小越靠前）
+    use_count           INTEGER           NOT NULL DEFAULT 0,     -- 使用次数
+    is_system           SMALLINT          NOT NULL DEFAULT 0,     -- 是否系统预设（1=是，0=否）
+    deleted             SMALLINT          NOT NULL DEFAULT 0,
+    created_at          TIMESTAMP         NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMP         NOT NULL DEFAULT NOW(),
+    created_by          VARCHAR(20),
+    updated_by          VARCHAR(20)
+);
+
+COMMENT ON TABLE  pmis_flow_quick_comment IS 'P1-2: 审批常用语表 — 用户预设常用审批意见，一键填入';
+COMMENT ON COLUMN pmis_flow_quick_comment.user_id IS '所属用户 ID（系统预设为 SYSTEM）';
+COMMENT ON COLUMN pmis_flow_quick_comment.content IS '常用语内容';
+COMMENT ON COLUMN pmis_flow_quick_comment.comment_type IS '意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE';
+COMMENT ON COLUMN pmis_flow_quick_comment.sort_num IS '排序号（越小越靠前）';
+COMMENT ON COLUMN pmis_flow_quick_comment.use_count IS '使用次数（统计用）';
+COMMENT ON COLUMN pmis_flow_quick_comment.is_system IS '是否系统预设（1=是，0=否）';
+
+CREATE INDEX IF NOT EXISTS idx_pfqc_user
+    ON pmis_flow_quick_comment (tenant_id, user_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_pfqc_system
+    ON pmis_flow_quick_comment (tenant_id, is_system, deleted) WHERE is_system = 1;
+
+-- 系统预设常用语初始化数据
+INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+SELECT '1', '1', 'SYSTEM', '同意', 'AGREE', 1, 0, 1, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '1');
+INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+SELECT '2', '1', 'SYSTEM', '已阅', NULL, 2, 0, 1, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '2');
+INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+SELECT '3', '1', 'SYSTEM', '不同意，请补充材料后重新提交', 'DISAGREE', 3, 0, 1, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '3');
+INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+SELECT '4', '1', 'SYSTEM', '请确认金额是否正确', 'INQUIRE', 4, 0, 1, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '4');
+INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
+SELECT '5', '1', 'SYSTEM', '建议优化方案后重新审批', 'SUGGEST', 5, 0, 1, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '5');
+
+-- ====================================================================
 -- ============================ [071] P3-3 AI 推荐审批人反馈记录表 ============================
 -- ====================================================================
 -- P3-3: 推荐审批人反馈闭环 — 记录用户对 AI 推荐审批人的反馈行为

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.dto;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
