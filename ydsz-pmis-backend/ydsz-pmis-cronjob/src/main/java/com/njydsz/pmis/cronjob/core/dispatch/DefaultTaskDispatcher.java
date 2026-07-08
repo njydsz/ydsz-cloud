@@ -225,7 +225,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 executor = taskExecutorPool;
             }
             final java.util.concurrent.ExecutorService finalExecutor = executor;
-            executor.submit(() -> {
+            // P0-3: 包装为 PriorityRunnable 实现优先级调度
+            PriorityRunnable priorityTask = new PriorityRunnable(job.getPriority(), () -> {
                 try {
                     executeJob(job, holdLock, triggerType, retryCount);
                 } catch (Exception e) {
@@ -233,6 +234,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                             job.getJobKey(), triggerType, e.getMessage(), e);
                 }
             });
+            executor.execute(priorityTask);
             if (finalExecutor instanceof java.util.concurrent.ThreadPoolExecutor tpe) {
                 log.debug("[Dispatcher] 任务异步派发: key={} triggerType={} pool={} active={} queue={}",
                         job.getJobKey(), triggerType,
@@ -1267,6 +1269,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                     return t;
                 });
         // P1-7: 初始化任务执行线程池（隔离调度线程与执行线程）
+        // P0-3: 使用 PriorityBlockingQueue 实现优先级调度
         CronjobProperties.Executor execConfig = cronjobProperties.getExecutor();
         int corePoolSize = Math.max(1, execConfig.getMaxConcurrent());
         int maxPoolSize = Math.max(corePoolSize, execConfig.getMaxConcurrent());
@@ -1274,7 +1277,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         java.util.concurrent.BlockingQueue<Runnable> workQueue =
                 queueCapacity == 0
                         ? new java.util.concurrent.SynchronousQueue<>()
-                        : new java.util.concurrent.LinkedBlockingQueue<>(queueCapacity);
+                        : new java.util.concurrent.PriorityBlockingQueue<>();
         java.util.concurrent.atomic.AtomicInteger threadCounter = new java.util.concurrent.atomic.AtomicInteger(0);
         this.taskExecutorPool = new java.util.concurrent.ThreadPoolExecutor(
                 corePoolSize, maxPoolSize, 60L, java.util.concurrent.TimeUnit.SECONDS,

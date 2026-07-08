@@ -188,8 +188,9 @@ public class MessageServiceImpl implements MessageService {
             messageMetrics.recordSend(channel, "FAILED", 0);
             throw new BizException(BizErrorCode.RATE_LIMIT, "发送限流，请稍后重试");
         }
-        // ⑥-2 P2-5: 多维度令牌桶（receiver/templateCode/tenant）
-        if (!rateLimitService.checkSendLimit(channel, receiver, templateCode, TenantContext.getTenantId())) {
+        // ⑥-2 P2-5/P0-5: 多维度令牌桶（receiver/templateCode/tenant），优先级感知
+        if (!rateLimitService.checkSendLimit(channel, receiver, templateCode,
+                TenantContext.getTenantId(), request.getPriority())) {
             messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
             throw new BizException(BizErrorCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
         }

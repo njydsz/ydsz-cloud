@@ -53,4 +53,27 @@ public interface RateLimitService {
      * @return true 表示所有启用的维度都未超限，允许发送
      */
     boolean checkSendLimit(String channel, String receiver, String templateCode, String tenantId);
+
+    /**
+     * P0-5: 优先级感知的多维度限流检查。
+     *
+     * <p>在 {@link #checkSendLimit} 基础上增加优先级感知：
+     * <ul>
+     *   <li>URGENT：跳过 template 和 tenant 维度限流，仅保留 receiver 维度</li>
+     *   <li>HIGH：限流阈值提升 2 倍</li>
+     *   <li>NORMAL：正常限流</li>
+     *   <li>LOW：限流阈值减半</li>
+     * </ul>
+     *
+     * @param channel      通道
+     * @param receiver     接收人
+     * @param templateCode 模板编码
+     * @param tenantId     租户 ID
+     * @param priority     优先级（LOW/NORMAL/HIGH/URGENT），为空时按 NORMAL
+     * @return true 表示允许发送
+     */
+    default boolean checkSendLimit(String channel, String receiver, String templateCode,
+                                   String tenantId, String priority) {
+        return checkSendLimit(channel, receiver, templateCode, tenantId);
+    }
 }

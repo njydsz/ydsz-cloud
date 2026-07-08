@@ -164,6 +164,11 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
     }
 
     @Override
+    public boolean supportsFunctionCalling() {
+        return true;
+    }
+
+    @Override
     public String chat(String systemPrompt, String userPrompt, AgentContext context) {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("[SpringAiLlm] API Key 未配置, 降级到 mock");
@@ -370,5 +375,113 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
 
         log.debug("[SpringAiLlm-Stream] 流式完成, totalLen={}", fullText.length());
         return fullText.toString();
+    }
+
+    /**
+     * 带工具的 LLM 调用（原生 Function Calling，P4-2 落地）。
+     *
+     * <p>使用 OpenAI 兼容 API 的 tools 参数，LLM 原生理解工具 schema
+     * 并自主决定是否调用工具。支持单轮并行多工具调用。
+     */
+    @Override
+    public LlmToolCallResponse chatWithTools(String systemPrompt, String userPrompt,
+                                              List<Map<String, Object>> tools,
+                                              AgentContext context) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("[SpringAiLlm] API Key 未配置, 降级到 mock");
+            return null;
+        }
+        Callable<LlmToolCallResponse> call = () -> doChatWithTools(systemPrompt, userPrompt, tools, context);
+        try {
+            String json = executeWithGuard(() -> {
+                LlmToolCallResponse r = call.call();
+                return r == null ? "" : JSON.toJSONString(r);
+            }, context);
+            if (json == null || json.isEmpty()) return null;
+            return JSON.parseObject(json, LlmToolCallResponse.class);
+        } catch (Exception e) {
+            log.warn("[SpringAiLlm] chatWithTools 异常: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 执行带 tools 参数的 OpenAI 兼容 API 调用。
+     */
+    @SuppressWarnings("unchecked")
+    protected LlmToolCallResponse doChatWithTools(String systemPrompt, String userPrompt,
+                                                    List<Map<String, Object>> tools,
+                                                    AgentContext context) throws Exception {
+        JSONObject body = new JSONObject();
+        body.put("model", model);
+        body.put("temperature", temperature);
+
+        JSONArray messages = new JSONArray();
+        if (systemPrompt != null && !systemPrompt.isEmpty()) {
+            messages.add(msg("system", systemPrompt));
+        }
+        messages.add(msg("user", userPrompt == null ? "" : userPrompt));
+        body.put("messages", messages);
+
+        if (tools != null && !tools.isEmpty()) {
+            body.put("tools", tools);
+        }
+
+        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                .uri(URI.create(apiUrl))
+                .timeout(Duration.ofMillis(timeoutMillis))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + apiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(body.toJSONString()))
+                .build();
+
+        java.net.http.HttpResponse<String> response =
+                httpClient.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() / 100 != 2) {
+            String snippet = response.body() != null && response.body().length() > 200
+                    ? response.body().substring(0, 200) : (response.body() == null ? "" : response.body());
+            throw new RuntimeException("LLM tools HTTP " + response.statusCode() + ": " + snippet);
+        }
+
+        JSONObject resp = JSON.parseObject(response.body());
+        if (context != null) {
+            String id = resp.getString("id");
+            if (id != null && !id.isEmpty()) {
+                context.setProviderTraceId(id);
+            }
+        }
+
+        JSONArray choices = resp.getJSONArray("choices");
+        if (choices == null || choices.isEmpty()) return null;
+        JSONObject first = choices.getJSONObject(0);
+        JSONObject message = first.getJSONObject("message");
+        if (message == null) return null;
+
+        LlmToolCallResponse result = new LlmToolCallResponse();
+        result.setContent(message.getString("content") == null ? "" : message.getString("content"));
+
+        // 解析 tool_calls
+        JSONArray toolCallsArr = message.getJSONArray("tool_calls");
+        if (toolCallsArr != null && !toolCallsArr.isEmpty()) {
+            List<LlmToolCallResponse.ToolCall> toolCalls = new java.util.ArrayList<>();
+            for (int i = 0; i < toolCallsArr.size(); i++) {
+                JSONObject tcJson = toolCallsArr.getJSONObject(i);
+                LlmToolCallResponse.ToolCall tc = new LlmToolCallResponse.ToolCall();
+                tc.setId(tcJson.getString("id") == null ? "" : tcJson.getString("id"));
+                tc.setIndex(tcJson.getIntValue("index", i));
+                tc.setType(tcJson.getString("type") == null ? "function" : tcJson.getString("type"));
+                JSONObject fnJson = tcJson.getJSONObject("function");
+                if (fnJson != null) {
+                    LlmToolCallResponse.ToolCall.FunctionCall fn = new LlmToolCallResponse.ToolCall.FunctionCall();
+                    fn.setName(fnJson.getString("name") == null ? "" : fnJson.getString("name"));
+                    fn.setArguments(fnJson.getString("arguments") == null ? "{}" : fnJson.getString("arguments"));
+                    tc.setFunction(fn);
+                }
+                toolCalls.add(tc);
+            }
+            result.setToolCalls(toolCalls);
+        }
+        return result;
     }
 }

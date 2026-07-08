@@ -6,6 +6,9 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.channel.MessageChannel;
 import com.njydsz.pmis.message.channel.sms.SmsProvider;
 import com.njydsz.pmis.message.config.MessageProperties;
+import com.njydsz.pmis.message.dto.ReceiptResult;
+import com.njydsz.pmis.message.enums.ReceiptStatusEnum;
+import com.njydsz.pmis.message.entity.MsgLogDO;
 import com.njydsz.pmis.message.entity.MsgTemplateDO;
 import com.njydsz.pmis.message.service.TemplateService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 短信通道门面（替换原 MockSmsChannel）。
@@ -63,6 +67,50 @@ public class SmsChannel implements MessageChannel {
         log.info("[SmsChannel] provider={} status={} phone={}",
                 provider.providerType(), result.getStatus(), request.getReceiver());
         return result;
+    }
+
+    /**
+     * P0-4: 批量发送短信（委托给 provider 的原生批量接口）。
+     *
+     * @param requests 消息请求列表
+     * @return 发送结果列表
+     */
+    public List<MessageResult> batchSend(List<MessageRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return List.of();
+        }
+        SmsProvider provider = selectProvider();
+        MsgTemplateDO template = resolveTemplate(requests.get(0));
+        List<MessageResult> results = provider.batchSend(requests, template);
+        log.info("[SmsChannel] 批量发送: provider={} count={} success={}",
+                provider.providerType(), requests.size(),
+                results.stream().filter(MessageResult::isSuccess).count());
+        return results;
+    }
+
+    /**
+     * P0-4: 查询短信回执（委托给 provider）。
+     */
+    @Override
+    public Optional<ReceiptResult> queryReceipt(MsgLogDO logDO) {
+        SmsProvider provider = selectProvider();
+        if (!"aliyun".equals(provider.providerType())) {
+            return Optional.empty();
+        }
+        String traceId = logDO.getProviderTraceId();
+        String phone = logDO.getReceiver();
+        if (!StringUtils.hasText(traceId) || !StringUtils.hasText(phone)) {
+            return Optional.empty();
+        }
+        MessageResult result = provider.queryReceipt(traceId, phone);
+        if ("SUCCESS".equals(result.getStatus())) {
+            return Optional.of(ReceiptResult.of(ReceiptStatusEnum.DELIVERED, traceId));
+        } else if ("FAILED".equals(result.getStatus())) {
+            return Optional.of(ReceiptResult.of(ReceiptStatusEnum.FAILED,
+                    result.getErrorMessage()));
+        }
+        // UNKNOWN 状态不更新回执,返回 empty
+        return Optional.empty();
     }
 
     /**

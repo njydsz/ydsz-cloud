@@ -1,5 +1,6 @@
 package com.njydsz.pmis.agent.engine.react;
 
+import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
@@ -163,7 +164,7 @@ public class ReActLoop {
                                           int startStep,
                                           ReActEventListener listener) {
         String fullSystemPrompt = buildFullSystemPrompt(baseSystemPrompt);
-        LlmProvider llm = llmProviderRouter.active();
+        // 注：active() 在循环内每步重新调用，支持 LLM Provider 运行时热切换
 
         ReActResult finalResult;
         try {
@@ -194,7 +195,7 @@ public class ReActLoop {
                     }
                     // 解析 JSON 为 ReActDecision
                     String json = LlmProvider.stripMarkdownCodeFence(llmRaw);
-                    decision = com.alibaba.fastjson2.JSON.parseObject(json, ReActDecision.class);
+                    decision = JSON.parseObject(json, ReActDecision.class);
                 } catch (Exception e) {
                     log.warn("[ReAct] step={} LLM 调用或 JSON 解析异常: {}", currentStep, e.getMessage());
                     stepRecord.setThought("[LLM 异常] " + e.getMessage());
@@ -457,7 +458,87 @@ public class ReActLoop {
         }
     }
 
-    // ==================== Prompt 构建 / 记忆 ====================
+    /**
+     * 并行执行多个工具调用（P4-2 落地）。
+     *
+     * <p>当 LLM 通过原生 Function Calling 返回多个 tool_calls 时，
+     * 使用线程池并行执行无依赖的工具，大幅缩短等待时间。
+     *
+     * <p>对标 Coze / Dify 的并行插件调用能力。
+     *
+     * <p>注意：需要人工审批（{@code requiresApproval()=true}）的工具仍串行处理，
+     * 避免并行审批导致状态混乱。
+     *
+     * @param toolCalls    工具调用列表
+     * @param ctx          Agent 上下文
+     * @param currentStep  当前步骤序号
+     * @param listener     事件监听器
+     * @return 合并后的 Observation 文本
+     */
+    public String executeToolsInParallel(
+            List<com.njydsz.pmis.agent.engine.llm.LlmToolCallResponse.ToolCall> toolCalls,
+            AgentContext ctx, int currentStep, ReActEventListener listener) {
+        if (toolCalls == null || toolCalls.isEmpty()) {
+            return "无工具调用";
+        }
+
+        // 单工具直接串行执行
+        if (toolCalls.size() == 1) {
+            var tc = toolCalls.get(0);
+            if (tc.getFunction() == null) return "工具调用缺少 function 信息";
+            String toolName = tc.getFunction().getName();
+            Map<String, Object> params = tc.getFunction().getArgumentsAsMap();
+            try {
+                return executeToolDirect(toolName, params, ctx);
+            } catch (Exception e) {
+                return "工具 [" + toolName + "] 执行异常: " + e.getMessage();
+            }
+        }
+
+        // 多工具并行执行
+        log.info("[ReAct] step={} 并行执行 {} 个工具", currentStep, toolCalls.size());
+        List<java.util.concurrent.Future<String>> futures = new java.util.ArrayList<>();
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(
+                Math.min(toolCalls.size(), 4),
+                r -> {
+                    Thread t = new Thread(r, "react-parallel-tool-" + currentStep);
+                    t.setDaemon(true);
+                    return t;
+                });
+
+        try {
+            for (var tc : toolCalls) {
+                if (tc.getFunction() == null) {
+                    futures.add(executor.submit(() -> "工具调用缺少 function 信息"));
+                    continue;
+                }
+                String toolName = tc.getFunction().getName();
+                Map<String, Object> params = tc.getFunction().getArgumentsAsMap();
+                futures.add(executor.submit(() -> {
+                    try {
+                        return executeToolDirect(toolName, params, ctx);
+                    } catch (Exception e) {
+                        return "工具 [" + toolName + "] 执行异常: " + e.getMessage();
+                    }
+                }));
+            }
+
+            // 等待所有工具完成，合并结果
+            StringBuilder combined = new StringBuilder();
+            for (int i = 0; i < futures.size(); i++) {
+                try {
+                    String result = futures.get(i).get(30, java.util.concurrent.TimeUnit.SECONDS);
+                    combined.append("[工具 ").append(i + 1).append(" 结果]\n").append(result).append("\n\n");
+                } catch (Exception e) {
+                    combined.append("[工具 ").append(i + 1).append(" 超时或异常: ")
+                            .append(e.getMessage()).append("]\n\n");
+                }
+            }
+            return combined.toString().trim();
+        } finally {
+            executor.shutdownNow();
+        }
+    }
 
     /**
      * 构建带对话历史的 user prompt（P1-1）。

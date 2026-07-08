@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.service.impl;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.engine.FlowEventListener;
+import com.njydsz.pmis.workflow.engine.FlowSensitiveMasker;
 import com.njydsz.pmis.workflow.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
@@ -45,6 +46,8 @@ public class FlowTaskSupport {
     private final List<FlowEventListener> eventListeners;
     /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
     private final ApplicationEventPublisher eventPublisher;
+    /** P0-1: 敏感字段脱敏器 */
+    private final FlowSensitiveMasker sensitiveMasker;
 
     // ============================== 任务校验 ==============================
 
@@ -96,7 +99,7 @@ public class FlowTaskSupport {
             log.setAction(action);
             log.setOperatorId(operatorId);
             log.setTargetId(targetId);
-            log.setComment(comment);
+            log.setComment(sensitiveMasker.mask(comment));
             log.setCommentType(commentType);
             log.setOperatedAt(LocalDateTime.now());
             log.setTenantId(task.getTenantId());

@@ -49,6 +49,21 @@ public interface JobMapper extends BaseMapper<JobDO> {
                               @Param("limit") int limit);
 
     /**
+     * P0-2: 扫描窗口内到期的 CRON 任务（精准调度预加载）。
+     *
+     * <p>查询 {@code next_fire_time} 在 {@code [now, windowEnd]} 区间内的 NORMAL 任务，
+     * 使用 {@code FOR UPDATE SKIP LOCKED} 抢占式行锁。
+     *
+     * @param now       当前时间
+     * @param windowEnd 窗口结束时间
+     * @param limit     单批最多扫描任务数
+     * @return 窗口内到期的任务列表
+     */
+    List<JobDO> selectDueJobsInWindow(@Param("now") LocalDateTime now,
+                                      @Param("windowEnd") LocalDateTime windowEnd,
+                                      @Param("limit") int limit);
+
+    /**
      * 原子推进 next_fire_time（P1-7 Leader 模式专用）。
      *
      * <p>Leader 扫描到任务后立即推进 next_fire_time，避免重复派发。

@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
@@ -48,13 +49,12 @@ class MessageStatsServiceImplTest {
     /**
      * P2-4: 为成本统计测试准备默认单价配置。
      *
-     * <p>非成本相关测试不需要 messageProperties,Mockito 会返回 null,
-     * getCostStats 内部已做空值降级处理。
+     * <p>使用 lenient 模式,因为非成本相关测试不会调用 messageProperties.getCost()。
      */
     @BeforeEach
     void setUpCostConfig() {
         MessageProperties.CostConfig costCfg = new MessageProperties.CostConfig();
-        when(messageProperties.getCost()).thenReturn(costCfg);
+        lenient().when(messageProperties.getCost()).thenReturn(costCfg);
     }
 
     @Test

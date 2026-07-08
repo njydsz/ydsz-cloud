@@ -101,3 +101,4 @@ public class MessageRequest {
      * @since 1.2.0
      */
     private String priority;
+}

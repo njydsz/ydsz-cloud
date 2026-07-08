@@ -55,7 +55,7 @@
     </select>
 
     <!-- P1-7: Leader 模式扫描待触发任务，FOR UPDATE SKIP LOCKED 抢占式行锁 -->
-    <!-- P0-3: 仅扫描 CRON 类型任务（FIXED_RATE/FIXED_DELAY 由 SecondLevelScheduler 接管） -->
+    <!-- P0-3: 按 priority 升序排序（priority 越小优先级越高），同优先级按 next_fire_time 升序 -->
     <select id="selectDueJobs" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM pmis_job
@@ -64,7 +64,23 @@
           AND schedule_type = 'CRON'
           AND next_fire_time IS NOT NULL
           AND next_fire_time &lt;= #{now}
-        ORDER BY next_fire_time ASC
+        ORDER BY COALESCE(priority, 5) ASC, next_fire_time ASC
+        LIMIT #{limit}
+        FOR UPDATE SKIP LOCKED
+    </select>
+
+    <!-- P0-2: 精准调度窗口内扫描，FOR UPDATE SKIP LOCKED 抢占式行锁 -->
+    <!-- P0-3: 按 priority 升序排序（priority 越小优先级越高） -->
+    <select id="selectDueJobsInWindow" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_job
+        WHERE status = 'NORMAL'
+          AND deleted = 0
+          AND schedule_type = 'CRON'
+          AND next_fire_time IS NOT NULL
+          AND next_fire_time &gt;= #{now}
+          AND next_fire_time &lt;= #{windowEnd}
+        ORDER BY COALESCE(priority, 5) ASC, next_fire_time ASC
         LIMIT #{limit}
         FOR UPDATE SKIP LOCKED
     </select>

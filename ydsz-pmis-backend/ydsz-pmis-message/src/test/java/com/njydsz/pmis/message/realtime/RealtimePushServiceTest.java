@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 class RealtimePushServiceTest {
 
     private SimpMessagingTemplate messagingTemplate;
+    private WebSocketClusterPublisher clusterPublisher;
     private OnlineUserService onlineUserService;
     private OfflineMessageService offlineMessageService;
     private RealtimePushService service;
@@ -31,9 +32,13 @@ class RealtimePushServiceTest {
     @BeforeEach
     void setUp() {
         messagingTemplate = mock(SimpMessagingTemplate.class);
+        clusterPublisher = mock(WebSocketClusterPublisher.class);
         onlineUserService = mock(OnlineUserService.class);
         offlineMessageService = mock(OfflineMessageService.class);
-        service = new RealtimePushService(messagingTemplate, onlineUserService, offlineMessageService);
+        // clusterPublisher.publish 返回 false 时降级为本地推送,匹配原有测试预期
+        when(clusterPublisher.publish(any())).thenReturn(false);
+        service = new RealtimePushService(messagingTemplate, clusterPublisher,
+                onlineUserService, offlineMessageService);
     }
 
     @Test

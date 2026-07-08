@@ -147,6 +147,111 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
     }
 
     /**
+     * 带工具的 LLM 调用（原生 Function Calling，P4-2 落地）。
+     *
+     * <p>使用 DashScope OpenAI 兼容模式的 tools 参数，LLM 原生理解工具 schema
+     * 并自主决定是否调用工具。支持单轮并行多工具调用。
+     */
+    @Override
+    public LlmToolCallResponse chatWithTools(String systemPrompt, String userPrompt,
+                                              List<Map<String, Object>> tools,
+                                              AgentContext context) {
+        if (apiKey == null || apiKey.isEmpty()) {
+            log.warn("[DashScope] API Key 未配置, 降级到 mock");
+            return null;
+        }
+        Callable<LlmToolCallResponse> call = () -> invokeDashScopeWithTools(systemPrompt, userPrompt, tools, context);
+        try {
+            return executeWithGuardCallable(call, context);
+        } catch (Exception e) {
+            log.warn("[DashScope] chatWithTools 异常: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 执行带 tools 参数的 DashScope 调用。
+     */
+    @SuppressWarnings("unchecked")
+    private LlmToolCallResponse invokeDashScopeWithTools(String systemPrompt, String userPrompt,
+                                                          List<Map<String, Object>> tools,
+                                                          AgentContext context) throws Exception {
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("model", model);
+        body.put("messages", List.of(
+                Map.of("role", "system", "content", systemPrompt == null ? "" : systemPrompt),
+                Map.of("role", "user", "content", userPrompt == null ? "" : userPrompt)
+        ));
+        body.put("temperature", 0.3);
+        if (tools != null && !tools.isEmpty()) {
+            body.put("tools", tools);
+        }
+
+        Map<String, Object> response = http.post()
+                .uri("/v1/chat/completions")
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Content-Type", "application/json")
+                .body(body)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, this::handleErrorResponse)
+                .onStatus(HttpStatusCode::is5xxServerError, this::handleErrorResponse)
+                .body(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {});
+        if (response == null) return null;
+
+        if (context != null) {
+            Object requestId = response.get("request_id");
+            if (requestId != null) context.setProviderTraceId(requestId.toString());
+        }
+
+        Object choices = response.get("choices");
+        if (!(choices instanceof List<?> list) || list.isEmpty()) return null;
+        Object first = list.get(0);
+        if (!(first instanceof Map<?, ?> msg)) return null;
+        Object message = msg.get("message");
+        if (!(message instanceof Map<?, ?> m)) return null;
+
+        LlmToolCallResponse result = new LlmToolCallResponse();
+        Object content = m.get("content");
+        result.setContent(content == null ? "" : content.toString());
+
+        // 解析 tool_calls（可能并行多个）
+        Object toolCallsObj = m.get("tool_calls");
+        if (toolCallsObj instanceof List<?> tcList && !tcList.isEmpty()) {
+            List<LlmToolCallResponse.ToolCall> toolCalls = new java.util.ArrayList<>();
+            for (int i = 0; i < tcList.size(); i++) {
+                Object tcObj = tcList.get(i);
+                if (!(tcObj instanceof Map<?, ?> tcMap)) continue;
+                LlmToolCallResponse.ToolCall tc = new LlmToolCallResponse.ToolCall();
+                tc.setId(tcMap.get("id") == null ? "" : tcMap.get("id").toString());
+                tc.setIndex(tcMap.get("index") == null ? i : Integer.parseInt(tcMap.get("index").toString()));
+                tc.setType(tcMap.get("type") == null ? "function" : tcMap.get("type").toString());
+                Object fnObj = tcMap.get("function");
+                if (fnObj instanceof Map<?, ?> fnMap) {
+                    LlmToolCallResponse.ToolCall.FunctionCall fn = new LlmToolCallResponse.ToolCall.FunctionCall();
+                    fn.setName(fnMap.get("name") == null ? "" : fnMap.get("name").toString());
+                    fn.setArguments(fnMap.get("arguments") == null ? "{}" : fnMap.get("arguments").toString());
+                    tc.setFunction(fn);
+                }
+                toolCalls.add(tc);
+            }
+            result.setToolCalls(toolCalls);
+        }
+        return result;
+    }
+
+    /**
+     * 带返回值类型的 guard 执行（P4-2 辅助方法）。
+     */
+    private <T> T executeWithGuardCallable(Callable<T> call, AgentContext context) throws Exception {
+        String result = executeWithGuard(() -> {
+            T r = call.call();
+            return r == null ? "" : com.alibaba.fastjson2.JSON.toJSONString(r);
+        }, context);
+        if (result == null || result.isEmpty()) return null;
+        return com.alibaba.fastjson2.JSON.parseObject(result, new com.alibaba.fastjson2.TypeReference<T>() {});
+    }
+
+    /**
      * SSE 流式调用 DashScope（P4-1 落地）。
      *
      * <p>使用 DashScope OpenAI 兼容模式的 stream=true 参数，服务端以 SSE 格式

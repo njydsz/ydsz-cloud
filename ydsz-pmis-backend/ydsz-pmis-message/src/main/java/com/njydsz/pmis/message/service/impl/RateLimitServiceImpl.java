@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.entity.MsgPreferenceDO;
+import com.njydsz.pmis.message.enums.MessagePriorityEnum;
 import com.njydsz.pmis.message.service.PreferenceService;
 import com.njydsz.pmis.message.service.RateLimitService;
 import lombok.RequiredArgsConstructor;
@@ -154,6 +155,30 @@ public class RateLimitServiceImpl implements RateLimitService {
             }
         }
         return true;
+    }
+
+    /**
+     * P0-5: 优先级感知的多维度限流检查。
+     *
+     * <p>根据优先级调整限流策略：
+     * <ul>
+     *   <li>URGENT：跳过 template 和 tenant 维度，仅保留 receiver 维度限流</li>
+     *   <li>HIGH/NORMAL/LOW：所有维度正常检查</li>
+     * </ul>
+     */
+    @Override
+    public boolean checkSendLimit(String channel, String receiver, String templateCode,
+                                  String tenantId, String priority) {
+        MessagePriorityEnum priorityEnum = MessagePriorityEnum.fromString(priority);
+        // URGENT 优先级跳过 template 和 tenant 维度限流
+        if (priorityEnum.canSkipRateLimit()) {
+            MessageProperties.RateLimitConfig cfg = messageProperties.getRateLimit();
+            if (cfg == null || !cfg.isReceiverEnabled() || receiver == null || receiver.isBlank()) {
+                return true;
+            }
+            return tryAcquire("receiver:" + receiver, cfg.getReceiverPermits());
+        }
+        return checkSendLimit(channel, receiver, templateCode, tenantId);
     }
 
     private Long readCounter(String prefix, String userId, String channel, String bizType, String suffix) {
