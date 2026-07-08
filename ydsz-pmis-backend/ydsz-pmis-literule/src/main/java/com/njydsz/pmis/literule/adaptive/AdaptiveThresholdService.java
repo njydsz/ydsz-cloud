@@ -63,9 +63,6 @@ public class AdaptiveThresholdService {
     /** 自动应用置信度阈值（2.0.0） */
     private static final double AUTO_APPLY_CONFIDENCE_THRESHOLD = 0.75;
 
-    /** 自动应用前后效果观察天数（2.0.0） */
-    private static final int EFFECT_OBSERVATION_DAYS = 7;
-
     /** LLM 调整原因系统提示词 */
     private static final String LLM_REASON_SYSTEM_PROMPT = "你是规则引擎风控专家。"
             + "请基于给定的规则阈值分析数据，用 1~2 句中文解释为什么要调整阈值，"

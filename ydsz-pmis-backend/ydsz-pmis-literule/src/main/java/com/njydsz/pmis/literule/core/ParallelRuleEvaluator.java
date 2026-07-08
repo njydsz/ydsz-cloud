@@ -266,7 +266,7 @@ public class ParallelRuleEvaluator {
         }
         // 组内按优先级排序
         for (List<Rule> groupRules : groups.values()) {
-            groupRules.sort(Comparator.comparingInt(Rule::getPriority));
+            groupRules.sort(Comparator.comparingInt((Rule r) -> r.getPriority()));
         }
         return groups;
     }

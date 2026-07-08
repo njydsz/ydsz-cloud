@@ -25,6 +25,7 @@
         <result column="misfire_policy" property="misfirePolicy"/>
         <result column="shard_total" property="shardTotal"/>
         <result column="timezone" property="timezone"/>
+        <result column="cluster" property="cluster"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
@@ -38,7 +39,7 @@
         schedule_type, fixed_rate_ms, fixed_delay_ms,
         params_json,
         status, remark, next_fire_time, last_fire_time, fire_count, success_count, fail_count,
-        lock_ttl_ms, timeout_ms, misfire_policy, shard_total, timezone, tenant_id,
+        lock_ttl_ms, timeout_ms, misfire_policy, shard_total, timezone, cluster, tenant_id,
         created_by, created_at, updated_by, updated_at, deleted
     </sql>
 

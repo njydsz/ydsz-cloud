@@ -68,8 +68,6 @@ public class MessageAlertService {
             String[] parts = entry.getKey().split(":");
             if (parts.length != 2) continue;
             String channel = parts[0];
-            String status = parts[1];
-            long count = Long.parseLong(entry.getValue());
             // 计算错误率
             long total = 0;
             long errors = 0;

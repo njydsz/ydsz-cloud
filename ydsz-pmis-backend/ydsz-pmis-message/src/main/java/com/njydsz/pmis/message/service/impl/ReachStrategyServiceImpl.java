@@ -1,7 +1,6 @@
 package com.njydsz.pmis.message.service.impl;
 
 import com.njydsz.pmis.message.dto.UserReachProfileDTO;
-import com.njydsz.pmis.message.service.PreferenceService;
 import com.njydsz.pmis.message.service.ReachStrategyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +59,6 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     );
 
     private final StringRedisTemplate redisTemplate;
-    private final PreferenceService preferenceService;
 
     @Override
     public UserReachProfileDTO getProfile(String userId) {
@@ -151,7 +149,6 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
 
     @Override
     public String getOptimalTimeWindow(String userId) {
-        UserReachProfileDTO profile = getProfile(userId);
         // 默认推荐 09:00-21:00
         return "09:00-21:00";
     }

@@ -47,9 +47,6 @@ public class LlmProviderRouter {
     /** Fallback 链（按优先级排列，P4-6） */
     private final List<String> fallbackChain;
 
-    /** 智能路由是否启用（P4-6） */
-    private final boolean smartRoutingEnabled;
-
     public LlmProviderRouter(ApplicationContext applicationContext,
                              MockLlmProvider mockLlmProvider,
                              @Value("${pmis.agent.llm.provider:mock}") String configuredProvider,
@@ -59,7 +56,6 @@ public class LlmProviderRouter {
         this.mockLlmProvider = mockLlmProvider;
         this.configuredProvider = configuredProvider;
         this.fallbackChain = parseFallbackChain(fallbackChainStr, configuredProvider);
-        this.smartRoutingEnabled = smartRoutingEnabled;
         log.info("[LlmRouter] 初始化, provider={}, fallbackChain={}, smartRouting={}",
                 configuredProvider, fallbackChain, smartRoutingEnabled);
     }
@@ -121,7 +117,6 @@ public class LlmProviderRouter {
      */
     public String chatWithFallback(String systemPrompt, String userPrompt,
                                     com.njydsz.pmis.agent.engine.AgentContext context) {
-        Exception lastError = null;
         for (String providerName : fallbackChain) {
             try {
                 LlmProvider provider = resolveProvider(providerName);
@@ -140,7 +135,6 @@ public class LlmProviderRouter {
             } catch (Exception e) {
                 log.warn("[LlmRouter] Provider [{}] 调用失败, 尝试下一个: {}",
                         providerName, e.getMessage());
-                lastError = e;
             }
         }
         // 全部失败，降级到 mock

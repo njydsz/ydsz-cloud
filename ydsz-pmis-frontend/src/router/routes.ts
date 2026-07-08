@@ -656,6 +656,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/message/dead-letter/index.vue'),
         meta: { title: 'route.messageDeadLetter', icon: 'WarningFilled', keepAlive: true, permCode: PC.MESSAGE_DEAD_LETTER_VIEW },
       },
+      {
+        path: 'preference',
+        name: 'MessagePreference',
+        component: () => import('@/views/message/preference/index.vue'),
+        meta: { title: 'route.messagePreference', icon: 'Setting', keepAlive: true, permCode: PC.MESSAGE_PREFERENCE_VIEW },
+      },
     ],
   },
 ]

@@ -1,14 +1,11 @@
 package com.njydsz.pmis.agent.engine.llm;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 结构化输出 Schema 验证器（P4-7 落地）。

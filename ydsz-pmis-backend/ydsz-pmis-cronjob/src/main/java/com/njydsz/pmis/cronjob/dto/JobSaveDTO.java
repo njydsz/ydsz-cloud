@@ -90,4 +90,7 @@ public class JobSaveDTO implements Serializable {
 
     @Schema(description = "任务时区（如 Asia/Shanghai / America/New_York / UTC，null 使用默认）")
     private String timezone;
+
+    @Schema(description = "目标集群名称（P3-12 跨集群调度，null=本地集群）")
+    private String cluster;
 }

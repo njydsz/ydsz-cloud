@@ -282,13 +282,6 @@ class DagExecutorTest {
         @Test
         @DisplayName("CONTINUE 策略：失败后失败节点的下游跳过，其他分支继续")
         void shouldContinueOnFailure() {
-            DagNode a = DagNode.builder().name("a").agentType("RISK_WARNING").build();
-            DagNode b = DagNode.builder().name("b").agentType("RISK_WARNING").dependsOn(List.of("a")).build();
-            DagNode c = DagNode.builder().name("c").agentType("RISK_WARNING").build(); // 独立分支
-            DagDefinition dag = DagDefinition.builder()
-                    .name("continue").nodes(List.of(a, b, c))
-                    .failureStrategy(DagFailureStrategy.CONTINUE).build();
-
             // a 失败，c 成功
             Agent failAgent = mockFailingAgent("fail");
             Agent okAgent = mockAgent("ok");

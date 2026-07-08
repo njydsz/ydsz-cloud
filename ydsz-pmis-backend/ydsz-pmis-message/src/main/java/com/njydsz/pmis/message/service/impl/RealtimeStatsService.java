@@ -1,10 +1,8 @@
 package com.njydsz.pmis.message.service.impl;
 
-import com.njydsz.pmis.message.metric.MessageMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -37,7 +35,6 @@ public class RealtimeStatsService {
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final StringRedisTemplate redisTemplate;
-    private final MessageMetrics messageMetrics;
 
     /**
      * 记录一次消息发送到实时统计。

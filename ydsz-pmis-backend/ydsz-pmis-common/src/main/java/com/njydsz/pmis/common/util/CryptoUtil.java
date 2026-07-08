@@ -50,8 +50,6 @@ public final class CryptoUtil {
     /** GCM 认证 tag 位数 */
     private static final int GCM_TAG_BITS = 128;
 
-    /** BouncyCastle 是否已注册（volatile 双重检查） */
-    private static volatile boolean bcRegistered = false;
     /** BouncyCastle 是否可用（null=未检测, true/false=已检测结果） */
     private static volatile Boolean bcAvailable = null;
 
@@ -74,7 +72,6 @@ public final class CryptoUtil {
             if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
                 Security.addProvider(new BouncyCastleProvider());
             }
-            bcRegistered = true;
             bcAvailable = true;
         } catch (NoClassDefFoundError | ExceptionInInitializerError e) {
             bcAvailable = false;

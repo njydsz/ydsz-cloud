@@ -1289,6 +1289,8 @@ CREATE TABLE IF NOT EXISTS pmis_job(
     version         INTEGER        NOT NULL DEFAULT 1,
     -- [P2-8] 任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区
     timezone        VARCHAR(64),
+    -- [P3-12] 目标集群名称: NULL=本地集群(默认), 非 NULL 时通过 CrossClusterDispatcher 派发到指定集群
+    cluster         VARCHAR(64),
     created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
@@ -1356,6 +1358,7 @@ COMMENT ON COLUMN pmis_job.auto_resume_after_minutes IS '自动恢复时间(分�
 COMMENT ON COLUMN pmis_job.priority IS '优先级: 1-10, 越小越高(默认 5), 扫描器按优先级排序派发';
 COMMENT ON COLUMN pmis_job.version IS '版本号: 每次修改 +1, 用于乐观锁和版本追溯';
 COMMENT ON COLUMN pmis_job.timezone IS '任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区';
+COMMENT ON COLUMN pmis_job.cluster IS '目标集群名称: NULL=本地集群(默认), 非 NULL 时通过 CrossClusterDispatcher 派发到指定集群';
 COMMENT ON COLUMN pmis_job.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_job.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_job.updated_by IS '最后修改人 ID';
@@ -2289,9 +2292,135 @@ COMMENT ON COLUMN pmis_job_sla.updated_by IS '修改人 ID';
 COMMENT ON COLUMN pmis_job_sla.updated_at IS '修改时间';
 COMMENT ON COLUMN pmis_job_sla.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
--- --------------------------------------------------------------------
+-- ============================================================================
 
--- ============================ [007] init pmis message schema ============================
+-- ============================================================================
+-- [P2-7] 任务版本历史表 pmis_job_version_history
+-- ----------------------------------------------------------------------------
+-- 每次任务定义变更时记录一条版本快照，支持版本回溯和差异对比。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_version_history(
+    id                VARCHAR(20)      PRIMARY KEY,
+    job_id            VARCHAR(20)         NOT NULL,
+    job_key           VARCHAR(128)   NOT NULL,
+    version           INTEGER        NOT NULL,
+    change_type       VARCHAR(32)    NOT NULL,
+    before_snapshot   TEXT,
+    after_snapshot    TEXT,
+    change_remark     VARCHAR(512),
+    changed_by        VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    changed_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ck_pjvh_change_type_enum CHECK (change_type IN ('CREATE', 'UPDATE', 'DELETE')),
+    CONSTRAINT ck_pjvh_version_pos CHECK (version >= 1)
+);
+
+COMMENT ON TABLE pmis_job_version_history IS '任务版本历史表: 每次任务定义变更时记录版本快照, 支持回溯和差异对比';
+COMMENT ON COLUMN pmis_job_version_history.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_version_history.job_id IS '任务 ID';
+COMMENT ON COLUMN pmis_job_version_history.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN pmis_job_version_history.version IS '版本号';
+COMMENT ON COLUMN pmis_job_version_history.change_type IS '变更类型: CREATE / UPDATE / DELETE';
+COMMENT ON COLUMN pmis_job_version_history.before_snapshot IS '变更前快照 JSON';
+COMMENT ON COLUMN pmis_job_version_history.after_snapshot IS '变更后快照 JSON';
+COMMENT ON COLUMN pmis_job_version_history.change_remark IS '变更说明';
+COMMENT ON COLUMN pmis_job_version_history.changed_by IS '变更人 ID';
+COMMENT ON COLUMN pmis_job_version_history.changed_at IS '变更时间';
+
+CREATE INDEX IF NOT EXISTS idx_pjvh_job_id
+    ON pmis_job_version_history (job_id, version DESC);
+
+-- ============================================================================
+-- [P2-8] 执行产物管理表 pmis_job_artifact
+-- ----------------------------------------------------------------------------
+-- 记录任务执行产生的文件/数据产物，支持产物查询、下载和过期清理。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_artifact(
+    id              VARCHAR(20)      PRIMARY KEY,
+    job_id          VARCHAR(20)         NOT NULL,
+    log_id          VARCHAR(20)         NOT NULL,
+    job_key         VARCHAR(128)   NOT NULL,
+    artifact_name   VARCHAR(256)   NOT NULL,
+    artifact_type   VARCHAR(32)    NOT NULL DEFAULT 'FILE',
+    storage_path    VARCHAR(1024)  NOT NULL,
+    size_bytes      BIGINT,
+    content_type    VARCHAR(128),
+    metadata        TEXT,
+    expire_at       TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pja_artifact_type_enum CHECK (artifact_type IN ('FILE', 'REPORT', 'DATA', 'LOG')),
+    CONSTRAINT ck_pja_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_artifact IS '执行产物管理表: 记录任务执行产生的文件/数据产物, 支持查询/下载/清理';
+COMMENT ON COLUMN pmis_job_artifact.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_artifact.job_id IS '任务 ID';
+COMMENT ON COLUMN pmis_job_artifact.log_id IS '执行日志 ID';
+COMMENT ON COLUMN pmis_job_artifact.job_key IS '任务 KEY(冗余)';
+COMMENT ON COLUMN pmis_job_artifact.artifact_name IS '产物名称';
+COMMENT ON COLUMN pmis_job_artifact.artifact_type IS '产物类型: FILE / REPORT / DATA / LOG';
+COMMENT ON COLUMN pmis_job_artifact.storage_path IS '存储路径(文件系统路径或对象存储 URL)';
+COMMENT ON COLUMN pmis_job_artifact.size_bytes IS '产物大小(字节)';
+COMMENT ON COLUMN pmis_job_artifact.content_type IS '内容类型(MIME type)';
+COMMENT ON COLUMN pmis_job_artifact.metadata IS '产物元数据 JSON';
+COMMENT ON COLUMN pmis_job_artifact.expire_at IS '过期时间(NULL=不过期, 过期后由清理任务删除)';
+COMMENT ON COLUMN pmis_job_artifact.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_artifact.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+CREATE INDEX IF NOT EXISTS idx_pja_log_id
+    ON pmis_job_artifact (log_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pja_job_key
+    ON pmis_job_artifact (job_key, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pja_expire_at
+    ON pmis_job_artifact (expire_at) WHERE deleted = 0 AND expire_at IS NOT NULL;
+
+-- ============================================================================
+-- [P3-13] WebHook 事件订阅表 pmis_job_webhook
+-- ----------------------------------------------------------------------------
+-- 记录用户配置的 WebHook 订阅，在任务生命周期事件发生时推送通知。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_webhook(
+    id              VARCHAR(20)      PRIMARY KEY,
+    name            VARCHAR(128)   NOT NULL,
+    event_type      VARCHAR(64)    NOT NULL,
+    job_key         VARCHAR(128),
+    job_group       VARCHAR(64),
+    callback_url    VARCHAR(1024)  NOT NULL,
+    http_method     VARCHAR(16)    NOT NULL DEFAULT 'POST',
+    headers         TEXT,
+    secret          VARCHAR(256),
+    status          VARCHAR(32)    NOT NULL DEFAULT 'ACTIVE',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    CONSTRAINT ck_pjw_event_type_enum CHECK (event_type IN (
+        'TASK_STARTED', 'TASK_SUCCESS', 'TASK_FAILED', 'TASK_TIMEOUT', 'DAG_COMPLETED')),
+    CONSTRAINT ck_pjw_http_method_enum CHECK (http_method IN ('POST', 'PUT')),
+    CONSTRAINT ck_pjw_status_enum CHECK (status IN ('ACTIVE', 'INACTIVE')),
+    CONSTRAINT ck_pjw_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_webhook IS 'WebHook 事件订阅表: 配置任务生命周期事件的通知推送';
+COMMENT ON COLUMN pmis_job_webhook.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_webhook.name IS 'WebHook 名称';
+COMMENT ON COLUMN pmis_job_webhook.event_type IS '订阅事件类型: TASK_STARTED / TASK_SUCCESS / TASK_FAILED / TASK_TIMEOUT / DAG_COMPLETED';
+COMMENT ON COLUMN pmis_job_webhook.job_key IS '订阅任务 KEY(NULL=所有任务)';
+COMMENT ON COLUMN pmis_job_webhook.job_group IS '订阅任务组(NULL=所有分组)';
+COMMENT ON COLUMN pmis_job_webhook.callback_url IS 'WebHook 回调 URL';
+COMMENT ON COLUMN pmis_job_webhook.http_method IS '请求方法: POST / PUT';
+COMMENT ON COLUMN pmis_job_webhook.headers IS '请求头 JSON';
+COMMENT ON COLUMN pmis_job_webhook.secret IS '密钥(用于 HMAC-SHA256 签名验证)';
+COMMENT ON COLUMN pmis_job_webhook.status IS '状态: ACTIVE / INACTIVE';
+COMMENT ON COLUMN pmis_job_webhook.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_webhook.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_job_webhook.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+CREATE INDEX IF NOT EXISTS idx_pjw_event_job
+    ON pmis_job_webhook (event_type, job_key) WHERE deleted = 0 AND status = 'ACTIVE';
+CREATE INDEX IF NOT EXISTS idx_pjw_status
+    ON pmis_job_webhook (status) WHERE deleted = 0;
+
+-- ============================================================================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
 --   2) 审计字段 create_by/create_time → created_by/created_at 规范命名

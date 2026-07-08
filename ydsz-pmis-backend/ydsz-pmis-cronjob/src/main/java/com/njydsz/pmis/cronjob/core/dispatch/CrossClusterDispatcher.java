@@ -2,11 +2,7 @@ package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.cronjob.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.entity.JobDO;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -32,10 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class CrossClusterDispatcher {
-
-    private final CronjobProperties cronjobProperties;
 
     /** 集群端点缓存: clusterName -> baseUrl */
     private final Map<String, String> clusterEndpoints = new ConcurrentHashMap<>();

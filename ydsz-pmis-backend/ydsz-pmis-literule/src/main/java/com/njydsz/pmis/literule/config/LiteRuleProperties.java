@@ -211,12 +211,15 @@ public class LiteRuleProperties {
     private ModelConfig model = new ModelConfig();
 
     /**
-     * AI 增强配置
+     * 高性能优化配置（P2-3）
      *
-     * <p>支持自然语言转规则表达式、规则推荐、健康度评分。
-     * LLM 客户端通过 OpenAI 兼容协议接入，可在不修改代码的情况下
-     * 切换 OpenAI / DeepSeek / 通义千问 / Ollama 等不同提供方。
+     * <p>控制评估结果缓存与规则分组并行评估。
+     *
+     * @since 2.0.0
      */
+    private PerformanceConfig performance = new PerformanceConfig();
+
+    /**
     @Data
     public static class Ai {
 
@@ -261,13 +264,44 @@ public class LiteRuleProperties {
     }
 
     /**
-     * 分布式执行配置
+     * 高性能优化配置（P2-3）
      *
-     * <p>启用后规则引擎按一致性 hash 将规则分片到集群节点，
-     * 每个节点只执行属于自己的规则，避免重复计算。
+     * <p>控制评估结果缓存与规则分组并行评估，提升大规则量场景下的评估吞吐。
      *
-     * @since 1.5.0
+     * @since 2.0.0
      */
+    @Data
+    public static class PerformanceConfig {
+
+        /**
+         * 是否启用评估结果缓存
+         *
+         * <p>true：相同上下文（scenario+tenant+environment+facts）在 TTL 内复用缓存结果；
+         * false（默认）：每次评估都重新计算。
+         * 适用于批量回放、风控试运行等重复评估率高的场景。
+         */
+        private boolean cacheEnabled = false;
+
+        /** 缓存 TTL（秒），默认 300（5 分钟） */
+        private int cacheTtlSeconds = 300;
+
+        /** 缓存最大条目数，默认 10000 */
+        private int cacheMaxSize = 10_000;
+
+        /**
+         * 是否启用规则分组并行评估
+         *
+         * <p>true：将候选规则按互斥组分组，组间并行评估；
+         * false（默认）：串行评估。
+         * 适用于规则数 > 100 且评估耗时敏感的场景。
+         */
+        private boolean parallelEnabled = false;
+
+        /** 并行评估线程池大小，默认 CPU 核数 */
+        private int parallelPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
+    }
+
+    /**
     @Data
     public static class Distributed {
 
