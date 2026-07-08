@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * 智能去重服务实现（P2-1）。
@@ -47,7 +47,7 @@ public class DedupServiceImpl implements DedupService {
         String redisKey = MessageConstants.DEDUP_KEY_PREFIX + dedupKey;
         try {
             Boolean acquired = stringRedisTemplate.opsForValue()
-                    .setIfAbsent(redisKey, "1", ttl, TimeUnit.SECONDS);
+                    .setIfAbsent(redisKey, "1", Duration.ofSeconds(ttl));
             if (Boolean.TRUE.equals(acquired)) {
                 log.debug("[Dedup] 首次到达,放行: key={} ttl={}s", dedupKey, ttl);
                 return true;

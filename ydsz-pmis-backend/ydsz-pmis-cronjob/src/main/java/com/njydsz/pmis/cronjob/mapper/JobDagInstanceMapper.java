@@ -100,4 +100,40 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstanceDO> {
     @Select("SELECT COUNT(1) FROM pmis_job_dag_instance "
             + "WHERE dag_id = #{dagId} AND status IN ('RUNNING', 'PAUSED') AND deleted = 0")
     int countActiveInstances(@Param("dagId") String dagId);
+
+    /**
+     * P1-4: 暂停 DAG 实例（RUNNING → PAUSED）。
+     *
+     * <p>暂停后，所有 RUNNING 状态的节点实例保持当前状态，
+     * PENDING 状态的节点不会被派发，直到恢复。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 受影响行数（0 表示非 RUNNING 状态，无法暂停）
+     */
+    @Update("UPDATE pmis_job_dag_instance SET status = 'PAUSED', updated_at = CURRENT_TIMESTAMP "
+            + "WHERE id = #{instanceId} AND status = 'RUNNING' AND deleted = 0")
+    int markPaused(@Param("instanceId") String instanceId);
+
+    /**
+     * P1-4: 恢复 DAG 实例（PAUSED → RUNNING）。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 受影响行数（0 表示非 PAUSED 状态，无法恢复）
+     */
+    @Update("UPDATE pmis_job_dag_instance SET status = 'RUNNING', updated_at = CURRENT_TIMESTAMP "
+            + "WHERE id = #{instanceId} AND status = 'PAUSED' AND deleted = 0")
+    int markResumed(@Param("instanceId") String instanceId);
+
+    /**
+     * P1-4: 取消 DAG 实例（RUNNING/PAUSED → CANCELED）。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 受影响行数
+     */
+    @Update("UPDATE pmis_job_dag_instance SET status = 'CANCELED', finished_at = #{finishedAt}, "
+            + "       duration_ms = #{durationMs}, updated_at = CURRENT_TIMESTAMP "
+            + "WHERE id = #{instanceId} AND status IN ('RUNNING', 'PAUSED') AND deleted = 0")
+    int markCanceled(@Param("instanceId") String instanceId,
+                     @Param("finishedAt") LocalDateTime finishedAt,
+                     @Param("durationMs") long durationMs);
 }

@@ -2,7 +2,6 @@ package com.njydsz.pmis.message.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.message.channel.ChannelRouter;
-import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.entity.MsgLogDO;
 import com.njydsz.pmis.message.enums.MessageStatusEnum;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;

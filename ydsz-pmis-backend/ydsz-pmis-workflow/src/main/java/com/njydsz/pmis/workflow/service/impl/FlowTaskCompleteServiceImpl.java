@@ -37,6 +37,7 @@ import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowAttachmentService;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.service.FlowEventSubscriptionService;
+import com.njydsz.pmis.workflow.service.FlowFormFieldPermService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowSlaService;
 import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
@@ -122,6 +123,8 @@ public class FlowTaskCompleteServiceImpl {
     private final FlowEventSubscriptionService eventSubscriptionService;
     /** P1-6: 审批附件服务（任务通过/驳回时保存附件） */
     private final FlowAttachmentService attachmentService;
+    /** P0-2: 表单字段权限服务 */
+    private final FlowFormFieldPermService formFieldPermService;
     /**
      * P1-2: 流程定义缓存服务 — reject 退回发起人时解析 startNode 下游第一节点
      *
@@ -936,6 +939,16 @@ public class FlowTaskCompleteServiceImpl {
                 ? Collections.emptyMap() : dto.getVariables();
         FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
         Map<String, Object> mergedVars = mergeVariables(instance, variables);
+
+        // P0-2: 表单字段权限校验
+        FlowNodeDO formNode = nodeMapper.selectByCode(task.getDefinitionId(), task.getNodeCode());
+        if (formNode != null && StringUtils.hasText(formNode.getFormFieldsConfig())) {
+            Map<String, String> fieldPerms = formFieldPermService.parseFieldPerms(formNode.getFormFieldsConfig());
+            if (!fieldPerms.isEmpty()) {
+                Map<String, Object> existingVars = mergeVariables(instance, Collections.emptyMap());
+                formFieldPermService.validateFieldPerms(fieldPerms, variables, existingVars);
+            }
+        }
 
         // P1-10: 委派回归 — 被委派人通过后任务回到原办理人
         if (FlowTaskStatus.DELEGATED.name().equals(task.getTaskStatus()) && task.getAssignorId() != null) {

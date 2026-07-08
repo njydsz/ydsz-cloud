@@ -14,12 +14,11 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -58,7 +57,7 @@ class DedupServiceImplTest {
     @Test
     @DisplayName("首次到达(SET NX 成功) → 返回 true")
     void tryAcquireShouldReturnTrueWhenFirstTime() {
-        when(valueOps.setIfAbsent(anyString(), eq("1"), anyLong(), eq(TimeUnit.SECONDS)))
+        when(valueOps.setIfAbsent(anyString(), eq("1"), any(Duration.class)))
                 .thenReturn(true);
 
         boolean result = dedupService.tryAcquire("WELCOME:b1:TPL:u1");
@@ -66,13 +65,13 @@ class DedupServiceImplTest {
         assertTrue(result);
         verify(valueOps).setIfAbsent(
                 eq(MessageConstants.DEDUP_KEY_PREFIX + "WELCOME:b1:TPL:u1"),
-                eq("1"), anyLong(), eq(TimeUnit.SECONDS));
+                eq("1"), any(Duration.class));
     }
 
     @Test
     @DisplayName("重复到达(SET NX 失败) → 返回 false")
     void tryAcquireShouldReturnFalseWhenDuplicate() {
-        when(valueOps.setIfAbsent(anyString(), anyString(), anyLong(), eq(TimeUnit.SECONDS)))
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
                 .thenReturn(false);
 
         boolean result = dedupService.tryAcquire("WELCOME:b1:TPL:u1");
@@ -86,7 +85,7 @@ class DedupServiceImplTest {
         boolean result = dedupService.tryAcquire(null);
 
         assertTrue(result);
-        verify(valueOps, never()).setIfAbsent(anyString(), anyString(), anyLong(), any());
+        verify(valueOps, never()).setIfAbsent(anyString(), anyString(), any(Duration.class));
     }
 
     @Test
@@ -95,7 +94,7 @@ class DedupServiceImplTest {
         boolean result = dedupService.tryAcquire("   ");
 
         assertTrue(result);
-        verify(valueOps, never()).setIfAbsent(anyString(), anyString(), anyLong(), any());
+        verify(valueOps, never()).setIfAbsent(anyString(), anyString(), any(Duration.class));
     }
 
     @Test
@@ -108,13 +107,13 @@ class DedupServiceImplTest {
         boolean result = dedupService.tryAcquire("some-key");
 
         assertTrue(result);
-        verify(valueOps, never()).setIfAbsent(anyString(), anyString(), anyLong(), any());
+        verify(valueOps, never()).setIfAbsent(anyString(), anyString(), any(Duration.class));
     }
 
     @Test
     @DisplayName("Redis 异常 → fail-open 返回 true")
     void tryAcquireShouldReturnTrueWhenRedisThrows() {
-        when(valueOps.setIfAbsent(anyString(), anyString(), anyLong(), eq(TimeUnit.SECONDS)))
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
                 .thenThrow(new RuntimeException("redis connection refused"));
 
         boolean result = dedupService.tryAcquire("some-key");
@@ -125,7 +124,7 @@ class DedupServiceImplTest {
     @Test
     @DisplayName("setIfAbsent 返回 null → 视为失败返回 false")
     void tryAcquireShouldReturnFalseWhenSetIfAbsentReturnsNull() {
-        when(valueOps.setIfAbsent(anyString(), anyString(), anyLong(), eq(TimeUnit.SECONDS)))
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
                 .thenReturn(null);
 
         boolean result = dedupService.tryAcquire("some-key");
@@ -139,13 +138,13 @@ class DedupServiceImplTest {
         MessageProperties.DedupConfig cfg = new MessageProperties.DedupConfig();
         cfg.setTtlSeconds(0);
         when(messageProperties.getDedup()).thenReturn(cfg);
-        when(valueOps.setIfAbsent(anyString(), anyString(), eq(60L), eq(TimeUnit.SECONDS)))
+        when(valueOps.setIfAbsent(anyString(), anyString(), eq(Duration.ofSeconds(60))))
                 .thenReturn(true);
 
         boolean result = dedupService.tryAcquire("some-key");
 
         assertTrue(result);
-        verify(valueOps).setIfAbsent(anyString(), eq("1"), eq(60L), eq(TimeUnit.SECONDS));
+        verify(valueOps).setIfAbsent(anyString(), eq("1"), eq(Duration.ofSeconds(60)));
     }
 
     @Test
@@ -156,6 +155,6 @@ class DedupServiceImplTest {
         boolean result = dedupService.tryAcquire("some-key");
 
         assertTrue(result);
-        verify(valueOps, never()).setIfAbsent(anyString(), anyString(), anyLong(), any());
+        verify(valueOps, never()).setIfAbsent(anyString(), anyString(), any(Duration.class));
     }
 }

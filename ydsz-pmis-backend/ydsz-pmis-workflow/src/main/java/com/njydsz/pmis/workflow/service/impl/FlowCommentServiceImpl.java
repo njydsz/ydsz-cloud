@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.service.impl;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.FlowCommentCreateDTO;
+import com.njydsz.pmis.workflow.engine.FlowSensitiveMasker;
 import com.njydsz.pmis.workflow.entity.FlowCommentDO;
 import com.njydsz.pmis.workflow.mapper.FlowCommentMapper;
 import com.njydsz.pmis.workflow.service.FlowCommentService;
@@ -29,6 +30,8 @@ import java.util.List;
 public class FlowCommentServiceImpl implements FlowCommentService {
 
     private final FlowCommentMapper commentMapper;
+    /** P0-1: 敏感字段脱敏器 */
+    private final FlowSensitiveMasker sensitiveMasker;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -56,7 +59,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
         comment.setNodeCode(dto.getNodeCode());
         comment.setUserId(userId);
         comment.setUserName(userName);
-        comment.setContent(dto.getContent());
+        comment.setContent(sensitiveMasker.mask(dto.getContent()));
         comment.setParentCommentId(dto.getParentCommentId());
         comment.setReplyToUserId(dto.getReplyToUserId());
         comment.setReplyToUserName(dto.getReplyToUserName());

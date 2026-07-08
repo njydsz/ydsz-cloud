@@ -123,4 +123,40 @@ public interface JobMapper extends BaseMapper<JobDO> {
      */
     @org.apache.ibatis.annotations.Select("SELECT consecutive_fail_count FROM pmis_job WHERE id = #{id}")
     Integer selectConsecutiveFailCount(@Param("id") String id);
+
+    /**
+     * P1-5: 查询所有 AUTO_PAUSED 状态且已到自动恢复时间的任务。
+     *
+     * <p>通过 updated_at（状态变更为 AUTO_PAUSED 的时间）+ auto_resume_after_minutes 判断是否到期。
+     * auto_resume_after_minutes 为 null 的任务不自动恢复。
+     *
+     * @param now 当前时间
+     * @return 可自动恢复的任务列表
+     */
+    @org.apache.ibatis.annotations.Select("SELECT id, job_name, job_group, job_key, handler, cron_expression, "
+            + "       schedule_type, fixed_rate_ms, fixed_delay_ms, params_json, status, remark, "
+            + "       next_fire_time, last_fire_time, fire_count, success_count, fail_count, "
+            + "       lock_ttl_ms, timeout_ms, misfire_policy, shard_total, timezone, tenant_id, "
+            + "       consecutive_fail_count, max_consecutive_fails, auto_resume_after_minutes, "
+            + "       priority, version, slow_threshold_ms, job_type, max_retries, retry_interval_ms, "
+            + "       retry_backoff, block_strategy, "
+            + "       created_by, created_at, updated_by, updated_at, deleted "
+            + "FROM pmis_job "
+            + "WHERE status = 'AUTO_PAUSED' "
+            + "  AND auto_resume_after_minutes IS NOT NULL "
+            + "  AND auto_resume_after_minutes > 0 "
+            + "  AND deleted = 0 "
+            + "  AND updated_at + (auto_resume_after_minutes || ' minutes')::interval <= #{now}")
+    List<JobDO> selectAutoResumeCandidates(@Param("now") java.time.LocalDateTime now);
+
+    /**
+     * P1-5: 恢复 AUTO_PAUSED 任务为 NORMAL（重置连续失败计数）。
+     *
+     * @param id 任务 ID
+     * @return 受影响行数
+     */
+    @org.apache.ibatis.annotations.Update("UPDATE pmis_job SET status = 'NORMAL', "
+            + "       consecutive_fail_count = 0, updated_at = CURRENT_TIMESTAMP "
+            + "WHERE id = #{id} AND status = 'AUTO_PAUSED' AND deleted = 0")
+    int resumeAutoPaused(@Param("id") String id);
 }

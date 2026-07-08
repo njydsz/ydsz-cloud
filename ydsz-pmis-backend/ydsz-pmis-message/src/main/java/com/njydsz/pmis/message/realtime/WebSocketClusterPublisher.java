@@ -1,7 +1,6 @@
 package com.njydsz.pmis.message.realtime;
 
 import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.message.constant.MessageConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;

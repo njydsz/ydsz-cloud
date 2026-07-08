@@ -89,6 +89,24 @@ public class RuleChain {
     /** WHILE 最大迭代次数，防止死循环，默认 100 */
     private final int maxIterations;
 
+    /** 主节点（CATCH/RETRY 使用）：执行的主体节点 */
+    private final RuleNode primaryNode;
+
+    /** 补偿/回滚节点（CATCH/RETRY 使用）：异常或重试耗尽时执行 */
+    private final RuleNode catchNode;
+
+    /** 最大重试次数（RETRY 使用，不含首次执行） */
+    private final int maxRetries;
+
+    /** 重试间隔（毫秒，RETRY 使用） */
+    private final long retryIntervalMs;
+
+    /** 节点级超时（毫秒，0=不超时） */
+    private final long nodeTimeoutMs;
+
+    /** 节点级重试次数（0=不重试） */
+    private final int nodeRetries;
+
     /**
      * 私有构造，统一通过工厂方法创建
      *
@@ -102,12 +120,21 @@ public class RuleChain {
      * @param iterableExpression  遍历集合表达式
      * @param iterationVar        迭代变量名
      * @param maxIterations       最大迭代次数
+     * @param primaryNode         主节点（CATCH/RETRY）
+     * @param catchNode           补偿/回滚节点（CATCH/RETRY）
+     * @param maxRetries          最大重试次数（RETRY）
+     * @param retryIntervalMs     重试间隔毫秒（RETRY）
+     * @param nodeTimeoutMs       节点级超时毫秒
+     * @param nodeRetries         节点级重试次数
      */
     private RuleChain(RuleChainType chainType, List<RuleNode> nodes, String conditionExpression,
                       String branchKey, Map<String, RuleNode> branchMap, RuleNode defaultBranch,
                       List<Map.Entry<String, RuleNode>> elifBranches, RuleNode elseNode,
                       String iterableExpression, String iterationVar,
-                      int maxIterations) {
+                      int maxIterations,
+                      RuleNode primaryNode, RuleNode catchNode,
+                      int maxRetries, long retryIntervalMs,
+                      long nodeTimeoutMs, int nodeRetries) {
         this.chainType = chainType;
         this.nodes = nodes;
         this.conditionExpression = conditionExpression;
@@ -119,6 +146,25 @@ public class RuleChain {
         this.iterableExpression = iterableExpression;
         this.iterationVar = iterationVar;
         this.maxIterations = maxIterations;
+        this.primaryNode = primaryNode;
+        this.catchNode = catchNode;
+        this.maxRetries = maxRetries;
+        this.retryIntervalMs = retryIntervalMs;
+        this.nodeTimeoutMs = nodeTimeoutMs;
+        this.nodeRetries = nodeRetries;
+    }
+
+    /**
+     * 向后兼容的私有构造（无 CATCH/RETRY 字段）
+     */
+    private RuleChain(RuleChainType chainType, List<RuleNode> nodes, String conditionExpression,
+                      String branchKey, Map<String, RuleNode> branchMap, RuleNode defaultBranch,
+                      List<Map.Entry<String, RuleNode>> elifBranches, RuleNode elseNode,
+                      String iterableExpression, String iterationVar,
+                      int maxIterations) {
+        this(chainType, nodes, conditionExpression, branchKey, branchMap, defaultBranch,
+                elifBranches, elseNode, iterableExpression, iterationVar, maxIterations,
+                null, null, 0, 0, 0, 0);
     }
 
     /**
@@ -305,6 +351,102 @@ public class RuleChain {
                 nodeList, null, null, null, null, null, null, null, null, 0);
     }
 
+    // ============================== 编排容错工厂方法 (2.0.0) ==============================
+
+    /**
+     * 构建异常捕获链（CATCH，2.0.0）
+     *
+     * <p>执行 {@code primaryRule}，若抛出异常则执行 {@code catchRule} 进行补偿。
+     * 补偿规则可以访问上下文中的事实数据，用于执行回滚操作或记录告警。
+     *
+     * <pre>
+     *   RuleChain.catchThen(mainRule, compensationRule)
+     * </pre>
+     *
+     * @param primaryRule 主规则（正常执行）
+     * @param catchRule   补偿规则（异常时执行，可为 null 表示仅记录日志不补偿）
+     * @return CATCH 类型规则链
+     * @since 2.0.0
+     */
+    public static RuleChain catchThen(Rule primaryRule, Rule catchRule) {
+        Objects.requireNonNull(primaryRule, "primaryRule 不能为 null");
+        RuleNode primaryNode = RuleNode.of(primaryRule);
+        RuleNode catchNode = catchRule != null ? RuleNode.of(catchRule) : null;
+        return new RuleChain(RuleChainType.CATCH,
+                null, null, null, null, null, null, null, null, null, 0,
+                primaryNode, catchNode, 0, 0, 0, 0);
+    }
+
+    /**
+     * 构建异常捕获链（CATCH，2.0.0），主节点和补偿节点为子链
+     *
+     * @param primaryChain 主子链
+     * @param catchChain   补偿子链（可为 null）
+     * @return CATCH 类型规则链
+     * @since 2.0.0
+     */
+    public static RuleChain catchThen(RuleChain primaryChain, RuleChain catchChain) {
+        Objects.requireNonNull(primaryChain, "primaryChain 不能为 null");
+        RuleNode primaryNode = RuleNode.of(primaryChain);
+        RuleNode catchNode = catchChain != null ? RuleNode.of(catchChain) : null;
+        return new RuleChain(RuleChainType.CATCH,
+                null, null, null, null, null, null, null, null, null, 0,
+                primaryNode, catchNode, 0, 0, 0, 0);
+    }
+
+    /**
+     * 构建重试链（RETRY，2.0.0）
+     *
+     * <p>执行 {@code primaryRule}，失败时自动重试，最多重试 {@code maxRetries} 次
+     * （不含首次执行），每次重试间隔 {@code retryIntervalMs} 毫秒。
+     * 全部重试耗尽后若仍失败，执行 {@code rollbackRule} 回滚补偿（如果提供）。
+     *
+     * <pre>
+     *   // 最多执行 4 次（1 + 3 重试），间隔 500ms
+     *   RuleChain.retryThen(mainRule, 3, 500, rollbackRule)
+     * </pre>
+     *
+     * @param primaryRule      主规则
+     * @param maxRetries       最大重试次数（不含首次执行，建议 1-5）
+     * @param retryIntervalMs  重试间隔（毫秒）
+     * @param rollbackRule     回滚规则（全部重试失败后执行，可为 null）
+     * @return RETRY 类型规则链
+     * @since 2.0.0
+     */
+    public static RuleChain retryThen(Rule primaryRule, int maxRetries, long retryIntervalMs, Rule rollbackRule) {
+        Objects.requireNonNull(primaryRule, "primaryRule 不能为 null");
+        if (maxRetries < 0) {
+            throw new IllegalArgumentException("maxRetries 不能为负数");
+        }
+        RuleNode primaryNode = RuleNode.of(primaryRule);
+        RuleNode catchNode = rollbackRule != null ? RuleNode.of(rollbackRule) : null;
+        return new RuleChain(RuleChainType.RETRY,
+                null, null, null, null, null, null, null, null, null, 0,
+                primaryNode, catchNode, maxRetries, retryIntervalMs, 0, 0);
+    }
+
+    /**
+     * 构建重试链（RETRY，2.0.0），主节点为子链
+     *
+     * @param primaryChain     主子链
+     * @param maxRetries       最大重试次数
+     * @param retryIntervalMs  重试间隔（毫秒）
+     * @param rollbackChain    回滚子链（可为 null）
+     * @return RETRY 类型规则链
+     * @since 2.0.0
+     */
+    public static RuleChain retryThen(RuleChain primaryChain, int maxRetries, long retryIntervalMs, RuleChain rollbackChain) {
+        Objects.requireNonNull(primaryChain, "primaryChain 不能为 null");
+        if (maxRetries < 0) {
+            throw new IllegalArgumentException("maxRetries 不能为负数");
+        }
+        RuleNode primaryNode = RuleNode.of(primaryChain);
+        RuleNode catchNode = rollbackChain != null ? RuleNode.of(rollbackChain) : null;
+        return new RuleChain(RuleChainType.RETRY,
+                null, null, null, null, null, null, null, null, null, 0,
+                primaryNode, catchNode, maxRetries, retryIntervalMs, 0, 0);
+    }
+
     /**
      * 评估规则链
      *
@@ -362,6 +504,8 @@ public class RuleChain {
             case WHILE -> evaluateWhile(context, evaluator, statsRecorder);
             case BREAK -> evaluateBreak(context, evaluator);
             case AGENT -> evaluateAgent(context, evaluator, statsRecorder);
+            case CATCH -> evaluateCatch(context, evaluator, statsRecorder);
+            case RETRY -> evaluateRetry(context, evaluator, statsRecorder);
         };
     }
 
@@ -664,6 +808,107 @@ public class RuleChain {
         return results;
     }
 
+    // ============================== 编排容错执行逻辑 (2.0.0) ==============================
+
+    /**
+     * CATCH 语义：执行主节点，异常时执行补偿节点
+     *
+     * <p>主节点（{@link #primaryNode}）正常执行时返回其结果列表。
+     * 若主节点抛出异常，则执行补偿节点（{@link #catchNode}）进行回滚补偿，
+     * 补偿节点的结果作为最终返回。若未配置补偿节点，仅记录日志。
+     *
+     * @param context   规则上下文
+     * @param evaluator 表达式求值器
+     * @return 主节点或补偿节点的评估结果
+     * @since 2.0.0
+     */
+    private List<RuleResult> evaluateCatch(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+        List<RuleResult> results = new ArrayList<>();
+        if (primaryNode == null) {
+            log.warn("[LiteRule-Chain] CATCH 链缺少主节点，跳过执行");
+            return results;
+        }
+        try {
+            results.addAll(evaluateNode(primaryNode, context, evaluator, statsRecorder));
+            log.debug("[LiteRule-Chain] CATCH 主节点执行成功");
+        } catch (Exception e) {
+            log.warn("[LiteRule-Chain] CATCH 主节点执行异常: {}，触发补偿", e.getMessage());
+            if (catchNode != null) {
+                try {
+                    List<RuleResult> catchResults = evaluateNode(catchNode, context, evaluator, statsRecorder);
+                    results.addAll(catchResults);
+                    log.info("[LiteRule-Chain] CATCH 补偿节点执行完成, 结果数={}", catchResults.size());
+                } catch (Exception ce) {
+                    log.error("[LiteRule-Chain] CATCH 补偿节点也执行异常: {}", ce.getMessage());
+                }
+            }
+        }
+        return results;
+    }
+
+    /**
+     * RETRY 语义：执行主节点失败时自动重试，重试耗尽后执行回滚补偿
+     *
+     * <p>首次执行 {@link #primaryNode}，若抛出异常则等待 {@link #retryIntervalMs} 后重试，
+     * 最多重试 {@link #maxRetries} 次。全部重试耗尽后仍失败，执行 {@link #catchNode} 回滚补偿（如果配置）。
+     *
+     * @param context   规则上下文
+     * @param evaluator 表达式求值器
+     * @return 主节点或回滚节点的评估结果
+     * @since 2.0.0
+     */
+    private List<RuleResult> evaluateRetry(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+        List<RuleResult> results = new ArrayList<>();
+        if (primaryNode == null) {
+            log.warn("[LiteRule-Chain] RETRY 链缺少主节点，跳过执行");
+            return results;
+        }
+        int totalAttempts = maxRetries + 1; // 首次 + 重试
+        Exception lastException = null;
+        for (int attempt = 1; attempt <= totalAttempts; attempt++) {
+            try {
+                results.addAll(evaluateNode(primaryNode, context, evaluator, statsRecorder));
+                if (attempt > 1) {
+                    log.info("[LiteRule-Chain] RETRY 第 {} 次尝试成功 (共 {} 次)", attempt, totalAttempts);
+                } else {
+                    log.debug("[LiteRule-Chain] RETRY 首次执行成功");
+                }
+                return results;
+            } catch (Exception e) {
+                lastException = e;
+                if (attempt < totalAttempts) {
+                    log.warn("[LiteRule-Chain] RETRY 第 {}/{} 次尝试失败: {}，{}ms 后重试",
+                            attempt, totalAttempts, e.getMessage(), retryIntervalMs);
+                    if (retryIntervalMs > 0) {
+                        try {
+                            Thread.sleep(retryIntervalMs);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            log.warn("[LiteRule-Chain] RETRY 重试等待被中断");
+                            break;
+                        }
+                    }
+                } else {
+                    log.error("[LiteRule-Chain] RETRY 全部 {} 次尝试均失败: {}",
+                            totalAttempts, e.getMessage());
+                }
+            }
+        }
+        // 全部重试耗尽，执行回滚补偿
+        if (catchNode != null) {
+            log.info("[LiteRule-Chain] RETRY 重试耗尽，执行回滚补偿节点");
+            try {
+                List<RuleResult> rollbackResults = evaluateNode(catchNode, context, evaluator, statsRecorder);
+                results.addAll(rollbackResults);
+            } catch (Exception ce) {
+                log.error("[LiteRule-Chain] RETRY 回滚补偿节点也执行异常: {}", ce.getMessage());
+            }
+        } else if (lastException != null) {
+            log.warn("[LiteRule-Chain] RETRY 未配置回滚节点，异常被隔离: {}", lastException.getMessage());
+        }
+        return results;
+    }
+
     /**
      * 评估单个编排节点
      *
@@ -835,5 +1080,65 @@ public class RuleChain {
      */
     public Map<String, RuleNode> getBranchMap() {
         return branchMap;
+    }
+
+    /**
+     * 获取主节点（CATCH/RETRY 使用）
+     *
+     * @return 主节点；CATCH/RETRY 之外为 null
+     * @since 2.0.0
+     */
+    public RuleNode getPrimaryNode() {
+        return primaryNode;
+    }
+
+    /**
+     * 获取补偿/回滚节点（CATCH/RETRY 使用）
+     *
+     * @return 补偿节点；CATCH/RETRY 之外为 null
+     * @since 2.0.0
+     */
+    public RuleNode getCatchNode() {
+        return catchNode;
+    }
+
+    /**
+     * 获取最大重试次数（RETRY 使用）
+     *
+     * @return 最大重试次数；RETRY 之外为 0
+     * @since 2.0.0
+     */
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    /**
+     * 获取重试间隔（RETRY 使用）
+     *
+     * @return 重试间隔毫秒；RETRY 之外为 0
+     * @since 2.0.0
+     */
+    public long getRetryIntervalMs() {
+        return retryIntervalMs;
+    }
+
+    /**
+     * 获取节点级超时（毫秒）
+     *
+     * @return 节点级超时；0 表示不超时
+     * @since 2.0.0
+     */
+    public long getNodeTimeoutMs() {
+        return nodeTimeoutMs;
+    }
+
+    /**
+     * 获取节点级重试次数
+     *
+     * @return 节点级重试次数；0 表示不重试
+     * @since 2.0.0
+     */
+    public int getNodeRetries() {
+        return nodeRetries;
     }
 }

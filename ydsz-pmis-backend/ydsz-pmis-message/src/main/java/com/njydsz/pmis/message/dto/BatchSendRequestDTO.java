@@ -2,7 +2,6 @@ package com.njydsz.pmis.message.dto;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 /**

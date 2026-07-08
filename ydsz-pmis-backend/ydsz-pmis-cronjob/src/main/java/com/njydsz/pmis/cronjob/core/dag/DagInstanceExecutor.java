@@ -632,6 +632,9 @@ public class DagInstanceExecutor {
         // 加载 DAG 实例和定义
         JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null || !DagInstanceStatus.RUNNING.name().equals(instance.getStatus())) {
+            // P1-4: 实例非 RUNNING 状态（如 PAUSED/CANCELED），不触发后继
+            log.info("[DagInstance] 实例非 RUNNING 状态, 不触发后继: instanceId={} status={}",
+                    dagInstanceId, instance == null ? "null" : instance.getStatus());
             return;
         }
         JobDagDO dag = dagMapper.selectById(instance.getDagId());

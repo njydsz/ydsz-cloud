@@ -131,6 +131,10 @@ public final class PermissionCodes {
     public static final String NOTIF_MESSAGE_DELETE = "notif:message:delete";
     /** 撤回通知 (本人/管理员) */
     public static final String NOTIF_MESSAGE_RECALL = "notif:message:recall";
+    /** 模板版本查看 */
+    public static final String NOTIF_TEMPLATE_VIEW = "notif:template:view";
+    /** 模板版本审核 */
+    public static final String NOTIF_TEMPLATE_AUDIT = "notif:template:audit";
 
     // ==================== 消息模板 ====================
 

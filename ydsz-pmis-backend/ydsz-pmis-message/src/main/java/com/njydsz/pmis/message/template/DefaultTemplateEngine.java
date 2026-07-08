@@ -4,7 +4,15 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -37,8 +45,11 @@ import java.util.regex.Pattern;
 @Component
 public class DefaultTemplateEngine implements TemplateEngine {
 
-    /** 变量占位符正则：匹配 ${var} / ${a.b.c} / ${this} / ${@index} */
-    private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([\\w.@]+)\\}");
+    /** 变量占位符正则：匹配 ${var} / ${a.b.c} / ${this} / ${@index} / ${var|filter:arg} */
+    private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
+
+    /** 管道分隔符 */
+    private static final String PIPE = "|";
 
     /** if-else 块正则：{{#if var}}truePart{{else}}falsePart{{/if}} */
     private static final Pattern IF_ELSE_PATTERN = Pattern.compile(
@@ -187,7 +198,18 @@ public class DefaultTemplateEngine implements TemplateEngine {
     }
 
     /**
-     * 处理 {@code ${var}} 变量替换，未命中替换为空串。
+     * 处理 {@code ${var}} 变量替换，支持管道过滤器。
+     *
+     * <p>P1-7: 支持的过滤器：
+     * <ul>
+     *   <li>{@code ${var|date:yyyy-MM-dd HH:mm:ss}} — 日期格式化</li>
+     *   <li>{@code ${var|number:#,##0.00}} — 数字格式化</li>
+     *   <li>{@code ${var|default:N/A}} — 默认值</li>
+     *   <li>{@code ${var|upper}} — 转大写</li>
+     *   <li>{@code ${var|lower}} — 转小写</li>
+     *   <li>{@code ${var|truncate:50}} — 截断到指定长度</li>
+     * </ul>
+     * 多个过滤器可链式使用：{@code ${var|default:N/A|upper}}
      *
      * @param template 模板内容
      * @param params   参数映射
@@ -197,13 +219,120 @@ public class DefaultTemplateEngine implements TemplateEngine {
         Matcher m = VAR_PATTERN.matcher(template);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
-            String key = m.group(1);
+            String expr = m.group(1);
+            // 解析管道表达式
+            String[] parts = expr.split("\\|");
+            String key = parts[0].trim();
             Object value = resolve(params, key);
+            // 应用过滤器链
+            for (int i = 1; i < parts.length; i++) {
+                value = applyFilter(value, parts[i].trim());
+            }
             String replacement = value == null ? "" : String.valueOf(value);
             m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
         m.appendTail(sb);
         return sb.toString();
+    }
+
+    /**
+     * P1-7: 应用单个过滤器。
+     *
+     * @param value     输入值
+     * @param filterExpr 过滤器表达式（如 {@code date:yyyy-MM-dd} / {@code upper}）
+     * @return 过滤后的值
+     */
+    private Object applyFilter(Object value, String filterExpr) {
+        if (filterExpr == null || filterExpr.isEmpty()) {
+            return value;
+        }
+        String[] fa = filterExpr.split(":", 2);
+        String filterName = fa[0].trim().toLowerCase();
+        String filterArg = fa.length > 1 ? fa[1] : "";
+        return switch (filterName) {
+            case "date" -> formatDate(value, filterArg);
+            case "number" -> formatNumber(value, filterArg);
+            case "default" -> value == null || (value instanceof String s && s.isBlank()) ? filterArg : value;
+            case "upper" -> value == null ? null : String.valueOf(value).toUpperCase();
+            case "lower" -> value == null ? null : String.valueOf(value).toLowerCase();
+            case "truncate" -> truncate(value, filterArg);
+            default -> value; // 未知过滤器不处理
+        };
+    }
+
+    /**
+     * 日期格式化过滤器。
+     */
+    private String formatDate(Object value, String pattern) {
+        if (value == null) {
+            return "";
+        }
+        String fmt = pattern.isEmpty() ? "yyyy-MM-dd HH:mm:ss" : pattern;
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(fmt);
+            if (value instanceof LocalDateTime ldt) {
+                return ldt.format(formatter);
+            }
+            if (value instanceof LocalDate ld) {
+                return ld.format(formatter);
+            }
+            if (value instanceof Date date) {
+                return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter);
+            }
+            if (value instanceof String str) {
+                // 尝试解析 ISO 格式
+                return LocalDateTime.parse(str).format(formatter);
+            }
+            if (value instanceof Long ts) {
+                return new Date(ts).toInstant().atZone(ZoneId.systemDefault())
+                        .toLocalDateTime().format(formatter);
+            }
+        } catch (Exception e) {
+            return String.valueOf(value);
+        }
+        return String.valueOf(value);
+    }
+
+    /**
+     * 数字格式化过滤器。
+     */
+    private String formatNumber(Object value, String pattern) {
+        if (value == null) {
+            return "";
+        }
+        String fmt = pattern.isEmpty() ? "#,##0.00" : pattern;
+        try {
+            DecimalFormat df = new DecimalFormat(fmt);
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            if (value instanceof Number num) {
+                return df.format(num);
+            }
+            if (value instanceof String str) {
+                return df.format(new BigDecimal(str));
+            }
+        } catch (Exception e) {
+            return String.valueOf(value);
+        }
+        return String.valueOf(value);
+    }
+
+    /**
+     * 字符串截断过滤器。
+     */
+    private String truncate(Object value, String lengthStr) {
+        if (value == null) {
+            return "";
+        }
+        String str = String.valueOf(value);
+        try {
+            int maxLen = Integer.parseInt(lengthStr.trim());
+            if (str.length() <= maxLen) {
+                return str;
+            }
+            return str.substring(0, maxLen) + "...";
+        } catch (NumberFormatException e) {
+            return str;
+        }
     }
 
     /**
