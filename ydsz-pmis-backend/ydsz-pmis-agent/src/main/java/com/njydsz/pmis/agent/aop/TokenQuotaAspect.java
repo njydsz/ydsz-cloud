@@ -1,7 +1,6 @@
 package com.njydsz.pmis.agent.aop;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.agent.config.TokenQuotaProperties;
 import com.njydsz.pmis.agent.dto.TokenUsage;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
@@ -46,7 +45,6 @@ import org.springframework.stereotype.Component;
 public class TokenQuotaAspect {
 
     private final TokenQuotaService tokenQuotaService;
-    private final TokenQuotaProperties properties;
 
     /**
      * 拦截 LlmProvider.chat 与 chatForJson 方法，自动统计 token（P1-2 修复）。

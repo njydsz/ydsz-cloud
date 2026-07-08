@@ -4,6 +4,8 @@ import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.entity.MsgTemplateDO;
 
+import java.util.List;
+
 /**
  * APP 推送服务商 SPI 接口。
  *
@@ -13,6 +15,8 @@ import com.njydsz.pmis.message.entity.MsgTemplateDO;
  *
  * <p>目标设备标识（clientId/deviceToken）从 {@link MessageRequest#getChannelMeta()}
  * 的 {@code deviceToken} 获取，无则回退到 {@code receiver}。
+ *
+ * <p>P1-10 增强：支持批量推送（{@link #batchSend}）和富媒体推送（通过 channelMeta 传入 imageUrl / actionUrl）。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
@@ -34,4 +38,20 @@ public interface PushProvider {
      * @return 发送结果（含 providerTraceId）
      */
     MessageResult send(MessageRequest request, MsgTemplateDO template);
+
+    /**
+     * P1-10: 批量推送到多个设备。
+     *
+     * <p>默认实现逐条发送，provider 可覆盖为原生批量接口。
+     * 富媒体参数通过 channelMeta 传入：imageUrl / actionUrl / badge / sound。
+     *
+     * @param requests 消息请求列表（每条 receiver 为一个设备标识）
+     * @param template 模板实体
+     * @return 发送结果列表
+     */
+    default List<MessageResult> batchSend(List<MessageRequest> requests, MsgTemplateDO template) {
+        return requests.stream()
+                .map(req -> send(req, template))
+                .toList();
+    }
 }

@@ -111,6 +111,8 @@ class MessageServiceImplTest {
         // P2-5: 多维度限流默认放行,需要限流的测试单独覆盖
         // 用 any() 而非 anyString(),因为 templateCode 可能为 null(anyString 不匹配 null)
         when(rateLimitService.checkSendLimit(any(), any(), any(), any())).thenReturn(true);
+        // P0-5: 优先级感知的 5 参数版本（default 方法不会被 Mockito 执行,需单独 stub）
+        when(rateLimitService.checkSendLimit(any(), any(), any(), any(), any())).thenReturn(true);
         // P2-1: 去重默认放行(非重复),需要去重拦截的测试单独覆盖
         when(dedupService.tryAcquire(anyString())).thenReturn(true);
     }

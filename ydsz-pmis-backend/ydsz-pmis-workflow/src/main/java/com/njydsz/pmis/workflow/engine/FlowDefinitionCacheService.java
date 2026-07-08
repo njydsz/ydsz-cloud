@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Ticker;
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
@@ -88,8 +89,13 @@ public class FlowDefinitionCacheService {
         if (definitionId == null) {
             return;
         }
-        nodeCache.invalidate(definitionId);
-        skipCache.invalidate(definitionId);
+        // P0-3: 按租户维度失效缓存（所有租户的同 definitionId 一并清除）
+        nodeCache.asMap().keySet().stream()
+                .filter(k -> k.endsWith(":" + definitionId))
+                .forEach(nodeCache::invalidate);
+        skipCache.asMap().keySet().stream()
+                .filter(k -> k.endsWith(":" + definitionId))
+                .forEach(skipCache::invalidate);
         log.debug("[FlowCache] evict definitionId={}", definitionId);
     }
 
@@ -102,7 +108,8 @@ public class FlowDefinitionCacheService {
         if (definitionId == null) {
             return Collections.emptyList();
         }
-        return nodeCache.get(definitionId, this::loadNodes);
+        String cacheKey = buildCacheKey(definitionId);
+        return nodeCache.get(cacheKey, this::loadNodes);
     }
 
     /**
@@ -138,7 +145,8 @@ public class FlowDefinitionCacheService {
         if (definitionId == null) {
             return Collections.emptyList();
         }
-        return skipCache.get(definitionId, this::loadSkips);
+        String cacheKey = buildCacheKey(definitionId);
+        return skipCache.get(cacheKey, this::loadSkips);
     }
 
     /**
@@ -169,14 +177,18 @@ public class FlowDefinitionCacheService {
 
     // ============================== 内部加载 ==============================
 
-    private List<FlowNodeDO> loadNodes(String definitionId) {
+    private List<FlowNodeDO> loadNodes(String cacheKey) {
+        // P0-3: cacheKey 格式为 tenantId:definitionId
+        String definitionId = extractDefinitionId(cacheKey);
         List<FlowNodeDO> nodes = flowNodeMapper.selectByDefinitionId(definitionId);
         log.debug("[FlowCache] load nodes: definitionId={} count={}",
                 definitionId, nodes == null ? 0 : nodes.size());
         return nodes == null ? Collections.emptyList() : nodes;
     }
 
-    private List<FlowSkipDO> loadSkips(String definitionId) {
+    private List<FlowSkipDO> loadSkips(String cacheKey) {
+        // P0-3: cacheKey 格式为 tenantId:definitionId
+        String definitionId = extractDefinitionId(cacheKey);
         List<FlowSkipDO> skips = flowSkipMapper.selectByDefinitionId(definitionId);
         log.debug("[FlowCache] load skips: definitionId={} count={}",
                 definitionId, skips == null ? 0 : skips.size());
@@ -189,6 +201,27 @@ public class FlowDefinitionCacheService {
      * <p>skip 表无 source_node_code 列，源节点编码冗余存储在 ext JSON 的 sourceRef 字段
      * （见 FlowDefinitionServiceImpl 部署逻辑）。
      */
+    /**
+     * P0-3: 构建租户感知的缓存 key，防止跨租户缓存串号。
+     *
+     * @param definitionId 流程定义 ID
+     * @return "tenantId:definitionId"
+     */
+    private String buildCacheKey(String definitionId) {
+        return TenantContext.getTenantId() + ":" + definitionId;
+    }
+
+    /**
+     * P0-3: 从缓存 key 中提取 definitionId。
+     *
+     * @param cacheKey "tenantId:definitionId"
+     * @return definitionId
+     */
+    private String extractDefinitionId(String cacheKey) {
+        int idx = cacheKey.indexOf(':');
+        return idx >= 0 ? cacheKey.substring(idx + 1) : cacheKey;
+    }
+
     private String extractSourceRef(FlowSkipDO skip) {
         if (skip == null || skip.getExt() == null || skip.getExt().isBlank()) {
             return null;

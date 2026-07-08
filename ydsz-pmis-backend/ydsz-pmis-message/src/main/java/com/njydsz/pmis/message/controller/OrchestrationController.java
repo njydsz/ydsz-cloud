@@ -1,0 +1,41 @@
+package com.njydsz.pmis.message.controller;
+
+import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.message.dto.OrchestrationFlowDTO;
+import com.njydsz.pmis.message.dto.OrchestrationResultVO;
+import com.njydsz.pmis.message.service.OrchestrationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 消息编排引擎 Controller。
+ *
+ * <p>P1-9: 提供 DAG 流程编排接口，支持多节点依赖、条件分支和失败策略。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.2.0
+ */
+@Slf4j
+@Tag(name = "消息编排", description = "DAG 流程编排引擎")
+@RestController
+@RequestMapping("/orchestration")
+@RequiredArgsConstructor
+public class OrchestrationController {
+
+    private final OrchestrationService orchestrationService;
+
+    @Operation(summary = "执行编排流程")
+    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @PostMapping("/execute")
+    public Result<OrchestrationResultVO> execute(@RequestBody OrchestrationFlowDTO flow) {
+        return Result.ok(orchestrationService.execute(flow));
+    }
+}

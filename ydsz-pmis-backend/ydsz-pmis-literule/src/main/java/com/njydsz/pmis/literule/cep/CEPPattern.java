@@ -62,6 +62,18 @@ public class CEPPattern implements Serializable {
         COUNT, SUM, AVG, MIN, MAX
     }
 
+    /** 窗口类型（2.0.0 CEP 窗口语义增强） */
+    public enum WindowType {
+        /** 滚动窗口：固定大小、不重叠、每次到期后清空 */
+        TUMBLING,
+        /** 滑动窗口：固定大小、按滑动步长推进、窗口可重叠 */
+        SLIDING,
+        /** 会话窗口：由事件间隔驱动，超过 gap 则关闭当前窗口 */
+        SESSION,
+        /** 计数窗口：按事件数量计数，达到阈值后触发并清空 */
+        COUNT
+    }
+
     /** 模式唯一标识 */
     private String id;
 
@@ -79,6 +91,15 @@ public class CEPPattern implements Serializable {
 
     /** 滑动步长（仅 SLIDING 类型；null 表示滚动窗口） */
     private Duration slide;
+
+    /** 窗口类型（2.0.0，默认 TUMBLING 兼容旧版） */
+    private WindowType windowType;
+
+    /** 会话窗口空闲超时（仅 SESSION 类型，超过此间隔关闭当前窗口） */
+    private Duration sessionGap;
+
+    /** 计数窗口阈值（仅 COUNT 类型，事件数达到此值时触发并清空） */
+    private int countWindow = 0;
 
     /** 触发阈值（TIME_WINDOW 模式下为次数，AGGREGATE 模式下为数值阈值） */
     private double threshold;

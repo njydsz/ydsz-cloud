@@ -29,8 +29,6 @@ public class HttpMcpTransport implements McpTransport {
     private final long timeoutMs;
     private final HttpClient httpClient;
 
-    /** 上一次请求的 JSON（供 receive 返回） */
-    private volatile String lastRequest;
     /** 上一次响应的 JSON */
     private volatile String lastResponse;
 
@@ -78,7 +76,6 @@ public class HttpMcpTransport implements McpTransport {
     @Override
     public void send(String json) throws Exception {
         ensureConnected();
-        lastRequest = json;
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(endpointUrl))
                 .header("Content-Type", "application/json")
@@ -116,7 +113,6 @@ public class HttpMcpTransport implements McpTransport {
     @Override
     public void close() {
         connected.set(false);
-        lastRequest = null;
         lastResponse = null;
         log.info("[MCP-Http] 连接已关闭");
     }

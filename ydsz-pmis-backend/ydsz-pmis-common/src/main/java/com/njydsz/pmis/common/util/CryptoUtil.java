@@ -52,20 +52,34 @@ public final class CryptoUtil {
 
     /** BouncyCastle 是否已注册（volatile 双重检查） */
     private static volatile boolean bcRegistered = false;
-
-    static {
-        ensureBouncyCastle();
-    }
+    /** BouncyCastle 是否可用（null=未检测, true/false=已检测结果） */
+    private static volatile Boolean bcAvailable = null;
 
     private CryptoUtil() {
     }
 
-    private static synchronized void ensureBouncyCastle() {
-        if (bcRegistered) return;
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
+    /**
+     * 惰性注册 BouncyCastle Provider。
+     *
+     * <p>仅在 SM4 国密算法首次调用时触发,避免未引入 bcprov 依赖的模块
+     * 因静态初始化失败而抛 NoClassDefFoundError。
+     *
+     * @return true 表示 BouncyCastle 可用
+     */
+    private static synchronized boolean ensureBouncyCastle() {
+        if (bcAvailable != null) {
+            return bcAvailable;
         }
-        bcRegistered = true;
+        try {
+            if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+                Security.addProvider(new BouncyCastleProvider());
+            }
+            bcRegistered = true;
+            bcAvailable = true;
+        } catch (NoClassDefFoundError | ExceptionInInitializerError e) {
+            bcAvailable = false;
+        }
+        return bcAvailable;
     }
 
     // ==================== 摘要 ====================
@@ -398,6 +412,9 @@ public final class CryptoUtil {
         if (key == null || key.length != 16) {
             throw new IllegalArgumentException("SM4 要求 16 字节密钥, 实际: " + (key == null ? 0 : key.length));
         }
+        if (!ensureBouncyCastle()) {
+            throw new IllegalStateException("SM4 需要 BouncyCastle,但 bcprov 未在 classpath 中");
+        }
         try {
             byte[] iv = randomBytes(GCM_IV_LEN);
             SecretKey keySpec = new SecretKeySpec(key, "SM4");
@@ -424,6 +441,9 @@ public final class CryptoUtil {
         if (StrUtil.isBlank(ciphertextB64)) return null;
         if (key == null || key.length != 16) {
             throw new IllegalArgumentException("SM4 要求 16 字节密钥, 实际: " + (key == null ? 0 : key.length));
+        }
+        if (!ensureBouncyCastle()) {
+            throw new IllegalStateException("SM4 需要 BouncyCastle,但 bcprov 未在 classpath 中");
         }
         try {
             byte[] all = Base64.getDecoder().decode(ciphertextB64);

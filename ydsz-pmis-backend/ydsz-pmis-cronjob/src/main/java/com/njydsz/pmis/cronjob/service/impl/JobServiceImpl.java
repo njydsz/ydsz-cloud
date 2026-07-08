@@ -1000,7 +1000,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @return CronTrigger 实例
      */
     private CronTrigger buildTrigger(JobDO job) {
-        String tz = StringUtils.hasText(job.getTimezone()) ? job.getTimezone() : "Asia/Shanghai";
+        String tz = StringUtils.hasText(job.getTimezone()) ? job.getTimezone() : SCHEDULE_TIMEZONE.getID();
         return new CronTrigger(job.getCronExpression(), TimeZone.getTimeZone(tz));
     }
 

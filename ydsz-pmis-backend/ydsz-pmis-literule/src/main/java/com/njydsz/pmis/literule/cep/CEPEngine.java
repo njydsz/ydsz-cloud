@@ -63,6 +63,9 @@ public class CEPEngine implements Serializable {
     /** 序列状态：patternId → partitionKey → 序列已匹配步骤 */
     private final Map<String, Map<String, SequenceState>> sequenceStates = new ConcurrentHashMap<>();
 
+    /** 会话窗口最后事件时间戳：patternId → partitionKey → lastEventInstant */
+    private final Map<String, Map<String, Instant>> sessionLastEventAt = new ConcurrentHashMap<>();
+
     /** 已注册模式数 */
     private final AtomicLong totalHits = new AtomicLong();
 
@@ -164,10 +167,39 @@ public class CEPEngine implements Serializable {
     }
 
     /**
-     * 时间窗口模式
+     * 获取模式窗口类型（默认 TUMBLING，兼容旧版）
+     */
+    private CEPPattern.WindowType resolveWindowType(CEPPattern pattern) {
+        return pattern.getWindowType() != null ? pattern.getWindowType() : CEPPattern.WindowType.TUMBLING;
+    }
+
+    /**
+     * 时间窗口模式（2.0.0 增强窗口类型支持）
+     *
+     * <p>根据 {@link CEPPattern.WindowType} 分派不同的窗口语义：
+     * <ul>
+     *   <li>TUMBLING - 滚动窗口：固定大小不重叠，到期后清空</li>
+     *   <li>SLIDING - 滑动窗口：按 slide 步长推进，窗口可重叠</li>
+     *   <li>SESSION - 会话窗口：超过 sessionGap 无事件则关闭当前窗口</li>
+     *   <li>COUNT - 计数窗口：事件数达到 countWindow 时触发并清空</li>
+     * </ul>
      */
     private void handleTimeWindow(CEPPattern pattern, CEPEvent event,
                                   ConcurrentLinkedDeque<CEPEvent> queue) {
+        CEPPattern.WindowType wt = resolveWindowType(pattern);
+        switch (wt) {
+            case SLIDING -> handleSlidingWindow(pattern, event, queue);
+            case SESSION -> handleSessionWindow(pattern, event, queue);
+            case COUNT -> handleCountWindow(pattern, event, queue);
+            default -> handleTumblingWindow(pattern, event, queue);
+        }
+    }
+
+    /**
+     * 滚动窗口（默认）：固定大小不重叠，到期后清空
+     */
+    private void handleTumblingWindow(CEPPattern pattern, CEPEvent event,
+                                      ConcurrentLinkedDeque<CEPEvent> queue) {
         Instant now = event.getTimestamp();
         Instant windowStart = now.minus(pattern.getWindow());
         queue.addLast(event);
@@ -178,6 +210,95 @@ public class CEPEngine implements Serializable {
         int count = queue.size();
         if (count >= pattern.getThreshold()) {
             emitHit(pattern, new ArrayList<>(queue), count, event);
+            // 滚动窗口命中后清空，开启下一个窗口
+            queue.clear();
+        }
+    }
+
+    /**
+     * 滑动窗口：按 slide 步长推进，窗口可重叠
+     *
+     * <p>窗口大小 = {@code window}，滑动步长 = {@code slide}（默认为 window/2）。
+     * 每次新事件到来时，检查是否已达到 slide 步长，若是则触发并滑动窗口。
+     */
+    private void handleSlidingWindow(CEPPattern pattern, CEPEvent event,
+                                     ConcurrentLinkedDeque<CEPEvent> queue) {
+        Instant now = event.getTimestamp();
+        Instant windowStart = now.minus(pattern.getWindow());
+        queue.addLast(event);
+        // 裁剪窗口外
+        while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
+            queue.pollFirst();
+        }
+        int count = queue.size();
+        // 滑动窗口：每次达到阈值就触发，但不清空队列（窗口可重叠）
+        if (count >= pattern.getThreshold()) {
+            emitHit(pattern, new ArrayList<>(queue), count, event);
+            // 按 slide 步长移除最旧事件，实现滑动
+            Duration slide = pattern.getSlide() != null ? pattern.getSlide() : pattern.getWindow().dividedBy(2);
+            Instant slideBoundary = now.minus(slide);
+            while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(slideBoundary)) {
+                queue.pollFirst();
+            }
+        }
+    }
+
+    /**
+     * 会话窗口：由事件间隔驱动，超过 sessionGap 则关闭当前窗口
+     *
+     * <p>当新事件到来时，检查与上一个事件的间隔是否超过 sessionGap：
+     * <ul>
+     *   <li>超过：先检查旧窗口是否达到阈值，达到则触发，然后清空开启新窗口</li>
+     *   <li>未超过：追加到当前窗口</li>
+     * </ul>
+     */
+    private void handleSessionWindow(CEPPattern pattern, CEPEvent event,
+                                     ConcurrentLinkedDeque<CEPEvent> queue) {
+        Instant now = event.getTimestamp();
+        Duration gap = pattern.getSessionGap() != null ? pattern.getSessionGap() : pattern.getWindow();
+
+        // 检查会话超时
+        Map<String, Instant> lastEventMap = sessionLastEventAt
+                .computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>());
+        String partitionKey = event.getPartitionKey();
+        Instant lastEventAt = lastEventMap.get(partitionKey);
+
+        if (lastEventAt != null && Duration.between(lastEventAt, now).compareTo(gap) > 0) {
+            // 会话超时，检查旧窗口是否达到阈值
+            int oldCount = queue.size();
+            if (oldCount >= pattern.getThreshold()) {
+                emitHit(pattern, new ArrayList<>(queue), oldCount, event);
+            }
+            queue.clear();
+        }
+
+        queue.addLast(event);
+        lastEventMap.put(partitionKey, now);
+
+        // 实时检查阈值（会话窗口也可在事件到来时即时触发）
+        int count = queue.size();
+        if (count >= pattern.getThreshold() && pattern.getWindow() != null) {
+            // 对于会话窗口，阈值触发后不清空（等待会话超时才清空）
+            // 但避免重复触发：仅当 queue 大小恰好等于阈值时触发
+            if (count == (int) pattern.getThreshold()) {
+                emitHit(pattern, new ArrayList<>(queue), count, event);
+            }
+        }
+    }
+
+    /**
+     * 计数窗口：按事件数量计数，达到 countWindow 时触发并清空
+     *
+     * <p>不使用时间窗口，纯按事件数量。{@code countWindow} 为触发阈值。
+     */
+    private void handleCountWindow(CEPPattern pattern, CEPEvent event,
+                                   ConcurrentLinkedDeque<CEPEvent> queue) {
+        queue.addLast(event);
+        int count = queue.size();
+        int threshold = pattern.getCountWindow() > 0 ? pattern.getCountWindow() : (int) pattern.getThreshold();
+        if (count >= threshold) {
+            emitHit(pattern, new ArrayList<>(queue), count, event);
+            queue.clear();
         }
     }
 
@@ -241,19 +362,41 @@ public class CEPEngine implements Serializable {
     }
 
     /**
-     * 聚合模式
+     * 聚合模式（2.0.0 增强窗口类型支持）
+     *
+     * <p>聚合模式同样支持 TUMBLING/SLIDING/SESSION/COUNT 四种窗口类型。
+     * 当 windowType 为 null 时默认使用 TUMBLING。
      */
     private void handleAggregate(CEPPattern pattern, CEPEvent event,
                                  ConcurrentLinkedDeque<CEPEvent> queue) {
-        Instant now = event.getTimestamp();
-        Instant windowStart = now.minus(pattern.getWindow());
-        queue.addLast(event);
-        while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
-            queue.pollFirst();
-        }
-        double metric = aggregate(queue, pattern.getAggregateFunction(), pattern.getAggregateField());
-        if (metric >= pattern.getThreshold()) {
-            emitHit(pattern, new ArrayList<>(queue), metric, event);
+        CEPPattern.WindowType wt = resolveWindowType(pattern);
+        switch (wt) {
+            case COUNT -> {
+                queue.addLast(event);
+                int count = queue.size();
+                int threshold = pattern.getCountWindow() > 0 ? pattern.getCountWindow() : (int) pattern.getThreshold();
+                if (count >= threshold) {
+                    double metric = aggregate(queue, pattern.getAggregateFunction(), pattern.getAggregateField());
+                    emitHit(pattern, new ArrayList<>(queue), metric, event);
+                    queue.clear();
+                }
+            }
+            default -> {
+                // TUMBLING / SLIDING / SESSION 均使用时间裁剪
+                Instant now = event.getTimestamp();
+                Instant windowStart = now.minus(pattern.getWindow());
+                queue.addLast(event);
+                while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
+                    queue.pollFirst();
+                }
+                double metric = aggregate(queue, pattern.getAggregateFunction(), pattern.getAggregateField());
+                if (metric >= pattern.getThreshold()) {
+                    emitHit(pattern, new ArrayList<>(queue), metric, event);
+                    if (wt == CEPPattern.WindowType.TUMBLING) {
+                        queue.clear();
+                    }
+                }
+            }
         }
     }
 
@@ -405,6 +548,8 @@ public class CEPEngine implements Serializable {
         if (qMap != null) qMap.remove(partitionKey);
         Map<String, SequenceState> sMap = sequenceStates.get(patternId);
         if (sMap != null) sMap.remove(partitionKey);
+        Map<String, Instant> sessionMap = sessionLastEventAt.get(patternId);
+        if (sessionMap != null) sessionMap.remove(partitionKey);
     }
 
     /**
@@ -413,6 +558,7 @@ public class CEPEngine implements Serializable {
     public void clearAll() {
         eventQueues.clear();
         sequenceStates.clear();
+        sessionLastEventAt.clear();
     }
 
     /**

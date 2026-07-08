@@ -39,6 +39,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * // 循环
  * FOR("items", "item", R001)
  * WHILE("count > 0", R002)
+ *
+ * // 异常捕获（2.0.0）
+ * CATCH(R001, R002)
+ *
+ * // 重试（2.0.0）
+ * RETRY(R001, 3, 500, R002)
  * </pre>
  *
  * <p>解析器采用递归下降算法，支持无限嵌套。规则引用通过 {@link RuleResolver} 回调解析。
@@ -171,6 +177,30 @@ public class RuleChainDslParser {
                 }
                 sb.append(")");
             }
+            case CATCH -> {
+                sb.append("CATCH(");
+                if (chain.getPrimaryNode() != null) {
+                    appendNode(sb, chain.getPrimaryNode());
+                }
+                if (chain.getCatchNode() != null) {
+                    sb.append(", ");
+                    appendNode(sb, chain.getCatchNode());
+                }
+                sb.append(")");
+            }
+            case RETRY -> {
+                sb.append("RETRY(");
+                if (chain.getPrimaryNode() != null) {
+                    appendNode(sb, chain.getPrimaryNode());
+                }
+                sb.append(", ").append(chain.getMaxRetries());
+                sb.append(", ").append(chain.getRetryIntervalMs());
+                if (chain.getCatchNode() != null) {
+                    sb.append(", ");
+                    appendNode(sb, chain.getCatchNode());
+                }
+                sb.append(")");
+            }
         }
     }
 
@@ -238,6 +268,8 @@ public class RuleChainDslParser {
                 case "FOR" -> parseFor();
                 case "WHILE" -> parseWhile();
                 case "BREAK" -> RuleChain.breakChain();
+                case "CATCH" -> parseCatch();
+                case "RETRY" -> parseRetry();
                 default -> throw new IllegalArgumentException("未知链类型: " + keyword);
             };
 
@@ -376,6 +408,44 @@ public class RuleChainDslParser {
         }
 
         /**
+         * CATCH(R1, R2)  -- R1 异常时执行 R2
+         */
+        RuleChain parseCatch() {
+            Rule primaryRule = parseRuleOrChain();
+            skipWhitespace();
+            Rule catchRule = null;
+            if (pos < dsl.length() && dsl.charAt(pos) == ',') {
+                pos++;
+                skipWhitespace();
+                catchRule = parseRuleOrChain();
+            }
+            return RuleChain.catchThen(primaryRule, catchRule);
+        }
+
+        /**
+         * RETRY(R1, maxRetries, retryIntervalMs [, R2])
+         */
+        RuleChain parseRetry() {
+            Rule primaryRule = parseRuleOrChain();
+            skipWhitespace();
+            expect(',');
+            skipWhitespace();
+            int maxRetries = Integer.parseInt(readNumber());
+            skipWhitespace();
+            expect(',');
+            skipWhitespace();
+            long retryIntervalMs = Long.parseLong(readNumber());
+            skipWhitespace();
+            Rule rollbackRule = null;
+            if (pos < dsl.length() && dsl.charAt(pos) == ',') {
+                pos++;
+                skipWhitespace();
+                rollbackRule = parseRuleOrChain();
+            }
+            return RuleChain.retryThen(primaryRule, maxRetries, retryIntervalMs, rollbackRule);
+        }
+
+        /**
          * 解析规则列表（逗号分隔）
          */
         List<Rule> parseRuleList() {
@@ -465,7 +535,7 @@ public class RuleChainDslParser {
          */
         boolean isChainKeyword(String keyword) {
             return keyword != null && switch (keyword.toUpperCase()) {
-                case "THEN", "WHEN", "IF", "ELIF", "SWITCH", "FOR", "WHILE", "BREAK" -> true;
+                case "THEN", "WHEN", "IF", "ELIF", "SWITCH", "FOR", "WHILE", "BREAK", "CATCH", "RETRY" -> true;
                 default -> false;
             };
         }

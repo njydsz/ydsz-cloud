@@ -4,7 +4,11 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 消息引擎全局配置（prefix = {@code pmis.message}）。
@@ -261,6 +265,9 @@ public class MessageProperties {
     /** P1-5: 退订中心配置 */
     private UnsubscribeConfig unsubscribe = new UnsubscribeConfig();
 
+    /** P2-5: 智能定时配置 */
+    private SmartTimingConfig smartTiming = new SmartTimingConfig();
+
     /**
      * P1-5: 退订中心配置。
      *
@@ -279,5 +286,52 @@ public class MessageProperties {
         private int ttlDays = 30;
         /** 退订链接 base URL（如 https://pmis.example.com/unsubscribe），用于拼接完整链接 */
         private String baseUrl;
+    }
+
+    /**
+     * P2-5: 智能定时配置。
+     *
+     * <p>超越简单 DND 拦截的智能发送时机策略：
+     * <ul>
+     *   <li>DND 命中时不再丢弃消息，而是<strong>延迟到 DND 结束后</strong>自动重发</li>
+     *   <li>URGENT 优先级消息可绕过 DND 立即发送</li>
+     *   <li>DND 仅对"打扰型"通道生效（SMS/PUSH/IM），EMAIL/IN_APP/Webhook 不受 DND 限制</li>
+     * </ul>
+     */
+    @Data
+    public static class SmartTimingConfig {
+        /** 智能定时总开关（关闭后 DND 命中仍走旧的丢弃策略） */
+        private boolean enabled = true;
+        /** URGENT 优先级是否绕过 DND（默认 true，紧急消息必须立即送达） */
+        private boolean urgentBypassDnd = true;
+        /** DND 生效的打扰型通道列表（默认 SMS/PUSH/DINGTALK/WECOM/FEISHU） */
+        private List<String> disruptiveChannels = Arrays.asList(
+                "SMS", "PUSH", "DINGTALK", "WECOM", "FEISHU");
+        /** DND 延迟发送时附加的缓冲秒数（默认 60s，避免卡在 DND 结束瞬间的高峰） */
+        private long dndBufferSeconds = 60L;
+        /** DND 延迟消息最大延迟小时数（超过则降级为丢弃，防止消息过期太久失去意义，默认 72h） */
+        private long maxDeferHours = 72L;
+
+        /**
+         * 判断指定通道是否为打扰型通道（受 DND 约束）。
+         *
+         * @param channel 通道名称（大写）
+         * @return true 表示该通道受 DND 约束
+         */
+        public boolean isDisruptive(String channel) {
+            if (channel == null) {
+                return false;
+            }
+            return disruptiveChannels.contains(channel.toUpperCase());
+        }
+
+        /**
+         * 获取打扰型通道集合（用于测试与诊断）。
+         *
+         * @return 不可变副本
+         */
+        public Set<String> disruptiveChannelSet() {
+            return new LinkedHashSet<>(disruptiveChannels);
+        }
     }
 }

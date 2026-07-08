@@ -2,7 +2,6 @@ package com.njydsz.pmis.cronjob.service.impl;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.dto.JobSlaSaveDTO;
 import com.njydsz.pmis.cronjob.entity.JobSlaDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
@@ -36,7 +35,6 @@ public class JobSlaServiceImpl implements JobSlaService {
 
     private final JobSlaMapper jobSlaMapper;
     private final JobLogMapper jobLogMapper;
-    private final CronjobProperties cronjobProperties;
 
     /** 默认 SLA 检查时间窗口（分钟） */
     private static final int DEFAULT_WINDOW_MINUTES = 60;
@@ -219,7 +217,7 @@ public class JobSlaServiceImpl implements JobSlaService {
     /**
      * 解析 SLA 检查时间窗口（分钟）。
      *
-     * <p>当前固定使用 60 分钟默认窗口。后续可通过 CronjobProperties 扩展配置。
+     * <p>当前固定使用 60 分钟默认窗口。后续可通过 CronjobProperties 扩展配置（待引入）。
      */
     private int resolveWindowMinutes() {
         return DEFAULT_WINDOW_MINUTES;
