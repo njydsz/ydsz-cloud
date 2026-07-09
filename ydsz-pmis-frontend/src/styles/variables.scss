@@ -1,26 +1,45 @@
 /**
- * @file SCSS 全局变量定义
- * @description 对标 Element Plus 默认主题，集中声明主题色、文字、边框、背景、布局尺寸、
- *              字号、圆角、阴影、间距、响应式断点与 z-index 等设计令牌，供全局样式与业务页面复用。
+ * @file SCSS 全局变量定义（设计令牌体系）
+ * @description 对标 Ant Design 5 / TDesign / Arco Design Pro，集中声明主题色、文字、边框、背景、
+ *              布局尺寸、字号、圆角、阴影、间距、响应式断点与 z-index 等设计令牌，供全局样式与业务页面复用。
  *
- * 暗黑模式策略（P1-10）：
- *  - 文字颜色、边框颜色、背景色、阴影等需要随主题切换的令牌，以 CSS 自定义属性（CSS Variables）
- *    形式定义在 index.scss 的 :root / .dark 块中。
- *  - 此文件中的同名 SCSS 变量引用这些 CSS 变量（如 $text-primary: var(--text-primary)），
- *    使得所有使用 $text-primary 的组件样式自动获得暗黑模式支持。
+ * 设计令牌体系（批次 29-1）：
+ *  - 主题色统一为 #1677ff（Ant Design 5 标准），与 Element Plus 默认 #409eff 对齐通过覆盖 --el-color-primary
+ *  - 状态色（success/warning/danger/info）采用 Ant 5 色板，与图表色板保持一致
+ *  - 图表色板通过 CSS 变量 --chart-color-* 暴露，支持暗黑模式自动切换
+ *  - 暗黑模式策略：文字/边框/背景/阴影/图表色等需随主题切换的令牌，以 CSS 变量形式定义在 index.scss
+ *    的 :root / .dark 块中；此文件中的同名 SCSS 变量引用这些 CSS 变量，实现全局自动切换。
  *  - 主题色、布局尺寸、字号、圆角、间距、z-index 等无需随主题变化的令牌保持为纯 SCSS 值。
  *
  * @module styles/variables
  */
 
-// ===== 主题色（纯 SCSS 值，Element Plus 暗黑模式自行处理主题色变量） =====
+// ===== 主题色（纯 SCSS 值，Ant Design 5 标准色板） =====
 
-// 主题色
-$primary-color: #1890ff;
+// 主品牌色（Ant Design 5 primary：#1677ff，对齐现代企业后台视觉）
+$primary-color: #1677ff;
+// 状态色（Ant Design 5 标准色板，与 Element Plus 默认色差异已通过 element-overrides 覆盖）
 $success-color: #52c41a;
 $warning-color: #faad14;
 $danger-color: #ff4d4f;
 $info-color: #909399;
+
+// ===== 图表色板（引用 CSS 变量，支持暗黑模式切换） =====
+// 业务代码禁止硬编码 #xxxxxx，统一通过 $chart-color-* 或 chartColors 对象引用
+
+$chart-color-primary: var(--chart-color-primary);
+$chart-color-success: var(--chart-color-success);
+$chart-color-warning: var(--chart-color-warning);
+$chart-color-danger: var(--chart-color-danger);
+$chart-color-info: var(--chart-color-info);
+$chart-color-purple: var(--chart-color-purple);
+$chart-color-orange: var(--chart-color-orange);
+// 图表描边色（饼图/环形图分隔线，暗黑模式下自动适配）
+$chart-border-color: var(--chart-border-color);
+// 图表文字色（坐标轴/图例/标题，暗黑模式下自动适配）
+$chart-text-color: var(--chart-text-color);
+// 图表网格线色（暗黑模式下自动适配）
+$chart-split-line-color: var(--chart-split-line-color);
 
 // ===== 文字颜色（引用 CSS 变量，支持暗黑模式切换） =====
 
@@ -54,7 +73,7 @@ $breadcrumb-height: 40px;
 $footer-height: 48px;
 $tags-view-height: 36px;
 
-// 字号
+// 字号（对齐 Ant Design 5 字号 token：12/14/16/20/24/30）
 $font-size-xs: 12px;
 $font-size-sm: 13px;
 $font-size-base: 14px;
@@ -62,12 +81,13 @@ $font-size-md: 16px;
 $font-size-lg: 18px;
 $font-size-xl: 20px;
 $font-size-2xl: 24px;
+$font-size-3xl: 30px;
 
-// 圆角
-$border-radius-sm: 2px;
-$border-radius-base: 4px;
+// 圆角（对齐现代企业后台：4/6/8 三阶，移除过时的 2px）
+$border-radius-sm: 4px;
+$border-radius-base: 6px;
 $border-radius-lg: 8px;
-$border-radius-xl: 16px;
+$border-radius-xl: 12px;
 
 // 基础阴影（多层组合，不随主题变化）
 $shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);

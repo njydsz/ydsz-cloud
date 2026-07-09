@@ -71,6 +71,12 @@ export default {
     clearSelection: '清空选择',
     clear: '清空',
     pageLoading: '页面加载中',
+    // 批次 29-2：ProTable 增强能力 i18n
+    tableDensity: '表格密度',
+    tableDensityLarge: '宽松',
+    tableDensityDefault: '默认',
+    tableDensitySmall: '紧凑',
+    columnSetting: '列设置',
     retry: '重试',
     backHome: '返回首页',
     viewErrorDetails: '查看错误详情',

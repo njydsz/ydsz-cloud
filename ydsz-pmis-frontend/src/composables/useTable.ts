@@ -10,8 +10,6 @@
  * ```
  */
 import { ref, reactive, watch, onUnmounted, getCurrentInstance, type Ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import { useI18n } from 'vue-i18n'
 import { requestCanceler } from '@/utils/request-canceler'
 
 /** 分页查询参数基类 */
@@ -81,7 +79,6 @@ export function useTable<Q extends UseTableQuery>(
   fetcher: (query: Q) => Promise<PageResult<unknown>>,
   options: UseTableOptions<Q> = {},
 ) {
-  const { t } = useI18n()
   /** 加载中标志 */
   const loading = ref(false)
   /** 当前列表数据 */
@@ -142,15 +139,12 @@ export function useTable<Q extends UseTableQuery>(
         // 还原 loading，保留已有列表数据，不抛错
         return
       }
-      // 请求失败：清空列表数据，避免用户误以为是空数据
-      list.value = []
-      total.value = 0
+      // 请求失败：记录错误状态（由 PageLayout 展示 network preset + 重试按钮）
+      // 不清空已有列表数据：翻页失败时保留上一次数据，避免表格闪烁
       const msg = e instanceof Error ? e.message : String(e)
       error.value = msg
-      ElMessage.error(`${t('common.msg_fetch_failed')}: ${msg}`)
-      // 不吞掉错误，便于上层（如调用方）感知失败
+      // 错误提示由全局 request 拦截器统一处理（ElMessage.error），此处不重复弹窗
       console.error('[useTable] fetchData failed:', e)
-      throw e
     } finally {
       loading.value = false
     }

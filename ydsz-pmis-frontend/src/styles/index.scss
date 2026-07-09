@@ -36,6 +36,22 @@
 
   // 阴影
   --shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+
+  // 图表色板（批次 29-1：统一图表配色，禁止业务代码硬编码 #xxxxxx）
+  // 与主题色/状态色对齐，暗黑模式下自动切换为高对比度版本
+  --chart-color-primary: #1677ff;   // 主品牌色（折线/柱图主序列）
+  --chart-color-success: #52c41a;   // 成功/正常/绿色预警
+  --chart-color-warning: #faad14;   // 警告/黄色预警
+  --chart-color-danger: #ff4d4f;    // 危险/红色预警
+  --chart-color-info: #909399;      // 信息/成本序列
+  --chart-color-purple: #722ed1;    // 紫色序列（收入/合同）
+  --chart-color-orange: #fa8c16;    // 橙色序列（费用/支出）
+  // 图表描边色（饼图/环形图分隔线）
+  --chart-border-color: #ffffff;
+  // 图表文字色（坐标轴/图例/标题）
+  --chart-text-color: #303133;
+  // 图表网格线色
+  --chart-split-line-color: #ebeef5;
 }
 
 // 暗色主题（<html class="dark"> 时生效）
@@ -59,6 +75,21 @@
 
   // 阴影（暗色模式下加深）
   --shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+
+  // 图表色板（暗黑模式：提升对比度，避免暗背景上颜色发灰）
+  --chart-color-primary: #4096ff;   // 主品牌色提亮
+  --chart-color-success: #73d13d;   // 成功色提亮
+  --chart-color-warning: #ffc53d;   // 警告色提亮
+  --chart-color-danger: #ff7875;    // 危险色提亮
+  --chart-color-info: #bfbfbf;      // 信息色提亮
+  --chart-color-purple: #9254de;    // 紫色提亮
+  --chart-color-orange: #ffa940;    // 橙色提亮
+  // 图表描边色（暗黑模式下与背景一致）
+  --chart-border-color: #1e1e1e;
+  // 图表文字色（暗黑模式下为浅色）
+  --chart-text-color: #e5eaf3;
+  // 图表网格线色（暗黑模式下为深色）
+  --chart-split-line-color: #363738;
 }
 
 // ===== 全局样式模块 =====

@@ -36,6 +36,7 @@ export const getCockpitOverview = (period?: string, drillDown?: Record<string, u
     url: '/execution/cockpit/overview',
     method: 'GET',
     params: { period, ...(drillDown || {}) },
+    silent: true,
   })
 
 /**
@@ -164,4 +165,5 @@ export const getKpiTrend = (months = 12) =>
     url: '/execution/cockpit/kpi-trend',
     method: 'GET',
     params: { months },
+    silent: true,
   })

@@ -63,7 +63,12 @@ function onError(err: unknown, info: string) {
 #app {
   width: 100%;
   height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  // 字体栈对齐 Ant Design 5，优先中文字体保证跨平台渲染一致
+  // macOS: PingFang SC / Hiragino Sans GB
+  // Windows: Microsoft YaHei
+  // HarmonyOS: HarmonyOS Sans
+  // 跨平台兜底: system-ui / -apple-system / BlinkMacSystemFont / Segoe UI / Roboto
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'HarmonyOS Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

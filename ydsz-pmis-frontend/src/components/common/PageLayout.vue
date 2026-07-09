@@ -43,8 +43,9 @@
  *   </PageLayout>
  */
 import type { PropType } from 'vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import SkeletonTable from './SkeletonTable.vue'
 import BatchToolbar from './BatchToolbar.vue'
 import EmptyState, { type EmptyPreset } from './EmptyState.vue'
@@ -65,6 +66,8 @@ const props = defineProps({
   list: { type: Array as PropType<unknown[]>, default: () => [] },
   total: { type: Number, default: 0 },
   loading: { type: Boolean, default: false },
+  /** 最近一次请求的错误信息（非空字符串表示加载失败，优先级高于 emptyPreset） */
+  error: { type: String as PropType<string | null>, default: null },
   title: { type: String, default: '' },
   /** 表格区域最小宽度，用于内嵌 vxe-table */
   tableMinHeight: { type: [Number, String], default: 400 },
@@ -98,6 +101,12 @@ const props = defineProps({
   emptyPreset: { type: String as PropType<'' | 'list' | 'search' | 'network' | 'noPermission'>, default: '' },
   /** H16.4：空状态 CTA 按钮文本；不传则隐藏 */
   emptyActionText: { type: String, default: '' },
+  /** 搜索表单是否可折叠（UX-C3，默认 false） */
+  searchCollapsible: { type: Boolean, default: false },
+  /** 搜索表单折叠时展示的项数（默认 3，超出部分收起） */
+  searchCollapseCount: { type: Number, default: 3 },
+  /** 搜索表单默认是否收起（UX-C3，默认 true 收起） */
+  searchDefaultCollapsed: { type: Boolean, default: true },
 })
 
 const emit = defineEmits<{
@@ -110,6 +119,8 @@ const emit = defineEmits<{
   (e: 'clear-selection'): void
   /** H16.4：空状态 CTA 按钮点击 */
   (e: 'empty-action'): void
+  /** 加载失败时点击「重试」按钮触发 */
+  (e: 'retry'): void
 }>()
 
 // el-pagination 不允许直接 v-model 外部 prop，
@@ -142,6 +153,19 @@ function onEmptyAction() {
   emit('empty-action')
 }
 
+function onRetry() {
+  emit('retry')
+}
+
+// ===== 搜索表单折叠（UX-C3） =====
+/** 搜索表单当前是否收起 */
+const searchCollapsed = ref(props.searchDefaultCollapsed)
+
+/** 切换搜索表单展开/收起 */
+function toggleSearchCollapse() {
+  searchCollapsed.value = !searchCollapsed.value
+}
+
 /**
  * 骨架屏展示条件：
  *   loadingType='skeleton' 且处于加载中 且当前列表为空（首次加载）。
@@ -152,12 +176,22 @@ const showSkeleton = computed(
 )
 
 /**
+ * 加载失败展示条件（C6 修复）：
+ *   error 非空 且 非加载中 且列表为空。
+ * 翻页失败时保留上一次数据（list 非空），仅通过 toast 提示，不覆盖表格。
+ * 首次加载失败时 list 为空，展示 network preset + 重试按钮。
+ */
+const showError = computed(
+  () => !!props.error && !props.loading && props.list.length === 0,
+)
+
+/**
  * H16.4：空状态展示条件
- *   配置了 emptyPreset 且非加载中 且列表为空。
- * 骨架屏优先级更高，加载中不展示空状态。
+ *   配置了 emptyPreset 且非加载中 且非加载失败 且列表为空。
+ * 骨架屏与错误状态优先级更高。
  */
 const showEmpty = computed(
-  () => props.emptyPreset !== '' && !props.loading && props.list.length === 0,
+  () => props.emptyPreset !== '' && !props.loading && !showError.value && props.list.length === 0,
 )
 
 /**
@@ -184,18 +218,40 @@ const tableProps = computed(() => ({
       <div class="text-lg font-semibold">{{ title }}</div>
     </el-card>
     <el-card shadow="never" :body-style="noPadding ? { padding: 0 } : undefined">
-      <!-- 搜索区 -->
+      <!-- 搜索区（UX-D1: loading 期间禁用交互；UX-C3: 支持展开/收起） -->
       <el-form
         v-if="!hideSearch"
         inline
         :model="query"
-        class="search-form"
+        :class="['search-form', { 'is-loading': loading }]"
+        :disabled="loading"
         role="search"
       >
-        <slot name="search" />
-        <el-form-item>
-          <el-button type="primary" :icon="'Search'" :aria-label="t('common.query')" @click="onQuery">{{ t('common.query') }}</el-button>
+        <div
+          class="search-form__items"
+          :class="{
+            'is-collapsed': searchCollapsible && searchCollapsed,
+            [`collapse-count-${searchCollapseCount}`]: searchCollapsible && searchCollapsed,
+          }"
+        >
+          <slot name="search" />
+        </div>
+        <el-form-item class="search-form__actions">
+          <el-button type="primary" :icon="'Search'" :loading="loading" :aria-label="t('common.query')" @click="onQuery">{{ t('common.query') }}</el-button>
           <el-button :icon="'RefreshLeft'" :aria-label="t('common.resetQuery')" @click="onReset">{{ t('common.reset') }}</el-button>
+          <el-button
+            v-if="searchCollapsible"
+            link
+            type="primary"
+            :aria-label="searchCollapsed ? t('common.expand') : t('common.collapse')"
+            @click="toggleSearchCollapse"
+          >
+            {{ searchCollapsed ? t('common.expand') : t('common.collapse') }}
+            <el-icon class="el-icon--right">
+              <ArrowDown v-if="searchCollapsed" />
+              <ArrowUp v-else />
+            </el-icon>
+          </el-button>
         </el-form-item>
       </el-form>
 
@@ -204,7 +260,7 @@ const tableProps = computed(() => ({
         <slot name="toolbar" />
         <div class="toolbar-right">
           <slot name="toolbar-right">
-            <el-button :icon="'Refresh'" circle :aria-label="t('common.refreshList')" @click="onRefresh" />
+            <el-button :icon="'Refresh'" circle :loading="loading" :aria-label="t('common.refreshList')" @click="onRefresh" />
           </slot>
         </div>
       </div>
@@ -220,12 +276,19 @@ const tableProps = computed(() => ({
         </slot>
       </div>
 
-      <!-- 表格区：首次加载且开启骨架模式时以骨架屏占位；空状态展示 EmptyState；其余渲染 table 插槽 -->
+      <!-- 表格区：骨架屏 > 加载失败 > 空状态 > table 插槽 -->
       <div class="table-area" :style="{ minHeight: typeof tableMinHeight === 'number' ? `${tableMinHeight}px` : tableMinHeight }">
         <SkeletonTable
           v-if="showSkeleton"
           :rows="skeletonRows"
           :columns="skeletonColumns"
+        />
+        <EmptyState
+          v-else-if="showError"
+          preset="network"
+          :action-text="t('common.retry')"
+          :block-height="Number(tableMinHeight) || 0"
+          @action="onRetry"
         />
         <EmptyState
           v-else-if="showEmpty"
@@ -257,7 +320,34 @@ const tableProps = computed(() => ({
 
 <style lang="scss" scoped>
 .page-layout {
-  .search-form { margin-bottom: $spacing-md; }
+  .search-form {
+    margin-bottom: $spacing-md;
+    /* UX-D1: loading 期间降低搜索区视觉权重，提示用户正在处理 */
+    &.is-loading {
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+
+    /* UX-C3: 搜索表单折叠容器 */
+    &__items {
+      display: inline;
+
+      /* 折叠状态：隐藏第 N+1 个及以后的 el-form-item */
+      &.is-collapsed {
+        /* 预生成 1-10 的折叠数量 class，避免 :nth-child 不支持 calc 的问题 */
+        @for $i from 1 through 10 {
+          &.collapse-count-#{$i} .el-form-item:nth-child(n + #{$i + 1}) {
+            display: none;
+          }
+        }
+      }
+    }
+
+    /* 操作按钮组始终可见 */
+    &__actions {
+      margin-right: 0 !important;
+    }
+  }
   .toolbar {
     display: flex;
     align-items: center;

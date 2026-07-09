@@ -70,6 +70,12 @@ export default {
     clearSelection: 'Clear selection',
     clear: 'Clear',
     pageLoading: 'Page loading',
+    // Batch 29-2: ProTable enhanced capabilities i18n
+    tableDensity: 'Table Density',
+    tableDensityLarge: 'Large',
+    tableDensityDefault: 'Default',
+    tableDensitySmall: 'Compact',
+    columnSetting: 'Column Settings',
     retry: 'Retry',
     backHome: 'Back to home',
     viewErrorDetails: 'View error details',

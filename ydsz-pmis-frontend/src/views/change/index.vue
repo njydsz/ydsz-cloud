@@ -44,6 +44,7 @@ const {
   loading,
   list,
   total,
+  error,
   query,
   fetchData: fetchList,
   handleQuery,
@@ -345,10 +346,15 @@ onMounted(() => {
     :list="list"
     :total="total"
     :loading="loading"
+    :error="error"
+    empty-preset="list"
+    :empty-action-text="t('change.button.create')"
     @query="handleQuery"
     @reset="handleReset"
     @page-change="handlePageChange"
     @refresh="fetchList"
+    @retry="fetchList"
+    @empty-action="openCreate"
   >
     <template #search>
       <el-form-item :label="t('change.field.keyword')">

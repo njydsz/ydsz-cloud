@@ -74,9 +74,6 @@ const activeMenu = computed<string>(() => {
         :default-active="activeMenu"
         :collapse="appStore.sidebarCollapsed"
         :unique-opened="true"
-        background-color="#ffffff"
-        text-color="#303133"
-        active-text-color="#1890ff"
         router
         :aria-label="t('common.aria.menuList')"
       >
@@ -109,6 +106,8 @@ const activeMenu = computed<string>(() => {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  // 侧边栏背景色通过 CSS 变量控制，暗黑模式自动切换
+  background-color: $bg-white;
 
   .sidebar-logo {
     height: $header-height;
@@ -123,6 +122,23 @@ const activeMenu = computed<string>(() => {
 
   :deep(.el-menu) {
     border-right: none;
+    // 浅色模式下显式设置背景色（移除 props 硬编码后由 CSS 控制）
+    background-color: $bg-white;
+    color: $text-primary;
+
+    .el-menu-item,
+    .el-sub-menu__title {
+      color: $text-regular;
+
+      &:hover {
+        background-color: $border-extra-light;
+        color: $text-primary;
+      }
+    }
+
+    .el-menu-item.is-active {
+      color: $primary-color;
+    }
   }
 }
 </style>

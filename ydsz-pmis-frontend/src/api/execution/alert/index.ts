@@ -101,4 +101,5 @@ export const getCockpitAlertTopN = (period: string, topN = 5) =>
     url: '/execution/alert-dispatch/cockpit-top-n',
     method: 'GET',
     params: { period, topN },
+    silent: true,
   })

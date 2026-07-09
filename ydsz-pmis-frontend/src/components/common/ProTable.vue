@@ -1,19 +1,27 @@
 <!--
-  @fileoverview ProTable 通用高级表格组件
-  @description 集成 el-table / el-pagination / 搜索表单 / 工具栏 / 空状态：
+  @fileoverview ProTable 通用高级表格组件（批次 29-2 增强）
+  @description 集成 el-table / el-pagination / 搜索表单 / 工具栏 / 空状态 / 列设置 / 密度切换 / 合计行 / 行展开：
   - Props: columns / data / loading / total / page / size / selection / toolbar
             / paginationLayout / pageSizes / maxHeight / height / rowKey
-  - Emits: update:page / update:size / selection-change / sort-change
+            / columnSetting / density / summary / expandable / emptyCta
+  - Emits: update:page / update:size / selection-change / sort-change / column-setting-change / density-change
   - 泛型 T 为行数据类型；配合 useTable composable 使用
+
+  批次 29-2 新增能力（对齐 Ant Design ProTable）：
+  1. 列设置（columnSetting）：显隐切换 + 拖拽排序 + 宽度持久化（localStorage）
+  2. 密度切换（density）：large/default/small 三档，影响行高
+  3. 合计行（summary）：通过 summaryMethod 自定义合计逻辑
+  4. 行展开（expandable）：通过 #expand 插槽渲染展开内容
+  5. 空 CTA（emptyCta）：空状态时展示引导按钮
   @module components/common/ProTable
   @author ydsz-pmis-team
-  @since 1.0.0
+  @since 1.4.0
 -->
 <script setup lang="ts" generic="T extends Record<string, unknown> = Record<string, unknown>">
 /**
  * ProTable 通用表格组件
  *
- * 集成搜索表单、工具栏、分页、行选择、排序、空状态等功能，
+ * 集成搜索表单、工具栏、分页、行选择、排序、空状态、列设置、密度切换、合计行、行展开等功能，
  * 配合 useTable composable 使用，减少页面样板代码。
  *
  * 泛型参数 T 为行数据类型，默认 Record<string, unknown>，使用时可传入具体类型以获得类型提示：
@@ -21,9 +29,9 @@
  * <ProTable<UserVO> :data="users" :columns="cols" />
  * ```
  */
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Document } from '@element-plus/icons-vue'
+import { Document, Setting, Rank, FullScreen } from '@element-plus/icons-vue'
 import type { VNode } from 'vue'
 import type { TableInstance } from 'element-plus'
 
@@ -51,11 +59,26 @@ export interface ProTableColumn<R = Record<string, unknown>> {
   headerAlign?: 'left' | 'center' | 'right'
   /** 是否显示溢出提示 */
   showOverflowTooltip?: boolean
+  /** 列是否默认隐藏（列设置功能使用） */
+  defaultHidden?: boolean
+  /** 列是否禁用显隐切换（如选择列、操作列） */
+  disableHidden?: boolean
+}
+
+/** 表格密度 */
+type TableDensity = 'large' | 'default' | 'small'
+
+/** 列设置项（用于列设置弹窗的渲染状态） */
+interface ColumnSettingItem {
+  prop: string
+  label: string
+  visible: boolean
+  disableHidden?: boolean
 }
 
 const { t } = useI18n()
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     /** 列配置 */
     columns: ProTableColumn<T>[]
@@ -91,6 +114,24 @@ withDefaults(
     border?: boolean
     /** 是否斑马纹 */
     stripe?: boolean
+    /** 是否启用列设置（批次 29-2） */
+    columnSetting?: boolean
+    /** 列设置持久化 key（传则持久化到 localStorage，不传则仅内存） */
+    columnSettingKey?: string
+    /** 是否启用密度切换（批次 29-2） */
+    density?: boolean
+    /** 默认密度（批次 29-2） */
+    defaultDensity?: TableDensity
+    /** 是否显示合计行（批次 29-2） */
+    showSummary?: boolean
+    /** 合计方法（批次 29-2） */
+    summaryMethod?: (param: { columns: any[]; data: T[] }) => string[]
+    /** 是否支持行展开（批次 29-2） */
+    expandable?: boolean
+    /** 空状态 CTA 按钮文案（批次 29-2） */
+    emptyCtaText?: string
+    /** 是否显示全屏切换（批次 29-2） */
+    fullscreen?: boolean
   }>(),
   {
     loading: false,
@@ -106,6 +147,12 @@ withDefaults(
     emptyPreset: 'list',
     border: true,
     stripe: false,
+    columnSetting: false,
+    density: false,
+    defaultDensity: 'default',
+    showSummary: false,
+    expandable: false,
+    fullscreen: false,
   },
 )
 
@@ -116,6 +163,8 @@ const emit = defineEmits<{
   (e: 'size-change', size: number): void
   (e: 'selection-change', selection: T[]): void
   (e: 'sort-change', payload: { prop: string; order: string }): void
+  (e: 'empty-cta'): void
+  (e: 'density-change', density: TableDensity): void
 }>()
 
 const tableRef = ref<TableInstance | null>(null)
@@ -123,6 +172,126 @@ const tableRef = ref<TableInstance | null>(null)
 /** 当前选中行 */
 const selectedRows = ref<T[]>([])
 
+// ===== 密度切换（批次 29-2） =====
+const currentDensity = ref<TableDensity>(props.defaultDensity)
+
+/** 密度对应的 size 属性值 */
+const densitySize = computed(() => currentDensity.value)
+
+/** 切换密度 */
+function handleDensityChange(d: TableDensity) {
+  currentDensity.value = d
+  emit('density-change', d)
+}
+
+// ===== 列设置（批次 29-2） =====
+/** 列设置持久化存储 key */
+const columnSettingStorageKey = computed(
+  () => props.columnSettingKey ? `pmis:pro-table:columns:${props.columnSettingKey}` : '',
+)
+
+/** 从 localStorage 读取持久化的列设置 */
+function loadPersistedColumnSetting(): Record<string, { visible: boolean; order: number }> | null {
+  if (!columnSettingStorageKey.value) return null
+  try {
+    const raw = localStorage.getItem(columnSettingStorageKey.value)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+/** 持久化列设置到 localStorage */
+function persistColumnSetting(map: Record<string, { visible: boolean; order: number }>) {
+  if (!columnSettingStorageKey.value) return
+  try {
+    localStorage.setItem(columnSettingStorageKey.value, JSON.stringify(map))
+  } catch {
+    /* localStorage 可能不可用 */
+  }
+}
+
+/** 列设置项列表（可拖拽排序） */
+const columnSettingList = ref<ColumnSettingItem[]>([])
+
+/** 初始化列设置项 */
+function initColumnSetting() {
+  const persisted = loadPersistedColumnSetting()
+  columnSettingList.value = props.columns.map((col) => {
+    const persistedItem = persisted?.[col.prop]
+    return {
+      prop: col.prop,
+      label: col.label,
+      visible: persistedItem ? persistedItem.visible : !col.defaultHidden,
+      disableHidden: col.disableHidden,
+    }
+  })
+  // 若有持久化顺序，按持久化顺序重排
+  if (persisted) {
+    const orderMap = new Map<string, number>()
+    Object.entries(persisted).forEach(([prop, val]) => {
+      orderMap.set(prop, val.order ?? 999)
+    })
+    columnSettingList.value.sort((a, b) => (orderMap.get(a.prop) ?? 999) - (orderMap.get(b.prop) ?? 999))
+  }
+}
+
+/** 列设置变更时持久化 + 同步 */
+function syncColumnSetting() {
+  const map: Record<string, { visible: boolean; order: number }> = {}
+  columnSettingList.value.forEach((item, idx) => {
+    map[item.prop] = { visible: item.visible, order: idx }
+  })
+  persistColumnSetting(map)
+}
+
+/** 重置列设置 */
+function resetColumnSetting() {
+  columnSettingList.value = props.columns.map((col) => ({
+    prop: col.prop,
+    label: col.label,
+    visible: !col.defaultHidden,
+    disableHidden: col.disableHidden,
+  }))
+  syncColumnSetting()
+}
+
+/** 实际渲染的列（过滤掉隐藏的列，按列设置顺序排序） */
+const visibleColumns = computed<ProTableColumn<T>[]>(() => {
+  if (!props.columnSetting) return props.columns
+  const visibleProps = new Set(
+    columnSettingList.value.filter((c) => c.visible).map((c) => c.prop),
+  )
+  // 按列设置顺序排序
+  const orderMap = new Map<string, number>()
+  columnSettingList.value.forEach((item, idx) => orderMap.set(item.prop, idx))
+  return props.columns
+    .filter((col) => visibleProps.has(col.prop))
+    .sort((a, b) => (orderMap.get(a.prop) ?? 999) - (orderMap.get(b.prop) ?? 999))
+})
+
+// 列配置变化时重新初始化列设置
+watch(
+  () => props.columns,
+  () => {
+    if (props.columnSetting) initColumnSetting()
+  },
+  { immediate: true },
+)
+
+// ===== 全屏切换（批次 29-2） =====
+const isFullscreen = ref(false)
+
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value
+}
+
+/** 表格容器类（全屏时固定定位） */
+const tableContainerClass = computed(() => ({
+  'pro-table--fullscreen': isFullscreen.value,
+}))
+
+// ===== 分页与选择 =====
 /** 页码变化 */
 function handlePageChange(page: number) {
   emit('update:page', page)
@@ -148,6 +317,11 @@ function handleSortChange({ prop, order }: { prop: string | null; order: string 
   }
 }
 
+/** 空状态 CTA 点击 */
+function handleEmptyCta() {
+  emit('empty-cta')
+}
+
 /** 清空选择 */
 function clearSelection() {
   tableRef.value?.clearSelection?.()
@@ -168,24 +342,77 @@ defineExpose({
   clearSelection,
   getSelectedRows,
   getTableRef,
+  toggleFullscreen,
+  resetColumnSetting,
 })
 </script>
 
 <template>
-  <div class="pro-table">
+  <div class="pro-table" :class="tableContainerClass">
     <!-- 搜索表单区域 -->
     <div v-if="$slots.search" class="pro-table__search">
       <slot name="search" />
     </div>
 
     <!-- 工具栏区域 -->
-    <div v-if="toolbar && ($slots.toolbar || $slots['toolbar-left'] || $slots['toolbar-right'])" class="pro-table__toolbar">
+    <div
+      v-if="toolbar && ($slots.toolbar || $slots['toolbar-left'] || $slots['toolbar-right'] || columnSetting || density || fullscreen)"
+      class="pro-table__toolbar"
+    >
       <div class="pro-table__toolbar-left">
         <slot name="toolbar-left" />
         <slot name="toolbar" />
       </div>
       <div class="pro-table__toolbar-right">
         <slot name="toolbar-right" />
+        <!-- 密度切换（批次 29-2） -->
+        <el-dropdown v-if="density" trigger="click" @command="handleDensityChange">
+          <el-button :icon="Rank" circle :aria-label="t('common.tableDensity')" />
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="large" :class="{ 'is-active': currentDensity === 'large' }">
+                {{ t('common.tableDensityLarge') }}
+              </el-dropdown-item>
+              <el-dropdown-item command="default" :class="{ 'is-active': currentDensity === 'default' }">
+                {{ t('common.tableDensityDefault') }}
+              </el-dropdown-item>
+              <el-dropdown-item command="small" :class="{ 'is-active': currentDensity === 'small' }">
+                {{ t('common.tableDensitySmall') }}
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <!-- 列设置（批次 29-2） -->
+        <el-popover v-if="columnSetting" trigger="click" placement="bottom-end" :width="240">
+          <template #reference>
+            <el-button :icon="Setting" circle :aria-label="t('common.columnSetting')" />
+          </template>
+          <div class="pro-table__column-setting">
+            <div class="pro-table__column-setting-header">
+              <span>{{ t('common.columnSetting') }}</span>
+              <el-button link type="primary" size="small" @click="resetColumnSetting">
+                {{ t('common.reset') }}
+              </el-button>
+            </div>
+            <div class="pro-table__column-setting-list">
+              <div
+                v-for="item in columnSettingList"
+                :key="item.prop"
+                class="pro-table__column-setting-item"
+              >
+                <el-checkbox
+                  v-model="item.visible"
+                  :disabled="item.disableHidden"
+                  @change="syncColumnSetting"
+                >
+                  {{ item.label }}
+                </el-checkbox>
+              </div>
+            </div>
+          </div>
+        </el-popover>
+        <!-- 全屏切换（批次 29-2） -->
+        <el-button v-if="fullscreen" :icon="FullScreen" circle @click="toggleFullscreen" />
       </div>
     </div>
 
@@ -200,6 +427,9 @@ defineExpose({
         :max-height="maxHeight"
         :border="border"
         :stripe="stripe"
+        :size="densitySize"
+        :show-summary="showSummary"
+        :summary-method="summaryMethod"
         style="width: 100%"
         @selection-change="handleSelectionChange"
         @sort-change="handleSortChange"
@@ -212,8 +442,15 @@ defineExpose({
           fixed="left"
         />
 
-        <!-- 数据列 -->
-        <template v-for="col in columns" :key="col.prop">
+        <!-- 行展开列（批次 29-2） -->
+        <el-table-column v-if="expandable" type="expand">
+          <template #default="scope">
+            <slot name="expand" v-bind="scope" />
+          </template>
+        </el-table-column>
+
+        <!-- 数据列（按 visibleColumns 渲染，支持列设置显隐与排序） -->
+        <template v-for="col in visibleColumns" :key="col.prop">
           <!-- 有自定义插槽的列 -->
           <el-table-column
             v-if="col.slot"
@@ -268,7 +505,7 @@ defineExpose({
           />
         </template>
 
-        <!-- 空状态 -->
+        <!-- 空状态（批次 29-2：增加 CTA 按钮） -->
         <template #empty>
           <div class="pro-table__empty">
             <slot name="empty">
@@ -277,6 +514,14 @@ defineExpose({
                   <Document />
                 </el-icon>
                 <span>{{ t('common.empty') }}</span>
+                <el-button
+                  v-if="emptyCtaText"
+                  type="primary"
+                  size="small"
+                  @click="handleEmptyCta"
+                >
+                  {{ emptyCtaText }}
+                </el-button>
               </div>
             </slot>
           </div>
@@ -311,30 +556,43 @@ defineExpose({
 .pro-table {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $spacing-md;
+
+  // 全屏模式（批次 29-2）
+  &--fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: $z-index-modal;
+    background: $bg-base;
+    padding: $spacing-lg;
+    overflow: auto;
+  }
 
   &__search {
-    padding: 16px 16px 0;
-    background: var(--el-bg-color, #fff);
-    border-radius: 4px;
+    padding: $spacing-md $spacing-md 0;
+    background: $bg-white;
+    border-radius: $border-radius-base;
   }
 
   &__toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 0 8px;
+    padding: 0 0 $spacing-sm;
 
     &-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: $spacing-sm;
     }
 
     &-right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: $spacing-sm;
     }
   }
 
@@ -342,28 +600,58 @@ defineExpose({
     width: 100%;
   }
 
+  // 列设置弹窗（批次 29-2）
+  &__column-setting {
+    &-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: $spacing-sm;
+      margin-bottom: $spacing-sm;
+      border-bottom: 1px solid $border-lighter;
+      font-weight: 600;
+      font-size: $font-size-base;
+    }
+
+    &-list {
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    &-item {
+      display: flex;
+      align-items: center;
+      padding: $spacing-xs 0;
+      cursor: pointer;
+
+      &:hover {
+        background: $border-extra-light;
+      }
+    }
+  }
+
   &__empty {
-    padding: 32px 0;
+    padding: $spacing-xl 0;
     text-align: center;
 
     &-default {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
-      color: var(--el-text-color-secondary, #909399);
-      font-size: 14px;
+      gap: $spacing-base;
+      color: $text-secondary;
+      font-size: $font-size-base;
     }
 
     &-icon {
-      color: var(--el-color-info-light-3, #c0c4cc);
+      color: $text-placeholder;
     }
   }
 
   &__pagination {
     display: flex;
     justify-content: flex-end;
-    padding: 12px 0 0;
+    padding: $spacing-base 0 0;
   }
 }
 </style>

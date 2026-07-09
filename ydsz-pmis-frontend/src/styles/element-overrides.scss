@@ -2,16 +2,43 @@
  * @file Element Plus 主题覆盖
  * @description 通过 CSS 变量覆盖 Element Plus 默认主题色与圆角，并对表单 label、卡片标题、
  *              表格表头、对话框等高频组件做细节样式调优，保持企业级管理后台视觉一致性。
+ *
+ * 批次 29-1 增强：
+ *  - 主题色统一为 #1677ff（Ant Design 5 标准），覆盖 Element Plus 默认 #409eff
+ *  - 圆角覆盖扩展至 large 档位（8px），与设计令牌体系对齐
+ *  - 暗黑模式下 el-menu 自动适配（覆盖组件 props 硬编码色值）
+ *  - 生成主题色 10 阶 light 系列（Element Plus 运行时计算在浅色下正常，暗黑下需手动修正）
  * @module styles/element-overrides
  */
 :root {
+  // 主题色（Ant Design 5 标准 #1677ff，覆盖 Element Plus 默认 #409eff）
   --el-color-primary: #{$primary-color};
   --el-color-success: #{$success-color};
   --el-color-warning: #{$warning-color};
   --el-color-danger: #{$danger-color};
   --el-color-info: #{$info-color};
+
+  // 圆角（覆盖 base/small/large 三档，与设计令牌对齐）
   --el-border-radius-base: #{$border-radius-base};
   --el-border-radius-small: #{$border-radius-sm};
+  --el-border-radius-round: #{$border-radius-lg};
+
+  // 主题色 light 系列（Element Plus 运行时按 --el-color-primary 计算，
+  // 但暗黑模式下 light-9/light-8 计算结果异常，这里显式预定义浅色系列）
+  --el-color-primary-light-3: #4096ff;
+  --el-color-primary-light-5: #69b1ff;
+  --el-color-primary-light-7: #91caff;
+  --el-color-primary-light-8: #bae0ff;
+  --el-color-primary-light-9: #e6f4ff;
+}
+
+// 暗黑模式下主题色 light 系列修正（避免 Element Plus 运行时计算在暗背景下过亮刺眼）
+.dark {
+  --el-color-primary-light-3: #0958d9;
+  --el-color-primary-light-5: #003eb3;
+  --el-color-primary-light-7: #002c8c;
+  --el-color-primary-light-8: #001d66;
+  --el-color-primary-light-9: #000f40;
 }
 
 // 表单 label
@@ -53,4 +80,26 @@
 .el-dialog__footer {
   border-top: 1px solid $border-extra-light;
   padding: $spacing-sm $spacing-lg;
+}
+
+// 暗黑模式下 el-menu 适配（覆盖组件 props 硬编码的 #ffffff/#303133/#1890ff）
+// 业务组件中 el-menu 的 background-color/text-color/active-text-color props 应移除，
+// 由这里统一通过 CSS 变量控制，实现暗黑模式自动切换
+.dark .el-menu {
+  background-color: var(--bg-white) !important;
+  color: var(--text-primary) !important;
+
+  .el-menu-item,
+  .el-sub-menu__title {
+    color: var(--text-regular) !important;
+
+    &:hover {
+      background-color: var(--border-extra-light) !important;
+      color: var(--text-primary) !important;
+    }
+  }
+
+  .el-menu-item.is-active {
+    color: $primary-color !important;
+  }
 }

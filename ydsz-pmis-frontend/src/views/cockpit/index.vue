@@ -14,6 +14,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useECharts } from '@/composables/useECharts'
+import { chartColors } from '@/utils/chart-theme'
 import {
   getCockpitOverview,
   getEvmHealthDistribution,
@@ -103,9 +104,9 @@ async function loadHealth() {
           type: 'pie',
           radius: ['40%', '70%'],
           data: [
-            { name: t('cockpit.health.normal'), value: d?.NORMAL ?? 0, itemStyle: { color: '#67c23a' } },
-            { name: t('cockpit.health.yellow'), value: d?.YELLOW ?? 0, itemStyle: { color: '#e6a23c' } },
-            { name: t('cockpit.health.red'), value: d?.RED ?? 0, itemStyle: { color: '#f56c6c' } },
+            { name: t('cockpit.health.normal'), value: d?.NORMAL ?? 0, itemStyle: { color: chartColors.success } },
+            { name: t('cockpit.health.yellow'), value: d?.YELLOW ?? 0, itemStyle: { color: chartColors.warning } },
+            { name: t('cockpit.health.red'), value: d?.RED ?? 0, itemStyle: { color: chartColors.danger } },
           ],
         },
       ],
@@ -147,9 +148,9 @@ function renderDrillChart() {
     },
     yAxis: { type: 'value' },
     series: [
-      { name: t('cockpit.drill.legend.revenue'), type: 'bar', data: rows.map((d) => Number(d.revenue || 0)), itemStyle: { color: '#409eff' } },
-      { name: t('cockpit.drill.legend.cost'), type: 'bar', data: rows.map((d) => Number(d.cost || 0)), itemStyle: { color: '#909399' } },
-      { name: t('cockpit.drill.legend.grossProfit'), type: 'bar', data: rows.map((d) => Number(d.grossProfit || 0)), itemStyle: { color: '#67c23a' } },
+      { name: t('cockpit.drill.legend.revenue'), type: 'bar', data: rows.map((d) => Number(d.revenue || 0)), itemStyle: { color: chartColors.primary } },
+      { name: t('cockpit.drill.legend.cost'), type: 'bar', data: rows.map((d) => Number(d.cost || 0)), itemStyle: { color: chartColors.info } },
+      { name: t('cockpit.drill.legend.grossProfit'), type: 'bar', data: rows.map((d) => Number(d.grossProfit || 0)), itemStyle: { color: chartColors.success } },
     ],
   })
 }
@@ -213,9 +214,9 @@ function renderTrendChart() {
       { type: 'value', name: t('cockpit.trend.yAxisGrossMarginPct'), position: 'right', min: 0, max: 100 },
     ],
     series: [
-      { name: t('cockpit.trend.legend.contract'), type: 'bar', data: td.contractAmountSeries, itemStyle: { color: '#409eff' } },
-      { name: t('cockpit.trend.legend.revenue'), type: 'bar', data: td.confirmedRevenueSeries, itemStyle: { color: '#67c23a' } },
-      { name: t('cockpit.trend.legend.cost'), type: 'bar', data: td.totalCostSeries, itemStyle: { color: '#909399' } },
+      { name: t('cockpit.trend.legend.contract'), type: 'bar', data: td.contractAmountSeries, itemStyle: { color: chartColors.primary } },
+      { name: t('cockpit.trend.legend.revenue'), type: 'bar', data: td.confirmedRevenueSeries, itemStyle: { color: chartColors.success } },
+      { name: t('cockpit.trend.legend.cost'), type: 'bar', data: td.totalCostSeries, itemStyle: { color: chartColors.info } },
       {
         name: t('cockpit.trend.legend.grossMargin'),
         type: 'line',
@@ -223,7 +224,7 @@ function renderTrendChart() {
         data: td.grossMarginPctSeries,
         smooth: true,
         lineStyle: { type: 'dashed' },
-        itemStyle: { color: '#f56c6c' },
+        itemStyle: { color: chartColors.danger },
       },
     ],
   })

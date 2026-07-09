@@ -13,7 +13,7 @@
  *
  * 批次 21 / P2 - 迁移原始 echarts.init() 到 useECharts composable
  */
-import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import type { EChartsOption } from '@/utils/echarts'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
@@ -23,6 +23,7 @@ import { getCockpitOverview, getKpiTrend } from '@/api/execution/cockpit'
 import type { KpiTrendVO } from '@/api/execution/cockpit'
 import { getCockpitAlertTopN } from '@/api/execution/alert'
 import { useECharts } from '@/composables/useECharts'
+import { chartColors } from '@/utils/chart-theme'
 import { isHandledError } from '@/utils/error'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import SkeletonTable from '@/components/common/SkeletonTable.vue'
@@ -121,28 +122,28 @@ const metrics = computed<DashboardMetric[]>(() => [
     title: t('dashboard.metrics.activeProjects'),
     value: String(kpi.value?.activeProjectCount ?? 0),
     unit: t('dashboard.unit.count'),
-    color: '#1890ff',
+    color: chartColors.primary,
     icon: 'Document',
   },
   {
     title: t('dashboard.metrics.monthlyContractAmount'),
     value: yuanToWan(kpi.value?.totalRevenue),
     unit: t('dashboard.unit.tenThousand'),
-    color: '#52c41a',
+    color: chartColors.success,
     icon: 'Money',
   },
   {
     title: t('dashboard.metrics.recognizedRevenue'),
     value: yuanToWan(kpi.value?.recognizedRevenue),
     unit: t('dashboard.unit.tenThousand'),
-    color: '#722ed1',
+    color: chartColors.purple,
     icon: 'TrendCharts',
   },
   {
     title: t('dashboard.metrics.monthlyGrossProfit'),
     value: yuanToWan(kpi.value?.totalGrossProfit),
     unit: t('dashboard.unit.tenThousand'),
-    color: '#fa8c16',
+    color: chartColors.orange,
     sub: t('dashboard.metrics.grossMargin', { rate: fmtPercent(kpi.value?.grossMargin) }),
     icon: 'DataAnalysis',
   },
@@ -160,12 +161,12 @@ const healthOption = computed<EChartsOption>(() => ({
       type: 'pie',
       radius: ['38%', '70%'],
       avoidLabelOverlap: true,
-      itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
+      itemStyle: { borderRadius: 4, borderColor: chartColors.borderColor, borderWidth: 2 },
       label: { show: true, formatter: '{b}\n{c}' },
       data: [
-        { name: t('dashboard.charts.normal'), value: kpi.value?.normalProjects ?? 18, itemStyle: { color: '#67c23a' } },
-        { name: t('dashboard.charts.yellow'), value: kpi.value?.yellowProjects ?? 7, itemStyle: { color: '#e6a23c' } },
-        { name: t('dashboard.charts.red'), value: kpi.value?.redProjects ?? 3, itemStyle: { color: '#f56c6c' } },
+        { name: t('dashboard.charts.normal'), value: kpi.value?.normalProjects ?? 0, itemStyle: { color: chartColors.success } },
+        { name: t('dashboard.charts.yellow'), value: kpi.value?.yellowProjects ?? 0, itemStyle: { color: chartColors.warning } },
+        { name: t('dashboard.charts.red'), value: kpi.value?.redProjects ?? 0, itemStyle: { color: chartColors.danger } },
       ],
     },
   ],
@@ -201,7 +202,7 @@ const trendOption = computed<EChartsOption>(() => {
         smooth: true,
         symbolSize: 8,
         data: revenueSeries,
-        itemStyle: { color: '#409eff' },
+        itemStyle: { color: chartColors.primary },
         areaStyle: { opacity: 0.15 },
       },
       {
@@ -210,7 +211,7 @@ const trendOption = computed<EChartsOption>(() => {
         smooth: true,
         symbolSize: 8,
         data: profitSeries,
-        itemStyle: { color: '#67c23a' },
+        itemStyle: { color: chartColors.success },
         areaStyle: { opacity: 0.15 },
       },
     ],
@@ -229,9 +230,9 @@ const evmOption = computed<EChartsOption>(() => ({
       type: 'bar',
       barWidth: '50%',
       data: [
-        { value: kpi.value?.evmGreenCount ?? 12, itemStyle: { color: '#67c23a' } },
-        { value: kpi.value?.evmYellowCount ?? 5, itemStyle: { color: '#e6a23c' } },
-        { value: kpi.value?.evmRedCount ?? 2, itemStyle: { color: '#f56c6c' } },
+        { value: kpi.value?.evmGreenCount ?? 0, itemStyle: { color: chartColors.success } },
+        { value: kpi.value?.evmYellowCount ?? 0, itemStyle: { color: chartColors.warning } },
+        { value: kpi.value?.evmRedCount ?? 0, itemStyle: { color: chartColors.danger } },
       ],
       label: { show: true, position: 'top' },
     },
@@ -263,7 +264,7 @@ const alertTopNOption = computed<EChartsOption>(() => ({
       barWidth: '60%',
       data: alertTopN.value.map((a) => ({
         value: a.alertCount,
-        itemStyle: { color: a.alertLevel === 'RED' ? '#f56c6c' : '#e6a23c' },
+        itemStyle: { color: a.alertLevel === 'RED' ? chartColors.danger : chartColors.warning },
       })),
       label: { show: true, position: 'right' },
     },
@@ -276,7 +277,7 @@ async function loadOverview() {
   kpiLoading.value = true
   kpiError.value = false
   try {
-    const { data } = await getCockpitOverview(period.value, { silent: true } as any)
+    const { data } = await getCockpitOverview(period.value)
     kpi.value = data as CockpitKpi
   } catch (e) {
     kpi.value = null
@@ -294,7 +295,7 @@ async function loadAlertTopN() {
   alertLoading.value = true
   alertError.value = false
   try {
-    const { data } = await getCockpitAlertTopN(period.value, 5, { silent: true } as any)
+    const { data } = await getCockpitAlertTopN(period.value, 5)
     alertTopN.value = (data as AlertTopNItem[]) || []
   } catch (e) {
     alertTopN.value = []
@@ -312,7 +313,7 @@ async function loadTrendData() {
   trendLoading.value = true
   trendError.value = false
   try {
-    const { data } = await getKpiTrend(6, { silent: true } as any)
+    const { data } = await getKpiTrend(6)
     trendData.value = data ?? null
   } catch (e) {
     trendData.value = null
@@ -515,7 +516,8 @@ onMounted(async () => {
 }
 
 .welcome-card {
-  background: linear-gradient(135deg, #1890ff 0%, #722ed1 100%);
+  // 渐变背景使用图表色板变量，暗黑模式下自动切换为提亮版本
+  background: linear-gradient(135deg, $chart-color-primary 0%, $chart-color-purple 100%);
   color: $bg-white;
   border: none;
 
