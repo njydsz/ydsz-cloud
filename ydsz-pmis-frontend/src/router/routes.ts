@@ -1,4 +1,4 @@
-/**
+﻿﻿/**
  * @file 路由表定义
  * @description 定义前端静态路由（constantRoutes）与动态业务路由（asyncRoutes），
  *              静态路由包含登录/404/根布局默认页，动态路由按业务模块分组并通过权限码控制访问。
@@ -220,7 +220,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
       {
         path: 'expense',
         name: 'ExecutionExpense',
-        component: () => import('@/views/execution/expense/index.vue'),
+        component: () => import('@/views/finance/expense/index.vue'),
         meta: { title: 'route.executionExpense', icon: 'Wallet', keepAlive: true, permCode: PC.EXECUTION_EXPENSE_LIST },
       },
       {
@@ -232,7 +232,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
       {
         path: 'profit',
         name: 'ExecutionProfit',
-        component: () => import('@/views/execution/profit/index.vue'),
+        component: () => import('@/views/finance/profit/index.vue'),
         meta: { title: 'route.executionProfit', icon: 'TrendCharts', keepAlive: true, permCode: PC.EXECUTION_PROFIT_LIST },
       },
       {
@@ -250,19 +250,19 @@ export const asyncRoutes: RouteRecordRaw[] = [
       {
         path: 'rate-card',
         name: 'ExecutionRateCard',
-        component: () => import('@/views/execution/rate-card/index.vue'),
+        component: () => import('@/views/resource/rate-card/index.vue'),
         meta: { title: 'route.executionRateCard', icon: 'PriceTag', keepAlive: true, permCode: PC.EXECUTION_RATE_LIST },
       },
       {
         path: 'rate-internal',
         name: 'ExecutionRateInternal',
-        component: () => import('@/views/execution/rate-internal/index.vue'),
+        component: () => import('@/views/resource/rate-internal/index.vue'),
         meta: { title: 'route.executionRateInternal', icon: 'Coin', keepAlive: true, permCode: PC.EXECUTION_RATE_LIST },
       },
       {
         path: 'profit-simulation',
         name: 'ExecutionProfitSimulation',
-        component: () => import('@/views/execution/profit-simulation/index.vue'),
+        component: () => import('@/views/finance/profit-simulation/index.vue'),
         meta: { title: 'route.executionProfitSimulation', icon: 'MagicStick', keepAlive: true, permCode: PC.EXECUTION_SIMULATION_LIST },
       },
       {
@@ -274,7 +274,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
       {
         path: 'closure',
         name: 'ExecutionClosure',
-        component: () => import('@/views/execution/closure/index.vue'),
+        component: () => import('@/views/closure/index.vue'),
         meta: { title: 'route.executionClosure', icon: 'CircleCheck', keepAlive: true, permCode: PC.CLOSURE_LIST },
       },
       {
@@ -286,7 +286,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
       {
         path: 'reconcile',
         name: 'ExecutionReconcile',
-        component: () => import('@/views/execution/reconcile/index.vue'),
+        component: () => import('@/views/finance/reconcile/index.vue'),
         meta: { title: 'route.executionReconcile', icon: 'Document', keepAlive: true, permCode: PC.EXECUTION_RECONCILE_VIEW },
       },
       {
@@ -385,13 +385,13 @@ export const asyncRoutes: RouteRecordRaw[] = [
       {
         path: 'invoice',
         name: 'FinanceInvoice',
-        component: () => import('@/views/execution/invoice/index.vue'),
+        component: () => import('@/views/finance/invoice/index.vue'),
         meta: { title: 'route.financeInvoice', icon: 'Tickets', keepAlive: true, permCode: PC.FINANCE_INVOICE_LIST },
       },
       {
         path: 'payment',
         name: 'FinancePayment',
-        component: () => import('@/views/execution/payment/index.vue'),
+        component: () => import('@/views/finance/payment/index.vue'),
         meta: { title: 'route.financePayment', icon: 'CreditCard', keepAlive: true, permCode: PC.FINANCE_PAYMENT_LIST },
       },
       {

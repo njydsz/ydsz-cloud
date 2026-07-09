@@ -1,9 +1,9 @@
-<!--
+﻿<!--
   @file 回款管理
   @description 项目执行过程中的回款管理页面，覆盖回款单的全生命周期：待确认 → 已确认 → 已核销/已取消；
                支持回款核销（PaymentAllocation）将回款金额分摊到多张发票，余额耗尽自动转为 ALLOCATED；
                状态流转: PENDING → CONFIRMED → ALLOCATED / CANCELLED。
-  @module views/execution/payment
+  @module views/finance/payment
 -->
 <script setup lang="ts">
 /**
@@ -25,8 +25,8 @@ import {
   cancelPayment,
   allocatePayment,
   deletePayment,
-} from '@/api/execution/payment'
-import type { PaymentVO, PaymentCreateDTO, PaymentAllocationDTO } from '@/api/execution/payment/types'
+} from '@/api/finance/payment'
+import type { PaymentVO, PaymentCreateDTO, PaymentAllocationDTO } from '@/api/finance/payment/types'
 import { PC } from '@/constants/permissionCodes'
 import { handleError, confirmAction, showSuccess } from '@/utils/error'
 

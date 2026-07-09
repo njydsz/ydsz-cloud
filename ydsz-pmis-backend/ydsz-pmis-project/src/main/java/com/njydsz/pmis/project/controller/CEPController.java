@@ -47,12 +47,14 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/execution/rules/cep")
+@RequestMapping("/rule-engine/cep")
 @RequiredArgsConstructor
 @Tag(name = "CEP 复杂事件处理", description = "时间窗口/序列/聚合/缺失模式匹配")
 public class CEPController {
 
+    /** CEP 引擎（条件装配，未启用时为空） */
     private final ObjectProvider<CEPEngine> cepEngineProvider;
+    /** 规则引擎（条件装配，未启用时为空） */
     private final ObjectProvider<RuleEngine> ruleEngineProvider;
 
     /** 最近命中记录（内存暂存，最多 200 条，用于运维查看） */

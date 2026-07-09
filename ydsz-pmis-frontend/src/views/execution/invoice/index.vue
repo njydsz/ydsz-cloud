@@ -1,10 +1,10 @@
-<!--
+﻿<!--
   @file 发票管理
   @description 项目执行过程中的发票管理页面，覆盖发票全生命周期：草稿 → 提交 → 审批 → 开票 → 红冲/取消；
                支持蓝字发票与红字发票（红冲），开票依据包括里程碑、外协人天、按月、终验等；
                状态流转: DRAFT → SUBMITTED → APPROVED → ISSUED → RED_REVERSED / CANCELLED；
                开票后由后端自动生成发票号（invoiceNo）。
-  @module views/execution/invoice
+  @module views/finance/invoice
 -->
 <script setup lang="ts">
 /**
@@ -26,8 +26,8 @@ import {
   issueInvoice,
   reverseInvoice,
   deleteInvoice,
-} from '@/api/execution/invoice'
-import type { InvoiceVO, InvoiceCreateDTO } from '@/api/execution/invoice/types'
+} from '@/api/finance/invoice'
+import type { InvoiceVO, InvoiceCreateDTO } from '@/api/finance/invoice/types'
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()

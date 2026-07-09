@@ -25,11 +25,12 @@ import java.util.Map;
  */
 @Tag(name = "高级报表")
 @RestController
-@RequestMapping("/execution/advanced-report")
+@RequestMapping("/report/advanced")
 @RequiredArgsConstructor
 @Validated
 public class AdvancedReportController {
 
+    /** 高级报表服务 */
     private final AdvancedReportService service;
 
     @Operation(summary = "EVM 挣值管理报表")

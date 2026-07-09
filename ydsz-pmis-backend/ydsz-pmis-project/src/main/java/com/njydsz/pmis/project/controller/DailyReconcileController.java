@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @Tag(name = "每日自动对账")
 @RestController
-@RequestMapping("/execution/daily-reconcile")
+@RequestMapping("/finance/daily-reconcile")
 @RequiredArgsConstructor
 @Validated
 public class DailyReconcileController {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file Vite 插件: 本地 Mock 数据服务器（批次 20 补齐 P1 vite-plugin-mock）
  * @description 在 Vite dev server 中拦截 /* 请求并返回 Mock 数据,
  *              使前端在后端未启动时也能独立运行; 关闭后请求透传至 proxy。
@@ -97,7 +97,7 @@ export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
         }
 
         // 匹配 handler (path 已剥离 prefix, 与 handler.path 一致)
-        // 支持路径参数匹配: /project/initiation/{id}/submit
+        // 支持路径参数匹配: /initiation/{id}/submit
         const handler = mockHandlers.find(
           (h) => h.method === method && matchPath(h.path, path),
         )
@@ -177,9 +177,9 @@ function readBody(req: any): Promise<unknown> {
 
 /**
  * 路径匹配: 支持 {id} 等占位符.
- *   matchPath('/project/initiation/{id}/submit', '/project/initiation/42/submit') -> true
+ *   matchPath('/initiation/{id}/submit', '/initiation/42/submit') -> true
  *   matchPath('/auth/login', '/auth/login') -> true
- *   matchPath('/project/initiation/{id}/submit', '/project/initiation/42/cancel') -> false
+ *   matchPath('/initiation/{id}/submit', '/initiation/42/cancel') -> false
  */
 function matchPath(pattern: string, actual: string): boolean {
   if (pattern === actual) return true

@@ -1,7 +1,7 @@
-<!--
+﻿<!--
   @file 利润模拟
-  @description 利润测算版本管理页面：支持测算版本分页查询、多版本对比(V1/V2/V3)、状态流转(DRAFT→SUBMITTED→APPROVED/REJECTED)，对应路由 /execution/profit-simulation
-  @module views/execution/profit-simulation
+  @description 利润测算版本管理页面：支持测算版本分页查询、多版本对比(V1/V2/V3)、状态流转(DRAFT→SUBMITTED→APPROVED/REJECTED)，对应路由 /finance/profit-simulation
+  @module views/finance/profit-simulation
 -->
 <script setup lang="ts">
 /**
@@ -21,11 +21,11 @@ import {
   changeSimulationStatus,
   deleteProfitSimulation,
   compareSimulations,
-} from '@/api/execution/profit-simulation'
+} from '@/api/finance/profit-simulation'
 import type {
   ProfitSimulationVO,
   ProfitSimulationCreateDTO,
-} from '@/api/execution/profit-simulation'
+} from '@/api/finance/profit-simulation'
 import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'

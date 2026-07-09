@@ -37,7 +37,7 @@ import java.util.Map;
  */
 @Tag(name = "项目结项管理")
 @RestController
-@RequestMapping("/execution/closure")
+@RequestMapping("/closure")
 @RequiredArgsConstructor
 @Validated
 public class ProjectClosureController {

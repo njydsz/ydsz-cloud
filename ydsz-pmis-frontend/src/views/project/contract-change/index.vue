@@ -1,7 +1,7 @@
-<!--
+﻿<!--
   @file 合同变更管理
   @description 合同变更单的查询与新增；状态按 DRAFT → SUBMITTED → UNDER_REVIEW → APPROVED/REJECTED → CLOSED 流转
-  @module views/project/contract-change
+  @module views/contract-change
 -->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
@@ -13,8 +13,8 @@ import {
   pageContractChanges,
   createContractChange,
   changeContractChangeStatus,
-} from '@/api/project/contract'
-import type { ContractChangeVO, ContractChangeCreateDTO } from '@/api/project/contract/types'
+} from '@/api/contract'
+import type { ContractChangeVO, ContractChangeCreateDTO } from '@/api/contract/types'
 import { PC } from '@/constants/permissionCodes'
 
 // ===== 列表查询状态 =====

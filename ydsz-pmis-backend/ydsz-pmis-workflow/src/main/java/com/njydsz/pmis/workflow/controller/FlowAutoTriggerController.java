@@ -35,6 +35,7 @@ import java.util.Map;
 @Validated
 public class FlowAutoTriggerController {
 
+    /** 流程自动触发规则服务，负责规则注册、删除与启用/禁用管理 */
     private final FlowAutoTriggerService autoTriggerService;
 
     /**

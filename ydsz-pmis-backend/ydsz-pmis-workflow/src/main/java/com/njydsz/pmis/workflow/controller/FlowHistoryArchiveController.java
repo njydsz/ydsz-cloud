@@ -44,6 +44,7 @@ import java.util.Map;
 @Validated
 public class FlowHistoryArchiveController {
 
+    /** 流程历史归档服务，负责数据归档、冷数据清理与配置查询 */
     private final FlowHistoryArchiveService archiveService;
 
     /**

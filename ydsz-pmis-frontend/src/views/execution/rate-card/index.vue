@@ -1,7 +1,7 @@
-<!--
+﻿<!--
   @file 外部价目表
-  @description 对外报价费率(Rate Card)管理页面：按(职级×项目类型×客户等级)维护每日/每小时报价，支持三级回退(level→project→customer)匹配，对应路由 /execution/rate-card
-  @module views/execution/rate-card
+  @description 对外报价费率(Rate Card)管理页面：按(职级×项目类型×客户等级)维护每日/每小时报价，支持三级回退(level→project→customer)匹配，对应路由 /resource/rate-card
+  @module views/resource/rate-card
 -->
 <script setup lang="ts">
 /**
@@ -18,8 +18,8 @@ import {
   createRateCard,
   updateRateCard,
   deleteRateCard,
-} from '@/api/execution/rate-card'
-import type { RateCardVO, RateCardCreateDTO } from '@/api/execution/rate-card'
+} from '@/api/resource/rate-card'
+import type { RateCardVO, RateCardCreateDTO } from '@/api/resource/rate-card'
 import { listJobLevels } from '@/api/resource/job-level'
 import type { JobLevelVO } from '@/api/resource/job-level/types'
 import { isHandledError } from '@/utils/error'

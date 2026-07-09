@@ -26,12 +26,14 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/execution/rule-variables")
+@RequestMapping("/rule-engine/variables")
 @RequiredArgsConstructor
 @Validated
 public class RuleVariableAdminController {
 
+    /** 数据库变量注册表 */
     private final DatabaseVariableRegistry variableRegistry;
+    /** 表达式校验服务 */
     private final ExpressionValidationService expressionValidationService;
 
     /**

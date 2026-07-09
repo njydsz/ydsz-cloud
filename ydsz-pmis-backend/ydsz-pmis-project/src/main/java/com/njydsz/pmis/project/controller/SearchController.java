@@ -33,7 +33,7 @@ import java.util.List;
  */
 @Tag(name = "全文检索")
 @RestController
-@RequestMapping("/execution/search")
+@RequestMapping("/search")
 @RequiredArgsConstructor
 @Validated
 public class SearchController {

@@ -1,7 +1,7 @@
-<!--
+﻿<!--
   @file 执行-财务对账
-  @description 每日对账管理页面：支持按日期区间查询对账明细(成本/收入/回款/开票/工时/利润)、状态聚合统计(OK/WARN/ERROR)、手动触发对账重算，对应路由 /execution/reconcile
-  @module views/execution/reconcile
+  @description 每日对账管理页面：支持按日期区间查询对账明细(成本/收入/回款/开票/工时/利润)、状态聚合统计(OK/WARN/ERROR)、手动触发对账重算，对应路由 /finance/reconcile
+  @module views/finance/reconcile
 -->
 <script setup lang="ts">
 /**
@@ -18,11 +18,11 @@ import {
   runDailyReconcile,
   queryReconcileByDateRange,
   aggregateReconcileStatus,
-} from '@/api/execution/reconcile'
+} from '@/api/finance/reconcile'
 import type {
   DailyReconcileVO,
   DailyReconcileAggregateVO,
-} from '@/api/execution/reconcile/types'
+} from '@/api/finance/reconcile/types'
 import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 

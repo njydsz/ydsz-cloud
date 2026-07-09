@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file 执行模块 Mock 数据处理器
  * @description 为执行模块的 WBS、EVM、利用率排名、闲置成本、风险仪表盘、风险/预警/结项等 API 路径提供 Mock 数据
  * @module mock/handlers/execution
@@ -51,7 +51,7 @@ export const executionHandlers: MockHandler[] = [
   // ===== 利用率排名报表（员工维度） =====
   {
     method: 'GET',
-    path: '/execution/advanced-report/utilization-rank',
+    path: '/report/advanced/utilization-rank',
     handler: () =>
       Array.from({ length: 20 }, (_, i) => ({
         employeeId: i + 1,
@@ -63,7 +63,7 @@ export const executionHandlers: MockHandler[] = [
   // ===== 闲置成本月度报表 =====
   {
     method: 'GET',
-    path: '/execution/advanced-report/bench-cost',
+    path: '/report/advanced/bench-cost',
     handler: () =>
       Array.from({ length: 12 }, (_, i) => ({
         period: `2026-${String(i + 1).padStart(2, '0')}`,
@@ -74,7 +74,7 @@ export const executionHandlers: MockHandler[] = [
   // ===== 风险仪表盘报表（项目维度的风险/告警计数） =====
   {
     method: 'GET',
-    path: '/execution/advanced-report/risk-dashboard',
+    path: '/report/advanced/risk-dashboard',
     handler: () =>
       Array.from({ length: 5 }, (_, i) => ({
         projectId: i + 1,

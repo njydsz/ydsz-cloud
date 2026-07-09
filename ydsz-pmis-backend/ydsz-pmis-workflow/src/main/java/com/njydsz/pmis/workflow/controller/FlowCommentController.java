@@ -48,6 +48,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowCommentController {
 
+    /** 流程评论服务，负责评论/回复的发表、查询与删除 */
     private final FlowCommentService commentService;
 
     /**

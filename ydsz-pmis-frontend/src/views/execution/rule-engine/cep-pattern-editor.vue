@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file CEP 模式可视化编辑器（P2-7）
   @description 提供复杂事件处理（CEP）模式的可视化编辑能力：
   1. 左侧模式列表：展示已注册的全部 CEP 模式，支持新增 / 选中 / 删除
@@ -26,7 +26,7 @@ import {
   List as ListIcon,
   DataAnalysis,
 } from '@element-plus/icons-vue'
-import * as ruleApi from '@/api/execution/rule-engine'
+import * as ruleApi from '@/api/rule-engine'
 import type {
   CEPPattern,
   CEPPatternType,
@@ -34,7 +34,7 @@ import type {
   CEPTestEvent,
   CEPTestResult,
   CEPHit,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 
 const router = useRouter()
 

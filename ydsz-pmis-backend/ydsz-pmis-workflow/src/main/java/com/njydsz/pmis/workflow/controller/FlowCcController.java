@@ -56,7 +56,9 @@ public class FlowCcController {
     }
 
     /**
-     * P0-3: 抄送未读数（前端导航栏徽标）
+     * P0-3: 抄送未读数（前端导航栏徽标）。
+     *
+     * @return 未读抄送条数
      */
     @GetMapping("/cc/unread-count")
     public Result<Long> ccUnreadCount() {
@@ -66,7 +68,10 @@ public class FlowCcController {
     }
 
     /**
-     * P0-3: 抄送标记已读
+     * P0-3: 抄送标记已读。
+     *
+     * @param id 抄送记录 ID
+     * @return 操作结果
      */
     @Idempotent(key = "flow-cc:cc-mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/cc/{id}/read")
@@ -78,7 +83,9 @@ public class FlowCcController {
     }
 
     /**
-     * P0-3: 抄送全部标记已读
+     * P0-3: 抄送全部标记已读。
+     *
+     * @return 已标记已读的记录数
      */
     @Idempotent(key = "flow-cc:cc-mark-all-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/cc/read-all")

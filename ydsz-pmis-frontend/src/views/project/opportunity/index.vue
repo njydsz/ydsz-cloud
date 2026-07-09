@@ -1,10 +1,10 @@
-<!--
+﻿<!--
   @fileoverview 商机管理页面
 
   <详细说明，包括：>
   - 业务模块归属: 商机线索阶段，支持查询、新增、编辑、状态流转、赢率评估、转立项
   - 关键能力: 状态机 FOLLOWING → QUOTED → NEGOTIATING → WON → CONVERTED / LOST；赢率评估；转立项
-  - 关联的后端接口: @/api/project/opportunity
+  - 关联的后端接口: @/api/opportunity
 
   @author ydsz-pmis-team
   @since 1.0.0
@@ -30,8 +30,8 @@ import {
   deleteOpportunity,
   evaluateWinRate,
   convertToInitiation,
-} from '@/api/project/opportunity'
-import type { OpportunityVO, OpportunityCreateDTO, OpportunityUpdateDTO } from '@/api/project/opportunity/types'
+} from '@/api/opportunity'
+import type { OpportunityVO, OpportunityCreateDTO, OpportunityUpdateDTO } from '@/api/opportunity/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
 import { useFormGuard } from '@/composables/useFormGuard'

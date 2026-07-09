@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 评分卡可视化编辑器（P1-4）
   @description 表格化编辑器：评分因子（条件 + 分值 + 权重）增删改查、风险等级阈值/评级映射配置、
                实时总分预览与 dry-run 仿真、JSON 导出。
@@ -271,11 +271,11 @@ import { ElMessage } from 'element-plus'
 import {
   Plus, Delete, Refresh, Check, Close, VideoPlay, Download, CircleCheck, InfoFilled,
 } from '@element-plus/icons-vue'
-import * as ruleApi from '@/api/execution/rule-engine'
+import * as ruleApi from '@/api/rule-engine'
 import type {
   ScorecardDefinition, ScoreFactor, ScoreGrade, ScoreDirection,
   ScorecardValidateResult, RuleResult,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 
 defineOptions({ name: 'ScorecardEditor' })
 

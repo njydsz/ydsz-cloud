@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @fileoverview 高管看板
   @description 高管层驾驶舱：核心 KPI 概览 + 健康度评分 + 项目群对比 + KPI 趋势 + 告警事件摘要。
                顶部 6 张关键指标卡，下方通过 useECharts 渲染项目群横向柱状图与 30 天 KPI 折线趋势，
@@ -24,13 +24,13 @@ import {
   getExecutiveOverview,
   getKpiTrend,
   getAlertSummary,
-} from '@/api/execution/cockpit'
+} from '@/api/report/cockpit'
 import type {
   ExecutiveOverviewVO,
   KpiTrendVO,
   AlertEventDTO,
   ProjectGroupKpiDTO,
-} from '@/api/execution/cockpit/types'
+} from '@/api/report/cockpit/types'
 
 defineOptions({ name: 'ExecutiveOverview' })
 

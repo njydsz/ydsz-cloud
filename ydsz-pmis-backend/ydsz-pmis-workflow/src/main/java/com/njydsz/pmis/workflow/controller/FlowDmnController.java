@@ -40,6 +40,7 @@ import java.util.Map;
 @Validated
 public class FlowDmnController {
 
+    /** DMN 决策表服务，负责决策表的增删改查、发布与执行 */
     private final FlowDmnTableService dmnTableService;
 
     /**

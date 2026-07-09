@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @Tag(name = "利润核算")
 @RestController
-@RequestMapping("/execution/profit")
+@RequestMapping("/finance/profit")
 @RequiredArgsConstructor
 @Validated
 public class ProfitController {

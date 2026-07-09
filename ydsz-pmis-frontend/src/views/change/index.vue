@@ -1,6 +1,6 @@
-<!--
+﻿<!--
   @file 项目变更管理
-  @description 项目变更管理页面，支持变更创建、状态机流转（DRAFT→SUBMITTED→UNDER_REVIEW→APPROVED/REJECTED→EXECUTING→EXECUTED）、影响等级评估与详情查看，对接 @/api/project/change 模块。
+  @description 项目变更管理页面，支持变更创建、状态机流转（DRAFT→SUBMITTED→UNDER_REVIEW→APPROVED/REJECTED→EXECUTING→EXECUTED）、影响等级评估与详情查看，对接 @/api/initiation/change 模块。
   @module views/change
 -->
 <script setup lang="ts">
@@ -28,11 +28,11 @@ import {
   changeProjectChangeStatus,
   deleteProjectChange,
   getAllowedTransitions,
-} from '@/api/project/change'
+} from '@/api/initiation/change'
 import type {
   ProjectChangeVO,
   ProjectChangeCreateDTO,
-} from '@/api/project/change/types'
+} from '@/api/initiation/change/types'
 import { PC } from '@/constants/permissionCodes'
 import { useTable } from '@/composables/useTable'
 import type { PageResult } from '@/utils/request'

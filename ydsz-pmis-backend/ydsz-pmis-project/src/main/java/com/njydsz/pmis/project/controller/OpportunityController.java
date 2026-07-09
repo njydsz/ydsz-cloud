@@ -38,7 +38,7 @@ import java.util.Map;
  */
 @Tag(name = "商机管理", description = "商机管理相关接口")
 @RestController
-@RequestMapping("/project/opportunity")
+@RequestMapping("/opportunity")
 @RequiredArgsConstructor
 @Validated
 public class OpportunityController {
@@ -46,6 +46,12 @@ public class OpportunityController {
     /** 商机服务 */
     private final OpportunityService service;
 
+    /**
+     * 创建商机。
+     *
+     * @param dto 商机创建参数
+     * @return 统一响应结果，包含商机 ID
+     */
     @Operation(summary = "创建商机")
     @PrePermission("project:opportunity:create")
     @Idempotent(key = "opportunity:create", ttlSeconds = 5, message = "请勿重复提交")
@@ -54,6 +60,12 @@ public class OpportunityController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 更新商机。
+     *
+     * @param dto 商机更新参数
+     * @return 统一响应结果
+     */
     @Operation(summary = "更新商机")
     @PrePermission("project:opportunity:update")
     @Idempotent(key = "opportunity:update", ttlSeconds = 5, message = "请勿重复提交")
@@ -63,6 +75,12 @@ public class OpportunityController {
         return Result.ok();
     }
 
+    /**
+     * 变更商机状态。
+     *
+     * @param dto 状态变更参数
+     * @return 统一响应结果
+     */
     @Operation(summary = "变更状态")
     @PrePermission("project:opportunity:update")
     @Idempotent(key = "opportunity:change-status", ttlSeconds = 5, message = "请勿重复提交")
@@ -72,6 +90,12 @@ public class OpportunityController {
         return Result.ok();
     }
 
+    /**
+     * 删除商机。
+     *
+     * @param id 商机 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除商机")
     @PrePermission("project:opportunity:delete")
     @Idempotent(key = "opportunity:delete", ttlSeconds = 5, message = "请勿重复提交")
@@ -81,6 +105,12 @@ public class OpportunityController {
         return Result.ok();
     }
 
+    /**
+     * 查询商机详情。
+     *
+     * @param id 商机 ID
+     * @return 统一响应结果，包含商机详情
+     */
     @Operation(summary = "商机详情")
     @PrePermission("project:opportunity:list")
     @GetMapping("/{id}")
@@ -88,6 +118,17 @@ public class OpportunityController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询商机列表。
+     *
+     * @param page     页码（从 1 开始）
+     * @param size     每页大小
+     * @param keyword  关键词（编号/名称），可空
+     * @param status   状态过滤，可空
+     * @param level    分级过滤，可空
+     * @param ownerId  负责人 ID 过滤，可空
+     * @return 统一响应结果，包含商机分页数据
+     */
     @Operation(summary = "分页查询")
     @PrePermission("project:opportunity:list")
     @GetMapping("/page")
@@ -101,6 +142,14 @@ public class OpportunityController {
         return Result.ok(service.page(page, size, keyword, status, level, ownerId));
     }
 
+    /**
+     * 评估并更新商机赢率。
+     *
+     * @param id             商机 ID
+     * @param customerCredit 客户信用等级（可选）
+     * @param hasHistory     是否有历史合作（默认 false）
+     * @return 统一响应结果，包含评估后的赢率
+     */
     @Operation(summary = "评估并更新赢率")
     @PrePermission("project:opportunity:evaluate")
     @Idempotent(key = "opportunity:evaluate-win-rate", ttlSeconds = 5, message = "请勿重复提交")
@@ -111,6 +160,12 @@ public class OpportunityController {
         return Result.ok(service.evaluateWinRate(id, customerCredit, hasHistory));
     }
 
+    /**
+     * 按状态聚合计数。
+     *
+     * @param tenantId 租户 ID，可空
+     * @return 统一响应结果，包含各状态对应的数量列表
+     */
     @Operation(summary = "按状态聚合")
     @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/status")
@@ -118,6 +173,12 @@ public class OpportunityController {
         return Result.ok(service.aggregateByStatus(tenantId));
     }
 
+    /**
+     * 按分级聚合计数。
+     *
+     * @param tenantId 租户 ID，可空
+     * @return 统一响应结果，包含各分级对应的数量列表
+     */
     @Operation(summary = "按分级聚合")
     @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/level")
@@ -125,6 +186,14 @@ public class OpportunityController {
         return Result.ok(service.aggregateByLevel(tenantId));
     }
 
+    /**
+     * 商机转立项自动化（WON -> CONVERTED + 创建预立项草稿）。
+     *
+     * @param id        商机 ID
+     * @param sponsorId 发起人 ID（可选）
+     * @param pmId      项目经理 ID（可选）
+     * @return 统一响应结果，包含预立项草稿 ID
+     */
     @Operation(summary = "商机转立项自动化(WON -> CONVERTED + 创建预立项草稿)")
     @PrePermission("project:opportunity:convert")
     @Idempotent(key = "opportunity:convert-to-initiation", ttlSeconds = 5, message = "请勿重复提交")

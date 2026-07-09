@@ -40,7 +40,7 @@ import java.util.Map;
  */
 @Tag(name = "回款管理")
 @RestController
-@RequestMapping("/execution/payment")
+@RequestMapping("/finance/payment")
 @RequiredArgsConstructor
 @Validated
 public class PaymentController {

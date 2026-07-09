@@ -35,12 +35,13 @@ import java.util.Map;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/execution/export")
+@RequestMapping("/report/async-export")
 @RequiredArgsConstructor
 @Tag(name = "异步导出", description = "异步导出任务管理与下载中心")
 @Validated
 public class AsyncExportController {
 
+    /** 异步导出服务 */
     private final AsyncExportService asyncExportService;
 
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")

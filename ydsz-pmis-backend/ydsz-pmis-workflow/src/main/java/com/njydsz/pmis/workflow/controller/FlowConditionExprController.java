@@ -26,8 +26,15 @@ import java.util.Map;
 @Tag(name = "条件表达式编辑器", description = "结构化条件 JSON ↔ 表达式字符串双向转换")
 public class FlowConditionExprController {
 
+    /** 条件表达式服务，负责结构化条件 JSON 与表达式字符串的双向转换与校验 */
     private final FlowConditionExprService conditionExprService;
 
+    /**
+     * 结构化条件 JSON 转表达式字符串。
+     *
+     * @param body 请求体，需包含 conditionJson 和可选的 engine（默认 AVIATOR）
+     * @return 转换后的表达式字符串
+     */
     @Idempotent(key = "flow-condition-expr:build", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/build")
     @Operation(summary = "结构化条件 JSON → 表达式字符串")
@@ -37,6 +44,12 @@ public class FlowConditionExprController {
         return Result.ok(conditionExprService.buildExpression(conditionJson, engine));
     }
 
+    /**
+     * 表达式字符串转结构化条件 JSON。
+     *
+     * @param body 请求体，需包含 expression 和可选的 engine（默认 AVIATOR）
+     * @return 转换后的结构化条件 JSON 字符串
+     */
     @Idempotent(key = "flow-condition-expr:parse", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/parse")
     @Operation(summary = "表达式字符串 → 结构化条件 JSON")
@@ -46,6 +59,12 @@ public class FlowConditionExprController {
         return Result.ok(conditionExprService.parseExpression(expression, engine));
     }
 
+    /**
+     * 校验表达式语法。
+     *
+     * @param body 请求体，需包含 expression 和可选的 engine（默认 AVIATOR）
+     * @return 校验结果（valid / errors 等字段）
+     */
     @Idempotent(key = "flow-condition-expr:validate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/validate")
     @Operation(summary = "校验表达式语法")
@@ -55,12 +74,22 @@ public class FlowConditionExprController {
         return Result.ok(conditionExprService.validateExpression(expression, engine));
     }
 
+    /**
+     * 获取可用的操作符列表。
+     *
+     * @return 操作符列表
+     */
     @GetMapping("/operators")
     @Operation(summary = "获取可用的操作符列表")
     public Result<List<Map<String, String>>> operators() {
         return Result.ok(conditionExprService.getOperators());
     }
 
+    /**
+     * 获取可用的值类型列表。
+     *
+     * @return 值类型列表
+     */
     @GetMapping("/value-types")
     @Operation(summary = "获取可用的值类型列表")
     public Result<List<Map<String, String>>> valueTypes() {

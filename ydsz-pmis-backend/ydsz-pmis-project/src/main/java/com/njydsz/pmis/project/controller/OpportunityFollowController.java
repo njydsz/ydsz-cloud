@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "商机跟进")
 @RestController
-@RequestMapping("/project/opportunity/follow")
+@RequestMapping("/opportunity/follow")
 @RequiredArgsConstructor
 @Validated
 public class OpportunityFollowController {

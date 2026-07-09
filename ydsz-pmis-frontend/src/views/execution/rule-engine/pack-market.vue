@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 规则集市场
   @description 列出市场中的全部规则集（RulePack），支持搜索、按行业筛选、详情查看、一键安装。
   @module views/execution/rule-engine/pack-market
@@ -10,8 +10,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Download, Star, Document, OfficeBuilding, Refresh, Upload } from '@element-plus/icons-vue'
-import * as ruleApi from '@/api/execution/rule-engine'
-import type { RulePack, PackUpdateInfo } from '@/api/execution/rule-engine'
+import * as ruleApi from '@/api/rule-engine'
+import type { RulePack, PackUpdateInfo } from '@/api/rule-engine'
 
 const loading = ref(false)
 const searchKeyword = ref('')

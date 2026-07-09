@@ -30,6 +30,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowInboxController {
 
+    /** 站内信服务，负责消息查询、已读标记与未读统计 */
     private final FlowInboxService inboxService;
 
     /**
@@ -38,6 +39,7 @@ public class FlowInboxController {
      * @param onlyUnread 是否只查未读（默认 false）
      * @param page       页码（从 1 开始，默认 1）
      * @param size       每页大小（默认 20，最大 100）
+     * @return 分页数据（items / total / page / size）
      */
     @GetMapping("/list")
     public Result<Map<String, Object>> list(
@@ -63,6 +65,8 @@ public class FlowInboxController {
 
     /**
      * 统计未读站内信数。
+     *
+     * @return 未读条数
      */
     @GetMapping("/unread-count")
     public Result<Long> unreadCount() {
@@ -73,6 +77,9 @@ public class FlowInboxController {
 
     /**
      * 标记单条站内信为已读。
+     *
+     * @param id 站内信 ID
+     * @return 空响应
      */
     @Idempotent(key = "flow-inbox:mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/read")
@@ -84,6 +91,9 @@ public class FlowInboxController {
 
     /**
      * 批量标记已读。
+     *
+     * @param body 请求体，含 ids 列表
+     * @return 已标记已读的条数
      */
     @Idempotent(key = "flow-inbox:batch-mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/batch-read")
@@ -99,6 +109,8 @@ public class FlowInboxController {
 
     /**
      * 全部标记已读。
+     *
+     * @return 已标记已读的条数
      */
     @Idempotent(key = "flow-inbox:mark-all-read", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/read-all")
@@ -108,6 +120,11 @@ public class FlowInboxController {
         return Result.ok(inboxService.markAllRead(userId, tenantId));
     }
 
+    /**
+     * 获取当前登录用户 ID，未登录时抛出 401 异常。
+     *
+     * @return 当前用户 ID
+     */
     private String getCurrentUserId() {
         String userId = SecurityContext.getUserId();
         if (userId == null || userId.isEmpty()) {

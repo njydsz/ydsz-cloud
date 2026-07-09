@@ -111,29 +111,47 @@ import java.nio.charset.StandardCharsets;
  */
 @Slf4j
 @RestController
-@RequestMapping("/execution/rules")
+@RequestMapping("/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、AI 增强、规则集市场")
 public class RuleAdminController {
 
+    /** 规则管理服务 */
     private final RuleAdminService ruleAdminService;
+    /** A/B 测试服务 */
     private final ABTestService abTestService;
+    /** 规则引擎 */
     private final RuleEngine ruleEngine;
+    /** 规则模板服务 */
     private final RuleTemplateService ruleTemplateService;
+    /** 规则生成服务 */
     private final RuleGenerationService ruleGenerationService;
+    /** 规则冲突检测器 */
     private final RuleConflictDetector ruleConflictDetector;
+    /** 规则测试用例 Mapper */
     private final RuleTestCaseMapper ruleTestCaseMapper;
+    /** 规则执行轨迹 Mapper */
     private final RuleExecutionTraceMapper ruleExecutionTraceMapper;
+    /** 决策表 Mapper */
     private final DecisionTableMapper decisionTableMapper;
+    /** JSON 序列化器 */
     private final ObjectMapper objectMapper;
+    /** 决策表评估服务 */
     private final DecisionTableEvalService decisionTableEvalService;
+    /** 表达式校验服务 */
     private final ExpressionValidationService expressionValidationService;
+    /** 规则链图服务 */
     private final RuleChainGraphService ruleChainGraphService;
+    /** 图执行服务 */
     private final com.njydsz.pmis.project.literule.GraphExecutionService graphExecutionService;
+    /** 规则依赖服务 */
     private final RuleDependencyService ruleDependencyService;
+    /** 规则分类树服务 */
     private final RuleCategoryTreeService ruleCategoryTreeService;
+    /** A/B 测试自动回滚服务 */
     private final ABTestAutoRollbackService abTestAutoRollbackService;
+    /** 规则包服务 */
     private final RulePackService rulePackService;
     // 规则压测服务（P2-9）：可选注入，RuleAdminService 未装配时为空
     private final org.springframework.beans.factory.ObjectProvider<RuleStressTestService> ruleStressTestServiceProvider;

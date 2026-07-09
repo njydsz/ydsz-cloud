@@ -1,7 +1,7 @@
-<!--
+﻿<!--
   @file 合同模板管理
-  @description 合同模板的查询与新增；模板编码 code 唯一，状态按 DRAFT → PUBLISHED → DEPRECATED 线性转换；对接 @/api/project/contract
-  @module views/project/contract-template
+  @description 合同模板的查询与新增；模板编码 code 唯一，状态按 DRAFT → PUBLISHED → DEPRECATED 线性转换；对接 @/api/contract
+  @module views/contract-template
 -->
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
@@ -14,8 +14,8 @@ import {
   pageContractTemplates,
   createContractTemplate,
   changeContractTemplateStatus,
-} from '@/api/project/contract'
-import type { ContractTemplateVO, ContractTemplateCreateDTO } from '@/api/project/contract/types'
+} from '@/api/contract'
+import type { ContractTemplateVO, ContractTemplateCreateDTO } from '@/api/contract/types'
 import { PC } from '@/constants/permissionCodes'
 
 const loading = ref(false)

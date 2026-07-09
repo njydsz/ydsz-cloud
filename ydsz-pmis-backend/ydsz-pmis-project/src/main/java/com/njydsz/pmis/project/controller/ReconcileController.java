@@ -26,7 +26,7 @@ import java.util.List;
  */
 @Tag(name = "执行-对账")
 @RestController
-@RequestMapping("/execution/reconcile")
+@RequestMapping("/finance/reconcile")
 @RequiredArgsConstructor
 @Validated
 public class ReconcileController {

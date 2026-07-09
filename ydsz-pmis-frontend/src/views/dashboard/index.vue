@@ -1,6 +1,6 @@
-<!--
+﻿<!--
   @file 首页仪表盘
-  @description 系统首页仪表盘，基于 Cockpit 总览 API 与 ECharts 可视化展示活跃项目、本月合同/收入/毛利、EVM 健康度分布、近 6 月趋势与预警 TOP 5，对接 @/api/execution/cockpit 与 @/api/execution/alert 模块。
+  @description 系统首页仪表盘，基于 Cockpit 总览 API 与 ECharts 可视化展示活跃项目、本月合同/收入/毛利、EVM 健康度分布、近 6 月趋势与预警 TOP 5，对接 @/api/report/cockpit 与 @/api/alert 模块。
   @module views/dashboard
 -->
 <script setup lang="ts">
@@ -20,9 +20,9 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { formatDate } from '@/utils/format'
-import { getCockpitOverview, getKpiTrend } from '@/api/execution/cockpit'
-import type { KpiTrendVO } from '@/api/execution/cockpit'
-import { getCockpitAlertTopN } from '@/api/execution/alert'
+import { getCockpitOverview, getKpiTrend } from '@/api/report/cockpit'
+import type { KpiTrendVO } from '@/api/report/cockpit'
+import { getCockpitAlertTopN } from '@/api/alert'
 import { useECharts } from '@/composables/useECharts'
 import { chartColors } from '@/utils/chart-theme'
 import { isHandledError } from '@/utils/error'
@@ -216,7 +216,7 @@ const metrics = computed<DashboardMetric[]>(() => [
     icon: 'TrendCharts',
     mtdGrowth: trendData.value?.revenueMtdGrowth,
     sparkline: trendData.value?.confirmedRevenueSeries,
-    drillRoute: '/execution/profit',
+    drillRoute: '/finance/profit',
   },
   {
     title: t('dashboard.metrics.monthlyGrossProfit'),
@@ -227,7 +227,7 @@ const metrics = computed<DashboardMetric[]>(() => [
     icon: 'DataAnalysis',
     mtdGrowth: trendData.value?.profitMtdGrowth,
     sparkline: trendData.value?.grossProfitSeries,
-    drillRoute: '/execution/profit',
+    drillRoute: '/finance/profit',
   },
 ])
 

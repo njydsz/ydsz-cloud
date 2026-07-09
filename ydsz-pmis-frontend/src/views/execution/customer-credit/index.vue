@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 客户信用管理
   @description 客户信用评分与等级管理页面，支持列表查询、按客户查询最新信用、人工触发信用评估；
                评分模型: 30 基础分（新客户） + 合同数 + 合作年限 + 付款习惯 - 逾期惩罚；
@@ -22,8 +22,8 @@ import {
   pageCustomerCredits,
   assessCustomerCredit,
   getCreditByCustomer,
-} from '@/api/execution/customer-credit'
-import type { CustomerCreditVO, CreditAssessmentDTO } from '@/api/execution/customer-credit/types'
+} from '@/api/finance/credit'
+import type { CustomerCreditVO, CreditAssessmentDTO } from '@/api/finance/credit/types'
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()

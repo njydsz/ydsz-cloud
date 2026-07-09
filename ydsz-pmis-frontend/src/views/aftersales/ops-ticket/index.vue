@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 运维工单管理
   @description 售后运维工单的统一管理页面，支持工单创建、派单、状态流转、SLA 达成率统计与客户评价闭环。
   @module views/aftersales/ops-ticket
@@ -26,13 +26,13 @@ import {
   scanOpsTicketSlaBreaches,
   slaSummaryOpsTicket,
   aggregateOpsTicketByStatus,
-} from '@/api/execution/aftersales/ops-ticket'
+} from '@/api/after-sales/ops-ticket'
 import type {
   OpsTicketVO,
   OpsTicketCreateDTO,
   OpsTicketAssignDTO,
   OpsTicketStatusDTO,
-} from '@/api/execution/aftersales/types'
+} from '@/api/after-sales/types'
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()

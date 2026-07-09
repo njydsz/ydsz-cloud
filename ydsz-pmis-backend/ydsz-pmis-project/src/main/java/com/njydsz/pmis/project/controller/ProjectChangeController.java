@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  */
 @Tag(name = "项目变更管理")
 @RestController
-@RequestMapping("/project/change")
+@RequestMapping("/initiation/change")
 @RequiredArgsConstructor
 @Validated
 public class ProjectChangeController {

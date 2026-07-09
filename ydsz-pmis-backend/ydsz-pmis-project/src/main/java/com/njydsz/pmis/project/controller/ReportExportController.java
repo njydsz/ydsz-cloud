@@ -33,7 +33,7 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "报表导出")
 @RestController
-@RequestMapping("/execution/report-export")
+@RequestMapping("/report/export")
 @RequiredArgsConstructor
 @Validated
 public class ReportExportController {

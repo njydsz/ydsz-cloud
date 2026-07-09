@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @fileoverview 全局搜索弹窗（Ctrl+K 唤起）
   @description 顶部全局搜索入口：
   - 空关键词：展示最近访问
@@ -162,7 +162,7 @@ const fallbackProjectItems = computed<EntityItem[]>(() => {
     entityType: 'project' as SearchEntityType,
     title: p.projectName,
     subtitle: [p.customerName, p.pmName].filter(Boolean).join(' · '),
-    path: `/project/initiation?highlight=${p.id}`,
+    path: `/initiation?highlight=${p.id}`,
   }))
 })
 

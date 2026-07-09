@@ -46,7 +46,9 @@ import java.util.Map;
 @Validated
 public class FlowAiGenerateController {
 
+    /** AI 流程生成服务，负责调用 AI Agent 将自然语言转为 BPMN XML */
     private final FlowAiGenerateService flowAiGenerateService;
+    /** AI 辅助分析服务，负责风险预测、智能催办、SLA 预测等分析能力 */
     private final FlowAiAssistService flowAiAssistService;
 
     /**
@@ -132,6 +134,11 @@ public class FlowAiGenerateController {
 
     // ============================== 参数校验 ==============================
 
+    /**
+     * 校验风险预测请求参数，要求 instanceId 或 flowCode 至少传其一。
+     *
+     * @param body 请求体
+     */
     private void validateRiskParams(Map<String, Object> body) {
         if (body == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
@@ -142,6 +149,11 @@ public class FlowAiGenerateController {
         }
     }
 
+    /**
+     * 校验智能催办请求参数，要求 taskId 与 assigneeId 均不能为空。
+     *
+     * @param body 请求体
+     */
     private void validateRemindParams(Map<String, Object> body) {
         if (body == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d9e0f1a2");
@@ -152,6 +164,11 @@ public class FlowAiGenerateController {
         }
     }
 
+    /**
+     * 校验 SLA 预测请求参数，要求 instanceId 或 flowCode 至少传其一。
+     *
+     * @param body 请求体
+     */
     private void validateSlaParams(Map<String, Object> body) {
         if (body == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");

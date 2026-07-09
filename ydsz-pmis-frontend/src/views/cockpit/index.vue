@@ -1,6 +1,6 @@
-<!--
+﻿<!--
   @file 经营驾驶舱
-  @description 经营驾驶舱页面，聚合 KPI 总览、EVM 健康度分布、维度下钻（事业部/项目类型/客户）、KPI 月度趋势与实时预警，60 秒自动刷新，对接 @/api/execution/cockpit 模块。
+  @description 经营驾驶舱页面，聚合 KPI 总览、EVM 健康度分布、维度下钻（事业部/项目类型/客户）、KPI 月度趋势与实时预警，60 秒自动刷新，对接 @/api/report/cockpit 模块。
   @module views/cockpit
 -->
 <script setup lang="ts">
@@ -23,8 +23,8 @@ import {
   drillByDept,
   drillByProjectType,
   drillByCustomer,
-} from '@/api/execution/cockpit'
-import type { CockpitKpiVO, AlertEventDTO } from '@/api/execution/cockpit/types'
+} from '@/api/report/cockpit'
+import type { CockpitKpiVO, AlertEventDTO } from '@/api/report/cockpit/types'
 import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 
@@ -514,8 +514,8 @@ onBeforeUnmount(() => {
             <el-button :icon="'TrendCharts'" @click="$router.push('/report/executive')">{{ t('cockpit.shortcuts.executive') }}</el-button>
             <el-button :icon="'WarningFilled'" @click="$router.push('/execution/risk')">{{ t('cockpit.shortcuts.risk') }}</el-button>
             <el-button :icon="'Document'" @click="$router.push('/report')">{{ t('cockpit.shortcuts.profitReport') }}</el-button>
-            <el-button :icon="'Coin'" @click="$router.push('/execution/invoice')">{{ t('cockpit.shortcuts.invoice') }}</el-button>
-            <el-button :icon="'Money'" @click="$router.push('/execution/payment')">{{ t('cockpit.shortcuts.payment') }}</el-button>
+            <el-button :icon="'Coin'" @click="$router.push('/finance/invoice')">{{ t('cockpit.shortcuts.invoice') }}</el-button>
+            <el-button :icon="'Money'" @click="$router.push('/finance/payment')">{{ t('cockpit.shortcuts.payment') }}</el-button>
           </el-space>
         </el-col>
       </el-row>

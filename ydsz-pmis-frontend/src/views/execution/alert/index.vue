@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 预警中心
   @description 项目执行过程中的预算/风险/EVM/SLA/Bench 等多维预警中心页面，
                支持预警提交、立即分发、失败重试、取消及等级聚合统计；
@@ -27,13 +27,13 @@ import {
   cancelAlert,
   aggregateAlerts,
   resolveAlertRoles,
-} from '@/api/execution/alert'
+} from '@/api/alert'
 import type {
   AlertDispatchVO,
   AlertDispatchDTO,
   AlertAggregateVO,
   AlertResolveRolesVO,
-} from '@/api/execution/alert/types'
+} from '@/api/alert/types'
 import { handleError, confirmAction, showSuccess } from '@/utils/error'
 
 const { t } = useI18n()

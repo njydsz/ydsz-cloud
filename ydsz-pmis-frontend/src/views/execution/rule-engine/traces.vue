@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 规则执行链路追踪中心（P1-12 / P2-5）
   @description 独立路由页面：按 traceId / 规则编码 / 时间 / 触发状态检索执行链路，
                支持回放、上下文快照查看、详细错误展示。
@@ -12,15 +12,15 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span class="title">规则执行链路追踪中心</span>
+          <span class="title">{{ t('execution.ruleEngine.traces.title') }}</span>
           <div class="actions">
             <el-radio-group v-model="viewMode" size="small" style="margin-right: 12px">
-              <el-radio-button value="list">列表</el-radio-button>
-              <el-radio-button value="tree">树形</el-radio-button>
-              <el-radio-button value="gantt">甘特图</el-radio-button>
+              <el-radio-button value="list">{{ t('execution.ruleEngine.traces.view.list') }}</el-radio-button>
+              <el-radio-button value="tree">{{ t('execution.ruleEngine.traces.view.tree') }}</el-radio-button>
+              <el-radio-button value="gantt">{{ t('execution.ruleEngine.traces.view.gantt') }}</el-radio-button>
             </el-radio-group>
-            <el-button :icon="Refresh" @click="fetchTraces" :loading="loading">刷新</el-button>
-            <el-button @click="goBack">返回</el-button>
+            <el-button :icon="Refresh" @click="fetchTraces" :loading="loading">{{ t('execution.ruleEngine.traces.buttons.refresh') }}</el-button>
+            <el-button @click="goBack">{{ t('execution.ruleEngine.traces.buttons.back') }}</el-button>
           </div>
         </div>
       </template>
@@ -28,20 +28,20 @@
       <!-- 筛选区 -->
       <el-form :inline="true" class="filter-form">
         <el-form-item label="traceId">
-          <el-input v-model="filterTraceId" placeholder="按 traceId 精确查询" clearable style="width: 240px" />
+          <el-input v-model="filterTraceId" :placeholder="t('execution.ruleEngine.traces.filter.traceIdPlaceholder')" clearable style="width: 240px" />
         </el-form-item>
-        <el-form-item label="规则编码">
-          <el-input v-model="filterRuleCode" placeholder="按规则编码" clearable style="width: 180px" />
+        <el-form-item :label="t('execution.ruleEngine.traces.filter.ruleCode')">
+          <el-input v-model="filterRuleCode" :placeholder="t('execution.ruleEngine.traces.filter.ruleCodePlaceholder')" clearable style="width: 180px" />
         </el-form-item>
-        <el-form-item label="触发状态">
-          <el-select v-model="filterTriggered" placeholder="全部" clearable style="width: 120px">
-            <el-option label="仅触发" :value="true" />
-            <el-option label="仅未触发" :value="false" />
+        <el-form-item :label="t('execution.ruleEngine.traces.filter.triggerStatus')">
+          <el-select v-model="filterTriggered" :placeholder="t('execution.ruleEngine.traces.filter.all')" clearable style="width: 120px">
+            <el-option :label="t('execution.ruleEngine.traces.filter.onlyTriggered')" :value="true" />
+            <el-option :label="t('execution.ruleEngine.traces.filter.onlyNotTriggered')" :value="false" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="fetchTraces">查询</el-button>
-          <el-button text @click="resetFilter">重置</el-button>
+          <el-button type="primary" :icon="Search" @click="fetchTraces">{{ t('execution.ruleEngine.traces.buttons.query') }}</el-button>
+          <el-button text @click="resetFilter">{{ t('execution.ruleEngine.traces.buttons.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
@@ -55,7 +55,7 @@
       >
         <template #col-triggered="{ row }">
           <el-tag :type="(row as ExecutionTrace).triggered ? 'danger' : 'info'" size="small">
-            {{ (row as ExecutionTrace).triggered ? '触发' : '未触发' }}
+            {{ (row as ExecutionTrace).triggered ? t('execution.ruleEngine.traces.list.triggered') : t('execution.ruleEngine.traces.list.notTriggered') }}
           </el-tag>
         </template>
         <template #col-severity="{ row }">
@@ -64,96 +64,96 @@
           </el-tag>
         </template>
         <template #col-actions="{ row }">
-          <el-button link type="primary" size="small" @click="openDetail(row as ExecutionTrace)">详情</el-button>
-          <el-button link type="warning" size="small" @click="replayTraceRow(row as ExecutionTrace)">回放</el-button>
+          <el-button link type="primary" size="small" @click="openDetail(row as ExecutionTrace)">{{ t('execution.ruleEngine.traces.buttons.detail') }}</el-button>
+          <el-button link type="warning" size="small" @click="replayTraceRow(row as ExecutionTrace)">{{ t('execution.ruleEngine.traces.buttons.replay') }}</el-button>
         </template>
       </VirtualTable>
 
       <!-- 树形视图（P2-5）：按 traceId 分组展示规则链路 -->
       <div v-else-if="viewMode === 'tree'" class="chart-container">
         <div v-if="filteredTraces.length === 0" class="chart-empty">
-          <el-empty description="暂无链路数据" />
+          <el-empty :description="t('execution.ruleEngine.traces.empty')" />
         </div>
         <div v-else ref="treeChartRef" class="chart-canvas" style="height: 520px"></div>
         <div class="chart-legend">
-          <span class="legend-item"><i class="legend-dot" style="background:#409eff"></i>批次（traceId）</span>
-          <span class="legend-item"><i class="legend-dot" style="background:#f56c6c"></i>已触发规则</span>
-          <span class="legend-item"><i class="legend-dot" style="background:#909399"></i>未触发规则</span>
-          <span class="legend-tip">点击规则节点查看详情</span>
+          <span class="legend-item"><i class="legend-dot" style="background:#409eff"></i>{{ t('execution.ruleEngine.traces.legend.batchTraceId') }}</span>
+          <span class="legend-item"><i class="legend-dot" style="background:#f56c6c"></i>{{ t('execution.ruleEngine.traces.legend.triggeredRule') }}</span>
+          <span class="legend-item"><i class="legend-dot" style="background:#909399"></i>{{ t('execution.ruleEngine.traces.legend.notTriggeredRule') }}</span>
+          <span class="legend-tip">{{ t('execution.ruleEngine.traces.tips.clickNodeDetail') }}</span>
         </div>
       </div>
 
       <!-- 甘特图视图（P2-5）：按耗时可视化 -->
       <div v-else-if="viewMode === 'gantt'" class="chart-container">
         <div v-if="filteredTraces.length === 0" class="chart-empty">
-          <el-empty description="暂无链路数据" />
+          <el-empty :description="t('execution.ruleEngine.traces.empty')" />
         </div>
         <div v-else ref="ganttChartRef" class="chart-canvas" style="height: 520px"></div>
         <div class="chart-legend">
-          <span class="legend-item"><i class="legend-dot" style="background:#f56c6c"></i>红色 RED</span>
-          <span class="legend-item"><i class="legend-dot" style="background:#e6a23c"></i>黄色 YELLOW</span>
-          <span class="legend-item"><i class="legend-dot" style="background:#909399"></i>通知 / 未触发</span>
-          <span class="legend-tip">支持滚轮缩放和拖拽</span>
+          <span class="legend-item"><i class="legend-dot" style="background:#f56c6c"></i>{{ t('execution.ruleEngine.traces.legend.redLegend') }}</span>
+          <span class="legend-item"><i class="legend-dot" style="background:#e6a23c"></i>{{ t('execution.ruleEngine.traces.legend.yellowLegend') }}</span>
+          <span class="legend-item"><i class="legend-dot" style="background:#909399"></i>{{ t('execution.ruleEngine.traces.legend.notificationNotTriggered') }}</span>
+          <span class="legend-tip">{{ t('execution.ruleEngine.traces.tips.zoomTip') }}</span>
         </div>
       </div>
     </el-card>
 
     <!-- 详情对话框 -->
-    <el-dialog v-model="detailVisible" title="执行链路详情" width="800px">
+    <el-dialog v-model="detailVisible" :title="t('execution.ruleEngine.traces.detail.title')" width="800px">
       <el-descriptions v-if="currentTrace" :column="2" border>
         <el-descriptions-item label="Trace ID">{{ currentTrace.traceId }}</el-descriptions-item>
-        <el-descriptions-item label="规则编码">{{ currentTrace.ruleCode }}</el-descriptions-item>
-        <el-descriptions-item label="规则名称">{{ currentTrace.ruleName }}</el-descriptions-item>
-        <el-descriptions-item label="场景">{{ currentTrace.scenario }}</el-descriptions-item>
-        <el-descriptions-item label="触发">
+        <el-descriptions-item :label="t('execution.ruleEngine.traces.detail.ruleCode')">{{ currentTrace.ruleCode }}</el-descriptions-item>
+        <el-descriptions-item :label="t('execution.ruleEngine.traces.detail.ruleName')">{{ currentTrace.ruleName }}</el-descriptions-item>
+        <el-descriptions-item :label="t('execution.ruleEngine.traces.detail.scenario')">{{ currentTrace.scenario }}</el-descriptions-item>
+        <el-descriptions-item :label="t('execution.ruleEngine.traces.detail.trigger')">
           <el-tag :type="currentTrace.triggered ? 'danger' : 'info'" size="small">
-            {{ currentTrace.triggered ? '是' : '否' }}
+            {{ currentTrace.triggered ? t('execution.ruleEngine.traces.common.yes') : t('execution.ruleEngine.traces.common.no') }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="严重度">
+        <el-descriptions-item :label="t('execution.ruleEngine.traces.detail.severity')">
           <el-tag :type="severityType(currentTrace.severity)" size="small">
             {{ severityLabel(currentTrace.severity) }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="条件结果">{{ currentTrace.conditionResult }}</el-descriptions-item>
-        <el-descriptions-item label="耗时">{{ currentTrace.elapsedMs }}ms</el-descriptions-item>
-        <el-descriptions-item label="错误" :span="2" v-if="currentTrace.errorMessage">
+        <el-descriptions-item :label="t('execution.ruleEngine.traces.detail.conditionResult')">{{ currentTrace.conditionResult }}</el-descriptions-item>
+        <el-descriptions-item :label="t('execution.ruleEngine.traces.detail.elapsed')">{{ currentTrace.elapsedMs }}ms</el-descriptions-item>
+        <el-descriptions-item :label="t('execution.ruleEngine.traces.detail.error')" :span="2" v-if="currentTrace.errorMessage">
           <el-text type="danger">{{ currentTrace.errorMessage }}</el-text>
         </el-descriptions-item>
       </el-descriptions>
       <el-tabs style="margin-top: 16px">
-        <el-tab-pane label="输入事实">
+        <el-tab-pane :label="t('execution.ruleEngine.traces.detail.inputFacts')">
           <pre class="json-view">{{ formatJson(currentTrace?.factsSnapshot) }}</pre>
         </el-tab-pane>
-        <el-tab-pane label="输出结果">
+        <el-tab-pane :label="t('execution.ruleEngine.traces.detail.outputResult')">
           <pre class="json-view">{{ formatJson(currentTrace?.resultSnapshot) }}</pre>
         </el-tab-pane>
       </el-tabs>
     </el-dialog>
 
     <!-- 回放结果对话框 -->
-    <el-dialog v-model="replayVisible" title="回放结果" width="700px">
+    <el-dialog v-model="replayVisible" :title="t('execution.ruleEngine.traces.replay.title')" width="700px">
       <div v-if="replayResult">
         <el-alert
-          :title="replayResult.diff?.summary || '回放中...'"
+          :title="replayResult.diff?.summary || t('execution.ruleEngine.traces.replay.loading')"
           :type="(replayResult.diff?.added?.length || 0) > 0 ? 'warning' : 'success'"
           :closable="false"
           show-icon
         />
         <el-descriptions :column="2" border style="margin-top: 12px">
           <el-descriptions-item label="traceId">{{ replayResult.traceId }}</el-descriptions-item>
-          <el-descriptions-item label="历史触发">{{ replayResult.historicalTraces?.length || 0 }} 条</el-descriptions-item>
-          <el-descriptions-item label="当前触发" :span="2">
+          <el-descriptions-item :label="t('execution.ruleEngine.traces.replay.historicalTrigger')">{{ replayResult.historicalTraces?.length || 0 }} {{ t('execution.ruleEngine.traces.replay.historicalUnit') }}</el-descriptions-item>
+          <el-descriptions-item :label="t('execution.ruleEngine.traces.replay.currentTrigger')" :span="2">
             <el-tag v-for="r in replayResult.currentResults" :key="r.ruleCode" size="small" style="margin: 2px">
               {{ r.ruleCode }}
             </el-tag>
           </el-descriptions-item>
         </el-descriptions>
-        <el-divider>差异分析</el-divider>
+        <el-divider>{{ t('execution.ruleEngine.traces.replay.diffAnalysis') }}</el-divider>
         <el-row :gutter="12">
           <el-col :span="8">
             <el-card shadow="never" class="diff-card diff-added">
-              <div class="diff-card-title">新增触发</div>
+              <div class="diff-card-title">{{ t('execution.ruleEngine.traces.replay.added') }}</div>
               <div class="diff-card-count">{{ replayResult.diff?.added?.length || 0 }}</div>
               <div class="diff-card-list">
                 <el-tag v-for="c in replayResult.diff?.added" :key="c" type="success" size="small">{{ c }}</el-tag>
@@ -162,7 +162,7 @@
           </el-col>
           <el-col :span="8">
             <el-card shadow="never" class="diff-card diff-removed">
-              <div class="diff-card-title">移除触发</div>
+              <div class="diff-card-title">{{ t('execution.ruleEngine.traces.replay.removed') }}</div>
               <div class="diff-card-count">{{ replayResult.diff?.removed?.length || 0 }}</div>
               <div class="diff-card-list">
                 <el-tag v-for="c in replayResult.diff?.removed" :key="c" type="warning" size="small">{{ c }}</el-tag>
@@ -171,7 +171,7 @@
           </el-col>
           <el-col :span="8">
             <el-card shadow="never" class="diff-card diff-unchanged">
-              <div class="diff-card-title">保持不变</div>
+              <div class="diff-card-title">{{ t('execution.ruleEngine.traces.replay.unchanged') }}</div>
               <div class="diff-card-count">{{ replayResult.diff?.unchanged?.length || 0 }}</div>
               <div class="diff-card-list">
                 <el-tag v-for="c in replayResult.diff?.unchanged" :key="c" type="info" size="small">{{ c }}</el-tag>
@@ -189,6 +189,7 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch, shallowRef 
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Refresh, Search } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 import * as echarts from '@/utils/echarts'
 import type { ECharts } from '@/utils/echarts'
 import VirtualTable from '@/components/common/VirtualTable.vue'
@@ -196,11 +197,12 @@ import type { ColumnConfig } from '@/components/common/VirtualTable.vue'
 import {
   getTrace, getTracesByRule, listRecentTraces, replayTrace,
   type ExecutionTrace, type ReplayResult,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 
 defineOptions({ name: 'RuleEngineTraceCenter' })
 
 const router = useRouter()
+const { t } = useI18n()
 const loading = ref(false)
 const traces = ref<ExecutionTrace[]>([])
 
@@ -227,17 +229,17 @@ let treeChartInstance: ECharts | null = null
 let ganttChartInstance: ECharts | null = null
 
 /** 链路列表列配置 */
-const traceColumns: ColumnConfig[] = [
+const traceColumns = computed<ColumnConfig[]>(() => [
   { field: 'traceId', title: 'Trace ID', width: 220 },
-  { field: 'ruleCode', title: '规则编码', width: 180 },
-  { field: 'ruleName', title: '规则名称', width: 180 },
-  { field: 'triggered', title: '是否触发', width: 100, align: 'center', slot: true },
-  { field: 'severity', title: '严重度', width: 100, slot: true },
-  { field: 'elapsedMs', title: '耗时(ms)', width: 100, sortable: true },
-  { field: 'scenario', title: '场景', width: 100 },
-  { field: 'createdAt', title: '执行时间', width: 180 },
-  { field: 'actions', title: '操作', width: 180, fixed: 'right', slot: true },
-]
+  { field: 'ruleCode', title: t('execution.ruleEngine.traces.columns.ruleCode'), width: 180 },
+  { field: 'ruleName', title: t('execution.ruleEngine.traces.columns.ruleName'), width: 180 },
+  { field: 'triggered', title: t('execution.ruleEngine.traces.columns.triggered'), width: 100, align: 'center', slot: true },
+  { field: 'severity', title: t('execution.ruleEngine.traces.columns.severity'), width: 100, slot: true },
+  { field: 'elapsedMs', title: t('execution.ruleEngine.traces.columns.elapsed'), width: 100, sortable: true },
+  { field: 'scenario', title: t('execution.ruleEngine.traces.columns.scenario'), width: 100 },
+  { field: 'createdAt', title: t('execution.ruleEngine.traces.columns.createdAt'), width: 180 },
+  { field: 'actions', title: t('execution.ruleEngine.traces.columns.actions'), width: 180, fixed: 'right', slot: true },
+])
 
 const filteredTraces = computed(() => {
   let list = traces.value
@@ -259,9 +261,9 @@ function severityType(s: string): 'danger' | 'warning' | 'info' | 'success' | 'p
   return 'info'
 }
 function severityLabel(s: string): string {
-  if (s === 'RED') return '红色'
-  if (s === 'YELLOW') return '黄色'
-  if (s === 'NORMAL') return '通知'
+  if (s === 'RED') return t('execution.ruleEngine.traces.severity.red')
+  if (s === 'YELLOW') return t('execution.ruleEngine.traces.severity.yellow')
+  if (s === 'NORMAL') return t('execution.ruleEngine.traces.severity.normal')
   return s || '-'
 }
 /** 严重度 → 颜色（用于图表） */
@@ -271,7 +273,7 @@ function severityColor(s: string): string {
   return '#909399'
 }
 function formatJson(obj: any): string {
-  if (!obj) return '（空）'
+  if (!obj) return t('execution.ruleEngine.traces.format.empty')
   try {
     return JSON.stringify(obj, null, 2)
   } catch {
@@ -294,7 +296,7 @@ async function fetchTraces() {
       traces.value = res.data || []
     }
   } catch (e: any) {
-    ElMessage.error(e?.message || '查询失败')
+    ElMessage.error(e?.message || t('execution.ruleEngine.traces.messages.queryFailed'))
   } finally {
     loading.value = false
   }
@@ -319,10 +321,10 @@ async function replayTraceRow(row: ExecutionTrace) {
       replayResult.value = res.data
       replayVisible.value = true
     } else {
-      ElMessage.error(res.message || '回放失败')
+      ElMessage.error(res.message || t('execution.ruleEngine.traces.messages.replayFailed'))
     }
   } catch (e: any) {
-    ElMessage.error(e?.message || '回放异常')
+    ElMessage.error(e?.message || t('execution.ruleEngine.traces.messages.replayError'))
   }
 }
 
@@ -346,9 +348,9 @@ function buildTreeOption(): echarts.EChartsOption {
   const nodes: Record<string, unknown>[] = []
   const links: Record<string, unknown>[] = []
   const categories = [
-    { name: '批次' },
-    { name: '已触发' },
-    { name: '未触发' },
+    { name: t('execution.ruleEngine.traces.chart.categoryBatch') },
+    { name: t('execution.ruleEngine.traces.chart.categoryTriggered') },
+    { name: t('execution.ruleEngine.traces.chart.categoryNotTriggered') },
   ]
 
   groups.forEach((traces, traceId) => {
@@ -361,22 +363,22 @@ function buildTreeOption(): echarts.EChartsOption {
       itemStyle: { color: '#409eff' },
       label: { show: true, position: 'right', fontSize: 11 },
       tooltip: {
-        formatter: `批次: ${traceId}<br/>规则数: ${traces.length}<br/>触发: ${triggeredCount}`,
+        formatter: `${t('execution.ruleEngine.traces.tooltip.batch')}: ${traceId}<br/>${t('execution.ruleEngine.traces.tooltip.ruleCount')}: ${traces.length}<br/>${t('execution.ruleEngine.traces.tooltip.trigger')}: ${triggeredCount}`,
       },
     })
-    traces.forEach((t) => {
-      const nodeId = `rule::${traceId}::${t.ruleCode}`
+    traces.forEach((tr) => {
+      const nodeId = `rule::${traceId}::${tr.ruleCode}`
       nodes.push({
         id: nodeId,
-        name: t.ruleCode,
+        name: tr.ruleCode,
         symbolSize: 24,
-        category: t.triggered ? 1 : 2,
-        itemStyle: { color: t.triggered ? '#f56c6c' : '#909399' },
+        category: tr.triggered ? 1 : 2,
+        itemStyle: { color: tr.triggered ? '#f56c6c' : '#909399' },
         label: { show: true, position: 'right', fontSize: 10 },
         tooltip: {
-          formatter: `规则: ${t.ruleName || t.ruleCode}<br/>触发: ${t.triggered ? '是' : '否'}<br/>严重度: ${severityLabel(t.severity)}<br/>耗时: ${t.elapsedMs}ms`,
+          formatter: `${t('execution.ruleEngine.traces.tooltip.rule')}: ${tr.ruleName || tr.ruleCode}<br/>${t('execution.ruleEngine.traces.tooltip.trigger')}: ${tr.triggered ? t('execution.ruleEngine.traces.common.yes') : t('execution.ruleEngine.traces.common.no')}<br/>${t('execution.ruleEngine.traces.tooltip.severity')}: ${severityLabel(tr.severity)}<br/>${t('execution.ruleEngine.traces.tooltip.cost')}: ${tr.elapsedMs}ms`,
         },
-        traceData: t,
+        traceData: tr,
       })
       links.push({
         source: `trace::${traceId}`,
@@ -461,22 +463,22 @@ function buildGanttOption(): echarts.EChartsOption {
     tooltip: {
       trigger: 'item',
       formatter: (params: { data?: { traceData?: ExecutionTrace } }) => {
-        const t = params?.data?.traceData
-        if (!t) return ''
+        const tr = params?.data?.traceData
+        if (!tr) return ''
         return [
-          `规则: ${t.ruleName || t.ruleCode}`,
-          `Trace: ${t.traceId}`,
-          `触发: ${t.triggered ? '是' : '否'}`,
-          `严重度: ${severityLabel(t.severity)}`,
-          `耗时: ${t.elapsedMs}ms`,
-          `时间: ${t.createdAt}`,
+          `${t('execution.ruleEngine.traces.tooltip.rule')}: ${tr.ruleName || tr.ruleCode}`,
+          `Trace: ${tr.traceId}`,
+          `${t('execution.ruleEngine.traces.tooltip.trigger')}: ${tr.triggered ? t('execution.ruleEngine.traces.common.yes') : t('execution.ruleEngine.traces.common.no')}`,
+          `${t('execution.ruleEngine.traces.tooltip.severity')}: ${severityLabel(tr.severity)}`,
+          `${t('execution.ruleEngine.traces.tooltip.cost')}: ${tr.elapsedMs}ms`,
+          `${t('execution.ruleEngine.traces.tooltip.time')}: ${tr.createdAt}`,
         ].join('<br/>')
       },
     },
     grid: { left: 160, right: 40, top: 30, bottom: 60 },
     xAxis: {
       type: 'value',
-      name: '耗时(ms)',
+      name: t('execution.ruleEngine.traces.chart.xAxisElapsed'),
       nameLocation: 'middle',
       nameGap: 30,
       axisLabel: { fontSize: 11 },

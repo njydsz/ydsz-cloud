@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 规则引擎监控大盘（P1-6）
   @description 规则引擎监控大盘页面：聚合规则数量、触发率、P99 耗时、错误率趋势等核心指标，
                支持时间范围切换（24h/7d/30d）、30 秒自动刷新，对应路由 /execution/rule-engine/dashboard。
@@ -27,7 +27,7 @@ import {
   getDashboardDistribution,
   getDashboardTopRules,
   getDashboardRealtime,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 import type {
   DashboardOverview,
   DashboardTrend,
@@ -36,7 +36,7 @@ import type {
   DashboardRealtime,
   DashboardTimeRange,
   DashboardTopType,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 import { logger } from '@/utils/logger'
 
 defineOptions({ name: 'RuleEngineDashboard' })

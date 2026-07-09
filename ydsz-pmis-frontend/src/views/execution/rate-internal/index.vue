@@ -1,7 +1,7 @@
-<!--
+﻿<!--
   @file 内部价目表
-  @description 对内职级成本费率(Rate Internal)管理页面：按(职级×部门)维护每日/每小时内部成本价，支持二级回退(level→department)匹配，对应路由 /execution/rate-internal
-  @module views/execution/rate-internal
+  @description 对内职级成本费率(Rate Internal)管理页面：按(职级×部门)维护每日/每小时内部成本价，支持二级回退(level→department)匹配，对应路由 /resource/rate-internal
+  @module views/resource/rate-internal
 -->
 <script setup lang="ts">
 /**
@@ -16,8 +16,8 @@ import {
   createRateInternal,
   updateRateInternal,
   deleteRateInternal,
-} from '@/api/execution/rate-internal'
-import type { RateInternalVO, RateInternalCreateDTO } from '@/api/execution/rate-internal'
+} from '@/api/resource/rate-internal'
+import type { RateInternalVO, RateInternalCreateDTO } from '@/api/resource/rate-internal'
 import { listJobLevels } from '@/api/resource/job-level'
 import type { JobLevelVO } from '@/api/resource/job-level/types'
 import { listDeptTree } from '@/api/system/dept'

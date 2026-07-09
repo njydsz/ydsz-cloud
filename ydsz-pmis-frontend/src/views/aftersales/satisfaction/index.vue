@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 服务满意度评价
   @description 售后服务满意度评价管理页面，支持多维度打分、不满意评价跟进闭环及综合统计概览。
   @module views/aftersales/satisfaction
@@ -23,8 +23,8 @@ import {
   closeFollowUp,
   overallSatisfaction,
   levelDistributionSatisfaction,
-} from '@/api/execution/aftersales/satisfaction'
-import type { SatisfactionVO, SatisfactionCreateDTO } from '@/api/execution/aftersales/types'
+} from '@/api/after-sales/satisfaction'
+import type { SatisfactionVO, SatisfactionCreateDTO } from '@/api/after-sales/types'
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()

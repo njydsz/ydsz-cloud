@@ -74,7 +74,10 @@ public class FlowDelegateController {
     }
 
     /**
-     * P1-4: 撤回授权
+     * P1-4: 撤回授权。
+     *
+     * @param id 授权记录 ID
+     * @return 空响应
      */
     @Idempotent(key = "flow-delegate:revoke-delegate-auth", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate-auth/{id}/revoke")
@@ -86,7 +89,11 @@ public class FlowDelegateController {
     }
 
     /**
-     * P1-4: 启用/停用授权
+     * P1-4: 启用/停用授权。
+     *
+     * @param id     授权记录 ID
+     * @param status 目标状态
+     * @return 空响应
      */
     @Idempotent(key = "flow-delegate:update-delegate-auth-status", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate-auth/{id}/status")
@@ -99,7 +106,10 @@ public class FlowDelegateController {
     }
 
     /**
-     * P1-4: 查"我设置的"授权列表
+     * P1-4: 查"我设置的"授权列表。
+     *
+     * @param status 状态筛选（可选）
+     * @return 授权列表
      */
     @GetMapping("/delegate-auth/mine")
     public Result<List<FlowDelegateAuthDO>> listMyDelegateAuths(
@@ -110,7 +120,10 @@ public class FlowDelegateController {
     }
 
     /**
-     * P1-4: 查"代理给我的"授权列表
+     * P1-4: 查"代理给我的"授权列表。
+     *
+     * @param status 状态筛选（可选）
+     * @return 授权列表
      */
     @GetMapping("/delegate-auth/as-delegate")
     public Result<List<FlowDelegateAuthDO>> listAsDelegate(
@@ -121,7 +134,11 @@ public class FlowDelegateController {
     }
 
     /**
-     * P1-4: 查"我代理处理了哪些任务"
+     * P1-4: 查"我代理处理了哪些任务"。
+     *
+     * @param page 页码
+     * @param size 每页大小
+     * @return 委派处理日志分页
      */
     @GetMapping("/delegate-auth/log/delegate")
     public Result<PageResult<?>> myDelegateLog(
@@ -132,7 +149,11 @@ public class FlowDelegateController {
     }
 
     /**
-     * P1-4: 查"我的哪些任务被代理了"
+     * P1-4: 查"我的哪些任务被代理了"。
+     *
+     * @param page 页码
+     * @param size 每页大小
+     * @return 被代理任务日志分页
      */
     @GetMapping("/delegate-auth/log/owner")
     public Result<PageResult<?>> myOwnerLog(

@@ -29,10 +29,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowDelegateMessageController {
 
+    /** 委派沟通服务，负责委托人与被委托人之间的留言收发与已读管理 */
     private final FlowDelegateMessageService messageService;
 
     /**
-     * 发送委派沟通留言
+     * 发送委派沟通留言。
+     *
+     * @param dto        留言内容
+     * @param senderId   发送人 ID
+     * @param senderName 发送人姓名（可选）
+     * @param senderRole 发送人角色（OWNER / DELEGATE）
+     * @param tenantId   租户 ID（可选，默认 1）
+     * @return 保存后的留言记录
      */
     @Idempotent(key = "flow-delegate-message:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate/message/send")
@@ -46,7 +54,10 @@ public class FlowDelegateMessageController {
     }
 
     /**
-     * 查询任务沟通记录
+     * 查询任务沟通记录。
+     *
+     * @param taskId 任务 ID
+     * @return 留言列表
      */
     @GetMapping("/delegate/message/task/{taskId}")
     public Result<List<FlowDelegateMessageDO>> list(@PathVariable String taskId) {
@@ -54,7 +65,11 @@ public class FlowDelegateMessageController {
     }
 
     /**
-     * 标记已读（当前查看者角色的对侧消息）
+     * 标记已读（当前查看者角色的对侧消息）。
+     *
+     * @param taskId     任务 ID
+     * @param viewerRole 查看者角色（OWNER / DELEGATE）
+     * @return 空响应
      */
     @Idempotent(key = "flow-delegate-message:mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate/message/read/{taskId}")

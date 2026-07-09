@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 决策表可视化编辑器（P1-6）
   @description 表格化编辑器：HitPolicy 切换、行列增删、列类型显式声明、命中预览。
   @module views/execution/rule-engine/decision-table-editor
@@ -151,8 +151,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete, Refresh, Check, Close, VideoPlay } from '@element-plus/icons-vue'
-import * as ruleApi from '@/api/execution/rule-engine'
-import type { RuleDefinition } from '@/api/execution/rule-engine'
+import * as ruleApi from '@/api/rule-engine'
+import type { RuleDefinition } from '@/api/rule-engine'
 
 defineOptions({ name: 'DecisionTableEditor' })
 

@@ -1,9 +1,9 @@
-<!--
+﻿<!--
   @file 项目结项管理
   @description 项目交付完成后的结项流程管理页面，支持正式结项/预结项/强制结项三种类型，
                状态流转: DRAFT → SUBMITTED → APPROVED → ARCHIVED / REJECTED，
                由后端 ClosureAdmissionValidator 校验结项准入条件（回款比例、毛利率等）。
-  @module views/execution/closure
+  @module views/closure
 -->
 <script setup lang="ts">
 /**
@@ -22,8 +22,8 @@ import {
   pageProjectClosures,
   createProjectClosure,
   changeProjectClosureStatus,
-} from '@/api/execution/closure'
-import type { ProjectClosureVO, ProjectClosureCreateDTO } from '@/api/execution/closure/types'
+} from '@/api/closure'
+import type { ProjectClosureVO, ProjectClosureCreateDTO } from '@/api/closure/types'
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()

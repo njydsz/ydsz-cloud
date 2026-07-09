@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file Permission Store - 动态路由与菜单权限
  * @description 拉取后端菜单树、转换为前端路由、与本地兜底路由合并后注册到 vue-router
  * @module store/modules/permission
@@ -45,28 +45,28 @@ const viewModules: Record<string, () => Promise<unknown>> = {
   'system/import-export/index': () => import('@/views/system/import-export/index.vue'),
   'chaos/index': () => import('@/views/chaos/index.vue'),
   // 项目管理
-  'project/opportunity/index': () => import('@/views/project/opportunity/index.vue'),
-  'project/initiation/index': () => import('@/views/project/initiation/index.vue'),
-  'project/contract/index': () => import('@/views/project/contract/index.vue'),
-  'project/contract-template/index': () => import('@/views/project/contract-template/index.vue'),
-  'project/contract-change/index': () => import('@/views/project/contract-change/index.vue'),
+  'project/opportunity/index': () => import('@/views/opportunity/index.vue'),
+  'project/initiation/index': () => import('@/views/initiation/index.vue'),
+  'project/contract/index': () => import('@/views/contract/index.vue'),
+  'project/contract-template/index': () => import('@/views/contract-template/index.vue'),
+  'project/contract-change/index': () => import('@/views/contract-change/index.vue'),
   'change/index': () => import('@/views/change/index.vue'),
   // 执行管理
   'execution/wbs-task/index': () => import('@/views/execution/wbs-task/index.vue'),
   'execution/time-entry/index': () => import('@/views/execution/time-entry/index.vue'),
   'execution/purchase/index': () => import('@/views/execution/purchase/index.vue'),
-  'execution/expense/index': () => import('@/views/execution/expense/index.vue'),
+  'execution/expense/index': () => import('@/views/finance/expense/index.vue'),
   'execution/risk/index': () => import('@/views/execution/risk/index.vue'),
-  'execution/profit/index': () => import('@/views/execution/profit/index.vue'),
+  'execution/profit/index': () => import('@/views/finance/profit/index.vue'),
   'execution/evm/index': () => import('@/views/execution/evm/index.vue'),
   'execution/utilization/index': () => import('@/views/execution/utilization/index.vue'),
-  'execution/rate-card/index': () => import('@/views/execution/rate-card/index.vue'),
-  'execution/rate-internal/index': () => import('@/views/execution/rate-internal/index.vue'),
-  'execution/profit-simulation/index': () => import('@/views/execution/profit-simulation/index.vue'),
+  'execution/rate-card/index': () => import('@/views/resource/rate-card/index.vue'),
+  'execution/rate-internal/index': () => import('@/views/resource/rate-internal/index.vue'),
+  'execution/profit-simulation/index': () => import('@/views/finance/profit-simulation/index.vue'),
   'execution/delivery/index': () => import('@/views/execution/delivery/index.vue'),
-  'execution/closure/index': () => import('@/views/execution/closure/index.vue'),
+  'execution/closure/index': () => import('@/views/closure/index.vue'),
   'execution/alert/index': () => import('@/views/execution/alert/index.vue'),
-  'execution/reconcile/index': () => import('@/views/execution/reconcile/index.vue'),
+  'execution/reconcile/index': () => import('@/views/finance/reconcile/index.vue'),
   'execution/rule-engine/index': () => import('@/views/execution/rule-engine/index.vue'),
   // 售后管理
   'aftersales/warranty/index': () => import('@/views/aftersales/warranty/index.vue'),

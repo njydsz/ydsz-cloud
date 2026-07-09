@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @fileoverview 规则目录树侧边栏 (P1-9)
   @description 左侧展示基于 category_path 的多级分类树：
   - 树节点展示规则数与 Owner 数量徽标
@@ -18,8 +18,8 @@
  */
 import { ref, onMounted } from 'vue'
 import { Folder, FolderOpened, User } from '@element-plus/icons-vue'
-import * as ruleApi from '@/api/execution/rule-engine'
-import type { CategoryNode } from '@/api/execution/rule-engine'
+import * as ruleApi from '@/api/rule-engine'
+import type { CategoryNode } from '@/api/rule-engine'
 
 /** 选中的分类路径（空字符串 = 全部） */
 const selectedPath = defineModel<string>('selectedPath', { default: '' })

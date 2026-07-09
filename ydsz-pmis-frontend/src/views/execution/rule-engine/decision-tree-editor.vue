@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 决策树可视化编辑器（P1-4）
   @description 树形编辑器：条件节点（菱形/圆角矩形）与决策节点（按严重度着色）的增删改查、
                拖拽调整、表达式校验、dry-run 预览与 JSON 导出。
@@ -241,11 +241,11 @@ import {
   Plus, Delete, Refresh, Check, Close, VideoPlay, Download, CircleCheck, CircleClose,
   Edit, Operation, DocumentChecked, Expand, Fold, InfoFilled,
 } from '@element-plus/icons-vue'
-import * as ruleApi from '@/api/execution/rule-engine'
+import * as ruleApi from '@/api/rule-engine'
 import type {
   DecisionTreeDefinition, DecisionNode, DecisionTreeValidateResult,
   RuleResult,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 
 defineOptions({ name: 'DecisionTreeEditor' })
 

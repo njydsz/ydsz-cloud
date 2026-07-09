@@ -1,10 +1,10 @@
-<!--
+﻿<!--
   @file 收入确认 + 利润快照
   @description 项目执行过程中的收入确认与利润快照管理页面，采用双 Tab 布局：
                Tab1 收入确认：支持终验法/里程碑/按月三种确认方式，可新增/删除收入记录；
                Tab2 利润快照：按项目 + 期间生成利润快照，自动汇总收入、人工成本、采购成本、费用成本、
                总成本、毛利、毛利率及健康度评分。
-  @module views/execution/profit
+  @module views/finance/profit
 -->
 <script setup lang="ts">
 /**
@@ -21,8 +21,8 @@ import {
   deleteRevenue,
   pageProfitSnapshots,
   generateProfitSnapshot,
-} from '@/api/execution/profit'
-import type { RevenueVO, RevenueCreateDTO, ProfitSnapshotVO } from '@/api/execution/profit/types'
+} from '@/api/finance/profit'
+import type { RevenueVO, RevenueCreateDTO, ProfitSnapshotVO } from '@/api/finance/profit/types'
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()

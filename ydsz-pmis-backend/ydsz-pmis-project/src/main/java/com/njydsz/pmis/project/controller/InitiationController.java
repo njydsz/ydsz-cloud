@@ -45,7 +45,7 @@ import java.util.Map;
  */
 @Tag(name = "立项管理", description = "立项管理相关接口")
 @RestController
-@RequestMapping("/project/initiation")
+@RequestMapping("/initiation")
 @RequiredArgsConstructor
 @Validated
 public class InitiationController {

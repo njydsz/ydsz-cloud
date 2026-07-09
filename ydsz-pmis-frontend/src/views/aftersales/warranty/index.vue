@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 质保期管理
   @description 售后质保期管理页面，支持质保期创建、提前终止、到期/过期扫描提醒。
   @module views/aftersales/warranty
@@ -22,8 +22,8 @@ import {
   terminateWarranty,
   scanExpiringWarranty,
   scanOverdueWarranty,
-} from '@/api/execution/aftersales/warranty'
-import type { WarrantyVO, WarrantyCreateDTO } from '@/api/execution/aftersales/types'
+} from '@/api/after-sales/warranty'
+import type { WarrantyVO, WarrantyCreateDTO } from '@/api/after-sales/types'
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()

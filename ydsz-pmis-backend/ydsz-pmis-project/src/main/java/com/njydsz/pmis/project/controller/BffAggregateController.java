@@ -38,7 +38,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/execution/aggregate")
+@RequestMapping("/aggregate")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "BFF聚合", description = "前端聚合接口，一次请求返回复合数据")

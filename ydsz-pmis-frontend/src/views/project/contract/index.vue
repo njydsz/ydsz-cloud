@@ -1,7 +1,7 @@
-<!--
+﻿<!--
   @file 合同管理
   @description 合同的查询、新增、编辑与状态流转；状态按 DRAFT → UNDER_REVIEW → APPROVED → SIGNED → EXECUTING → CLOSED 流转
-  @module views/project/contract
+  @module views/contract
 -->
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
@@ -14,8 +14,8 @@ import {
   updateContract,
   changeContractStatus,
   deleteContract,
-} from '@/api/project/contract'
-import type { ContractVO, ContractCreateDTO, ContractStatusDTO } from '@/api/project/contract/types'
+} from '@/api/contract'
+import type { ContractVO, ContractCreateDTO, ContractStatusDTO } from '@/api/contract/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
 import { useFormGuard } from '@/composables/useFormGuard'

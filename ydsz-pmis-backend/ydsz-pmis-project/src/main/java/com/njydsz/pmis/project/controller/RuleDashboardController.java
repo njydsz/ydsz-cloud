@@ -32,7 +32,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/execution/rules/dashboard")
+@RequestMapping("/rule-engine/dashboard")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则引擎监控大盘", description = "P1-6 规则引擎指标聚合 API：概览 / 趋势 / 分布 / Top 规则 / 实时指标")

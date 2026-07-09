@@ -36,7 +36,7 @@ import java.util.Map;
  */
 @Tag(name = "客户信用")
 @RestController
-@RequestMapping("/execution/credit")
+@RequestMapping("/finance/credit")
 @RequiredArgsConstructor
 @Validated
 public class CustomerCreditController {

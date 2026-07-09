@@ -39,11 +39,12 @@ import java.util.Set;
  */
 @Slf4j
 @RestController
-@RequestMapping("/execution/rules/breakpoints")
+@RequestMapping("/rule-engine/breakpoints")
 @RequiredArgsConstructor
 @Tag(name = "规则断点调试", description = "断点管理、调试指令、上下文快照")
 public class BreakpointController {
 
+    /** 断点调试钩子（条件装配，未启用时为空） */
     private final ObjectProvider<DefaultBreakpointHook> breakpointHookProvider;
 
     /**

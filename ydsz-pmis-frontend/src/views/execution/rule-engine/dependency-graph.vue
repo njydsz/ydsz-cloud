@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 规则依赖拓扑图（P2-6）
   @description 可视化展示规则之间的依赖关系：
                - 力导向 / 环形 / 树形三种布局切换
@@ -118,7 +118,7 @@ import type { ECharts } from '@/utils/echarts'
 import {
   listRules, listDependencies,
   type RuleDefinition, type RuleDependency,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 
 defineOptions({ name: 'RuleEngineDependencyGraph' })
 

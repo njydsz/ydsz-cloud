@@ -37,10 +37,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowAttachmentController {
 
+    /** 审批附件服务，负责附件元数据管理与在线预览 */
     private final FlowAttachmentService attachmentService;
 
     /**
-     * 查询任务附件
+     * 查询任务附件。
+     *
+     * @param taskId 任务 ID
+     * @return 附件列表
      */
     @GetMapping("/attachment/task/{taskId}")
     public Result<List<FlowAttachmentDO>> listByTask(@PathVariable String taskId) {
@@ -48,7 +52,10 @@ public class FlowAttachmentController {
     }
 
     /**
-     * 查询实例附件
+     * 查询实例附件。
+     *
+     * @param instanceId 流程实例 ID
+     * @return 附件列表
      */
     @GetMapping("/attachment/instance/{instanceId}")
     public Result<List<FlowAttachmentDO>> listByInstance(@PathVariable String instanceId) {
@@ -56,7 +63,11 @@ public class FlowAttachmentController {
     }
 
     /**
-     * 删除附件（逻辑删除）
+     * 删除附件（逻辑删除）。
+     *
+     * @param attachmentId 附件 ID
+     * @param operatorId   操作人 ID
+     * @return 空响应
      */
     @Idempotent(key = "flow-attachment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/attachment/{attachmentId}")

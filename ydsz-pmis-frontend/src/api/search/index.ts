@@ -1,8 +1,8 @@
-/**
+﻿/**
  * @file 全局搜索 API
  * @description 全文检索（基于 PostgreSQL tsvector），
  *              对应后端 SearchController
- *              /execution/search/* （baseURL 由 VITE_API_BASE_URL 注入）
+ *              /search/* （baseURL 由 VITE_API_BASE_URL 注入）
  *
  * P0-4: 扩展实体覆盖 — 项目 / 合同 / 审批任务 / 工单 / 人员 / 知识库 等
  * @module api/search
@@ -69,7 +69,7 @@ export interface UniversalSearchDoc {
  */
 export const searchProjects = (keyword: string, page = 1, size = 10) =>
   request<PageData<ProjectSearchDoc>>({
-    url: '/execution/search/projects',
+    url: '/search/projects',
     method: 'GET',
     params: { keyword, page, size },
     silent: true,
@@ -88,7 +88,7 @@ export const searchProjects = (keyword: string, page = 1, size = 10) =>
  */
 export const searchAll = (keyword: string, size = 5) =>
   request<UniversalSearchDoc[]>({
-    url: '/execution/search/all',
+    url: '/search/all',
     method: 'GET',
     params: { keyword, size },
     silent: true,

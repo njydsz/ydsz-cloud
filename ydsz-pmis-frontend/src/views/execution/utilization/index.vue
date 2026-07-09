@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 人员利用率
   @description 可计费利用率统计与考核页面：支持团队整体均值(实时聚合+快照兜底)、等级分布、人效排行榜 TOP20、预警员工列表、快照重算(增量/强制)，对应路由 /execution/utilization
   @module views/execution/utilization
@@ -30,8 +30,8 @@ import {
   getUtilizationAlerts,
   recomputeUtilization,
   getSnapshotAverage,
-} from '@/api/execution/utilization'
-import type { UtilizationRowVO, UtilizationOverallVO } from '@/api/execution/utilization'
+} from '@/api/resource/utilization'
+import type { UtilizationRowVO, UtilizationOverallVO } from '@/api/resource/utilization'
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
 

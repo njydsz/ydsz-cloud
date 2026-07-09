@@ -1,6 +1,6 @@
-<!--
+﻿<!--
   @fileoverview 报表中心
-  @description 项目利润 / 成本明细 / 回款台账 / 生命周期台账 / EVM 挣值 / 双费率对比 / 风险看板 / 利用率 / Bench 成本等核心报表的 ECharts 可视化；对接 @/api/execution/report。
+  @description 项目利润 / 成本明细 / 回款台账 / 生命周期台账 / EVM 挣值 / 双费率对比 / 风险看板 / 利用率 / Bench 成本等核心报表的 ECharts 可视化；对接 @/api/report。
                顶部 Tab 切换 11 类报表视图，下方提供查询条件（项目 ID / 期间）与图表渲染容器。
                所有图表实例通过 useECharts composable 统一管理生命周期（init/setOption/resize/dispose）。
   @module views/report
@@ -24,7 +24,7 @@ import {
   getUtilizationRank,
   getBenchCostReport,
   getResourceGantt,
-} from '@/api/execution/report'
+} from '@/api/report/base'
 import { useECharts } from '@/composables/useECharts'
 import { chartColors } from '@/utils/chart-theme'
 

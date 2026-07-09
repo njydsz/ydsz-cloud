@@ -38,7 +38,7 @@ import java.util.List;
  */
 @Tag(name = "对外报价费率 Rate Card")
 @RestController
-@RequestMapping("/execution/rate-card")
+@RequestMapping("/resource/rate-card")
 @RequiredArgsConstructor
 @Validated
 public class RateCardController {

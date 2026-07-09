@@ -33,14 +33,26 @@ import java.util.List;
 @Tag(name = "流程分类管理", description = "流程分类的增删改查")
 public class FlowCategoryController {
 
+    /** 流程分类管理服务，负责分类的增删改查 */
     private final FlowCategoryService categoryService;
 
+    /**
+     * 查询全部分类。
+     *
+     * @return 分类列表
+     */
     @GetMapping
     @Operation(summary = "查询全部分类")
     public Result<List<FlowCategoryDO>> list() {
         return Result.ok(categoryService.listAll(TenantContext.getTenantId()));
     }
 
+    /**
+     * 新增分类。
+     *
+     * @param dto 分类信息
+     * @return 新建分类 ID
+     */
     @Idempotent(key = "flow-category:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "新增分类")
@@ -48,6 +60,12 @@ public class FlowCategoryController {
         return Result.ok(categoryService.create(dto, TenantContext.getTenantId()));
     }
 
+    /**
+     * 编辑分类。
+     *
+     * @param dto 分类信息
+     * @return 空响应
+     */
     @Idempotent(key = "flow-category:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "编辑分类")
@@ -56,6 +74,12 @@ public class FlowCategoryController {
         return Result.ok();
     }
 
+    /**
+     * 删除分类。
+     *
+     * @param id 分类 ID
+     * @return 空响应
+     */
     @Idempotent(key = "flow-category:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类")

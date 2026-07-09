@@ -1,9 +1,9 @@
-<!--
+﻿<!--
   @file 费用报销管理
   @description 项目执行过程中的费用报销管理页面，支持费用单的创建、提交、审批、支付、驳回、取消等全流程操作；
                状态流转: DRAFT → SUBMITTED → APPROVED → PAID / REJECTED / CANCELLED；
                关联项目时由后端触发【预算强管控】校验，超预算将被拒绝。
-  @module views/execution/expense
+  @module views/finance/expense
 -->
 <script setup lang="ts">
 /**
@@ -23,8 +23,8 @@ import {
   createExpense,
   changeExpenseStatus,
   deleteExpense,
-} from '@/api/execution/expense'
-import type { ExpenseVO, ExpenseCreateDTO } from '@/api/execution/expense/types'
+} from '@/api/finance/expense'
+import type { ExpenseVO, ExpenseCreateDTO } from '@/api/finance/expense/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
 import { useUserStore } from '@/store/modules/user'

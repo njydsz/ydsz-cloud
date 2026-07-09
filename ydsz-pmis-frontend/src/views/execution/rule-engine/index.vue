@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 规则引擎可视化管理
   @description 规则引擎管理页面：支持规则列表查看、新建/编辑、启停切换、版本历史与回滚、
                Dry-run 仿真、表达式校验、模板市场导入及 AI 辅助生成，
@@ -24,7 +24,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { CircleCheck, CircleClose, Connection, Expand, Fold, User, Document, DataLine, Cpu, Histogram } from '@element-plus/icons-vue'
 import * as echarts from '@/utils/echarts'
-import * as ruleApi from '@/api/execution/rule-engine'
+import * as ruleApi from '@/api/rule-engine'
 import type {
   RuleDefinition,
   RuleResult,
@@ -38,7 +38,7 @@ import type {
   RuleTestCase,
   StressTestResult,
   StressTestParams,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 import ExpressionEditor from '@/components/common/ExpressionEditor.vue'
 import RuleCategoryTreeSidebar from '@/components/common/RuleCategoryTreeSidebar.vue'
 import VirtualTable from '@/components/common/VirtualTable.vue'

@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   @file 规则链可视化编排画布（P0-1）
   @description 节点拖拽 + 边连接 + 缩放/平移 + 撤销/重做 + dagre 自动布局
   @module views/execution/rule-engine/designer
@@ -289,10 +289,10 @@ import {
 import * as dagre from 'dagre'
 import {
   getChainGraph, saveChainGraph, validateChainGraph, listRules, dryRunGraph,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 import type {
   ChainNodeDTO, ChainEdgeDTO, RuleChainGraph, RuleChainGraphViewIssue, RuleResult,
-} from '@/api/execution/rule-engine'
+} from '@/api/rule-engine'
 
 defineOptions({ name: 'RuleChainDesigner' })
 

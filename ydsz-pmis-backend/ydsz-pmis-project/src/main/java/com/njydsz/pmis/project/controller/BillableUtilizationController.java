@@ -30,11 +30,12 @@ import java.util.Map;
  */
 @Tag(name = "可计费利用率")
 @RestController
-@RequestMapping("/execution/billable-utilization")
+@RequestMapping("/resource/utilization")
 @RequiredArgsConstructor
 @Validated
 public class BillableUtilizationController {
 
+    /** 可计费利用率服务 */
     private final BillableUtilizationService service;
 
     /**

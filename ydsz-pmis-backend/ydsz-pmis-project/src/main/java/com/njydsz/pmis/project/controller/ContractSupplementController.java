@@ -33,7 +33,7 @@ import java.util.List;
  */
 @Tag(name = "合同补充协议")
 @RestController
-@RequestMapping("/project/contract/supplement")
+@RequestMapping("/contract/supplement")
 @RequiredArgsConstructor
 @Validated
 public class ContractSupplementController {
