@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.dto.initiation;
+package com.njydsz.pmis.project.dto.initiation;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;

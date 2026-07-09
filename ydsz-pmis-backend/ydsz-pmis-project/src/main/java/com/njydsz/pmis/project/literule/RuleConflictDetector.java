@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.literule;
+package com.njydsz.pmis.project.literule;
 
 import com.njydsz.pmis.project.entity.ruleengine.RuleDefinitionDO;
 import com.njydsz.pmis.project.mapper.ruleengine.RuleDefinitionMapper;

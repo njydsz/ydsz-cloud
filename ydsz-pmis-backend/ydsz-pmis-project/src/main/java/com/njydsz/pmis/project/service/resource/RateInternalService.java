@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.service.resource;
+package com.njydsz.pmis.project.service.resource;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.project.dto.resource.RateInternalCreateDTO;

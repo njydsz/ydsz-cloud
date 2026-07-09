@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.literule;
+package com.njydsz.pmis.project.literule;
 
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

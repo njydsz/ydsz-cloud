@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.aftersales;
+package com.njydsz.pmis.project.enums.aftersales;
 
 /**
  * 满意度评价等级

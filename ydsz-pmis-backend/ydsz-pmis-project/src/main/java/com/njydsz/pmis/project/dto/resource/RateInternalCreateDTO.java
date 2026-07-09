@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.dto.resource;
+package com.njydsz.pmis.project.dto.resource;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.finance;
+package com.njydsz.pmis.project.enums.finance;
 
 /**
  * 对账严重等级

@@ -35,8 +35,19 @@ import java.util.List;
 @Validated
 public class LoginAuditController {
 
+    /** 登录审计 Mapper */
     private final LoginAuditMapper loginAuditMapper;
 
+    /**
+     * 分页查询登录审计日志
+     *
+     * @param page     页码
+     * @param size     每页大小
+     * @param username 用户名（可选，模糊匹配）
+     * @param status   登录状态（可选）
+     * @param loginIp  登录 IP（可选，模糊匹配）
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "分页查询")
     @PrePermission("audit:login:view")
     @GetMapping("/page")
@@ -58,6 +69,13 @@ public class LoginAuditController {
     @Operation(summary = "按用户名查询登录历史")
     @PrePermission("audit:login:view")
     @GetMapping("/by-username")
+    /**
+     * 按用户名查询登录历史
+     *
+     * @param username 用户名
+     * @param limit    最大条数
+     * @return 统一响应结果，包含登录审计列表
+     */
     public Result<List<LoginAuditDO>> byUsername(
             @Parameter(description = "用户名") @RequestParam String username,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
@@ -67,6 +85,14 @@ public class LoginAuditController {
     @Operation(summary = "统计某 IP 短期登录失败次数")
     @PrePermission("audit:login:view")
     @GetMapping("/count-by-ip")
+    /**
+     * 统计某 IP 在指定时间窗口内的登录次数
+     *
+     * @param ip            IP 地址
+     * @param status        登录状态
+     * @param sinceMinutes  统计时间窗口（分钟）
+     * @return 统一响应结果，包含匹配的记录数
+     */
     public Result<Long> countByIp(
             @Parameter(description = "IP地址") @RequestParam String ip,
             @Parameter(description = "状态") @RequestParam String status,

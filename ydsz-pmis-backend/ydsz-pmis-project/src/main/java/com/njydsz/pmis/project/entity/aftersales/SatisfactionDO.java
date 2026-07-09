@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.entity.aftersales;
+package com.njydsz.pmis.project.entity.aftersales;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;

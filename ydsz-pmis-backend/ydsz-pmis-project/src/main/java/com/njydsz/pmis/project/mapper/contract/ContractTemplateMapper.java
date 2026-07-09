@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.mapper.contract;
+package com.njydsz.pmis.project.mapper.contract;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.project.entity.contract.ContractTemplateDO;

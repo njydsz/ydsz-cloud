@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.finance;
+package com.njydsz.pmis.project.enums.finance;
 
 /**
  * 客户信用等级

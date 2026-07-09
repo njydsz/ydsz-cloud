@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.dto.ruleengine;
+package com.njydsz.pmis.project.dto.ruleengine;
 
 import lombok.Builder;
 import lombok.Data;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.service.resource;
+package com.njydsz.pmis.project.service.resource;
 
 import java.time.LocalDate;
 import java.util.List;

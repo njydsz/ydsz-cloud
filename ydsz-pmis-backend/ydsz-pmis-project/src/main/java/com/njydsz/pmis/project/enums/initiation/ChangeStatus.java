@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.initiation;
+package com.njydsz.pmis.project.enums.initiation;
 
 /**
  * 项目变更状态

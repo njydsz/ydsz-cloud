@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.dto.ruleengine;
+package com.njydsz.pmis.project.dto.ruleengine;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import io.swagger.v3.oas.annotations.media.Schema;

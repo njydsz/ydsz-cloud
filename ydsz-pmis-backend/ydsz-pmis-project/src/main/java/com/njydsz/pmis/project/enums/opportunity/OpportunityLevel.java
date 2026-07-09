@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.opportunity;
+package com.njydsz.pmis.project.enums.opportunity;
 
 /**
  * 商机分级

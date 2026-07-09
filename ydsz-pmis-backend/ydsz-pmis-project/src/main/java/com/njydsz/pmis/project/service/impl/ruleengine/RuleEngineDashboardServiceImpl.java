@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.service.impl.ruleengine;
+package com.njydsz.pmis.project.service.impl.ruleengine;
 
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;

@@ -35,8 +35,18 @@ import java.util.List;
 @Validated
 public class SensitiveOperationController {
 
+    /** 敏感操作审计 Mapper */
     private final SensitiveOperationMapper mapper;
 
+    /**
+     * 分页查询敏感操作审计记录
+     *
+     * @param page   页码
+     * @param size   每页大小
+     * @param userId 用户 ID（可选）
+     * @param opType 操作类型（可选）
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "分页查询")
     @PrePermission("audit:sensitive:view")
     @GetMapping("/page")
@@ -56,6 +66,13 @@ public class SensitiveOperationController {
     @Operation(summary = "按用户查询敏感操作历史")
     @PrePermission("audit:sensitive:view")
     @GetMapping("/by-user")
+    /**
+     * 按用户查询敏感操作历史
+     *
+     * @param userId 用户 ID
+     * @param limit  最大条数
+     * @return 统一响应结果，包含敏感操作审计列表
+     */
     public Result<List<SensitiveOperationDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {

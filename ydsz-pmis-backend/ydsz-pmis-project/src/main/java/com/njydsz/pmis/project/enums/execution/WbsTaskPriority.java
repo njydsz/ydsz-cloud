@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.execution;
+package com.njydsz.pmis.project.enums.execution;
 
 /**
  * WBS 任务优先级

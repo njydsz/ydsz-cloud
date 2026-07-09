@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.dto.aftersales;
+package com.njydsz.pmis.project.dto.aftersales;
 
 import lombok.Data;
 

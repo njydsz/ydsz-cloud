@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.execution;
+package com.njydsz.pmis.project.enums.execution;
 
 /**
  * 交付物门径阶段

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.closure;
+package com.njydsz.pmis.project.enums.closure;
 
 /**
  * 项目结项类型

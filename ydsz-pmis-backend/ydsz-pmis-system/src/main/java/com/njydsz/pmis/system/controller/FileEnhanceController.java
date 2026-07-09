@@ -39,6 +39,7 @@ import java.util.Map;
 @Validated
 public class FileEnhanceController {
 
+    /** 文件增强服务（分片上传、病毒扫描、在线预览） */
     private final FileEnhanceService fileEnhanceService;
 
     /**

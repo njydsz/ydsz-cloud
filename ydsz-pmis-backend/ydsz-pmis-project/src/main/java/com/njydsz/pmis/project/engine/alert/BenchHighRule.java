@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.engine.alert;
+package com.njydsz.pmis.project.engine.alert;
 
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.project.dto.common.AlertEventDTO;

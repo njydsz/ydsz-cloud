@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.mapper.finance;
+package com.njydsz.pmis.project.mapper.finance;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.project.entity.finance.CustomerCreditDO;

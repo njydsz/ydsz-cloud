@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.literule;
+package com.njydsz.pmis.project.literule;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.feign.InitiationServiceClient;

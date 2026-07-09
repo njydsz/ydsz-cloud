@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.dto.resource;
+package com.njydsz.pmis.project.dto.resource;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.annotation.format.NumberFormat;

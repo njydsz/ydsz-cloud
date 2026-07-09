@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.dto.ruleengine;
+package com.njydsz.pmis.project.dto.ruleengine;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

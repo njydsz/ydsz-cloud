@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.contract;
+package com.njydsz.pmis.project.enums.contract;
 
 /**
  * 合同模板状态

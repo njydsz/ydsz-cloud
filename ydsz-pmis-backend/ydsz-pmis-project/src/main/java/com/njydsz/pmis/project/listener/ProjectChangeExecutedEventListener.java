@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.listener;
+package com.njydsz.pmis.project.listener;
 
 import com.njydsz.pmis.common.event.ProjectChangeExecutedEvent;
 import com.njydsz.pmis.project.dto.common.AlertDispatchDTO;

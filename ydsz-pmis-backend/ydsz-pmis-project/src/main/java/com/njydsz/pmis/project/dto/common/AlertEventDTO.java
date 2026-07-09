@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.dto.common;
+package com.njydsz.pmis.project.dto.common;
 
 import com.njydsz.pmis.project.enums.common.AlertSeverity;
 import lombok.AllArgsConstructor;

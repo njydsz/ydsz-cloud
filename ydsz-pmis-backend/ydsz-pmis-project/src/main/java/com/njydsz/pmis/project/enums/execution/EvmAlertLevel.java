@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.execution;
+package com.njydsz.pmis.project.enums.execution;
 
 /**
  * EVM 挣值告警等级

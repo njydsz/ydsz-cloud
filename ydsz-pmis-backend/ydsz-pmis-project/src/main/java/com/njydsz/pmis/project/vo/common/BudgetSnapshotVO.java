@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.vo.common;
+package com.njydsz.pmis.project.vo.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.njydsz.pmis.literule.spi.BudgetSnapshotProvider.BudgetSnapshot;

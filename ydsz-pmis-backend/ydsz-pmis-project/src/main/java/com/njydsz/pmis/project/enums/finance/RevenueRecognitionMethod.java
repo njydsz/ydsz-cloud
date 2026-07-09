@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.finance;
+package com.njydsz.pmis.project.enums.finance;
 
 /**
  * 收入确认方法

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.service.impl.common;
+package com.njydsz.pmis.project.service.impl.common;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;

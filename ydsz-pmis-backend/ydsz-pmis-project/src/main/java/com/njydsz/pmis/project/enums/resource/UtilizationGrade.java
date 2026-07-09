@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.resource;
+package com.njydsz.pmis.project.enums.resource;
 
 /**
  * 可计费利用率考核等级

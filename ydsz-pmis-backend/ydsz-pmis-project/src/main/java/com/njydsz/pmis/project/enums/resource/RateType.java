@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.resource;
+package com.njydsz.pmis.project.enums.resource;
 
 /**
  * 费率类型

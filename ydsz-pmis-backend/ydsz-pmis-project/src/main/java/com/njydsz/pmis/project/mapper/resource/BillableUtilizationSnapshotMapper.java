@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.mapper.resource;
+package com.njydsz.pmis.project.mapper.resource;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.project.entity.resource.BillableUtilizationSnapshotDO;

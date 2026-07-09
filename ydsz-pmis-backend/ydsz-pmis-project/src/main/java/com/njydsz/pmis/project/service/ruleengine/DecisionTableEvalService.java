@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.service.ruleengine;
+package com.njydsz.pmis.project.service.ruleengine;
 
 import java.util.List;
 import java.util.Map;

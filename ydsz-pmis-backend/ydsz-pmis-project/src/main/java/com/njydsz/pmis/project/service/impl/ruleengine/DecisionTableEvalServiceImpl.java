@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.service.impl.ruleengine;
+package com.njydsz.pmis.project.service.impl.ruleengine;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;

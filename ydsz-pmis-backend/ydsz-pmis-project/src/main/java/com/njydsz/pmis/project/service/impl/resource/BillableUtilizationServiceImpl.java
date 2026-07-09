@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.service.impl.resource;
+package com.njydsz.pmis.project.service.impl.resource;
 
 import com.njydsz.pmis.project.entity.resource.BillableUtilizationSnapshotDO;
 import com.njydsz.pmis.project.entity.resource.RateInternalDO;

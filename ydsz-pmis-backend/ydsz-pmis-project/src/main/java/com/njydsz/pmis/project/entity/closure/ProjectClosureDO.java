@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.entity.closure;
+package com.njydsz.pmis.project.entity.closure;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;

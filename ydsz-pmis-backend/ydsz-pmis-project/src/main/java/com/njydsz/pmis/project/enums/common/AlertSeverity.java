@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.enums.common;
+package com.njydsz.pmis.project.enums.common;
 
 /**
  * 驾驶舱预警严重度

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.mapper.initiation;
+package com.njydsz.pmis.project.mapper.initiation;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.project.entity.initiation.GateReviewDO;

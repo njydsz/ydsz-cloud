@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.mapper.opportunity;
+package com.njydsz.pmis.project.mapper.opportunity;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.project.entity.opportunity.OpportunityDO;

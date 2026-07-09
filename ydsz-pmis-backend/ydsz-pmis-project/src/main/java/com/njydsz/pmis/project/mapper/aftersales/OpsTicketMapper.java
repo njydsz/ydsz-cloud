@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.mapper.aftersales;
+package com.njydsz.pmis.project.mapper.aftersales;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.project.entity.aftersales.OpsTicketDO;
