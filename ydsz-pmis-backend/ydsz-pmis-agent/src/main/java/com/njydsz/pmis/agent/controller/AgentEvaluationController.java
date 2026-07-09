@@ -1,5 +1,7 @@
 package com.njydsz.pmis.agent.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.agent.engine.Agent;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
@@ -52,6 +54,7 @@ public class AgentEvaluationController {
      */
     @Operation(summary = "执行评测")
     @PrePermission("agent:task:run")
+    @Idempotent(key = "agent-evaluation:run-evaluation", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/run")
     public Result<EvaluationReport> runEvaluation(@RequestBody EvaluationRunRequest req) {
         if (req.getAgentType() == null || req.getAgentType().isBlank()) {

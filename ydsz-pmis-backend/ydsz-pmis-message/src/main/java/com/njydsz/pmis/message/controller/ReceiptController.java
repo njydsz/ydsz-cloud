@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -35,6 +37,7 @@ public class ReceiptController {
 
     @Operation(summary = "回执回调")
     @PrePermission(PermissionCodes.MESSAGE_RECEIPT_CALLBACK)
+    @Idempotent(key = "receipt:callback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/callback")
     public Result<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {
         receiptService.callback(dto);

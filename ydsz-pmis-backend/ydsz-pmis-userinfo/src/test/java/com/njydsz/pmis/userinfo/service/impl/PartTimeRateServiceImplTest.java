@@ -262,5 +262,33 @@ class PartTimeRateServiceImplTest {
     void update_notFound() {
         when(partTimeRateMapper.selectById("X")).thenReturn(null);
 
-        OutsourceRateUpdateDTO dto = new OutsourceRateUpdateDTO();
-        dto.setDailyRate(new BigDecimal("500.00"));
+        PartTimeRateUpdateDTO dto = new PartTimeRateUpdateDTO();
+        dto.setHourlyRate(new BigDecimal("39.77"));
+
+        BizException ex = assertThrows(BizException.class, () -> service.update("X", dto));
+        assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
+    }
+
+    // ==================== delete ====================
+
+    @Test
+    @DisplayName("删除成功")
+    void delete_success() {
+        PartTimeRateDO existing = new PartTimeRateDO();
+        existing.setId("R1");
+        when(partTimeRateMapper.selectById("R1")).thenReturn(existing);
+
+        service.delete("R1");
+
+        verify(partTimeRateMapper).deleteById("R1");
+    }
+
+    @Test
+    @DisplayName("删除失败: 不存在抛 NOT_FOUND")
+    void delete_notFound() {
+        when(partTimeRateMapper.selectById("X")).thenReturn(null);
+
+        BizException ex = assertThrows(BizException.class, () -> service.delete("X"));
+        assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
+    }
+}

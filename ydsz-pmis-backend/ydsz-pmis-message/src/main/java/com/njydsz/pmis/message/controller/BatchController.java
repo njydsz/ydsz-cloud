@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -50,6 +52,7 @@ public class BatchController {
      */
     @Operation(summary = "异步批量发送消息")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "batch:submit-batch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public Result<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
         if (dto == null) {

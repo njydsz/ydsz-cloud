@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.PageResult;
@@ -56,6 +58,7 @@ public class UnsubscribeController {
      */
     @Operation(summary = "token 一键退订")
     @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
+    @Idempotent(key = "unsubscribe:one-click", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/one-click")
     public Result<MsgSubscriptionDO> oneClick(@RequestParam String token) {
         if (token == null || token.isBlank()) {
@@ -106,6 +109,7 @@ public class UnsubscribeController {
      */
     @Operation(summary = "恢复订阅")
     @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
+    @Idempotent(key = "unsubscribe:resubscribe", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/resubscribe")
     public Result<Void> resubscribe(@RequestParam String userId,
                                     @RequestParam String topicCode,

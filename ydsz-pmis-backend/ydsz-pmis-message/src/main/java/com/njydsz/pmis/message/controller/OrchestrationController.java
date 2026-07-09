@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -35,6 +37,7 @@ public class OrchestrationController {
 
     @Operation(summary = "执行编排流程")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "orchestration:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/execute")
     public Result<OrchestrationResultVO> execute(@Valid @RequestBody OrchestrationFlowDTO flow) {
         return Result.ok(orchestrationService.execute(flow));

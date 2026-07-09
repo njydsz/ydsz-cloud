@@ -1,5 +1,7 @@
 package com.njydsz.pmis.system.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -55,6 +57,7 @@ public class FileController {
     @Operation(summary = "上传文件")
     @PrePermission(PermissionCodes.FILE_STORAGE_UPLOAD)
     @OperationLog(module = "文件存储", action = "上传文件", bizType = "FILE")
+    @Idempotent(key = "file:upload", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/upload")
     public Result<FileDO> upload(
             @Parameter(description = "multipart 文件") @RequestPart("file") MultipartFile file,
@@ -81,6 +84,7 @@ public class FileController {
     @Operation(summary = "删除文件")
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "删除文件", bizType = "FILE")
+    @Idempotent(key = "file:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(
             @Parameter(description = "文件ID") @PathVariable String id) throws Exception {
@@ -98,6 +102,7 @@ public class FileController {
     @Operation(summary = "批量删除")
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "批量删除文件", bizType = "FILE")
+    @Idempotent(key = "file:delete-batch", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/batch")
     public Result<Void> deleteBatch(@Valid @RequestBody List<String> ids) throws Exception {
         fileService.deleteBatch(ids);

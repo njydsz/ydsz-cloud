@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.entity.FlowThirdPartyAccountDO;
@@ -81,6 +83,7 @@ public class FlowThirdPartyApprovalController {
      * @return 处理结果
      */
     @Operation(summary = "钉钉审批回调")
+    @Idempotent(key = "flow-third-party-approval:ding-talk-callback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/dingtalk/callback")
     public Map<String, Object> dingTalkCallback(
             @RequestHeader(value = "timestamp", required = false) String timestamp,
@@ -106,6 +109,7 @@ public class FlowThirdPartyApprovalController {
      * @return 处理结果
      */
     @Operation(summary = "飞书审批回调")
+    @Idempotent(key = "flow-third-party-approval:feishu-callback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/feishu/callback")
     public Map<String, Object> feishuCallback(
             @RequestHeader(value = "X-Lark-Request-Timestamp", required = false) String timestamp,
@@ -131,6 +135,7 @@ public class FlowThirdPartyApprovalController {
      * @return 处理结果
      */
     @Operation(summary = "企业微信审批回调")
+    @Idempotent(key = "flow-third-party-approval:we-com-callback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/wecom/callback")
     public Map<String, Object> weComCallback(
             @RequestParam(value = "msg_signature", required = false) String msgSignature,

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -37,6 +39,7 @@ public class AlertController {
     @Operation(summary = "创建告警规则")
     @PrePermission(PermissionCodes.CRONJOB_ALERT_CREATE)
     @OperationLog(module = "任务调度", action = "创建告警规则", bizType = "CRONJOB_ALERT")
+    @Idempotent(key = "alert:create-rule", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rule")
     public Result<String> createRule(@Valid @RequestBody AlertRuleSaveDTO dto) {
         return Result.ok(alertService.createRule(dto));
@@ -45,6 +48,7 @@ public class AlertController {
     @Operation(summary = "更新告警规则")
     @PrePermission(PermissionCodes.CRONJOB_ALERT_UPDATE)
     @OperationLog(module = "任务调度", action = "更新告警规则", bizType = "CRONJOB_ALERT")
+    @Idempotent(key = "alert:update-rule", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/rule/{id}")
     public Result<Void> updateRule(@PathVariable String id, @Valid @RequestBody AlertRuleSaveDTO dto) {
         alertService.updateRule(id, dto);
@@ -54,6 +58,7 @@ public class AlertController {
     @Operation(summary = "删除告警规则")
     @PrePermission(PermissionCodes.CRONJOB_ALERT_DELETE)
     @OperationLog(module = "任务调度", action = "删除告警规则", bizType = "CRONJOB_ALERT")
+    @Idempotent(key = "alert:delete-rule", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/rule/{id}")
     public Result<Void> deleteRule(@PathVariable String id) {
         alertService.deleteRule(id);
@@ -77,6 +82,7 @@ public class AlertController {
     @Operation(summary = "启用/禁用告警规则")
     @PrePermission(PermissionCodes.CRONJOB_ALERT_UPDATE)
     @OperationLog(module = "任务调度", action = "切换告警规则启用状态", bizType = "CRONJOB_ALERT")
+    @Idempotent(key = "alert:toggle-rule", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/rule/{id}/toggle")
     public Result<Void> toggleRule(@PathVariable String id, @RequestParam Integer enabled) {
         alertService.toggleRule(id, enabled);

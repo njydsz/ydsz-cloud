@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.userinfo.entity.DictItemDO;
@@ -61,6 +63,7 @@ public class DictController {
      * @return 统一响应结果
      */
     @Operation(summary = "刷新字典缓存")
+    @Idempotent(key = "dict:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
     public Result<Void> refresh(@RequestParam String typeCode) {
         dictService.refreshCache(typeCode);

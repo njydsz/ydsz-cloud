@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowConditionExprService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +28,7 @@ public class FlowConditionExprController {
 
     private final FlowConditionExprService conditionExprService;
 
+    @Idempotent(key = "flow-condition-expr:build", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/build")
     @Operation(summary = "结构化条件 JSON → 表达式字符串")
     public Result<String> build(@RequestBody Map<String, String> body) {
@@ -34,6 +37,7 @@ public class FlowConditionExprController {
         return Result.ok(conditionExprService.buildExpression(conditionJson, engine));
     }
 
+    @Idempotent(key = "flow-condition-expr:parse", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/parse")
     @Operation(summary = "表达式字符串 → 结构化条件 JSON")
     public Result<String> parse(@RequestBody Map<String, String> body) {
@@ -42,6 +46,7 @@ public class FlowConditionExprController {
         return Result.ok(conditionExprService.parseExpression(expression, engine));
     }
 
+    @Idempotent(key = "flow-condition-expr:validate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/validate")
     @Operation(summary = "校验表达式语法")
     public Result<Map<String, Object>> validate(@RequestBody Map<String, String> body) {

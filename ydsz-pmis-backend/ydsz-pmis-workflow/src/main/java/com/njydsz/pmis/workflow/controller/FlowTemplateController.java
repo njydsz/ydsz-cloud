@@ -1,5 +1,8 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowTemplateService;
 import org.springframework.validation.annotation.Validated;
@@ -78,6 +81,7 @@ public class FlowTemplateController {
      * @return 新创建的流程定义 ID
      */
     @Operation(summary = "导入模板")
+    @Idempotent(key = "flow-template:import-template", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{templateCode}/import")
     public Result<String> importTemplate(@PathVariable String templateCode,
                                           @RequestParam(required = false) String flowName) {
@@ -96,6 +100,7 @@ public class FlowTemplateController {
      * @return 操作结果
      */
     @Operation(summary = "导出为模板")
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/export/{definitionId}")
     public Result<Void> exportAsTemplate(@PathVariable String definitionId,
                                          @RequestParam String templateName,
@@ -142,6 +147,7 @@ public class FlowTemplateController {
      * @return 新版本号
      */
     @Operation(summary = "P2-9: 创建模板新版本")
+    @Idempotent(key = "flow-template:create-new-version", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{templateCode}/new-version")
     public Result<Integer> createNewVersion(@PathVariable String templateCode,
                                             @RequestParam(required = false) String versionLabel) {
@@ -160,6 +166,7 @@ public class FlowTemplateController {
      * @return 新模板编码
      */
     @Operation(summary = "P2-9: 克隆模板为独立新模板")
+    @Idempotent(key = "flow-template:clone-template", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{templateCode}/clone")
     public Result<String> cloneTemplate(@PathVariable String templateCode,
                                         @RequestParam String newTemplateCode,
@@ -181,6 +188,7 @@ public class FlowTemplateController {
      * @return 新模板编码
      */
     @Operation(summary = "P2-9: 从父模板继承创建子模板")
+    @Idempotent(key = "flow-template:inherit-from-parent", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{parentTemplateCode}/inherit")
     public Result<String> inheritFromParent(@PathVariable String parentTemplateCode,
                                             @RequestParam String newTemplateCode,

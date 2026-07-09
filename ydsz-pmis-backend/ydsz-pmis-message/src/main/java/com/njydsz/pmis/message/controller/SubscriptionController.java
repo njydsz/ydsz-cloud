@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -36,6 +38,7 @@ public class SubscriptionController {
 
     @Operation(summary = "新增/更新订阅")
     @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
+    @Idempotent(key = "subscription:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<MsgSubscriptionDO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
         return Result.ok(subscriptionService.upsert(dto));
@@ -58,6 +61,7 @@ public class SubscriptionController {
 
     @Operation(summary = "退订")
     @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_DELETE)
+    @Idempotent(key = "subscription:unsubscribe", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/unsubscribe")
     public Result<Void> unsubscribe(@RequestParam String userId,
                                     @RequestParam String topicCode,

@@ -1,5 +1,8 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
@@ -40,6 +43,7 @@ public class FlowCcController {
      * @param query 查询条件
      * @return 抄送分页结果
      */
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/cc/page")
     @PrePermission(PermissionCodes.WORKFLOW_CC_VIEW)
     public Result<PageResult<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
@@ -64,6 +68,7 @@ public class FlowCcController {
     /**
      * P0-3: 抄送标记已读
      */
+    @Idempotent(key = "flow-cc:cc-mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/cc/{id}/read")
     public Result<Boolean> ccMarkRead(@PathVariable String id) {
         String tenantId = SecurityContext.getTenantIdOrDefault("1");
@@ -75,6 +80,7 @@ public class FlowCcController {
     /**
      * P0-3: 抄送全部标记已读
      */
+    @Idempotent(key = "flow-cc:cc-mark-all-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/cc/read-all")
     public Result<Integer> ccMarkAllRead() {
         String tenantId = SecurityContext.getTenantIdOrDefault("1");

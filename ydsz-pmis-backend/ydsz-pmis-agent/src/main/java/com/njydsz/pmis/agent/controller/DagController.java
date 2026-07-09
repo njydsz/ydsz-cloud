@@ -1,5 +1,7 @@
 package com.njydsz.pmis.agent.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.agent.entity.DagDefinitionDO;
 import com.njydsz.pmis.agent.entity.DagInstanceDO;
 import com.njydsz.pmis.agent.entity.DagNodeInstanceDO;
@@ -56,6 +58,7 @@ public class DagController {
      * 创建 DAG 定义。
      */
     @Operation(summary = "创建 DAG 定义")
+    @Idempotent(key = "dag:create-definition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<DagDefinitionDO> createDefinition(@Valid @RequestBody DagDefinition dag) {
         return Result.ok(dagService.createDefinition(dag));
@@ -86,6 +89,7 @@ public class DagController {
      * 执行 DAG。
      */
     @Operation(summary = "执行 DAG")
+    @Idempotent(key = "dag:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/execute")
     public Result<DagExecutionResult> execute(
             @PathVariable("id") @NotBlank String definitionId,
@@ -139,6 +143,7 @@ public class DagController {
      * 更新 DAG 定义。
      */
     @Operation(summary = "更新 DAG 定义")
+    @Idempotent(key = "dag:update-definition", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<DagDefinitionDO> updateDefinition(
             @PathVariable String id,
@@ -150,6 +155,7 @@ public class DagController {
      * 删除 DAG 定义（软删除）。
      */
     @Operation(summary = "删除 DAG 定义")
+    @Idempotent(key = "dag:delete-definition", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> deleteDefinition(@PathVariable String id) {
         dagService.deleteDefinition(id);
@@ -160,6 +166,7 @@ public class DagController {
      * 启用/禁用 DAG 定义。
      */
     @Operation(summary = "启用/禁用 DAG 定义")
+    @Idempotent(key = "dag:toggle-enabled", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/toggle")
     public Result<DagDefinitionDO> toggleEnabled(
             @PathVariable String id,
@@ -171,6 +178,7 @@ public class DagController {
      * 验证 DAG 定义结构（不执行）。
      */
     @Operation(summary = "验证 DAG 定义结构")
+    @Idempotent(key = "dag:validate-definition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/validate")
     public Result<ValidationResult> validateDefinition(@Valid @RequestBody DagDefinition dag) {
         return Result.ok(dagService.validateDefinition(dag));
@@ -180,6 +188,7 @@ public class DagController {
      * 调试运行 DAG（不持久化结果）。
      */
     @Operation(summary = "调试运行 DAG")
+    @Idempotent(key = "dag:debug-execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/debug")
     public Result<DagExecutionResult> debugExecute(
             @Valid @RequestBody DebugRequest req) {

@@ -67,6 +67,7 @@ public class ProfitSimulationController {
      */
     @Operation(summary = "状态迁移")
     @PrePermission("execution:simulation:approve")
+    @Idempotent(key = "profit-simulation:change-status", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody SimulationStatusDTO dto) {
         service.changeStatus(dto);
@@ -81,6 +82,7 @@ public class ProfitSimulationController {
      */
     @Operation(summary = "删除")
     @PrePermission("execution:simulation:delete")
+    @Idempotent(key = "profit-simulation:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

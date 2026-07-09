@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.dto.FlowDelegateMessageDTO;
 import com.njydsz.pmis.workflow.entity.FlowDelegateMessageDO;
@@ -31,6 +33,7 @@ public class FlowDelegateMessageController {
     /**
      * 发送委派沟通留言
      */
+    @Idempotent(key = "flow-delegate-message:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate/message/send")
     public Result<FlowDelegateMessageDO> send(
             @RequestBody FlowDelegateMessageDTO dto,
@@ -52,6 +55,7 @@ public class FlowDelegateMessageController {
     /**
      * 标记已读（当前查看者角色的对侧消息）
      */
+    @Idempotent(key = "flow-delegate-message:mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate/message/read/{taskId}")
     public Result<Void> markRead(@PathVariable String taskId, @RequestParam String viewerRole) {
         messageService.markRead(taskId, viewerRole);

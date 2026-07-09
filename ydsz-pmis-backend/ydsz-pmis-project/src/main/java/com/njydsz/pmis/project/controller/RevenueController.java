@@ -82,6 +82,7 @@ public class RevenueController {
      */
     @Operation(summary = "冲销收入")
     @PrePermission("execution:revenue:update")
+    @Idempotent(key = "revenue:reverse", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
     public Result<Void> reverse(@PathVariable String id) {
         service.reverse(id);
@@ -96,6 +97,7 @@ public class RevenueController {
      */
     @Operation(summary = "删除")
     @PrePermission("execution:revenue:delete")
+    @Idempotent(key = "revenue:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

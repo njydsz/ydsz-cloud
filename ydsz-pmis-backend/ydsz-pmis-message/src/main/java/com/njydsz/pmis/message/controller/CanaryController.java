@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -36,6 +38,7 @@ public class CanaryController {
 
     @Operation(summary = "新增/更新灰度桶")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_UPDATE)
+    @Idempotent(key = "canary:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
         return Result.ok(canaryService.upsert(dto));

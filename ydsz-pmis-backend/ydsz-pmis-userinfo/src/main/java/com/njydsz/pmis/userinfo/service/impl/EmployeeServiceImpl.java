@@ -255,16 +255,18 @@ public class EmployeeServiceImpl implements EmployeeService {
                 rate = partTimeRateMapper.selectById(emp.getPartTimeRateId());
             }
             profile.put("monthlyTotalCost", rate != null ? rate.getTotalCost() : null);
-            profile.put("hourlyRate", null);
+            profile.put("hourlyRate", rate != null ? rate.getHourlyRate() : null);
+            profile.put("monthlyHours", rate != null ? rate.getMonthlyHours() : null);
             profile.put("overtimeRate", null);
         } else if (EmployeeType.OUTSOURCE.getCode().equals(employeeType)) {
-            // 外包：月薪 + 差旅报销 + 差旅补贴（公司承担），取 pmis_outsource_rate.total_cost
+            // 外包：人天核算月薪 + 差旅报销 + 差旅补贴（公司承担），取 pmis_outsource_rate.total_cost
             OutsourceRateDO rate = null;
             if (StringUtils.hasText(emp.getOutsourceRateId())) {
                 rate = outsourceRateMapper.selectById(emp.getOutsourceRateId());
             }
             profile.put("monthlyTotalCost", rate != null ? rate.getTotalCost() : null);
-            profile.put("hourlyRate", null);
+            profile.put("dailyRate", rate != null ? rate.getDailyRate() : null);
+            profile.put("monthlyDays", rate != null ? rate.getMonthlyDays() : null);
             profile.put("overtimeRate", null);
         } else {
             profile.put("monthlyTotalCost", null);

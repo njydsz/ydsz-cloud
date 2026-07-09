@@ -1,5 +1,7 @@
 package com.njydsz.pmis.system.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -71,6 +73,7 @@ public class ConfigController {
     @Operation(summary = "创建配置")
     @PrePermission("sys:config:create")
     @OperationLog(module = "系统配置", action = "创建配置", bizType = "CONFIG")
+    @Idempotent(key = "config:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody ConfigFormDTO dto) {
         return Result.ok(configService.create(dto));
@@ -79,6 +82,7 @@ public class ConfigController {
     @Operation(summary = "更新配置")
     @PrePermission("sys:config:update")
     @OperationLog(module = "系统配置", action = "更新配置", bizType = "CONFIG")
+    @Idempotent(key = "config:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@Valid @RequestBody ConfigFormDTO dto) {
         configService.update(dto);
@@ -88,6 +92,7 @@ public class ConfigController {
     @Operation(summary = "删除配置")
     @PrePermission("sys:config:delete")
     @OperationLog(module = "系统配置", action = "删除配置", bizType = "CONFIG")
+    @Idempotent(key = "config:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(
             @Parameter(description = "配置ID") @PathVariable @NotBlank String id) {
@@ -98,6 +103,7 @@ public class ConfigController {
     @Operation(summary = "按分组批量删除")
     @PrePermission("sys:config:delete")
     @OperationLog(module = "系统配置", action = "按分组删除", bizType = "CONFIG")
+    @Idempotent(key = "config:delete-by-group", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/group/{group}")
     public Result<Integer> deleteByGroup(
             @Parameter(description = "配置分组") @PathVariable String group) {
@@ -107,6 +113,7 @@ public class ConfigController {
     @Operation(summary = "按分组批量启停")
     @PrePermission("sys:config:update")
     @OperationLog(module = "系统配置", action = "按分组启停", bizType = "CONFIG")
+    @Idempotent(key = "config:update-status-by-group", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/group/{group}/status/{status}")
     public Result<Integer> updateStatusByGroup(
             @Parameter(description = "配置分组") @PathVariable String group,
@@ -117,6 +124,7 @@ public class ConfigController {
     @Operation(summary = "刷新缓存")
     @PrePermission("sys:config:refresh")
     @OperationLog(module = "系统配置", action = "刷新缓存", bizType = "CONFIG")
+    @Idempotent(key = "config:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
     public Result<Void> refresh() {
         configService.refreshCache();

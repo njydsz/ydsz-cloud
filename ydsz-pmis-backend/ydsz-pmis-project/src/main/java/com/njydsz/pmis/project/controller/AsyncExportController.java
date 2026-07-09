@@ -1,5 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.project.service.AsyncExportService;
@@ -41,6 +43,7 @@ public class AsyncExportController {
 
     private final AsyncExportService asyncExportService;
 
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/submit")
     @Operation(summary = "提交异步导出任务")
     @RateLimit(key = "export", qps = 3, windowSeconds = 60,
@@ -71,6 +74,7 @@ public class AsyncExportController {
     }
 
     @OperationLog(module = "异步导出", action = "删除导出记录", bizType = "ASYNC_EXPORT")
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @DeleteMapping("/{recordId}")
     @Operation(summary = "删除导出记录")
     public Map<String, Object> deleteExportRecord(@PathVariable String recordId) {

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -54,6 +56,7 @@ public class FlowCommentController {
      * @param dto 评论参数
      * @return 统一响应结果，包含新评论 ID
      */
+    @Idempotent(key = "flow-comment:add-comment", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "发表评论/回复")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
@@ -108,6 +111,7 @@ public class FlowCommentController {
      * @param commentId 评论 ID
      * @return 统一响应结果，包含是否删除成功
      */
+    @Idempotent(key = "flow-comment:delete-comment", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{commentId}")
     @Operation(summary = "删除评论（仅本人）")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)

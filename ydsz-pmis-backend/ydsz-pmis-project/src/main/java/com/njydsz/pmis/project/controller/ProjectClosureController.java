@@ -66,6 +66,7 @@ public class ProjectClosureController {
      */
     @Operation(summary = "状态迁移")
     @PrePermission("closure:project:status")
+    @Idempotent(key = "project-closure:change-status", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody ProjectClosureStatusDTO dto) {
         service.changeStatus(dto);
@@ -80,6 +81,7 @@ public class ProjectClosureController {
      */
     @Operation(summary = "删除结项记录")
     @PrePermission("closure:project:delete")
+    @Idempotent(key = "project-closure:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

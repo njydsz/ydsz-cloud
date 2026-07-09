@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.service.FlowOfflineAutoForwardService;
@@ -24,12 +26,14 @@ public class FlowOfflineForwardController {
 
     private final FlowOfflineAutoForwardService offlineAutoForwardService;
 
+    @Idempotent(key = "flow-offline-forward:auto-forward", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/auto")
     @Operation(summary = "按代理授权规则自动转发已有待办")
     public Result<Integer> autoForward(@RequestParam String authId) {
         return Result.ok(offlineAutoForwardService.autoForwardByAuth(authId));
     }
 
+    @Idempotent(key = "flow-offline-forward:manual-forward", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/manual")
     @Operation(summary = "手动触发离线转发")
     public Result<Integer> manualForward(

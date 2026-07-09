@@ -1,5 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -51,6 +53,7 @@ public class EvmController {
      */
     @Operation(summary = "录入/更新 EVM 测量（按 initiation+wbs+period 幂等）")
     @PrePermission("execution:evm:save")
+    @Idempotent(key = "evm:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> save(@Valid @RequestBody EvmMeasureCreateDTO dto) {
         return Result.ok(service.save(dto));
@@ -150,6 +153,7 @@ public class EvmController {
     @Operation(summary = "删除")
     @PrePermission("execution:evm:delete")
     @OperationLog(module = "挣值管理", action = "删除EVM测量", bizType = "EVM_MEASURE")
+    @Idempotent(key = "evm:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

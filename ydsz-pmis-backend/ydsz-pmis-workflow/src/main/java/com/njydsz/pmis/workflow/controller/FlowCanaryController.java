@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -46,6 +48,7 @@ public class FlowCanaryController {
      * @param note           备注
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-canary:publish-canary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/publish")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> publishCanary(
@@ -68,6 +71,7 @@ public class FlowCanaryController {
      * @param note         备注
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-canary:adjust-canary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/adjust")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> adjustCanary(
@@ -88,6 +92,7 @@ public class FlowCanaryController {
      * @param note         备注
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-canary:promote-canary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/promote")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> promoteCanary(
@@ -107,6 +112,7 @@ public class FlowCanaryController {
      * @param note         备注（含回滚原因）
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-canary:rollback-canary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/rollback")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> rollbackCanary(

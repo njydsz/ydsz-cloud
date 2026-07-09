@@ -49,6 +49,7 @@ public class SatisfactionController {
 
     @Operation(summary = "标记跟进")
     @PrePermission("aftersales:satisfaction:follow-up")
+    @Idempotent(key = "satisfaction:mark-follow-up", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/follow-up")
     public Result<Void> markFollowUp(@RequestParam String id, @RequestParam(required = false) String note) {
         service.markFollowUp(id, note);
@@ -57,6 +58,7 @@ public class SatisfactionController {
 
     @Operation(summary = "关闭跟进")
     @PrePermission("aftersales:satisfaction:follow-up")
+    @Idempotent(key = "satisfaction:close-follow-up", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/follow-up/close")
     public Result<Void> closeFollowUp(@RequestParam String id) {
         service.closeFollowUp(id);

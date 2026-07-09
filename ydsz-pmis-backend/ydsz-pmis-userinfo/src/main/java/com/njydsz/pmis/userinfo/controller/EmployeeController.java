@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -53,6 +55,7 @@ public class EmployeeController {
     @Operation(summary = "创建员工")
     @PrePermission("org:employee:create")
     @OperationLog(module = "员工管理", action = "创建员工", bizType = "EMPLOYEE")
+    @Idempotent(key = "employee:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody EmployeeCreateDTO dto) {
         return Result.ok(employeeService.create(dto));
@@ -68,6 +71,7 @@ public class EmployeeController {
     @Operation(summary = "更新员工")
     @PrePermission("org:employee:update")
     @OperationLog(module = "员工管理", action = "更新员工", bizType = "EMPLOYEE")
+    @Idempotent(key = "employee:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@Parameter(description = "员工 ID") @PathVariable String id,
                                @Valid @RequestBody EmployeeUpdateDTO dto) {
@@ -84,6 +88,7 @@ public class EmployeeController {
     @Operation(summary = "删除员工")
     @PrePermission("org:employee:delete")
     @OperationLog(module = "员工管理", action = "删除员工", bizType = "EMPLOYEE")
+    @Idempotent(key = "employee:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "员工 ID") @PathVariable String id) {
         employeeService.delete(id);

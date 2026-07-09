@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -42,6 +44,7 @@ public class JobSlaController {
     @Operation(summary = "创建 SLA 规则")
     @PrePermission(PermissionCodes.CRONJOB_SLA_CREATE)
     @OperationLog(module = "任务调度", action = "创建 SLA 规则", bizType = "CRONJOB_SLA")
+    @Idempotent(key = "job-sla:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody JobSlaSaveDTO dto) {
         return Result.ok(jobSlaService.createSla(dto));
@@ -50,6 +53,7 @@ public class JobSlaController {
     @Operation(summary = "更新 SLA 规则")
     @PrePermission(PermissionCodes.CRONJOB_SLA_UPDATE)
     @OperationLog(module = "任务调度", action = "更新 SLA 规则", bizType = "CRONJOB_SLA")
+    @Idempotent(key = "job-sla:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable String id, @Valid @RequestBody JobSlaSaveDTO dto) {
         jobSlaService.updateSla(id, dto);
@@ -59,6 +63,7 @@ public class JobSlaController {
     @Operation(summary = "删除 SLA 规则")
     @PrePermission(PermissionCodes.CRONJOB_SLA_DELETE)
     @OperationLog(module = "任务调度", action = "删除 SLA 规则", bizType = "CRONJOB_SLA")
+    @Idempotent(key = "job-sla:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         jobSlaService.deleteSla(id);
@@ -82,6 +87,7 @@ public class JobSlaController {
     @Operation(summary = "启用/禁用 SLA 规则")
     @PrePermission(PermissionCodes.CRONJOB_SLA_UPDATE)
     @OperationLog(module = "任务调度", action = "切换 SLA 启用状态", bizType = "CRONJOB_SLA")
+    @Idempotent(key = "job-sla:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/toggle")
     public Result<Void> toggle(@PathVariable String id, @RequestParam Integer enabled) {
         jobSlaService.toggleSla(id, enabled);

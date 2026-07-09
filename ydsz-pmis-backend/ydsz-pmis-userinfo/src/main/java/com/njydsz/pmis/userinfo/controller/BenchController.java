@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -55,6 +57,7 @@ public class BenchController {
     @Operation(summary = "入池 / 出池 业务动作")
     @PrePermission("resource:bench:act")
     @OperationLog(module = "Bench 池", action = "入/出池", bizType = "BENCH_RECORD")
+    @Idempotent(key = "bench:act", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/act")
     public Result<String> act(@Valid @RequestBody BenchRecordCreateDTO dto) {
         return Result.ok(benchService.act(dto));

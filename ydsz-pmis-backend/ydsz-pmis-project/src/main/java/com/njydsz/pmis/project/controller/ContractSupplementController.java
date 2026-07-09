@@ -62,6 +62,7 @@ public class ContractSupplementController {
      */
     @Operation(summary = "删除补充协议")
     @OperationLog(module = "合同管理", action = "删除补充协议", bizType = "CONTRACT_SUPPLEMENT")
+    @Idempotent(key = "contract-supplement:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.agent.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.agent.dto.PromptTemplateCreateDTO;
 import com.njydsz.pmis.agent.dto.PromptTemplateQueryDTO;
 import com.njydsz.pmis.agent.entity.AgentPromptTemplateDO;
@@ -36,12 +38,14 @@ public class PromptTemplateController {
 
     private final PromptTemplateService service;
 
+    @Idempotent(key = "prompt-template:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建模板", description = "创建新的 Prompt 模板（默认非生效，需手动激活）")
     public Result<AgentPromptTemplateDO> create(@Valid @RequestBody PromptTemplateCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 
+    @Idempotent(key = "prompt-template:activate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/activate")
     @Operation(summary = "激活模板", description = "激活指定模板版本，同 code 的其他版本自动失效")
     public Result<AgentPromptTemplateDO> activate(@PathVariable String id) {
@@ -60,6 +64,7 @@ public class PromptTemplateController {
         return Result.ok(service.page(query));
     }
 
+    @Idempotent(key = "prompt-template:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除模板", description = "软删除指定模板")
     public Result<Void> delete(@PathVariable String id) {

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.userinfo.dto.PartTimeRateCreateDTO;
@@ -49,6 +51,7 @@ public class PartTimeRateController {
      * @return 统一响应结果，包含新建记录 ID
      */
     @Operation(summary = "创建兼职职级费率")
+    @Idempotent(key = "part-time-rate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody PartTimeRateCreateDTO dto) {
         return Result.ok(partTimeRateService.create(dto));
@@ -62,6 +65,7 @@ public class PartTimeRateController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新兼职职级费率")
+    @Idempotent(key = "part-time-rate:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable String id, @Valid @RequestBody PartTimeRateUpdateDTO dto) {
         partTimeRateService.update(id, dto);
@@ -75,6 +79,7 @@ public class PartTimeRateController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除兼职职级费率")
+    @Idempotent(key = "part-time-rate:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         partTimeRateService.delete(id);

@@ -7,15 +7,16 @@
  */
 
 import { request } from '@/utils/request'
+import type { PageData } from '@/types/api'
 import type { UserVO, UserQuery, UserCreateDTO } from './types'
 
 /**
  * 分页查询
  * @param query 分页及过滤条件
- * @returns 用户分页结果
+ * @returns 用户分页结果（后端返回 MyBatis-Plus Page，字段 records/total）
  */
 export const listUsers = (query: UserQuery) =>
-  request<PageResult<UserVO>>({ url: '/users', method: 'GET', params: query })
+  request<PageData<UserVO>>({ url: '/users', method: 'GET', params: query })
 
 /**
  * 详情

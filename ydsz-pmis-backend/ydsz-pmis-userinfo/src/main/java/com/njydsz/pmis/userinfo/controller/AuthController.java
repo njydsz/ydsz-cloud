@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.userinfo.dto.LoginDTO;
 import com.njydsz.pmis.userinfo.dto.LoginResultVO;
 import com.njydsz.pmis.userinfo.dto.CaptchaVO;
@@ -53,6 +55,7 @@ public class AuthController {
     @Operation(summary = "登录")
     @RateLimit(key = "login", qps = 5, windowSeconds = 60,
             message = "{validation.auth.msg_aea5163a}")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/login")
     public Result<LoginResultVO> login(@Valid @RequestBody LoginDTO dto) {
         return Result.ok(authService.login(dto));
@@ -65,6 +68,7 @@ public class AuthController {
      * @return 统一响应结果，包含新的访问 Token 与刷新 Token
      */
     @Operation(summary = "刷新 Token")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/refresh")
     public Result<LoginResultVO> refresh(@Parameter(description = "刷新Token") @RequestParam String refreshToken) {
         return Result.ok(authService.refresh(refreshToken));
@@ -78,6 +82,7 @@ public class AuthController {
      * @return 统一响应结果
      */
     @Operation(summary = "登出")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/logout")
     public Result<Void> logout(@RequestHeader(value = "X-User-Id", required = false) String userId,
                           @RequestHeader(value = "Authorization", required = false) String authorization) {

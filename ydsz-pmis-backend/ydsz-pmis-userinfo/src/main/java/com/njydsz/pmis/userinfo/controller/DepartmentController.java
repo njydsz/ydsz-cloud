@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
@@ -80,6 +82,7 @@ public class DepartmentController {
     @Operation(summary = "创建部门")
     @PrePermission("org:dept:create")
     @OperationLog(module = "组织架构", action = "创建部门", bizType = "DEPARTMENT")
+    @Idempotent(key = "department:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody DepartmentFormDTO dto) {
         return Result.ok(departmentService.create(dto));
@@ -94,6 +97,7 @@ public class DepartmentController {
     @Operation(summary = "更新部门")
     @PrePermission("org:dept:update")
     @OperationLog(module = "组织架构", action = "更新部门", bizType = "DEPARTMENT")
+    @Idempotent(key = "department:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@Valid @RequestBody DepartmentFormDTO dto) {
         departmentService.update(dto);
@@ -109,6 +113,7 @@ public class DepartmentController {
     @Operation(summary = "删除部门")
     @PrePermission("org:dept:delete")
     @OperationLog(module = "组织架构", action = "删除部门", bizType = "DEPARTMENT")
+    @Idempotent(key = "department:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "部门ID") @PathVariable String id) {
         departmentService.delete(id);

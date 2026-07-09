@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -83,6 +85,7 @@ public class RoleController {
     @Operation(summary = "创建角色")
     @PrePermission("auth:role:create")
     @OperationLog(module = "权限管理", action = "创建角色", bizType = "ROLE")
+    @Idempotent(key = "role:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody RoleFormDTO dto) {
         return Result.ok(roleService.create(dto));
@@ -97,6 +100,7 @@ public class RoleController {
     @Operation(summary = "更新角色")
     @PrePermission("auth:role:update")
     @OperationLog(module = "权限管理", action = "更新角色", bizType = "ROLE")
+    @Idempotent(key = "role:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@Valid @RequestBody RoleFormDTO dto) {
         roleService.update(dto);
@@ -112,6 +116,7 @@ public class RoleController {
     @Operation(summary = "删除角色")
     @PrePermission("auth:role:delete")
     @OperationLog(module = "权限管理", action = "删除角色", bizType = "ROLE")
+    @Idempotent(key = "role:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "角色ID") @PathVariable String id) {
         roleService.delete(id);
@@ -128,6 +133,7 @@ public class RoleController {
     @Operation(summary = "为角色分配权限")
     @PrePermission("auth:role:assign")
     @OperationLog(module = "权限管理", action = "分配权限", bizType = "ROLE")
+    @Idempotent(key = "role:assign-permissions", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/permissions")
     public Result<Void> assignPermissions(@Parameter(description = "角色ID") @PathVariable String id, @Valid @RequestBody List<String> permissionIds) {
         roleService.assignPermissions(id, permissionIds);

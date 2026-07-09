@@ -86,6 +86,7 @@ public class WbsTaskController {
      */
     @Operation(summary = "更新任务进度")
     @PrePermission("execution:wbs:update")
+    @Idempotent(key = "wbs-task:update-progress", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/progress")
     public Result<Void> updateProgress(@PathVariable String id,
                                    @RequestParam BigDecimal progressPct,

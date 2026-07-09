@@ -79,6 +79,7 @@ public class ExpenseController {
      */
     @Operation(summary = "删除")
     @PrePermission("execution:expense:delete")
+    @Idempotent(key = "expense:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

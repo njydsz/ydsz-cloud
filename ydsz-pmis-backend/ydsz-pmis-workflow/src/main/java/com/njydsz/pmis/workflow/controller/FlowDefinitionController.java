@@ -1,5 +1,8 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -51,6 +54,7 @@ public class FlowDefinitionController {
      * @param dto 流程部署参数
      * @return 统一响应结果，包含流程定义 ID
      */
+    @Idempotent(key = "flow-definition:deploy", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/deploy")
     @Operation(summary = "部署流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
@@ -68,6 +72,7 @@ public class FlowDefinitionController {
      * @param file     zip 文件（multipart/form-data）
      * @return 统一响应结果，包含 successCount / failedItems
      */
+    @Idempotent(key = "flow-definition:batch-deploy-from-zip", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping(value = "/definition/batch-deploy-zip", consumes = "multipart/form-data")
     @Operation(summary = "BPMN 部署包 .zip 批量导入")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
@@ -90,6 +95,7 @@ public class FlowDefinitionController {
      * @param id 流程定义 ID
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-definition:publish", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/publish")
     @Operation(summary = "发布流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -104,6 +110,7 @@ public class FlowDefinitionController {
      * @param id 流程定义 ID
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-definition:deprecate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/deprecate")
     @Operation(summary = "废弃流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -180,6 +187,7 @@ public class FlowDefinitionController {
      * @param tenantId     租户 ID（可选）
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-definition:switch-version", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{code}/switchVersion")
     @Operation(summary = "切换流程定义的激活版本")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -196,6 +204,7 @@ public class FlowDefinitionController {
      * @param id 流程定义 ID
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-definition:enable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/enable")
     @Operation(summary = "启用流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -210,6 +219,7 @@ public class FlowDefinitionController {
      * @param id 流程定义 ID
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-definition:disable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/disable")
     @Operation(summary = "停用流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
@@ -226,6 +236,7 @@ public class FlowDefinitionController {
      * @param coordinate   坐标 JSON 字符串
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-definition:update-node-coordinate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
     @Operation(summary = "更新流程节点坐标")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
@@ -243,6 +254,7 @@ public class FlowDefinitionController {
      * @param dto 部署参数（含更新后的元数据与节点/跳转）
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-definition:update-definition", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/definition/{id}")
     @Operation(summary = "编辑未发布的流程定义草稿")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
@@ -271,6 +283,7 @@ public class FlowDefinitionController {
      * @param tenantId 租户 ID（可选，默认从上下文获取）
      * @return 统一响应结果，包含新创建的流程定义 ID
      */
+    @Idempotent(key = "flow-definition:import-definition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/import")
     @Operation(summary = "从 JSON 导入流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
@@ -316,6 +329,7 @@ public class FlowDefinitionController {
      * @param dto 模拟参数（flowCode / variables / version）
      * @return 统一响应结果，包含模拟路径列表
      */
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/definition/simulate")
     @Operation(summary = "流程模拟运行")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)

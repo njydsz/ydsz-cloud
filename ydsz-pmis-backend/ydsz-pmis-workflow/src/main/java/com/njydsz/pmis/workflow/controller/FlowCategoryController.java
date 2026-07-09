@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.dto.FlowCategoryDTO;
@@ -39,12 +41,14 @@ public class FlowCategoryController {
         return Result.ok(categoryService.listAll(TenantContext.getTenantId()));
     }
 
+    @Idempotent(key = "flow-category:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "新增分类")
     public Result<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
         return Result.ok(categoryService.create(dto, TenantContext.getTenantId()));
     }
 
+    @Idempotent(key = "flow-category:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "编辑分类")
     public Result<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
@@ -52,6 +56,7 @@ public class FlowCategoryController {
         return Result.ok();
     }
 
+    @Idempotent(key = "flow-category:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类")
     public Result<Void> delete(@PathVariable String id) {

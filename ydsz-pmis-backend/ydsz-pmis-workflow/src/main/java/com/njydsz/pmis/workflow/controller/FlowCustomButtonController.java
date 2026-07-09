@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.service.FlowCustomButtonService;
@@ -35,6 +37,7 @@ public class FlowCustomButtonController {
         return Result.ok(customButtonService.getCustomButtons(definitionId, nodeCode));
     }
 
+    @Idempotent(key = "flow-custom-button:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "保存节点的自定义按钮配置")
     public Result<Void> save(
@@ -45,6 +48,7 @@ public class FlowCustomButtonController {
         return Result.ok();
     }
 
+    @Idempotent(key = "flow-custom-button:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/execute")
     @Operation(summary = "执行自定义按钮操作")
     public Result<Map<String, Object>> execute(

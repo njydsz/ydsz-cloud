@@ -64,8 +64,7 @@ jobs:
 
       - name: 幂等注解覆盖检查
         # 扫描所有写接口(@PostMapping/@PutMapping/@DeleteMapping/@PatchMapping)
-        # 是否标注了 @Idempotent,未标注的输出 warning(当前不阻断 CI)
-        # 后续会逐步提升为 error
+        # 是否标注了 @Idempotent 或 @IdempotentExempt;未标注的以 ERROR 阻断 CI
         # 注意:defaults.run.working-directory 是 ydsz-pmis-backend,这里切换到
         # 仓库根目录,使脚本路径 ydsz-pmis-backend/scripts/... 与参数 ydsz-pmis-backend
         # 均相对于仓库根目录解析

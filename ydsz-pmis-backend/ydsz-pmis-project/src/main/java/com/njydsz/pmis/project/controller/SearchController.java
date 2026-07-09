@@ -1,5 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.util.SortBy;
@@ -63,6 +65,7 @@ public class SearchController {
      * @return 重建结果提示
      */
     @Operation(summary = "重建索引")
+    @Idempotent(key = "search:reindex", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reindex")
     public Result<String> reindex() {
         searchService.reindexAll();

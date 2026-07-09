@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
@@ -39,6 +41,7 @@ public class FlowSlaController {
      *
      * @return 本轮扫描处理的任务数
      */
+    @Idempotent(key = "flow-sla:sla-scan", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sla/scan")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<Integer> slaScan() {
@@ -52,6 +55,7 @@ public class FlowSlaController {
      * @param taskId 任务 ID
      * @return 是否处理成功
      */
+    @Idempotent(key = "flow-sla:sla-process", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sla/process/{taskId}")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<Boolean> slaProcess(@PathVariable String taskId) {

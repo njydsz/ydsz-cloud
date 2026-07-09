@@ -1,5 +1,8 @@
 package com.njydsz.pmis.agent.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.agent.entity.AgentDocumentDO;
 import com.njydsz.pmis.agent.entity.KnowledgeBaseDO;
 import com.njydsz.pmis.agent.rag.RetrievedChunk;
@@ -55,6 +58,7 @@ public class KnowledgeBaseController {
      * 创建知识库。
      */
     @Operation(summary = "创建知识库")
+    @Idempotent(key = "knowledge-base:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<KnowledgeBaseDO> create(@Valid @RequestBody KnowledgeBaseDO kb) {
         return Result.ok(kbService.create(kb));
@@ -85,6 +89,7 @@ public class KnowledgeBaseController {
      * 上传文档到知识库。
      */
     @Operation(summary = "上传文档")
+    @Idempotent(key = "knowledge-base:upload-document", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/documents")
     public Result<AgentDocumentDO> uploadDocument(
             @PathVariable("id") @NotBlank String knowledgeBaseId,
@@ -106,6 +111,7 @@ public class KnowledgeBaseController {
      * 检索知识库。
      */
     @Operation(summary = "检索知识库")
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/{id}/search")
     public Result<List<RetrievedChunk>> search(
             @PathVariable("id") @NotBlank String knowledgeBaseId,

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.system.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -100,6 +102,7 @@ public class ChaosController {
     @Operation(summary = "注册新实验")
     @PrePermission("sys:chaos:create")
     @OperationLog(module = "混沌工程", action = "注册实验", bizType = "CHAOS_EXPERIMENT")
+    @Idempotent(key = "chaos:register", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/experiments")
     public Result<Void> register(@RequestBody @Valid ChaosExperiment experiment) {
         chaosService.register(experiment);
@@ -116,6 +119,7 @@ public class ChaosController {
     @Operation(summary = "修改实验 (按 target 覆盖)")
     @PrePermission("sys:chaos:create")
     @OperationLog(module = "混沌工程", action = "更新实验", bizType = "CHAOS_EXPERIMENT")
+    @Idempotent(key = "chaos:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/experiments/{target}")
     public Result<Void> update(
             @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target,
@@ -135,6 +139,7 @@ public class ChaosController {
     @Operation(summary = "启停实验")
     @PrePermission("sys:chaos:trigger")
     @OperationLog(module = "混沌工程", action = "启停实验", bizType = "CHAOS_EXPERIMENT")
+    @Idempotent(key = "chaos:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/experiments/{target}/enabled")
     public Result<Void> toggle(
             @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target,
@@ -157,6 +162,7 @@ public class ChaosController {
     @Operation(summary = "注销实验")
     @PrePermission("sys:chaos:delete")
     @OperationLog(module = "混沌工程", action = "注销实验", bizType = "CHAOS_EXPERIMENT")
+    @Idempotent(key = "chaos:unregister", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/experiments/{target}")
     public Result<Void> unregister(
             @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target) {
@@ -184,6 +190,7 @@ public class ChaosController {
     @Operation(summary = "清空历史")
     @PrePermission("sys:chaos:trigger")
     @OperationLog(module = "混沌工程", action = "清空实验历史", bizType = "CHAOS_EXPERIMENT")
+    @Idempotent(key = "chaos:clear-history", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/history/clear")
     public Result<Void> clearHistory() {
         chaosService.clearHistory();
@@ -198,6 +205,7 @@ public class ChaosController {
      */
     @Operation(summary = "dry-run: 主动触发一次注入以验证容错 (需 captureMode 包裹异常)")
     @PrePermission("sys:chaos:trigger")
+    @Idempotent(key = "chaos:dry-run", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/dry-run")
     public Result<Map<String, Object>> dryRun(
             @Parameter(description = "实验目标标识") @RequestParam @NotBlank String target) {

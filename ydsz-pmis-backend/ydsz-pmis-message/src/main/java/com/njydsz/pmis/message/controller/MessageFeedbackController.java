@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -37,6 +39,7 @@ public class MessageFeedbackController {
     private final MessageFeedbackService messageFeedbackService;
 
     @Operation(summary = "提交消息反馈")
+    @Idempotent(key = "message-feedback:submit-feedback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
         return Result.ok(messageFeedbackService.submitFeedback(dto));

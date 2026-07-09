@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -53,6 +55,7 @@ public class ResourcePoolController {
     @Operation(summary = "创建资源池")
     @PrePermission("resource:pool:create")
     @OperationLog(module = "资源池", action = "创建资源池", bizType = "RESOURCE_POOL")
+    @Idempotent(key = "resource-pool:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
         return Result.ok(poolService.create(dto));
@@ -68,6 +71,7 @@ public class ResourcePoolController {
     @Operation(summary = "更新资源池")
     @PrePermission("resource:pool:update")
     @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
+    @Idempotent(key = "resource-pool:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable String id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
         poolService.update(id, dto);
@@ -83,6 +87,7 @@ public class ResourcePoolController {
     @Operation(summary = "删除资源池")
     @PrePermission("resource:pool:delete")
     @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
+    @Idempotent(key = "resource-pool:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         poolService.delete(id);

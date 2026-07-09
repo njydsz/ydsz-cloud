@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -74,6 +76,7 @@ public class FlowEventController {
      * @param tenantId       租户 ID（可选）
      * @return 触发的订阅数量
      */
+    @Idempotent(key = "flow-event:correlate-message", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/event/correlate-message")
     public Result<Integer> correlateMessage(
             @RequestParam String messageName,
@@ -96,6 +99,7 @@ public class FlowEventController {
      * @param tenantId   租户 ID（可选）
      * @return 触发的订阅数量
      */
+    @Idempotent(key = "flow-event:throw-error", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/event/throw-error")
     public Result<Integer> throwError(
             @RequestParam String errorCode,
@@ -139,6 +143,7 @@ public class FlowEventController {
      * @param dto 通道配置（id 为空时新增，非空时更新）
      * @return 保存后的通道配置
      */
+    @Idempotent(key = "flow-event:save-notify-channel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notify-channel/save")
     @PrePermission(PermissionCodes.WORKFLOW_NOTIFY_CONFIG)
     public Result<FlowNotifyChannelDO> saveNotifyChannel(@RequestBody FlowNotifyChannelDO dto) {
@@ -155,6 +160,7 @@ public class FlowEventController {
      * @param enabled 是否启用
      * @return 统一响应结果
      */
+    @Idempotent(key = "flow-event:toggle-notify-channel", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/notify-channel/{id}/toggle")
     public Result<Void> toggleNotifyChannel(@PathVariable String id,
                                              @RequestParam Boolean enabled) {
@@ -169,6 +175,7 @@ public class FlowEventController {
      * @return 统一响应结果
      */
     @OperationLog(module = "工作流", action = "删除通知通道", bizType = "FLOW_NOTIFY_CHANNEL")
+    @Idempotent(key = "flow-event:delete-notify-channel", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/notify-channel/{id}")
     public Result<Void> deleteNotifyChannel(@PathVariable String id) {
         notifyChannelService.deleteChannel(id);

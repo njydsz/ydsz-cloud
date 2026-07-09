@@ -84,6 +84,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "删除变更")
     @PrePermission("project:change:delete")
+    @Idempotent(key = "project-change:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

@@ -72,6 +72,7 @@ public class PaymentController {
     @Operation(summary = "确认到账")
     @PrePermission("finance:payment:status")
     @OperationLog(module = "回款管理", action = "确认到账", bizType = "PAYMENT")
+    @Idempotent(key = "payment:confirm", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/confirm")
     public Result<Void> confirm(@PathVariable String id, @RequestParam String operatorId) {
         service.confirm(id, operatorId);
@@ -89,6 +90,7 @@ public class PaymentController {
     @Operation(summary = "取消")
     @PrePermission("finance:payment:status")
     @OperationLog(module = "回款管理", action = "取消回款", bizType = "PAYMENT")
+    @Idempotent(key = "payment:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/cancel")
     public Result<Void> cancel(@PathVariable String id,
                           @RequestParam String operatorId,
@@ -106,6 +108,7 @@ public class PaymentController {
     @Operation(summary = "删除")
     @PrePermission("finance:payment:delete")
     @OperationLog(module = "回款管理", action = "删除回款", bizType = "PAYMENT")
+    @Idempotent(key = "payment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
@@ -121,6 +124,7 @@ public class PaymentController {
     @Operation(summary = "核销到发票")
     @PrePermission("finance:payment:allocate")
     @OperationLog(module = "回款管理", action = "核销到发票", bizType = "PAYMENT")
+    @Idempotent(key = "payment:allocate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/allocate")
     public Result<Void> allocate(@Valid @RequestBody PaymentAllocationDTO dto) {
         service.allocate(dto);
@@ -137,6 +141,7 @@ public class PaymentController {
     @Operation(summary = "自动核销（按客户）")
     @PrePermission("finance:payment:allocate")
     @OperationLog(module = "回款管理", action = "自动核销（按客户）", bizType = "PAYMENT", saveResult = true)
+    @Idempotent(key = "payment:auto-allocate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/auto-allocate")
     public Result<Integer> autoAllocate(@RequestParam String customerId,
                                    @RequestParam String operatorId) {

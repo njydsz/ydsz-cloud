@@ -1,5 +1,7 @@
 package com.njydsz.pmis.agent.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.agent.dto.ToolMarketQueryDTO;
 import com.njydsz.pmis.agent.dto.ToolRegisterDTO;
 import com.njydsz.pmis.agent.entity.ToolMarketEntryDO;
@@ -55,12 +57,14 @@ public class ToolMarketController {
 
     private final ToolMarketService service;
 
+    @Idempotent(key = "tool-market:register", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/register")
     @Operation(summary = "注册工具", description = "手动注册单个 HTTP API 工具到工具市场")
     public Result<ToolMarketEntryDO> register(@Valid @RequestBody ToolRegisterDTO dto) {
         return Result.ok(service.register(dto));
     }
 
+    @Idempotent(key = "tool-market:register-from-open-api", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/register-openapi")
     @Operation(summary = "OpenAPI 批量导入", description = "通过 OpenAPI 3.x 规范 URL 批量导入工具")
     public Result<List<ToolMarketEntryDO>> registerFromOpenApi(
@@ -69,6 +73,7 @@ public class ToolMarketController {
         return Result.ok(service.registerFromOpenApi(specUrl));
     }
 
+    @Idempotent(key = "tool-market:unregister", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{toolName}")
     @Operation(summary = "注销工具", description = "从工具市场注销指定工具（软删除 + 从 ToolRegistry 移除）")
     public Result<Void> unregister(@PathVariable String toolName) {
@@ -76,12 +81,14 @@ public class ToolMarketController {
         return Result.ok();
     }
 
+    @Idempotent(key = "tool-market:enable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{toolName}/enable")
     @Operation(summary = "启用工具", description = "启用指定工具，注册到 ToolRegistry 供 Agent 调用")
     public Result<ToolMarketEntryDO> enable(@PathVariable String toolName) {
         return Result.ok(service.enable(toolName));
     }
 
+    @Idempotent(key = "tool-market:disable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{toolName}/disable")
     @Operation(summary = "禁用工具", description = "禁用指定工具，从 ToolRegistry 移除")
     public Result<ToolMarketEntryDO> disable(@PathVariable String toolName) {
@@ -100,6 +107,7 @@ public class ToolMarketController {
         return Result.ok(service.page(query));
     }
 
+    @Idempotent(key = "tool-market:test-tool", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{toolName}/test")
     @Operation(summary = "测试工具调用", description = "使用指定参数测试工具调用，不影响 ToolRegistry 状态")
     public Result<ToolResult> testTool(

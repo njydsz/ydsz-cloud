@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
@@ -72,6 +74,7 @@ public class FlowInboxController {
     /**
      * 标记单条站内信为已读。
      */
+    @Idempotent(key = "flow-inbox:mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/read")
     public Result<Void> markRead(@PathVariable String id) {
         String userId = getCurrentUserId();
@@ -82,6 +85,7 @@ public class FlowInboxController {
     /**
      * 批量标记已读。
      */
+    @Idempotent(key = "flow-inbox:batch-mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/batch-read")
     public Result<Integer> batchMarkRead(@RequestBody Map<String, List<String>> body) {
         String userId = getCurrentUserId();
@@ -96,6 +100,7 @@ public class FlowInboxController {
     /**
      * 全部标记已读。
      */
+    @Idempotent(key = "flow-inbox:mark-all-read", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/read-all")
     public Result<Integer> markAllRead() {
         String userId = getCurrentUserId();

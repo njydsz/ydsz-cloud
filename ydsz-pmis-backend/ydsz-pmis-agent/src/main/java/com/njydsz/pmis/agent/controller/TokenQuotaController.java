@@ -1,5 +1,7 @@
 package com.njydsz.pmis.agent.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.agent.dto.QuotaSummary;
 import com.njydsz.pmis.agent.service.TokenQuotaService;
 import com.njydsz.pmis.common.api.Result;
@@ -47,6 +49,7 @@ public class TokenQuotaController {
      *
      * @return 重置后的配额概览
      */
+    @Idempotent(key = "token-quota:reset", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reset")
     @Operation(summary = "重置当月 Token 配额")
     public Result<QuotaSummary> reset() {

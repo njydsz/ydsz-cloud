@@ -1,5 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.service.BillableUtilizationService;
@@ -144,6 +146,7 @@ public class BillableUtilizationController {
      */
     @Operation(summary = "触发快照重算（Cronjob 调用 / 运维手工）")
     @PrePermission("execution:utilization:recompute")
+    @Idempotent(key = "billable-utilization:recompute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/recompute")
     public Result<Map<String, Object>> recompute(
             @RequestParam(required = false) String period,

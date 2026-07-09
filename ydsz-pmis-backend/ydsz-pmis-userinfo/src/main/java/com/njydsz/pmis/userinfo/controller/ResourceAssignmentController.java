@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -52,6 +54,7 @@ public class ResourceAssignmentController {
     @Operation(summary = "分配动作（RESERVE/START/TRANSFER/RELEASE/CANCEL）")
     @PrePermission("resource:assign:act")
     @OperationLog(module = "资源分配", action = "分配动作", bizType = "RESOURCE_ASSIGN")
+    @Idempotent(key = "resource-assignment:act", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/act")
     public Result<String> act(@Valid @RequestBody ResourceAssignmentCreateDTO dto) {
         return Result.ok(assignmentService.act(dto));

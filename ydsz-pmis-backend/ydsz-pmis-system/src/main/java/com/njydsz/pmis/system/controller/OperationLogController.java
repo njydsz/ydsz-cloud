@@ -1,5 +1,7 @@
 package com.njydsz.pmis.system.controller;
 
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.system.entity.OperationLogDO;
 import com.njydsz.pmis.system.service.OperationLogServiceImpl;
 import com.njydsz.pmis.system.util.DiffCalculator;
@@ -153,6 +155,7 @@ public class OperationLogController {
     @Operation(summary = "清理 N 天前日志")
     @PrePermission(PermissionCodes.AUDIT_LOG_CLEAN)
     @OperationLog(module = "操作日志", action = "清理历史日志", bizType = "AUDIT_LOG", saveParams = true)
+    @IdempotentExempt("审计清理接口，无需幂等")
     @PostMapping("/clean")
     public Result<Integer> clean(
             @Parameter(description = "保留天数") @RequestParam(defaultValue = "90") int days) {

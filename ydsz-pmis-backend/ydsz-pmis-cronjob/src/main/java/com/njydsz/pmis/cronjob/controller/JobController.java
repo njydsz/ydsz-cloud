@@ -1,5 +1,8 @@
 package com.njydsz.pmis.cronjob.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -48,6 +51,7 @@ public class JobController {
      */
     @Operation(summary = "新增任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_CREATE)
+    @Idempotent(key = "job:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody JobSaveDTO dto) {
         JobDO job = new JobDO();
@@ -63,6 +67,7 @@ public class JobController {
      */
     @Operation(summary = "更新任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @Idempotent(key = "job:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@Valid @RequestBody JobSaveDTO dto) {
         JobDO job = new JobDO();
@@ -80,6 +85,7 @@ public class JobController {
     @Operation(summary = "删除任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
     @OperationLog(module = "任务调度", action = "删除任务", bizType = "CRONJOB_JOB")
+    @Idempotent(key = "job:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         jobService.delete(id);
@@ -94,6 +100,7 @@ public class JobController {
      */
     @Operation(summary = "暂停任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @Idempotent(key = "job:pause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/pause")
     public Result<Void> pause(@PathVariable String id) {
         jobService.pause(id);
@@ -108,6 +115,7 @@ public class JobController {
      */
     @Operation(summary = "恢复任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @Idempotent(key = "job:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/resume")
     public Result<Void> resume(@PathVariable String id) {
         jobService.resume(id);
@@ -124,6 +132,7 @@ public class JobController {
      */
     @Operation(summary = "立即执行一次")
     @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
+    @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/{id}/trigger")
     public Result<String> trigger(@PathVariable String id,
                                    @RequestParam(defaultValue = "false") boolean holdLock) {
@@ -138,6 +147,7 @@ public class JobController {
      */
     @Operation(summary = "批量暂停任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @Idempotent(key = "job:batch-pause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/pause")
     public Result<Integer> batchPause(@RequestBody @Valid JobBatchDTO dto) {
         return Result.ok(jobService.batchPause(dto.getJobIds()));
@@ -151,6 +161,7 @@ public class JobController {
      */
     @Operation(summary = "批量恢复任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @Idempotent(key = "job:batch-resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/resume")
     public Result<Integer> batchResume(@RequestBody @Valid JobBatchDTO dto) {
         return Result.ok(jobService.batchResume(dto.getJobIds()));
@@ -164,6 +175,7 @@ public class JobController {
      */
     @Operation(summary = "批量触发任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
+    @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/batch/trigger")
     public Result<Integer> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
         return Result.ok(jobService.batchTrigger(dto.getJobIds()));
@@ -178,6 +190,7 @@ public class JobController {
     @Operation(summary = "批量删除任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
     @OperationLog(module = "任务调度", action = "批量删除任务", bizType = "CRONJOB_JOB")
+    @Idempotent(key = "job:batch-delete", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/delete")
     public Result<Integer> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
         return Result.ok(jobService.batchDelete(dto.getJobIds()));
@@ -242,6 +255,7 @@ public class JobController {
      */
     @Operation(summary = "重新加载所有任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_RELOAD)
+    @Idempotent(key = "job:reload", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reload")
     public Result<Map<String, Object>> reload() {
         jobService.loadOnStartup();

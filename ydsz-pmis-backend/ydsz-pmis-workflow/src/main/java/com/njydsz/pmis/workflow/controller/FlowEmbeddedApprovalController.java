@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.LoginUser;
@@ -88,6 +90,7 @@ public class FlowEmbeddedApprovalController {
      * @param dto 嵌入式快捷操作参数
      */
     @Operation(summary = "嵌入式快捷操作")
+    @Idempotent(key = "flow-embedded-approval:quick-action", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/action")
     public Result<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
         LoginUser u = SecurityContext.getCurrentOrNull();
@@ -107,6 +110,7 @@ public class FlowEmbeddedApprovalController {
      * <p>URL 形式：/workflow/embedded/{businessType}/{businessId}/action
      */
     @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
+    @Idempotent(key = "flow-embedded-approval:quick-action-by-path", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{businessType}/{businessId}/action")
     public Result<Void> quickActionByPath(@PathVariable String businessType,
                                           @PathVariable String businessId,

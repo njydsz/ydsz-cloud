@@ -1,5 +1,8 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.entity.FlowDmnTableDO;
@@ -48,6 +51,7 @@ public class FlowDmnController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询决策表")
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/page")
     public Result<Page<FlowDmnTableDO>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNum,
                                              @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
@@ -88,6 +92,7 @@ public class FlowDmnController {
      * @return 新建返回主键 ID，更新返回 null
      */
     @Operation(summary = "新建/更新决策表")
+    @Idempotent(key = "flow-dmn:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/save")
     public Result<String> save(@Valid @RequestBody FlowDmnTableSaveDTO dto) {
         FlowDmnTableDO table = new FlowDmnTableDO();
@@ -106,6 +111,7 @@ public class FlowDmnController {
      * @return 操作结果
      */
     @Operation(summary = "发布决策表")
+    @Idempotent(key = "flow-dmn:publish", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/publish")
     public Result<Void> publish(@PathVariable String id) {
         dmnTableService.publish(id);
@@ -127,6 +133,7 @@ public class FlowDmnController {
      * @return 输出结果列表（每个匹配规则产生一组输出）
      */
     @Operation(summary = "执行决策")
+    @Idempotent(key = "flow-dmn:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/execute")
     public Result<List<Map<String, Object>>> execute(@Valid @RequestBody DmnExecuteDTO dto) {
         String tableKey = dto.getTableKey();

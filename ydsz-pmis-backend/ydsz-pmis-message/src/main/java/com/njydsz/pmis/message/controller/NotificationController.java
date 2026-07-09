@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -46,6 +48,7 @@ public class NotificationController {
 
     @Operation(summary = "发送站内通知")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "notification:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public Result<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
         return Result.ok(notificationService.send(dto));
@@ -67,6 +70,7 @@ public class NotificationController {
 
     @Operation(summary = "标记单条已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @Idempotent(key = "notification:mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/read")
     public Result<Boolean> markRead(@PathVariable String id) {
         return Result.ok(notificationService.markRead(SecurityContext.getUserId(), id));
@@ -74,6 +78,7 @@ public class NotificationController {
 
     @Operation(summary = "全部标记已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @Idempotent(key = "notification:mark-all-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/read-all")
     public Result<Integer> markAllRead() {
         return Result.ok(notificationService.markAllRead(SecurityContext.getUserId()));
@@ -81,6 +86,7 @@ public class NotificationController {
 
     @Operation(summary = "删除通知(仅删自己的)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_DELETE)
+    @Idempotent(key = "notification:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping
     public Result<Void> delete(@Valid @RequestBody List<String> ids) {
         notificationService.delete(SecurityContext.getUserId(), ids);
@@ -89,6 +95,7 @@ public class NotificationController {
 
     @Operation(summary = "撤回通知")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_RECALL)
+    @Idempotent(key = "notification:recall", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/recall")
     public Result<Boolean> recall(@PathVariable String id) {
         return Result.ok(recallService.recallNotification(SecurityContext.getUserId(), id));
@@ -96,6 +103,7 @@ public class NotificationController {
 
     @Operation(summary = "单推(实时推送指定用户)")
     @PrePermission(PermissionCodes.NOTIF_PUSH)
+    @Idempotent(key = "notification:push", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/push")
     public Result<Map<String, Object>> push(
             @RequestParam String userId,
@@ -108,6 +116,7 @@ public class NotificationController {
 
     @Operation(summary = "广播(实时推送所有在线用户)")
     @PrePermission(PermissionCodes.NOTIF_BROADCAST)
+    @Idempotent(key = "notification:broadcast", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/broadcast")
     public Result<Map<String, Object>> broadcast(
             @RequestParam String type,

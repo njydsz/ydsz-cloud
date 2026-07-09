@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -91,6 +93,7 @@ public class UserController {
      * @throws BizException 当原密码或新密码为空时抛出
      */
     @Operation(summary = "修改自己的密码")
+    @Idempotent(key = "user:change-my-password", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/me/password")
     public Result<Void> changeMyPassword(@Valid @RequestBody PasswordChangeDTO dto) {
         userAccountService.changePassword(SecurityContext.getUserId(), dto.getOldPassword(), dto.getNewPassword());
@@ -109,6 +112,7 @@ public class UserController {
     @OperationLog(module = "权限管理", action = "创建用户", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_7aa2293e}")
+    @Idempotent(key = "user:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody UserCreateDTO dto) {
         String username = dto.getUsername();
@@ -131,6 +135,7 @@ public class UserController {
     @Operation(summary = "更新用户")
     @PrePermission("auth:user:update")
     @OperationLog(module = "权限管理", action = "更新用户", bizType = "USER")
+    @Idempotent(key = "user:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@Valid @RequestBody UserUpdateDTO dto) {
         UserAccountDO user = new UserAccountDO();
@@ -149,6 +154,7 @@ public class UserController {
     @PrePermission("auth:user:delete")
     @RequireReAuth(code = "USER_DELETE", name = "删除用户")
     @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
+    @Idempotent(key = "user:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "用户ID") @PathVariable String id) {
         userAccountService.delete(id);
@@ -168,6 +174,7 @@ public class UserController {
     @OperationLog(module = "权限管理", action = "重置密码", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_538560c7}")
+    @Idempotent(key = "user:reset-password", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/reset-password")
     public Result<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable String id,
                                       @Valid @RequestBody PasswordResetDTO dto) {
@@ -185,6 +192,7 @@ public class UserController {
     @Operation(summary = "启用/禁用用户")
     @PrePermission("auth:user:toggle")
     @OperationLog(module = "权限管理", action = "切换状态", bizType = "USER")
+    @Idempotent(key = "user:toggle-status", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/status")
     public Result<Void> toggleStatus(@Parameter(description = "用户ID") @PathVariable String id, @Parameter(description = "目标状态") @RequestParam @NotBlank String status) {
         userAccountService.toggleStatus(id, status);
@@ -201,6 +209,7 @@ public class UserController {
     @Operation(summary = "为用户分配角色")
     @PrePermission("auth:user:assign")
     @OperationLog(module = "权限管理", action = "分配角色", bizType = "USER")
+    @Idempotent(key = "user:assign-roles", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/roles")
     public Result<Void> assignRoles(@Parameter(description = "用户ID") @PathVariable String id, @Valid @RequestBody List<String> roleIds) {
         userAccountService.assignRoles(id, roleIds);

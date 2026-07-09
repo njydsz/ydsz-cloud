@@ -79,6 +79,7 @@ public class PurchaseController {
      */
     @Operation(summary = "删除")
     @PrePermission("execution:purchase:delete")
+    @Idempotent(key = "purchase:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

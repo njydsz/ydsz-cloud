@@ -1,5 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.literule.core.DefaultBreakpointHook;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,6 +66,7 @@ public class BreakpointController {
      * @param ruleCode 规则编码
      * @return 添加结果
      */
+    @Idempotent(key = "breakpoint:add-breakpoint", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}")
     public Result<Void> addBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -81,6 +84,7 @@ public class BreakpointController {
      * @param ruleCode 规则编码
      * @return 移除结果
      */
+    @Idempotent(key = "breakpoint:remove-breakpoint", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}")
     public Result<Void> removeBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -97,6 +101,7 @@ public class BreakpointController {
      *
      * @return 清空结果
      */
+    @Idempotent(key = "breakpoint:clear-breakpoints", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping
     public Result<Void> clearBreakpoints() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -114,6 +119,7 @@ public class BreakpointController {
      * @param ruleCode 规则编码
      * @return 下发结果；false 表示规则未处于挂起状态
      */
+    @Idempotent(key = "breakpoint:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/resume")
     public Result<Boolean> resume(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -130,6 +136,7 @@ public class BreakpointController {
      * @param ruleCode 规则编码
      * @return 下发结果
      */
+    @Idempotent(key = "breakpoint:step-over", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/step-over")
     public Result<Boolean> stepOver(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -173,6 +180,7 @@ public class BreakpointController {
      *
      * @return 清空结果
      */
+    @Idempotent(key = "breakpoint:clear-snapshots", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/snapshots")
     public Result<Void> clearSnapshots() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();

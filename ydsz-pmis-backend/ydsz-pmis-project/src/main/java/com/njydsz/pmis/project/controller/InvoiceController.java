@@ -73,6 +73,7 @@ public class InvoiceController {
     @Operation(summary = "提交审批")
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "提交发票审批", bizType = "INVOICE")
+    @Idempotent(key = "invoice:submit", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
     public Result<Void> submit(@Parameter(description = "发票ID") @PathVariable String id, @Parameter(description = "操作人ID") @RequestParam String operatorId) {
         service.submit(id, operatorId);
@@ -89,6 +90,7 @@ public class InvoiceController {
     @Operation(summary = "审批通过")
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批通过", bizType = "INVOICE")
+    @Idempotent(key = "invoice:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/approve")
     public Result<Void> approve(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.approve(id, dto);
@@ -105,6 +107,7 @@ public class InvoiceController {
     @Operation(summary = "审批驳回")
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批驳回", bizType = "INVOICE")
+    @Idempotent(key = "invoice:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reject")
     public Result<Void> reject(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.reject(id, dto);
@@ -121,6 +124,7 @@ public class InvoiceController {
     @Operation(summary = "财务开具")
     @PrePermission("finance:invoice:issue")
     @OperationLog(module = "发票管理", action = "财务开具发票", bizType = "INVOICE")
+    @Idempotent(key = "invoice:issue", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/issue")
     public Result<Void> issue(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.issue(id, dto);
@@ -138,6 +142,7 @@ public class InvoiceController {
     @Operation(summary = "红冲")
     @PrePermission("finance:invoice:reverse")
     @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
+    @Idempotent(key = "invoice:red-reverse", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
     public Result<Void> redReverse(@Parameter(description = "发票ID") @PathVariable String id,
                               @Parameter(description = "操作人ID") @RequestParam String operatorId,
@@ -157,6 +162,7 @@ public class InvoiceController {
     @Operation(summary = "取消")
     @PrePermission("finance:invoice:status")
     @OperationLog(module = "发票管理", action = "取消发票", bizType = "INVOICE")
+    @Idempotent(key = "invoice:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/cancel")
     public Result<Void> cancel(@Parameter(description = "发票ID") @PathVariable String id,
                           @Parameter(description = "操作人ID") @RequestParam String operatorId,
@@ -174,6 +180,7 @@ public class InvoiceController {
     @Operation(summary = "删除")
     @PrePermission("finance:invoice:delete")
     @OperationLog(module = "发票管理", action = "删除发票", bizType = "INVOICE")
+    @Idempotent(key = "invoice:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "发票ID") @PathVariable String id) {
         service.delete(id);

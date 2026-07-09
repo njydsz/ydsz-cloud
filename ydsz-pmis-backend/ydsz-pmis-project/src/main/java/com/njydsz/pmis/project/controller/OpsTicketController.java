@@ -61,6 +61,7 @@ public class OpsTicketController {
 
     @Operation(summary = "状态变更")
     @PrePermission("aftersales:ops-ticket:status")
+    @Idempotent(key = "ops-ticket:change-status", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.changeStatus(dto);
@@ -69,6 +70,7 @@ public class OpsTicketController {
 
     @Operation(summary = "关闭工单并评价")
     @PrePermission("aftersales:ops-ticket:evaluate")
+    @Idempotent(key = "ops-ticket:close-and-evaluate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/close-evaluate")
     public Result<Void> closeAndEvaluate(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.closeAndEvaluate(dto);
@@ -77,6 +79,7 @@ public class OpsTicketController {
 
     @Operation(summary = "SLA 扫描")
     @PrePermission("aftersales:ops-ticket:scan")
+    @Idempotent(key = "ops-ticket:scan-sla", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/sla")
     public Result<Integer> scanSla() {
         return Result.ok(service.scanSlaBreaches());

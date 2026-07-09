@@ -80,6 +80,7 @@ public class ContractChangeController {
      */
     @Operation(summary = "审批通过")
     @PrePermission("project:contract-change:approve")
+    @Idempotent(key = "contract-change:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/approve")
     public Result<Void> approve(@PathVariable String id,
                            @RequestParam String approverId,
@@ -99,6 +100,7 @@ public class ContractChangeController {
      */
     @Operation(summary = "驳回")
     @PrePermission("project:contract-change:approve")
+    @Idempotent(key = "contract-change:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reject")
     public Result<Void> reject(@PathVariable String id,
                           @RequestParam String approverId,

@@ -96,6 +96,7 @@ public class InitiationController {
     @Operation(summary = "删除立项")
     @PrePermission("project:initiation:delete")
     @OperationLog(module = "立项管理", action = "删除立项", bizType = "INITIATION")
+    @Idempotent(key = "initiation:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "立项ID") @PathVariable String id) {
         service.delete(id);
@@ -150,6 +151,7 @@ public class InitiationController {
     @Operation(summary = "新增预算明细")
     @PrePermission("project:initiation:budget")
     @OperationLog(module = "立项管理", action = "新增预算明细", bizType = "BUDGET", saveResult = true)
+    @Idempotent(key = "initiation:add-budget", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/budget")
     public Result<String> addBudget(@Valid @RequestBody BudgetItemDTO dto) {
         return Result.ok(service.addBudgetItem(dto));
@@ -164,6 +166,7 @@ public class InitiationController {
     @Operation(summary = "删除预算明细")
     @PrePermission("project:initiation:budget")
     @OperationLog(module = "立项管理", action = "删除预算明细", bizType = "BUDGET")
+    @Idempotent(key = "initiation:del-budget", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/budget/{id}")
     public Result<Void> delBudget(@Parameter(description = "预算明细ID") @PathVariable String id) {
         service.deleteBudgetItem(id);
@@ -205,6 +208,7 @@ public class InitiationController {
     @Operation(summary = "重新汇总预算总额")
     @PrePermission("project:initiation:budget")
     @OperationLog(module = "立项管理", action = "重新汇总预算总额", bizType = "BUDGET", saveResult = true)
+    @Idempotent(key = "initiation:recompute-budget", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/budget/recompute")
     public Result<BigDecimal> recomputeBudget(@Parameter(description = "立项ID") @PathVariable String id) {
         return Result.ok(service.recomputeBudget(id));
@@ -221,6 +225,7 @@ public class InitiationController {
     @Operation(summary = "门径评审")
     @PrePermission("project:initiation:gate")
     @OperationLog(module = "立项管理", action = "门径评审", bizType = "GATE", saveResult = true)
+    @Idempotent(key = "initiation:review-gate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/gate/review")
     public Result<String> reviewGate(@Valid @RequestBody GateReviewDTO dto) {
         return Result.ok(service.reviewGate(dto));
@@ -297,6 +302,7 @@ public class InitiationController {
     @Operation(summary = "标记审批中")
     @PrePermission("project:initiation:update")
     @OperationLog(module = "立项管理", action = "标记审批中（流程回调）", bizType = "INITIATION")
+    @Idempotent(key = "initiation:mark-processing", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/mark-processing")
     public Result<Void> markProcessing(@Parameter(description = "立项ID") @PathVariable String id) {
         service.markProcessing(id);
@@ -312,6 +318,7 @@ public class InitiationController {
     @Operation(summary = "标记已批准")
     @PrePermission("project:initiation:update")
     @OperationLog(module = "立项管理", action = "标记已批准（流程回调）", bizType = "INITIATION")
+    @Idempotent(key = "initiation:mark-approved", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/mark-approved")
     public Result<Void> markApproved(@Parameter(description = "立项ID") @PathVariable String id) {
         service.markApproved(id);
@@ -328,6 +335,7 @@ public class InitiationController {
     @Operation(summary = "标记已驳回")
     @PrePermission("project:initiation:update")
     @OperationLog(module = "立项管理", action = "标记已驳回（流程回调）", bizType = "INITIATION")
+    @Idempotent(key = "initiation:mark-rejected", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/mark-rejected")
     public Result<Void> markRejected(@Parameter(description = "立项ID") @PathVariable String id,
                                      @Parameter(description = "驳回原因") @RequestParam(required = false) String reason) {

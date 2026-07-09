@@ -85,6 +85,7 @@ public class TimeEntryController {
      */
     @Operation(summary = "审批工时")
     @PrePermission("execution:time:approve")
+    @Idempotent(key = "time-entry:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/approve")
     public Result<Void> approve(@Valid @RequestBody TimeEntryApprovalDTO dto) {
         service.approve(dto);

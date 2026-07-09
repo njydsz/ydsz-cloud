@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.api.PageResult;
@@ -57,6 +59,7 @@ public class FlowDelegateController {
      * }
      * </pre>
      */
+    @Idempotent(key = "flow-delegate:create-delegate-auth", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate-auth/create")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public Result<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
@@ -73,6 +76,7 @@ public class FlowDelegateController {
     /**
      * P1-4: 撤回授权
      */
+    @Idempotent(key = "flow-delegate:revoke-delegate-auth", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate-auth/{id}/revoke")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public Result<Void> revokeDelegateAuth(@PathVariable String id) {
@@ -84,6 +88,7 @@ public class FlowDelegateController {
     /**
      * P1-4: 启用/停用授权
      */
+    @Idempotent(key = "flow-delegate:update-delegate-auth-status", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate-auth/{id}/status")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public Result<Void> updateDelegateAuthStatus(@PathVariable String id,

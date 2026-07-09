@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -38,6 +40,7 @@ public class TemplateController {
 
     @Operation(summary = "创建模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_CREATE)
+    @Idempotent(key = "template:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<MsgTemplateDO> create(@Valid @RequestBody TemplateCreateDTO dto) {
         return Result.ok(templateService.create(dto));
@@ -45,6 +48,7 @@ public class TemplateController {
 
     @Operation(summary = "更新模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
+    @Idempotent(key = "template:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<MsgTemplateDO> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
         return Result.ok(templateService.update(id, dto));
@@ -52,6 +56,7 @@ public class TemplateController {
 
     @Operation(summary = "删除模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_DELETE)
+    @Idempotent(key = "template:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         templateService.delete(id);
@@ -74,6 +79,7 @@ public class TemplateController {
 
     @Operation(summary = "审核模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
+    @Idempotent(key = "template:audit", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/audit")
     public Result<Void> audit(@PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {
         dto.setId(id);

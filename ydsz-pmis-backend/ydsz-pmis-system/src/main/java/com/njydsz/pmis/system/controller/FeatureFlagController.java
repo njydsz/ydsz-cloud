@@ -1,5 +1,7 @@
 package com.njydsz.pmis.system.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -99,6 +101,7 @@ public class FeatureFlagController {
     @Operation(summary = "启停指定 flag")
     @PrePermission("sys:feature-flag:update")
     @OperationLog(module = "特性开关", action = "更新开关", bizType = "FEATURE_FLAG")
+    @Idempotent(key = "feature-flag:set-enabled", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/enabled")
     public Result<Boolean> setEnabled(
             @Parameter(description = "flag 键") @PathVariable String key,
@@ -118,6 +121,7 @@ public class FeatureFlagController {
     @Operation(summary = "设置灰度发布比例 (0-100)")
     @PrePermission("sys:feature-flag:update")
     @OperationLog(module = "特性开关", action = "更新灰度", bizType = "FEATURE_FLAG")
+    @Idempotent(key = "feature-flag:set-rollout", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/rollout")
     public Result<Integer> setRollout(
             @Parameter(description = "flag 键") @PathVariable String key,
@@ -135,6 +139,7 @@ public class FeatureFlagController {
     @Operation(summary = "强制刷新本地缓存")
     @PrePermission("sys:feature-flag:update")
     @OperationLog(module = "特性开关", action = "刷新缓存", bizType = "FEATURE_FLAG")
+    @Idempotent(key = "feature-flag:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
     public Result<Void> refresh() {
         featureFlagService.refresh();

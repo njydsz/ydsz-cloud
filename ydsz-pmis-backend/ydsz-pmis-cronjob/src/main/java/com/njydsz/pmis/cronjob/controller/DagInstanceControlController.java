@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.cronjob.core.dag.DagInstanceControlService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +38,7 @@ public class DagInstanceControlController {
     private final DagInstanceControlService dagInstanceControlService;
 
     @Operation(summary = "暂停 DAG 实例")
+    @Idempotent(key = "dag-instance-control:pause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/pause")
     public Result<Boolean> pause(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.pause(instanceId);
@@ -43,6 +46,7 @@ public class DagInstanceControlController {
     }
 
     @Operation(summary = "恢复 DAG 实例")
+    @Idempotent(key = "dag-instance-control:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/resume")
     public Result<Boolean> resume(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.resume(instanceId);
@@ -50,6 +54,7 @@ public class DagInstanceControlController {
     }
 
     @Operation(summary = "取消 DAG 实例")
+    @Idempotent(key = "dag-instance-control:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/cancel")
     public Result<Boolean> cancel(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.cancel(instanceId);
@@ -57,6 +62,7 @@ public class DagInstanceControlController {
     }
 
     @Operation(summary = "手动重试指定失败节点")
+    @Idempotent(key = "dag-instance-control:retry-node", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/retry-node")
     public Result<Boolean> retryNode(@PathVariable String instanceId,
                                       @RequestParam String jobKey) {

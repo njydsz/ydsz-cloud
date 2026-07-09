@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.PageResult;
@@ -63,6 +65,7 @@ public class SessionController {
      * @return 统一响应结果
      */
     @Operation(summary = "下线指定会话")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @DeleteMapping("/{sessionId}")
     public Result<Void> invalidate(@PathVariable String sessionId) {
         sessionService.invalidate(sessionId, "用户主动下线");
@@ -75,6 +78,7 @@ public class SessionController {
      * @return 统一响应结果，包含被下线的会话数
      */
     @Operation(summary = "下线其他会话（同账号仅保留当前）")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @DeleteMapping("/others")
     public Result<Integer> kickOthers() {
         String userId = SecurityContext.getUserId();
@@ -115,6 +119,7 @@ public class SessionController {
      * @return 统一响应结果
      */
     @Operation(summary = "管理员强制下线任意会话")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @DeleteMapping("/admin/{sessionId}")
     public Result<Void> adminKick(@PathVariable String sessionId) {
         sessionService.invalidate(sessionId, "管理员强制下线");

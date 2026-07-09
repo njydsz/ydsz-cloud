@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -37,6 +39,7 @@ public class ReadStatusController {
 
     @Operation(summary = "标记消息已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @Idempotent(key = "read-status:mark-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/read/{msgId}")
     public Result<Boolean> markRead(@PathVariable String msgId,
                                      @RequestParam String userId) {
@@ -45,6 +48,7 @@ public class ReadStatusController {
 
     @Operation(summary = "批量标记消息已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @Idempotent(key = "read-status:mark-read-batch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/read-batch")
     public Result<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
                                           @RequestParam String userId) {
@@ -53,6 +57,7 @@ public class ReadStatusController {
 
     @Operation(summary = "标记站内通知已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @Idempotent(key = "read-status:mark-notification-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification/{notificationId}")
     public Result<Boolean> markNotificationRead(@PathVariable String notificationId,
                                                   @RequestParam String userId) {
@@ -61,6 +66,7 @@ public class ReadStatusController {
 
     @Operation(summary = "全部通知标记已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @Idempotent(key = "read-status:mark-all-notifications-read", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification/read-all")
     public Result<Integer> markAllNotificationsRead(@RequestParam String userId,
                                                       @RequestParam(required = false) String bizType) {

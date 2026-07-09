@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
@@ -56,6 +58,7 @@ public class FlowAiGenerateController {
      * @param body 请求体，需包含 description 字段
      * @return 包含 bpmnXml 字段的响应数据
      */
+    @Idempotent(key = "flow-ai-generate:generate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/generate")
     @Operation(summary = "AI一句话生成流程")
     public Result<Map<String, Object>> generate(@Valid @RequestBody FlowAiGenerateDTO dto) {
@@ -79,6 +82,7 @@ public class FlowAiGenerateController {
      * @param body 请求体，需包含 instanceId 或 flowCode
      * @return 风险预测结果
      */
+    @Idempotent(key = "flow-ai-generate:predict-risk", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/predict-risk")
     @Operation(summary = "P3-1: 流程风险预测")
     public Result<Map<String, Object>> predictRisk(@RequestBody Map<String, Object> body) {
@@ -97,6 +101,7 @@ public class FlowAiGenerateController {
      * @param body 请求体，需包含 taskId 与 assigneeId
      * @return 智能催办建议
      */
+    @Idempotent(key = "flow-ai-generate:smart-remind", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/smart-remind")
     @Operation(summary = "P3-1: 智能催办")
     public Result<Map<String, Object>> smartRemind(@RequestBody Map<String, Object> body) {
@@ -115,6 +120,7 @@ public class FlowAiGenerateController {
      * @param body 请求体，需包含 instanceId 或 flowCode
      * @return SLA 预测结果
      */
+    @Idempotent(key = "flow-ai-generate:predict-sla", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/predict-sla")
     @Operation(summary = "P3-1: SLA 预测")
     public Result<Map<String, Object>> predictSla(@RequestBody Map<String, Object> body) {

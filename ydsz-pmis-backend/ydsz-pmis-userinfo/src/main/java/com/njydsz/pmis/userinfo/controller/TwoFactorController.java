@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.userinfo.dto.TwoFactorBindResult;
@@ -39,6 +41,7 @@ public class TwoFactorController {
      * @return 统一响应结果，包含绑定信息（含密钥与二维码）
      */
     @Operation(summary = "发起 TOTP 绑定")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/bind")
     public Result<TwoFactorBindResult> bind() {
         String userId = SecurityContext.getUserId();
@@ -53,6 +56,7 @@ public class TwoFactorController {
      * @return 统一响应结果，包含是否绑定成功
      */
     @Operation(summary = "校验 OTP 完成绑定")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/confirm")
     public Result<Boolean> confirm(@RequestParam String otp) {
         String userId = SecurityContext.getUserId();
@@ -66,6 +70,7 @@ public class TwoFactorController {
      * @return 统一响应结果，包含是否校验通过
      */
     @Operation(summary = "校验 2FA 码（用于登录第二步）")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/verify")
     public Result<Boolean> verify(@RequestParam String otp) {
         String userId = SecurityContext.getUserId();
@@ -79,6 +84,7 @@ public class TwoFactorController {
      * @return 统一响应结果，包含是否校验通过
      */
     @Operation(summary = "使用备份码")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/verify-backup")
     public Result<Boolean> verifyBackup(@RequestParam String code) {
         String userId = SecurityContext.getUserId();
@@ -91,6 +97,7 @@ public class TwoFactorController {
      * @return 统一响应结果
      */
     @Operation(summary = "关闭 2FA")
+    @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/disable")
     public Result<Void> disable() {
         String userId = SecurityContext.getUserId();

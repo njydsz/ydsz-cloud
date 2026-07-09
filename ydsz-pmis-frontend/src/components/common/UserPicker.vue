@@ -150,9 +150,8 @@ async function doSearch(kw: string) {
       levelCode: props.levelCode,
       keyword: kw || undefined,
     })
-    // res.data 为 PageResult<UserVO>，后端分页返回 records 字段（MyBatis-Plus），用类型断言收敛
-    const pageData = res.data as unknown as { data?: { records?: UserVO[] } } | undefined
-    const records = (pageData?.data?.records || []) as UserVO[]
+    // 后端返回 MyBatis-Plus Page（records/total），listUsers 类型已对齐 PageData<UserVO>
+    const records = res.data?.records || []
     mergeCandidates(records)
   } catch (e) {
     // 全局拦截器已弹错，这里只兜底
@@ -255,11 +254,10 @@ async function loadDialogList(reset = false) {
       levelCode: props.levelCode,
       keyword: dialogKeyword.value || undefined,
     })
-    // res.data 为 PageResult<UserVO>，后端分页返回 records/total 字段（MyBatis-Plus），用类型断言收敛
-    const pageData = res.data as unknown as { data?: { records?: UserVO[]; total?: number } } | undefined
-    const records = (pageData?.data?.records || []) as UserVO[]
+    // 后端返回 MyBatis-Plus Page（records/total），listUsers 类型已对齐 PageData<UserVO>
+    const records = res.data?.records || []
     dialogList.value = reset ? records : [...dialogList.value, ...records]
-    dialogTotal.value = pageData?.data?.total || 0
+    dialogTotal.value = res.data?.total || 0
     mergeCandidates(records)
   } catch (e) {
     ElMessage.error(t('common.userPicker.loadFailed', { message: (e as Error).message }))

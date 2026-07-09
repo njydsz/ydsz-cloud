@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -70,6 +72,7 @@ public class DeadLetterController {
      */
     @Operation(summary = "手动重发死信")
     @PrePermission(PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
+    @Idempotent(key = "dead-letter:resend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{logId}/resend")
     public Result<Void> resend(@PathVariable String logId) {
         if (logId == null || logId.isBlank()) {

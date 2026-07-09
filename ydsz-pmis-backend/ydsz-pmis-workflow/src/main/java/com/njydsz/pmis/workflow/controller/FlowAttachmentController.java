@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.dto.FlowAttachmentPreviewVO;
 import com.njydsz.pmis.workflow.entity.FlowAttachmentDO;
@@ -56,6 +58,7 @@ public class FlowAttachmentController {
     /**
      * 删除附件（逻辑删除）
      */
+    @Idempotent(key = "flow-attachment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/attachment/{attachmentId}")
     public Result<Void> delete(@PathVariable String attachmentId,
                                @RequestParam String operatorId) {

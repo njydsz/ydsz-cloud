@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.controller;
 
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.job.MapContext;
 import com.njydsz.pmis.common.job.MapProcessor;
@@ -69,6 +71,7 @@ public class InternalJobController {
      * @return 统一响应结果，data 为执行日志 ID（锁被持有或执行失败时为 null）
      */
     @Operation(summary = "接收远程派发请求并本地执行")
+    @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/execute")
     public Result<String> execute(@RequestBody RemoteTaskRequest request) {
         if (request == null || request.getJob() == null) {
@@ -119,6 +122,7 @@ public class InternalJobController {
      * @return 统一响应结果，data 为子任务执行结果对象
      */
     @Operation(summary = "接收 MapReduce 子任务远程派发并本地执行")
+    @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/execute-sub-task")
     public Result<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {

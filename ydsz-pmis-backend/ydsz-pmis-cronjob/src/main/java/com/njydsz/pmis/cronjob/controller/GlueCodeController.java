@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.cronjob.entity.GlueCodeDO;
 import com.njydsz.pmis.cronjob.service.GlueCodeService;
@@ -40,6 +42,7 @@ public class GlueCodeController {
      * @return 统一响应结果，包含新创建的 GLUE 代码版本
      */
     @Operation(summary = "保存 GLUE 代码（新版本）")
+    @Idempotent(key = "glue-code:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/save")
     public Result<GlueCodeDO> save(@RequestBody GlueCodeSaveRequest request) {
         return Result.ok(glueCodeService.save(
@@ -80,6 +83,7 @@ public class GlueCodeController {
      * @return 统一响应结果，包含新创建的回滚版本
      */
     @Operation(summary = "回滚到指定版本")
+    @Idempotent(key = "glue-code:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
     public Result<GlueCodeDO> rollback(@RequestBody GlueCodeRollbackRequest request) {
         return Result.ok(glueCodeService.rollback(request.getJobId(), request.getVersion()));

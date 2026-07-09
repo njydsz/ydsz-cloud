@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobHistoryDO;
@@ -66,6 +68,7 @@ public class JobHistoryController {
      * @return 统一响应结果，包含回滚后的任务定义
      */
     @Operation(summary = "回滚到指定版本")
+    @Idempotent(key = "job-history:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
     public Result<JobDO> rollback(@RequestParam String jobId,
                                    @RequestParam Integer version) {

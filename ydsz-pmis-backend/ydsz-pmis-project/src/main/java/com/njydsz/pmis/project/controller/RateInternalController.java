@@ -83,6 +83,7 @@ public class RateInternalController {
      */
     @Operation(summary = "删除")
     @PrePermission("execution:rate-internal:delete")
+    @Idempotent(key = "rate-internal:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

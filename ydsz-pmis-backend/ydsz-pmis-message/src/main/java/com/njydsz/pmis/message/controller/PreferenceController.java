@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -36,6 +38,7 @@ public class PreferenceController {
 
     @Operation(summary = "新增/更新偏好")
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
+    @Idempotent(key = "preference:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
         return Result.ok(preferenceService.upsert(dto));
@@ -59,6 +62,7 @@ public class PreferenceController {
 
     @Operation(summary = "删除偏好")
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_DELETE)
+    @Idempotent(key = "preference:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         preferenceService.delete(id);

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -54,6 +56,7 @@ public class MessageController {
 
     @Operation(summary = "发送消息(基于共享请求)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public Result<MessageResult> send(@Valid @RequestBody MessageRequest request) {
         return Result.ok(messageService.send(request));
@@ -61,6 +64,7 @@ public class MessageController {
 
     @Operation(summary = "直接发送消息(本模块 DTO)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:send-direct", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send-direct")
     public Result<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
         return Result.ok(messageService.sendDirect(dto));
@@ -75,6 +79,7 @@ public class MessageController {
      */
     @Operation(summary = "异步发送消息(投递 RocketMQ)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:send-async", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send-async")
     public Result<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
         if (request == null) {
@@ -116,6 +121,7 @@ public class MessageController {
      */
     @Operation(summary = "事务消息发送(RocketMQ 半消息)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:send-transactionally", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send-transactional")
     public Result<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
         return Result.ok(messageService.sendTransactionally(request));
@@ -130,6 +136,7 @@ public class MessageController {
      */
     @Operation(summary = "批量发送消息(限制 100 条/批)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:batch-send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch-send")
     public Result<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
                                              @RequestParam String batchId) {

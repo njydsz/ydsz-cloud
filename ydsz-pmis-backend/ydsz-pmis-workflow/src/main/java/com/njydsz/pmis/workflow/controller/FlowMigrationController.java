@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.dto.InstanceMigrationDTO;
 import com.njydsz.pmis.workflow.dto.InstanceMigrationResultDTO;
@@ -45,6 +47,7 @@ public class FlowMigrationController {
      * @param dto 迁移参数
      * @return 统一响应结果，包含迁移结果报告
      */
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/instance/migrate")
     public Result<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
         return Result.ok(instanceMigrationService.migrate(dto));
@@ -56,6 +59,7 @@ public class FlowMigrationController {
      * @param dto 迁移参数（dryRun 字段将被忽略，强制为试运行）
      * @return 统一响应结果，包含迁移结果报告
      */
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/instance/migrate/preview")
     public Result<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
         return Result.ok(instanceMigrationService.previewMigration(dto));

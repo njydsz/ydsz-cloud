@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -42,6 +44,7 @@ public class FlowQuickCommentController {
         return Result.ok(quickCommentService.listByUser(userId, tenantId));
     }
 
+    @Idempotent(key = "flow-quick-comment:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "新增常用语")
     public Result<String> create(@Valid @RequestBody FlowQuickCommentDTO dto) {
@@ -50,6 +53,7 @@ public class FlowQuickCommentController {
         return Result.ok(quickCommentService.create(dto, userId, tenantId));
     }
 
+    @Idempotent(key = "flow-quick-comment:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "编辑常用语")
     public Result<Void> update(@Valid @RequestBody FlowQuickCommentDTO dto) {
@@ -58,6 +62,7 @@ public class FlowQuickCommentController {
         return Result.ok();
     }
 
+    @Idempotent(key = "flow-quick-comment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除常用语")
     public Result<Void> delete(@PathVariable String id) {
@@ -66,6 +71,7 @@ public class FlowQuickCommentController {
         return Result.ok();
     }
 
+    @Idempotent(key = "flow-quick-comment:increment-use-count", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/use")
     @Operation(summary = "增加使用次数（审批时调用）")
     public Result<Void> incrementUseCount(@PathVariable String id) {

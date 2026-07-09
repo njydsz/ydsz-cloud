@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 /**
  * OutsourceRateServiceImpl 单元测试
  *
- * <p>覆盖外包职级费率 CRUD 核心行为：月薪+差旅报销+差旅补贴自动计算 totalCost、
+ * <p>覆盖外包职级费率 CRUD 核心行为：人天核算月薪(monthlySalary=dailyRate×monthlyDays)+差旅报销+差旅补贴自动计算 totalCost、
  * 级别编码+版本唯一性校验、级别段位校验、日期校验、生效费率匹配。
  *
  * @author ydsz-pmis-team
@@ -52,13 +52,14 @@ class OutsourceRateServiceImplTest {
     // ==================== create ====================
 
     @Test
-    @DisplayName("创建成功: 自动计算 totalCost = monthlySalary + travelReimbursement + travelAllowance")
+    @DisplayName("创建成功: 自动计算 monthlySalary=dailyRate×monthlyDays, totalCost=monthlySalary+travelReimbursement+travelAllowance")
     void create_success_calculatesTotalCost() {
         OutsourceRateCreateDTO dto = new OutsourceRateCreateDTO();
         dto.setRateCode("V5");
         dto.setRateName("外包高级工程师");
         dto.setLevelSegment("MIDDLE");
-        dto.setMonthlySalary(new BigDecimal("5000"));
+        dto.setDailyRate(new BigDecimal("227.27"));
+        dto.setMonthlyDays(new BigDecimal("22"));
         dto.setTravelReimbursement(new BigDecimal("500"));
         dto.setTravelAllowance(new BigDecimal("300"));
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
@@ -74,7 +75,10 @@ class OutsourceRateServiceImplTest {
         verify(outsourceRateMapper).insert(captor.capture());
         OutsourceRateDO saved = captor.getValue();
         assertEquals("V5", saved.getRateCode());
-        assertEquals(new BigDecimal("5800.00"), saved.getTotalCost());
+        // monthlySalary = 227.27 × 22 = 4999.94
+        assertEquals(new BigDecimal("4999.94"), saved.getMonthlySalary());
+        // totalCost = 4999.94 + 500 + 300 = 5799.94
+        assertEquals(new BigDecimal("5799.94"), saved.getTotalCost());
         assertEquals("ACTIVE", saved.getStatus());
         assertEquals(1, saved.getVersion());
         assertEquals("OR-GENERATED", id);
@@ -87,7 +91,8 @@ class OutsourceRateServiceImplTest {
         dto.setRateCode("V1");
         dto.setRateName("外包助理工程师");
         dto.setLevelSegment("PRIMARY");
-        dto.setMonthlySalary(new BigDecimal("2500"));
+        dto.setDailyRate(new BigDecimal("113.64"));
+        dto.setMonthlyDays(new BigDecimal("22"));
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
         when(outsourceRateMapper.selectOne(any())).thenReturn(null);
         doAnswer(inv -> {
@@ -99,17 +104,18 @@ class OutsourceRateServiceImplTest {
 
         ArgumentCaptor<OutsourceRateDO> captor = ArgumentCaptor.forClass(OutsourceRateDO.class);
         verify(outsourceRateMapper).insert(captor.capture());
-        assertEquals(new BigDecimal("2500.00"), captor.getValue().getTotalCost());
+        // monthlySalary = 113.64 × 22 = 2500.08
+        assertEquals(new BigDecimal("2500.08"), captor.getValue().getTotalCost());
     }
 
     @Test
-    @DisplayName("创建失败: monthlySalary 不为正数抛 BAD_REQUEST")
+    @DisplayName("创建失败: dailyRate 不为正数抛 BAD_REQUEST")
     void create_invalidSalary() {
         OutsourceRateCreateDTO dto = new OutsourceRateCreateDTO();
         dto.setRateCode("V1");
         dto.setRateName("外包助理工程师");
         dto.setLevelSegment("PRIMARY");
-        dto.setMonthlySalary(BigDecimal.ZERO);
+        dto.setDailyRate(BigDecimal.ZERO);
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
 
         BizException ex = assertThrows(BizException.class, () -> service.create(dto));
@@ -124,7 +130,7 @@ class OutsourceRateServiceImplTest {
         dto.setRateCode("V1");
         dto.setRateName("外包助理工程师");
         dto.setLevelSegment("INVALID");
-        dto.setMonthlySalary(new BigDecimal("2500"));
+        dto.setDailyRate(new BigDecimal("113.64"));
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
 
         BizException ex = assertThrows(BizException.class, () -> service.create(dto));
@@ -138,7 +144,7 @@ class OutsourceRateServiceImplTest {
         dto.setRateCode("V5");
         dto.setRateName("外包高级工程师");
         dto.setLevelSegment("MIDDLE");
-        dto.setMonthlySalary(new BigDecimal("5000"));
+        dto.setDailyRate(new BigDecimal("227.27"));
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
         when(outsourceRateMapper.selectOne(any())).thenReturn(new OutsourceRateDO());
 
@@ -223,19 +229,21 @@ class OutsourceRateServiceImplTest {
     // ==================== update ====================
 
     @Test
-    @DisplayName("更新成功: 重新计算 totalCost")
+    @DisplayName("更新成功: 修改人天单价后重新推导月薪和 totalCost")
     void update_success_recalculatesTotalCost() {
         OutsourceRateDO existing = new OutsourceRateDO();
         existing.setId("R1");
         existing.setRateCode("V5");
-        existing.setMonthlySalary(new BigDecimal("5000"));
+        existing.setDailyRate(new BigDecimal("227.27"));
+        existing.setMonthlyDays(new BigDecimal("22"));
+        existing.setMonthlySalary(new BigDecimal("4999.94"));
         existing.setTravelReimbursement(new BigDecimal("500"));
         existing.setTravelAllowance(new BigDecimal("300"));
         when(outsourceRateMapper.selectById("R1")).thenReturn(existing);
         when(outsourceRateMapper.selectOne(any())).thenReturn(null);
 
         OutsourceRateUpdateDTO dto = new OutsourceRateUpdateDTO();
-        dto.setMonthlySalary(new BigDecimal("6000"));
+        dto.setDailyRate(new BigDecimal("272.73"));
         dto.setTravelReimbursement(new BigDecimal("800"));
         dto.setTravelAllowance(new BigDecimal("500"));
 
@@ -243,7 +251,11 @@ class OutsourceRateServiceImplTest {
 
         ArgumentCaptor<OutsourceRateDO> captor = ArgumentCaptor.forClass(OutsourceRateDO.class);
         verify(outsourceRateMapper).updateById(captor.capture());
-        assertEquals(new BigDecimal("7300.00"), captor.getValue().getTotalCost());
+        OutsourceRateDO updated = captor.getValue();
+        // monthlySalary = 272.73 × 22 = 6000.06
+        assertEquals(new BigDecimal("6000.06"), updated.getMonthlySalary());
+        // totalCost = 6000.06 + 800 + 500 = 7300.06
+        assertEquals(new BigDecimal("7300.06"), updated.getTotalCost());
     }
 
     @Test
@@ -252,7 +264,7 @@ class OutsourceRateServiceImplTest {
         when(outsourceRateMapper.selectById("X")).thenReturn(null);
 
         OutsourceRateUpdateDTO dto = new OutsourceRateUpdateDTO();
-        dto.setMonthlySalary(new BigDecimal("6000"));
+        dto.setDailyRate(new BigDecimal("272.73"));
 
         BizException ex = assertThrows(BizException.class, () -> service.update("X", dto));
         assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());

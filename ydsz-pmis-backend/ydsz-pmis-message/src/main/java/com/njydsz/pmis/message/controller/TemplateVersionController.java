@@ -1,5 +1,8 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
+
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.annotation.PrePermission;
@@ -50,6 +53,7 @@ public class TemplateVersionController {
 
     @Operation(summary = "回滚到指定版本")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
+    @Idempotent(key = "template-version:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
     public Result<String> rollback(@RequestParam String templateCode, @RequestParam int version) {
         return Result.ok(templateVersionService.rollbackToVersion(templateCode, version));
@@ -57,6 +61,7 @@ public class TemplateVersionController {
 
     @Operation(summary = "预览模板渲染结果")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_VIEW)
+    @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/preview")
     public Result<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
         if (dto == null) {
@@ -67,6 +72,7 @@ public class TemplateVersionController {
 
     @Operation(summary = "试发模板（向测试接收人发送）")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
+    @Idempotent(key = "template-version:test-send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/test-send")
     public Result<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
         if (dto == null) {

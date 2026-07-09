@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.entity.FlowNotifyPreferenceDO;
@@ -40,6 +42,7 @@ public class FlowNotifyPreferenceController {
     /**
      * 保存（新增或更新）当前用户的通知偏好
      */
+    @Idempotent(key = "flow-notify-preference:save", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<String> save(@RequestBody FlowNotifyPreferenceDO preference) {
         String tenantId = SecurityContext.getTenantIdOrDefault("1");

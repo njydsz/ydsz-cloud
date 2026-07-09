@@ -1,5 +1,7 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
+
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -112,6 +114,7 @@ public class PermissionController {
     @Operation(summary = "创建权限")
     @PrePermission("auth:perm:create")
     @OperationLog(module = "权限管理", action = "创建权限", bizType = "PERM")
+    @Idempotent(key = "permission:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody PermissionFormDTO dto) {
         return Result.ok(permissionService.create(dto));
@@ -126,6 +129,7 @@ public class PermissionController {
     @Operation(summary = "更新权限")
     @PrePermission("auth:perm:update")
     @OperationLog(module = "权限管理", action = "更新权限", bizType = "PERM")
+    @Idempotent(key = "permission:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@Valid @RequestBody PermissionFormDTO dto) {
         permissionService.update(dto);
@@ -141,6 +145,7 @@ public class PermissionController {
     @Operation(summary = "删除权限")
     @PrePermission("auth:perm:delete")
     @OperationLog(module = "权限管理", action = "删除权限", bizType = "PERM")
+    @Idempotent(key = "permission:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "权限ID") @PathVariable String id) {
         permissionService.delete(id);
