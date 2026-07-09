@@ -10,13 +10,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * 兼职工时单价更新 DTO（部分更新，仅非空字段生效）
+ * 兼职职级费率更新 DTO（部分更新，仅非空字段生效）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data
-@Schema(description = "兼职工时单价更新")
+@Schema(description = "兼职职级费率更新")
 public class PartTimeRateUpdateDTO implements Serializable {
 
     @Serial
@@ -30,20 +30,26 @@ public class PartTimeRateUpdateDTO implements Serializable {
     @Size(max = 64)
     private String rateName;
 
-    /** 工作日时薪 (元/小时) */
-    private BigDecimal hourlyRate;
-
-    /** 加班时薪 (元/小时, 可空) */
-    private BigDecimal overtimeRate;
-
-    /** 周末时薪 (元/小时, 可空) */
-    private BigDecimal weekendRate;
-
-    /** 法定节假日时薪 (元/小时, 可空) */
-    private BigDecimal holidayRate;
-
     /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIC */
-    private String segment;
+    private String levelSegment;
+
+    /** 月度薪资 (元/月) */
+    private BigDecimal monthlySalary;
+
+    /** 商业保险-公司承担部分 (元/月) */
+    private BigDecimal commercialInsurance;
+
+    /** 公司总人力成本 (元/月) */
+    private BigDecimal totalCost;
+
+    /** 对外人天单价 (元/天) */
+    private BigDecimal externalDaily;
+
+    /** 对内人天成本 (元/天) */
+    private BigDecimal internalDaily;
+
+    /** 可计费利用率目标 (0-1) */
+    private BigDecimal billableTarget;
 
     /** 排序序号 */
     private Integer sortOrder;

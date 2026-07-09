@@ -8,10 +8,13 @@ import com.njydsz.pmis.userinfo.dto.EmployeeUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.DepartmentDO;
 import com.njydsz.pmis.userinfo.entity.EmployeeDO;
 import com.njydsz.pmis.userinfo.entity.JobLevelDO;
+import com.njydsz.pmis.userinfo.entity.PartTimeRateDO;
 import com.njydsz.pmis.userinfo.entity.PositionDO;
 import com.njydsz.pmis.userinfo.mapper.DepartmentMapper;
 import com.njydsz.pmis.userinfo.mapper.EmployeeMapper;
 import com.njydsz.pmis.userinfo.mapper.JobLevelMapper;
+import com.njydsz.pmis.userinfo.mapper.JobLevelRateMapper;
+import com.njydsz.pmis.userinfo.mapper.PartTimeRateMapper;
 import com.njydsz.pmis.userinfo.mapper.PositionMapper;
 import com.njydsz.pmis.userinfo.vo.EmployeeVO;
 import org.junit.jupiter.api.DisplayName;
@@ -22,7 +25,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,6 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -38,8 +45,8 @@ import static org.mockito.Mockito.when;
 /**
  * EmployeeServiceImpl 单元测试
  *
- * <p>覆盖员工 CRUD 核心行为与业务规则校验：empCode 唯一性、雇佣类型与兼职工时单价联动、
- * 在职状态流转、默认值填充、外键名称装配降级。使用 Mockito 纯 mock，不启动 Spring 上下文。
+ * <p>覆盖员工 CRUD 核心行为与业务规则校验：empCode 唯一性、雇佣类型与兼职费率联动、
+ * 在职状态流转、默认值填充、外键名称装配降级、成本档案查询。使用 Mockito 纯 mock，不启动 Spring 上下文。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -56,6 +63,10 @@ class EmployeeServiceImplTest {
     private PositionMapper positionMapper;
     @Mock
     private JobLevelMapper jobLevelMapper;
+    @Mock
+    private JobLevelRateMapper jobLevelRateMapper;
+    @Mock
+    private PartTimeRateMapper partTimeRateMapper;
 
     @InjectMocks
     private EmployeeServiceImpl service;
@@ -109,7 +120,7 @@ class EmployeeServiceImplTest {
         EmployeeCreateDTO dto = new EmployeeCreateDTO();
         dto.setEmpCode("E002");
         dto.setEmpName("李四");
-        dto.setLevelCode("L3");
+        dto.setLevelCode("P3");
         dto.setEmployeeType("PART_TIME");
 
         BizException ex = assertThrows(BizException.class, () -> service.create(dto));
@@ -152,7 +163,7 @@ class EmployeeServiceImplTest {
         EmployeeCreateDTO dto = new EmployeeCreateDTO();
         dto.setEmpCode("E005");
         dto.setEmpName("钱七");
-        dto.setLevelCode("L3");
+        dto.setLevelCode("P3");
         dto.setEmployeeType("PART_TIME");
         dto.setPartTimeRateId("R1");
         when(employeeMapper.selectByEmpCode("E005")).thenReturn(null);
@@ -411,5 +422,56 @@ class EmployeeServiceImplTest {
         assertNotNull(vo);
         assertNull(vo.getDepartmentName());
         assertNull(vo.getLevelName());
+    }
+
+    // ==================== getCostProfile ====================
+
+    @Test
+    @DisplayName("getCostProfile 全职: 返回 JobLevelRate.totalCost")
+    void getCostProfile_fullTime() {
+        EmployeeDO emp = new EmployeeDO();
+        emp.setId("E1");
+        emp.setEmployeeType("FULL_TIME");
+        emp.setLevelCode("L5");
+        when(employeeMapper.selectById("E1")).thenReturn(emp);
+
+        com.njydsz.pmis.userinfo.entity.JobLevelRateDO rate = new com.njydsz.pmis.userinfo.entity.JobLevelRateDO();
+        rate.setTotalCost(new BigDecimal("10360"));
+        when(jobLevelRateMapper.selectEffective(eq("L5"), any())).thenReturn(rate);
+
+        Map<String, Object> profile = service.getCostProfile("E1");
+
+        assertNotNull(profile);
+        assertEquals("FULL_TIME", profile.get("employeeType"));
+        assertEquals(new BigDecimal("10360"), profile.get("monthlyTotalCost"));
+    }
+
+    @Test
+    @DisplayName("getCostProfile 兼职: 返回 PartTimeRate.totalCost")
+    void getCostProfile_partTime() {
+        EmployeeDO emp = new EmployeeDO();
+        emp.setId("E2");
+        emp.setEmployeeType("PART_TIME");
+        emp.setLevelCode("P3");
+        emp.setPartTimeRateId("R1");
+        when(employeeMapper.selectById("E2")).thenReturn(emp);
+
+        PartTimeRateDO rate = new PartTimeRateDO();
+        rate.setTotalCost(new BigDecimal("4050"));
+        when(partTimeRateMapper.selectById("R1")).thenReturn(rate);
+
+        Map<String, Object> profile = service.getCostProfile("E2");
+
+        assertNotNull(profile);
+        assertEquals("PART_TIME", profile.get("employeeType"));
+        assertEquals(new BigDecimal("4050"), profile.get("monthlyTotalCost"));
+    }
+
+    @Test
+    @DisplayName("getCostProfile 员工不存在返回 null")
+    void getCostProfile_notFound() {
+        when(employeeMapper.selectById("X")).thenReturn(null);
+
+        assertNull(service.getCostProfile("X"));
     }
 }

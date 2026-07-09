@@ -27,41 +27,41 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 兼职工时单价接口
+ * 兼职职级费率接口（P1-P18）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "基础数据-兼职工时单价")
+@Tag(name = "基础数据-兼职职级费率")
 @RestController
 @RequestMapping("/part-time-rates")
 @RequiredArgsConstructor
 @Validated
 public class PartTimeRateController {
 
-    /** 兼职工时单价服务 */
+    /** 兼职职级费率服务 */
     private final PartTimeRateService partTimeRateService;
 
     /**
-     * 创建兼职工时单价
+     * 创建兼职职级费率
      *
      * @param dto 创建参数
      * @return 统一响应结果，包含新建记录 ID
      */
-    @Operation(summary = "创建兼职工时单价")
+    @Operation(summary = "创建兼职职级费率")
     @PostMapping
     public Result<String> create(@Valid @RequestBody PartTimeRateCreateDTO dto) {
         return Result.ok(partTimeRateService.create(dto));
     }
 
     /**
-     * 更新兼职工时单价
+     * 更新兼职职级费率
      *
      * @param id  记录 ID
      * @param dto 更新参数
      * @return 统一响应结果
      */
-    @Operation(summary = "更新兼职工时单价")
+    @Operation(summary = "更新兼职职级费率")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable String id, @Valid @RequestBody PartTimeRateUpdateDTO dto) {
         partTimeRateService.update(id, dto);
@@ -69,12 +69,12 @@ public class PartTimeRateController {
     }
 
     /**
-     * 删除兼职工时单价
+     * 删除兼职职级费率
      *
      * @param id 记录 ID
      * @return 统一响应结果
      */
-    @Operation(summary = "删除兼职工时单价")
+    @Operation(summary = "删除兼职职级费率")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         partTimeRateService.delete(id);
@@ -82,31 +82,31 @@ public class PartTimeRateController {
     }
 
     /**
-     * 查询兼职工时单价详情
+     * 查询兼职职级费率详情
      *
      * @param id 记录 ID
-     * @return 统一响应结果，包含单价详情
+     * @return 统一响应结果，包含费率详情
      */
-    @Operation(summary = "兼职工时单价详情")
+    @Operation(summary = "兼职职级费率详情")
     @GetMapping("/{id}")
     public Result<PartTimeRateDO> get(@PathVariable String id) {
         return Result.ok(partTimeRateService.getById(id));
     }
 
     /**
-     * 分页查询兼职工时单价
+     * 分页查询兼职职级费率
      *
      * @param query 查询参数
      * @return 统一响应结果，包含分页数据
      */
-    @Operation(summary = "兼职工时单价分页")
+    @Operation(summary = "兼职职级费率分页")
     @GetMapping
     public Result<Page<PartTimeRateDO>> page(@Valid PartTimeRatePageDTO query) {
         return Result.ok(partTimeRateService.page(
                 (int) query.getPage(),
                 (int) Math.min(query.getSize(), 200),
                 query.getKeyword(),
-                query.getSegment(),
+                query.getLevelSegment(),
                 query.getStatus()));
     }
 

@@ -29,8 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -210,7 +208,49 @@ public class EmployeeServiceImpl implements EmployeeService {
         vo.setDepartmentName(resolveDepartmentName(entity.getDepartmentId()));
         vo.setPositionName(resolvePositionName(entity.getPositionId()));
         vo.setLevelName(resolveLevelName(entity.getLevelCode()));
+        vo.setPartTimeRateName(resolvePartTimeRateName(entity.getPartTimeRateId()));
         return vo;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getCostProfile(String id) {
+        if (!StringUtils.hasText(id)) {
+            return null;
+        }
+        EmployeeDO emp = employeeMapper.selectById(id);
+        if (emp == null) {
+            return null;
+        }
+        Map<String, Object> profile = new HashMap<>(8);
+        String employeeType = emp.getEmployeeType() != null ? emp.getEmployeeType() : EmployeeType.FULL_TIME.getCode();
+        profile.put("employeeType", employeeType);
+        profile.put("levelCode", emp.getLevelCode());
+        profile.put("partTimeRateId", emp.getPartTimeRateId());
+
+        if (EmployeeType.FULL_TIME.getCode().equals(employeeType)) {
+            // 全职：月薪 + 社保公积金（公司承担），取 pmis_job_level_rate.total_cost
+            LocalDate today = LocalDate.now();
+            JobLevelRateDO rate = jobLevelRateMapper.selectEffective(emp.getLevelCode(), today);
+            profile.put("monthlyTotalCost", rate != null ? rate.getTotalCost() : null);
+            profile.put("hourlyRate", null);
+            profile.put("overtimeRate", null);
+        } else if (EmployeeType.PART_TIME.getCode().equals(employeeType)) {
+            // 兼职：月薪 + 商业保险（公司承担），取 pmis_part_time_rate.total_cost
+            PartTimeRateDO rate = null;
+            if (StringUtils.hasText(emp.getPartTimeRateId())) {
+                rate = partTimeRateMapper.selectById(emp.getPartTimeRateId());
+            }
+            profile.put("monthlyTotalCost", rate != null ? rate.getTotalCost() : null);
+            profile.put("hourlyRate", null);
+            profile.put("overtimeRate", null);
+        } else {
+            // 外包：预留扩展
+            profile.put("monthlyTotalCost", null);
+            profile.put("hourlyRate", null);
+            profile.put("overtimeRate", null);
+        }
+        return profile;
     }
 
     /**
@@ -225,18 +265,18 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     /**
-     * 校验兼职工时单价级别：PART_TIME 必填，其余类型必须为空
+     * 校验兼职费率：PART_TIME 必填，其余类型必须为空
      *
      * @param employeeType   雇佣类型编码
-     * @param partTimeRateId 兼职工时单价级别 ID
+     * @param partTimeRateId 兼职费率 ID
      */
     private void validatePartTimeRate(String employeeType, String partTimeRateId) {
         if (EmployeeType.PART_TIME.getCode().equals(employeeType)) {
             if (!StringUtils.hasText(partTimeRateId)) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "兼职类型员工必须填写兼职工时单价级别 ID");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "兼职类型员工必须填写兼职费率 ID");
             }
         } else if (StringUtils.hasText(partTimeRateId)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "非兼职类型员工的兼职工时单价级别 ID 必须为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "非兼职类型员工的兼职费率 ID 必须为空");
         }
     }
 
@@ -305,6 +345,22 @@ public class EmployeeServiceImpl implements EmployeeService {
             return level == null ? null : level.getLevelName();
         } catch (Exception e) {
             log.warn("[Employee] 装配职级名称失败: levelCode={}, msg={}", levelCode, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 装配兼职费率名称，失败降级为 null
+     */
+    private String resolvePartTimeRateName(String partTimeRateId) {
+        if (partTimeRateId == null) {
+            return null;
+        }
+        try {
+            PartTimeRateDO rate = partTimeRateMapper.selectById(partTimeRateId);
+            return rate == null ? null : rate.getRateName();
+        } catch (Exception e) {
+            log.warn("[Employee] 装配兼职费率名称失败: partTimeRateId={}, msg={}", partTimeRateId, e.getMessage());
             return null;
         }
     }

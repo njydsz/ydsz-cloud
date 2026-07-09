@@ -72,8 +72,14 @@ public class EmployeeDO extends BaseDO {
     /** 岗位 ID（pmis_position.id，可空） */
     private String positionId;
 
-    /** 职级编码（pmis_job_level.level_code） */
+    /** 职级编码（全职 L1-L18 / 兼职 P1-P18） */
     private String levelCode;
+
+    /** 雇佣类型：FULL_TIME 全职 / PART_TIME 兼职 / OUTSOURCE 外包 */
+    private String employeeType;
+
+    /** 兼职费率 ID（仅 PART_TIME 类型填写，关联 pmis_part_time_rate.id） */
+    private String partTimeRateId;
 
     /** 入职日期 */
     private LocalDate hireDate;

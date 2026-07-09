@@ -415,6 +415,18 @@ export const asyncRoutes: RouteRecordRaw[] = [
         meta: { title: 'route.resourceJobLevel', icon: 'DataLine', keepAlive: true, permCode: PC.EXECUTION_RATE_LIST },
       },
       {
+        path: 'part-time-rate',
+        name: 'ResourcePartTimeRate',
+        component: () => import('@/views/resource/part-time-rate/index.vue'),
+        meta: { title: 'route.resourcePartTimeRate', icon: 'Coin', keepAlive: true, permCode: PC.RESOURCE_PART_TIME_RATE_LIST },
+      },
+      {
+        path: 'employee',
+        name: 'ResourceEmployee',
+        component: () => import('@/views/resource/employee/index.vue'),
+        meta: { title: 'route.resourceEmployee', icon: 'User', keepAlive: true, permCode: PC.RESOURCE_EMPLOYEE_LIST },
+      },
+      {
         path: 'pool',
         name: 'ResourcePool',
         component: () => import('@/views/resource/pool/index.vue'),

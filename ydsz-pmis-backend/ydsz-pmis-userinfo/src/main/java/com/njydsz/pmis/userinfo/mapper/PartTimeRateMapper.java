@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 兼职工时单价 Mapper
+ * 兼职职级费率 Mapper（P1-P18）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

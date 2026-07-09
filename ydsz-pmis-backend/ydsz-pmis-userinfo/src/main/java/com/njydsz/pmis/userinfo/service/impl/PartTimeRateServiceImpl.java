@@ -16,12 +16,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
 /**
- * 兼职工时单价服务实现
+ * 兼职职级费率服务实现（P1-P18，月薪+商业保险）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -41,7 +43,7 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     /** 默认版本号 */
     private static final int DEFAULT_VERSION = 1;
 
-    /** 兼职工时单价 Mapper */
+    /** 兼职职级费率 Mapper */
     private final PartTimeRateMapper partTimeRateMapper;
 
     @Override
@@ -50,6 +52,8 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         validateCreate(dto);
         PartTimeRateDO entity = new PartTimeRateDO();
         BeanUtils.copyProperties(dto, entity);
+        // 自动计算 totalCost = monthlySalary + commercialInsurance
+        entity.setTotalCost(calculateTotalCost(dto.getMonthlySalary(), dto.getCommercialInsurance()));
         if (entity.getStatus() == null) {
             entity.setStatus(DEFAULT_STATUS);
         }
@@ -65,22 +69,22 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     @Transactional(rollbackFor = Exception.class)
     public void update(String id, PartTimeRateUpdateDTO dto) {
         if (id == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "兼职工时单价 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "兼职职级费率 ID 不能为空");
         }
         PartTimeRateDO exists = partTimeRateMapper.selectById(id);
         if (exists == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "兼职工时单价不存在: " + id);
+            throw new BizException(BizErrorCode.NOT_FOUND, "兼职职级费率不存在: " + id);
         }
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "兼职工时单价参数不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "兼职职级费率参数不能为空");
         }
-        if (dto.getHourlyRate() != null && dto.getHourlyRate().signum() <= 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "工作日时薪必须大于 0");
+        if (dto.getMonthlySalary() != null && dto.getMonthlySalary().signum() <= 0) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "月度薪资必须大于 0");
         }
-        if (StringUtils.hasText(dto.getSegment()) && !VALID_SEGMENTS.contains(dto.getSegment())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "级别段位非法: " + dto.getSegment());
+        if (StringUtils.hasText(dto.getLevelSegment()) && !VALID_SEGMENTS.contains(dto.getLevelSegment())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "级别段位非法: " + dto.getLevelSegment());
         }
-        // 日期校验：合并已有字段后判断失效日期不早于生效日期
+        // 日期校验
         LocalDate effective = dto.getEffectiveDate() != null ? dto.getEffectiveDate() : exists.getEffectiveDate();
         LocalDate expire = dto.getExpireDate() != null ? dto.getExpireDate() : exists.getExpireDate();
         if (expire != null && expire.isBefore(effective)) {
@@ -99,6 +103,12 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         PartTimeRateDO entity = new PartTimeRateDO();
         BeanUtils.copyProperties(dto, entity);
         entity.setId(id);
+        // 重新计算 totalCost
+        BigDecimal salary = dto.getMonthlySalary() != null ? dto.getMonthlySalary() : exists.getMonthlySalary();
+        BigDecimal insurance = dto.getCommercialInsurance() != null ? dto.getCommercialInsurance() : exists.getCommercialInsurance();
+        if (salary != null) {
+            entity.setTotalCost(calculateTotalCost(salary, insurance));
+        }
         partTimeRateMapper.updateById(entity);
         log.info("[PartTimeRate] 更新兼职费率: id={}", id);
     }
@@ -107,10 +117,10 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
         if (id == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "兼职工时单价 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "兼职职级费率 ID 不能为空");
         }
         if (partTimeRateMapper.selectById(id) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "兼职工时单价不存在: " + id);
+            throw new BizException(BizErrorCode.NOT_FOUND, "兼职职级费率不存在: " + id);
         }
         partTimeRateMapper.deleteById(id);
         log.info("[PartTimeRate] 删除兼职费率: id={}", id);
@@ -121,7 +131,7 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     public PartTimeRateDO getById(String id) {
         PartTimeRateDO rate = partTimeRateMapper.selectById(id);
         if (rate == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "兼职工时单价不存在: " + id);
+            throw new BizException(BizErrorCode.NOT_FOUND, "兼职职级费率不存在: " + id);
         }
         return rate;
     }
@@ -136,7 +146,7 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
                     .or().like(PartTimeRateDO::getRateName, keyword));
         }
         if (StringUtils.hasText(segment)) {
-            w.eq(PartTimeRateDO::getSegment, segment);
+            w.eq(PartTimeRateDO::getLevelSegment, segment);
         }
         if (StringUtils.hasText(status)) {
             w.eq(PartTimeRateDO::getStatus, status);
@@ -166,6 +176,23 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         return partTimeRateMapper.listEffective(date);
     }
 
+    // ==================== private ====================
+
+    /**
+     * 计算公司总人力成本 = 月薪 + 商业保险
+     *
+     * @param monthlySalary       月度薪资
+     * @param commercialInsurance 商业保险（为 null 时按 0 处理）
+     * @return 总成本（保留 2 位小数）
+     */
+    private BigDecimal calculateTotalCost(BigDecimal monthlySalary, BigDecimal commercialInsurance) {
+        if (monthlySalary == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "月度薪资不能为空");
+        }
+        BigDecimal insurance = commercialInsurance != null ? commercialInsurance : BigDecimal.ZERO;
+        return monthlySalary.add(insurance).setScale(2, RoundingMode.HALF_UP);
+    }
+
     /**
      * 创建参数校验
      *
@@ -173,7 +200,7 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
      */
     private void validateCreate(PartTimeRateCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "兼职工时单价参数不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "兼职职级费率参数不能为空");
         }
         if (!StringUtils.hasText(dto.getRateCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "兼职级别编码不能为空");
@@ -181,10 +208,10 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         if (!StringUtils.hasText(dto.getRateName())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "兼职级别名称不能为空");
         }
-        if (dto.getHourlyRate() == null || dto.getHourlyRate().signum() <= 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "工作日时薪必须大于 0");
+        if (dto.getMonthlySalary() == null || dto.getMonthlySalary().signum() <= 0) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "月度薪资必须大于 0");
         }
-        validateSegment(dto.getSegment());
+        validateSegment(dto.getLevelSegment());
         if (dto.getEffectiveDate() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "生效日期不能为空");
         }

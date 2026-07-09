@@ -522,6 +522,8 @@ CREATE TABLE IF NOT EXISTS pmis_employee(
     department_id   VARCHAR(20)         NOT NULL,
     position_id     VARCHAR(20),
     level_code      VARCHAR(8)     NOT NULL,
+    employee_type   VARCHAR(16)    NOT NULL DEFAULT 'FULL_TIME',
+    part_time_rate_id VARCHAR(20),
     hire_date       DATE           NOT NULL,
     leave_date      DATE,
     work_status     VARCHAR(16)    NOT NULL DEFAULT 'ACTIVE',
@@ -540,6 +542,7 @@ CREATE TABLE IF NOT EXISTS pmis_employee(
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmis_emp_code UNIQUE (emp_code, deleted),
     CONSTRAINT ck_pe_gender_enum      CHECK (gender IN ('M', 'F', 'U')),
+    CONSTRAINT ck_pe_employee_type   CHECK (employee_type IN ('FULL_TIME', 'PART_TIME', 'OUTSOURCE')),
     CONSTRAINT ck_pe_work_status     CHECK (work_status IN ('ACTIVE', 'LEAVE', 'SUSPEND', 'PROBATION')),
     CONSTRAINT ck_pe_bench_status     CHECK (bench_status IN ('YES', 'NO', 'TRAINING')),
     CONSTRAINT ck_pe_dates_valid      CHECK (leave_date IS NULL OR leave_date >= hire_date),
@@ -559,7 +562,9 @@ COMMENT ON COLUMN pmis_employee.phone_enc IS '手机号 SM4 加密密文';
 COMMENT ON COLUMN pmis_employee.email IS '企业邮箱';
 COMMENT ON COLUMN pmis_employee.department_id IS '所属部门 ID(关联 pmis_department.id)';
 COMMENT ON COLUMN pmis_employee.position_id IS '岗位 ID(关联 pmis_position.id)';
-COMMENT ON COLUMN pmis_employee.level_code IS '职级编码(L1-L18,关联 pmis_job_level.level_code)';
+COMMENT ON COLUMN pmis_employee.level_code IS '职级编码(全职 L1-L18 / 兼职 P1-P18,关联 pmis_job_level 或 pmis_part_time_rate)';
+COMMENT ON COLUMN pmis_employee.employee_type IS '雇佣类型: FULL_TIME 全职 / PART_TIME 兼职 / OUTSOURCE 外包';
+COMMENT ON COLUMN pmis_employee.part_time_rate_id IS '兼职费率 ID(仅 PART_TIME 类型填写,关联 pmis_part_time_rate.id)';
 COMMENT ON COLUMN pmis_employee.hire_date IS '入职日期';
 COMMENT ON COLUMN pmis_employee.leave_date IS '离职日期(在职为 NULL)';
 COMMENT ON COLUMN pmis_employee.work_status IS '在职状态: ACTIVE 在职 / LEAVE 离职 / SUSPEND 停薪留职 / PROBATION 试用期';
@@ -580,12 +585,73 @@ COMMENT ON COLUMN pmis_employee.tenant_id IS '租户 ID(单租户部署默认 1)
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_user ON pmis_employee (user_id);
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_dept ON pmis_employee (department_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_level ON pmis_employee (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_emp_type ON pmis_employee (employee_type) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_bench ON pmis_employee (bench_status, bench_start) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_employee_tenant ON pmis_employee(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_employee_tenant_created
     ON pmis_employee(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_position
     ON pmis_employee(position_id) WHERE deleted = 0;
+
+-- 兼职职级费率表 (P1-P18, 月薪+商业保险)
+CREATE TABLE IF NOT EXISTS pmis_part_time_rate(
+    id                  VARCHAR(20)      PRIMARY KEY,
+    rate_code           VARCHAR(8)     NOT NULL,
+    rate_name           VARCHAR(64)    NOT NULL,
+    level_segment       VARCHAR(16)    NOT NULL,
+    monthly_salary      NUMERIC(10,2)  NOT NULL,
+    commercial_insurance NUMERIC(10,2) NOT NULL DEFAULT 0,
+    total_cost          NUMERIC(10,2)  NOT NULL,
+    external_daily      NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    internal_daily      NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    billable_target     NUMERIC(5,4)   NOT NULL DEFAULT 0.70,
+    sort_order          INTEGER        NOT NULL DEFAULT 0,
+    effective_date      DATE           NOT NULL,
+    expire_date         DATE,
+    version             INTEGER        NOT NULL DEFAULT 1,
+    description         TEXT,
+    status              VARCHAR(16)    NOT NULL DEFAULT 'ACTIVE',
+    created_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_pmis_part_time_rate UNIQUE (rate_code, version, deleted),
+    CONSTRAINT ck_ptr_segment         CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
+    CONSTRAINT ck_ptr_status_enum     CHECK (status IN ('ACTIVE', 'INACTIVE')),
+    CONSTRAINT ck_ptr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
+    CONSTRAINT ck_ptr_deleted_enum    CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_ptr_cost_valid      CHECK (total_cost = monthly_salary + commercial_insurance)
+);
+COMMENT ON TABLE pmis_part_time_rate IS '兼职职级费率表(P1-P18): 月薪+商业保险成本拆解,支持版本化生效';
+COMMENT ON COLUMN pmis_part_time_rate.id IS '主键 ID';
+COMMENT ON COLUMN pmis_part_time_rate.rate_code IS '兼职级别编码(P1-P18)';
+COMMENT ON COLUMN pmis_part_time_rate.rate_name IS '级别名称(如兼职初级工程师)';
+COMMENT ON COLUMN pmis_part_time_rate.level_segment IS '级别段: PRIMARY 初级(P1-P3) / MIDDLE 中级(P4-P6) / SENIOR 高级(P7-P9) / EXPERT 专家(P10-P12) / STRATEGIC 战略(P13-P18)';
+COMMENT ON COLUMN pmis_part_time_rate.monthly_salary IS '月度薪资(元/月)';
+COMMENT ON COLUMN pmis_part_time_rate.commercial_insurance IS '商业保险-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_part_time_rate.total_cost IS '公司总人力成本(元/月,=monthly_salary+commercial_insurance)';
+COMMENT ON COLUMN pmis_part_time_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
+COMMENT ON COLUMN pmis_part_time_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
+COMMENT ON COLUMN pmis_part_time_rate.billable_target IS '可计费利用率目标(0.0-1.0)';
+COMMENT ON COLUMN pmis_part_time_rate.sort_order IS '排序序号';
+COMMENT ON COLUMN pmis_part_time_rate.effective_date IS '生效日期';
+COMMENT ON COLUMN pmis_part_time_rate.expire_date IS '失效日期(NULL 表示长期有效)';
+COMMENT ON COLUMN pmis_part_time_rate.version IS '版本号(同级别可有多版本,通过 effective_date 区分)';
+COMMENT ON COLUMN pmis_part_time_rate.description IS '费率版本说明';
+COMMENT ON COLUMN pmis_part_time_rate.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
+COMMENT ON COLUMN pmis_part_time_rate.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_part_time_rate.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_part_time_rate.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_part_time_rate.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_part_time_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_part_time_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
+
+CREATE INDEX IF NOT EXISTS idx_ptr_code ON pmis_part_time_rate (rate_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ptr_effective ON pmis_part_time_rate (effective_date, expire_date);
+CREATE INDEX IF NOT EXISTS idx_ptr_tenant ON pmis_part_time_rate(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ptr_tenant_sort ON pmis_part_time_rate(tenant_id, sort_order) WHERE deleted = 0;
 
 -- 员工标签表
 CREATE TABLE IF NOT EXISTS pmis_employee_tag(
@@ -1050,6 +1116,30 @@ VALUES
     ('L16', 1900, 950,  19000, 4655, 2005, 950,  950,  16045, 24605, 0.45, '2026-01-01', 1, 0),
     ('L17', 2000, 1000, 20000, 4900, 2110, 1000, 1000, 16890, 25900, 0.40, '2026-01-01', 1, 0),
     ('L18', 2100, 1050, 21000, 5145, 2215, 1050, 1050, 17735, 27195, 0.40, '2026-01-01', 1, 0)
+ON CONFLICT DO NOTHING;
+
+-- 初始化兼职职级费率 (P1-P18, 月薪+商业保险)
+INSERT INTO pmis_part_time_rate
+(rate_code, rate_name, level_segment, monthly_salary, commercial_insurance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
+VALUES
+    ('P1',  '兼职助理工程师',     'PRIMARY',   3000,  50,  3050,  300,  150,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P2',  '兼职初级开发工程师', 'PRIMARY',   3500,  50,  3550,  350,  175,  0.78,  2, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P3',  '兼职开发工程师',     'PRIMARY',   4000,  50,  4050,  400,  200,  0.80,  3, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P4',  '兼职中级工程师',     'MIDDLE',    5000,  80,  5080,  500,  250,  0.82,  4, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P5',  '兼职高级工程师',     'MIDDLE',    6000,  80,  6080,  600,  300,  0.82,  5, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P6',  '兼职资深工程师',     'MIDDLE',    7000,  80,  7080,  700,  350,  0.82,  6, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P7',  '兼职高级工程师/项目经理', 'SENIOR', 8000, 100,  8100,  800,  400,  0.80,  7, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P8',  '兼职资深工程师/高级项目经理', 'SENIOR', 9000, 100,  9100,  900,  450,  0.80,  8, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P9',  '兼职架构师/项目总监', 'SENIOR',  10000, 100, 10100, 1000, 500,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P10', '兼职资深架构师',     'EXPERT',   11000, 120, 11120, 1100, 550,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P11', '兼职技术专家/交付总监', 'EXPERT', 12000, 120, 12120, 1200, 600,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P12', '兼职资深技术专家',   'EXPERT',   13000, 120, 13120, 1300, 650,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P13', '兼职首席架构师',     'STRATEGIC',14000, 150, 14150, 1400, 700,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P14', '兼职技术总监',       'STRATEGIC',15000, 150, 15150, 1500, 750,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P15', '兼职CTO/事业部总经理', 'STRATEGIC',16000, 150, 16150, 1600, 800,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P16', '兼职技术副总裁',     'STRATEGIC',17000, 150, 17150, 1700, 850,  0.45, 16, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P17', '兼职执行副总裁',     'STRATEGIC',18000, 200, 18200, 1800, 900,  0.40, 17, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P18', '兼职首席科学家',     'STRATEGIC',19000, 200, 19200, 1900, 950,  0.40, 18, '2026-01-01', 1, 'ACTIVE', 0)
 ON CONFLICT DO NOTHING;
 
 -- 初始化根部门

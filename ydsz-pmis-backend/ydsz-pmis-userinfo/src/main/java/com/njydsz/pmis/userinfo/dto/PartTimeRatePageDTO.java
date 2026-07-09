@@ -23,7 +23,7 @@ public class PartTimeRatePageDTO extends PageQuery {
 
     /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIC */
     @Schema(description = "级别段位")
-    private String segment;
+    private String levelSegment;
 
     /** 状态: ACTIVE/INACTIVE */
     @Schema(description = "状态")
