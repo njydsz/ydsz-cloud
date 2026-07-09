@@ -1,6 +1,6 @@
-package com.njydsz.pmis.project.engine;
+﻿package com.njydsz.pmis.project.engine;
 
-import com.njydsz.pmis.project.entity.ProfitSnapshotDO;
+import com.njydsz.pmis.project.entity.finance.ProfitSnapshotDO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;

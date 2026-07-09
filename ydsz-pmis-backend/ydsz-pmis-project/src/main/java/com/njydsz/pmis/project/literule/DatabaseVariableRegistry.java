@@ -1,10 +1,10 @@
-package com.njydsz.pmis.project.literule;
+﻿package com.njydsz.pmis.project.literule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.literule.expr.VariableDefinition;
 import com.njydsz.pmis.literule.expr.VariableRegistry;
-import com.njydsz.pmis.project.entity.RuleVariableDefDO;
-import com.njydsz.pmis.project.mapper.RuleVariableDefMapper;
+import com.njydsz.pmis.project.entity.ruleengine.RuleVariableDefDO;
+import com.njydsz.pmis.project.mapper.ruleengine.RuleVariableDefMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

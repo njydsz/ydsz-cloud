@@ -19,8 +19,16 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RedisHealthIndicator implements HealthIndicator {
 
+    /** Redis 操作模板，用于执行 PING 命令检查连通性 */
     private final StringRedisTemplate redisTemplate;
 
+    /**
+     * 执行 Redis 健康检查：通过 PING 命令验证连接可用性
+     *
+     * <p>检查成功时返回 UP 状态；PONG 响应异常或连接失败时返回 DOWN 状态。
+     *
+     * @return 健康状态对象
+     */
     @Override
     public Health health() {
         try {

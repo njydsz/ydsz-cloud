@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.project.mapper.contract.ContractMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.ContractDO">
+        <id column="id" property="id"/>
+        <result column="contract_code" property="contractCode"/>
+        <result column="contract_name" property="contractName"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="contract_type" property="contractType"/>
+        <result column="sign_date" property="signDate"/>
+        <result column="effective_date" property="effectiveDate"/>
+        <result column="expire_date" property="expireDate"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="currency" property="currency"/>
+        <result column="payment_terms" property="paymentTerms"/>
+        <result column="billing_cycle" property="billingCycle"/>
+        <result column="tax_rate" property="taxRate"/>
+        <result column="status" property="status"/>
+        <result column="risk_level" property="riskLevel"/>
+        <result column="risk_notes" property="riskNotes"/>
+        <result column="owner_id" property="ownerId"/>
+        <result column="owner_name" property="ownerName"/>
+        <result column="contract_file_id" property="contractFileId"/>
+        <result column="workflow_id" property="workflowId"/>
+        <result column="remark" property="remark"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT id, contract_code, contract_name, initiation_id, customer_id, customer_name, contract_type, sign_date, effective_date, expire_date, total_amount, currency, payment_terms, billing_cycle, tax_rate, status, risk_level, risk_notes, owner_id, owner_name, contract_file_id, workflow_id, remark, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_project_contract
+        WHERE contract_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <update id="updateStatus">
+        UPDATE pmis_project_contract
+        SET status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <update id="adjustTotalAmount">
+        UPDATE pmis_project_contract
+        SET total_amount = total_amount + #{delta}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="aggregateByStatus" resultType="java.util.Map">
+        SELECT status, COUNT(1) AS cnt, COALESCE(SUM(total_amount), 0) AS amount
+        FROM pmis_project_contract
+        WHERE tenant_id = #{tenantId} AND deleted = 0
+        GROUP BY status
+    </select>
+
+    <select id="aggregateByRisk" resultType="java.util.Map">
+        SELECT risk_level, COUNT(1) AS cnt, COALESCE(SUM(total_amount), 0) AS amount
+        FROM pmis_project_contract
+        WHERE tenant_id = #{tenantId} AND deleted = 0
+        GROUP BY risk_level
+    </select>
+
+    <select id="countByStatus" resultType="java.lang.Long">
+        SELECT COUNT(1) FROM pmis_project_contract
+        WHERE status = #{status} AND tenant_id = #{tenantId} AND deleted = 0
+    </select>
+
+</mapper>

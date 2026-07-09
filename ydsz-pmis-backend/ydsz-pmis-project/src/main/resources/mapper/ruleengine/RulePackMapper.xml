@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.project.mapper.ruleengine.RulePackMapper">
+
+    <select id="selectByPackCode" resultType="com.njydsz.pmis.project.entity.RulePackDO">
+        SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
+               rule_snapshots, previous_version,
+               description, author, download_count, rating, enabled, official,
+               created_by, created_at, updated_by, updated_at
+        FROM pmis_rule_pack
+        WHERE pack_code = #{packCode}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="selectByPackCodeVersion" resultType="com.njydsz.pmis.project.entity.RulePackDO">
+        SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
+               rule_snapshots, previous_version,
+               description, author, download_count, rating, enabled, official,
+               created_by, created_at, updated_by, updated_at
+        FROM pmis_rule_pack
+        WHERE pack_code = #{packCode} AND pack_version = #{packVersion}
+        LIMIT 1
+    </select>
+
+    <select id="selectByIndustry" resultType="com.njydsz.pmis.project.entity.RulePackDO">
+        SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
+               rule_snapshots, previous_version,
+               description, author, download_count, rating, enabled, official,
+               created_by, created_at, updated_by, updated_at
+        FROM pmis_rule_pack
+        WHERE industry = #{industry} AND enabled = TRUE
+        ORDER BY official DESC, download_count DESC
+    </select>
+
+    <update id="increaseDownloadCount">
+        UPDATE pmis_rule_pack
+        SET download_count = download_count + 1
+        WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,12 +1,12 @@
-package com.njydsz.pmis.project.literule;
+﻿package com.njydsz.pmis.project.literule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.HitPolicy;
 import com.njydsz.pmis.literule.spi.DecisionTableConfigProvider;
-import com.njydsz.pmis.project.entity.DecisionTableDO;
-import com.njydsz.pmis.project.mapper.DecisionTableMapper;
+import com.njydsz.pmis.project.entity.ruleengine.DecisionTableDO;
+import com.njydsz.pmis.project.mapper.ruleengine.DecisionTableMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

@@ -1,10 +1,10 @@
-package com.njydsz.pmis.project.literule;
+﻿package com.njydsz.pmis.project.literule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.project.entity.CostAllocationDO;
-import com.njydsz.pmis.project.entity.TimeEntryDO;
-import com.njydsz.pmis.project.mapper.CostAllocationMapper;
-import com.njydsz.pmis.project.mapper.TimeEntryMapper;
+import com.njydsz.pmis.project.entity.execution.CostAllocationDO;
+import com.njydsz.pmis.project.entity.execution.TimeEntryDO;
+import com.njydsz.pmis.project.mapper.execution.CostAllocationMapper;
+import com.njydsz.pmis.project.mapper.execution.TimeEntryMapper;
 import com.njydsz.pmis.literule.spi.ReconcileDataProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

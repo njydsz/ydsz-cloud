@@ -52,6 +52,11 @@ public class AuditFieldFiller implements MetaObjectHandler {
         strictUpdateFill(metaObject, "updatedBy", String.class, userId);
     }
 
+    /**
+     * 获取当前线程登录用户 ID，未登录或异常时回退到系统占位值
+     *
+     * @return 当前用户 ID 或 {@link SystemConstants#SYSTEM_USER_ID}
+     */
     private String currentUserId() {
         try {
             String uid = SecurityContext.getUserId();

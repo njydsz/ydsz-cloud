@@ -19,12 +19,26 @@ import java.sql.Statement;
 @Component
 public class DatabaseHealthIndicator implements HealthIndicator {
 
+    /** 数据源，用于获取数据库连接执行健康检查 SQL */
     private final DataSource dataSource;
 
+    /**
+     * 构造器注入数据源
+     *
+     * @param dataSource Spring 管理的数据源
+     */
     public DatabaseHealthIndicator(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
+    /**
+     * 执行数据库健康检查：通过 {@code SELECT 1} 验证连接可用性
+     *
+     * <p>检查成功时返回 UP 状态，携带数据库产品名与版本信息；
+     * 检查失败时返回 DOWN 状态，携带异常信息。
+     *
+     * @return 健康状态对象
+     */
     @Override
     public Health health() {
         try (Connection conn = dataSource.getConnection();

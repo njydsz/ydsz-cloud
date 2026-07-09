@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.project.mapper.finance.ProfitSnapshotMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.ProfitSnapshotDO">
+        <id column="id" property="id"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="period" property="period"/>
+        <result column="contract_amount" property="contractAmount"/>
+        <result column="recognized_revenue" property="recognizedRevenue"/>
+        <result column="billed_amount" property="billedAmount"/>
+        <result column="received_amount" property="receivedAmount"/>
+        <result column="labor_cost" property="laborCost"/>
+        <result column="purchase_cost" property="purchaseCost"/>
+        <result column="expense_cost" property="expenseCost"/>
+        <result column="outsource_cost" property="outsourceCost"/>
+        <result column="allocation_cost" property="allocationCost"/>
+        <result column="total_cost" property="totalCost"/>
+        <result column="gross_profit" property="grossProfit"/>
+        <result column="gross_margin" property="grossMargin"/>
+        <result column="progress_pct" property="progressPct"/>
+        <result column="billable_hours" property="billableHours"/>
+        <result column="non_billable_hours" property="nonBillableHours"/>
+        <result column="snapshot_at" property="snapshotAt"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByInitiationAndPeriod" resultMap="BaseResultMap">
+        SELECT id, initiation_id, period, contract_amount, recognized_revenue, billed_amount, received_amount, labor_cost, purchase_cost, expense_cost, outsource_cost, allocation_cost, total_cost, gross_profit, gross_margin, progress_pct, billable_hours, non_billable_hours, snapshot_at, tenant_id, provider_trace_id, deleted FROM pmis_profit_snapshot
+        WHERE initiation_id = #{initiationId} AND period = #{period} AND deleted = 0 LIMIT 1
+    </select>
+
+    <select id="selectByInitiation" resultMap="BaseResultMap">
+        SELECT id, initiation_id, period, contract_amount, recognized_revenue, billed_amount, received_amount, labor_cost, purchase_cost, expense_cost, outsource_cost, allocation_cost, total_cost, gross_profit, gross_margin, progress_pct, billable_hours, non_billable_hours, snapshot_at, tenant_id, provider_trace_id, deleted FROM pmis_profit_snapshot
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY period DESC
+    </select>
+
+    <select id="trendByPeriod" resultType="java.util.Map">
+        SELECT period, total_cost, gross_profit, gross_margin, progress_pct
+        FROM pmis_profit_snapshot
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY period ASC
+    </select>
+
+    <!-- P6 每日对账：跨项目汇总所有快照利润 -->
+    <select id="sumAll" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(gross_profit), 0) FROM pmis_profit_snapshot
+        WHERE deleted = 0
+    </select>
+</mapper>

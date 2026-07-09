@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.engine;
+﻿package com.njydsz.pmis.project.engine;
 
-import com.njydsz.pmis.project.dto.AlertDispatchDTO;
-import com.njydsz.pmis.project.service.AlertDispatchService;
+import com.njydsz.pmis.project.dto.common.AlertDispatchDTO;
+import com.njydsz.pmis.project.service.common.AlertDispatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

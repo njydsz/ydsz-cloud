@@ -1,8 +1,8 @@
-package com.njydsz.pmis.project.engine;
+﻿package com.njydsz.pmis.project.engine;
 
-import com.njydsz.pmis.project.entity.OpsTicketDO;
-import com.njydsz.pmis.project.enums.OpsTicketPriority;
-import com.njydsz.pmis.project.enums.OpsTicketStatus;
+import com.njydsz.pmis.project.entity.aftersales.OpsTicketDO;
+import com.njydsz.pmis.project.enums.aftersales.OpsTicketPriority;
+import com.njydsz.pmis.project.enums.aftersales.OpsTicketStatus;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.project.mapper.ruleengine.RuleCanaryBucketMapper">
+
+    <select id="selectByRuleCodeSince" resultType="com.njydsz.pmis.project.entity.RuleCanaryBucketDO">
+        SELECT id, rule_code, bucket_type, bucket_count, stat_date, updated_at
+        FROM pmis_rule_canary_bucket
+        WHERE rule_code = #{ruleCode}
+          AND updated_at >= #{since}
+        ORDER BY stat_date ASC, bucket_type ASC
+    </select>
+
+</mapper>

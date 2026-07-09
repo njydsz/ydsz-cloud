@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.job;
+﻿package com.njydsz.pmis.project.job;
 
-import com.njydsz.pmis.project.service.OpsTicketService;
-import com.njydsz.pmis.project.service.WarrantyService;
+import com.njydsz.pmis.project.service.aftersales.OpsTicketService;
+import com.njydsz.pmis.project.service.aftersales.WarrantyService;
 import com.njydsz.pmis.common.job.JobHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

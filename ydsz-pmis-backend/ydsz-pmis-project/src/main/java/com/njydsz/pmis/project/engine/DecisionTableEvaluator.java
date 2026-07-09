@@ -1,6 +1,6 @@
-package com.njydsz.pmis.project.engine;
+﻿package com.njydsz.pmis.project.engine;
 
-import com.njydsz.pmis.project.entity.DecisionTableDO;
+import com.njydsz.pmis.project.entity.ruleengine.DecisionTableDO;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;

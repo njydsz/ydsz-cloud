@@ -1,8 +1,8 @@
-package com.njydsz.pmis.project.literule;
+﻿package com.njydsz.pmis.project.literule;
 
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.project.entity.RuleDependencyDO;
-import com.njydsz.pmis.project.mapper.RuleDependencyMapper;
+import com.njydsz.pmis.project.entity.ruleengine.RuleDependencyDO;
+import com.njydsz.pmis.project.mapper.ruleengine.RuleDependencyMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

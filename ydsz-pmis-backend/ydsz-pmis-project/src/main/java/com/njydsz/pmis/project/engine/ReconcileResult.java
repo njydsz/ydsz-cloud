@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.engine;
+﻿package com.njydsz.pmis.project.engine;
 
-import com.njydsz.pmis.project.enums.ReconcileLevel;
-import com.njydsz.pmis.project.enums.ReconcileType;
+import com.njydsz.pmis.project.enums.finance.ReconcileLevel;
+import com.njydsz.pmis.project.enums.finance.ReconcileType;
 import lombok.Builder;
 import lombok.Data;
 

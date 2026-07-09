@@ -1,6 +1,6 @@
-package com.njydsz.pmis.project.engine.alert;
+﻿package com.njydsz.pmis.project.engine.alert;
 
-import com.njydsz.pmis.project.dto.AlertEventDTO;
+import com.njydsz.pmis.project.dto.common.AlertEventDTO;
 
 import java.util.Map;
 

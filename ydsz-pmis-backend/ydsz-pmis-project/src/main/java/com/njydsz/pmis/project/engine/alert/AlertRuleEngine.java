@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.engine.alert;
+﻿package com.njydsz.pmis.project.engine.alert;
 
-import com.njydsz.pmis.project.dto.AlertEventDTO;
-import com.njydsz.pmis.project.enums.AlertSeverity;
+import com.njydsz.pmis.project.dto.common.AlertEventDTO;
+import com.njydsz.pmis.project.enums.common.AlertSeverity;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;

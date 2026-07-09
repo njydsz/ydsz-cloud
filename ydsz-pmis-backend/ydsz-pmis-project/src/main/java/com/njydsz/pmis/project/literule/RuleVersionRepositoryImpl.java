@@ -1,11 +1,11 @@
-package com.njydsz.pmis.project.literule;
+﻿package com.njydsz.pmis.project.literule;
 
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.project.entity.RuleDefinitionDO;
-import com.njydsz.pmis.project.entity.RuleVersionHistoryDO;
-import com.njydsz.pmis.project.mapper.RuleDefinitionMapper;
-import com.njydsz.pmis.project.mapper.RuleVersionHistoryMapper;
+import com.njydsz.pmis.project.entity.ruleengine.RuleDefinitionDO;
+import com.njydsz.pmis.project.entity.ruleengine.RuleVersionHistoryDO;
+import com.njydsz.pmis.project.mapper.ruleengine.RuleDefinitionMapper;
+import com.njydsz.pmis.project.mapper.ruleengine.RuleVersionHistoryMapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.spi.RuleVersion;

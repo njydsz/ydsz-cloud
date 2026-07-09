@@ -1,9 +1,9 @@
-package com.njydsz.pmis.project.listener;
+﻿package com.njydsz.pmis.project.listener;
 
 import com.njydsz.pmis.common.event.ProjectChangeExecutedEvent;
-import com.njydsz.pmis.project.dto.AlertDispatchDTO;
-import com.njydsz.pmis.project.service.AlertDispatchService;
-import com.njydsz.pmis.project.service.EvmMeasureService;
+import com.njydsz.pmis.project.dto.common.AlertDispatchDTO;
+import com.njydsz.pmis.project.service.common.AlertDispatchService;
+import com.njydsz.pmis.project.service.execution.EvmMeasureService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

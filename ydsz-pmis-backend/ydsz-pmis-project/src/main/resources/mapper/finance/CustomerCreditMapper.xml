@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.project.mapper.finance.CustomerCreditMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.CustomerCreditDO">
+        <id column="id" property="id"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="credit_level" property="creditLevel"/>
+        <result column="credit_score" property="creditScore"/>
+        <result column="total_contract_amount" property="totalContractAmount"/>
+        <result column="total_invoiced_amount" property="totalInvoicedAmount"/>
+        <result column="total_received_amount" property="totalReceivedAmount"/>
+        <result column="on_time_rate" property="onTimeRate"/>
+        <result column="contract_count" property="contractCount"/>
+        <result column="overdue_count" property="overdueCount"/>
+        <result column="last_evaluation_at" property="lastEvaluationAt"/>
+        <result column="evaluator" property="evaluator"/>
+        <result column="remark" property="remark"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCustomerId" resultMap="BaseResultMap">
+        SELECT id, customer_id, customer_name, credit_level, credit_score, total_contract_amount, total_invoiced_amount, total_received_amount, on_time_rate, contract_count, overdue_count, last_evaluation_at, evaluator, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_finance_customer_credit
+        WHERE customer_id = #{customerId} AND deleted = 0 LIMIT 1
+    </select>
+
+    <update id="updateLevel">
+        UPDATE pmis_finance_customer_credit
+        SET credit_level = #{level},
+            credit_score = #{score},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="selectByLevel" resultMap="BaseResultMap">
+        SELECT id, customer_id, customer_name, credit_level, credit_score, total_contract_amount, total_invoiced_amount, total_received_amount, on_time_rate, contract_count, overdue_count, last_evaluation_at, evaluator, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_finance_customer_credit
+        WHERE credit_level = #{level} AND deleted = 0
+        ORDER BY credit_score DESC
+    </select>
+</mapper>
