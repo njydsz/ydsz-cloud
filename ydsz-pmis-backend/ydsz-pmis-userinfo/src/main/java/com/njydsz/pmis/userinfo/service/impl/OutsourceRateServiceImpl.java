@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 外包职级费率服务实现（V1-V18，月薪+差旅报销+差旅补贴）
+ * 外包职级费率服务实现（V1-V18，人天核算月薪+差旅报销+差旅补贴）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -43,6 +43,9 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
     /** 默认版本号 */
     private static final int DEFAULT_VERSION = 1;
 
+    /** 默认月工作天数 */
+    private static final BigDecimal DEFAULT_MONTHLY_DAYS = new BigDecimal("22");
+
     /** 外包职级费率 Mapper */
     private final OutsourceRateMapper outsourceRateMapper;
 
@@ -52,8 +55,15 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
         validateCreate(dto);
         OutsourceRateDO entity = new OutsourceRateDO();
         BeanUtils.copyProperties(dto, entity);
+        // 外包核心：月薪 = 人天单价 × 月工作天数
+        BigDecimal dailyRate = dto.getDailyRate();
+        BigDecimal monthlyDays = dto.getMonthlyDays() != null ? dto.getMonthlyDays() : DEFAULT_MONTHLY_DAYS;
+        BigDecimal monthlySalary = dailyRate.multiply(monthlyDays).setScale(2, RoundingMode.HALF_UP);
+        entity.setDailyRate(dailyRate);
+        entity.setMonthlyDays(monthlyDays);
+        entity.setMonthlySalary(monthlySalary);
         // 自动计算 totalCost = monthlySalary + travelReimbursement + travelAllowance
-        entity.setTotalCost(calculateTotalCost(dto.getMonthlySalary(), dto.getTravelReimbursement(), dto.getTravelAllowance()));
+        entity.setTotalCost(calculateTotalCost(monthlySalary, dto.getTravelReimbursement(), dto.getTravelAllowance()));
         if (entity.getStatus() == null) {
             entity.setStatus(DEFAULT_STATUS);
         }
@@ -61,7 +71,8 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
             entity.setVersion(DEFAULT_VERSION);
         }
         outsourceRateMapper.insert(entity);
-        log.info("[OutsourceRate] 创建外包费率: code={} version={}", entity.getRateCode(), entity.getVersion());
+        log.info("[OutsourceRate] 创建外包费率: code={} version={} dailyRate={} monthlySalary={}",
+                entity.getRateCode(), entity.getVersion(), dailyRate, monthlySalary);
         return entity.getId();
     }
 
@@ -80,6 +91,9 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
         }
         if (dto.getMonthlySalary() != null && dto.getMonthlySalary().signum() <= 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "月度薪资必须大于 0");
+        }
+        if (dto.getDailyRate() != null && dto.getDailyRate().signum() <= 0) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "人天单价必须大于 0");
         }
         if (StringUtils.hasText(dto.getLevelSegment()) && !VALID_SEGMENTS.contains(dto.getLevelSegment())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "级别段位非法: " + dto.getLevelSegment());
@@ -103,13 +117,26 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
         OutsourceRateDO entity = new OutsourceRateDO();
         BeanUtils.copyProperties(dto, entity);
         entity.setId(id);
+        // 外包核心：如果人天单价或月工作天数有变更，重新推导月薪
+        BigDecimal dailyRate = dto.getDailyRate() != null ? dto.getDailyRate() : exists.getDailyRate();
+        BigDecimal monthlyDays = dto.getMonthlyDays() != null ? dto.getMonthlyDays() : exists.getMonthlyDays();
+        if (monthlyDays == null) {
+            monthlyDays = DEFAULT_MONTHLY_DAYS;
+        }
+        boolean rateChanged = dto.getDailyRate() != null || dto.getMonthlyDays() != null;
+        BigDecimal salary;
+        if (rateChanged) {
+            salary = dailyRate.multiply(monthlyDays).setScale(2, RoundingMode.HALF_UP);
+            entity.setDailyRate(dailyRate);
+            entity.setMonthlyDays(monthlyDays);
+            entity.setMonthlySalary(salary);
+        } else {
+            salary = dto.getMonthlySalary() != null ? dto.getMonthlySalary() : exists.getMonthlySalary();
+        }
         // 重新计算 totalCost
-        BigDecimal salary = dto.getMonthlySalary() != null ? dto.getMonthlySalary() : exists.getMonthlySalary();
         BigDecimal reimbursement = dto.getTravelReimbursement() != null ? dto.getTravelReimbursement() : exists.getTravelReimbursement();
         BigDecimal allowance = dto.getTravelAllowance() != null ? dto.getTravelAllowance() : exists.getTravelAllowance();
-        if (salary != null) {
-            entity.setTotalCost(calculateTotalCost(salary, reimbursement, allowance));
-        }
+        entity.setTotalCost(calculateTotalCost(salary, reimbursement, allowance));
         outsourceRateMapper.updateById(entity);
         log.info("[OutsourceRate] 更新外包费率: id={}", id);
     }
@@ -213,6 +240,9 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
         }
         if (dto.getMonthlySalary() == null || dto.getMonthlySalary().signum() <= 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "月度薪资必须大于 0");
+        }
+        if (dto.getDailyRate() == null || dto.getDailyRate().signum() <= 0) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "人天单价必须大于 0");
         }
         validateSegment(dto.getLevelSegment());
         if (dto.getEffectiveDate() == null) {

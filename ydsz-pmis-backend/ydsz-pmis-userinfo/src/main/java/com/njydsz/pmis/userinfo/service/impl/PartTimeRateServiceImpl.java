@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 兼职职级费率服务实现（P1-P18，月薪+商业保险）
+ * 兼职职级费率服务实现（P1-P18，时薪核算月薪+商业保险）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -43,6 +43,9 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     /** 默认版本号 */
     private static final int DEFAULT_VERSION = 1;
 
+    /** 默认月工时数（22天×8小时） */
+    private static final BigDecimal DEFAULT_MONTHLY_HOURS = new BigDecimal("176");
+
     /** 兼职职级费率 Mapper */
     private final PartTimeRateMapper partTimeRateMapper;
 
@@ -52,8 +55,15 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         validateCreate(dto);
         PartTimeRateDO entity = new PartTimeRateDO();
         BeanUtils.copyProperties(dto, entity);
-        // 自动计算 totalCost = monthlySalary + commercialInsurance
-        entity.setTotalCost(calculateTotalCost(dto.getMonthlySalary(), dto.getCommercialInsurance(),
+        // 兼职核心：月薪 = 时薪 × 月工时数
+        BigDecimal hourlyRate = dto.getHourlyRate();
+        BigDecimal monthlyHours = dto.getMonthlyHours() != null ? dto.getMonthlyHours() : DEFAULT_MONTHLY_HOURS;
+        BigDecimal monthlySalary = hourlyRate.multiply(monthlyHours).setScale(2, RoundingMode.HALF_UP);
+        entity.setHourlyRate(hourlyRate);
+        entity.setMonthlyHours(monthlyHours);
+        entity.setMonthlySalary(monthlySalary);
+        // 自动计算 totalCost = monthlySalary + commercialInsurance + travelReimbursement + travelAllowance
+        entity.setTotalCost(calculateTotalCost(monthlySalary, dto.getCommercialInsurance(),
                 dto.getTravelReimbursement(), dto.getTravelAllowance()));
         if (entity.getStatus() == null) {
             entity.setStatus(DEFAULT_STATUS);
@@ -62,7 +72,8 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
             entity.setVersion(DEFAULT_VERSION);
         }
         partTimeRateMapper.insert(entity);
-        log.info("[PartTimeRate] 创建兼职费率: code={} version={}", entity.getRateCode(), entity.getVersion());
+        log.info("[PartTimeRate] 创建兼职费率: code={} version={} hourlyRate={} monthlySalary={}",
+                entity.getRateCode(), entity.getVersion(), hourlyRate, monthlySalary);
         return entity.getId();
     }
 
@@ -81,6 +92,9 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         }
         if (dto.getMonthlySalary() != null && dto.getMonthlySalary().signum() <= 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "月度薪资必须大于 0");
+        }
+        if (dto.getHourlyRate() != null && dto.getHourlyRate().signum() <= 0) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "时薪必须大于 0");
         }
         if (StringUtils.hasText(dto.getLevelSegment()) && !VALID_SEGMENTS.contains(dto.getLevelSegment())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "级别段位非法: " + dto.getLevelSegment());
@@ -104,14 +118,27 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         PartTimeRateDO entity = new PartTimeRateDO();
         BeanUtils.copyProperties(dto, entity);
         entity.setId(id);
+        // 兼职核心：如果时薪或月工时数有变更，重新推导月薪
+        BigDecimal hourlyRate = dto.getHourlyRate() != null ? dto.getHourlyRate() : exists.getHourlyRate();
+        BigDecimal monthlyHours = dto.getMonthlyHours() != null ? dto.getMonthlyHours() : exists.getMonthlyHours();
+        if (monthlyHours == null) {
+            monthlyHours = DEFAULT_MONTHLY_HOURS;
+        }
+        boolean rateChanged = dto.getHourlyRate() != null || dto.getMonthlyHours() != null;
+        BigDecimal salary;
+        if (rateChanged) {
+            salary = hourlyRate.multiply(monthlyHours).setScale(2, RoundingMode.HALF_UP);
+            entity.setHourlyRate(hourlyRate);
+            entity.setMonthlyHours(monthlyHours);
+            entity.setMonthlySalary(salary);
+        } else {
+            salary = dto.getMonthlySalary() != null ? dto.getMonthlySalary() : exists.getMonthlySalary();
+        }
         // 重新计算 totalCost
-        BigDecimal salary = dto.getMonthlySalary() != null ? dto.getMonthlySalary() : exists.getMonthlySalary();
         BigDecimal insurance = dto.getCommercialInsurance() != null ? dto.getCommercialInsurance() : exists.getCommercialInsurance();
         BigDecimal reimbursement = dto.getTravelReimbursement() != null ? dto.getTravelReimbursement() : exists.getTravelReimbursement();
         BigDecimal allowance = dto.getTravelAllowance() != null ? dto.getTravelAllowance() : exists.getTravelAllowance();
-        if (salary != null) {
-            entity.setTotalCost(calculateTotalCost(salary, insurance, reimbursement, allowance));
-        }
+        entity.setTotalCost(calculateTotalCost(salary, insurance, reimbursement, allowance));
         partTimeRateMapper.updateById(entity);
         log.info("[PartTimeRate] 更新兼职费率: id={}", id);
     }
@@ -218,6 +245,9 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         }
         if (dto.getMonthlySalary() == null || dto.getMonthlySalary().signum() <= 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "月度薪资必须大于 0");
+        }
+        if (dto.getHourlyRate() == null || dto.getHourlyRate().signum() <= 0) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "时薪必须大于 0");
         }
         validateSegment(dto.getLevelSegment());
         if (dto.getEffectiveDate() == null) {

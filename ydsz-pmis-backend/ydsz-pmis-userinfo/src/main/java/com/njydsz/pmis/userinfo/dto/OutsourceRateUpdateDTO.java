@@ -33,7 +33,13 @@ public class OutsourceRateUpdateDTO implements Serializable {
     /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIC */
     private String levelSegment;
 
-    /** 月度薪资 (元/月) */
+    /** 人天单价 (元/天, 外包核心计价单元) */
+    private BigDecimal dailyRate;
+
+    /** 月工作天数 (默认22天) */
+    private BigDecimal monthlyDays;
+
+    /** 月度薪资 (元/月, = dailyRate × monthlyDays, 服务端自动计算) */
     private BigDecimal monthlySalary;
 
     /** 差旅报销-公司承担部分 (元/月) */

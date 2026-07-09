@@ -12,6 +12,7 @@
  *   <li>{@link com.njydsz.pmis.common.annotation.DataScope}       - 数据范围隔离</li>
  *   <li>{@link com.njydsz.pmis.common.annotation.DistributedLock} - 分布式锁（Redis）</li>
  *   <li>{@link com.njydsz.pmis.common.annotation.Idempotent}      - 幂等控制（Redis SETNX + 滑动窗口）</li>
+ *   <li>{@link com.njydsz.pmis.common.annotation.IdempotentExempt}- 幂等豁免（标注无需幂等防护的接口）</li>
  *   <li>{@link com.njydsz.pmis.common.annotation.OperationLog}    - 操作日志（异步落库）</li>
  *   <li>{@link com.njydsz.pmis.common.annotation.PrePermission}   - 权限码前置校验</li>
  *   <li>{@link com.njydsz.pmis.common.annotation.RateLimit}       - 限流（Sentinel / Resilience4j）</li>

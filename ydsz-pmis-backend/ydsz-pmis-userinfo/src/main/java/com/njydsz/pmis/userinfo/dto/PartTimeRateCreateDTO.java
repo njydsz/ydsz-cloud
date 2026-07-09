@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * 兼职职级费率创建 DTO（月薪+商业保险）
+ * 兼职职级费率创建 DTO（时薪核算月薪+商业保险）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -38,8 +38,14 @@ public class PartTimeRateCreateDTO implements Serializable {
     @NotBlank
     private String levelSegment;
 
-    /** 月度薪资 (元/月) */
+    /** 时薪 (元/小时, 兼职核心计价单元) */
     @NotNull
+    private BigDecimal hourlyRate;
+
+    /** 月工时数 (默认176小时=22天×8小时) */
+    private BigDecimal monthlyHours;
+
+    /** 月度薪资 (元/月, = hourlyRate × monthlyHours, 服务端自动计算) */
     private BigDecimal monthlySalary;
 
     /** 商业保险-公司承担部分 (元/月) */

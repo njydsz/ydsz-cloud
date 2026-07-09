@@ -14,7 +14,11 @@ export interface PartTimeRateVO {
   rateName: string
   /** 级别段：PRIMARY / MIDDLE / SENIOR / EXPERT / STRATEGIC */
   levelSegment?: string
-  /** 月度薪资（元/月） */
+  /** 时薪（元/小时，兼职核心计价单元） */
+  hourlyRate?: number
+  /** 月工时数（默认176小时=22天×8小时） */
+  monthlyHours?: number
+  /** 月度薪资（元/月, = hourlyRate × monthlyHours） */
   monthlySalary?: number
   /** 商业保险-公司承担部分（元/月） */
   commercialInsurance?: number
@@ -49,7 +53,10 @@ export interface PartTimeRateCreateDTO {
   rateCode: string
   rateName: string
   levelSegment: string
-  monthlySalary: number
+  /** 时薪（元/小时，兼职核心计价单元） */
+  hourlyRate: number
+  /** 月工时数（默认176小时=22天×8小时） */
+  monthlyHours?: number
   commercialInsurance?: number
   travelReimbursement?: number
   travelAllowance?: number
@@ -69,6 +76,10 @@ export interface PartTimeRateUpdateDTO {
   rateCode?: string
   rateName?: string
   levelSegment?: string
+  /** 时薪（元/小时，兼职核心计价单元） */
+  hourlyRate?: number
+  /** 月工时数（默认176小时=22天×8小时） */
+  monthlyHours?: number
   monthlySalary?: number
   commercialInsurance?: number
   travelReimbursement?: number

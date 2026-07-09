@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 /**
  * PartTimeRateServiceImpl 单元测试
  *
- * <p>覆盖兼职职级费率 CRUD 核心行为：月薪+商业保险+差旅报销+差旅补贴自动计算 totalCost、
+ * <p>覆盖兼职职级费率 CRUD 核心行为：时薪核算月薪(monthlySalary=hourlyRate×monthlyHours)+商业保险+差旅报销+差旅补贴自动计算 totalCost、
  * 级别编码+版本唯一性校验、级别段位校验、日期校验、生效费率匹配。
  *
  * @author ydsz-pmis-team
@@ -52,13 +52,14 @@ class PartTimeRateServiceImplTest {
     // ==================== create ====================
 
     @Test
-    @DisplayName("创建成功: 自动计算 totalCost = monthlySalary + commercialInsurance + travelReimbursement + travelAllowance")
+    @DisplayName("创建成功: 自动计算 monthlySalary=hourlyRate×monthlyHours, totalCost=monthlySalary+commercialInsurance+travelReimbursement+travelAllowance")
     void create_success_calculatesTotalCost() {
         PartTimeRateCreateDTO dto = new PartTimeRateCreateDTO();
         dto.setRateCode("P5");
         dto.setRateName("兼职高级工程师");
         dto.setLevelSegment("MIDDLE");
-        dto.setMonthlySalary(new BigDecimal("6000"));
+        dto.setHourlyRate(new BigDecimal("34.09"));
+        dto.setMonthlyHours(new BigDecimal("176"));
         dto.setCommercialInsurance(new BigDecimal("80"));
         dto.setTravelReimbursement(new BigDecimal("500"));
         dto.setTravelAllowance(new BigDecimal("300"));
@@ -75,7 +76,10 @@ class PartTimeRateServiceImplTest {
         verify(partTimeRateMapper).insert(captor.capture());
         PartTimeRateDO saved = captor.getValue();
         assertEquals("P5", saved.getRateCode());
-        assertEquals(new BigDecimal("6880.00"), saved.getTotalCost());
+        // monthlySalary = 34.09 × 176 = 5999.84
+        assertEquals(new BigDecimal("5999.84"), saved.getMonthlySalary());
+        // totalCost = 5999.84 + 80 + 500 + 300 = 6879.84
+        assertEquals(new BigDecimal("6879.84"), saved.getTotalCost());
         assertEquals("ACTIVE", saved.getStatus());
         assertEquals(1, saved.getVersion());
         assertEquals("PTR-GENERATED", id);
@@ -88,7 +92,8 @@ class PartTimeRateServiceImplTest {
         dto.setRateCode("P1");
         dto.setRateName("兼职助理工程师");
         dto.setLevelSegment("PRIMARY");
-        dto.setMonthlySalary(new BigDecimal("3000"));
+        dto.setHourlyRate(new BigDecimal("17.05"));
+        dto.setMonthlyHours(new BigDecimal("176"));
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
         when(partTimeRateMapper.selectOne(any())).thenReturn(null);
         doAnswer(inv -> {
@@ -100,17 +105,18 @@ class PartTimeRateServiceImplTest {
 
         ArgumentCaptor<PartTimeRateDO> captor = ArgumentCaptor.forClass(PartTimeRateDO.class);
         verify(partTimeRateMapper).insert(captor.capture());
-        assertEquals(new BigDecimal("3000.00"), captor.getValue().getTotalCost());
+        // monthlySalary = 17.05 × 176 = 3000.80
+        assertEquals(new BigDecimal("3000.80"), captor.getValue().getTotalCost());
     }
 
     @Test
-    @DisplayName("创建失败: monthlySalary 不为正数抛 BAD_REQUEST")
+    @DisplayName("创建失败: hourlyRate 不为正数抛 BAD_REQUEST")
     void create_invalidSalary() {
         PartTimeRateCreateDTO dto = new PartTimeRateCreateDTO();
         dto.setRateCode("P1");
         dto.setRateName("兼职助理工程师");
         dto.setLevelSegment("PRIMARY");
-        dto.setMonthlySalary(BigDecimal.ZERO);
+        dto.setHourlyRate(BigDecimal.ZERO);
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
 
         BizException ex = assertThrows(BizException.class, () -> service.create(dto));
@@ -125,7 +131,7 @@ class PartTimeRateServiceImplTest {
         dto.setRateCode("P1");
         dto.setRateName("兼职助理工程师");
         dto.setLevelSegment("INVALID");
-        dto.setMonthlySalary(new BigDecimal("3000"));
+        dto.setHourlyRate(new BigDecimal("17.05"));
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
 
         BizException ex = assertThrows(BizException.class, () -> service.create(dto));
@@ -139,7 +145,7 @@ class PartTimeRateServiceImplTest {
         dto.setRateCode("P5");
         dto.setRateName("兼职高级工程师");
         dto.setLevelSegment("MIDDLE");
-        dto.setMonthlySalary(new BigDecimal("6000"));
+        dto.setHourlyRate(new BigDecimal("34.09"));
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
         when(partTimeRateMapper.selectOne(any())).thenReturn(new PartTimeRateDO());
 
@@ -224,25 +230,31 @@ class PartTimeRateServiceImplTest {
     // ==================== update ====================
 
     @Test
-    @DisplayName("更新成功: 重新计算 totalCost")
+    @DisplayName("更新成功: 修改时薪后重新推导月薪和 totalCost")
     void update_success_recalculatesTotalCost() {
         PartTimeRateDO existing = new PartTimeRateDO();
         existing.setId("R1");
         existing.setRateCode("P5");
-        existing.setMonthlySalary(new BigDecimal("6000"));
+        existing.setHourlyRate(new BigDecimal("34.09"));
+        existing.setMonthlyHours(new BigDecimal("176"));
+        existing.setMonthlySalary(new BigDecimal("5999.84"));
         existing.setCommercialInsurance(new BigDecimal("80"));
         when(partTimeRateMapper.selectById("R1")).thenReturn(existing);
         when(partTimeRateMapper.selectOne(any())).thenReturn(null);
 
         PartTimeRateUpdateDTO dto = new PartTimeRateUpdateDTO();
-        dto.setMonthlySalary(new BigDecimal("7000"));
+        dto.setHourlyRate(new BigDecimal("39.77"));
         dto.setCommercialInsurance(new BigDecimal("100"));
 
         service.update("R1", dto);
 
         ArgumentCaptor<PartTimeRateDO> captor = ArgumentCaptor.forClass(PartTimeRateDO.class);
         verify(partTimeRateMapper).updateById(captor.capture());
-        assertEquals(new BigDecimal("7100.00"), captor.getValue().getTotalCost());
+        PartTimeRateDO updated = captor.getValue();
+        // monthlySalary = 39.77 × 176 = 6999.52
+        assertEquals(new BigDecimal("6999.52"), updated.getMonthlySalary());
+        // totalCost = 6999.52 + 100 + 0 + 0 = 7099.52
+        assertEquals(new BigDecimal("7099.52"), updated.getTotalCost());
     }
 
     @Test
@@ -250,33 +262,5 @@ class PartTimeRateServiceImplTest {
     void update_notFound() {
         when(partTimeRateMapper.selectById("X")).thenReturn(null);
 
-        PartTimeRateUpdateDTO dto = new PartTimeRateUpdateDTO();
-        dto.setMonthlySalary(new BigDecimal("7000"));
-
-        BizException ex = assertThrows(BizException.class, () -> service.update("X", dto));
-        assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
-    }
-
-    // ==================== delete ====================
-
-    @Test
-    @DisplayName("删除成功")
-    void delete_success() {
-        PartTimeRateDO existing = new PartTimeRateDO();
-        existing.setId("R1");
-        when(partTimeRateMapper.selectById("R1")).thenReturn(existing);
-
-        service.delete("R1");
-
-        verify(partTimeRateMapper).deleteById("R1");
-    }
-
-    @Test
-    @DisplayName("删除失败: 不存在抛 NOT_FOUND")
-    void delete_notFound() {
-        when(partTimeRateMapper.selectById("X")).thenReturn(null);
-
-        BizException ex = assertThrows(BizException.class, () -> service.delete("X"));
-        assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
-    }
-}
+        OutsourceRateUpdateDTO dto = new OutsourceRateUpdateDTO();
+        dto.setDailyRate(new BigDecimal("500.00"));

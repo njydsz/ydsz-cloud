@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * 外包职级费率创建 DTO（月薪+差旅报销+差旅补贴）
+ * 外包职级费率创建 DTO（人天核算月薪+差旅报销+差旅补贴）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -38,8 +38,14 @@ public class OutsourceRateCreateDTO implements Serializable {
     @NotBlank
     private String levelSegment;
 
-    /** 月度薪资 (元/月) */
+    /** 人天单价 (元/天, 外包核心计价单元) */
     @NotNull
+    private BigDecimal dailyRate;
+
+    /** 月工作天数 (默认22天) */
+    private BigDecimal monthlyDays;
+
+    /** 月度薪资 (元/月, = dailyRate × monthlyDays, 服务端自动计算) */
     private BigDecimal monthlySalary;
 
     /** 差旅报销-公司承担部分 (元/月) */

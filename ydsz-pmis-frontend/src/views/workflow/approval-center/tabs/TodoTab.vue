@@ -162,9 +162,8 @@ async function loadFlowDefinitions() {
   try {
     const res = await pageDefinitions({ status: 'PUBLISHED', pageNum: 1, pageSize: 200 })
     if (res.data?.code === 0) {
-      // 后端分页返回 records 字段（MyBatis-Plus Page），与前端 PageResult.list 类型不一致，用类型断言收敛
-      const pageData = res.data?.data as unknown as { records?: FlowDefinitionDTO[] } | undefined
-      flowDefinitions.value = pageData?.records || []
+      const pageData = res.data?.data
+      flowDefinitions.value = pageData?.list || []
     }
   } catch {
     // 静默失败
@@ -360,9 +359,8 @@ async function loadTodo() {
 
     const res = await pageTodoTasks(params)
     if (res.data?.code === 0) {
-      // 后端分页返回 records/total 字段（MyBatis-Plus Page），与前端 PageResult 类型不一致，用类型断言收敛
-      const pageData = res.data?.data as unknown as { records?: FlowTaskDTO[]; total?: number } | undefined
-      let records = pageData?.records || []
+      const pageData = res.data?.data
+      let records = pageData?.list || []
       const total = pageData?.total || 0
 
       // 紧急程度筛选（客户端过滤）

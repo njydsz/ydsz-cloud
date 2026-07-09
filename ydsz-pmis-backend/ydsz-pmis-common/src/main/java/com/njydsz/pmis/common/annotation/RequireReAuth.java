@@ -24,12 +24,21 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequireReAuth {
 
-    /** 操作码 */
+    /**
+     * 操作编码（用于 Redis 中二次认证 token 的 key 维度区分）
+     * <p>示例：{@code "project:delete"}、{@code "contract:amount:adjust"}
+     */
     String code();
 
-    /** 操作名 */
+    /**
+     * 操作名称（用于审计日志展示与前端弹窗提示）
+     * <p>示例：{@code "删除项目"}、{@code "调整合同金额"}
+     */
     String name();
 
-    /** token 有效时间（秒），默认 300 = 5 分钟 */
+    /**
+     * 二次认证 token 有效时间（秒）
+     * <p>默认 300 秒（5 分钟），超时后需重新认证
+     */
     int ttlSeconds() default 300;
 }

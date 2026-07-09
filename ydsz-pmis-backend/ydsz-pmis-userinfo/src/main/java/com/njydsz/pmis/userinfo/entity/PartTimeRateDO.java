@@ -12,10 +12,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * 兼职职级费率实体（P1-P18，月薪+商业保险）
+ * 兼职职级费率实体（P1-P18，时薪核算月薪+商业保险）
  *
  * <p>与全职 {@link JobLevelRateDO}（L1-L18，月薪+社保公积金）平行，
- * 用于兼职员工的成本核算。
+ * 用于兼职员工的成本核算。兼职核心计价单元为<strong>时薪</strong>，
+ * 月薪 = 时薪(hourlyRate) × 月工时数(monthlyHours)。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -41,7 +42,13 @@ public class PartTimeRateDO extends BaseDO {
     /** 级别段位：PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIC */
     private String levelSegment;
 
-    /** 月度薪资（元/月） */
+    /** 时薪（元/小时，兼职核心计价单元） */
+    private BigDecimal hourlyRate;
+
+    /** 月工时数（默认176小时=22天×8小时） */
+    private BigDecimal monthlyHours;
+
+    /** 月度薪资（元/月, = hourlyRate × monthlyHours） */
     private BigDecimal monthlySalary;
 
     /** 商业保险-公司承担部分（元/月） */

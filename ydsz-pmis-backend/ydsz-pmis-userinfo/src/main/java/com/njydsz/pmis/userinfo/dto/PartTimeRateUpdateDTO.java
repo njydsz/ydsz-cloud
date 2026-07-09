@@ -33,7 +33,13 @@ public class PartTimeRateUpdateDTO implements Serializable {
     /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIC */
     private String levelSegment;
 
-    /** 月度薪资 (元/月) */
+    /** 时薪 (元/小时, 兼职核心计价单元) */
+    private BigDecimal hourlyRate;
+
+    /** 月工时数 (默认176小时=22天×8小时) */
+    private BigDecimal monthlyHours;
+
+    /** 月度薪资 (元/月, = hourlyRate × monthlyHours, 服务端自动计算) */
     private BigDecimal monthlySalary;
 
     /** 商业保险-公司承担部分 (元/月) */

@@ -41,7 +41,8 @@ const form = ref<OutsourceRateCreateDTO & { id?: string }>({
   rateCode: '',
   rateName: '',
   levelSegment: 'PRIMARY',
-  monthlySalary: 0,
+  dailyRate: 0,
+  monthlyDays: 22,
   travelReimbursement: 0,
   travelAllowance: 0,
   externalDaily: 0,
@@ -55,8 +56,15 @@ const form = ref<OutsourceRateCreateDTO & { id?: string }>({
   status: 'ACTIVE',
 })
 
+/** 外包核心：月薪 = 人天单价 × 月工作天数（自动推导） */
+const computedMonthlySalary = computed(() => {
+  const daily = Number(form.value.dailyRate) || 0
+  const days = Number(form.value.monthlyDays) || 22
+  return (daily * days).toFixed(2)
+})
+
 const computedTotalCost = computed(() => {
-  const salary = Number(form.value.monthlySalary) || 0
+  const salary = Number(computedMonthlySalary.value) || 0
   const reimbursement = Number(form.value.travelReimbursement) || 0
   const allowance = Number(form.value.travelAllowance) || 0
   return (salary + reimbursement + allowance).toFixed(2)
@@ -86,7 +94,8 @@ function openCreate() {
     rateCode: '',
     rateName: '',
     levelSegment: 'PRIMARY',
-    monthlySalary: 0,
+    dailyRate: 0,
+    monthlyDays: 22,
     travelReimbursement: 0,
     travelAllowance: 0,
     externalDaily: 0,
@@ -110,7 +119,8 @@ function openEdit(row: OutsourceRateVO) {
     rateCode: row.rateCode,
     rateName: row.rateName,
     levelSegment: row.levelSegment || 'PRIMARY',
-    monthlySalary: row.monthlySalary || 0,
+    dailyRate: row.dailyRate || 0,
+    monthlyDays: row.monthlyDays || 22,
     travelReimbursement: row.travelReimbursement || 0,
     travelAllowance: row.travelAllowance || 0,
     externalDaily: row.externalDaily || 0,
@@ -127,7 +137,7 @@ function openEdit(row: OutsourceRateVO) {
 }
 
 async function submitForm() {
-  if (!form.value.rateCode || !form.value.rateName || !form.value.monthlySalary) {
+  if (!form.value.rateCode || !form.value.rateName || !form.value.dailyRate) {
     ElMessage.warning('请填写必填项')
     return
   }
@@ -224,7 +234,13 @@ onMounted(fetchData)
             {{ segmentMap[row.levelSegment] || row.levelSegment || '-' }}
           </template>
         </vxe-column>
-        <vxe-column field="monthlySalary" title="月薪" width="120" align="right">
+        <vxe-column field="dailyRate" title="人天单价" width="110" align="right">
+          <template #default="{ row }">{{ formatMoney(row.dailyRate) }}</template>
+        </vxe-column>
+        <vxe-column field="monthlyDays" title="月天数" width="90" align="center">
+          <template #default="{ row }">{{ row.monthlyDays ?? 22 }}天</template>
+        </vxe-column>
+        <vxe-column field="monthlySalary" title="月薪(自动)" width="120" align="right">
           <template #default="{ row }">{{ formatMoney(row.monthlySalary) }}</template>
         </vxe-column>
         <vxe-column field="travelReimbursement" title="差旅报销" width="120" align="right">
@@ -308,17 +324,30 @@ onMounted(fetchData)
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="月度薪资" required>
-              <el-input-number v-model="form.monthlySalary" :min="0" :precision="2" style="width: 100%" />
+            <el-form-item label="人天单价" required>
+              <el-input-number v-model="form.dailyRate" :min="0" :precision="2" :step="10" style="width: 100%" />
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="月工作天数">
+              <el-input-number v-model="form.monthlyDays" :min="1" :precision="2" :step="1" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="月薪(自动)">
+          <span style="font-size: 16px; font-weight: 600; color: var(--el-color-success)">
+            ¥{{ computedMonthlySalary }}
+          </span>
+          <span style="margin-left: 8px; color: var(--el-text-color-secondary); font-size: 12px">
+            = 人天单价 × 月工作天数
+          </span>
+        </el-form-item>
+        <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="差旅报销">
               <el-input-number v-model="form.travelReimbursement" :min="0" :precision="2" style="width: 100%" />
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="差旅补贴">
               <el-input-number v-model="form.travelAllowance" :min="0" :precision="2" style="width: 100%" />

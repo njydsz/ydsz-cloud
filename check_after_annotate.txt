@@ -1,0 +1,12 @@
+[check-idempotent] 扫描 Controller: 154 个
+[check-idempotent] 写接口方法: 467 个
+[check-idempotent] 已标注 @Idempotent: 466 个
+[check-idempotent] 未标注: 1 个
+[check-idempotent] 豁免: 28 个
+[check-idempotent] 覆盖率: 99.8%
+
+[check-idempotent] ERROR: 以下写接口未标注 @Idempotent,将阻断 CI:
+  - AsyncExportController#submitExport (POST /execution/export/submit	UNCOVERED)  [ydsz-pmis-project]
+
+[check-idempotent] 各模块未覆盖写接口数量:
+  - ydsz-pmis-project         1 个

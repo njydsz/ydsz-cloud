@@ -5,7 +5,6 @@
 -->
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   pagePartTimeRates,
@@ -14,8 +13,6 @@ import {
   deletePartTimeRate,
 } from '@/api/resource/part-time-rate'
 import type { PartTimeRateVO, PartTimeRateCreateDTO } from '@/api/resource/part-time-rate/types'
-
-const { t } = useI18n()
 
 const loading = ref(false)
 const rateList = ref<PartTimeRateVO[]>([])
@@ -44,7 +41,8 @@ const form = ref<PartTimeRateCreateDTO & { id?: string }>({
   rateCode: '',
   rateName: '',
   levelSegment: 'PRIMARY',
-  monthlySalary: 0,
+  hourlyRate: 0,
+  monthlyHours: 176,
   commercialInsurance: 0,
   travelReimbursement: 0,
   travelAllowance: 0,
@@ -59,8 +57,15 @@ const form = ref<PartTimeRateCreateDTO & { id?: string }>({
   status: 'ACTIVE',
 })
 
+/** 兼职核心：月薪 = 时薪 × 月工时数（自动推导） */
+const computedMonthlySalary = computed(() => {
+  const hourly = Number(form.value.hourlyRate) || 0
+  const hours = Number(form.value.monthlyHours) || 176
+  return (hourly * hours).toFixed(2)
+})
+
 const computedTotalCost = computed(() => {
-  const salary = Number(form.value.monthlySalary) || 0
+  const salary = Number(computedMonthlySalary.value) || 0
   const insurance = Number(form.value.commercialInsurance) || 0
   const reimbursement = Number(form.value.travelReimbursement) || 0
   const allowance = Number(form.value.travelAllowance) || 0
@@ -91,7 +96,8 @@ function openCreate() {
     rateCode: '',
     rateName: '',
     levelSegment: 'PRIMARY',
-    monthlySalary: 0,
+    hourlyRate: 0,
+    monthlyHours: 176,
     commercialInsurance: 0,
     travelReimbursement: 0,
     travelAllowance: 0,
@@ -116,7 +122,8 @@ function openEdit(row: PartTimeRateVO) {
     rateCode: row.rateCode,
     rateName: row.rateName,
     levelSegment: row.levelSegment || 'PRIMARY',
-    monthlySalary: row.monthlySalary || 0,
+    hourlyRate: row.hourlyRate || 0,
+    monthlyHours: row.monthlyHours || 176,
     commercialInsurance: row.commercialInsurance || 0,
     travelReimbursement: row.travelReimbursement || 0,
     travelAllowance: row.travelAllowance || 0,
@@ -134,7 +141,7 @@ function openEdit(row: PartTimeRateVO) {
 }
 
 async function submitForm() {
-  if (!form.value.rateCode || !form.value.rateName || !form.value.monthlySalary) {
+  if (!form.value.rateCode || !form.value.rateName || !form.value.hourlyRate) {
     ElMessage.warning('请填写必填项')
     return
   }
@@ -231,7 +238,13 @@ onMounted(fetchData)
             {{ segmentMap[row.levelSegment] || row.levelSegment || '-' }}
           </template>
         </vxe-column>
-        <vxe-column field="monthlySalary" title="月薪" width="120" align="right">
+        <vxe-column field="hourlyRate" title="时薪" width="100" align="right">
+          <template #default="{ row }">{{ formatMoney(row.hourlyRate) }}</template>
+        </vxe-column>
+        <vxe-column field="monthlyHours" title="月工时" width="90" align="center">
+          <template #default="{ row }">{{ row.monthlyHours ?? 176 }}h</template>
+        </vxe-column>
+        <vxe-column field="monthlySalary" title="月薪(自动)" width="120" align="right">
           <template #default="{ row }">{{ formatMoney(row.monthlySalary) }}</template>
         </vxe-column>
         <vxe-column field="commercialInsurance" title="商业保险" width="120" align="right">
@@ -318,26 +331,43 @@ onMounted(fetchData)
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="月度薪资" required>
-              <el-input-number v-model="form.monthlySalary" :min="0" :precision="2" style="width: 100%" />
+            <el-form-item label="时薪" required>
+              <el-input-number v-model="form.hourlyRate" :min="0" :precision="2" :step="0.01" style="width: 100%" />
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="月工时数">
+              <el-input-number v-model="form.monthlyHours" :min="1" :precision="2" :step="8" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="月薪(自动)">
+          <span style="font-size: 16px; font-weight: 600; color: var(--el-color-success)">
+            ¥{{ computedMonthlySalary }}
+          </span>
+          <span style="margin-left: 8px; color: var(--el-text-color-secondary); font-size: 12px">
+            = 时薪 × 月工时数
+          </span>
+        </el-form-item>
+        <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="商业保险">
               <el-input-number v-model="form.commercialInsurance" :min="0" :precision="2" style="width: 100%" />
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="差旅报销">
               <el-input-number v-model="form.travelReimbursement" :min="0" :precision="2" style="width: 100%" />
             </el-form-item>
           </el-col>
+        </el-row>
+        <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="差旅补贴">
               <el-input-number v-model="form.travelAllowance" :min="0" :precision="2" style="width: 100%" />
             </el-form-item>
+          </el-col>
+        </el-row>
         <el-form-item label="总成本（自动）">
           <span style="font-size: 18px; font-weight: 600; color: var(--el-color-primary)">
             ¥{{ computedTotalCost }}

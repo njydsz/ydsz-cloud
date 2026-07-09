@@ -22,19 +22,34 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OperationLog {
 
-    /** 模块名 */
+    /**
+     * 操作所属模块名称（用于日志检索与分类）
+     * <p>示例：{@code "用户管理"}、{@code "合同管理"}
+     */
     String module() default "";
 
-    /** 操作 */
+    /**
+     * 操作动作描述（记录具体执行的操作）
+     * <p>示例：{@code "创建用户"}、{@code "更新合同金额"}
+     */
     String action() default "";
 
-    /** 业务类型 */
+    /**
+     * 业务类型编码（用于日志业务维度归类）
+     * <p>示例：{@code "USER"}、{@code "CONTRACT"}
+     */
     String bizType() default "";
 
-    /** 是否保存请求参数 */
+    /**
+     * 是否保存请求参数（默认 true）
+     * <p>开启后会将方法入参序列化为 JSON 存入操作日志的 params 字段
+     */
     boolean saveParams() default true;
 
-    /** 是否保存响应结果 */
+    /**
+     * 是否保存响应结果（默认 false）
+     * <p>开启后会将方法返回值序列化为 JSON 存入操作日志的 result 字段
+     */
     boolean saveResult() default false;
 
     /**

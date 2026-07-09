@@ -101,13 +101,6 @@ public class Result<T> implements Serializable {
     }
 
     /**
-     * 构建失败响应（基于业务错误码）
-     *
-     * @param errorCode 业务错误码
-     * @param <T>       数据类型
-     * @return 失败响应
-     */
-    /**
      * 失败响应（快捷别名，等价 failed(-1, message)）
      *
      * @param message 错误信息

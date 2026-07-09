@@ -5,7 +5,6 @@
 -->
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   pageEmployees,
@@ -20,8 +19,6 @@ import { listEffectivePartTimeRates } from '@/api/resource/part-time-rate'
 import type { PartTimeRateVO } from '@/api/resource/part-time-rate/types'
 import { listEffectiveOutsourceRates } from '@/api/resource/outsource-rate'
 import type { OutsourceRateVO } from '@/api/resource/outsource-rate/types'
-
-const { t } = useI18n()
 
 const loading = ref(false)
 const empList = ref<EmployeeVO[]>([])

@@ -5,7 +5,8 @@
 # 扫描所有 Controller.java,检查写接口(@PostMapping / @PutMapping /
 # @DeleteMapping / @PatchMapping)是否标注了 @Idempotent 注解。
 #
-# 第一版仅输出 WARNING,不阻断 CI。后续会逐步提升为 error。
+# 方法或类上标注 @IdempotentExempt 的写接口视为明确豁免,不计入未覆盖。
+# 若存在未覆盖写接口,脚本以退出码 1 阻断 CI。
 #
 # 用法:
 #   ./check-idempotent-coverage.sh [后端根目录路径]
@@ -37,11 +38,11 @@ fi
 
 # -----------------------------------------------------------------------------
 # 用 awk 解析所有 Controller.java,输出 TSV:
-#   模块名 \t 类名 \t 方法名 \t HTTP方法 \t 路径 \t COVERED|UNCOVERED
+#   模块名 \t 类名 \t 方法名 \t HTTP方法 \t 路径 \t COVERED|UNCOVERED|EXEMPT
 #
 # 解析逻辑(状态机):
-#   1. 类声明前:累积类级注解,提取 @RequestMapping 路径 与 类级 @Idempotent
-#   2. 类声明后:累积方法级注解块,遇到方法签名时检查是否为写接口 + 是否有 @Idempotent
+#   1. 类声明前:累积类级注解,提取 @RequestMapping 路径、类级 @Idempotent 与 @IdempotentExempt
+#   2. 类声明后:累积方法级注解块,遇到方法签名时检查是否为写接口 + 是否有 @Idempotent / @IdempotentExempt
 #   3. 多行注解:通过"续行检测"将多行注解合并到当前注解块
 # -----------------------------------------------------------------------------
 RESULTS=$(find "$BACKEND_DIR" -type f -name "*Controller.java" -print0 \
@@ -55,9 +56,10 @@ RESULTS=$(find "$BACKEND_DIR" -type f -name "*Controller.java" -print0 \
       class_name = ""
       class_path = ""
       class_has_idempotent = 0
+      class_has_exempt = 0
       seen_class = 0
       # 从 FILENAME 提取模块名(ydsz-pmis-xxx)
-      # FILENAME 形如: ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/...
+      # FILENAME 形如: ydsz-pmis-backend/ydsz-pmis-xxx/src/main/java/...
       module_name = ""
       n = split(FILENAME, parts, "/")
       for (i = 1; i <= n; i++) {
@@ -76,9 +78,12 @@ RESULTS=$(find "$BACKEND_DIR" -type f -name "*Controller.java" -print0 \
         sub(/class[[:space:]]+/, "", s)
         class_name = s
       }
-      # 检查类级注解中的 @Idempotent
-      if (annotation_block ~ /@Idempotent/) {
+      # 检查类级注解中的 @Idempotent / @IdempotentExempt
+      if (annotation_block ~ /@Idempotent([^E]|$)/) {
         class_has_idempotent = 1
+      }
+      if (annotation_block ~ /@IdempotentExempt/) {
+        class_has_exempt = 1
       }
       # 提取类级 @RequestMapping 路径(取第一个引号字符串)
       if (match(annotation_block, /@RequestMapping\([^)]*\)/)) {
@@ -140,8 +145,8 @@ RESULTS=$(find "$BACKEND_DIR" -type f -name "*Controller.java" -print0 \
       }
     }
 
-    # ----- 处理方法:检查是否为写接口 + 是否有 @Idempotent -----
-    function process_method(sig,    is_write, http_method, method_name, path, full_path, has_idempotent, s, rest, mapping) {
+    # ----- 处理方法:检查是否为写接口 + 是否有 @Idempotent / @IdempotentExempt -----
+    function process_method(sig,    is_write, http_method, method_name, path, full_path, has_idempotent, has_exempt, s, rest, mapping) {
       is_write = 0
       http_method = ""
       if (annotation_block ~ /@PostMapping/) { is_write = 1; http_method = "POST" }
@@ -176,7 +181,15 @@ RESULTS=$(find "$BACKEND_DIR" -type f -name "*Controller.java" -print0 \
       full_path = class_path path
 
       # 检查 @Idempotent(方法级 或 类级)
-      has_idempotent = (annotation_block ~ /@Idempotent/) || class_has_idempotent
+      has_idempotent = (annotation_block ~ /@Idempotent([^E]|$)/) || class_has_idempotent
+      # 检查 @IdempotentExempt(方法级 或 类级)
+      has_exempt = (annotation_block ~ /@IdempotentExempt/) || class_has_exempt
+
+      # 豁免方法不计入覆盖统计
+      if (has_exempt) {
+        print module_name "\t" class_name "\t" method_name "\t" http_method "\t" full_path "\tEXEMPT"
+        return
+      }
 
       # 输出 TSV: 模块 \t 类名 \t 方法名 \t HTTP方法 \t 路径 \t 状态
       print module_name "\t" class_name "\t" method_name "\t" http_method "\t" full_path "\t" (has_idempotent ? "COVERED" : "UNCOVERED")
@@ -185,15 +198,18 @@ RESULTS=$(find "$BACKEND_DIR" -type f -name "*Controller.java" -print0 \
 
 
 # -----------------------------------------------------------------------------
-# 汇总统计
+# 汇总统计(不包含 EXEMPT)
 # -----------------------------------------------------------------------------
-TOTAL_WRITE=$(printf '%s\n' "$RESULTS" | grep -c . || true)
+TOTAL_WRITE=$(printf '%s\n' "$RESULTS" | grep -c $'\tCOVERED$\|\tUNCOVERED$' || true)
 COVERED=$(printf '%s\n' "$RESULTS" | grep -c $'\tCOVERED$' || true)
 UNCOVERED=$(printf '%s\n' "$RESULTS" | grep -c $'\tUNCOVERED$' || true)
+EXEMPT=$(printf '%s\n' "$RESULTS" | grep -c $'\tEXEMPT$' || true)
 
 # 处理空值(grep -c 在无匹配时输出 0 但退出码为 1)
 COVERED=${COVERED:-0}
 UNCOVERED=${UNCOVERED:-0}
+EXEMPT=${EXEMPT:-0}
+TOTAL_WRITE=${TOTAL_WRITE:-0}
 
 # 计算覆盖率
 if [ "$TOTAL_WRITE" -eq 0 ]; then
@@ -207,6 +223,7 @@ echo "[check-idempotent] 扫描 Controller: $TOTAL_CONTROLLERS 个"
 echo "[check-idempotent] 写接口方法: $TOTAL_WRITE 个"
 echo "[check-idempotent] 已标注 @Idempotent: $COVERED 个"
 echo "[check-idempotent] 未标注: $UNCOVERED 个"
+echo "[check-idempotent] 豁免: $EXEMPT 个"
 echo "[check-idempotent] 覆盖率: $COVERAGE%"
 
 # -----------------------------------------------------------------------------
@@ -214,7 +231,7 @@ echo "[check-idempotent] 覆盖率: $COVERAGE%"
 # -----------------------------------------------------------------------------
 if [ "$UNCOVERED" -gt 0 ]; then
   echo ""
-  echo "[check-idempotent] WARNING: 以下写接口未标注 @Idempotent (当前不阻断 CI,后续将提升为 error):"
+  echo "[check-idempotent] ERROR: 以下写接口未标注 @Idempotent,将阻断 CI:"
   printf '%s\n' "$RESULTS" | grep $'\tUNCOVERED$' | sort | while IFS=$'\t' read -r module class method http path; do
     # 路径为空时显示 /
     display_path="$path"
@@ -227,7 +244,9 @@ if [ "$UNCOVERED" -gt 0 ]; then
   echo ""
   echo "[check-idempotent] 各模块未覆盖写接口数量:"
   printf '%s\n' "$RESULTS" | grep $'\tUNCOVERED$' | awk -F'\t' '{counts[$1]++} END {for (m in counts) printf "  - %-25s %d 个\n", m, counts[m]}' | sort
+
+  # 存在未覆盖写接口,以错误退出码阻断 CI
+  exit 1
 fi
 
-# 第一版不阻断 CI,始终退出 0
 exit 0

@@ -56,6 +56,7 @@ export interface EmployeeCreateDTO {
   partTimeRateId?: string
   outsourceRateId?: string
   hireDate: string
+  leaveDate?: string
   workStatus?: string
   avatar?: string
   address?: string

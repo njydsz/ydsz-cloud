@@ -14,7 +14,11 @@ export interface OutsourceRateVO {
   rateName: string
   /** 级别段：PRIMARY / MIDDLE / SENIOR / EXPERT / STRATEGIC */
   levelSegment?: string
-  /** 月度薪资（元/月） */
+  /** 人天单价（元/天，外包核心计价单元） */
+  dailyRate?: number
+  /** 月工作天数（默认22天） */
+  monthlyDays?: number
+  /** 月度薪资（元/月, = dailyRate × monthlyDays） */
   monthlySalary?: number
   /** 差旅报销-公司承担部分（元/月） */
   travelReimbursement?: number
@@ -47,7 +51,10 @@ export interface OutsourceRateCreateDTO {
   rateCode: string
   rateName: string
   levelSegment: string
-  monthlySalary: number
+  /** 人天单价（元/天，外包核心计价单元） */
+  dailyRate: number
+  /** 月工作天数（默认22天） */
+  monthlyDays?: number
   travelReimbursement?: number
   travelAllowance?: number
   externalDaily?: number
@@ -66,6 +73,10 @@ export interface OutsourceRateUpdateDTO {
   rateCode?: string
   rateName?: string
   levelSegment?: string
+  /** 人天单价（元/天，外包核心计价单元） */
+  dailyRate?: number
+  /** 月工作天数（默认22天） */
+  monthlyDays?: number
   monthlySalary?: number
   travelReimbursement?: number
   travelAllowance?: number

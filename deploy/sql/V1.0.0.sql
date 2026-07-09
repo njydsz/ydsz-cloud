@@ -600,12 +600,14 @@ CREATE INDEX IF NOT EXISTS idx_employee_tenant_created
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_position
     ON pmis_employee(position_id) WHERE deleted = 0;
 
--- 兼职职级费率表 (P1-P18, 月薪+商业保险)
+-- 兼职职级费率表 (P1-P18, 时薪核算月薪+商业保险+差旅)
 CREATE TABLE IF NOT EXISTS pmis_part_time_rate(
     id                  VARCHAR(20)      PRIMARY KEY,
     rate_code           VARCHAR(8)     NOT NULL,
     rate_name           VARCHAR(64)    NOT NULL,
     level_segment       VARCHAR(16)    NOT NULL,
+    hourly_rate         NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    monthly_hours       NUMERIC(8,2)   NOT NULL DEFAULT 176,
     monthly_salary      NUMERIC(10,2)  NOT NULL,
     commercial_insurance NUMERIC(10,2) NOT NULL DEFAULT 0,
     travel_reimbursement NUMERIC(10,2) NOT NULL DEFAULT 0,
@@ -631,14 +633,17 @@ CREATE TABLE IF NOT EXISTS pmis_part_time_rate(
     CONSTRAINT ck_ptr_status_enum     CHECK (status IN ('ACTIVE', 'INACTIVE')),
     CONSTRAINT ck_ptr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
     CONSTRAINT ck_ptr_deleted_enum    CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_ptr_salary_valid    CHECK (monthly_salary = ROUND(hourly_rate * monthly_hours, 2)),
     CONSTRAINT ck_ptr_cost_valid      CHECK (total_cost = monthly_salary + commercial_insurance + travel_reimbursement + travel_allowance)
 );
-COMMENT ON TABLE pmis_part_time_rate IS '兼职职级费率表(P1-P18): 月薪+商业保险+差旅成本拆解,支持版本化生效';
+COMMENT ON TABLE pmis_part_time_rate IS '兼职职级费率表(P1-P18): 时薪核算月薪+商业保险+差旅成本拆解,支持版本化生效';
 COMMENT ON COLUMN pmis_part_time_rate.id IS '主键 ID';
 COMMENT ON COLUMN pmis_part_time_rate.rate_code IS '兼职级别编码(P1-P18)';
 COMMENT ON COLUMN pmis_part_time_rate.rate_name IS '级别名称(如兼职初级工程师)';
 COMMENT ON COLUMN pmis_part_time_rate.level_segment IS '级别段: PRIMARY 初级(P1-P3) / MIDDLE 中级(P4-P6) / SENIOR 高级(P7-P9) / EXPERT 专家(P10-P12) / STRATEGIC 战略(P13-P18)';
-COMMENT ON COLUMN pmis_part_time_rate.monthly_salary IS '月度薪资(元/月)';
+COMMENT ON COLUMN pmis_part_time_rate.hourly_rate IS '时薪(元/小时,兼职核心计价单元)';
+COMMENT ON COLUMN pmis_part_time_rate.monthly_hours IS '月工时数(默认176小时=22天×8小时)';
+COMMENT ON COLUMN pmis_part_time_rate.monthly_salary IS '月度薪资(元/月,= hourly_rate × monthly_hours)';
 COMMENT ON COLUMN pmis_part_time_rate.commercial_insurance IS '商业保险-公司承担部分(元/月)';
 COMMENT ON COLUMN pmis_part_time_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
 COMMENT ON COLUMN pmis_part_time_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
@@ -664,12 +669,14 @@ CREATE INDEX IF NOT EXISTS idx_ptr_effective ON pmis_part_time_rate (effective_d
 CREATE INDEX IF NOT EXISTS idx_ptr_tenant ON pmis_part_time_rate(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_ptr_tenant_sort ON pmis_part_time_rate(tenant_id, sort_order) WHERE deleted = 0;
 
--- 外包职级费率表 (V1-V18, 月薪+差旅报销+差旅补贴)
+-- 外包职级费率表 (V1-V18, 人天核算月薪+差旅报销+差旅补贴)
 CREATE TABLE IF NOT EXISTS pmis_outsource_rate(
     id                  VARCHAR(20)      PRIMARY KEY,
     rate_code           VARCHAR(8)     NOT NULL,
     rate_name           VARCHAR(64)    NOT NULL,
     level_segment       VARCHAR(16)    NOT NULL,
+    daily_rate          NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    monthly_days        NUMERIC(8,2)   NOT NULL DEFAULT 22,
     monthly_salary      NUMERIC(10,2)  NOT NULL,
     travel_reimbursement NUMERIC(10,2) NOT NULL DEFAULT 0,
     travel_allowance    NUMERIC(10,2)  NOT NULL DEFAULT 0,
@@ -694,14 +701,17 @@ CREATE TABLE IF NOT EXISTS pmis_outsource_rate(
     CONSTRAINT ck_por_status_enum     CHECK (status IN ('ACTIVE', 'INACTIVE')),
     CONSTRAINT ck_por_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
     CONSTRAINT ck_por_deleted_enum    CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_por_salary_valid    CHECK (monthly_salary = ROUND(daily_rate * monthly_days, 2)),
     CONSTRAINT ck_por_cost_valid      CHECK (total_cost = monthly_salary + travel_reimbursement + travel_allowance)
 );
-COMMENT ON TABLE pmis_outsource_rate IS '外包职级费率表(V1-V18): 月薪+差旅报销+差旅补贴成本拆解,支持版本化生效';
+COMMENT ON TABLE pmis_outsource_rate IS '外包职级费率表(V1-V18): 人天核算月薪+差旅报销+差旅补贴成本拆解,支持版本化生效';
 COMMENT ON COLUMN pmis_outsource_rate.id IS '主键 ID';
 COMMENT ON COLUMN pmis_outsource_rate.rate_code IS '外包级别编码(V1-V18)';
 COMMENT ON COLUMN pmis_outsource_rate.rate_name IS '级别名称(如外包初级工程师)';
 COMMENT ON COLUMN pmis_outsource_rate.level_segment IS '级别段: PRIMARY 初级(V1-V3) / MIDDLE 中级(V4-V6) / SENIOR 高级(V7-V9) / EXPERT 专家(V10-V12) / STRATEGIC 战略(V13-V18)';
-COMMENT ON COLUMN pmis_outsource_rate.monthly_salary IS '月度薪资(元/月)';
+COMMENT ON COLUMN pmis_outsource_rate.daily_rate IS '人天单价(元/天,外包核心计价单元)';
+COMMENT ON COLUMN pmis_outsource_rate.monthly_days IS '月工作天数(默认22天)';
+COMMENT ON COLUMN pmis_outsource_rate.monthly_salary IS '月度薪资(元/月,= daily_rate × monthly_days)';
 COMMENT ON COLUMN pmis_outsource_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
 COMMENT ON COLUMN pmis_outsource_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
 COMMENT ON COLUMN pmis_outsource_rate.total_cost IS '公司总人力成本(元/月,=monthly_salary+travel_reimbursement+travel_allowance)';
@@ -1191,52 +1201,52 @@ VALUES
     ('L18', 2100, 1050, 21000, 5145, 2215, 1050, 1050, 17735, 2500, 2000, 31695, 0.40, '2026-01-01', 1, 0)
 ON CONFLICT DO NOTHING;
 
--- 初始化兼职职级费率 (P1-P18, 月薪+商业保险)
+-- 初始化兼职职级费率 (P1-P18, 时薪核算月薪+商业保险+差旅)
 INSERT INTO pmis_part_time_rate
-(rate_code, rate_name, level_segment, monthly_salary, commercial_insurance, travel_reimbursement, travel_allowance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
+(rate_code, rate_name, level_segment, hourly_rate, monthly_hours, monthly_salary, commercial_insurance, travel_reimbursement, travel_allowance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
 VALUES
-    ('P1',  '兼职助理工程师',     'PRIMARY',   3000,  50,  300,  200,  3550,  300,  150,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P2',  '兼职初级开发工程师', 'PRIMARY',   3500,  50,  300,  200,  4050,  350,  175,  0.78,  2, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P3',  '兼职开发工程师',     'PRIMARY',   4000,  50,  300,  200,  4550,  400,  200,  0.80,  3, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P4',  '兼职中级工程师',     'MIDDLE',    5000,  80,  500,  300,  5880,  500,  250,  0.82,  4, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P5',  '兼职高级工程师',     'MIDDLE',    6000,  80,  500,  300,  6880,  600,  300,  0.82,  5, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P6',  '兼职资深工程师',     'MIDDLE',    7000,  80,  500,  300,  7880,  700,  350,  0.82,  6, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P7',  '兼职高级工程师/项目经理', 'SENIOR', 8000, 100,  800,  500,  9400,  800,  400,  0.80,  7, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P8',  '兼职资深工程师/高级项目经理', 'SENIOR', 9000, 100,  800,  500, 10400,  900,  450,  0.80,  8, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P9',  '兼职架构师/项目总监', 'SENIOR',  10000, 100,  800,  500, 11400, 1000,  500,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P10', '兼职资深架构师',     'EXPERT',   11000, 120, 1000,  600, 12720, 1100,  550,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P11', '兼职技术专家/交付总监', 'EXPERT', 12000, 120, 1000,  600, 13720, 1200,  600,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P12', '兼职资深技术专家',   'EXPERT',   13000, 120, 1000,  600, 14720, 1300,  650,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P13', '兼职首席架构师',     'STRATEGIC',14000, 150, 1500,  800, 16450, 1400,  700,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P14', '兼职技术总监',       'STRATEGIC',15000, 150, 1500,  800, 17450, 1500,  750,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P15', '兼职CTO/事业部总经理', 'STRATEGIC',16000, 150, 1500,  800, 18450, 1600,  800,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P16', '兼职技术副总裁',     'STRATEGIC',17000, 150, 1500,  800, 19450, 1700,  850,  0.45, 16, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P17', '兼职执行副总裁',     'STRATEGIC',18000, 200, 2000, 1000, 21200, 1800,  900,  0.40, 17, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P18', '兼职首席科学家',     'STRATEGIC',19000, 200, 2000, 1000, 22200, 1900,  950,  0.40, 18, '2026-01-01', 1, 'ACTIVE', 0)
+    ('P1',  '兼职助理工程师',     'PRIMARY',   17.05, 176,  3000.80,  50,  300,  200,  3550.80,  300,  150,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P2',  '兼职初级开发工程师', 'PRIMARY',   19.89, 176,  3500.64,  50,  300,  200,  4050.64,  350,  175,  0.78,  2, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P3',  '兼职开发工程师',     'PRIMARY',   22.73, 176,  4000.48,  50,  300,  200,  4550.48,  400,  200,  0.80,  3, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P4',  '兼职中级工程师',     'MIDDLE',    28.41, 176,  5000.16,  80,  500,  300,  5880.16,  500,  250,  0.82,  4, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P5',  '兼职高级工程师',     'MIDDLE',    34.09, 176,  5999.84,  80,  500,  300,  6879.84,  600,  300,  0.82,  5, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P6',  '兼职资深工程师',     'MIDDLE',    39.77, 176,  6999.52,  80,  500,  300,  7879.52,  700,  350,  0.82,  6, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P7',  '兼职高级工程师/项目经理', 'SENIOR', 45.45, 176,  7999.20, 100,  800,  500,  9399.20,  800,  400,  0.80,  7, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P8',  '兼职资深工程师/高级项目经理', 'SENIOR', 51.14, 176,  9000.64, 100,  800,  500, 10400.64,  900,  450,  0.80,  8, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P9',  '兼职架构师/项目总监', 'SENIOR',   56.82, 176, 10000.32, 100,  800,  500, 11400.32, 1000,  500,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P10', '兼职资深架构师',     'EXPERT',    62.50, 176, 11000.00, 120, 1000,  600, 12720.00, 1100,  550,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P11', '兼职技术专家/交付总监', 'EXPERT',  68.18, 176, 11999.68, 120, 1000,  600, 13719.68, 1200,  600,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P12', '兼职资深技术专家',   'EXPERT',    73.86, 176, 12999.36, 120, 1000,  600, 14719.36, 1300,  650,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P13', '兼职首席架构师',     'STRATEGIC', 79.55, 176, 14000.80, 150, 1500,  800, 16450.80, 1400,  700,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P14', '兼职技术总监',       'STRATEGIC', 85.23, 176, 15000.48, 150, 1500,  800, 17450.48, 1500,  750,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P15', '兼职CTO/事业部总经理', 'STRATEGIC',90.91, 176, 16000.16, 150, 1500,  800, 18450.16, 1600,  800,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P16', '兼职技术副总裁',     'STRATEGIC', 96.59, 176, 16999.84, 150, 1500,  800, 19449.84, 1700,  850,  0.45, 16, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P17', '兼职执行副总裁',     'STRATEGIC',102.27, 176, 17999.52, 200, 2000, 1000, 21199.52, 1800,  900,  0.40, 17, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P18', '兼职首席科学家',     'STRATEGIC',107.95, 176, 18999.20, 200, 2000, 1000, 22199.20, 1900,  950,  0.40, 18, '2026-01-01', 1, 'ACTIVE', 0)
 ON CONFLICT DO NOTHING;
 
--- 初始化外包职级费率 (V1-V18, 月薪+差旅报销+差旅补贴)
+-- 初始化外包职级费率 (V1-V18, 人天核算月薪+差旅报销+差旅补贴)
 INSERT INTO pmis_outsource_rate
-(rate_code, rate_name, level_segment, monthly_salary, travel_reimbursement, travel_allowance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
+(rate_code, rate_name, level_segment, daily_rate, monthly_days, monthly_salary, travel_reimbursement, travel_allowance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
 VALUES
-    ('V1',  '外包助理工程师',     'PRIMARY',   2500,  300,  200,  3000,  250,  120,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V2',  '外包初级开发工程师', 'PRIMARY',   3000,  300,  200,  3500,  300,  150,  0.78,  2, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V3',  '外包开发工程师',     'PRIMARY',   3500,  300,  200,  4000,  350,  180,  0.80,  3, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V4',  '外包中级工程师',     'MIDDLE',    4000,  500,  300,  4800,  400,  200,  0.82,  4, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V5',  '外包高级工程师',     'MIDDLE',    5000,  500,  300,  5800,  500,  250,  0.82,  5, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V6',  '外包资深工程师',     'MIDDLE',    6000,  500,  300,  6800,  600,  300,  0.82,  6, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V7',  '外包高级工程师/项目经理', 'SENIOR', 7000,  800,  500,  8300,  700,  350,  0.80,  7, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V8',  '外包资深工程师/高级项目经理', 'SENIOR', 8000,  800,  500,  9300,  800,  400,  0.80,  8, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V9',  '外包架构师/项目总监', 'SENIOR',   9000,  800,  500, 10300,  900,  450,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V10', '外包资深架构师',     'EXPERT',   10000, 1000,  600, 11600, 1000,  500,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V11', '外包技术专家/交付总监', 'EXPERT', 11000, 1000,  600, 12600, 1100,  550,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V12', '外包资深技术专家',   'EXPERT',   12000, 1000,  600, 13600, 1200,  600,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V13', '外包首席架构师',     'STRATEGIC',13000, 1500,  800, 15300, 1300,  650,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V14', '外包技术总监',       'STRATEGIC',14000, 1500,  800, 16300, 1400,  700,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V15', '外包CTO/事业部总经理', 'STRATEGIC',15000, 1500,  800, 17300, 1500,  750,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V16', '外包技术副总裁',     'STRATEGIC',16000, 1500,  800, 18300, 1600,  800,  0.45, 16, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V17', '外包执行副总裁',     'STRATEGIC',17000, 2000, 1000, 20000, 1700,  850,  0.40, 17, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V18', '外包首席科学家',     'STRATEGIC',18000, 2000, 1000, 21000, 1800,  900,  0.40, 18, '2026-01-01', 1, 'ACTIVE', 0)
+    ('V1',  '外包助理工程师',     'PRIMARY',   113.64, 22,  2500.08,  300,  200,  3000.08,  250,  120,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V2',  '外包初级开发工程师', 'PRIMARY',   136.36, 22,  2999.92,  300,  200,  3499.92,  300,  150,  0.78,  2, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V3',  '外包开发工程师',     'PRIMARY',   159.09, 22,  3499.98,  300,  200,  3999.98,  350,  180,  0.80,  3, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V4',  '外包中级工程师',     'MIDDLE',    181.82, 22,  4000.04,  500,  300,  4800.04,  400,  200,  0.82,  4, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V5',  '外包高级工程师',     'MIDDLE',    227.27, 22,  4999.94,  500,  300,  5799.94,  500,  250,  0.82,  5, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V6',  '外包资深工程师',     'MIDDLE',    272.73, 22,  6000.06,  500,  300,  6800.06,  600,  300,  0.82,  6, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V7',  '外包高级工程师/项目经理', 'SENIOR', 318.18, 22,  6999.96,  800,  500,  8299.96,  700,  350,  0.80,  7, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V8',  '外包资深工程师/高级项目经理', 'SENIOR', 363.64, 22,  8000.08,  800,  500,  9300.08,  800,  400,  0.80,  8, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V9',  '外包架构师/项目总监', 'SENIOR',   409.09, 22,  8999.98,  800,  500, 10299.98,  900,  450,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V10', '外包资深架构师',     'EXPERT',    454.55, 22, 10000.10, 1000,  600, 11600.10, 1000,  500,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V11', '外包技术专家/交付总监', 'EXPERT',  500.00, 22, 11000.00, 1000,  600, 12600.00, 1100,  550,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V12', '外包资深技术专家',   'EXPERT',    545.45, 22, 12000.00, 1000,  600, 13600.00, 1200,  600,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V13', '外包首席架构师',     'STRATEGIC', 590.91, 22, 12999.98, 1500,  800, 15299.98, 1300,  650,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V14', '外包技术总监',       'STRATEGIC', 636.36, 22, 13999.92, 1500,  800, 16299.92, 1400,  700,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V15', '外包CTO/事业部总经理', 'STRATEGIC',681.82, 22, 15000.04, 1500,  800, 17300.04, 1500,  750,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V16', '外包技术副总裁',     'STRATEGIC', 727.27, 22, 15999.94, 1500,  800, 18299.94, 1600,  800,  0.45, 16, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V17', '外包执行副总裁',     'STRATEGIC', 772.73, 22, 16999.94, 2000, 1000, 19999.94, 1700,  850,  0.40, 17, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V18', '外包首席科学家',     'STRATEGIC', 818.18, 22, 17999.96, 2000, 1000, 20999.96, 1800,  900,  0.40, 18, '2026-01-01', 1, 'ACTIVE', 0)
 ON CONFLICT DO NOTHING;
 
 -- 初始化根部门
