@@ -28,6 +28,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { pageTodoTasks, ccUnreadCount } from '@/api/workflow'
+import type { ApiResponse, PageResult } from '@/utils/request'
+import type { FlowTaskDTO } from '@/api/workflow/types'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useUserStore } from '@/store/modules/user'
 import { PC } from '@/constants/permissionCodes'
@@ -60,10 +62,9 @@ const tabBadge = computed(() => ({
 /** 轻量请求：仅刷新待办总数 */
 async function refreshTodoBadge() {
   try {
-    const res = await pageTodoTasks({ pageNum: 1, pageSize: 1 })
-    if (res.data?.code === 0) {
-      todoTotal.value = res.data.data?.total || 0
-    }
+    // 响应拦截器已校验 code===0/200 并剥离为 ApiResponse 对象
+    const res = (await pageTodoTasks({ pageNum: 1, pageSize: 1 })) as unknown as ApiResponse<PageResult<FlowTaskDTO>>
+    todoTotal.value = res.data?.total || 0
   } catch {
     // 静默失败
   }
@@ -72,10 +73,9 @@ async function refreshTodoBadge() {
 /** 轻量请求：仅刷新抄送未读数 */
 async function refreshCcUnread() {
   try {
-    const res = await ccUnreadCount()
-    if (res.data?.code === 0) {
-      ccUnread.value = res.data.data || 0
-    }
+    // 响应拦截器已校验 code===0/200 并剥离为 ApiResponse 对象
+    const res = (await ccUnreadCount()) as unknown as ApiResponse<number>
+    ccUnread.value = res.data || 0
   } catch {
     // 静默失败
   }
@@ -221,14 +221,14 @@ onUnmounted(stopPolling)
   h2 {
     margin: 0;
     font-size: 20px;
-    color: #1e293b;
+    color: $text-primary;
     display: inline-flex;
     align-items: center;
     gap: 8px;
   }
   &__sub {
     margin: 4px 0 0;
-    color: #64748b;
+    color: $text-secondary;
     font-size: 13px;
   }
 }
@@ -236,10 +236,10 @@ onUnmounted(stopPolling)
   font-size: 12px;
 }
 .approval-tabs {
-  background: #fff;
-  border-radius: 6px;
+  background: $bg-white;
+  border-radius: $border-radius-base;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: $shadow-card;
   :deep(.el-tabs__header) {
     margin-bottom: 16px;
   }

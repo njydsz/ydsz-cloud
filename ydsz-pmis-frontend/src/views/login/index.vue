@@ -294,7 +294,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  background: $gradient-login-bg;
 }
 
 .login-container {
@@ -310,7 +310,7 @@ onMounted(() => {
 .login-left {
   flex: 1;
   padding: $spacing-xl $spacing-xl;
-  background: linear-gradient(135deg, #1890ff 0%, #722ed1 100%);
+  background: $gradient-login-left;
   color: $bg-white;
   display: flex;
   flex-direction: column;

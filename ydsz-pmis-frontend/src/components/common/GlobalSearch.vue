@@ -2,7 +2,7 @@
   @fileoverview 全局搜索弹窗（Ctrl+K 唤起）
   @description 顶部全局搜索入口：
   - 空关键词：展示最近访问
-  - 有关键词：菜单导航本地过滤 + 项目全文检索
+  - 有关键词：菜单导航本地过滤 + 统一全文检索（项目/合同/审批/工单/人员/知识库）
   - 键盘导航：↑↓ 切换、Enter 打开、Esc 关闭
   - 打开页面后自动记录到最近访问
   - 数据来源: @/api/search、@/api/favorite
@@ -14,10 +14,28 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Search, Clock, Folder, Document, Loading, ArrowRight } from '@element-plus/icons-vue'
+import {
+  Search,
+  Clock,
+  Folder,
+  Document,
+  Loading,
+  ArrowRight,
+  Tickets,
+  Connection,
+  Avatar,
+  Collection,
+  Checked,
+} from '@element-plus/icons-vue'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
 import { usePermissionStore } from '@/store/modules/permission'
-import { searchProjects, type ProjectSearchDoc } from '@/api/search'
+import {
+  searchProjects,
+  searchAll,
+  type ProjectSearchDoc,
+  type UniversalSearchDoc,
+  type SearchEntityType,
+} from '@/api/search'
 import { getRecentAccess, recordAccess, type RecentAccessVO } from '@/api/favorite'
 import { logger } from '@/utils/logger'
 import type { RouteRecordRaw } from 'vue-router'
@@ -33,10 +51,12 @@ const keyword = ref('')
 const inputRef = ref<HTMLInputElement>()
 /** 当前选中项索引（基于扁平结果列表） */
 const activeIndex = ref(0)
-/** 项目搜索结果 */
+/** 统一搜索结果 */
+const universalResults = ref<UniversalSearchDoc[]>([])
+/** 项目搜索结果（兼容旧端点降级） */
 const projectResults = ref<ProjectSearchDoc[]>([])
-/** 项目搜索加载中 */
-const projectLoading = ref(false)
+/** 搜索加载中 */
+const searchLoading = ref(false)
 /** 最近访问记录 */
 const recentAccess = ref<RecentAccessVO[]>([])
 
@@ -56,15 +76,36 @@ interface RecentItem {
   title: string
   path: string
 }
-/** 项目搜索结果项 */
-interface ProjectItem {
-  type: 'project'
+/** 实体搜索结果项 */
+interface EntityItem {
+  type: 'entity'
+  entityType: SearchEntityType
   title: string
   subtitle: string
   path: string
 }
 
-type SearchItem = MenuItem | RecentItem | ProjectItem
+type SearchItem = MenuItem | RecentItem | EntityItem
+
+/** 实体类型 → 图标组件 映射 */
+const entityIconMap: Record<SearchEntityType, typeof Folder> = {
+  project: Folder,
+  contract: Document,
+  approval: Checked,
+  ticket: Tickets,
+  employee: Avatar,
+  knowledge: Collection,
+}
+
+/** 实体类型 → 分组标签 i18n key */
+const entityLabelMap: Record<SearchEntityType, string> = {
+  project: 'common.globalSearch.groupProject',
+  contract: 'common.globalSearch.groupContract',
+  approval: 'common.globalSearch.groupApproval',
+  ticket: 'common.globalSearch.groupTicket',
+  employee: 'common.globalSearch.groupEmployee',
+  knowledge: 'common.globalSearch.groupKnowledge',
+}
 
 /**
  * 递归从路由树提取可搜索的叶子菜单
@@ -102,15 +143,34 @@ const menuResults = computed<MenuItem[]>(() => {
     .slice(0, 8)
 })
 
-/** 项目结果转换为搜索项 */
-const projectItems = computed<ProjectItem[]>(() =>
-  projectResults.value.map((p) => ({
-    type: 'project',
+/** 统一搜索结果转换为 EntityItem */
+const entityItems = computed<EntityItem[]>(() =>
+  universalResults.value.map((d) => ({
+    type: 'entity',
+    entityType: d.type,
+    title: d.title,
+    subtitle: d.subtitle,
+    path: d.path,
+  })),
+)
+
+/** 兼容降级：如果统一搜索返回空但项目搜索有结果 */
+const fallbackProjectItems = computed<EntityItem[]>(() => {
+  if (universalResults.value.length > 0) return []
+  return projectResults.value.map((p) => ({
+    type: 'entity' as const,
+    entityType: 'project' as SearchEntityType,
     title: p.projectName,
     subtitle: [p.customerName, p.pmName].filter(Boolean).join(' · '),
     path: `/project/initiation?highlight=${p.id}`,
-  })),
-)
+  }))
+})
+
+/** 合并后的实体搜索结果 */
+const allEntityItems = computed<EntityItem[]>(() => [
+  ...entityItems.value,
+  ...fallbackProjectItems.value,
+])
 
 // ===========================================
 // 二、分组结果与扁平索引
@@ -121,6 +181,21 @@ interface ResultGroup {
   label: string
   items: SearchItem[]
 }
+
+/** 按实体类型分组 */
+const entityGroups = computed<{ label: string; items: EntityItem[] }[]>(() => {
+  const groups: { label: string; items: EntityItem[] }[] = []
+  const allItems = allEntityItems.value
+  const typeOrder: SearchEntityType[] = ['project', 'contract', 'approval', 'ticket', 'employee', 'knowledge']
+
+  for (const et of typeOrder) {
+    const items = allItems.filter((i) => i.entityType === et)
+    if (items.length > 0) {
+      groups.push({ label: t(entityLabelMap[et]), items })
+    }
+  }
+  return groups
+})
 
 /** 分组后的结果列表 */
 const groupedResults = computed<ResultGroup[]>(() => {
@@ -138,12 +213,12 @@ const groupedResults = computed<ResultGroup[]>(() => {
       groups.push({ label: t('common.globalSearch.groupRecent'), items: recent })
     }
   } else {
-    // 有关键词：菜单 + 项目
+    // 有关键词：菜单 + 实体搜索
     if (menuResults.value.length) {
       groups.push({ label: t('common.globalSearch.groupMenu'), items: menuResults.value })
     }
-    if (projectItems.value.length || projectLoading.value) {
-      groups.push({ label: t('common.globalSearch.groupProject'), items: projectItems.value })
+    for (const eg of entityGroups.value) {
+      groups.push({ label: eg.label, items: eg.items })
     }
   }
   return groups
@@ -156,7 +231,7 @@ const flatResults = computed<SearchItem[]>(() =>
 
 /** 是否有结果（含 loading） */
 const hasContent = computed(
-  () => groupedResults.value.length > 0 || projectLoading.value,
+  () => groupedResults.value.length > 0 || searchLoading.value,
 )
 
 /**
@@ -175,7 +250,7 @@ function flatIndex(gi: number, ii: number): number {
 }
 
 // ===========================================
-// 三、项目搜索（防抖）
+// 三、搜索（防抖 + 统一搜索优先 + 项目搜索降级）
 // ===========================================
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null
@@ -184,20 +259,43 @@ watch(keyword, (val) => {
   if (searchTimer) clearTimeout(searchTimer)
   const kw = val.trim()
   if (!kw) {
+    universalResults.value = []
     projectResults.value = []
-    projectLoading.value = false
+    searchLoading.value = false
     return
   }
-  projectLoading.value = true
+  searchLoading.value = true
   searchTimer = setTimeout(async () => {
     try {
-      const res = await searchProjects(kw, 1, 8)
-      projectResults.value = res?.data?.records ?? []
+      // 优先调用统一搜索端点
+      const res = await searchAll(kw, 5)
+      const data = res?.data
+      if (data && Array.isArray(data) && data.length > 0) {
+        universalResults.value = data
+        projectResults.value = []
+      } else {
+        // 降级：统一搜索无结果时调用项目搜索
+        universalResults.value = []
+        try {
+          const pres = await searchProjects(kw, 1, 5)
+          projectResults.value = pres?.data?.records ?? []
+        } catch {
+          projectResults.value = []
+        }
+      }
     } catch (e) {
-      logger.warn('[GlobalSearch]', '项目搜索失败', e)
-      projectResults.value = []
+      logger.warn('[GlobalSearch]', '统一搜索失败，降级为项目搜索', e)
+      // 降级为项目搜索
+      try {
+        const pres = await searchProjects(kw, 1, 5)
+        projectResults.value = pres?.data?.records ?? []
+        universalResults.value = []
+      } catch {
+        universalResults.value = []
+        projectResults.value = []
+      }
     } finally {
-      projectLoading.value = false
+      searchLoading.value = false
     }
   }, 300)
 })
@@ -215,8 +313,9 @@ watch(visible, async (val) => {
   if (val) {
     keyword.value = ''
     activeIndex.value = 0
+    universalResults.value = []
     projectResults.value = []
-    projectLoading.value = false
+    searchLoading.value = false
     await nextTick()
     inputRef.value?.focus()
     // 加载最近访问
@@ -315,20 +414,26 @@ watch(activeIndex, scrollToActive)
           >
             <el-icon class="gs-item-icon">
               <Clock v-if="item.type === 'recent'" />
-              <Folder v-else-if="item.type === 'project'" />
+              <component
+                v-else-if="item.type === 'entity'"
+                :is="entityIconMap[item.entityType] || Connection"
+              />
               <Document v-else />
             </el-icon>
             <div class="gs-item-content">
               <span class="gs-item-title">{{ item.title }}</span>
-              <span v-if="item.type === 'project' && item.subtitle" class="gs-item-subtitle">
+              <span
+                v-if="(item.type === 'entity') && item.subtitle"
+                class="gs-item-subtitle"
+              >
                 {{ item.subtitle }}
               </span>
             </div>
             <el-icon v-if="item.type !== 'recent'" class="gs-item-arrow"><ArrowRight /></el-icon>
           </div>
         </div>
-        <!-- 项目搜索 loading 占位 -->
-        <div v-if="projectLoading && projectItems.length === 0" class="gs-loading">
+        <!-- 搜索 loading 占位 -->
+        <div v-if="searchLoading && allEntityItems.length === 0" class="gs-loading">
           <el-icon class="is-loading"><Loading /></el-icon>
           <span>{{ t('common.globalSearch.searching') }}</span>
         </div>

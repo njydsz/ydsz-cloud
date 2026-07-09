@@ -1,8 +1,10 @@
 /**
  * @file 全局搜索 API
- * @description 项目全文检索（基于 PostgreSQL tsvector，P2-19 替代 ES），
+ * @description 全文检索（基于 PostgreSQL tsvector），
  *              对应后端 SearchController
- *              /execution/search/projects（baseURL 由 VITE_API_BASE_URL 注入）
+ *              /execution/search/* （baseURL 由 VITE_API_BASE_URL 注入）
+ *
+ * P0-4: 扩展实体覆盖 — 项目 / 合同 / 审批任务 / 工单 / 人员 / 知识库 等
  * @module api/search
  */
 import { request } from '@/utils/request'
@@ -32,6 +34,31 @@ export interface ProjectSearchDoc {
   updatedAt: string
 }
 
+/** 搜索实体类型 */
+export type SearchEntityType =
+  | 'project'
+  | 'contract'
+  | 'approval'
+  | 'ticket'
+  | 'employee'
+  | 'knowledge'
+
+/** 统一搜索结果项（跨实体通用结构） */
+export interface UniversalSearchDoc {
+  /** 实体类型 */
+  type: SearchEntityType
+  /** 实体 ID */
+  id: number | string
+  /** 主标题（项目名 / 合同名 / 流程标题 / 工单标题 / 员工姓名 / 文档标题） */
+  title: string
+  /** 副标题（客户名 / 合同编号 / 流程编号 / 工单编号 / 部门 / 标签） */
+  subtitle: string
+  /** 状态 */
+  status?: string
+  /** 跳转路径（前端路由，已组装好查询参数） */
+  path: string
+}
+
 /**
  * 全文检索项目
  *
@@ -45,5 +72,24 @@ export const searchProjects = (keyword: string, page = 1, size = 10) =>
     url: '/execution/search/projects',
     method: 'GET',
     params: { keyword, page, size },
+    silent: true,
+  })
+
+/**
+ * 统一搜索（跨实体）
+ *
+ * P0-4: 一次请求搜索项目 / 合同 / 审批 / 工单 / 人员 / 知识库，
+ * 后端 SearchController 聚合返回分类结果。
+ * 如后端尚未实现此端点，前端降级为仅调用 searchProjects。
+ *
+ * @param keyword 关键词
+ * @param size    每类实体最大返回条数（默认 5）
+ * @returns 分类搜索结果
+ */
+export const searchAll = (keyword: string, size = 5) =>
+  request<UniversalSearchDoc[]>({
+    url: '/execution/search/all',
+    method: 'GET',
+    params: { keyword, size },
     silent: true,
   })

@@ -36,6 +36,14 @@
 
   // 阴影
   --shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  // 行高亮背景色（审批中心逾期/临期行）
+  --row-overdue-bg: #fef2f2;
+  --row-overdue-hover: #fee2e2;
+  --row-nearly-overdue-bg: #fffbeb;
+  --row-nearly-overdue-hover: #fef3c7;
+  --row-hover-primary: #ecf5ff;
 
   // 图表色板（批次 29-1：统一图表配色，禁止业务代码硬编码 #xxxxxx）
   // 与主题色/状态色对齐，暗黑模式下自动切换为高对比度版本
@@ -52,6 +60,11 @@
   --chart-text-color: #303133;
   // 图表网格线色
   --chart-split-line-color: #ebeef5;
+
+  // 渐变色（浅色模式）
+  --gradient-login-bg: linear-gradient(135deg, #1677ff 0%, #096dd9 100%);
+  --gradient-login-left: linear-gradient(135deg, #1677ff 0%, #722ed1 100%);
+  --gradient-welcome: linear-gradient(135deg, #1677ff 0%, #722ed1 100%);
 }
 
 // 暗色主题（<html class="dark"> 时生效）
@@ -75,6 +88,19 @@
 
   // 阴影（暗色模式下加深）
   --shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+  // 行高亮背景色（暗黑模式适配）
+  --row-overdue-bg: rgba(255, 77, 79, 0.12);
+  --row-overdue-hover: rgba(255, 77, 79, 0.2);
+  --row-nearly-overdue-bg: rgba(250, 173, 20, 0.12);
+  --row-nearly-overdue-hover: rgba(250, 173, 20, 0.2);
+  --row-hover-primary: rgba(22, 119, 255, 0.12);
+
+  // 渐变色（暗黑模式适配）
+  --gradient-login-bg: linear-gradient(135deg, #0d2640 0%, #1a1a2e 100%);
+  --gradient-login-left: linear-gradient(135deg, #1677ff 0%, #722ed1 100%);
+  --gradient-welcome: linear-gradient(135deg, #1677ff 0%, #722ed1 100%);
 
   // 图表色板（暗黑模式：提升对比度，避免暗背景上颜色发灰）
   --chart-color-primary: #4096ff;   // 主品牌色提亮

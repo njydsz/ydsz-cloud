@@ -941,10 +941,10 @@ onMounted(() => {
                 style="display: block; margin-bottom: 4px"
               />
             </el-checkbox-group>
-            <div v-if="opForm.rejectTargets.length === 0" style="color: #909399; font-size: 12px">
+            <div v-if="opForm.rejectTargets.length === 0" class="reject-hint">
               {{ t('workflow.approval.actions.rejectNodeEmpty') }}
             </div>
-            <div style="color: #909399; font-size: 12px; margin-top: 4px">
+            <div class="reject-hint reject-hint--mt">
               {{ t('workflow.approval.actions.rejectMultiHint') }}
             </div>
           </div>
@@ -965,9 +965,9 @@ onMounted(() => {
 .filter-bar-enhanced {
   margin-bottom: 12px;
   padding: 12px;
-  background: #f8fafc;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  background: $bg-base;
+  border-radius: $border-radius-base;
+  border: 1px solid $border-extra-light;
 
   &__row {
     display: flex;
@@ -978,7 +978,7 @@ onMounted(() => {
     &:first-child {
       margin-bottom: 8px;
       padding-bottom: 8px;
-      border-bottom: 1px dashed #e2e8f0;
+      border-bottom: 1px dashed $border-extra-light;
     }
   }
 }
@@ -992,28 +992,28 @@ onMounted(() => {
 // 表格行高亮
 // ===========================================
 :deep(.row-overdue) {
-  background-color: #fef2f2 !important;
+  background-color: var(--row-overdue-bg) !important;
   td {
-    background-color: #fef2f2 !important;
+    background-color: var(--row-overdue-bg) !important;
   }
   &:hover td {
-    background-color: #fee2e2 !important;
+    background-color: var(--row-overdue-hover) !important;
   }
 }
 
 :deep(.row-nearly-overdue) {
-  background-color: #fffbeb !important;
+  background-color: var(--row-nearly-overdue-bg) !important;
   td {
-    background-color: #fffbeb !important;
+    background-color: var(--row-nearly-overdue-bg) !important;
   }
   &:hover td {
-    background-color: #fef3c7 !important;
+    background-color: var(--row-nearly-overdue-hover) !important;
   }
 }
 
 :deep(.row-pinned) {
   td:first-child {
-    border-left: 3px solid #e6a23c;
+    border-left: 3px solid $warning-color;
   }
 }
 
@@ -1026,7 +1026,7 @@ onMounted(() => {
 
 .chips-label {
   font-size: 12px;
-  color: #909399;
+  color: $text-secondary;
 }
 
 .chip-tag {
@@ -1047,8 +1047,8 @@ onMounted(() => {
 
 .group-card {
   margin-bottom: 12px;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
+  border: 1px solid $border-lighter;
+  border-radius: $border-radius-sm;
   overflow: hidden;
 }
 
@@ -1057,25 +1057,35 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: #f5f7fa;
+  background: $bg-base;
   cursor: pointer;
   user-select: none;
 }
 
 .group-card__header:hover {
-  background: #ecf5ff;
+  background: var(--row-hover-primary);
 }
 
 .group-card__arrow {
   font-size: 12px;
-  color: #909399;
+  color: $text-secondary;
 }
 
 .group-card__name {
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: $text-primary;
   flex: 1;
+}
+
+/* 驳回提示文字 */
+.reject-hint {
+  color: $text-secondary;
+  font-size: $font-size-xs;
+
+  &--mt {
+    margin-top: $spacing-xs;
+  }
 }
 
 /* P2-6: 移动端 H5 适配 */

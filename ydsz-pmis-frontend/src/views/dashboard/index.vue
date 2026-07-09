@@ -27,8 +27,28 @@ import { chartColors } from '@/utils/chart-theme'
 import { isHandledError } from '@/utils/error'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import SkeletonTable from '@/components/common/SkeletonTable.vue'
+import { useDashboardLayout, type WidgetConfig } from '@/composables/useDashboardLayout'
 
 const { t } = useI18n()
+
+// ===== Dashboard 拖拽布局 =====
+const dashboardWidgets: WidgetConfig[] = [
+  { id: 'health', title: t('dashboard.charts.healthTitle'), defaultSpan: 8, defaultVisible: true, disableHide: true },
+  { id: 'trend', title: t('dashboard.charts.trendTitle'), defaultSpan: 10, defaultVisible: true },
+  { id: 'keyMetrics', title: t('dashboard.keyMetrics.title'), defaultSpan: 6, defaultVisible: true },
+  { id: 'evm', title: t('dashboard.charts.evmTitle'), defaultSpan: 10, defaultVisible: true },
+  { id: 'alertTopN', title: t('dashboard.charts.alertTitle'), defaultSpan: 14, defaultVisible: true },
+]
+const {
+  widgets: layoutWidgets,
+  isCustomizing: isDashboardCustomizing,
+  dragStart: onDragStart,
+  dragOver: onDragOver,
+  drop: onDrop,
+  toggleVisible: toggleWidgetVisible,
+  resetLayout: resetDashboardLayout,
+  toggleCustomizing: toggleDashboardCustomizing,
+} = useDashboardLayout('main', dashboardWidgets)
 
 // ===== 数据状态 =====
 /** Cockpit KPI 数据结构 */
@@ -391,15 +411,52 @@ onMounted(async () => {
 
     <!-- 周期切换 + KPI -->
     <div class="toolbar">
-      <el-select v-model="period" style="width: 140px" @change="changePeriod">
-        <el-option
-          v-for="opt in periodOptions"
-          :key="opt.value"
-          :label="opt.label"
-          :value="opt.value"
-        />
-      </el-select>
-      <el-button :loading="loading" @click="refreshAll">{{ t('common.refresh') }}</el-button>
+      <div class="toolbar-left">
+        <el-select v-model="period" style="width: 140px" @change="changePeriod">
+          <el-option
+            v-for="opt in periodOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
+        </el-select>
+        <el-button :loading="loading" @click="refreshAll">{{ t('common.refresh') }}</el-button>
+      </div>
+      <div class="toolbar-right">
+        <el-popover trigger="click" placement="bottom-end" :width="240">
+          <template #reference>
+            <el-button :icon="'Setting'" circle :aria-label="t('common.dashboardCustomize')" />
+          </template>
+          <div class="dashboard-layout-settings">
+            <div class="dashboard-layout-header">
+              <span>{{ t('common.dashboardCustomize') }}</span>
+              <el-button link type="primary" size="small" @click="resetDashboardLayout">
+                {{ t('common.reset') }}
+              </el-button>
+            </div>
+            <div class="dashboard-layout-list">
+              <div
+                v-for="w in layoutWidgets"
+                :key="w.id"
+                class="dashboard-layout-item"
+              >
+                <el-checkbox
+                  :model-value="w.visible"
+                  :disabled="w.disableHide"
+                  @change="toggleWidgetVisible(w.id)"
+                >
+                  {{ w.title }}
+                </el-checkbox>
+              </div>
+            </div>
+            <div class="dashboard-layout-footer">
+              <el-button size="small" @click="toggleDashboardCustomizing">
+                {{ isDashboardCustomizing ? t('common.dashboardExitCustomize') : t('common.dashboardEnterCustomize') }}
+              </el-button>
+            </div>
+          </div>
+        </el-popover>
+      </div>
     </div>
 
     <el-row :gutter="16" class="metric-row">
@@ -517,7 +574,7 @@ onMounted(async () => {
 
 .welcome-card {
   // 渐变背景使用图表色板变量，暗黑模式下自动切换为提亮版本
-  background: linear-gradient(135deg, $chart-color-primary 0%, $chart-color-purple 100%);
+  background: $gradient-welcome;
   color: $bg-white;
   border: none;
 

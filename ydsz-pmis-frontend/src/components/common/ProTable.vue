@@ -132,6 +132,10 @@ const props = withDefaults(
     emptyCtaText?: string
     /** 是否显示全屏切换（批次 29-2） */
     fullscreen?: boolean
+    /** 是否启用批量操作工具栏（选中行时浮现） */
+    batchActions?: boolean
+    /** 批量操作工具栏位置（top / bottom） */
+    batchActionsPosition?: 'top' | 'bottom'
   }>(),
   {
     loading: false,
@@ -153,6 +157,8 @@ const props = withDefaults(
     showSummary: false,
     expandable: false,
     fullscreen: false,
+    batchActions: false,
+    batchActionsPosition: 'top',
   },
 )
 
@@ -345,6 +351,11 @@ defineExpose({
   toggleFullscreen,
   resetColumnSetting,
 })
+
+/** 是否显示批量操作栏 */
+const showBatchBar = computed(
+  () => props.batchActions && props.selection && selectedRows.value.length > 0,
+)
 </script>
 
 <template>
@@ -415,6 +426,26 @@ defineExpose({
         <el-button v-if="fullscreen" :icon="FullScreen" circle @click="toggleFullscreen" />
       </div>
     </div>
+
+    <!-- 批量操作工具栏（顶部） -->
+    <Transition name="batch-bar-slide">
+      <div
+        v-if="showBatchBar && batchActionsPosition === 'top'"
+        class="pro-table__batch-bar"
+      >
+        <div class="pro-table__batch-info">
+          <span class="pro-table__batch-count">
+            {{ t('common.batchSelected', { count: selectedRows.length }) }}
+          </span>
+          <el-button link type="primary" size="small" @click="clearSelection">
+            {{ t('common.batchClear') }}
+          </el-button>
+        </div>
+        <div class="pro-table__batch-actions">
+          <slot name="batch-actions" :selection="selectedRows" :clear="clearSelection" />
+        </div>
+      </div>
+    </Transition>
 
     <!-- 表格主体 -->
     <div class="pro-table__body">
@@ -533,6 +564,26 @@ defineExpose({
         </template>
       </el-table>
     </div>
+
+    <!-- 批量操作工具栏（底部） -->
+    <Transition name="batch-bar-slide">
+      <div
+        v-if="showBatchBar && batchActionsPosition === 'bottom'"
+        class="pro-table__batch-bar pro-table__batch-bar--bottom"
+      >
+        <div class="pro-table__batch-info">
+          <span class="pro-table__batch-count">
+            {{ t('common.batchSelected', { count: selectedRows.length }) }}
+          </span>
+          <el-button link type="primary" size="small" @click="clearSelection">
+            {{ t('common.batchClear') }}
+          </el-button>
+        </div>
+        <div class="pro-table__batch-actions">
+          <slot name="batch-actions" :selection="selectedRows" :clear="clearSelection" />
+        </div>
+      </div>
+    </Transition>
 
     <!-- 分页 -->
     <div v-if="showPagination && total > 0" class="pro-table__pagination">
@@ -653,5 +704,50 @@ defineExpose({
     justify-content: flex-end;
     padding: $spacing-base 0 0;
   }
+
+  // 批量操作工具栏
+  &__batch-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-sm $spacing-md;
+    background: var(--el-color-primary-light-9);
+    border: 1px solid var(--el-color-primary-light-7);
+    border-radius: $border-radius-base;
+    gap: $spacing-md;
+
+    &--bottom {
+      margin-top: 0;
+    }
+  }
+
+  &__batch-info {
+    display: flex;
+    align-items: center;
+    gap: $spacing-base;
+  }
+
+  &__batch-count {
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $primary-color;
+  }
+
+  &__batch-actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+}
+
+// 批量操作栏过渡动画
+.batch-bar-slide-enter-active,
+.batch-bar-slide-leave-active {
+  transition: all 0.25s ease;
+}
+.batch-bar-slide-enter-from,
+.batch-bar-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 </style>

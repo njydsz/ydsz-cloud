@@ -64,6 +64,13 @@ $bg-white: var(--bg-white);
 // ===== 阴影（引用 CSS 变量，暗黑模式下加深） =====
 
 $shadow-light: var(--shadow-light);
+$shadow-card: var(--shadow-card);
+
+// ===== 渐变色（引用 CSS 变量，支持暗黑模式切换） =====
+
+$gradient-login-bg: var(--gradient-login-bg);
+$gradient-login-left: var(--gradient-login-left);
+$gradient-welcome: var(--gradient-welcome);
 
 // 布局（纯 SCSS 值，不随主题变化）
 $header-height: 56px;

@@ -1,16 +1,17 @@
 <!--
   @fileoverview 报表中心
   @description 项目利润 / 成本明细 / 回款台账 / 生命周期台账 / EVM 挣值 / 双费率对比 / 风险看板 / 利用率 / Bench 成本等核心报表的 ECharts 可视化；对接 @/api/execution/report。
-               顶部 Tab 切换 11 类报表视图，下方提供查询条件（项目 ID / 期间）与图表渲染容器；所有图表实例在组件卸载时统一 dispose，避免内存泄漏。
+               顶部 Tab 切换 11 类报表视图，下方提供查询条件（项目 ID / 期间）与图表渲染容器。
+               所有图表实例通过 useECharts composable 统一管理生命周期（init/setOption/resize/dispose）。
   @module views/report
   @author ydsz-pmis-team
   @since 1.0.0
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, nextTick, watch, type ComponentPublicInstance } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch, type ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
-import * as echarts from '@/utils/echarts'
+import type { EChartsOption } from '@/utils/echarts'
 import {
   getProjectProfitReport,
   getCostDetailReport,
@@ -24,6 +25,8 @@ import {
   getBenchCostReport,
   getResourceGantt,
 } from '@/api/execution/report'
+import { useECharts } from '@/composables/useECharts'
+import { chartColors } from '@/utils/chart-theme'
 
 type TabKey =
   | 'profit'
@@ -51,15 +54,31 @@ const listData = ref<Record<string, unknown>[]>([])
 
 const query = reactive({ initiationId: undefined as number | undefined, period: '' })
 
-// ECharts 实例容器
-const chartRefs = reactive<Record<string, HTMLDivElement | null>>({})
-const charts: Record<string, echarts.ECharts | null> = {}
+// ===== ECharts 容器 refs（每个图表一个 ref，配合 useECharts 自动管理生命周期） =====
+const profitBarRef = ref<HTMLDivElement | null>(null)
+const profitPieRef = ref<HTMLDivElement | null>(null)
+const costPieRef = ref<HTMLDivElement | null>(null)
+const evmLineRef = ref<HTMLDivElement | null>(null)
+const evmIndexRef = ref<HTMLDivElement | null>(null)
+const dualBarRef = ref<HTMLDivElement | null>(null)
+const riskPieRef = ref<HTMLDivElement | null>(null)
+const riskBarRef = ref<HTMLDivElement | null>(null)
+const utilBarRef = ref<HTMLDivElement | null>(null)
+const benchLineRef = ref<HTMLDivElement | null>(null)
+const summaryBarRef = ref<HTMLDivElement | null>(null)
 
-function setRef(key: string) {
-  return (el: Element | ComponentPublicInstance | null) => {
-    chartRefs[key] = el as HTMLDivElement | null
-  }
-}
+// ===== useECharts 实例化（自动 init / setOption / resize / dispose） =====
+const { setOption: setProfitBarOption } = useECharts(profitBarRef)
+const { setOption: setProfitPieOption } = useECharts(profitPieRef)
+const { setOption: setCostPieOption } = useECharts(costPieRef)
+const { setOption: setEvmLineOption } = useECharts(evmLineRef)
+const { setOption: setEvmIndexOption } = useECharts(evmIndexRef)
+const { setOption: setDualBarOption } = useECharts(dualBarRef)
+const { setOption: setRiskPieOption } = useECharts(riskPieRef)
+const { setOption: setRiskBarOption } = useECharts(riskBarRef)
+const { setOption: setUtilBarOption } = useECharts(utilBarRef)
+const { setOption: setBenchLineOption } = useECharts(benchLineRef)
+const { setOption: setSummaryBarOption } = useECharts(summaryBarRef)
 
 async function load(target: TabKey) {
   // P0 修复: 调整 initiationId 必传规则
@@ -105,33 +124,27 @@ async function load(target: TabKey) {
         renderSummaryChart()
         return
       case 'evm':
-        // P0 修复: 后端 /evm 仅取 initiationId, period 已被忽略
         res = await getEvmReport(query.initiationId!)
         listData.value = (res?.data as Record<string, unknown>[]) || []
         break
       case 'dualRate':
-        // P0 修复: 后端 /dual-rate 仅取 period, 按全局聚合 (不需要 initiationId)
         res = await getDualRateComparison(query.period)
         listData.value = (res?.data as Record<string, unknown>[]) || []
         break
       case 'gantt':
-        // P0 修复: 后端 /gantt 必传 initiationId
         res = await getResourceGantt(query.initiationId!)
         listData.value = (res?.data as Record<string, unknown>[]) || []
         break
       case 'risk':
-        // P0 修复: 后端 /risk-dashboard 返回 List<Map>, 不取 period
         res = await getRiskDashboard()
         listData.value = (res?.data as Record<string, unknown>[]) || []
         break
       case 'utilization':
-        // P0 修复: 后端 /utilization-rank, 默认 top=20
         res = await getUtilizationRank(20)
         listData.value = (res?.data as Record<string, unknown>[]) || []
         renderUtilizationChart()
         return
       case 'bench':
-        // P0 修复: 后端 /bench-cost 返回 List<Map>, 不取 period
         res = await getBenchCostReport()
         listData.value = (res?.data as Record<string, unknown>[]) || []
         renderBenchChart()
@@ -197,37 +210,23 @@ async function renderChartForTab(key: TabKey) {
   else if (key === 'bench') renderBenchChart()
 }
 
-/**
- * 获取或初始化指定 key 的 ECharts 实例
- * @param key 图表容器标识
- * @returns ECharts 实例，容器不存在时返回 null
- */
-function ensureChart(key: string) {
-  const el = chartRefs[key]
-  if (!el) return null
-  if (!charts[key]) charts[key] = echarts.init(el)
-  return charts[key]
-}
-
 function renderProfitCharts() {
   const d = reportData.value || {}
   // 收入/成本/毛利对比柱状图
-  const c1 = ensureChart('profit-bar')
-  c1?.setOption({
+  setProfitBarOption({
     title: { text: t('report.profit.charts.barTitle'), left: 'center' },
     tooltip: { trigger: 'axis' },
     grid: { top: 60, left: 60, right: 40, bottom: 40 },
     xAxis: { type: 'category', data: ['金额'] },
     yAxis: { type: 'value' },
     series: [
-      { name: t('report.profit.charts.seriesRevenue'), type: 'bar', data: [toNumber(d.revenue)], itemStyle: { color: '#409eff' } },
-      { name: t('report.profit.charts.seriesTotalCost'), type: 'bar', data: [toNumber(d.totalCost)], itemStyle: { color: '#909399' } },
-      { name: t('report.profit.charts.seriesGrossProfit'), type: 'bar', data: [toNumber(d.grossProfit)], itemStyle: { color: '#67c23a' } },
+      { name: t('report.profit.charts.seriesRevenue'), type: 'bar', data: [toNumber(d.revenue)], itemStyle: { color: chartColors.primary } },
+      { name: t('report.profit.charts.seriesTotalCost'), type: 'bar', data: [toNumber(d.totalCost)], itemStyle: { color: chartColors.info } },
+      { name: t('report.profit.charts.seriesGrossProfit'), type: 'bar', data: [toNumber(d.grossProfit)], itemStyle: { color: chartColors.success } },
     ],
-  })
+  } as EChartsOption)
   // 成本构成饼图
-  const c2 = ensureChart('profit-pie')
-  c2?.setOption({
+  setProfitPieOption({
     title: { text: t('report.profit.charts.pieTitle'), left: 'center' },
     tooltip: { trigger: 'item' },
     series: [
@@ -235,20 +234,20 @@ function renderProfitCharts() {
         name: t('report.profit.charts.pieTitle'),
         type: 'pie',
         radius: ['40%', '70%'],
+        itemStyle: { borderColor: chartColors.borderColor, borderWidth: 2 },
         data: [
-          { name: t('report.profit.charts.costLabor'), value: toNumber(d.laborCost), itemStyle: { color: '#409eff' } },
-          { name: t('report.profit.charts.costPurchase'), value: toNumber(d.purchaseCost), itemStyle: { color: '#e6a23c' } },
-          { name: t('report.profit.charts.costExpense'), value: toNumber(d.expenseCost), itemStyle: { color: '#f56c6c' } },
+          { name: t('report.profit.charts.costLabor'), value: toNumber(d.laborCost), itemStyle: { color: chartColors.primary } },
+          { name: t('report.profit.charts.costPurchase'), value: toNumber(d.purchaseCost), itemStyle: { color: chartColors.warning } },
+          { name: t('report.profit.charts.costExpense'), value: toNumber(d.expenseCost), itemStyle: { color: chartColors.danger } },
         ],
       },
     ],
-  })
+  } as EChartsOption)
 }
 
 function renderCostCharts() {
   const d = reportData.value || {}
-  const c1 = ensureChart('cost-pie')
-  c1?.setOption({
+  setCostPieOption({
     title: { text: t('report.cost.charts.pieTitle'), left: 'center' },
     tooltip: { trigger: 'item' },
     series: [
@@ -256,20 +255,20 @@ function renderCostCharts() {
         name: t('report.cost.charts.pieTitle'),
         type: 'pie',
         radius: '60%',
+        itemStyle: { borderColor: chartColors.borderColor, borderWidth: 2 },
         data: [
-          { name: t('report.profit.charts.costLabor'), value: toNumber(d.laborRatio), itemStyle: { color: '#409eff' } },
-          { name: t('report.profit.charts.costPurchase'), value: toNumber(d.purchaseRatio), itemStyle: { color: '#e6a23c' } },
-          { name: t('report.profit.charts.costExpense'), value: toNumber(d.expenseRatio), itemStyle: { color: '#f56c6c' } },
+          { name: t('report.profit.charts.costLabor'), value: toNumber(d.laborRatio), itemStyle: { color: chartColors.primary } },
+          { name: t('report.profit.charts.costPurchase'), value: toNumber(d.purchaseRatio), itemStyle: { color: chartColors.warning } },
+          { name: t('report.profit.charts.costExpense'), value: toNumber(d.expenseRatio), itemStyle: { color: chartColors.danger } },
         ],
       },
     ],
-  })
+  } as EChartsOption)
 }
 
 function renderEvmChart() {
   const d = reportData.value || {}
-  const c1 = ensureChart('evm-line')
-  c1?.setOption({
+  setEvmLineOption({
     title: { text: t('report.evm.charts.lineTitle'), left: 'center' },
     tooltip: { trigger: 'axis' },
     legend: { data: ['PV', 'EV', 'AC'], top: 30 },
@@ -277,13 +276,12 @@ function renderEvmChart() {
     xAxis: { type: 'category', data: [t('report.evm.charts.pvName'), t('report.evm.charts.evName'), t('report.evm.charts.acName')] },
     yAxis: { type: 'value' },
     series: [
-      { name: 'PV', type: 'bar', data: [toNumber(d.pv), 0, 0], itemStyle: { color: '#409eff' } },
-      { name: 'EV', type: 'bar', data: [0, toNumber(d.ev), 0], itemStyle: { color: '#67c23a' } },
-      { name: 'AC', type: 'bar', data: [0, 0, toNumber(d.ac)], itemStyle: { color: '#f56c6c' } },
+      { name: 'PV', type: 'bar', data: [toNumber(d.pv), 0, 0], itemStyle: { color: chartColors.primary } },
+      { name: 'EV', type: 'bar', data: [0, toNumber(d.ev), 0], itemStyle: { color: chartColors.success } },
+      { name: 'AC', type: 'bar', data: [0, 0, toNumber(d.ac)], itemStyle: { color: chartColors.danger } },
     ],
-  })
-  const c2 = ensureChart('evm-index')
-  c2?.setOption({
+  } as EChartsOption)
+  setEvmIndexOption({
     title: { text: t('report.evm.charts.indexTitle'), left: 'center' },
     tooltip: { trigger: 'axis' },
     radar: {
@@ -306,20 +304,18 @@ function renderEvmChart() {
               toNumber(d.healthScore) || 60,
             ],
             name: t('report.evm.charts.seriesProject'),
-            areaStyle: { color: 'rgba(64,158,255,0.3)' },
-            itemStyle: { color: '#409eff' },
+            areaStyle: { color: chartColors.primary },
+            itemStyle: { color: chartColors.primary },
           },
         ],
       },
     ],
-  })
+  } as EChartsOption)
 }
 
 function renderDualRateChart() {
-  // P0 修复: listData 为 List<Map>, 每行是 (jobLevel + externalRate/internalRate) 等字段
   const rows = listData.value || []
-  const c1 = ensureChart('dual-bar')
-  c1?.setOption({
+  setDualBarOption({
     title: { text: t('report.dualRate.charts.title'), left: 'center' },
     tooltip: { trigger: 'axis' },
     legend: { data: [t('report.dualRate.charts.seriesExternal'), t('report.dualRate.charts.seriesInternal')], top: 30 },
@@ -331,22 +327,20 @@ function renderDualRateChart() {
         name: t('report.dualRate.charts.seriesExternal'),
         type: 'bar',
         data: rows.map((r) => toNumber(r.externalRate || r.cardRate)),
-        itemStyle: { color: '#409eff' },
+        itemStyle: { color: chartColors.primary },
       },
       {
         name: t('report.dualRate.charts.seriesInternal'),
         type: 'bar',
         data: rows.map((r) => toNumber(r.internalRate || r.internalCost)),
-        itemStyle: { color: '#67c23a' },
+        itemStyle: { color: chartColors.success },
       },
     ],
-  })
+  } as EChartsOption)
 }
 
 function renderRiskChart() {
-  // P0 修复: listData 为 List<Map>, 按 highRiskCount/mediumRiskCount/lowRiskCount 字段聚合
   const rows = listData.value || []
-  // 简单聚合: 取所有行的合计
   type RiskAgg = {
     highRiskCount: number
     mediumRiskCount: number
@@ -369,8 +363,7 @@ function renderRiskChart() {
     },
     { highRiskCount: 0, mediumRiskCount: 0, lowRiskCount: 0, highAlerts: 0, mediumAlerts: 0, lowAlerts: 0, alertCount: 0 },
   )
-  const c1 = ensureChart('risk-pie')
-  c1?.setOption({
+  setRiskPieOption({
     title: { text: t('report.risk.charts.pieTitle'), left: 'center' },
     tooltip: { trigger: 'item' },
     series: [
@@ -378,16 +371,16 @@ function renderRiskChart() {
         name: t('report.risk.charts.pieTitle'),
         type: 'pie',
         radius: ['40%', '70%'],
+        itemStyle: { borderColor: chartColors.borderColor, borderWidth: 2 },
         data: [
-          { name: t('report.risk.charts.seriesHigh'), value: agg.highRiskCount, itemStyle: { color: '#f56c6c' } },
-          { name: t('report.risk.charts.seriesMedium'), value: agg.mediumRiskCount, itemStyle: { color: '#e6a23c' } },
-          { name: t('report.risk.charts.seriesLow'), value: agg.lowRiskCount, itemStyle: { color: '#67c23a' } },
+          { name: t('report.risk.charts.seriesHigh'), value: agg.highRiskCount, itemStyle: { color: chartColors.danger } },
+          { name: t('report.risk.charts.seriesMedium'), value: agg.mediumRiskCount, itemStyle: { color: chartColors.warning } },
+          { name: t('report.risk.charts.seriesLow'), value: agg.lowRiskCount, itemStyle: { color: chartColors.success } },
         ],
       },
     ],
-  })
-  const c2 = ensureChart('risk-bar')
-  c2?.setOption({
+  } as EChartsOption)
+  setRiskBarOption({
     title: { text: t('report.risk.charts.barTitle'), left: 'center' },
     tooltip: { trigger: 'axis' },
     grid: { top: 60, left: 60, right: 40, bottom: 40 },
@@ -397,16 +390,15 @@ function renderRiskChart() {
       {
         type: 'bar',
         data: [agg.highAlerts, agg.mediumAlerts, agg.lowAlerts, agg.alertCount],
-        itemStyle: { color: '#409eff' },
+        itemStyle: { color: chartColors.primary },
       },
     ],
-  })
+  } as EChartsOption)
 }
 
 function renderUtilizationChart() {
   const rows = listData.value || []
-  const c1 = ensureChart('util-bar')
-  c1?.setOption({
+  setUtilBarOption({
     title: { text: t('report.utilization.charts.title'), left: 'center' },
     tooltip: { trigger: 'axis' },
     grid: { top: 60, left: 100, right: 40, bottom: 40 },
@@ -419,18 +411,16 @@ function renderUtilizationChart() {
       {
         type: 'bar',
         data: rows.map((r) => toNumber(r.utilization)).reverse(),
-        itemStyle: { color: '#67c23a' },
+        itemStyle: { color: chartColors.success },
         label: { show: true, position: 'right', formatter: '{c}%' },
       },
     ],
-  })
+  } as EChartsOption)
 }
 
 function renderBenchChart() {
-  // P0 修复: listData 为 List<Map>, 每行是一个 Bench 记录 (period/totalCost/cost/date)
   const rows = listData.value || []
-  const c1 = ensureChart('bench-line')
-  c1?.setOption({
+  setBenchLineOption({
     title: { text: t('report.bench.charts.title'), left: 'center' },
     tooltip: { trigger: 'axis' },
     grid: { top: 60, left: 60, right: 40, bottom: 40 },
@@ -441,17 +431,16 @@ function renderBenchChart() {
         type: 'line',
         smooth: true,
         data: rows.map((r) => toNumber(r.totalCost || r.cost)),
-        areaStyle: { color: 'rgba(230,162,60,0.3)' },
-        itemStyle: { color: '#e6a23c' },
+        areaStyle: { color: chartColors.warning },
+        itemStyle: { color: chartColors.warning },
       },
     ],
-  })
+  } as EChartsOption)
 }
 
 function renderSummaryChart() {
   const rows = summaryData.value || []
-  const c1 = ensureChart('summary-bar')
-  c1?.setOption({
+  setSummaryBarOption({
     title: { text: t('report.summary.charts.title'), left: 'center' },
     tooltip: { trigger: 'axis' },
     legend: { data: [t('report.profit.charts.seriesRevenue'), t('report.profit.charts.seriesTotalCost'), t('report.profit.charts.seriesGrossProfit')], top: 30 },
@@ -463,15 +452,14 @@ function renderSummaryChart() {
     },
     yAxis: { type: 'value' },
     series: [
-      { name: t('report.profit.charts.seriesRevenue'), type: 'bar', data: rows.map((r) => toNumber(r.revenue)), itemStyle: { color: '#409eff' } },
-      { name: t('report.profit.charts.seriesTotalCost'), type: 'bar', data: rows.map((r) => toNumber(r.totalCost)), itemStyle: { color: '#909399' } },
-      { name: t('report.profit.charts.seriesGrossProfit'), type: 'bar', data: rows.map((r) => toNumber(r.grossProfit)), itemStyle: { color: '#67c23a' } },
+      { name: t('report.profit.charts.seriesRevenue'), type: 'bar', data: rows.map((r) => toNumber(r.revenue)), itemStyle: { color: chartColors.primary } },
+      { name: t('report.profit.charts.seriesTotalCost'), type: 'bar', data: rows.map((r) => toNumber(r.totalCost)), itemStyle: { color: chartColors.info } },
+      { name: t('report.profit.charts.seriesGrossProfit'), type: 'bar', data: rows.map((r) => toNumber(r.grossProfit)), itemStyle: { color: chartColors.success } },
     ],
-  })
+  } as EChartsOption)
 }
 
 watch(tab, () => {
-  // tab 切换时重新渲染
   if (reportData.value || listData.value.length || summaryData.value.length) {
     renderChartForTab(tab.value)
     if (tab.value === 'summary') renderSummaryChart()
@@ -479,17 +467,8 @@ watch(tab, () => {
   }
 })
 
-function handleResize() {
-  Object.values(charts).forEach((c) => c?.resize())
-}
-
 onMounted(() => {
-  window.addEventListener('resize', handleResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  Object.values(charts).forEach((c) => c?.dispose())
+  // useECharts 自动管理 init/resize/dispose，无需手动事件监听
 })
 </script>
 
@@ -535,8 +514,8 @@ onUnmounted(() => {
         <div class="kpi highlight"><div class="kpi-label">{{ t('report.profit.kpis.grossMargin') }}</div><div class="kpi-value">{{ fmtPct(reportData?.grossMargin) }}</div></div>
       </div>
       <el-row v-if="tab === 'profit' && reportData" :gutter="16" class="chart-row">
-        <el-col :span="12"><div :ref="setRef('profit-bar')" class="chart-area" /></el-col>
-        <el-col :span="12"><div :ref="setRef('profit-pie')" class="chart-area" /></el-col>
+        <el-col :span="12"><div ref="profitBarRef" class="chart-area" /></el-col>
+        <el-col :span="12"><div ref="profitPieRef" class="chart-area" /></el-col>
       </el-row>
 
       <!-- 成本归集 -->
@@ -548,7 +527,7 @@ onUnmounted(() => {
           <div class="kpi"><div class="kpi-label">{{ t('report.cost.kpis.expenseRatio') }}</div><div class="kpi-value">{{ fmtPct(reportData?.expenseRatio) }}</div></div>
         </div>
         <el-row :gutter="16" class="chart-row">
-          <el-col :span="12" :offset="6"><div :ref="setRef('cost-pie')" class="chart-area" /></el-col>
+          <el-col :span="12" :offset="6"><div ref="costPieRef" class="chart-area" /></el-col>
         </el-row>
       </template>
 
@@ -596,7 +575,7 @@ onUnmounted(() => {
           <vxe-column field="grossMargin" :title="t('report.summary.columns.grossMargin')" width="120" align="right" :formatter="pctFormatter" />
         </vxe-table>
         <el-row :gutter="16" class="chart-row">
-          <el-col :span="24"><div :ref="setRef('summary-bar')" class="chart-area" /></el-col>
+          <el-col :span="24"><div ref="summaryBarRef" class="chart-area" /></el-col>
         </el-row>
       </div>
 
@@ -611,8 +590,8 @@ onUnmounted(() => {
           <div class="kpi highlight"><div class="kpi-label">{{ t('report.evm.kpis.spi') }}</div><div class="kpi-value">{{ ((reportData?.spi as number | undefined)?.toFixed?.(2)) || '-' }}</div></div>
         </div>
         <el-row :gutter="16" class="chart-row">
-          <el-col :span="12"><div :ref="setRef('evm-line')" class="chart-area" /></el-col>
-          <el-col :span="12"><div :ref="setRef('evm-index')" class="chart-area" /></el-col>
+          <el-col :span="12"><div ref="evmLineRef" class="chart-area" /></el-col>
+          <el-col :span="12"><div ref="evmIndexRef" class="chart-area" /></el-col>
         </el-row>
       </template>
 
@@ -627,7 +606,7 @@ onUnmounted(() => {
           <div class="kpi highlight"><div class="kpi-label">{{ t('report.dualRate.kpis.internalMargin') }}</div><div class="kpi-value">{{ fmtPct(reportData?.internalMargin) }}</div></div>
         </div>
         <el-row :gutter="16" class="chart-row">
-          <el-col :span="24"><div :ref="setRef('dual-bar')" class="chart-area" /></el-col>
+          <el-col :span="24"><div ref="dualBarRef" class="chart-area" /></el-col>
         </el-row>
       </template>
 
@@ -640,8 +619,8 @@ onUnmounted(() => {
           <div class="kpi"><div class="kpi-label">{{ t('report.risk.kpis.alertTotal') }}</div><div class="kpi-value">{{ reportData?.alertCount ?? 0 }}</div></div>
         </div>
         <el-row :gutter="16" class="chart-row">
-          <el-col :span="12"><div :ref="setRef('risk-pie')" class="chart-area" /></el-col>
-          <el-col :span="12"><div :ref="setRef('risk-bar')" class="chart-area" /></el-col>
+          <el-col :span="12"><div ref="riskPieRef" class="chart-area" /></el-col>
+          <el-col :span="12"><div ref="riskBarRef" class="chart-area" /></el-col>
         </el-row>
       </template>
 
@@ -655,7 +634,7 @@ onUnmounted(() => {
           <vxe-column field="billableHours" :title="t('report.utilization.columns.billableHours')" width="120" align="right" />
         </vxe-table>
         <el-row :gutter="16" class="chart-row">
-          <el-col :span="24"><div :ref="setRef('util-bar')" class="chart-area" /></el-col>
+          <el-col :span="24"><div ref="utilBarRef" class="chart-area" /></el-col>
         </el-row>
       </div>
 
@@ -667,7 +646,7 @@ onUnmounted(() => {
           <el-descriptions-item :label="t('report.bench.fields.avgDays')">{{ reportData?.avgDays ?? 0 }}</el-descriptions-item>
         </el-descriptions>
         <el-row :gutter="16" class="chart-row">
-          <el-col :span="24"><div :ref="setRef('bench-line')" class="chart-area" /></el-col>
+          <el-col :span="24"><div ref="benchLineRef" class="chart-area" /></el-col>
         </el-row>
       </div>
 
@@ -686,12 +665,12 @@ onUnmounted(() => {
   .kpi {
     padding: 16px;
     background: var(--el-fill-color-light);
-    border-radius: 4px;
+    border-radius: $border-radius-sm;
     &.highlight { background: var(--el-color-primary-light-9); }
-    .kpi-label { font-size: 12px; color: var(--el-text-color-secondary); margin-bottom: 8px; }
-    .kpi-value { font-size: 20px; font-weight: 600; &.money { color: var(--el-color-primary); } }
+    .kpi-label { font-size: $font-size-xs; color: $text-secondary; margin-bottom: $spacing-sm; }
+    .kpi-value { font-size: $font-size-xl; font-weight: 600; &.money { color: $primary-color; } }
   }
-  .chart-row { margin-top: 16px; }
+  .chart-row { margin-top: $spacing-md; }
   .chart-area { width: 100%; height: 320px; }
 }
 </style>
