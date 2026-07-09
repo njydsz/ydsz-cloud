@@ -55,6 +55,7 @@ import java.util.Map;
 @Tag(name = "工具市场管理", description = "HTTP API 工具的在线注册、OpenAPI 导入、启停与测试")
 public class ToolMarketController {
 
+    /** 工具市场服务 */
     private final ToolMarketService service;
 
     @Idempotent(key = "tool-market:register", ttlSeconds = 5, message = "请勿重复提交")

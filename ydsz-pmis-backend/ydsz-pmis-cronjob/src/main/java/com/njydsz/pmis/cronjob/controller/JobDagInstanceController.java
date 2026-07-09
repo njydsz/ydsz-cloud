@@ -31,8 +31,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JobDagInstanceController {
 
+    /** DAG 实例服务 */
     private final JobDagInstanceService jobDagInstanceService;
 
+    /**
+     * 查询 DAG 实例详情。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 统一响应结果，包含 DAG 实例信息
+     */
     @Operation(summary = "查询 DAG 实例详情")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}")
@@ -40,6 +47,13 @@ public class JobDagInstanceController {
         return Result.ok(jobDagInstanceService.getInstanceById(instanceId));
     }
 
+    /**
+     * 查询指定 DAG 的实例列表。
+     *
+     * @param dagId DAG ID
+     * @param limit 最多返回条数（默认 20）
+     * @return 统一响应结果，包含 DAG 实例列表
+     */
     @Operation(summary = "查询 DAG 的实例列表")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/dag/{dagId}")
@@ -48,6 +62,12 @@ public class JobDagInstanceController {
         return Result.ok(jobDagInstanceService.listByDagId(dagId, limit));
     }
 
+    /**
+     * 按状态查询 DAG 实例。
+     *
+     * @param status 实例状态（RUNNING/PAUSED/SUCCESS/FAILED/CANCELLED）
+     * @return 统一响应结果，包含 DAG 实例列表
+     */
     @Operation(summary = "按状态查询 DAG 实例")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/status/{status}")
@@ -55,6 +75,12 @@ public class JobDagInstanceController {
         return Result.ok(jobDagInstanceService.listByStatus(status));
     }
 
+    /**
+     * 查询 DAG 实例的节点列表。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 统一响应结果，包含节点实例列表
+     */
     @Operation(summary = "查询 DAG 实例的节点列表")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/nodes")
@@ -62,6 +88,12 @@ public class JobDagInstanceController {
         return Result.ok(jobDagInstanceService.listNodes(instanceId));
     }
 
+    /**
+     * 获取 DAG 实例可视化数据。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 统一响应结果，包含可视化数据（节点状态/边/时间线）
+     */
     @Operation(summary = "获取 DAG 实例可视化数据（P4-1）")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/visualization")
@@ -69,6 +101,12 @@ public class JobDagInstanceController {
         return Result.ok(jobDagInstanceService.getVisualization(instanceId));
     }
 
+    /**
+     * 暂停 DAG 实例。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "暂停 DAG 实例")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "暂停DAG实例", bizType = "CRONJOB_DAG")
@@ -79,6 +117,12 @@ public class JobDagInstanceController {
         return Result.ok();
     }
 
+    /**
+     * 恢复 DAG 实例。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "恢复 DAG 实例")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "恢复DAG实例", bizType = "CRONJOB_DAG")
@@ -89,6 +133,12 @@ public class JobDagInstanceController {
         return Result.ok();
     }
 
+    /**
+     * 取消 DAG 实例。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "取消 DAG 实例")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "取消DAG实例", bizType = "CRONJOB_DAG")
@@ -99,6 +149,13 @@ public class JobDagInstanceController {
         return Result.ok();
     }
 
+    /**
+     * 更新 DAG 实例上下文（用于节点间参数传递）。
+     *
+     * @param instanceId DAG 实例 ID
+     * @param contextJson 上下文 JSON 字符串
+     * @return 统一响应结果
+     */
     @Operation(summary = "更新 DAG 实例上下文")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "更新DAG实例上下文", bizType = "CRONJOB_DAG")

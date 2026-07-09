@@ -43,6 +43,7 @@ import java.util.List;
 @Validated
 public class RateCardController {
 
+    /** 标准费率卡服务 */
     private final RateCardService service;
 
     /**

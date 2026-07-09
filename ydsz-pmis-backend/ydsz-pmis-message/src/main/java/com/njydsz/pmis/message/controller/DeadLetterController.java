@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class DeadLetterController {
 
+    /** 消息日志服务 */
     private final MessageLogService messageLogService;
 
     /**

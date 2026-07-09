@@ -7,6 +7,7 @@ import com.njydsz.pmis.workflow.dto.FlowDelegateMessageDTO;
 import com.njydsz.pmis.workflow.entity.FlowDelegateMessageDO;
 import com.njydsz.pmis.workflow.service.FlowDelegateMessageService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +37,7 @@ public class FlowDelegateMessageController {
     @Idempotent(key = "flow-delegate-message:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegate/message/send")
     public Result<FlowDelegateMessageDO> send(
-            @RequestBody FlowDelegateMessageDTO dto,
+            @Valid @RequestBody FlowDelegateMessageDTO dto,
             @RequestParam String senderId,
             @RequestParam(required = false) String senderName,
             @RequestParam String senderRole,

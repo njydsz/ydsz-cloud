@@ -37,6 +37,7 @@ import java.util.Map;
 @Validated
 public class SatisfactionController {
 
+    /** 满意度调查服务 */
     private final SatisfactionService service;
 
     @Operation(summary = "提交评价")

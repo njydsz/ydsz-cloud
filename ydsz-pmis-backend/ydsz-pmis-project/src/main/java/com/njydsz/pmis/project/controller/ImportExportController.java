@@ -46,6 +46,7 @@ public class ImportExportController {
     /** bizType 白名单（防御性编程：阻止路径穿越与非法业务类型） */
     private static final Set<String> ALLOWED_BIZ_TYPES = Set.of("rate-card", "rate-internal", "time-entry");
 
+    /** 数据导入服务 */
     private final ImportService importService;
 
     /**

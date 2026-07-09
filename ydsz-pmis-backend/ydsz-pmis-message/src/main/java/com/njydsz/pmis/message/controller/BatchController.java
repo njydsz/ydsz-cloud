@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class BatchController {
 
+    /** 批量发送服务 */
     private final BatchService batchService;
 
     /**

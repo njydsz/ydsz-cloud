@@ -47,6 +47,7 @@ import java.util.List;
 @Validated
 public class HitlApprovalController {
 
+    /** HITL 人工审批服务 */
     private final HitlApprovalService service;
 
     public HitlApprovalController(HitlApprovalService service) {
@@ -55,6 +56,14 @@ public class HitlApprovalController {
 
     /**
      * 分页查询审批请求。
+     *
+     * @param page      页码（从 1 开始）
+     * @param size      每页大小
+     * @param status    审批状态（可空）
+     * @param agentType Agent 类型（可空）
+     * @param bizType   关联业务类型（可空）
+     * @param bizId     关联业务 ID（可空）
+     * @return 分页结果
      */
     @Operation(summary = "分页查询审批请求")
     @PrePermission("agent:hitl:list")
@@ -71,6 +80,9 @@ public class HitlApprovalController {
 
     /**
      * 查询待审批请求列表。
+     *
+     * @param limit 返回条数，默认 20
+     * @return 待审批请求列表
      */
     @Operation(summary = "待审批请求列表")
     @PrePermission("agent:hitl:list")
@@ -82,6 +94,9 @@ public class HitlApprovalController {
 
     /**
      * 查询审批请求详情。
+     *
+     * @param id 审批请求 ID
+     * @return 审批请求详情
      */
     @Operation(summary = "审批请求详情")
     @PrePermission("agent:hitl:list")
@@ -92,6 +107,10 @@ public class HitlApprovalController {
 
     /**
      * 批准审批请求。
+     *
+     * @param id  审批请求 ID
+     * @param dto 审批动作 DTO（含审批人信息与备注）
+     * @return ReAct 执行结果
      */
     @Operation(summary = "批准审批请求")
     @PrePermission("agent:hitl:approve")
@@ -104,6 +123,10 @@ public class HitlApprovalController {
 
     /**
      * 拒绝审批请求。
+     *
+     * @param id  审批请求 ID
+     * @param dto 审批动作 DTO（含审批人信息与备注）
+     * @return ReAct 执行结果
      */
     @Operation(summary = "拒绝审批请求")
     @PrePermission("agent:hitl:approve")
@@ -116,6 +139,10 @@ public class HitlApprovalController {
 
     /**
      * 取消审批请求。
+     *
+     * @param id  审批请求 ID
+     * @param dto 审批动作 DTO（含审批人信息与备注）
+     * @return 空结果
      */
     @Operation(summary = "取消审批请求")
     @PrePermission("agent:hitl:approve")

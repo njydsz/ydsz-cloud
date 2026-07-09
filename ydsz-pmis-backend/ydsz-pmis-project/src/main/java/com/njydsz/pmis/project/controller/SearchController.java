@@ -38,6 +38,7 @@ import java.util.List;
 @Validated
 public class SearchController {
 
+    /** 全局搜索服务 */
     private final SearchService searchService;
 
     /**

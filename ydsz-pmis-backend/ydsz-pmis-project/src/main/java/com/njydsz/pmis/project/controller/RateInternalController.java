@@ -43,6 +43,7 @@ import java.util.List;
 @Validated
 public class RateInternalController {
 
+    /** 内部费率服务 */
     private final RateInternalService service;
 
     /**

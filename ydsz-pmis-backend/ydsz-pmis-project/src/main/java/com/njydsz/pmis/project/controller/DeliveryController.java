@@ -42,6 +42,7 @@ import java.util.Map;
 @Validated
 public class DeliveryController {
 
+    /** 交付物服务 */
     private final DeliveryService service;
 
     // ========== 标准管理 ==========

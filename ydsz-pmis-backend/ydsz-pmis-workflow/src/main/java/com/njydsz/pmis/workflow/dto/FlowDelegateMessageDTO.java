@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serial;
@@ -20,6 +21,7 @@ public class FlowDelegateMessageDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 关联任务 ID */
+    @NotBlank(message = "关联任务 ID 不能为空")
     private String taskId;
 
     /** 关联实例 ID */
@@ -29,6 +31,7 @@ public class FlowDelegateMessageDTO implements Serializable {
     private String nodeCode;
 
     /** 发送内容 */
+    @NotBlank(message = "发送内容不能为空")
     private String content;
 
     /** 可选附件存储 key */

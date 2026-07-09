@@ -34,8 +34,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class CanaryController {
 
+    /** 灰度桶服务 */
     private final CanaryService canaryService;
 
+    /**
+     * 新增或更新灰度桶配置。
+     *
+     * @param dto 灰度桶保存请求体
+     * @return 统一响应结果，包含灰度桶详情
+     */
     @Operation(summary = "新增/更新灰度桶")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_UPDATE)
     @Idempotent(key = "canary:upsert", ttlSeconds = 5, message = "请勿重复提交")
@@ -44,6 +51,12 @@ public class CanaryController {
         return Result.ok(canaryService.upsert(dto));
     }
 
+    /**
+     * 按灰度键查询灰度桶配置。
+     *
+     * @param canaryKey 灰度键
+     * @return 统一响应结果，包含灰度桶详情
+     */
     @Operation(summary = "按灰度键查询灰度桶")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/{canaryKey}")
@@ -51,6 +64,12 @@ public class CanaryController {
         return Result.ok(canaryService.getByKey(canaryKey));
     }
 
+    /**
+     * 分页查询灰度桶列表。
+     *
+     * @param query 分页查询参数
+     * @return 统一响应结果，包含灰度桶分页数据
+     */
     @Operation(summary = "灰度桶分页")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
@@ -58,6 +77,13 @@ public class CanaryController {
         return Result.ok(canaryService.page(query));
     }
 
+    /**
+     * 判定桶值是否命中灰度。
+     *
+     * @param canaryKey  灰度键
+     * @param bucketValue 桶值
+     * @return 统一响应结果，true 表示命中灰度
+     */
     @Operation(summary = "判定桶值是否命中灰度")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/hit")

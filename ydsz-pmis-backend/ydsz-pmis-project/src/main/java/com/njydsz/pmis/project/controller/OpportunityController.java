@@ -43,6 +43,7 @@ import java.util.Map;
 @Validated
 public class OpportunityController {
 
+    /** 商机服务 */
     private final OpportunityService service;
 
     @Operation(summary = "创建商机")

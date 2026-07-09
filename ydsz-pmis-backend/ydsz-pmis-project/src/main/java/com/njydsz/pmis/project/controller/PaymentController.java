@@ -45,6 +45,7 @@ import java.util.Map;
 @Validated
 public class PaymentController {
 
+    /** 回款服务 */
     private final PaymentService service;
 
     /**

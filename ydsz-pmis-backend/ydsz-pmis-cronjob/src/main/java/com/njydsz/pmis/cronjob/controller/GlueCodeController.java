@@ -33,6 +33,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GlueCodeController {
 
+    /** GLUE 在线编码服务 */
     private final GlueCodeService glueCodeService;
 
     /**

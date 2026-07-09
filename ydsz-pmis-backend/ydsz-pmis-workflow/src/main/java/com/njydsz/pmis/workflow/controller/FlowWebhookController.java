@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.entity.FlowWebhookSubscriptionDO;
 import com.njydsz.pmis.workflow.service.FlowWebhookService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +34,7 @@ public class FlowWebhookController {
 
     @Idempotent(key = "flow-webhook:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@RequestBody FlowWebhookSubscriptionDO subscription) {
+    public Result<String> create(@Valid @RequestBody FlowWebhookSubscriptionDO subscription) {
         if (subscription.getTenantId() == null) {
             subscription.setTenantId(SecurityContext.getTenantIdOrDefault("1"));
         }
@@ -42,7 +43,7 @@ public class FlowWebhookController {
 
     @Idempotent(key = "flow-webhook:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
-    public Result<Void> update(@RequestBody FlowWebhookSubscriptionDO subscription) {
+    public Result<Void> update(@Valid @RequestBody FlowWebhookSubscriptionDO subscription) {
         webhookService.update(subscription);
         return Result.ok();
     }

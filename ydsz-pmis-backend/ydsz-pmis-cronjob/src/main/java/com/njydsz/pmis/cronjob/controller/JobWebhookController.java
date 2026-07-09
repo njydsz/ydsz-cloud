@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class JobWebhookController {
 
+    /** WebHook 订阅 Mapper */
     private final JobWebhookMapper webhookMapper;
 
     /**

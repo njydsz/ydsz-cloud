@@ -38,6 +38,7 @@ import java.util.List;
 @Tag(name = "规则引擎监控大盘", description = "P1-6 规则引擎指标聚合 API：概览 / 趋势 / 分布 / Top 规则 / 实时指标")
 public class RuleDashboardController {
 
+    /** 规则引擎看板服务 */
     private final RuleEngineDashboardService dashboardService;
 
     /**

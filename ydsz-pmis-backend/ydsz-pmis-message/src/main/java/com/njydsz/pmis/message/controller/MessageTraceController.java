@@ -30,8 +30,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageTraceController {
 
+    /** 消息追踪服务 */
     private final MessageTraceService messageTraceService;
 
+    /**
+     * 按消息 ID 查询完整轨迹。
+     *
+     * @param msgId 消息 ID
+     * @return 统一响应结果，包含轨迹列表
+     */
     @Operation(summary = "按消息 ID 查询轨迹")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/msg/{msgId}")
@@ -39,6 +46,12 @@ public class MessageTraceController {
         return Result.ok(messageTraceService.getTraceByMsgId(msgId));
     }
 
+    /**
+     * 按链路追踪 ID 查询完整轨迹。
+     *
+     * @param traceId 链路追踪 ID
+     * @return 统一响应结果，包含轨迹列表
+     */
     @Operation(summary = "按链路追踪 ID 查询轨迹")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/trace/{traceId}")
@@ -46,6 +59,13 @@ public class MessageTraceController {
         return Result.ok(messageTraceService.getTraceByTraceId(traceId));
     }
 
+    /**
+     * 按业务类型和单据 ID 查询轨迹。
+     *
+     * @param bizType 业务类型
+     * @param bizId   单据 ID
+     * @return 统一响应结果，包含轨迹列表
+     */
     @Operation(summary = "按业务类型+单据 ID 查询轨迹")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/biz")

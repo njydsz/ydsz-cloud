@@ -55,10 +55,15 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TaskTopologyController {
 
+    /** DAG 实例 Mapper */
     private final JobDagInstanceMapper dagInstanceMapper;
+    /** DAG 节点实例 Mapper */
     private final JobDagNodeInstanceMapper dagNodeInstanceMapper;
+    /** DAG 定义 Mapper */
     private final JobDagMapper dagMapper;
+    /** DAG 定义 JSON 编解码器 */
     private final DagDefinitionCodec dagDefinitionCodec;
+    /** 任务执行日志 Mapper */
     private final JobLogMapper jobLogMapper;
 
     /**

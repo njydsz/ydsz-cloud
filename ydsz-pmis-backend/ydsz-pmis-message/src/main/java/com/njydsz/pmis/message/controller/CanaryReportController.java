@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class CanaryReportController {
 
+    /** 灰度报表服务 */
     private final CanaryReportService canaryReportService;
 
     /**

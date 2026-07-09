@@ -46,6 +46,7 @@ import java.util.Map;
 @Validated
 public class TimeEntryController {
 
+    /** 工时填报服务 */
     private final TimeEntryService service;
 
     /**

@@ -41,6 +41,7 @@ import java.util.Map;
 @Validated
 public class CustomerCreditController {
 
+    /** 客户信用服务 */
     private final CustomerCreditService service;
 
     /**

@@ -116,7 +116,7 @@ public class AgentController {
     @Idempotent(key = "agent:in-memory", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/in-memory")
     public Result<AgentResult> inMemory(@RequestParam String agentType,
-                                    @RequestBody AgentContext ctx) {
+                                    @Valid @RequestBody AgentContext ctx) {
         return Result.ok(service.executeInMemory(agentType, ctx));
     }
 
@@ -160,7 +160,7 @@ public class AgentController {
     @Idempotent(key = "agent:run-stream", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping(value = "/run/stream", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter runStream(@RequestParam String agentType,
-                                @RequestBody AgentContext ctx) {
+                                @Valid @RequestBody AgentContext ctx) {
         // 超时 5 分钟（覆盖多步 ReAct + LLM 调用）
         SseEmitter emitter = new SseEmitter(5 * 60 * 1000L);
         SseEventListener listener = new SseEventListener(emitter);

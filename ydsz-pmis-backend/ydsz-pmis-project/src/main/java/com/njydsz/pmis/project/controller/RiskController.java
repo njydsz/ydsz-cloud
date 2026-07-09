@@ -45,6 +45,7 @@ import java.util.Map;
 @Validated
 public class RiskController {
 
+    /** 风险管理服务 */
     private final RiskService service;
 
     /**

@@ -30,8 +30,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AggregateController {
 
+    /** 聚合批次服务 */
     private final AggregateService aggregateService;
 
+    /**
+     * 分页查询聚合批次列表。
+     *
+     * @param query 分页查询参数
+     * @return 统一响应结果，包含聚合批次分页数据
+     */
     @Operation(summary = "聚合批次分页")
     @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_LIST)
     @GetMapping("/page")
@@ -39,6 +46,13 @@ public class AggregateController {
         return Result.ok(aggregateService.page(query));
     }
 
+    /**
+     * 按聚合组和接收人强制刷新聚合批次。
+     *
+     * @param group    聚合组标识
+     * @param receiver 接收人标识
+     * @return 统一响应结果，包含刷新的消息数量
+     */
     @Operation(summary = "按聚合组+接收人强制刷新")
     @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "aggregate:flush-by-group", ttlSeconds = 5, message = "请勿重复提交")
@@ -47,6 +61,11 @@ public class AggregateController {
         return Result.ok(aggregateService.flushByGroup(group, receiver));
     }
 
+    /**
+     * 刷新全部到期聚合批次。
+     *
+     * @return 统一响应结果，包含刷新的消息数量
+     */
     @Operation(summary = "刷新到期批次")
     @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "aggregate:flush-due", ttlSeconds = 5, message = "请勿重复提交")

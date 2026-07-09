@@ -45,7 +45,9 @@ import java.util.List;
 @Validated
 public class KnowledgeBaseController {
 
+    /** 知识库服务 */
     private final KnowledgeBaseService kbService;
+    /** 检索器（可选依赖，缺失时检索接口返回空列表） */
     private final ObjectProvider<Retriever> retrieverProvider;
 
     public KnowledgeBaseController(KnowledgeBaseService kbService,
@@ -56,6 +58,9 @@ public class KnowledgeBaseController {
 
     /**
      * 创建知识库。
+     *
+     * @param kb 知识库实体
+     * @return 落库后的知识库
      */
     @Operation(summary = "创建知识库")
     @Idempotent(key = "knowledge-base:create", ttlSeconds = 5, message = "请勿重复提交")
@@ -66,6 +71,9 @@ public class KnowledgeBaseController {
 
     /**
      * 查询知识库详情。
+     *
+     * @param id 知识库 ID
+     * @return 知识库详情
      */
     @Operation(summary = "知识库详情")
     @GetMapping("/{id}")
@@ -75,6 +83,11 @@ public class KnowledgeBaseController {
 
     /**
      * 分页查询知识库。
+     *
+     * @param page     页码（从 1 开始）
+     * @param size     每页大小
+     * @param tenantId 租户 ID（可空）
+     * @return 分页结果
      */
     @Operation(summary = "分页查询知识库")
     @GetMapping("/page")
@@ -87,6 +100,10 @@ public class KnowledgeBaseController {
 
     /**
      * 上传文档到知识库。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param req             上传请求 DTO
+     * @return 落库后的文档
      */
     @Operation(summary = "上传文档")
     @Idempotent(key = "knowledge-base:upload-document", ttlSeconds = 5, message = "请勿重复提交")
@@ -100,6 +117,9 @@ public class KnowledgeBaseController {
 
     /**
      * 查询知识库下的文档列表。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @return 文档列表
      */
     @Operation(summary = "文档列表")
     @GetMapping("/{id}/documents")
@@ -109,6 +129,10 @@ public class KnowledgeBaseController {
 
     /**
      * 检索知识库。
+     *
+     * @param knowledgeBaseId 知识库 ID
+     * @param req             检索请求 DTO
+     * @return 检索到的文档分块列表
      */
     @Operation(summary = "检索知识库")
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")

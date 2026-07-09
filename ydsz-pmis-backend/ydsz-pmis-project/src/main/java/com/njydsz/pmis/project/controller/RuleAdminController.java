@@ -1742,7 +1742,7 @@ public class RuleAdminController {
     @Idempotent(key = "rule-admin:save-chain-graph", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/graph")
     public Result<Map<String, Object>> saveChainGraph(@PathVariable String ruleCode,
-                                                       @RequestBody RuleChainGraph graph,
+                                                       @Valid @RequestBody RuleChainGraph graph,
                                                        @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         // 1. 结构校验
         List<RuleGraphValidator.GraphValidationIssue> issues = RuleGraphValidator.validate(graph);
@@ -1989,7 +1989,7 @@ public class RuleAdminController {
     @PutMapping("/{ruleCode}/ab-policy")
     public Result<Void> updateABPolicy(
             @PathVariable String ruleCode,
-            @RequestBody RuleABPolicyDO policy,
+            @Valid @RequestBody RuleABPolicyDO policy,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         policy.setRuleCode(ruleCode);
         abTestAutoRollbackService.savePolicy(policy, operator);
@@ -2100,7 +2100,7 @@ public class RuleAdminController {
     @Idempotent(key = "rule-admin:publish-pack", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/packs")
     public Result<RulePack> publishPack(
-            @RequestBody RulePack pack,
+            @Valid @RequestBody RulePack pack,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         return Result.ok(rulePackService.publish(pack, operator));
     }
@@ -2454,7 +2454,7 @@ public class RuleAdminController {
     @Operation(summary = "应用阈值调整", description = "将建议阈值写入规则条件表达式并持久化")
     public Result<Boolean> applyThreshold(
             @PathVariable String ruleCode,
-            @RequestBody ThresholdAnalysis analysis,
+            @Valid @RequestBody ThresholdAnalysis analysis,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
         if (svc == null) {

@@ -42,6 +42,7 @@ import java.util.Map;
 @Validated
 public class ProjectClosureController {
 
+    /** 项目结项服务 */
     private final ProjectClosureService service;
 
     /**

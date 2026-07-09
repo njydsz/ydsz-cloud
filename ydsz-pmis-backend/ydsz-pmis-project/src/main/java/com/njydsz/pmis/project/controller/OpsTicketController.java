@@ -40,6 +40,7 @@ import java.util.Map;
 @Validated
 public class OpsTicketController {
 
+    /** 运维工单服务 */
     private final OpsTicketService service;
 
     @Operation(summary = "创建工单")

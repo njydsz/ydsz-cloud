@@ -42,8 +42,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TemplateVersionController {
 
+    /** 模板版本管理服务 */
     private final TemplateVersionService templateVersionService;
 
+    /**
+     * 查询模板版本历史。
+     *
+     * @param templateCode 模板编码
+     * @return 统一响应结果，包含版本列表
+     */
     @Operation(summary = "查询模板版本历史")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_VIEW)
     @GetMapping("/list/{templateCode}")
@@ -51,6 +58,13 @@ public class TemplateVersionController {
         return Result.ok(templateVersionService.listVersions(templateCode));
     }
 
+    /**
+     * 回滚到指定版本。
+     *
+     * @param templateCode 模板编码
+     * @param version      目标版本号
+     * @return 统一响应结果，包含新版本 ID
+     */
     @Operation(summary = "回滚到指定版本")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "template-version:rollback", ttlSeconds = 5, message = "请勿重复提交")
@@ -59,6 +73,12 @@ public class TemplateVersionController {
         return Result.ok(templateVersionService.rollbackToVersion(templateCode, version));
     }
 
+    /**
+     * 预览模板渲染结果。
+     *
+     * @param dto 预览请求体
+     * @return 统一响应结果，包含渲染后的内容
+     */
     @Operation(summary = "预览模板渲染结果")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_VIEW)
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
@@ -70,6 +90,12 @@ public class TemplateVersionController {
         return Result.ok(templateVersionService.preview(dto));
     }
 
+    /**
+     * 试发模板（向测试接收人发送）。
+     *
+     * @param dto 试发请求体
+     * @return 统一响应结果，包含发送结果
+     */
     @Operation(summary = "试发模板（向测试接收人发送）")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "template-version:test-send", ttlSeconds = 5, message = "请勿重复提交")

@@ -36,8 +36,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MessageFeedbackController {
 
+    /** 消息质量反馈服务 */
     private final MessageFeedbackService messageFeedbackService;
 
+    /**
+     * 提交消息质量反馈。
+     *
+     * @param dto 反馈请求体
+     * @return 统一响应结果，包含反馈记录 ID
+     */
     @Operation(summary = "提交消息反馈")
     @Idempotent(key = "message-feedback:submit-feedback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -45,6 +52,13 @@ public class MessageFeedbackController {
         return Result.ok(messageFeedbackService.submitFeedback(dto));
     }
 
+    /**
+     * 查询用户和通道的平均评分。
+     *
+     * @param userId  用户 ID
+     * @param channel 通道（可选）
+     * @return 统一响应结果，包含用户评分与通道评分
+     */
     @Operation(summary = "查询用户平均评分")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/rating")
@@ -58,6 +72,15 @@ public class MessageFeedbackController {
                 "channelRating", channelRating));
     }
 
+    /**
+     * 分页查询反馈记录。
+     *
+     * @param page    页码（默认 1）
+     * @param size    每页条数（默认 20）
+     * @param channel 通道过滤（可选）
+     * @param userId  用户 ID 过滤（可选）
+     * @return 统一响应结果，包含反馈分页数据
+     */
     @Operation(summary = "分页查询反馈记录")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/page")
@@ -68,6 +91,12 @@ public class MessageFeedbackController {
         return Result.ok(messageFeedbackService.pageFeedback(page, size, channel, userId));
     }
 
+    /**
+     * 检查用户是否需要降频推送。
+     *
+     * @param userId 用户 ID
+     * @return 统一响应结果，包含 shouldReduce 标记
+     */
     @Operation(summary = "检查用户是否需要降频")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/should-reduce-freq")

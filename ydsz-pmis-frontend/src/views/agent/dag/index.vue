@@ -558,7 +558,7 @@ onMounted(() => {
                       </el-select>
                     </el-form-item>
                     <el-form-item label="Deps">
-                      <div v-if="selectedNode.dependencies.length === 0" class="empty-deps">无依赖</div>
+                      <div v-if="selectedNode.dependencies.length === 0" class="empty-deps">{{ t('agent.dag.nodeDetail.noDeps') }}</div>
                       <el-tag
                         v-for="depId in selectedNode.dependencies"
                         :key="depId"

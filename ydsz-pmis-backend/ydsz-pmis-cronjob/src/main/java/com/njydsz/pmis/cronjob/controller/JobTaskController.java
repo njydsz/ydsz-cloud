@@ -33,6 +33,7 @@ import java.util.List;
 @Validated
 public class JobTaskController {
 
+    /** MapReduce 子任务 Mapper */
     private final JobTaskMapper jobTaskMapper;
 
     /**

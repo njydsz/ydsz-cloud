@@ -33,8 +33,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class OrchestrationController {
 
+    /** 消息编排服务 */
     private final OrchestrationService orchestrationService;
 
+    /**
+     * 执行 DAG 编排流程。
+     *
+     * @param flow 编排流程定义
+     * @return 统一响应结果，包含编排执行结果
+     */
     @Operation(summary = "执行编排流程")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "orchestration:execute", ttlSeconds = 5, message = "请勿重复提交")

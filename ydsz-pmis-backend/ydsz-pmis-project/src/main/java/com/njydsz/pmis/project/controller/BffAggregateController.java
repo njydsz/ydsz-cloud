@@ -44,7 +44,9 @@ import java.util.Map;
 @Tag(name = "BFF聚合", description = "前端聚合接口，一次请求返回复合数据")
 public class BffAggregateController {
 
+    /** 驾驶舱报表服务 */
     private final CockpitReportService cockpitReportService;
+    /** 报表服务 */
     private final ReportService reportService;
 
     @GetMapping("/project-detail/{initiationId}")

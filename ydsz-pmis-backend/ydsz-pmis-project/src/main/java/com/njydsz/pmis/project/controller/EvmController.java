@@ -43,6 +43,7 @@ import java.util.Map;
 @Validated
 public class EvmController {
 
+    /** EVM 挣值度量服务 */
     private final EvmMeasureService service;
 
     /**

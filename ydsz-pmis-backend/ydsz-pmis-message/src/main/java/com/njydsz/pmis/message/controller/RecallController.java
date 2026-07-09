@@ -30,8 +30,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class RecallController {
 
+    /** 消息撤回服务 */
     private final RecallService recallService;
 
+    /**
+     * 撤回站内通知。
+     *
+     * @param userId 用户 ID
+     * @param dto    撤回请求体（含通知 ID）
+     * @return 统一响应结果，true 表示撤回成功
+     */
     @Operation(summary = "撤回站内通知")
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recall-notification", ttlSeconds = 5, message = "请勿重复提交")
@@ -41,6 +49,12 @@ public class RecallController {
         return Result.ok(recallService.recallNotification(userId, dto.getId()));
     }
 
+    /**
+     * 撤回已发送消息。
+     *
+     * @param logId 发送日志 ID
+     * @return 统一响应结果，true 表示撤回成功
+     */
     @Operation(summary = "撤回已发送消息")
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recall-message", ttlSeconds = 5, message = "请勿重复提交")
@@ -65,6 +79,12 @@ public class RecallController {
         return Result.ok(recallService.recallByMsgId(msgId));
     }
 
+    /**
+     * 按业务类型和单据 ID 批量撤回消息。
+     *
+     * @param dto 批量撤回请求体（含 bizType + bizId）
+     * @return 统一响应结果，包含撤回条数
+     */
     @Operation(summary = "按业务类型+单据 ID 批量撤回")
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recall-batch", ttlSeconds = 5, message = "请勿重复提交")

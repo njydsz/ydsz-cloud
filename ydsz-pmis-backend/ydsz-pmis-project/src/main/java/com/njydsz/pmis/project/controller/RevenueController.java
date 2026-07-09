@@ -42,6 +42,7 @@ import java.util.Map;
 @Validated
 public class RevenueController {
 
+    /** 收入确认服务 */
     private final RevenueService service;
 
     /**

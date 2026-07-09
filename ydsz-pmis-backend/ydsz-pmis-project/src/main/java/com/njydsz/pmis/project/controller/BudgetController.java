@@ -30,6 +30,7 @@ import java.util.Map;
 @Validated
 public class BudgetController {
 
+    /** 预算强管控守卫 */
     private final BudgetGuard budgetGuard;
 
     /**

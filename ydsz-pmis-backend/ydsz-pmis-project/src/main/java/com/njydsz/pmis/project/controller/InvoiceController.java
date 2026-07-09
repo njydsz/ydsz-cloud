@@ -46,6 +46,7 @@ import java.util.Map;
 @Validated
 public class InvoiceController {
 
+    /** 发票服务 */
     private final InvoiceService service;
 
     /**

@@ -37,6 +37,7 @@ import java.util.Map;
 @Validated
 public class ProfitController {
 
+    /** 利润服务 */
     private final ProfitService service;
 
     /**

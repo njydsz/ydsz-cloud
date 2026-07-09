@@ -14,7 +14,10 @@
  * @since 1.0.0
  */
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { OrchestrationModeCode, OrchestrationResult } from '@/api/agent/orchestration/types'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   mode: OrchestrationModeCode
@@ -285,7 +288,7 @@ function nodeStroke(level: string): string {
       <el-tag :color="'#67C23A'" effect="dark" size="small" style="color:#fff">NORMAL</el-tag>
       <el-tag :color="'#E6A23C'" effect="dark" size="small" style="color:#fff">YELLOW</el-tag>
       <el-tag :color="'#F56C6C'" effect="dark" size="small" style="color:#fff">RED</el-tag>
-      <span class="legend-tip">节点颜色 = 告警等级</span>
+      <span class="legend-tip">{{ t('agent.orchestration.legend.tip') }}</span>
     </div>
   </div>
 </template>

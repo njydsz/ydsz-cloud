@@ -39,8 +39,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JobSlaController {
 
+    /** SLA 管理服务 */
     private final JobSlaService jobSlaService;
 
+    /**
+     * 创建 SLA 规则。
+     *
+     * @param dto SLA 规则保存请求体
+     * @return 统一响应结果，包含新增 SLA ID
+     */
     @Operation(summary = "创建 SLA 规则")
     @PrePermission(PermissionCodes.CRONJOB_SLA_CREATE)
     @OperationLog(module = "任务调度", action = "创建 SLA 规则", bizType = "CRONJOB_SLA")
@@ -50,6 +57,13 @@ public class JobSlaController {
         return Result.ok(jobSlaService.createSla(dto));
     }
 
+    /**
+     * 更新 SLA 规则。
+     *
+     * @param id  SLA 规则 ID
+     * @param dto SLA 规则保存请求体
+     * @return 统一响应结果
+     */
     @Operation(summary = "更新 SLA 规则")
     @PrePermission(PermissionCodes.CRONJOB_SLA_UPDATE)
     @OperationLog(module = "任务调度", action = "更新 SLA 规则", bizType = "CRONJOB_SLA")
@@ -60,6 +74,12 @@ public class JobSlaController {
         return Result.ok();
     }
 
+    /**
+     * 删除 SLA 规则。
+     *
+     * @param id SLA 规则 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除 SLA 规则")
     @PrePermission(PermissionCodes.CRONJOB_SLA_DELETE)
     @OperationLog(module = "任务调度", action = "删除 SLA 规则", bizType = "CRONJOB_SLA")
@@ -70,6 +90,12 @@ public class JobSlaController {
         return Result.ok();
     }
 
+    /**
+     * 查询 SLA 规则详情。
+     *
+     * @param id SLA 规则 ID
+     * @return 统一响应结果，包含 SLA 规则详情
+     */
     @Operation(summary = "查询 SLA 规则详情")
     @PrePermission(PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/{id}")
@@ -77,6 +103,11 @@ public class JobSlaController {
         return Result.ok(jobSlaService.getSlaById(id));
     }
 
+    /**
+     * 查询全部 SLA 规则。
+     *
+     * @return 统一响应结果，包含 SLA 规则列表
+     */
     @Operation(summary = "查询全部 SLA 规则")
     @PrePermission(PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/list")
@@ -84,6 +115,13 @@ public class JobSlaController {
         return Result.ok(jobSlaService.listSla());
     }
 
+    /**
+     * 启用或禁用 SLA 规则。
+     *
+     * @param id      SLA 规则 ID
+     * @param enabled 启用状态（1=启用，0=禁用）
+     * @return 统一响应结果
+     */
     @Operation(summary = "启用/禁用 SLA 规则")
     @PrePermission(PermissionCodes.CRONJOB_SLA_UPDATE)
     @OperationLog(module = "任务调度", action = "切换 SLA 启用状态", bizType = "CRONJOB_SLA")
@@ -94,6 +132,12 @@ public class JobSlaController {
         return Result.ok();
     }
 
+    /**
+     * 检查任务是否违反 SLA。
+     *
+     * @param jobId 任务 ID
+     * @return 统一响应结果，包含违约记录列表
+     */
     @Operation(summary = "检查任务是否违反 SLA")
     @PrePermission(PermissionCodes.CRONJOB_SLA_VIEW)
     @GetMapping("/check")

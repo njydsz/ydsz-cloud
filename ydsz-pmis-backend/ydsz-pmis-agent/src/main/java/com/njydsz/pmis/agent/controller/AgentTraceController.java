@@ -32,6 +32,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AgentTraceController {
 
+    /** Agent 链路追踪 Mapper */
     private final AgentTraceMapper traceMapper;
 
     /**

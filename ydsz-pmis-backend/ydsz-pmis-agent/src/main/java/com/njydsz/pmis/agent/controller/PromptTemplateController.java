@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Prompt 模板管理", description = "Agent Prompt 模板的创建、查询、激活与删除")
 public class PromptTemplateController {
 
+    /** Prompt 模板服务 */
     private final PromptTemplateService service;
 
     @Idempotent(key = "prompt-template:create", ttlSeconds = 5, message = "请勿重复提交")

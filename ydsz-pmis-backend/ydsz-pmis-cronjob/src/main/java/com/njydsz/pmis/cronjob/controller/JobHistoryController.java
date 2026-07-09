@@ -32,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JobHistoryController {
 
+    /** 任务配置历史版本服务 */
     private final JobHistoryService jobHistoryService;
 
     /**

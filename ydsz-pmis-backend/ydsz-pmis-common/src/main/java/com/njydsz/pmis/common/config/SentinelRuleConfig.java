@@ -157,6 +157,16 @@ public class SentinelRuleConfig {
         log.info("[Sentinel] 加载系统级保护规则: {} 条（CPU/Load/RT/QPS）", rules.size());
     }
 
+    /**
+     * 构建单条 QPS 限流规则。
+     *
+     * <p>控制行为：预热 + 排队等待（WARM_UP_RATE_LIMITER），预热时长 10s，排队最大等待 1s。
+     * 超出排队等待时间的请求被拒绝。</p>
+     *
+     * @param resource 资源名（HTTP 方法:路径，如 {@code "POST:/auth/login"}）
+     * @param qps      允许的 QPS 上限
+     * @return FlowRule 实例
+     */
     private FlowRule buildFlowRule(String resource, int qps) {
         FlowRule rule = new FlowRule();
         rule.setResource(resource);

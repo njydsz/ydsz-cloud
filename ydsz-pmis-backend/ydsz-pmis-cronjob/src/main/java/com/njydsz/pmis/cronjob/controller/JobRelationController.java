@@ -31,8 +31,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JobRelationController {
 
+    /** 任务依赖关系服务 */
     private final JobRelationService jobRelationService;
 
+    /**
+     * 添加任务依赖关系。
+     *
+     * @param dto 依赖关系保存请求体
+     * @return 统一响应结果，包含新增关系 ID
+     */
     @Operation(summary = "添加任务依赖关系")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "添加任务依赖", bizType = "CRONJOB_DAG")
@@ -43,6 +50,12 @@ public class JobRelationController {
                 dto.getParentJobId(), dto.getChildJobId(), dto.getFailStrategy()));
     }
 
+    /**
+     * 删除任务依赖关系。
+     *
+     * @param relationId 依赖关系 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除任务依赖关系")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "删除任务依赖", bizType = "CRONJOB_DAG")
@@ -53,18 +66,35 @@ public class JobRelationController {
         return Result.ok();
     }
 
+    /**
+     * 查询任务的后继依赖。
+     *
+     * @param parentJobId 父任务 ID
+     * @return 统一响应结果，包含后继依赖关系列表
+     */
     @Operation(summary = "查询任务后继依赖")
     @GetMapping("/children/{parentJobId}")
     public Result<List<JobRelationDO>> getChildren(@PathVariable String parentJobId) {
         return Result.ok(jobRelationService.getChildren(parentJobId));
     }
 
+    /**
+     * 查询任务的前置依赖。
+     *
+     * @param childJobId 子任务 ID
+     * @return 统一响应结果，包含前置依赖关系列表
+     */
     @Operation(summary = "查询任务前置依赖")
     @GetMapping("/parents/{childJobId}")
     public Result<List<JobRelationDO>> getParents(@PathVariable String childJobId) {
         return Result.ok(jobRelationService.getParents(childJobId));
     }
 
+    /**
+     * 查询全部依赖关系（DAG 全图）。
+     *
+     * @return 统一响应结果，包含全部依赖关系列表
+     */
     @Operation(summary = "查询全部依赖关系（DAG 全图）")
     @GetMapping("/all")
     public Result<List<JobRelationDO>> getAllRelations() {

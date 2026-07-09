@@ -33,6 +33,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JobStatsController {
 
+    /** 每日统计 Mapper */
     private final JobDailyStatsMapper jobDailyStatsMapper;
 
     /**

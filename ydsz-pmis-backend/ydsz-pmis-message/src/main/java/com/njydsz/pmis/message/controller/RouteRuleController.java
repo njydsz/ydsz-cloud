@@ -36,8 +36,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RouteRuleController {
 
+    /** 路由规则服务 */
     private final RouteRuleService routeRuleService;
 
+    /**
+     * 创建路由规则。
+     *
+     * @param dto 路由规则保存请求体
+     * @return 统一响应结果，包含路由规则详情
+     */
     @Operation(summary = "创建路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
     @Idempotent(key = "route-rule:create", ttlSeconds = 5, message = "请勿重复提交")
@@ -46,6 +53,13 @@ public class RouteRuleController {
         return Result.ok(routeRuleService.create(dto));
     }
 
+    /**
+     * 更新路由规则。
+     *
+     * @param id  规则 ID
+     * @param dto 路由规则保存请求体
+     * @return 统一响应结果，包含更新后规则详情
+     */
     @Operation(summary = "更新路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
     @Idempotent(key = "route-rule:update", ttlSeconds = 5, message = "请勿重复提交")
@@ -54,6 +68,12 @@ public class RouteRuleController {
         return Result.ok(routeRuleService.update(id, dto));
     }
 
+    /**
+     * 删除路由规则。
+     *
+     * @param id 规则 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
     @Idempotent(key = "route-rule:delete", ttlSeconds = 5, message = "请勿重复提交")
@@ -63,6 +83,12 @@ public class RouteRuleController {
         return Result.ok();
     }
 
+    /**
+     * 查询路由规则详情。
+     *
+     * @param id 规则 ID
+     * @return 统一响应结果，包含路由规则详情
+     */
     @Operation(summary = "路由规则详情")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
     @GetMapping("/{id}")
@@ -70,6 +96,12 @@ public class RouteRuleController {
         return Result.ok(routeRuleService.getById(id));
     }
 
+    /**
+     * 分页查询路由规则列表。
+     *
+     * @param query 分页查询参数
+     * @return 统一响应结果，包含路由规则分页数据
+     */
     @Operation(summary = "路由规则分页")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
@@ -77,6 +109,11 @@ public class RouteRuleController {
         return Result.ok(routeRuleService.page(query));
     }
 
+    /**
+     * 查询全部启用的路由规则。
+     *
+     * @return 统一响应结果，包含启用的路由规则列表
+     */
     @Operation(summary = "查询启用的路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/enabled")

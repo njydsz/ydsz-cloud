@@ -18,9 +18,10 @@
  *   P1-02: 新增自定义属性面板（Vue 组件式），支持节点名称/审批人/会签/条件表达式等编辑。
  *   支持拖拽式 BPMN 2.0 建模、属性编辑、XML 导入导出、模板加载。
  */
-import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import type { Element as BpmnElement } from 'bpmn-js/lib/model/Types'
 import 'bpmn-js/dist/assets/diagram-js.css'
@@ -53,6 +54,8 @@ const emit = defineEmits<{
   /** 设计器内容变更（节点增删改、连线等） */
   (e: 'change'): void
 }>()
+
+const { t } = useI18n()
 
 // ==================== State ====================
 const containerRef = ref<HTMLDivElement>()
@@ -90,16 +93,16 @@ const panelData = reactive({
 // 节点类型中文映射
 const elementTypeLabel = (type: string): string => {
   const map: Record<string, string> = {
-    'bpmn:StartEvent': '开始事件',
-    'bpmn:EndEvent': '结束事件',
-    'bpmn:UserTask': '审批节点',
-    'bpmn:ServiceTask': '服务节点',
-    'bpmn:ScriptTask': '脚本节点',
-    'bpmn:ExclusiveGateway': '排他网关',
-    'bpmn:ParallelGateway': '并行网关',
-    'bpmn:InclusiveGateway': '包容网关',
-    'bpmn:SequenceFlow': '连线',
-    'bpmn:Process': '流程',
+    'bpmn:StartEvent': t('workflow.designer.elementType.startEvent'),
+    'bpmn:EndEvent': t('workflow.designer.elementType.endEvent'),
+    'bpmn:UserTask': t('workflow.designer.elementType.userTask'),
+    'bpmn:ServiceTask': t('workflow.designer.elementType.serviceTask'),
+    'bpmn:ScriptTask': t('workflow.designer.elementType.scriptTask'),
+    'bpmn:ExclusiveGateway': t('workflow.designer.elementType.exclusiveGateway'),
+    'bpmn:ParallelGateway': t('workflow.designer.elementType.parallelGateway'),
+    'bpmn:InclusiveGateway': t('workflow.designer.elementType.inclusiveGateway'),
+    'bpmn:SequenceFlow': t('workflow.designer.elementType.sequenceFlow'),
+    'bpmn:Process': t('workflow.designer.elementType.process'),
   }
   return map[type] || type
 }
@@ -255,7 +258,7 @@ function initModeler() {
       }
     })
   } catch (e) {
-    ElMessage.error('BPMN 设计器初始化失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.designer.messages.initFailed', { msg: (e as Error).message }))
     logger.error('[BpmnDesigner]', e, { phase: 'init' })
   } finally {
     loading.value = false
@@ -270,7 +273,7 @@ async function loadXml(xml: string) {
     const result = await modeler.value.saveXML({ format: true })
     currentXml.value = result.xml || ''
   } catch (e) {
-    ElMessage.error('BPMN XML 导入失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.designer.messages.importXmlFailed', { msg: (e as Error).message }))
     logger.error('[BpmnDesigner]', e, { phase: 'importXML' })
   } finally {
     loading.value = false
@@ -315,7 +318,7 @@ async function loadBlankDiagram() {
 // ==================== Actions ====================
 async function handleExportXml() {
   if (!currentXml.value) {
-    ElMessage.warning('请先设计流程')
+    ElMessage.warning(t('workflow.designer.messages.designFirst'))
     return
   }
   const blob = new Blob([currentXml.value], { type: 'application/xml' })
@@ -325,7 +328,7 @@ async function handleExportXml() {
   a.download = `${deployForm.value.flowCode || 'process'}.bpmn`
   a.click()
   URL.revokeObjectURL(url)
-  ElMessage.success('BPMN XML 已导出')
+  ElMessage.success(t('workflow.designer.messages.xmlExported'))
 }
 
 /**
@@ -336,7 +339,7 @@ async function handleExportXml() {
  */
 async function handleExportSvg() {
   if (!currentSvg.value) {
-    ElMessage.warning('请先设计流程')
+    ElMessage.warning(t('workflow.designer.messages.designFirst'))
     return
   }
   const blob = new Blob([currentSvg.value], { type: 'image/svg+xml' })
@@ -346,7 +349,7 @@ async function handleExportSvg() {
   a.download = `${deployForm.value.flowCode || 'process'}.svg`
   a.click()
   URL.revokeObjectURL(url)
-  ElMessage.success('流程图 SVG 已导出')
+  ElMessage.success(t('workflow.designer.messages.svgExported'))
 }
 
 /**
@@ -357,7 +360,7 @@ async function handleExportSvg() {
  */
 async function handleExportPng() {
   if (!currentSvg.value) {
-    ElMessage.warning('请先设计流程')
+    ElMessage.warning(t('workflow.designer.messages.designFirst'))
     return
   }
   try {
@@ -369,7 +372,7 @@ async function handleExportPng() {
       canvas.height = img.naturalHeight || img.height
       const ctx = canvas.getContext('2d')
       if (!ctx) {
-        ElMessage.error('Canvas 2D 上下文不可用，无法导出 PNG')
+        ElMessage.error(t('workflow.designer.messages.canvasUnavailable'))
         return
       }
       ctx.fillStyle = '#ffffff'
@@ -377,7 +380,7 @@ async function handleExportPng() {
       ctx.drawImage(img, 0, 0)
       canvas.toBlob((blob) => {
         if (!blob) {
-          ElMessage.error('PNG 生成失败')
+          ElMessage.error(t('workflow.designer.messages.pngGenerateFailed'))
           return
         }
         const url = URL.createObjectURL(blob)
@@ -386,15 +389,15 @@ async function handleExportPng() {
         a.download = `${deployForm.value.flowCode || 'process'}.png`
         a.click()
         URL.revokeObjectURL(url)
-        ElMessage.success('流程图 PNG 已导出')
+        ElMessage.success(t('workflow.designer.messages.pngExported'))
       }, 'image/png')
     }
     img.onerror = () => {
-      ElMessage.error('SVG 加载失败，无法导出 PNG')
+      ElMessage.error(t('workflow.designer.messages.svgLoadFailed'))
     }
     img.src = svgDataUrl
   } catch (e) {
-    ElMessage.error('PNG 导出失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.designer.messages.pngExportFailed', { msg: (e as Error).message }))
   }
 }
 
@@ -407,20 +410,20 @@ async function handleImportXml() {
     if (!file) return
     const text = await file.text()
     await loadXml(text)
-    ElMessage.success('BPMN XML 已导入')
+    ElMessage.success(t('workflow.designer.messages.xmlImported'))
   }
   input.click()
 }
 
 async function handleSave() {
   if (!currentXml.value) {
-    ElMessage.warning('请先设计流程')
+    ElMessage.warning(t('workflow.designer.messages.designFirst'))
     return
   }
   saving.value = true
   try {
     emit('save', currentXml.value, currentSvg.value)
-    ElMessage.success('流程已保存')
+    ElMessage.success(t('workflow.designer.messages.saved'))
   } finally {
     saving.value = false
   }
@@ -428,15 +431,15 @@ async function handleSave() {
 
 async function handleDeploy() {
   if (!currentXml.value) {
-    ElMessage.warning('请先设计流程')
+    ElMessage.warning(t('workflow.designer.messages.designFirst'))
     return
   }
   if (!deployForm.value.flowCode.trim()) {
-    ElMessage.warning('请输入流程编码')
+    ElMessage.warning(t('workflow.designer.messages.flowCodeRequired'))
     return
   }
   if (!deployForm.value.flowName.trim()) {
-    ElMessage.warning('请输入流程名称')
+    ElMessage.warning(t('workflow.designer.messages.flowNameRequired'))
     return
   }
   saving.value = true
@@ -450,13 +453,13 @@ async function handleDeploy() {
     }
     const res = await deployDefinition(payload)
     if (res.data?.code === 0) {
-      ElMessage.success(`流程部署成功，定义 ID: ${res.data.data}`)
+      ElMessage.success(t('workflow.designer.messages.deploySuccess', { id: res.data.data }))
       emit('deploy', deployForm.value.flowCode, deployForm.value.flowName, currentXml.value)
     } else {
-      ElMessage.error(res.data?.message || '部署失败')
+      ElMessage.error(res.data?.message || t('workflow.designer.messages.deployFailed'))
     }
   } catch (e) {
-    ElMessage.error('部署失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.designer.messages.deployFailedWithMsg', { msg: (e as Error).message }))
   } finally {
     saving.value = false
   }
@@ -464,7 +467,7 @@ async function handleDeploy() {
 
 function handleReset() {
   loadBlankDiagram()
-  ElMessage.success('已重置为空白流程')
+  ElMessage.success(t('workflow.designer.messages.resetDone'))
 }
 
 /**
@@ -478,9 +481,9 @@ function handleAutoLayout() {
   if (!modeler.value) return
   try {
     autoLayout(modeler.value)
-    ElMessage.success('已自动布局')
+    ElMessage.success(t('workflow.designer.messages.autoLayoutDone'))
   } catch (e) {
-    ElMessage.error('自动布局失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.designer.messages.autoLayoutFailed', { msg: (e as Error).message }))
   }
 }
 
@@ -510,13 +513,21 @@ function handleFitView() {
 }
 
 // ==================== Templates ====================
-const templates = [
+interface BpmnTemplate {
+  key: string
+  label: string
+  xml: string
+}
+
+const templates = computed<BpmnTemplate[]>(() => [
   {
-    label: '空白流程',
+    key: 'blank',
+    label: t('workflow.designer.templates.blank'),
     xml: '', // triggers loadBlankDiagram
   },
   {
-    label: '请假审批（2级）',
+    key: 'leave',
+    label: t('workflow.designer.templates.leave'),
     xml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_Leave" name="请假审批" isExecutable="true">
@@ -531,7 +542,8 @@ const templates = [
 </bpmn:definitions>`,
   },
   {
-    label: '报销审批（含条件）',
+    key: 'expense',
+    label: t('workflow.designer.templates.expense'),
     xml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_Expense" name="报销审批" isExecutable="true">
@@ -555,7 +567,8 @@ const templates = [
 </bpmn:definitions>`,
   },
   {
-    label: '合同审批（并行）',
+    key: 'contract',
+    label: t('workflow.designer.templates.contract'),
     xml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:flowable="http://flowable.org/bpmn" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_Contract" name="合同审批" isExecutable="true">
@@ -579,15 +592,15 @@ const templates = [
   </bpmn:process>
 </bpmn:definitions>`,
   },
-]
+])
 
-function applyTemplate(tpl: (typeof templates)[0]) {
+function applyTemplate(tpl: BpmnTemplate) {
   if (!tpl.xml) {
     loadBlankDiagram()
   } else {
     loadXml(tpl.xml)
   }
-  ElMessage.success(`已加载模板：${tpl.label}`)
+  ElMessage.success(t('workflow.designer.messages.templateLoaded', { name: tpl.label }))
 }
 </script>
 
@@ -596,44 +609,44 @@ function applyTemplate(tpl: (typeof templates)[0]) {
     <!-- 工具栏 -->
     <div class="bpmn-toolbar">
       <div class="bpmn-toolbar-left">
-        <el-dropdown @command="(cmd: string) => { const t = templates.find(x => x.label === cmd); if (t) applyTemplate(t) }">
+        <el-dropdown @command="(cmd: string) => { const found = templates.find(x => x.key === cmd); if (found) applyTemplate(found) }">
           <el-button size="small">
-            模板 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            {{ t('workflow.designer.toolbar.template') }} <el-icon class="el-icon--right"><ArrowDown /></el-icon>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item
                 v-for="tpl in templates"
-                :key="tpl.label"
-                :command="tpl.label"
+                :key="tpl.key"
+                :command="tpl.key"
               >{{ tpl.label }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
       </div>
       <div class="bpmn-toolbar-right">
-        <el-button size="small" @click="handleImportXml">导入 XML</el-button>
+        <el-button size="small" @click="handleImportXml">{{ t('workflow.designer.toolbar.importXml') }}</el-button>
         <el-dropdown @command="(cmd: string) => { switch (cmd) { case 'xml': handleExportXml(); break; case 'svg': handleExportSvg(); break; case 'png': handleExportPng(); break } }" :disabled="!currentXml">
           <el-button size="small" :disabled="!currentXml">
-            导出 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            {{ t('workflow.designer.toolbar.export') }} <el-icon class="el-icon--right"><ArrowDown /></el-icon>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="xml">BPMN XML</el-dropdown-item>
-              <el-dropdown-item command="svg">SVG 矢量图</el-dropdown-item>
-              <el-dropdown-item command="png">PNG 图片</el-dropdown-item>
+              <el-dropdown-item command="xml">{{ t('workflow.designer.toolbar.exportXml') }}</el-dropdown-item>
+              <el-dropdown-item command="svg">{{ t('workflow.designer.toolbar.exportSvg') }}</el-dropdown-item>
+              <el-dropdown-item command="png">{{ t('workflow.designer.toolbar.exportPng') }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
         <el-button-group class="zoom-group">
-          <el-button size="small" @click="handleZoomOut" :disabled="!currentXml" title="缩小">－</el-button>
-          <el-button size="small" @click="handleFitView" :disabled="!currentXml" title="适配画布">适配</el-button>
-          <el-button size="small" @click="handleZoomIn" :disabled="!currentXml" title="放大">＋</el-button>
+          <el-button size="small" @click="handleZoomOut" :disabled="!currentXml" :title="t('workflow.designer.toolbar.zoomOut')">－</el-button>
+          <el-button size="small" @click="handleFitView" :disabled="!currentXml" :title="t('workflow.designer.toolbar.fitView')">{{ t('workflow.designer.toolbar.fit') }}</el-button>
+          <el-button size="small" @click="handleZoomIn" :disabled="!currentXml" :title="t('workflow.designer.toolbar.zoomIn')">＋</el-button>
         </el-button-group>
-        <el-button size="small" @click="handleAutoLayout" :disabled="!currentXml">自动布局</el-button>
-        <el-button size="small" @click="handleReset">重置</el-button>
+        <el-button size="small" @click="handleAutoLayout" :disabled="!currentXml">{{ t('workflow.designer.toolbar.autoLayout') }}</el-button>
+        <el-button size="small" @click="handleReset">{{ t('workflow.designer.toolbar.reset') }}</el-button>
         <el-button size="small" type="primary" @click="handleSave" :loading="saving" :disabled="!currentXml">
-          保存
+          {{ t('workflow.designer.toolbar.save') }}
         </el-button>
       </div>
     </div>
@@ -642,14 +655,14 @@ function applyTemplate(tpl: (typeof templates)[0]) {
     <div class="bpmn-body">
       <div class="bpmn-canvas" ref="containerRef" v-loading="loading">
         <div v-if="loading" class="bpmn-loading-overlay">
-          <span>正在加载 BPMN 设计器...</span>
+          <span>{{ t('workflow.designer.loading') }}</span>
         </div>
       </div>
 
       <!-- P1-02: 自定义属性面板 -->
       <div class="bpmn-property-panel">
         <div v-if="!selectedElement" class="panel-empty">
-          <el-empty description="选择一个元素查看属性" :image-size="60" />
+          <el-empty :description="t('workflow.designer.selectElementHint')" :image-size="60" />
         </div>
 
         <template v-else>
@@ -661,14 +674,14 @@ function applyTemplate(tpl: (typeof templates)[0]) {
           <el-form label-width="80px" size="small" class="panel-form">
             <!-- 通用属性 -->
             <template v-if="hasGeneralProps()">
-              <el-divider content-position="left">基本信息</el-divider>
-              <el-form-item label="节点ID">
+              <el-divider content-position="left">{{ t('workflow.designer.property.basicInfo') }}</el-divider>
+              <el-form-item :label="t('workflow.designer.property.nodeId')">
                 <el-input
                   v-model="panelData.elementId"
                   @change="(v: string) => onPropertyChange('elementId', v)"
                 />
               </el-form-item>
-              <el-form-item label="节点名称">
+              <el-form-item :label="t('workflow.designer.property.nodeName')">
                 <el-input
                   v-model="panelData.elementName"
                   @change="(v: string) => onPropertyChange('elementName', v)"
@@ -678,55 +691,55 @@ function applyTemplate(tpl: (typeof templates)[0]) {
 
             <!-- 审批节点属性 -->
             <template v-if="isUserTask()">
-              <el-divider content-position="left">审批配置</el-divider>
-              <el-form-item label="审批人">
+              <el-divider content-position="left">{{ t('workflow.designer.property.approvalConfig') }}</el-divider>
+              <el-form-item :label="t('workflow.designer.property.assignee')">
                 <el-input
                   v-model="panelData.assignee"
-                  placeholder="${leader} 或用户ID"
+                  :placeholder="t('workflow.designer.property.assigneePlaceholder', { example: '${leader}' })"
                   @change="(v: string) => onPropertyChange('assignee', v)"
                 />
               </el-form-item>
-              <el-form-item label="审批人类型">
+              <el-form-item :label="t('workflow.designer.property.assigneeType')">
                 <el-select
                   v-model="panelData.assigneeType"
-                  placeholder="选择审批人类型"
+                  :placeholder="t('workflow.designer.property.assigneeTypePlaceholder')"
                   @change="(v: string) => onPropertyChange('assigneeType', v)"
                 >
-                  <el-option label="指定用户" value="user" />
-                  <el-option label="指定角色" value="role" />
-                  <el-option label="指定部门" value="dept" />
-                  <el-option label="发起人自己" value="initiator" />
-                  <el-option label="直属上级" value="leader" />
-                  <el-option label="上级的上级" value="superior" />
+                  <el-option :label="t('workflow.designer.property.assigneeTypeOptions.user')" value="user" />
+                  <el-option :label="t('workflow.designer.property.assigneeTypeOptions.role')" value="role" />
+                  <el-option :label="t('workflow.designer.property.assigneeTypeOptions.dept')" value="dept" />
+                  <el-option :label="t('workflow.designer.property.assigneeTypeOptions.initiator')" value="initiator" />
+                  <el-option :label="t('workflow.designer.property.assigneeTypeOptions.leader')" value="leader" />
+                  <el-option :label="t('workflow.designer.property.assigneeTypeOptions.superior')" value="superior" />
                 </el-select>
               </el-form-item>
-              <el-form-item label="会签类型">
+              <el-form-item :label="t('workflow.designer.property.performType')">
                 <el-select
                   v-model="panelData.performType"
-                  placeholder="选择会签类型"
+                  :placeholder="t('workflow.designer.property.performTypePlaceholder')"
                   @change="(v: string) => onPropertyChange('performType', v)"
                 >
-                  <el-option label="单人审批" value="" />
-                  <el-option label="依次审批" value="sequential" />
-                  <el-option label="并行审批" value="parallel" />
-                  <el-option label="投票审批" value="vote" />
+                  <el-option :label="t('workflow.designer.property.performTypeOptions.none')" value="" />
+                  <el-option :label="t('workflow.designer.property.performTypeOptions.sequential')" value="sequential" />
+                  <el-option :label="t('workflow.designer.property.performTypeOptions.parallel')" value="parallel" />
+                  <el-option :label="t('workflow.designer.property.performTypeOptions.vote')" value="vote" />
                 </el-select>
               </el-form-item>
-              <el-form-item label="表单Key">
+              <el-form-item :label="t('workflow.designer.property.formKey')">
                 <el-input
                   v-model="panelData.formKey"
-                  placeholder="表单标识"
+                  :placeholder="t('workflow.designer.property.formKeyPlaceholder')"
                   @change="(v: string) => onPropertyChange('formKey', v)"
                 />
               </el-form-item>
-              <el-form-item label="超期时间">
+              <el-form-item :label="t('workflow.designer.property.dueDate')">
                 <el-input
                   v-model="panelData.dueDate"
-                  placeholder="如 PT48H（48小时）"
+                  :placeholder="t('workflow.designer.property.dueDatePlaceholder')"
                   @change="(v: string) => onPropertyChange('dueDate', v)"
                 />
               </el-form-item>
-              <el-form-item label="优先级">
+              <el-form-item :label="t('workflow.designer.property.priority')">
                 <el-input-number
                   v-model="panelData.priority"
                   :min="0"
@@ -736,7 +749,7 @@ function applyTemplate(tpl: (typeof templates)[0]) {
               </el-form-item>
 
               <!-- P1-2: SLA 超时策略配置（仅已部署流程可配置） -->
-              <el-divider content-position="left">SLA 策略</el-divider>
+              <el-divider content-position="left">{{ t('workflow.designer.property.slaStrategy') }}</el-divider>
               <div v-if="props.definitionId" class="field-perm-wrap">
                 <SlaRuleConfig
                   :definition-id="props.definitionId"
@@ -744,11 +757,11 @@ function applyTemplate(tpl: (typeof templates)[0]) {
                 />
               </div>
               <div v-else class="field-perm-tip">
-                请先发布部署流程后再配置 SLA 策略
+                {{ t('workflow.designer.property.slaTip') }}
               </div>
 
               <!-- P0-3: 字段权限配置（仅已部署流程可配置） -->
-              <el-divider content-position="left">字段权限</el-divider>
+              <el-divider content-position="left">{{ t('workflow.designer.property.fieldPermission') }}</el-divider>
               <div v-if="props.definitionId" class="field-perm-wrap">
                 <FormFieldPermissions
                   :definition-id="props.definitionId"
@@ -756,14 +769,14 @@ function applyTemplate(tpl: (typeof templates)[0]) {
                 />
               </div>
               <div v-else class="field-perm-tip">
-                请先发布部署流程后再配置字段权限
+                {{ t('workflow.designer.property.fieldPermissionTip') }}
               </div>
             </template>
 
             <!-- 连线条件表达式 -->
             <template v-if="isSequenceFlow()">
-              <el-divider content-position="left">条件路由</el-divider>
-              <el-form-item label="条件表达式">
+              <el-divider content-position="left">{{ t('workflow.designer.property.conditionRoute') }}</el-divider>
+              <el-form-item :label="t('workflow.designer.property.conditionExpression')">
                 <el-input
                   v-model="panelData.conditionExpression"
                   type="textarea"
@@ -771,19 +784,19 @@ function applyTemplate(tpl: (typeof templates)[0]) {
                   placeholder='${amount > 5000}'
                   @change="(v: string) => onPropertyChange('conditionExpression', v)"
                 />
-                <div class="form-tip">使用 ${expr} 语法，支持 SpEL 表达式</div>
+                <div class="form-tip">{{ t('workflow.designer.property.conditionTip', { example: '${expr}' }) }}</div>
               </el-form-item>
             </template>
 
             <!-- 节点说明 -->
             <template v-if="hasGeneralProps()">
-              <el-divider content-position="left">其他</el-divider>
-              <el-form-item label="节点说明">
+              <el-divider content-position="left">{{ t('workflow.designer.property.other') }}</el-divider>
+              <el-form-item :label="t('workflow.designer.property.nodeDescription')">
                 <el-input
                   v-model="panelData.documentation"
                   type="textarea"
                   :rows="2"
-                  placeholder="节点备注说明"
+                  :placeholder="t('workflow.designer.property.nodeDescriptionPlaceholder')"
                   @change="(v: string) => onPropertyChange('documentation', v)"
                 />
               </el-form-item>
@@ -797,13 +810,13 @@ function applyTemplate(tpl: (typeof templates)[0]) {
     <div class="bpmn-deploy-bar">
       <el-input
         v-model="deployForm.flowCode"
-        placeholder="流程编码（如 project_initiation）"
+        :placeholder="t('workflow.designer.deploy.flowCodePlaceholder')"
         size="small"
         style="width: 200px"
       />
       <el-input
         v-model="deployForm.flowName"
-        placeholder="流程名称（如 项目立项审批）"
+        :placeholder="t('workflow.designer.deploy.flowNamePlaceholder')"
         size="small"
         style="width: 200px"
       />
@@ -812,21 +825,21 @@ function applyTemplate(tpl: (typeof templates)[0]) {
         size="small"
         style="width: 140px"
       >
-        <el-option label="通用" value="GENERAL" />
-        <el-option label="项目" value="PROJECT" />
-        <el-option label="财务" value="FINANCE" />
-        <el-option label="人事" value="HR" />
-        <el-option label="行政" value="ADMIN" />
-        <el-option label="采购" value="PURCHASE" />
+        <el-option :label="t('workflow.designer.deploy.category.general')" value="GENERAL" />
+        <el-option :label="t('workflow.designer.deploy.category.project')" value="PROJECT" />
+        <el-option :label="t('workflow.designer.deploy.category.finance')" value="FINANCE" />
+        <el-option :label="t('workflow.designer.deploy.category.hr')" value="HR" />
+        <el-option :label="t('workflow.designer.deploy.category.admin')" value="ADMIN" />
+        <el-option :label="t('workflow.designer.deploy.category.purchase')" value="PURCHASE" />
       </el-select>
       <el-input
         v-model="deployForm.formPath"
-        placeholder="表单路径（可选）"
+        :placeholder="t('workflow.designer.deploy.formPathPlaceholder')"
         size="small"
         style="width: 180px"
       />
       <el-button size="small" type="success" @click="handleDeploy" :loading="saving" :disabled="!currentXml">
-        发布部署
+        {{ t('workflow.designer.toolbar.deploy') }}
       </el-button>
     </div>
   </div>

@@ -30,6 +30,7 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class ReadReceiptController {
 
+    /** 已读回执服务 */
     private final ReadReceiptService readReceiptService;
 
     /** 1x1 透明 PNG 字节 */

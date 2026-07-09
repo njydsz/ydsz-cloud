@@ -33,8 +33,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReceiptController {
 
+    /** 消息回执服务 */
     private final ReceiptService receiptService;
 
+    /**
+     * 服务商回执回调接口。
+     *
+     * @param dto 回执回调请求体
+     * @return 统一响应结果
+     */
     @Operation(summary = "回执回调")
     @PrePermission(PermissionCodes.MESSAGE_RECEIPT_CALLBACK)
     @Idempotent(key = "receipt:callback", ttlSeconds = 5, message = "请勿重复提交")
@@ -44,6 +51,12 @@ public class ReceiptController {
         return Result.ok();
     }
 
+    /**
+     * 按发送日志 ID 查询回执列表。
+     *
+     * @param logId 发送日志 ID
+     * @return 统一响应结果，包含回执列表
+     */
     @Operation(summary = "按日志 ID 查询回执列表")
     @PrePermission(PermissionCodes.MESSAGE_RECEIPT_VIEW)
     @GetMapping("/{logId}")

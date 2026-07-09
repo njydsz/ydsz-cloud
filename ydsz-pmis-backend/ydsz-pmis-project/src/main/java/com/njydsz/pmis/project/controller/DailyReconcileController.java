@@ -32,6 +32,7 @@ import java.util.Map;
 @Validated
 public class DailyReconcileController {
 
+    /** 每日对账服务 */
     private final DailyReconcileService service;
 
     /**

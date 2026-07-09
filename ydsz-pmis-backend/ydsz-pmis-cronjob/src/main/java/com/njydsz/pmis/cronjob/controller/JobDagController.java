@@ -36,10 +36,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JobDagController {
 
+    /** DAG 工作流服务 */
     private final JobDagService jobDagService;
+    /** DAG 定义校验器（校验节点/边/环等） */
     private final DagDefinitionValidator dagDefinitionValidator;
+    /** DAG 定义 JSON 编解码器 */
     private final DagDefinitionCodec dagDefinitionCodec;
 
+    /**
+     * 创建 DAG 工作流。
+     *
+     * @param dto DAG 保存请求体
+     * @return 统一响应结果，包含新增 DAG ID
+     */
     @Operation(summary = "创建 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_CREATE)
     @OperationLog(module = "任务调度", action = "创建DAG", bizType = "CRONJOB_DAG")
@@ -49,6 +58,13 @@ public class JobDagController {
         return Result.ok(jobDagService.createDag(dto));
     }
 
+    /**
+     * 更新 DAG 工作流。
+     *
+     * @param dagId DAG ID
+     * @param dto   DAG 保存请求体
+     * @return 统一响应结果
+     */
     @Operation(summary = "更新 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "job-dag:update-dag", ttlSeconds = 5, message = "请勿重复提交")
@@ -58,6 +74,12 @@ public class JobDagController {
         return Result.ok();
     }
 
+    /**
+     * 删除 DAG 工作流。
+     *
+     * @param dagId DAG ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_DELETE)
     @OperationLog(module = "任务调度", action = "删除DAG", bizType = "CRONJOB_DAG")
@@ -68,6 +90,12 @@ public class JobDagController {
         return Result.ok();
     }
 
+    /**
+     * 启用 DAG 工作流。
+     *
+     * @param dagId DAG ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "启用 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "启用DAG", bizType = "CRONJOB_DAG")
@@ -78,6 +106,12 @@ public class JobDagController {
         return Result.ok();
     }
 
+    /**
+     * 禁用 DAG 工作流。
+     *
+     * @param dagId DAG ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "禁用 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "禁用DAG", bizType = "CRONJOB_DAG")
@@ -88,6 +122,12 @@ public class JobDagController {
         return Result.ok();
     }
 
+    /**
+     * 查询 DAG 工作流详情。
+     *
+     * @param dagId DAG ID
+     * @return 统一响应结果，包含 DAG 定义
+     */
     @Operation(summary = "查询 DAG 工作流详情")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{dagId}")
@@ -95,6 +135,12 @@ public class JobDagController {
         return Result.ok(jobDagService.getDagById(dagId));
     }
 
+    /**
+     * 根据 KEY 查询 DAG 工作流。
+     *
+     * @param dagKey DAG 唯一 KEY
+     * @return 统一响应结果，包含 DAG 定义
+     */
     @Operation(summary = "根据 KEY 查询 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/key/{dagKey}")
@@ -102,6 +148,11 @@ public class JobDagController {
         return Result.ok(jobDagService.getDagByKey(dagKey));
     }
 
+    /**
+     * 查询所有启用的 DAG 工作流。
+     *
+     * @return 统一响应结果，包含 DAG 列表
+     */
     @Operation(summary = "查询所有启用的 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/enabled")
@@ -109,6 +160,12 @@ public class JobDagController {
         return Result.ok(jobDagService.listEnabledDags());
     }
 
+    /**
+     * 手动触发 DAG 工作流。
+     *
+     * @param dto DAG 触发请求体（dagKey + triggerBy）
+     * @return 统一响应结果，包含 DAG 实例 ID
+     */
     @Operation(summary = "手动触发 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_TRIGGER)
     @OperationLog(module = "任务调度", action = "触发DAG", bizType = "CRONJOB_DAG")

@@ -45,7 +45,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SseLogController {
 
+    /** SSE 日志流管理器（管理实时推送通道） */
     private final LogStreamManager logStreamManager;
+    /** 任务日志内容服务（查询历史日志行） */
     private final JobLogContentService jobLogContentService;
 
     /**

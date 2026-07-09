@@ -36,8 +36,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TemplateController {
 
+    /** 消息模板服务 */
     private final TemplateService templateService;
 
+    /**
+     * 创建消息模板。
+     *
+     * @param dto 模板创建请求体
+     * @return 统一响应结果，包含模板详情
+     */
     @Operation(summary = "创建模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_CREATE)
     @Idempotent(key = "template:create", ttlSeconds = 5, message = "请勿重复提交")
@@ -46,6 +53,13 @@ public class TemplateController {
         return Result.ok(templateService.create(dto));
     }
 
+    /**
+     * 更新消息模板。
+     *
+     * @param id  模板 ID
+     * @param dto 模板创建请求体
+     * @return 统一响应结果，包含更新后模板详情
+     */
     @Operation(summary = "更新模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
     @Idempotent(key = "template:update", ttlSeconds = 5, message = "请勿重复提交")
@@ -54,6 +68,12 @@ public class TemplateController {
         return Result.ok(templateService.update(id, dto));
     }
 
+    /**
+     * 删除消息模板。
+     *
+     * @param id 模板 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_DELETE)
     @Idempotent(key = "template:delete", ttlSeconds = 5, message = "请勿重复提交")
@@ -63,6 +83,12 @@ public class TemplateController {
         return Result.ok();
     }
 
+    /**
+     * 查询模板详情。
+     *
+     * @param id 模板 ID
+     * @return 统一响应结果，包含模板详情
+     */
     @Operation(summary = "模板详情")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_VIEW)
     @GetMapping("/{id}")
@@ -70,6 +96,12 @@ public class TemplateController {
         return Result.ok(templateService.getById(id));
     }
 
+    /**
+     * 分页查询模板列表。
+     *
+     * @param query 查询参数
+     * @return 统一响应结果，包含模板分页数据
+     */
     @Operation(summary = "模板分页")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_LIST)
     @GetMapping("/page")
@@ -77,6 +109,13 @@ public class TemplateController {
         return Result.ok(templateService.page(query));
     }
 
+    /**
+     * 审核模板（通过/驳回）。
+     *
+     * @param id  模板 ID
+     * @param dto 审核请求体
+     * @return 统一响应结果
+     */
     @Operation(summary = "审核模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
     @Idempotent(key = "template:audit", ttlSeconds = 5, message = "请勿重复提交")

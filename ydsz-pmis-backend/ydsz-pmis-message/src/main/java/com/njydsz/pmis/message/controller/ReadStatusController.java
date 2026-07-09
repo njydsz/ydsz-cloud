@@ -35,8 +35,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReadStatusController {
 
+    /** 已读状态同步服务 */
     private final ReadStatusSyncService readStatusSyncService;
 
+    /**
+     * 标记消息为已读。
+     *
+     * @param msgId  消息 ID
+     * @param userId 用户 ID
+     * @return 统一响应结果，true 表示标记成功
+     */
     @Operation(summary = "标记消息已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "read-status:mark-read", ttlSeconds = 5, message = "请勿重复提交")
@@ -46,6 +54,13 @@ public class ReadStatusController {
         return Result.ok(readStatusSyncService.markRead(msgId, userId));
     }
 
+    /**
+     * 批量标记消息为已读。
+     *
+     * @param msgIds 消息 ID 列表
+     * @param userId 用户 ID
+     * @return 统一响应结果，包含已标记条数
+     */
     @Operation(summary = "批量标记消息已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "read-status:mark-read-batch", ttlSeconds = 5, message = "请勿重复提交")
@@ -55,6 +70,13 @@ public class ReadStatusController {
         return Result.ok(readStatusSyncService.markReadBatch(msgIds, userId));
     }
 
+    /**
+     * 标记站内通知为已读。
+     *
+     * @param notificationId 通知 ID
+     * @param userId         用户 ID
+     * @return 统一响应结果，true 表示标记成功
+     */
     @Operation(summary = "标记站内通知已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "read-status:mark-notification-read", ttlSeconds = 5, message = "请勿重复提交")
@@ -64,6 +86,13 @@ public class ReadStatusController {
         return Result.ok(readStatusSyncService.markNotificationRead(notificationId, userId));
     }
 
+    /**
+     * 将用户全部通知标记为已读。
+     *
+     * @param userId  用户 ID
+     * @param bizType 业务类型过滤（可选）
+     * @return 统一响应结果，包含已标记条数
+     */
     @Operation(summary = "全部通知标记已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "read-status:mark-all-notifications-read", ttlSeconds = 5, message = "请勿重复提交")
@@ -73,6 +102,13 @@ public class ReadStatusController {
         return Result.ok(readStatusSyncService.markAllNotificationsRead(userId, bizType));
     }
 
+    /**
+     * 查询用户未读消息数量。
+     *
+     * @param userId  用户 ID
+     * @param channel 通道过滤（可选）
+     * @return 统一响应结果，包含 total 和 byChannel 两个未读计数
+     */
     @Operation(summary = "查询用户未读消息数量")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @GetMapping("/unread-count")

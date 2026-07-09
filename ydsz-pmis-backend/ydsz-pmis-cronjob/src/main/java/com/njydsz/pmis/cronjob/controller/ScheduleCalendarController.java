@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScheduleCalendarController {
 
+    /** 调度日历服务 */
     private final ScheduleCalendarService scheduleCalendarService;
 
     /**

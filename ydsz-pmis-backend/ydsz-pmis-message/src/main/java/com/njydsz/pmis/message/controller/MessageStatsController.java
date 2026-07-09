@@ -39,6 +39,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageStatsController {
 
+    /** 消息统计服务 */
     private final MessageStatsService messageStatsService;
 
     /**

@@ -42,6 +42,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AgentEvaluationController {
 
+    /** Agent 实例 Map（key = agentType, value = Agent 实例） */
     private final Map<String, Agent> agentMap;
 
     /**

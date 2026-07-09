@@ -31,6 +31,7 @@ import java.util.Map;
 @Validated
 public class ReportController {
 
+    /** 报表服务 */
     private final ReportService service;
 
     /**

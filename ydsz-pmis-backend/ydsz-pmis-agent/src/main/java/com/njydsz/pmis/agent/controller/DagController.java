@@ -48,6 +48,7 @@ import java.util.Map;
 @Validated
 public class DagController {
 
+    /** DAG 编排引擎服务 */
     private final DagService dagService;
 
     public DagController(DagService dagService) {
@@ -56,6 +57,9 @@ public class DagController {
 
     /**
      * 创建 DAG 定义。
+     *
+     * @param dag DAG 定义结构
+     * @return 落库后的 DAG 定义
      */
     @Operation(summary = "创建 DAG 定义")
     @Idempotent(key = "dag:create-definition", ttlSeconds = 5, message = "请勿重复提交")
@@ -66,6 +70,9 @@ public class DagController {
 
     /**
      * 查询 DAG 定义详情。
+     *
+     * @param id DAG 定义 ID
+     * @return DAG 定义详情
      */
     @Operation(summary = "DAG 定义详情")
     @GetMapping("/{id}")
@@ -75,6 +82,11 @@ public class DagController {
 
     /**
      * 分页查询 DAG 定义。
+     *
+     * @param page     页码（从 1 开始）
+     * @param size     每页大小
+     * @param tenantId 租户 ID（可空）
+     * @return 分页结果
      */
     @Operation(summary = "分页查询 DAG 定义")
     @GetMapping("/page")
@@ -87,6 +99,10 @@ public class DagController {
 
     /**
      * 执行 DAG。
+     *
+     * @param definitionId DAG 定义 ID
+     * @param req          执行请求（含全局输入参数，可空）
+     * @return DAG 执行结果
      */
     @Operation(summary = "执行 DAG")
     @Idempotent(key = "dag:execute", ttlSeconds = 5, message = "请勿重复提交")
@@ -100,6 +116,11 @@ public class DagController {
 
     /**
      * 查询 DAG 执行历史。
+     *
+     * @param definitionId DAG 定义 ID
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @return 分页结果
      */
     @Operation(summary = "DAG 执行历史")
     @GetMapping("/{id}/instances")
@@ -112,6 +133,9 @@ public class DagController {
 
     /**
      * 查询 DAG 执行实例详情。
+     *
+     * @param instanceId 实例 ID
+     * @return 实例详情
      */
     @Operation(summary = "DAG 实例详情")
     @GetMapping("/instance/{instanceId}")
@@ -121,6 +145,9 @@ public class DagController {
 
     /**
      * 查询节点执行明细。
+     *
+     * @param instanceId 实例 ID
+     * @return 节点执行明细列表
      */
     @Operation(summary = "节点执行明细")
     @GetMapping("/instance/{instanceId}/nodes")
@@ -141,6 +168,10 @@ public class DagController {
 
     /**
      * 更新 DAG 定义。
+     *
+     * @param id  DAG 定义 ID
+     * @param dag 更新后的 DAG 定义结构
+     * @return 更新后的 DAG 定义
      */
     @Operation(summary = "更新 DAG 定义")
     @Idempotent(key = "dag:update-definition", ttlSeconds = 5, message = "请勿重复提交")
@@ -153,6 +184,9 @@ public class DagController {
 
     /**
      * 删除 DAG 定义（软删除）。
+     *
+     * @param id DAG 定义 ID
+     * @return 空结果
      */
     @Operation(summary = "删除 DAG 定义")
     @Idempotent(key = "dag:delete-definition", ttlSeconds = 5, message = "请勿重复提交")
@@ -164,6 +198,10 @@ public class DagController {
 
     /**
      * 启用/禁用 DAG 定义。
+     *
+     * @param id      DAG 定义 ID
+     * @param enabled 是否启用
+     * @return 更新后的 DAG 定义
      */
     @Operation(summary = "启用/禁用 DAG 定义")
     @Idempotent(key = "dag:toggle-enabled", ttlSeconds = 5, message = "请勿重复提交")
@@ -176,6 +214,9 @@ public class DagController {
 
     /**
      * 验证 DAG 定义结构（不执行）。
+     *
+     * @param dag DAG 定义结构
+     * @return 验证结果
      */
     @Operation(summary = "验证 DAG 定义结构")
     @Idempotent(key = "dag:validate-definition", ttlSeconds = 5, message = "请勿重复提交")
@@ -186,6 +227,9 @@ public class DagController {
 
     /**
      * 调试运行 DAG（不持久化结果）。
+     *
+     * @param req 调试请求（含 DAG 定义与全局输入参数）
+     * @return DAG 执行结果
      */
     @Operation(summary = "调试运行 DAG")
     @Idempotent(key = "dag:debug-execute", ttlSeconds = 5, message = "请勿重复提交")

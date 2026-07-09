@@ -45,6 +45,7 @@ import java.util.Map;
 @Validated
 public class WbsTaskController {
 
+    /** WBS 任务服务 */
     private final WbsTaskService service;
 
     /**

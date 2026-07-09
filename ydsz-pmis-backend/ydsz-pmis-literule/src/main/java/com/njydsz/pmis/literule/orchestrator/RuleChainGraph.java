@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.orchestrator;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -58,6 +59,7 @@ public class RuleChainGraph implements Serializable {
     private String graphId;
 
     /** 画布名称（如"CPI 预警链-2024Q1"） */
+    @NotBlank(message = "画布名称不能为空")
     private String name;
 
     /** 关联规则编码（一对一，P0-1 增强：作为画布查询的 key） */

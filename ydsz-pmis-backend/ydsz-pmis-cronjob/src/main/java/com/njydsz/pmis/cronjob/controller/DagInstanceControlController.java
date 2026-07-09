@@ -35,8 +35,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class DagInstanceControlController {
 
+    /** DAG 实例控制服务（暂停/恢复/取消/重试） */
     private final DagInstanceControlService dagInstanceControlService;
 
+    /**
+     * 暂停 DAG 实例。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 统一响应结果，true 表示暂停成功
+     */
     @Operation(summary = "暂停 DAG 实例")
     @Idempotent(key = "dag-instance-control:pause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/pause")
@@ -45,6 +52,12 @@ public class DagInstanceControlController {
         return success ? Result.ok(true) : Result.fail("暂停失败：实例不存在或非 RUNNING 状态");
     }
 
+    /**
+     * 恢复 DAG 实例。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 统一响应结果，true 表示恢复成功
+     */
     @Operation(summary = "恢复 DAG 实例")
     @Idempotent(key = "dag-instance-control:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/resume")
@@ -53,6 +66,12 @@ public class DagInstanceControlController {
         return success ? Result.ok(true) : Result.fail("恢复失败：实例不存在或非 PAUSED 状态");
     }
 
+    /**
+     * 取消 DAG 实例。
+     *
+     * @param instanceId DAG 实例 ID
+     * @return 统一响应结果，true 表示取消成功
+     */
     @Operation(summary = "取消 DAG 实例")
     @Idempotent(key = "dag-instance-control:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/cancel")
@@ -61,6 +80,13 @@ public class DagInstanceControlController {
         return success ? Result.ok(true) : Result.fail("取消失败：实例不存在或已终态");
     }
 
+    /**
+     * 手动重试指定失败节点。
+     *
+     * @param instanceId DAG 实例 ID
+     * @param jobKey     任务 KEY（节点标识）
+     * @return 统一响应结果，true 表示重试成功
+     */
     @Operation(summary = "手动重试指定失败节点")
     @Idempotent(key = "dag-instance-control:retry-node", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/retry-node")

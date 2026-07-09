@@ -36,13 +36,28 @@ import java.lang.reflect.Method;
 @RequiredArgsConstructor
 public class DistributedLockAspect {
 
+    /** Redisson 客户端，用于获取分布式锁 */
     private final RedissonClient redissonClient;
 
+    /** Spring 参数名发现器，用于解析方法参数名以支持 SpEL 表达式 */
     private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER =
             new DefaultParameterNameDiscoverer();
 
+    /** SpEL 表达式解析器，用于解析锁 key 中的动态表达式 */
     private static final ExpressionParser SPEL_PARSER = new SpelExpressionParser();
 
+    /**
+     * 环绕增强：解析锁 key → 尝试获取锁 → 执行目标方法 → 释放锁。
+     *
+     * <p>获取锁失败时抛出 {@link BizException}（RESOURCE_LOCKED）。
+     * 业务异常时自动释放锁，避免锁泄漏；{@code InterruptedException} 时恢复中断标志。</p>
+     *
+     * @param joinPoint       连接点
+     * @param distributedLock 分布式锁注解
+     * @return 目标方法返回值
+     * @throws Throwable    目标方法抛出的异常
+     * @throws BizException 获取锁失败或被中断时抛出
+     */
     @Around("@annotation(distributedLock)")
     public Object around(ProceedingJoinPoint joinPoint, DistributedLock distributedLock) throws Throwable {
         String lockKey = resolveKey(distributedLock.key(), joinPoint);
@@ -70,7 +85,14 @@ public class DistributedLockAspect {
     }
 
     /**
-     * 解析 SpEL 表达式，获取锁的 key
+     * 解析 SpEL 表达式，获取锁的 key。
+     *
+     * <p>将方法参数名与参数值绑定到 SpEL 上下文，支持如
+     * {@code 'order:pay:' + #orderId} 的动态 key 表达式。</p>
+     *
+     * @param keyExpression SpEL 表达式
+     * @param joinPoint     连接点（用于提取方法签名与参数）
+     * @return 解析后的锁 key 字符串
      */
     private String resolveKey(String keyExpression, ProceedingJoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();

@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class PurchaseController {
 
+    /** 采购服务 */
     private final PurchaseService service;
 
     /**

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.api;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
 
@@ -35,12 +36,15 @@ public class RulePack implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 规则集编码（唯一） */
+    @NotBlank(message = "规则集编码不能为空")
     private String packCode;
 
     /** 规则集名称 */
+    @NotBlank(message = "规则集名称不能为空")
     private String packName;
 
     /** 规则集版本号（语义化版本，如 1.0.0） */
+    @NotBlank(message = "规则集版本号不能为空")
     private String packVersion;
 
     /** 规则集描述 */

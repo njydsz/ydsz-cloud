@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.adaptive;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -38,9 +39,11 @@ public class ThresholdAnalysis implements Serializable {
     private String ruleCode;
 
     /** 变量名（如 "amount"） */
+    @NotBlank(message = "变量名不能为空")
     private String variable;
 
     /** 运算符（如 "&gt;"、"&gt;="、"&lt;"、"&lt;="、"=="、"!="） */
+    @NotBlank(message = "运算符不能为空")
     private String operator;
 
     /** 当前阈值 */

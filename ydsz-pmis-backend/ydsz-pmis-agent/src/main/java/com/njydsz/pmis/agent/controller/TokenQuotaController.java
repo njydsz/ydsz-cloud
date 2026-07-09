@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Token 配额管理", description = "租户级 Token 配额查询与重置")
 public class TokenQuotaController {
 
+    /** Token 配额服务 */
     private final TokenQuotaService tokenQuotaService;
 
     /**

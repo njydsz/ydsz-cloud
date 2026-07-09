@@ -43,6 +43,7 @@ import java.util.Map;
 @Validated
 public class ProfitSimulationController {
 
+    /** 利润模拟服务 */
     private final ProfitSimulationService service;
 
     /**

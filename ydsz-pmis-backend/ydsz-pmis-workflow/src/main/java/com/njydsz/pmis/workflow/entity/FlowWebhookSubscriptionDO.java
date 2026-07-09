@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.entity.BaseDO;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -42,9 +43,11 @@ public class FlowWebhookSubscriptionDO extends BaseDO {
     private String tenantId;
 
     /** 订阅名称 */
+    @NotBlank(message = "订阅名称不能为空")
     private String name;
 
     /** 回调 URL（HTTPS 推荐） */
+    @NotBlank(message = "回调 URL 不能为空")
     private String callbackUrl;
 
     /**

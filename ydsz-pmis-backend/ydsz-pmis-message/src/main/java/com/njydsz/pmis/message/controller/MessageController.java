@@ -50,10 +50,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageController {
 
+    /** 消息发送服务 */
     private final MessageService messageService;
     /** RocketMQ 生产者（条件装配，未启用时为空） */
     private final ObjectProvider<RocketMQMessageProducer> producerProvider;
 
+    /**
+     * 基于共享请求发送消息。
+     *
+     * @param request 消息请求
+     * @return 发送结果
+     */
     @Operation(summary = "发送消息(基于共享请求)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:send", ttlSeconds = 5, message = "请勿重复提交")
@@ -62,6 +69,12 @@ public class MessageController {
         return Result.ok(messageService.send(request));
     }
 
+    /**
+     * 直接发送消息（使用本模块 DTO）。
+     *
+     * @param dto 消息发送请求体
+     * @return 发送结果
+     */
     @Operation(summary = "直接发送消息(本模块 DTO)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:send-direct", ttlSeconds = 5, message = "请勿重复提交")
@@ -103,6 +116,12 @@ public class MessageController {
         }
     }
 
+    /**
+     * 分页查询发送日志。
+     *
+     * @param query 日志查询参数
+     * @return 日志分页结果
+     */
     @Operation(summary = "发送日志分页")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")

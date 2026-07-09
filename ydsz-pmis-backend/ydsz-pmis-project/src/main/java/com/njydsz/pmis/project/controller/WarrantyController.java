@@ -40,6 +40,7 @@ import java.util.List;
 @Validated
 public class WarrantyController {
 
+    /** 保修服务 */
     private final WarrantyService service;
 
     @Operation(summary = "创建质保期")

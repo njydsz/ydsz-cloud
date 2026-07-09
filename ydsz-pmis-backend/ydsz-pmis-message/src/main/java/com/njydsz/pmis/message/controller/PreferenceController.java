@@ -34,8 +34,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PreferenceController {
 
+    /** 用户消息偏好服务 */
     private final PreferenceService preferenceService;
 
+    /**
+     * 新增或更新用户消息偏好。
+     *
+     * @param dto 偏好保存请求体
+     * @return 统一响应结果，包含偏好记录
+     */
     @Operation(summary = "新增/更新偏好")
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
     @Idempotent(key = "preference:upsert", ttlSeconds = 5, message = "请勿重复提交")
@@ -44,6 +51,12 @@ public class PreferenceController {
         return Result.ok(preferenceService.upsert(dto));
     }
 
+    /**
+     * 查询用户全部消息偏好。
+     *
+     * @param userId 用户 ID
+     * @return 统一响应结果，包含偏好列表
+     */
     @Operation(summary = "查询用户所有偏好")
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}")
@@ -51,6 +64,14 @@ public class PreferenceController {
         return Result.ok(preferenceService.listByUser(userId));
     }
 
+    /**
+     * 按用户、通道和业务类型查询偏好。
+     *
+     * @param userId   用户 ID
+     * @param channel  通道
+     * @param bizType  业务类型
+     * @return 统一响应结果，包含偏好记录
+     */
     @Operation(summary = "按用户+通道+业务类型查询偏好")
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}/{channel}/{bizType}")
@@ -60,6 +81,12 @@ public class PreferenceController {
         return Result.ok(preferenceService.getByUser(userId, channel, bizType));
     }
 
+    /**
+     * 删除用户消息偏好。
+     *
+     * @param id 偏好记录 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除偏好")
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_DELETE)
     @Idempotent(key = "preference:delete", ttlSeconds = 5, message = "请勿重复提交")

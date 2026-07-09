@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class ExpenseController {
 
+    /** 费用报销服务 */
     private final ExpenseService service;
 
     /**
