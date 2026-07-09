@@ -15,7 +15,6 @@ import { useI18n } from 'vue-i18n'
 import {
   createDefinition,
   executeDag,
-  getInstance,
   listNodeInstances,
   pageDefinitions,
   pageInstances,
@@ -44,7 +43,7 @@ async function loadList() {
   try {
     const { data } = await pageDefinitions(pageNo.value, pageSize.value)
     const result = data as PageResult<DagDefinitionDO> | undefined
-    list.value = result?.list ?? result?.records ?? []
+    list.value = result?.list ?? []
     total.value = result?.total ?? 0
   } catch (e: any) {
     ElMessage.error(e?.message || t('agent.dag.messages.loadFailed'))
@@ -374,7 +373,7 @@ async function loadInstances() {
   try {
     const { data } = await pageInstances(currentDefinitionId.value, instancePageNo.value, 20)
     const result = data as PageResult<DagInstanceDO> | undefined
-    instanceList.value = result?.list ?? result?.records ?? []
+    instanceList.value = result?.list ?? []
     instanceTotal.value = result?.total ?? 0
   } catch (e: any) {
     ElMessage.error(e?.message || t('agent.dag.messages.loadFailed'))
@@ -495,7 +494,7 @@ onMounted(() => {
           <el-input v-model="createForm.description" type="textarea" :rows="2" />
         </el-form-item>
         <el-form-item :label="t('agent.dag.create.json')">
-          <el-radio-group v-model="designerMode" @change="switchDesignerMode(designerMode.value)" style="margin-bottom: 8px">
+          <el-radio-group v-model="designerMode" @change="switchDesignerMode(designerMode)" style="margin-bottom: 8px">
             <el-radio-button value="visual">{{ t('agent.dag.designer.visual') }}</el-radio-button>
             <el-radio-button value="json">{{ t('agent.dag.designer.json') }}</el-radio-button>
           </el-radio-group>

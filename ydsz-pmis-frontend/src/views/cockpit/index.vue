@@ -10,7 +10,7 @@
  * 顶部预警 banner + 核心 KPI 概览 + 维度下钻(事业部/项目类型/客户) + ECharts 可视化 +
  * KPI 月度趋势 + 60 秒自动刷新。
  */
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useECharts } from '@/composables/useECharts'
@@ -40,6 +40,21 @@ type CockpitOverview = CockpitKpiVO & {
 
 /** 查询条件（期间，YYYY-MM） */
 const query = ref({ period: new Date().toISOString().slice(0, 7) })
+
+/** 监听 query.period 变化，触发刷新（el-date-picker 通过 value-format="YYYY-MM" 直接绑定字符串） */
+watch(
+  () => query.value.period,
+  (val, old) => {
+    if (!val || val === old) return
+    refresh()
+  },
+)
+
+/** el-date-picker 禁选未来月份 */
+function disabledFutureDate(date: Date): boolean {
+  const now = new Date()
+  return date.getFullYear() > now.getFullYear() || (date.getFullYear() === now.getFullYear() && date.getMonth() > now.getMonth())
+}
 /** KPI 总览数据 */
 const overview = ref<CockpitOverview | null>(null)
 /** 下钻分析原始数据 */
@@ -388,7 +403,16 @@ onBeforeUnmount(() => {
     <el-card shadow="never" class="query-card">
       <el-form inline>
         <el-form-item :label="t('cockpit.query.periodLabel')">
-          <el-input v-model="query.period" :placeholder="t('cockpit.query.periodPlaceholder')" style="width: 160px" />
+          <el-date-picker
+            v-model="query.period"
+            type="month"
+            :placeholder="t('cockpit.query.periodPlaceholder')"
+            format="YYYY-MM"
+            value-format="YYYY-MM"
+            :clearable="false"
+            :disabled-date="disabledFutureDate"
+            style="width: 180px"
+          />
         </el-form-item>
         <el-form-item>
           <el-button v-permission="[PC.COCKPIT_OVERVIEW_VIEW]" type="primary" :icon="'Refresh'" :loading="loading" @click="refresh">{{ t('cockpit.query.refresh') }}</el-button>

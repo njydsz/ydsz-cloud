@@ -17,11 +17,11 @@
  *     @clear="clearSelection"
  *   />
  */
-import { ref, computed } from 'vue'
+import { shallowRef, computed } from 'vue'
 
 export function useSelection<T extends Record<string, unknown>>(idField = 'id') {
-  /** 选中的行数据 */
-  const selectedRows = ref<T[]>([]) as ReturnType<typeof ref<T[]>>
+  /** 选中的行数据（shallowRef：行数据不需要深层响应式） */
+  const selectedRows = shallowRef<T[]>([])
 
   /** 选中的 ID 数组 */
   const selectedIds = computed(() =>

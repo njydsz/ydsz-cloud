@@ -5,7 +5,7 @@
  *
  * @module composables/useFilterPresets
  */
-import { ref, onMounted, type Ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/store/modules/user'
 import { logger } from '@/utils/logger'
 

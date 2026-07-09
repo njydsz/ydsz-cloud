@@ -105,7 +105,7 @@ async function handleSearch() {
   }
   loading.value = true
   try {
-    const data = await getPreferences(queryUserId.value.trim())
+    const { data } = await getPreferences(queryUserId.value.trim())
     list.value = data || []
   } catch (e) {
     list.value = []

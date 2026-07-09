@@ -70,3 +70,14 @@ interface PageResult<T = unknown> {
   size: number
   pages?: number
 }
+
+/** driver.js 动态导入类型声明（未安装时的占位） */
+declare module 'driver.js' {
+  export interface DriverOptions {
+    showProgress?: boolean
+    steps?: Array<{ element: string | Element; popover: Record<string, unknown> }>
+    [key: string]: unknown
+  }
+  export function driver(options: DriverOptions): { drive: () => void }
+}
+declare module 'driver.js/dist/driver.css'

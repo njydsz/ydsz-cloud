@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { approve, cancel, page, pending, reject } from '@/api/agent/hitl'
 import type { HitlApprovalRequest } from '@/api/agent/hitl/types'
@@ -50,8 +50,8 @@ async function loadList() {
       status: filter.status || undefined,
       agentType: filter.agentType || undefined,
     })
-    const result = data as PageResult<HitlApprovalRequest> | undefined
-    list.value = result?.records ?? result?.list ?? []
+    const result = data as unknown as PageResult<HitlApprovalRequest> | undefined
+    list.value = result?.list ?? []
     total.value = result?.total ?? 0
   } catch (e: any) {
     ElMessage.error(e?.message || t('agent.hitl.messages.loadFailed'))

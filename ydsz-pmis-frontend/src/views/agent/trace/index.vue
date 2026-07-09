@@ -9,7 +9,6 @@ import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { getByTraceId, recentByBiz } from '@/api/agent/trace'
 import type { AgentTrace } from '@/api/agent/trace/types'
-import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()
 
@@ -54,17 +53,6 @@ async function searchByBiz() {
     loading.value = false
   }
 }
-
-// 按步骤分组
-const groupedTraces = computed(() => {
-  const groups: Record<number, AgentTrace[]> = {}
-  for (const trace of traces.value) {
-    const step = trace.stepIndex || 0
-    if (!groups[step]) groups[step] = []
-    groups[step].push(trace)
-  }
-  return Object.entries(groups).sort(([a], [b]) => Number(a) - Number(b))
-})
 
 // 总耗时
 const totalCost = computed(() => {

@@ -8,7 +8,7 @@
   @since 1.0.0
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick, watch, type ComponentPublicInstance } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import type { EChartsOption } from '@/utils/echarts'

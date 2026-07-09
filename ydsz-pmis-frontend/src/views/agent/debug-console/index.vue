@@ -19,7 +19,7 @@
  * - 打字机效果，逐 token 展示
  * - 历史步骤折叠展示
  */
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { executeInMemory, executeStream } from '@/api/agent/debug'
@@ -80,8 +80,6 @@ const consoleEl = ref<HTMLDivElement | null>(null)
 const elapsed = ref(0)
 let startTime = 0
 let timer: ReturnType<typeof setInterval> | null = null
-
-const isStreaming = computed(() => streaming.value)
 
 // ===== 会话历史持久化 =====
 /** 历史会话列表 */

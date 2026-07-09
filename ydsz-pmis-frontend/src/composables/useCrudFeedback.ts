@@ -4,6 +4,7 @@
  * @module composables/useCrudFeedback
  */
 import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { handleError, showSuccess, confirmAction, isHandledError } from '@/utils/error'
 import i18n from '@/locales'
 

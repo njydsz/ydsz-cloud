@@ -42,9 +42,6 @@ const dashboardWidgets: WidgetConfig[] = [
 const {
   widgets: layoutWidgets,
   isCustomizing: isDashboardCustomizing,
-  dragStart: onDragStart,
-  dragOver: onDragOver,
-  drop: onDrop,
   toggleVisible: toggleWidgetVisible,
   resetLayout: resetDashboardLayout,
   toggleCustomizing: toggleDashboardCustomizing,
@@ -366,27 +363,11 @@ watch([healthOption, trendOption, evmOption, alertTopNOption], () => {
 })
 
 // ===== 周期切换 =====
-/**
- * 切换查询期间并刷新所有数据
- * @param newPeriod 新的期间字符串（YYYY-MM）
- */
-function changePeriod(newPeriod: string) {
-  period.value = newPeriod
-  refreshAll()
-}
-
-// ===== 周期选项 =====
-/** 最近 12 个月的期间选项列表 */
-const periodOptions = computed(() => {
-  const list: { label: string; value: string }[] = []
+/** el-date-picker 禁选未来月份 */
+function disabledFutureDate(date: Date): boolean {
   const now = new Date()
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const v = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    list.push({ label: v, value: v })
-  }
-  return list
-})
+  return date.getFullYear() > now.getFullYear() || (date.getFullYear() === now.getFullYear() && date.getMonth() > now.getMonth())
+}
 
 onMounted(async () => {
   if (!userStore.userInfo) {
@@ -412,14 +393,17 @@ onMounted(async () => {
     <!-- 周期切换 + KPI -->
     <div class="toolbar">
       <div class="toolbar-left">
-        <el-select v-model="period" style="width: 140px" @change="changePeriod">
-          <el-option
-            v-for="opt in periodOptions"
-            :key="opt.value"
-            :label="opt.label"
-            :value="opt.value"
-          />
-        </el-select>
+        <el-date-picker
+          v-model="period"
+          type="month"
+          :placeholder="t('dashboard.period.placeholder')"
+          :format="'YYYY-MM'"
+          :value-format="'YYYY-MM'"
+          :clearable="false"
+          :disabled-date="disabledFutureDate"
+          style="width: 180px"
+          @change="refreshAll"
+        />
         <el-button :loading="loading" @click="refreshAll">{{ t('common.refresh') }}</el-button>
       </div>
       <div class="toolbar-right">

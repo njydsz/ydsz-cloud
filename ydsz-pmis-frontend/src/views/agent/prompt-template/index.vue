@@ -34,7 +34,7 @@ async function loadList() {
   try {
     const { data } = await page(query)
     const result = data as PageResult<PromptTemplate> | undefined
-    list.value = result?.list ?? result?.records ?? []
+    list.value = result?.list ?? []
     total.value = result?.total ?? 0
   } catch (e: any) {
     ElMessage.error(e?.message || t('agent.prompt.messages.loadFailed'))

@@ -33,6 +33,14 @@ export const constantRoutes: RouteRecordRaw[] = [
     meta: { title: 'route.serverError', hidden: true },
   },
   {
+    // 重定向中转路由：用于 TagsView 的"刷新当前"功能
+    // 访问 /redirect/xxx 时，由 redirect/index.vue 在 onBeforeMount 中 replace 回 /xxx
+    path: '/redirect/:path(.*)',
+    name: 'Redirect',
+    component: () => import('@/views/redirect/index.vue'),
+    meta: { title: 'route.redirect', hidden: true },
+  },
+  {
     path: '/',
     component: () => import('@/layout/default/index.vue'),
     redirect: '/dashboard',

@@ -4,7 +4,7 @@
   @since 1.0.0
 -->
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import {
@@ -44,7 +44,7 @@ async function loadList() {
   try {
     const { data } = await page(pageNo.value, pageSize.value)
     const result = data as PageResult<KnowledgeBase> | undefined
-    list.value = result?.list ?? result?.records ?? []
+    list.value = result?.list ?? []
     total.value = result?.total ?? 0
   } catch (e: any) {
     ElMessage.error(e?.message || t('agent.kb.messages.loadFailed'))

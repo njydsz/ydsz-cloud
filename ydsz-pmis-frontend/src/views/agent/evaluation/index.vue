@@ -8,7 +8,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { listEvaluators, runEvaluation } from '@/api/agent/evaluation'
-import type { EvaluationReport, EvaluationResult, EvaluatorType } from '@/api/agent/evaluation/types'
+import type { EvaluationReport, EvaluatorType } from '@/api/agent/evaluation/types'
 import { useECharts } from '@/composables/useECharts'
 import { PC } from '@/constants/permissionCodes'
 

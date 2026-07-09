@@ -1,0 +1,35 @@
+-- P2-12: 工具市场条目表
+-- 对标 Coze Plugin Store / Dify Tool Manager
+-- 持久化运行时动态注册的 HTTP API 工具，支持手动注册与 OpenAPI 规范导入
+CREATE TABLE IF NOT EXISTS pmis_tool_market_entry (
+    id                      VARCHAR(64)   NOT NULL COMMENT '主键 ID（雪花算法）',
+    tool_name               VARCHAR(128)  NOT NULL COMMENT '工具名称（唯一标识，用于 LLM function calling）',
+    display_name            VARCHAR(256)  COMMENT '展示名称（人类可读）',
+    description             TEXT          COMMENT '工具描述（展示给 LLM）',
+    category                VARCHAR(64)   DEFAULT 'default' COMMENT '工具分类（weather/search/database 等）',
+    source_type             VARCHAR(32)   NOT NULL DEFAULT 'MANUAL' COMMENT '来源类型：MANUAL/OPENAPI',
+    http_method             VARCHAR(16)   NOT NULL COMMENT 'HTTP 方法：GET/POST/PUT/DELETE/PATCH',
+    endpoint_url            VARCHAR(1024) NOT NULL COMMENT 'API 端点 URL（可含 {paramName} 路径占位符）',
+    headers                 TEXT          COMMENT '静态请求头（JSON 字符串）',
+    param_schema            TEXT          COMMENT '参数 JSON Schema（JSON 字符串）',
+    body_template           TEXT          COMMENT '请求体模板（JSON 字符串，支持 ${param} 占位符）',
+    path_params             VARCHAR(1024) COMMENT '路径参数名列表（JSON 数组字符串）',
+    query_params            VARCHAR(1024) COMMENT '查询参数名列表（JSON 数组字符串）',
+    timeout_ms              BIGINT        DEFAULT 30000 COMMENT '请求超时毫秒',
+    requires_approval       INT           NOT NULL DEFAULT 0 COMMENT '是否需要人工审批（1=是, 0=否）',
+    enabled                 INT           NOT NULL DEFAULT 1 COMMENT '是否启用（1=启用, 0=禁用）',
+    version                 VARCHAR(32)   DEFAULT '1.0.0' COMMENT '工具版本',
+    open_api_spec_url       VARCHAR(1024) COMMENT 'OpenAPI 规范 URL（通过 OpenAPI 导入时记录）',
+    open_api_operation_id   VARCHAR(256)  COMMENT 'OpenAPI operationId',
+    tenant_id               VARCHAR(64)   COMMENT '租户 ID',
+    created_by              VARCHAR(64)   COMMENT '创建人 ID',
+    created_at              TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by              VARCHAR(64)   COMMENT '更新人 ID',
+    updated_at              TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted                 INT           NOT NULL DEFAULT 0 COMMENT '逻辑删除 (0=未删, 1=已删)',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_tool_name (tool_name),
+    KEY idx_category (category),
+    KEY idx_source_type (source_type),
+    KEY idx_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具市场条目表';

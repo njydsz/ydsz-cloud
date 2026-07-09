@@ -67,7 +67,7 @@ function isInputFocused(): boolean {
   const el = document.activeElement
   if (!el) return false
   const tag = el.tagName.toLowerCase()
-  return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable
+  return tag === 'input' || tag === 'textarea' || tag === 'select' || (el as HTMLElement).isContentEditable
 }
 
 /** 匹配快捷键 */
@@ -139,8 +139,8 @@ function initGlobalListener(): void {
   initialized = true
 }
 
-/** 销毁全局键盘监听 */
-function destroyGlobalListener(): void {
+/** 销毁全局键盘监听（应用级清理时调用） */
+export function destroyGlobalListener(): void {
   if (!initialized) return
   window.removeEventListener('keydown', handleKeydown, { capture: true })
   initialized = false

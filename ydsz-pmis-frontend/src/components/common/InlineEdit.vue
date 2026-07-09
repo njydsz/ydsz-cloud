@@ -9,7 +9,6 @@
 -->
 <script setup lang="ts">
 import { ref, nextTick, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 export type InlineEditType = 'text' | 'number' | 'select' | 'date' | 'textarea'
 
@@ -50,7 +49,6 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const { t } = useI18n()
 const isEditing = ref(false)
 const editValue = ref<string | number | null>('')
 const inputRef = ref<HTMLElement | null>(null)

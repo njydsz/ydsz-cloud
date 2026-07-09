@@ -16,7 +16,7 @@
  *     guardClose(() => dirty.value)()
  *   }
  */
-import { ref, type Ref } from 'vue'
+import { ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import i18n from '@/locales'
 

@@ -63,6 +63,25 @@ public class ToolRegistry {
     }
 
     /**
+     * 注销工具（P2-12 落地）。
+     *
+     * <p>从注册中心移除指定名称的工具，用于工具市场的动态卸载场景。
+     *
+     * @param name 工具名称
+     * @return 被移除的工具实例（不存在则返回 null）
+     */
+    public AgentTool unregister(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        AgentTool removed = tools.remove(name);
+        if (removed != null) {
+            log.info("[ToolRegistry] 工具已注销: {}", name);
+        }
+        return removed;
+    }
+
+    /**
      * 按名称查找工具。
      *
      * @param name 工具名称
