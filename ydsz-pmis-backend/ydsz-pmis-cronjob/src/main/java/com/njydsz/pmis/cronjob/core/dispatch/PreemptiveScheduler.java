@@ -1,8 +1,10 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
+import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -10,6 +12,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * P3-19: 优先级抢占式调度。
@@ -48,6 +53,7 @@ import java.util.List;
 public class PreemptiveScheduler {
 
     private final JobLogMapper jobLogMapper;
+    private final JobMapper jobMapper;
     private final StringRedisTemplate redisTemplate;
 
     /** 抢占计数器 key 前缀 */
@@ -108,7 +114,7 @@ public class PreemptiveScheduler {
         // 递增抢占计数器
         incrementPreemptCount(preemptable.getJobKey());
 
-        log.info("[Preemptive] 抢占成功: newPriority={} preemptedJobKey={} preemptedPriority={} threadId={}",
+        log.info("[Preemptive] 抢占成功: newPriority={} preemptedJobKey={} preemptedThreadId={}",
                 newJobPriority, preemptable.getJobKey(), preemptable.getExecThreadId());
 
         return true;
@@ -117,10 +123,13 @@ public class PreemptiveScheduler {
     /**
      * 查找可被抢占的低优先级运行中任务。
      *
+     * <p>P0-3 修复：原实现将 runningPriority 硬编码为 5，导致抢占逻辑失效。
+     * 现在通过 jobId 批量关联查询 JobDO 获取实际优先级。
+     *
      * <p>条件：
      * <ul>
      *   <li>状态为 RUNNING</li>
-     *   <li>执行节点为当前节点</li>
+     *   <li>执行节点为当前节点（P0-3 修复：原实现未使用 localNodeId 参数）</li>
      *   <li>触发类型非 MANUAL</li>
      *   <li>优先级 ≥ PREEMPTABLE_PRIORITY</li>
      *   <li>与新任务优先级差 ≥ PRIORITY_DIFF_THRESHOLD</li>
@@ -136,21 +145,42 @@ public class PreemptiveScheduler {
             wrapper.eq(JobLogDO::getStatus, "RUNNING")
                     .eq(JobLogDO::getDeleted, 0)
                     .ne(JobLogDO::getTriggerType, "MANUAL")
+                    .eq(JobLogDO::getExecNodeId, localNodeId)  // P0-3: 仅抢占当前节点上的任务
                     .orderByDesc(JobLogDO::getCreatedAt)
                     .last("LIMIT 20");
             List<JobLogDO> runningLogs = jobLogMapper.selectList(wrapper);
+            if (runningLogs.isEmpty()) {
+                return null;
+            }
+
+            // P0-3: 批量查询 JobDO 获取实际优先级，避免 N+1 查询
+            List<String> jobIds = runningLogs.stream()
+                    .map(JobLogDO::getJobId)
+                    .distinct()
+                    .collect(Collectors.toList());
+            List<JobDO> jobs = jobMapper.selectBatchIds(jobIds);
+            Map<String, JobDO> jobMap = jobs.stream()
+                    .collect(Collectors.toMap(JobDO::getId, Function.identity()));
 
             // 从运行中任务中找到优先级最低（数值最大）且差值足够的任务
-            for (JobLogDO log : runningLogs) {
-                // 通过 jobId 查询任务优先级（简化：从 JobLogDO 的 paramsJson 或直接从 JobDO 获取）
-                // 这里简化处理，假设 RUNNING 日志中已包含优先级信息
-                // 实际实现需要通过 jobId 关联 JobDO 获取 priority
-                int runningPriority = 5; // 默认优先级
+            JobLogDO bestCandidate = null;
+            int bestPriority = -1;
+            for (JobLogDO logEntry : runningLogs) {
+                JobDO job = jobMap.get(logEntry.getJobId());
+                if (job == null || job.getPriority() == null) {
+                    continue;
+                }
+                int runningPriority = job.getPriority();
                 if (runningPriority >= PREEMPTABLE_PRIORITY
                         && (runningPriority - newJobPriority) >= PRIORITY_DIFF_THRESHOLD) {
-                    return log;
+                    // 选择优先级最低（数值最大）的任务作为抢占目标
+                    if (runningPriority > bestPriority) {
+                        bestPriority = runningPriority;
+                        bestCandidate = logEntry;
+                    }
                 }
             }
+            return bestCandidate;
         } catch (Exception e) {
             log.warn("[Preemptive] 查找可抢占任务异常: reason={}", e.getMessage());
         }

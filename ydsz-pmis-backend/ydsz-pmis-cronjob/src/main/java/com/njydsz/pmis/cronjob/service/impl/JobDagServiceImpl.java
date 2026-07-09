@@ -12,9 +12,11 @@ import com.njydsz.pmis.cronjob.core.dag.FailStrategy;
 import com.njydsz.pmis.cronjob.dto.JobDagSaveDTO;
 import com.njydsz.pmis.cronjob.entity.JobDagDO;
 import com.njydsz.pmis.cronjob.entity.JobDagInstanceDO;
+import com.njydsz.pmis.cronjob.entity.JobDagVersionDO;
 import com.njydsz.pmis.cronjob.mapper.JobDagInstanceMapper;
 import com.njydsz.pmis.cronjob.mapper.JobDagMapper;
 import com.njydsz.pmis.cronjob.mapper.JobDagNodeInstanceMapper;
+import com.njydsz.pmis.cronjob.mapper.JobDagVersionMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.service.JobDagService;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +63,8 @@ public class JobDagServiceImpl implements JobDagService {
     /** DAG 节点实例 Mapper（由 DagInstanceExecutor 通过 setter 注入使用） */
     @SuppressWarnings("unused")
     private final JobDagNodeInstanceMapper jobDagNodeInstanceMapper;
+    /** P1-8: DAG 版本历史 Mapper */
+    private final JobDagVersionMapper jobDagVersionMapper;
     /** DAG 定义编解码器 */
     private final DagDefinitionCodec dagDefinitionCodec;
     /** DAG 解析器（环检测） */
@@ -112,6 +116,8 @@ public class JobDagServiceImpl implements JobDagService {
             dag.setNextFireTime(nextFireTime(dag.getCronExpression()));
         }
         jobDagMapper.insert(dag);
+        // P1-8: 保存 V1 版本快照
+        saveVersionSnapshot(dag, "初始创建");
         log.info("[JobDag] 创建 DAG: dagId={} dagKey={} dagName={}",
                 dag.getId(), dag.getDagKey(), dag.getDagName());
         return dag.getId();
@@ -163,6 +169,8 @@ public class JobDagServiceImpl implements JobDagService {
         // version + 1（乐观锁）
         exists.setVersion((exists.getVersion() == null ? 0 : exists.getVersion()) + 1);
         jobDagMapper.updateById(exists);
+        // P1-8: 保存版本快照
+        saveVersionSnapshot(exists, "更新 DAG 定义");
         log.info("[JobDag] 更新 DAG: dagId={} dagKey={} version={}",
                 dagId, exists.getDagKey(), exists.getVersion());
     }
@@ -303,6 +311,82 @@ public class JobDagServiceImpl implements JobDagService {
                     instance.getId());
         }
         return instance.getId();
+    }
+
+    // ==================== P1-8: 工作流版本管理 ====================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<JobDagVersionDO> listDagVersions(String dagId, int limit) {
+        int effectiveLimit = limit > 0 ? limit : 50;
+        return jobDagVersionMapper.selectByVersionDesc(dagId, effectiveLimit);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JobDagVersionDO getDagVersion(String dagId, int version) {
+        JobDagVersionDO versionDO = jobDagVersionMapper.selectByVersion(dagId, version);
+        if (versionDO == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.cronjob.msg_dag_version_not_found", dagId, version);
+        }
+        return versionDO;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int rollbackDagVersion(String dagId, int targetVersion, String changedBy) {
+        JobDagDO dag = jobDagMapper.selectById(dagId);
+        if (dag == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.cronjob.msg_dag_not_found_def", dagId);
+        }
+        JobDagVersionDO targetVersionDO = jobDagVersionMapper.selectByVersion(dagId, targetVersion);
+        if (targetVersionDO == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.cronjob.msg_dag_version_not_found", dagId, targetVersion);
+        }
+        // 回滚：将目标版本的 dagDefinition 复制到当前 DAG
+        dag.setDagDefinition(targetVersionDO.getDagDefinition());
+        dag.setDagName(targetVersionDO.getDagName());
+        dag.setTriggerType(targetVersionDO.getTriggerType());
+        dag.setCronExpression(targetVersionDO.getCronExpression());
+        dag.setFailStrategy(targetVersionDO.getFailStrategy());
+        // 重新计算 nextFireTime
+        if ("CRON".equals(dag.getTriggerType()) && StringUtils.hasText(dag.getCronExpression())) {
+            dag.setNextFireTime(nextFireTime(dag.getCronExpression()));
+        } else {
+            dag.setNextFireTime(null);
+        }
+        // version + 1（乐观锁）
+        int newVersion = (dag.getVersion() == null ? 0 : dag.getVersion()) + 1;
+        dag.setVersion(newVersion);
+        jobDagMapper.updateById(dag);
+        // 保存回滚版本快照
+        saveVersionSnapshot(dag, "回滚到版本 V" + targetVersion);
+        log.info("[JobDag] 回滚 DAG 版本: dagId={} fromV={} toV={} newV={} changedBy={}",
+                dagId, dag.getVersion() - 1, targetVersion, newVersion, changedBy);
+        return newVersion;
+    }
+
+    /**
+     * P1-8: 保存 DAG 版本快照。
+     *
+     * @param dag    DAG 定义
+     * @param remark 版本备注
+     */
+    private void saveVersionSnapshot(JobDagDO dag, String remark) {
+        JobDagVersionDO versionDO = new JobDagVersionDO();
+        versionDO.setDagId(dag.getId());
+        versionDO.setDagKey(dag.getDagKey());
+        versionDO.setVersion(dag.getVersion());
+        versionDO.setDagDefinition(dag.getDagDefinition());
+        versionDO.setDagName(dag.getDagName());
+        versionDO.setTriggerType(dag.getTriggerType());
+        versionDO.setCronExpression(dag.getCronExpression());
+        versionDO.setFailStrategy(dag.getFailStrategy());
+        versionDO.setRemark(remark);
+        jobDagVersionMapper.insert(versionDO);
     }
 
     // ==================== 内部辅助方法 ====================

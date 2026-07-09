@@ -89,6 +89,173 @@ public class DagService {
     }
 
     /**
+     * 更新 DAG 定义（P1-7 落地）。
+     *
+     * @param id  DAG 定义 ID
+     * @param dag 新的 DAG 定义内容
+     * @return 更新后的 DO
+     */
+    public DagDefinitionDO updateDefinition(String id, DagDefinition dag) {
+        DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
+        if (mapper == null) {
+            throw new IllegalStateException("DagDefinitionMapper 不可用");
+        }
+        DagDefinitionDO existing = mapper.selectById(id);
+        if (existing == null) {
+            throw new IllegalArgumentException("DAG 定义不存在: " + id);
+        }
+        existing.setName(dag.getName() != null ? dag.getName() : existing.getName());
+        existing.setDescription(dag.getDescription() != null ? dag.getDescription() : existing.getDescription());
+        existing.setBizType(dag.getBizType() != null ? dag.getBizType() : existing.getBizType());
+        existing.setVersion(dag.getVersion() != null ? dag.getVersion() : existing.getVersion());
+        existing.setDefinitionJson(serialize(dag));
+        if (dag.getFailureStrategy() != null) {
+            existing.setFailureStrategy(dag.getFailureStrategy().name());
+        }
+        if (dag.getMaxRetries() != null) {
+            existing.setMaxRetries(dag.getMaxRetries());
+        }
+        if (dag.getDefaultTimeoutMs() != 0) {
+            existing.setDefaultTimeoutMs(dag.getDefaultTimeoutMs());
+        }
+        if (dag.getEnabled() != null) {
+            existing.setEnabled(dag.getEnabled() ? 1 : 0);
+        }
+        mapper.updateById(existing);
+        log.info("[DAG] 更新定义: id={}, name={}", id, existing.getName());
+        return existing;
+    }
+
+    /**
+     * 删除 DAG 定义（软删除，P1-7 落地）。
+     *
+     * @param id DAG 定义 ID
+     */
+    public void deleteDefinition(String id) {
+        DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
+        if (mapper == null) {
+            throw new IllegalStateException("DagDefinitionMapper 不可用");
+        }
+        DagDefinitionDO existing = mapper.selectById(id);
+        if (existing == null) {
+            throw new IllegalArgumentException("DAG 定义不存在: " + id);
+        }
+        mapper.deleteById(id);
+        log.info("[DAG] 删除定义: id={}, name={}", id, existing.getName());
+    }
+
+    /**
+     * 启用/禁用 DAG 定义（P1-7 落地）。
+     *
+     * @param id      DAG 定义 ID
+     * @param enabled 是否启用
+     * @return 更新后的 DO
+     */
+    public DagDefinitionDO toggleEnabled(String id, boolean enabled) {
+        DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
+        if (mapper == null) {
+            throw new IllegalStateException("DagDefinitionMapper 不可用");
+        }
+        DagDefinitionDO existing = mapper.selectById(id);
+        if (existing == null) {
+            throw new IllegalArgumentException("DAG 定义不存在: " + id);
+        }
+        existing.setEnabled(enabled ? 1 : 0);
+        mapper.updateById(existing);
+        log.info("[DAG] {} 定义: id={}", enabled ? "启用" : "禁用", id);
+        return existing;
+    }
+
+    /**
+     * 验证 DAG 定义结构（P1-7 落地）。
+     *
+     * <p>检查项：
+     * <ul>
+     *   <li>节点列表非空</li>
+     *   <li>节点名唯一</li>
+     *   <li>依赖引用的节点存在</li>
+     *   <li>无循环依赖（环检测）</li>
+     *   <li>至少有一个起始节点（无依赖的节点）</li>
+     * </ul>
+     *
+     * @param dag DAG 定义
+     * @return 验证结果（valid=true 表示通过）
+     */
+    public ValidationResult validateDefinition(DagDefinition dag) {
+        if (dag == null || dag.getNodes() == null || dag.getNodes().isEmpty()) {
+            return ValidationResult.failure("DAG 节点列表为空");
+        }
+
+        List<String> errors = new java.util.ArrayList<>();
+
+        // 1. 节点名唯一性检查
+        java.util.Set<String> nodeNames = new java.util.HashSet<>();
+        for (var node : dag.getNodes()) {
+            if (node.getName() == null || node.getName().isBlank()) {
+                errors.add("存在未命名的节点");
+                continue;
+            }
+            if (!nodeNames.add(node.getName())) {
+                errors.add("节点名重复: " + node.getName());
+            }
+        }
+
+        // 2. 依赖引用检查
+        for (var node : dag.getNodes()) {
+            if (node.getDependsOn() != null) {
+                for (String dep : node.getDependsOn()) {
+                    if (!nodeNames.contains(dep)) {
+                        errors.add("节点 [" + node.getName() + "] 依赖了不存在的节点: " + dep);
+                    }
+                }
+            }
+        }
+
+        // 3. 环检测（DFS）
+        if (errors.isEmpty()) {
+            java.util.Set<String> visiting = new java.util.HashSet<>();
+            java.util.Set<String> visited = new java.util.HashSet<>();
+            for (var node : dag.getNodes()) {
+                if (hasCycle(node.getName(), dag, visiting, visited)) {
+                    errors.add("DAG 存在循环依赖");
+                    break;
+                }
+            }
+        }
+
+        // 4. 起始节点检查
+        boolean hasStartNode = dag.getNodes().stream()
+                .anyMatch(n -> n.getDependsOn() == null || n.getDependsOn().isEmpty());
+        if (!hasStartNode) {
+            errors.add("DAG 缺少起始节点（无依赖的节点）");
+        }
+
+        return errors.isEmpty() ? ValidationResult.success() : ValidationResult.failure(errors);
+    }
+
+    /**
+     * DFS 环检测。
+     */
+    private boolean hasCycle(String nodeName, DagDefinition dag,
+                              java.util.Set<String> visiting, java.util.Set<String> visited) {
+        if (visited.contains(nodeName)) return false;
+        if (visiting.contains(nodeName)) return true;
+
+        visiting.add(nodeName);
+        var node = dag.findNode(nodeName);
+        if (node != null && node.getDependsOn() != null) {
+            for (String dep : node.getDependsOn()) {
+                if (hasCycle(dep, dag, visiting, visited)) {
+                    return true;
+                }
+            }
+        }
+        visiting.remove(nodeName);
+        visited.add(nodeName);
+        return false;
+    }
+
+    /**
      * 查询 DAG 定义详情。
      *
      * @param id DAG 定义 ID

@@ -6,6 +6,7 @@ import com.njydsz.pmis.agent.entity.DagNodeInstanceDO;
 import com.njydsz.pmis.agent.orchestration.dag.DagDefinition;
 import com.njydsz.pmis.agent.orchestration.dag.DagExecutionResult;
 import com.njydsz.pmis.agent.service.DagService;
+import com.njydsz.pmis.agent.service.ValidationResult;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,9 +17,11 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -126,6 +129,70 @@ public class DagController {
      */
     @Data
     public static class ExecuteRequest {
+        /** 全局输入参数 */
+        private Map<String, Object> inputs;
+    }
+
+    // ==================== P1-7: 新增 CRUD + 验证接口 ====================
+
+    /**
+     * 更新 DAG 定义。
+     */
+    @Operation(summary = "更新 DAG 定义")
+    @PutMapping("/{id}")
+    public Result<DagDefinitionDO> updateDefinition(
+            @PathVariable String id,
+            @Valid @RequestBody DagDefinition dag) {
+        return Result.ok(dagService.updateDefinition(id, dag));
+    }
+
+    /**
+     * 删除 DAG 定义（软删除）。
+     */
+    @Operation(summary = "删除 DAG 定义")
+    @DeleteMapping("/{id}")
+    public Result<Void> deleteDefinition(@PathVariable String id) {
+        dagService.deleteDefinition(id);
+        return Result.ok();
+    }
+
+    /**
+     * 启用/禁用 DAG 定义。
+     */
+    @Operation(summary = "启用/禁用 DAG 定义")
+    @PutMapping("/{id}/toggle")
+    public Result<DagDefinitionDO> toggleEnabled(
+            @PathVariable String id,
+            @RequestParam boolean enabled) {
+        return Result.ok(dagService.toggleEnabled(id, enabled));
+    }
+
+    /**
+     * 验证 DAG 定义结构（不执行）。
+     */
+    @Operation(summary = "验证 DAG 定义结构")
+    @PostMapping("/validate")
+    public Result<ValidationResult> validateDefinition(@Valid @RequestBody DagDefinition dag) {
+        return Result.ok(dagService.validateDefinition(dag));
+    }
+
+    /**
+     * 调试运行 DAG（不持久化结果）。
+     */
+    @Operation(summary = "调试运行 DAG")
+    @PostMapping("/debug")
+    public Result<DagExecutionResult> debugExecute(
+            @Valid @RequestBody DebugRequest req) {
+        return Result.ok(dagService.executeDirect(req.getDag(), req.getInputs()));
+    }
+
+    /**
+     * 调试运行请求 DTO。
+     */
+    @Data
+    public static class DebugRequest {
+        /** DAG 定义 */
+        private DagDefinition dag;
         /** 全局输入参数 */
         private Map<String, Object> inputs;
     }

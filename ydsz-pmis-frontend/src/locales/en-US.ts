@@ -719,6 +719,8 @@ dashboardExitCustomize: 'Exit drag mode',
   },
   login: {
     slogan: 'Project Operations Management System',
+    subtitle: 'Welcome back, please sign in to continue',
+    copyright: '© 2024 Nanjing Yuandong Digital Intelligence · PMIS Team',
     features: {
       integration: 'Business-Finance Integration · Full Lifecycle Control',
       rate: 'L1-L18 Job Level Rates · EVM Earned Value Management',

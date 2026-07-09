@@ -46,6 +46,10 @@
         <!-- 组件版本 -->
         <mybatis-plus.version>3.5.16</mybatis-plus.version>
         <postgresql.version>42.7.4</postgresql.version>
+        <!-- Flyway 数据库版本管理 (P1-10) -->
+        <flyway.version>10.20.0</flyway.version>
+        <!-- Caffeine 本地缓存 (P1-11 多级缓存) -->
+        <caffeine.version>3.1.8</caffeine.version>
         <druid.version>1.2.28</druid.version>
         <!-- baomidou 动态数据源（读写分离 P2-3） -->
         <dynamic-datasource.version>4.3.1</dynamic-datasource.version>
@@ -73,6 +77,11 @@
         <!-- 测试 -->
         <springdoc.version>2.8.13</springdoc.version>
         <testcontainers.version>1.20.2</testcontainers.version>
+
+        <!-- P1-6: gRPC 通信 -->
+        <grpc.version>1.66.0</grpc.version>
+        <protobuf.version>3.25.5</protobuf.version>
+        <protobuf.plugin.version>0.6.1</protobuf.plugin.version>
 
         <!-- 质量与安全扫描（P0-3：CI 质量门禁） -->
         <skipDependencyCheck>true</skipDependencyCheck>
@@ -351,8 +360,48 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- P1-6: gRPC 通信 -->
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-netty-shaded</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-protobuf</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-stub</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>annotations-api</artifactId>
+                <version>6.0.53</version>
+                <scope>provided</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <!-- Flyway 数据库版本管理 (P1-10) -->
+    <!-- 各微服务通过 src/main/resources/db/migration/ 目录管理 SQL 变更 -->
+    <!-- Flyway 在应用启动时自动检测并执行未应用的迁移脚本 -->
+    <!-- 命名规范: V{版本号}__{描述}.sql, 如 V1.0.0__init_schema.sql -->
+
+    <!-- Caffeine 本地缓存 (P1-11 多级缓存 L1) -->
+    <dependency>
+        <groupId>com.github.ben-manes.caffeine</groupId>
+        <artifactId>caffeine</artifactId>
+        <version>${caffeine.version}</version>
+    </dependency>
 
     <dependencies>
         <!-- Lombok（所有子模块） -->

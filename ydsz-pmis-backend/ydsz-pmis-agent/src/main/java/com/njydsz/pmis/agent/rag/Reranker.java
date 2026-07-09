@@ -3,6 +3,7 @@ package com.njydsz.pmis.agent.rag;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
@@ -45,6 +46,14 @@ public class Reranker {
     private final HttpClient httpClient;
 
     /**
+     * LLM Provider（P0-3 落地）。
+     *
+     * <p>当 strategy=LLM 时，使用此 Provider 调用 LLM 对 chunk 进行评分。
+     * 可为 null，此时降级为原始分数排序。
+     */
+    private LlmProvider llmProvider;
+
+    /**
      * 重排序策略。
      */
     public enum Strategy {
@@ -56,15 +65,42 @@ public class Reranker {
 
     public Reranker(String apiKey, String baseUrl, String rerankModel,
                     Strategy strategy, long timeoutMillis) {
+        this(apiKey, baseUrl, rerankModel, strategy, timeoutMillis, null);
+    }
+
+    /**
+     * 构造 Reranker（P0-3：支持注入 LlmProvider）。
+     *
+     * @param apiKey      API Key（Cross-Encoder 策略使用）
+     * @param baseUrl     API Base URL
+     * @param rerankModel Rerank 模型名
+     * @param strategy    重排序策略
+     * @param timeoutMillis 超时
+     * @param llmProvider LLM Provider（LLM 策略使用，可为 null）
+     */
+    public Reranker(String apiKey, String baseUrl, String rerankModel,
+                    Strategy strategy, long timeoutMillis, LlmProvider llmProvider) {
         this.apiKey = apiKey;
         this.baseUrl = baseUrl != null ? baseUrl : "https://dashscope.aliyuncs.com/api/v1";
         this.rerankModel = rerankModel != null ? rerankModel : "gte-rerank";
         this.strategy = strategy != null ? strategy : Strategy.CROSS_ENCODER;
         this.timeoutMillis = timeoutMillis > 0 ? timeoutMillis : 10000;
+        this.llmProvider = llmProvider;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
-        log.info("[Reranker] 初始化, strategy={}, model={}", this.strategy, this.rerankModel);
+        log.info("[Reranker] 初始化, strategy={}, model={}, llmProvider={}",
+                this.strategy, this.rerankModel, this.llmProvider != null ? "set" : "null");
+    }
+
+    /**
+     * 设置 LLM Provider（P0-3 落地）。
+     *
+     * @param llmProvider LLM Provider
+     */
+    public void setLlmProvider(LlmProvider llmProvider) {
+        this.llmProvider = llmProvider;
+        log.info("[Reranker] LLM Provider 已设置: {}", llmProvider != null ? llmProvider.name() : "null");
     }
 
     /**
@@ -161,16 +197,101 @@ public class Reranker {
         return reranked;
     }
 
+    /** LLM 评分系统提示词（P0-3 落地） */
+    private static final String LLM_RERANK_SYSTEM_PROMPT = """
+            你是一个信息检索评分专家。请根据用户查询，对每个文档片段的相关性进行评分。
+
+            评分规则：
+            - 10分：完全相关，直接回答了用户查询
+            - 7-9分：高度相关，包含用户查询所需的关键信息
+            - 4-6分：部分相关，包含一些有用信息但不完整
+            - 1-3分：弱相关，仅提及相关话题但未提供有效信息
+            - 0分：完全不相关
+
+            请输出 JSON 数组，每个元素包含 index（片段序号）和 score（评分）：
+            [{"index": 0, "score": 9}, {"index": 1, "score": 3}]
+
+            请严格输出 JSON 格式（不要使用 markdown 代码块包裹）。""";
+
     /**
-     * 使用 LLM 评分进行重排序（降级方案）。
+     * 使用 LLM 评分进行重排序（P0-3 完善实现）。
      *
-     * <p>让 LLM 对每个 chunk 与 query 的相关性打分（0-10），按分数排序。
+     * <p>将所有候选 chunk 与用户查询一起发送给 LLM，让 LLM 对每个 chunk 的相关性
+     * 打分（0-10），然后按分数重新排序取 top-N。
+     *
+     * <p>优势：相比 Cross-Encoder，LLM 评分能理解深层语义关系，
+     * 适用于复杂查询和跨领域检索。
+     *
+     * <p>降级策略：当 llmProvider 为 null 或 LLM 调用失败时，
+     * 降级为按原始向量相似度分数排序。
      */
     private List<RetrievedChunk> rerankWithLlm(String query,
                                                  List<RetrievedChunk> candidates,
                                                  int topN) {
-        // 简化实现：按原始向量相似度分数排序
-        // 完整实现可调用 LLM 对每个 chunk 评分
+        if (llmProvider == null) {
+            log.warn("[Reranker] LLM 策略但 llmProvider 为 null, 降级为原始分数排序");
+            return fallbackSort(candidates, topN);
+        }
+
+        try {
+            // 构建 LLM 输入：列出所有候选 chunk
+            StringBuilder userPrompt = new StringBuilder();
+            userPrompt.append("用户查询：").append(query).append("\n\n");
+            userPrompt.append("文档片段列表：\n");
+            for (int i = 0; i < candidates.size(); i++) {
+                RetrievedChunk chunk = candidates.get(i);
+                String content = chunk.getContent() == null ? "" : chunk.getContent();
+                // 截断过长的 chunk 内容，避免 token 爆炸
+                if (content.length() > 500) {
+                    content = content.substring(0, 500) + "...";
+                }
+                userPrompt.append("[片段 ").append(i).append("] ")
+                        .append(content).append("\n\n");
+            }
+            userPrompt.append("请对每个片段评分并输出 JSON 数组。");
+
+            // 调用 LLM
+            String llmRaw = llmProvider.chat(LLM_RERANK_SYSTEM_PROMPT,
+                    userPrompt.toString(), null);
+            String json = LlmProvider.stripMarkdownCodeFence(llmRaw);
+
+            // 解析评分结果
+            JSONArray scores = JSON.parseArray(json);
+            if (scores == null || scores.isEmpty()) {
+                log.warn("[Reranker] LLM 评分结果为空, 降级为原始排序");
+                return fallbackSort(candidates, topN);
+            }
+
+            // 将评分映射到候选 chunk
+            for (int i = 0; i < scores.size(); i++) {
+                JSONObject item = scores.getJSONObject(i);
+                if (item == null) continue;
+                int index = item.getIntValue("index", -1);
+                double score = item.containsKey("score") ? item.getDoubleValue("score") : -1;
+                if (index >= 0 && index < candidates.size() && score >= 0) {
+                    // 归一化到 0-1
+                    candidates.get(index).setScore(score / 10.0);
+                }
+            }
+
+            // 按新分数排序
+            return candidates.stream()
+                    .sorted(Comparator.comparingDouble(
+                            (RetrievedChunk c) -> c.getScore() == null ? 0 : -c.getScore())
+                            .reversed())
+                    .limit(topN)
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            log.warn("[Reranker] LLM 评分失败, 降级为原始排序: {}", e.getMessage());
+            return fallbackSort(candidates, topN);
+        }
+    }
+
+    /**
+     * 降级排序：按原始分数降序排列取 top-N。
+     */
+    private List<RetrievedChunk> fallbackSort(List<RetrievedChunk> candidates, int topN) {
         return candidates.stream()
                 .sorted(Comparator.comparingDouble(
                         (RetrievedChunk c) -> c.getScore() == null ? 0 : -c.getScore())

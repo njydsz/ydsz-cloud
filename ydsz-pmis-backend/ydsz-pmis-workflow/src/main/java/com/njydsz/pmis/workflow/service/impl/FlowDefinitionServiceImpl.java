@@ -868,6 +868,30 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                             n1.getPermissionFlag() != null ? n1.getPermissionFlag() : "",
                             "new", n2.getPermissionFlag() != null ? n2.getPermissionFlag() : ""));
                 }
+                // P1-3: 增强 diff — 对比 formFieldsConfig（表单字段权限）
+                if (!Objects.equals(n1.getFormFieldsConfig(), n2.getFormFieldsConfig())) {
+                    changes.put("formFieldsConfig", Map.of("old",
+                            n1.getFormFieldsConfig() != null ? n1.getFormFieldsConfig() : "",
+                            "new", n2.getFormFieldsConfig() != null ? n2.getFormFieldsConfig() : ""));
+                }
+                // P1-3: 增强 diff — 对比 ext（含 formSchema、selfSelect、SLA 等配置）
+                if (!Objects.equals(n1.getExt(), n2.getExt())) {
+                    changes.put("ext", Map.of("old",
+                            n1.getExt() != null ? n1.getExt() : "",
+                            "new", n2.getExt() != null ? n2.getExt() : ""));
+                }
+                // P1-3: 增强 diff — 对比节点描述（skipAnyNode）
+                if (!Objects.equals(n1.getSkipAnyNode(), n2.getSkipAnyNode())) {
+                    changes.put("skipAnyNode", Map.of("old",
+                            n1.getSkipAnyNode() != null ? n1.getSkipAnyNode() : "",
+                            "new", n2.getSkipAnyNode() != null ? n2.getSkipAnyNode() : ""));
+                }
+                // P1-3: 增强 diff — 对比 SLA 配置
+                if (!Objects.equals(n1.getSlaConfig(), n2.getSlaConfig())) {
+                    changes.put("slaConfig", Map.of("old",
+                            n1.getSlaConfig() != null ? n1.getSlaConfig() : "",
+                            "new", n2.getSlaConfig() != null ? n2.getSlaConfig() : ""));
+                }
                 if (!changes.isEmpty()) {
                     Map<String, Object> modEntry = new LinkedHashMap<>();
                     modEntry.put("nodeCode", code);
@@ -914,6 +938,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         result.put("version2", version2);
         result.put("nodeChanges", nodeChanges);
         result.put("skipChanges", skipChanges);
+        // P1-3: 增强 diff — 统计摘要
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("totalNodeChanges", addedNodes.size() + removedNodes.size() + modifiedNodes.size());
+        summary.put("totalSkipChanges", addedSkips.size() + removedSkips.size());
+        summary.put("hasBreakingChange", !removedNodes.isEmpty() || !removedSkips.isEmpty());
+        result.put("summary", summary);
 
         log.info("[Flow] 版本差异对比: flowCode={} v1={} v2={} "
                         + "nodeAdded={} nodeRemoved={} nodeModified={} "

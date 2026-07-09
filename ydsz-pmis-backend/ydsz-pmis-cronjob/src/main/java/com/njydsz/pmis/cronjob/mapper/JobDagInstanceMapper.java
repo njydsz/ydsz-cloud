@@ -95,6 +95,26 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstanceDO> {
                       @Param("contextJson") String contextJson);
 
     /**
+     * 原子合并 DAG 实例上下文 JSON（P0-1 并发安全修复）。
+     *
+     * <p>使用 PostgreSQL {@code jsonb ||} 操作符在数据库层面原子合并，
+     * 消除 read-modify-write 竞态：并行网关多分支同时写 contextJson 时不再丢失数据。
+     *
+     * <p>合并语义：{@code context_json = COALESCE(context_json, '{}'::jsonb) || #{mergeJson}::jsonb}
+     * 相同 key 的后写覆盖先写，不同 key 的各自保留。
+     *
+     * @param instanceId DAG 实例 ID
+     * @param mergeJson  待合并的 JSON 片段（如 {@code {"nodeA":{"result":"ok"}}}）
+     * @return 受影响行数（0 表示实例不存在或已删除）
+     */
+    @Update("UPDATE pmis_job_dag_instance "
+            + "SET context_json = COALESCE(context_json, '{}'::jsonb) || #{mergeJson}::jsonb, "
+            + "    updated_at = CURRENT_TIMESTAMP "
+            + "WHERE id = #{instanceId} AND deleted = 0")
+    int mergeContextAtomic(@Param("instanceId") String instanceId,
+                           @Param("mergeJson") String mergeJson);
+
+    /**
      * 统计指定 DAG 的活跃（RUNNING/PAUSED）实例数（并发控制用）。
      */
     @Select("SELECT COUNT(1) FROM pmis_job_dag_instance "

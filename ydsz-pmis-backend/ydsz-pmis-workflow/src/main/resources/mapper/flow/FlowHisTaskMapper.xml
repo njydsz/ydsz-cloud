@@ -176,6 +176,45 @@
         LIMIT #{limit}
     </select>
 
+    <!-- P1-5: 单 SQL 聚合概览统计（替代多次 COUNT 查询） -->
+    <select id="selectOverviewStats" resultType="java.util.Map">
+        SELECT
+            COUNT(1)                                                                          AS "totalTasks",
+            COUNT(1) FILTER (WHERE task_status = 'COMPLETED')                                AS "completedTasks",
+            COUNT(1) FILTER (WHERE task_status = 'REJECTED')                                 AS "rejectedTasks",
+            CASE WHEN COUNT(1) = 0 THEN 0
+                 ELSE COUNT(1) FILTER (WHERE task_status = 'REJECTED')::FLOAT / COUNT(1)
+            END                                                                               AS "rejectionRate",
+            COALESCE(AVG(duration_ms) FILTER (WHERE task_status = 'COMPLETED'
+                AND duration_ms IS NOT NULL AND duration_ms > 0), 0)                      AS "avgDurationMs"
+        FROM pmis_flow_his_task
+        WHERE status = 'ENABLED'
+          AND deleted = 0
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+          <if test="startTime != null">AND finish_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND finish_at &lt;= #{endTime}</if>
+    </select>
+
+    <!-- P1-5: 审批趋势 — 按时间粒度分组聚合 -->
+    <select id="selectApprovalTrend" resultType="java.util.Map">
+        SELECT
+            date_trunc(#{granularity}, finish_at)                                          AS "date",
+            COUNT(1) FILTER (WHERE task_status IN ('COMPLETED', 'REJECTED'))                AS "totalCount",
+            COUNT(1) FILTER (WHERE task_status = 'COMPLETED')                               AS "completedCount",
+            COUNT(1) FILTER (WHERE task_status = 'REJECTED')                                AS "rejectedCount",
+            COALESCE(AVG(duration_ms) FILTER (WHERE task_status = 'COMPLETED'
+                AND duration_ms IS NOT NULL AND duration_ms > 0), 0)                       AS "avgDurationMs"
+        FROM pmis_flow_his_task
+        WHERE status = 'ENABLED'
+          AND deleted = 0
+          AND task_status IN ('COMPLETED', 'REJECTED')
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+          <if test="startTime != null">AND finish_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND finish_at &lt;= #{endTime}</if>
+        GROUP BY date_trunc(#{granularity}, finish_at)
+        ORDER BY "date" ASC
+    </select>
+
     <!-- P2-7: 流程效率对比 — 按流程编码分组聚合（COMPLETED + REJECTED 计入总数） -->
     <select id="selectFlowEfficiencyComparison" resultType="java.util.Map">
         SELECT flow_code                                                              AS "flowCode",

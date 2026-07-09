@@ -5,15 +5,18 @@ import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.project.mapper.InitiationMapper;
 import com.njydsz.pmis.project.search.ProjectSearchVO;
+import com.njydsz.pmis.project.search.UniversalSearchVO;
 import com.njydsz.pmis.project.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -83,5 +86,63 @@ public class SearchServiceImpl implements SearchService {
     public String reindexAll() {
         log.info("[Search] PG tsvector 无需重建索引，no-op");
         return "pg-tsvector: no-op";
+    }
+
+    /**
+     * 跨实体统一搜索 (P2-1)。
+     *
+     * <p>当前实现：聚合项目搜索结果，后续可通过 Feign 扩展到合同/审批/工单/人员/知识库。
+     * 任何子搜索异常均降级跳过，不影响其他实体类型的搜索结果。
+     *
+     * @param keyword 搜索关键词
+     * @param size    每类实体最大返回条数
+     * @return 统一搜索结果列表
+     */
+    @Override
+    public List<UniversalSearchVO> searchAll(String keyword, int size) {
+        if (!StringUtils.hasText(keyword)) {
+            return List.of();
+        }
+
+        List<UniversalSearchVO> results = new ArrayList<>();
+
+        // 1. 项目搜索 (复用现有 PG tsvector 检索)
+        try {
+            Page<ProjectSearchVO> projectPage = searchProjects(
+                    keyword, PageRequest.of(0, size));
+            for (ProjectSearchVO p : projectPage.getContent()) {
+                results.add(UniversalSearchVO.builder()
+                        .type("project")
+                        .id(p.getId())
+                        .title(p.getProjectName())
+                        .subtitle(joinNonBlank(p.getCustomerName(), p.getPmName()))
+                        .status(p.getStage())
+                        .path("/project/initiation?highlight=" + p.getId())
+                        .build());
+            }
+        } catch (Exception e) {
+            log.warn("[Search] 项目搜索失败，跳过: keyword={}, error={}", keyword, e.getMessage());
+        }
+
+        // 2. 后续可通过 Feign 调用其他微服务扩展搜索范围
+        // - 合同: feignClient.searchContracts(keyword, size)
+        // - 审批: feignClient.searchApprovals(keyword, size)
+        // - 工单: feignClient.searchTickets(keyword, size)
+        // - 人员: feignClient.searchEmployees(keyword, size)
+        // - 知识库: feignClient.searchKnowledge(keyword, size)
+
+        return results;
+    }
+
+    /** 拼接非空字符串，用 ' · ' 分隔 */
+    private String joinNonBlank(String... parts) {
+        StringBuilder sb = new StringBuilder();
+        for (String p : parts) {
+            if (StringUtils.hasText(p)) {
+                if (sb.length() > 0) sb.append(" · ");
+                sb.append(p);
+            }
+        }
+        return sb.toString();
     }
 }

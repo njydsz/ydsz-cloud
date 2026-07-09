@@ -127,3 +127,24 @@
 // P2-7: rem 自适应工具（rem() 函数 + 大屏断点 mixin），与 useResponsive.ts 的 initResponsive() 协同
 // 文件名使用 _responsive-rem.scss 以避免与 responsive.scss 产生 Sass partial 同名歧义
 @import './_responsive-rem.scss';
+
+// ===== NProgress 顶部进度条样式覆盖 =====
+// 使用品牌主色，高度 3px，圆角，支持暗黑模式
+#nprogress .bar {
+  background: $primary-color;
+  height: 3px;
+  border-radius: 0 2px 2px 0;
+  z-index: 9999;
+  box-shadow: 0 0 8px rgba(22, 119, 255, 0.5);
+}
+
+// 暗黑模式下进度条提亮
+.dark #nprogress .bar {
+  background: #4096ff;
+  box-shadow: 0 0 8px rgba(64, 150, 255, 0.6);
+}
+
+// 去掉默认的右上角旋转图标（已在 JS 中关闭，此处兜底）
+#nprogress .spinner {
+  display: none !important;
+}

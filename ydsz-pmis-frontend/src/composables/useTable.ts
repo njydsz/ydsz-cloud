@@ -178,6 +178,123 @@ export function useTable<Q extends UseTableQuery>(
     return fetchData()
   }
 
+  // ==================== 乐观更新（Optimistic UI） ====================
+  // 先更新本地列表，再发请求；失败时回滚，让用户感知"即时响应"
+  // 适用于删除、状态变更等高频操作，大幅减少等待感
+
+  /** 乐观更新前的快照（用于回滚） */
+  let snapshot: unknown[] = []
+
+  /** 保存当前列表快照（乐观操作前调用） */
+  function saveSnapshot(): void {
+    snapshot = [...list.value]
+  }
+
+  /** 回滚到快照 */
+  function rollback(): void {
+    list.value = snapshot
+  }
+
+  /**
+   * 乐观删除：先从列表移除，再调 API；失败时回滚
+   *
+   * @param ids 要删除的记录 ID 数组
+   * @param apiCall 删除 API 调用函数
+   * @param idField ID 字段名，默认 'id'
+   * @returns API 是否成功
+   */
+  async function optimisticDelete(
+    ids: (string | number)[],
+    apiCall: () => Promise<unknown>,
+    idField = 'id',
+  ): Promise<boolean> {
+    saveSnapshot()
+    // 立即从列表中移除
+    list.value = list.value.filter(
+      (item) => !ids.includes((item as Record<string, unknown>)[idField] as string | number),
+    )
+    // 同步减少 total（失败时回滚会恢复）
+    total.value = Math.max(0, total.value - ids.length)
+
+    try {
+      await apiCall()
+      return true
+    } catch (e) {
+      // 回滚列表和 total
+      rollback()
+      total.value = total.value + ids.length
+      throw e
+    }
+  }
+
+  /**
+   * 乐观更新：先更新列表中的记录，再调 API；失败时回滚
+   *
+   * @param id 要更新的记录 ID
+   * @param changes 要更新的字段
+   * @param apiCall 更新 API 调用函数
+   * @param idField ID 字段名，默认 'id'
+   * @returns API 是否成功
+   */
+  async function optimisticUpdate(
+    id: string | number,
+    changes: Record<string, unknown>,
+    apiCall: () => Promise<unknown>,
+    idField = 'id',
+  ): Promise<boolean> {
+    saveSnapshot()
+    // 立即更新列表中的记录
+    list.value = list.value.map((item) => {
+      const record = item as Record<string, unknown>
+      if (record[idField] === id) {
+        return { ...record, ...changes }
+      }
+      return item
+    })
+
+    try {
+      await apiCall()
+      return true
+    } catch (e) {
+      rollback()
+      throw e
+    }
+  }
+
+  /**
+   * 乐观批量更新状态：先更新列表中匹配记录的状态，再调 API；失败时回滚
+   *
+   * @param ids 要更新的记录 ID 数组
+   * @param changes 要更新的字段
+   * @param apiCall 批量更新 API 调用函数
+   * @param idField ID 字段名，默认 'id'
+   * @returns API 是否成功
+   */
+  async function optimisticBatchUpdate(
+    ids: (string | number)[],
+    changes: Record<string, unknown>,
+    apiCall: () => Promise<unknown>,
+    idField = 'id',
+  ): Promise<boolean> {
+    saveSnapshot()
+    const idSet = new Set(ids)
+    list.value = list.value.map((item) => {
+      const record = item as Record<string, unknown>
+      if (idSet.has(record[idField] as string | number)) {
+        return { ...record, ...changes }
+      }
+      return item
+    })
+
+    try {
+      await apiCall()
+      return true
+    } catch (e) {
+      rollback()
+      throw e
+    }
+  }
+
   return {
     loading,
     list,
@@ -188,5 +305,9 @@ export function useTable<Q extends UseTableQuery>(
     handleQuery,
     resetQuery,
     handlePageChange,
+    // 乐观更新方法
+    optimisticDelete,
+    optimisticUpdate,
+    optimisticBatchUpdate,
   }
 }

@@ -268,6 +268,34 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       exclude: ['node_modules', 'dist', 'e2e'],
+      // 覆盖率配置（CI 门禁: lines ≥ 40%, functions ≥ 30%, branches ≥ 30%）
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'text-summary', 'lcov', 'html'],
+        reportsDirectory: './coverage',
+        // 排除非业务逻辑文件
+        exclude: [
+          'node_modules/**',
+          'dist/**',
+          'e2e/**',
+          'src/**/*.d.ts',
+          'src/types/**',
+          'src/mock/**',
+          'src/config/**',
+          'src/plugins/**',
+          'src/main.ts',
+          'src/App.vue',
+          'src/vite-env.d.ts',
+          'auto-imports.d.ts',
+          'components.d.ts',
+        ],
+        // 覆盖率门禁阈值（分阶段提升）
+        thresholds: {
+          lines: 40,
+          functions: 30,
+          branches: 30,
+        },
+      },
     },
   }
 })

@@ -132,6 +132,46 @@ public class CronjobProperties {
 
         /** 续期间隔（秒，默认 10s 续期一次） */
         private long renewIntervalSeconds = 10;
+
+        /**
+         * P2-9: 多 Active Leader 分区调度配置。
+         *
+         * <p>启用后，将调度集群分为 N 个分区，每个分区有一个独立的 Leader，
+         * 各 Leader 负责扫描和派发属于自己分区的任务。
+         * 单节点可以同时持有多个分区的 Leader 角色。
+         *
+         * <p>对标 PowerJob 的多分区调度能力和 XXL-Job 的分片广播。
+         */
+        private Partition partition = new Partition();
+    }
+
+    /**
+     * P2-9: 多 Active Leader 分区调度配置。
+     */
+    @Data
+    public static class Partition {
+        /**
+         * 是否启用分区调度（默认 false）。
+         *
+         * <p>启用后，JobScanner 仅扫描属于当前节点 Leader 分区的任务，
+         * 多个节点可同时作为不同分区的 Leader，提升调度吞吐量。
+         */
+        private boolean enabled = false;
+
+        /**
+         * 分区总数（默认 4）。
+         *
+         * <p>建议设置为节点数的 2-4 倍，确保节点扩缩容时分区可均匀再分配。
+         */
+        private int totalPartitions = 4;
+
+        /**
+         * 分片分配策略: job_key（默认）/ job_group。
+         *
+         * <p>{@code job_key}: 按 jobKey 哈希取模分配分区（细粒度）
+         * {@code job_group}: 按 jobGroup 哈希取模分配分区（粗粒度，同组任务在同一分区）
+         */
+        private String hashStrategy = "job_key";
     }
 
     /**
@@ -142,11 +182,33 @@ public class CronjobProperties {
         /** 扫描间隔（毫秒，默认 5s） */
         private long intervalMs = 5000;
 
-        /** 单批最多触发任务数 */
-        private int batchSize = 100;
+        /**
+         * 单批最多触发任务数（P0-2 吞吐提升：默认从 100 提升至 500）。
+         *
+         * <p>5s 扫描间隔 × 500 batch = 100 tasks/s 基线吞吐量。
+         * 万级任务场景可通过增大此值或缩短扫描间隔进一步提升。
+         */
+        private int batchSize = 500;
 
         /** Misfire 宽容窗口（分钟，超过此窗口的任务按 misfire_policy 处理） */
         private int misfireGraceMinutes = 30;
+
+        /**
+         * P0-2: 是否启用并行派发（默认 true）。
+         *
+         * <p>启用后，JobScanner 扫描到待触发任务后，使用独立线程池并行执行
+         * CAS 推进 + dispatch，避免大批量任务时单线程串行派发延迟。
+         * CAS 推进本身是幂等的（WHERE next_fire_time = old），并行不会导致重复派发。
+         */
+        private boolean parallelDispatchEnabled = true;
+
+        /**
+         * P0-2: 并行派发线程池大小（默认 8）。
+         *
+         * <p>控制单次扫描中并行派发的并发度。过大可能压垮 DB 连接池（CAS 操作），
+         * 过小则并行效果不明显。
+         */
+        private int parallelDispatchPoolSize = 8;
     }
 
     /**
@@ -278,6 +340,22 @@ public class CronjobProperties {
 
         /** 远程派发失败时是否降级到 Leader 本地执行（true=保证分片不丢失） */
         private boolean fallbackToLocal = true;
+
+        /**
+         * P1-6: 传输协议类型（http / grpc）。
+         *
+         * <p>{@code http}（默认）：使用 HTTP + JSON 远程派发。
+         * {@code grpc}：使用 gRPC + Protobuf 远程派发（高性能，需 gRPC 依赖）。
+         */
+        private String transport = "http";
+
+        /**
+         * P1-6: gRPC 服务端端口（Worker 节点监听端口）。
+         *
+         * <p>仅当 {@code transport=grpc} 时生效。
+         * Leader 节点通过此端口连接 Worker 节点的 gRPC 服务。
+         */
+        private int grpcPort = 9090;
     }
 
     /**
@@ -462,6 +540,47 @@ public class CronjobProperties {
 
         /** 沙箱工作目录 */
         private String workDir = "./data/sandbox";
+
+        // ==================== P2-11: Docker 沙箱增强 ====================
+
+        /**
+         * P2-11: 是否启用 Docker 容器沙箱（比进程沙箱更强的隔离）。
+         *
+         * <p>启用后，SHELL/Python 脚本在 Docker 容器中执行，提供文件系统隔离、
+         * 网络隔离、资源限制和权限降级。
+         * 需要宿主机安装 Docker 且应用有 docker 命令执行权限。
+         */
+        private boolean dockerEnabled = false;
+
+        /** P2-11: 默认 Docker 镜像（Python 脚本） */
+        private String dockerImage = "python:3.11-slim";
+
+        /** P2-11: Shell 脚本 Docker 镜像 */
+        private String dockerShellImage = "bash:5.2";
+
+        /** P2-11: 容器内存限制（如 256m / 512m / 1g） */
+        private String dockerMemory = "256m";
+
+        /** P2-11: 容器 CPU 限制（核数，如 0.5 / 1 / 2） */
+        private String dockerCpus = "1";
+
+        /** P2-11: 容器最大进程数限制（防止 fork 炸弹） */
+        private int dockerPidsLimit = 100;
+
+        /** P2-11: 网络模式: none（禁网）/ bridge（默认桥接）/ host */
+        private String dockerNetwork = "none";
+
+        /** P2-11: 容器内运行用户（如 nobody / 1000:1000），空则使用镜像默认用户 */
+        private String dockerUser = "nobody";
+
+        /** P2-11: 容器内工作目录 */
+        private String dockerWorkDir = "/tmp/sandbox";
+
+        /** P2-11: tmpfs 挂载大小（如 10m / 50m），空则不挂载 tmpfs */
+        private String dockerTmpfsSize = "10m";
+
+        /** P2-11: 是否只读文件系统（--read-only） */
+        private boolean dockerReadOnly = true;
     }
 
     /**
@@ -484,8 +603,14 @@ public class CronjobProperties {
      */
     @Data
     public static class SchedulerExecutorSeparation {
-        /** 是否启用调度器-执行器分离（false=Leader 本地执行，向后兼容） */
-        private boolean enabled = false;
+        /**
+         * 是否启用调度器-执行器分离（P1-5: 默认 true，对标 XXL-Job/PowerJob 的调度器-执行器分离架构）。
+         *
+         * <p>启用后，Leader 节点通过 WorkerNodeSelector 选定 Worker 节点远程派发任务，
+         * 无可用 Worker 时自动降级为 Leader 本地执行（保证向后兼容）。
+         * 运行条件：remote.enabled=true 且 WorkerNodeSelector Bean 已注册。
+         */
+        private boolean enabled = true;
 
         /** Worker 节点选择策略: round_robin(轮询) / least_load(最小负载) */
         private String workerSelectionStrategy = "round_robin";

@@ -885,9 +885,33 @@ public class FlowTaskCreateService {
 
     /**
      * 展开办理人为用户列表
+     *
+     * <p>P0-2 增强：当节点 ext 配置 {@code selfSelect: true} 时，优先从流程变量中
+     * 读取发起人自选审批人（{@code _selfSelect_<nodeCode>}），无需在 permissionFlag
+     * 中显式配置 {@code self_select:} 前缀。自选变量为空时回退到 permissionFlag 解析。
      */
     private List<String> expandAssignees(FlowNodeDO node, Map<String, Object> variables) {
         Map<String, Object> nodeExt = parseExtConfig(node.getExt());
+
+        // P0-2: 节点 ext 配置 selfSelect=true 时，优先读取自选审批人
+        Object selfSelectFlag = nodeExt.get("selfSelect");
+        if (selfSelectFlag != null && isBooleanTrue(selfSelectFlag) && variables != null) {
+            Object selfSelectVal = variables.get("_selfSelect_" + node.getNodeCode());
+            List<String> selfSelectExpanded = expandCollectionValue(selfSelectVal);
+            if (!selfSelectExpanded.isEmpty()) {
+                log.info("[Flow] P0-2 自选审批人展开: nodeCode={} count={}",
+                        node.getNodeCode(), selfSelectExpanded.size());
+                return selfSelectExpanded;
+            }
+            // 自选变量为空 → 检查是否允许回退到 permissionFlag
+            Object allowFallback = nodeExt.get("selfSelectAllowFallback");
+            if (!isBooleanTrue(allowFallback)) {
+                log.warn("[Flow] P0-2 自选审批人为空且未配置 fallback: nodeCode={}", node.getNodeCode());
+                return Collections.emptyList();
+            }
+            log.info("[Flow] P0-2 自选审批人为空，回退到 permissionFlag: nodeCode={}", node.getNodeCode());
+        }
+
         Object collectionVar = nodeExt.get("collection");
         if (collectionVar != null && variables != null && !variables.isEmpty()) {
             String varName = String.valueOf(collectionVar).trim();
@@ -1220,6 +1244,25 @@ public class FlowTaskCreateService {
             log.warn("[Flow] 解析 node.ext JSON 失败: err={}", e.getMessage());
             return Collections.emptyMap();
         }
+    }
+
+    /**
+     * P0-2: 判断 ext 配置中的布尔值是否为 true。
+     *
+     * @param val 配置值（Boolean / String / Number）
+     * @return true 当值为 true / "true" / 1
+     */
+    private boolean isBooleanTrue(Object val) {
+        if (val == null) {
+            return false;
+        }
+        if (val instanceof Boolean b) {
+            return b;
+        }
+        if (val instanceof Number n) {
+            return n.intValue() != 0;
+        }
+        return "true".equalsIgnoreCase(String.valueOf(val).trim());
     }
 
     /**

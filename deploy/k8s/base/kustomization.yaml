@@ -11,6 +11,8 @@ resources:
   - configmap-common.yaml
   - secret-db.yaml
   - secret-jasypt.yaml
+  # SkyWalking Java Agent 配置 (链路追踪)
+  - skywalking-agent.yaml
   - gateway.yaml
   - userinfo.yaml
   - system.yaml

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.core.scheduler;
 
+import com.njydsz.pmis.cronjob.core.dispatch.DefaultTaskDispatcher;
+import com.njydsz.pmis.cronjob.core.dispatch.TaskDispatcher;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +48,7 @@ import org.springframework.stereotype.Component;
 public class EventDrivenScheduler {
 
     private final JobMapper jobMapper;
+    private final TaskDispatcher taskDispatcher;
     private final StringRedisTemplate redisTemplate;
 
     /** 事件去重 key 前缀 */
@@ -99,7 +102,14 @@ public class EventDrivenScheduler {
         }
 
         log.info("[EventScheduler] 事件触发任务: jobKey={} msgId={}", jobKey, msgId);
-        // 实际派发由调用方（MQ Consumer）通过 TaskDispatcher.dispatch 完成
+        // P0-4 修复：补全派发闭环，直接调用 TaskDispatcher.dispatch
+        // EVENT 触发走异步派发路径（非 MANUAL），dispatch 返回 null 表示异步执行中
+        String logId = taskDispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_EVENT);
+        if (logId != null) {
+            log.info("[EventScheduler] 事件任务同步派发完成: jobKey={} logId={}", jobKey, logId);
+        } else {
+            log.debug("[EventScheduler] 事件任务异步派发中: jobKey={}", jobKey);
+        }
         return true;
     }
 

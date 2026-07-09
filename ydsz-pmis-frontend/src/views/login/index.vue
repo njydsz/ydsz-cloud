@@ -187,6 +187,14 @@ function switchMfaMode(mode: string | number) {
   }
 }
 
+/** 功能特性列表（配合 i18n） */
+const features = computed(() => [
+  { icon: 'Connection', text: t('login.features.integration') },
+  { icon: 'TrendCharts', text: t('login.features.rate') },
+  { icon: 'Aim', text: t('login.features.wbs') },
+  { icon: 'Lock', text: t('login.features.security') },
+])
+
 onMounted(() => {
   refreshCaptcha()
 })
@@ -194,49 +202,79 @@ onMounted(() => {
 
 <template>
   <div class="login-wrap">
+    <!-- 动态背景装饰 -->
+    <div class="login-bg-decor">
+      <span class="orb orb-1" />
+      <span class="orb orb-2" />
+      <span class="orb orb-3" />
+    </div>
+
     <div class="login-container">
+      <!-- 左侧品牌展示区 -->
       <div class="login-left">
-        <h1 class="login-brand">PMIS</h1>
-        <p class="login-slogan">{{ t('login.slogan') }}</p>
-        <ul class="login-features">
-          <li>{{ t('login.features.integration') }}</li>
-          <li>{{ t('login.features.rate') }}</li>
-          <li>{{ t('login.features.wbs') }}</li>
-          <li>{{ t('login.features.security') }}</li>
-        </ul>
+        <div class="login-left-content">
+          <!-- 品牌 Logo -->
+          <div class="brand-logo">
+            <svg viewBox="0 0 48 48" fill="none" class="brand-logo-icon" aria-hidden="true">
+              <rect x="4" y="4" width="40" height="40" rx="10" fill="rgba(255,255,255,0.15)" />
+              <path d="M14 16h20M14 24h14M14 32h8" stroke="white" stroke-width="3" stroke-linecap="round" />
+              <circle cx="36" cy="32" r="5" fill="white" opacity="0.9" />
+            </svg>
+            <span class="brand-name">PMIS</span>
+          </div>
+
+          <h1 class="login-slogan">{{ t('login.slogan') }}</h1>
+
+          <ul class="login-features">
+            <li v-for="feat in features" :key="feat.icon">
+              <el-icon class="feature-icon"><component :is="feat.icon" /></el-icon>
+              <span>{{ feat.text }}</span>
+            </li>
+          </ul>
+
+          <div class="login-footer-brand">
+            <span>{{ t('login.copyright') }}</span>
+          </div>
+        </div>
       </div>
+
+      <!-- 右侧表单区 -->
       <div class="login-right">
-        <h2 class="login-title">{{ t('login.title') }}</h2>
-        <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="handleLogin">
-          <el-form-item prop="username">
-            <el-input v-model="form.username" :placeholder="t('login.usernamePlaceholder')" :prefix-icon="'User'" clearable />
-          </el-form-item>
-          <el-form-item prop="password">
-            <el-input
-              v-model="form.password"
-              type="password"
-              :placeholder="t('login.passwordPlaceholder')"
-              :prefix-icon="'Lock'"
-              show-password
-            />
-          </el-form-item>
-          <el-form-item prop="captchaCode">
-            <div class="captcha-row">
-              <el-input v-model="form.captchaCode" :placeholder="t('login.captchaPlaceholder')" :prefix-icon="'Picture'" />
-              <div class="captcha-img" :class="{ loading: captchaLoading }" @click="refreshCaptcha">
-                <img v-if="captchaImage" :src="captchaImage" alt="captcha" loading="lazy" />
-                <span v-else class="captcha-placeholder">{{ captchaLoading ? t('login.captchaLoading') : t('login.captchaClickToLoad') }}</span>
+        <div class="login-form-inner">
+          <h2 class="login-title">{{ t('login.title') }}</h2>
+          <p class="login-subtitle">{{ t('login.subtitle') }}</p>
+
+          <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="handleLogin">
+            <el-form-item prop="username">
+              <el-input v-model="form.username" :placeholder="t('login.usernamePlaceholder')" :prefix-icon="'User'" clearable />
+            </el-form-item>
+            <el-form-item prop="password">
+              <el-input
+                v-model="form.password"
+                type="password"
+                :placeholder="t('login.passwordPlaceholder')"
+                :prefix-icon="'Lock'"
+                show-password
+              />
+            </el-form-item>
+            <el-form-item prop="captchaCode">
+              <div class="captcha-row">
+                <el-input v-model="form.captchaCode" :placeholder="t('login.captchaPlaceholder')" :prefix-icon="'Picture'" />
+                <div class="captcha-img" :class="{ loading: captchaLoading }" @click="refreshCaptcha">
+                  <img v-if="captchaImage" :src="captchaImage" alt="captcha" loading="lazy" />
+                  <span v-else class="captcha-placeholder">{{ captchaLoading ? t('login.captchaLoading') : t('login.captchaClickToLoad') }}</span>
+                </div>
               </div>
-            </div>
-          </el-form-item>
-          <el-form-item>
-            <el-checkbox v-model="form.rememberMe">{{ t('login.rememberMe') }}</el-checkbox>
-          </el-form-item>
-          <el-button type="primary" :loading="loading" class="login-btn" @click="handleLogin">
-            {{ t('login.submit') }}
-          </el-button>
-        </el-form>
-        <p class="login-tip">{{ t('login.defaultAccountTip') }}</p>
+            </el-form-item>
+            <el-form-item>
+              <el-checkbox v-model="form.rememberMe">{{ t('login.rememberMe') }}</el-checkbox>
+            </el-form-item>
+            <el-button type="primary" :loading="loading" class="login-btn" @click="handleLogin">
+              {{ t('login.submit') }}
+            </el-button>
+          </el-form>
+          <p class="login-tip">{{ t('login.defaultAccountTip') }}</p>
+        </div>
       </div>
     </div>
 
@@ -289,117 +327,336 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .login-wrap {
+  position: relative;
   width: 100vw;
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: $gradient-login-bg;
-}
-
-.login-container {
-  display: flex;
-  width: 880px;
-  height: 600px;
-  background: $bg-white;
-  border-radius: $border-radius-lg;
-  box-shadow: $shadow-light;
   overflow: hidden;
 }
 
+// ===== 动态背景装饰 =====
+.login-bg-decor {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.4;
+    animation: orb-float 20s ease-in-out infinite;
+  }
+
+  .orb-1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(114, 46, 209, 0.3);
+    top: -100px;
+    left: -100px;
+    animation-delay: 0s;
+  }
+
+  .orb-2 {
+    width: 300px;
+    height: 300px;
+    background: rgba(22, 119, 255, 0.25);
+    bottom: -80px;
+    right: 10%;
+    animation-delay: -7s;
+  }
+
+  .orb-3 {
+    width: 250px;
+    height: 250px;
+    background: rgba(82, 196, 26, 0.15);
+    top: 40%;
+    right: -50px;
+    animation-delay: -14s;
+  }
+}
+
+@keyframes orb-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.05); }
+  66% { transform: translate(-20px, 30px) scale(0.95); }
+}
+
+// ===== 登录卡片 =====
+.login-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 900px;
+  max-height: 90vh;
+  min-height: 560px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: $border-radius-xl;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: card-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// ===== 左侧品牌区 =====
 .login-left {
   flex: 1;
-  padding: $spacing-xl $spacing-xl;
   background: $gradient-login-left;
   color: $bg-white;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
 
-  .login-brand {
-    font-size: 48px;
-    font-weight: 700;
-    margin-bottom: $spacing-sm;
+  // 左侧内层装饰光斑
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    pointer-events: none;
   }
 
-  .login-slogan {
-    font-size: $font-size-lg;
-    margin-bottom: $spacing-xl;
-    opacity: 0.95;
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: -20%;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+}
+
+.login-left-content {
+  position: relative;
+  z-index: 1;
+  padding: $spacing-xl $spacing-xl;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+
+  animation: content-slide-in 0.8s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes content-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+
+  .brand-logo-icon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
   }
 
-  .login-features {
-    list-style: none;
+  .brand-name {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
 
-    li {
-      padding: $spacing-sm 0;
-      font-size: $font-size-base;
+.login-slogan {
+  font-size: $font-size-xl;
+  font-weight: 500;
+  margin-bottom: $spacing-xl;
+  opacity: 0.95;
+  line-height: 1.5;
+}
+
+.login-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-sm 0;
+    font-size: $font-size-base;
+    opacity: 0;
+    animation: feature-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+    &:nth-child(1) { animation-delay: 0.4s; }
+    &:nth-child(2) { animation-delay: 0.5s; }
+    &:nth-child(3) { animation-delay: 0.6s; }
+    &:nth-child(4) { animation-delay: 0.7s; }
+
+    .feature-icon {
+      font-size: 18px;
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+
+    span {
       opacity: 0.9;
     }
   }
 }
 
-.login-right {
-  flex: 1;
-  padding: $spacing-xl;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  .login-title {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: $spacing-xl;
-    color: $text-primary;
+@keyframes feature-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
   }
-
-  .captcha-row {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 12px;
-  }
-
-  .captcha-img {
-    width: 130px;
-    height: 40px;
-    border: 1px solid $border-base;
-    border-radius: 4px;
-    overflow: hidden;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    background: $bg-base;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .captcha-placeholder {
-      font-size: 12px;
-      color: $text-secondary;
-    }
-  }
-
-  .login-btn {
-    width: 100%;
-    height: 44px;
-    font-size: $font-size-md;
-  }
-
-  .login-tip {
-    margin-top: $spacing-md;
-    font-size: $font-size-sm;
-    color: $text-placeholder;
-    text-align: center;
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
-// 移动端适配
+.login-footer-brand {
+  margin-top: auto;
+  padding-top: $spacing-lg;
+  font-size: $font-size-xs;
+  opacity: 0.6;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+// ===== 右侧表单区 =====
+.login-right {
+  flex: 1;
+  padding: $spacing-xl $spacing-xl;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto;
+
+  .login-form-inner {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+    animation: form-slide-in 0.8s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes form-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.login-title {
+  font-size: $font-size-2xl;
+  font-weight: 700;
+  margin-bottom: $spacing-xs;
+  color: $text-primary;
+}
+
+.login-subtitle {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  margin-bottom: $spacing-xl;
+}
+
+.captcha-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.captcha-img {
+  width: 130px;
+  height: 40px;
+  border: 1px solid $border-base;
+  border-radius: $border-radius-sm;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: $bg-base;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: $primary-color;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .captcha-placeholder {
+    font-size: 12px;
+    color: $text-secondary;
+  }
+}
+
+.login-btn {
+  width: 100%;
+  height: 46px;
+  font-size: $font-size-md;
+  font-weight: 600;
+  border-radius: $border-radius-base;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(22, 119, 255, 0.35);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.login-tip {
+  margin-top: $spacing-md;
+  font-size: $font-size-sm;
+  color: $text-placeholder;
+  text-align: center;
+}
+
+// ===== 移动端适配 =====
 @media (max-width: $breakpoint-sm) {
   .login-container {
     width: 90%;
@@ -416,8 +673,17 @@ onMounted(() => {
   .login-right {
     padding: $spacing-lg $spacing-md;
 
+    .login-form-inner {
+      max-width: 100%;
+    }
+
     .login-title {
-      font-size: 20px;
+      font-size: $font-size-xl;
+      text-align: center;
+      margin-bottom: $spacing-xs;
+    }
+
+    .login-subtitle {
       text-align: center;
       margin-bottom: $spacing-lg;
     }
@@ -432,6 +698,27 @@ onMounted(() => {
         height: 50px;
       }
     }
+  }
+}
+
+// ===== 平板适配 =====
+@media (min-width: $breakpoint-sm) and (max-width: $breakpoint-md) {
+  .login-container {
+    width: 95%;
+    max-width: 720px;
+    min-height: 480px;
+  }
+
+  .login-left-content {
+    padding: $spacing-lg;
+  }
+
+  .brand-logo .brand-name {
+    font-size: 28px;
+  }
+
+  .login-slogan {
+    font-size: $font-size-md;
   }
 }
 </style>

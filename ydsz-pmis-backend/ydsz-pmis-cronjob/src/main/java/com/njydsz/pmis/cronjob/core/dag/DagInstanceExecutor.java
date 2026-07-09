@@ -899,13 +899,13 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     /**
      * 将节点执行结果合并到 DAG 实例级上下文（contextJson）。
      *
-     * <p>合并策略：以 jobKey 为 key，节点结果为 value，写入 contextJson 对象。
-     * 同一 jobKey 的多次执行（重试）会覆盖旧值。
+     * <p>P0-1 并发安全修复：使用 PostgreSQL {@code jsonb ||} 操作符在 DB 层面原子合并，
+     * 消除 read-modify-write 竞态。并行网关（PARALLEL_GATEWAY）多分支同时写 contextJson
+     * 时不再丢失数据。
      *
-     * <p>线程安全：DAG 实例级 contextJson 更新采用 read-modify-write，
-     * 由于 DAG 节点完成事件是异步串行处理的（@Async 单线程默认），
-     * 且同一 DAG 实例的节点不会并行完成（拓扑顺序），冲突概率低。
-     * 如需强一致，可后续改为 PostgreSQL jsonb 合并或 Redis HSET。
+     * <p>合并策略：构造 {@code {"jobKey": nodeResult}} 片段，通过
+     * {@link JobDagInstanceMapper#mergeContextAtomic} 原子写入。
+     * 相同 jobKey 的后写覆盖先写（重试场景），不同 jobKey 各自保留。
      *
      * @param dagInstanceId DAG 实例 ID
      * @param jobKey        节点 jobKey（作为 contextJson 的 key）
@@ -913,22 +913,21 @@ private final SpELConditionEvaluator spELConditionEvaluator;
      */
     private void mergeNodeResultToContext(String dagInstanceId, String jobKey, String nodeResultJson) {
         try {
-            JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
-            if (instance == null) {
-                return;
-            }
-            JSONObject context = parseContextJson(instance.getContextJson());
-            // 尝试将 nodeResultJson 解析为对象/数组，保留原始类型；解析失败则作为字符串存储
+            // 构造待合并的 JSON 片段: {"jobKey": <nodeResult>}
             Object parsed;
             try {
                 parsed = JSON.parse(nodeResultJson);
             } catch (Exception parseEx) {
                 parsed = nodeResultJson;
             }
-            context.put(jobKey, parsed);
-            dagInstanceMapper.updateContext(dagInstanceId, JSON.toJSONString(context));
-            log.debug("[DagInstance] 上下文合并: instanceId={} jobKey={} keys={}",
-                    dagInstanceId, jobKey, context.size());
+            JSONObject mergeFragment = new JSONObject();
+            mergeFragment.put(jobKey, parsed);
+            String mergeJson = JSON.toJSONString(mergeFragment);
+
+            // 使用 PostgreSQL jsonb || 原子合并，消除 read-modify-write 竞态
+            dagInstanceMapper.mergeContextAtomic(dagInstanceId, mergeJson);
+            log.debug("[DagInstance] 上下文原子合并: instanceId={} jobKey={}",
+                    dagInstanceId, jobKey);
         } catch (Exception e) {
             log.warn("[DagInstance] 上下文合并异常, 不影响主流程: instanceId={} jobKey={} reason={}",
                     dagInstanceId, jobKey, e.getMessage());

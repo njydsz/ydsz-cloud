@@ -32,6 +32,8 @@ patches:
   - path: patch-resources.yaml
   - path: patch-hpa.yaml
   - path: patch-pdb.yaml
+  # SkyWalking Java Agent 注入 (链路追踪)
+  - path: patch-skywalking.yaml
 
 # P1-3: 生产环境 Sentry 错误监控配置
 resources:

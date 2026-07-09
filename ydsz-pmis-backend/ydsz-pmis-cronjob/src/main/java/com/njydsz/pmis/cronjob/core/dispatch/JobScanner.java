@@ -3,6 +3,7 @@ package com.njydsz.pmis.cronjob.core.dispatch;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
+import com.njydsz.pmis.cronjob.core.leader.PartitionLeaderManager;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
@@ -20,8 +21,13 @@ import org.springframework.util.Assert;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 任务扫描器（P1-7 Leader 模式专用）。
@@ -65,6 +71,8 @@ public class JobScanner {
     private final CronjobProperties cronjobProperties;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
+    /** P2-9: 分区 Leader 管理器（可选注入，仅分区调度启用时存在） */
+    private final ObjectProvider<PartitionLeaderManager> partitionLeaderManagerProvider;
 
     /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
     private final AtomicBoolean scanning = new AtomicBoolean(false);
@@ -72,13 +80,29 @@ public class JobScanner {
     /** Leader 角色（从配置读取，便于多套调度集群隔离） */
     private String leaderRole;
 
+    /** P0-2: 并行派发线程池 */
+    private ExecutorService dispatchPool;
+
     @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();
         if (cronjobProperties.getLeader().isEnabled()) {
-            log.info("[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={}",
-                    leaderRole, cronjobProperties.getScanner().getIntervalMs(),
-                    cronjobProperties.getScanner().getBatchSize());
+            // P0-2: 初始化并行派发线程池
+            if (cronjobProperties.getScanner().isParallelDispatchEnabled()) {
+                int poolSize = cronjobProperties.getScanner().getParallelDispatchPoolSize();
+                this.dispatchPool = Executors.newFixedThreadPool(poolSize, r -> {
+                    Thread t = new Thread(r, "job-scanner-dispatch");
+                    t.setDaemon(true);
+                    return t;
+                });
+                log.info("[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true poolSize={}",
+                        leaderRole, cronjobProperties.getScanner().getIntervalMs(),
+                        cronjobProperties.getScanner().getBatchSize(), poolSize);
+            } else {
+                log.info("[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=false",
+                        leaderRole, cronjobProperties.getScanner().getIntervalMs(),
+                        cronjobProperties.getScanner().getBatchSize());
+            }
         } else {
             log.info("[JobScanner] leader.enabled=false, 扫描器不启用（Leaderless 模式）");
         }
@@ -148,70 +172,129 @@ public class JobScanner {
             return;
         }
         log.info("[JobScanner] 扫描到 {} 个待触发任务: role={}", dueJobs.size(), leaderRole);
+
+        // P0-2: 并行派发模式
+        if (cronjobProperties.getScanner().isParallelDispatchEnabled() && dispatchPool != null) {
+            doParallelDispatch(dueJobs, now, metrics);
+        } else {
+            doSequentialDispatch(dueJobs, now, metrics);
+        }
+    }
+
+    /**
+     * P0-2: 并行派发待触发任务。
+     *
+     * <p>每个任务的 Misfire 判定 + CAS 推进 + dispatch 在独立线程中执行，
+     * CAS 操作（WHERE next_fire_time = old）保证幂等，并行不会导致重复派发。
+     * 使用 CountDownLatch 等待全部完成后返回，确保单次扫描内不遗漏。
+     *
+     * @param dueJobs 待触发任务列表
+     * @param now     扫描时间
+     * @param metrics 指标收集器（可空）
+     */
+    private void doParallelDispatch(List<JobDO> dueJobs, LocalDateTime now, CronjobMetrics metrics) {
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger skipCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+        List<CompletableFuture<Void>> futures = new ArrayList<>(dueJobs.size());
         for (JobDO job : dueJobs) {
-            // P6-1: 为每个任务派发生成独立 traceId，保证任务间链路隔离
-            TraceIdUtil.getOrCreate();
-            try {
-                // P2-2: Misfire 判定
-                MisfirePolicy policy = MisfirePolicy.parse(job.getMisfirePolicy());
-                boolean misfired = isMisfired(job, now);
-                if (misfired && policy == MisfirePolicy.SKIP) {
-                    // 仅推进 next_fire_time，不派发
-                    LocalDateTime newNext = nextFireTime(job.getCronExpression());
-                    boolean advanced = advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
-                    // P6-2: Misfire SKIP 计数
-                    if (metrics != null) {
-                        metrics.incMisfire("SKIP");
-                    }
-                    log.info("[JobScanner] Misfire SKIP 跳过派发: key={} advanced={}",
-                            job.getJobKey(), advanced);
-                    continue;
-                }
-                // 计算新的 next_fire_time 并 CAS 推进
-                LocalDateTime oldNext = job.getNextFireTime();
+            CompletableFuture<Void> f = CompletableFuture.runAsync(
+                    () -> dispatchSingleJob(job, now, metrics, successCount, skipCount, failCount),
+                    dispatchPool);
+            futures.add(f);
+        }
+        // 等待全部完成，任一异常不影响其他任务
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        log.info("[JobScanner] 并行派发完成: total={} success={} skip={} fail={}",
+                dueJobs.size(), successCount.get(), skipCount.get(), failCount.get());
+    }
+
+    /**
+     * P0-2: 串行派发（兼容模式，parallelDispatchEnabled=false 时使用）。
+     */
+    private void doSequentialDispatch(List<JobDO> dueJobs, LocalDateTime now, CronjobMetrics metrics) {
+        for (JobDO job : dueJobs) {
+            dispatchSingleJob(job, now, metrics, null, null, null);
+        }
+    }
+
+    /**
+     * P0-2: 派发单个任务（Misfire 判定 + CAS 推进 + dispatch）。
+     *
+     * <p>提取公共逻辑，串行/并行模式共用。每个任务独立生成 traceId，
+     * 异常不传播到外层，仅记录日志并递增计数器。
+     */
+    private void dispatchSingleJob(JobDO job, LocalDateTime now, CronjobMetrics metrics,
+                                    AtomicInteger successCount, AtomicInteger skipCount,
+                                    AtomicInteger failCount) {
+        // P2-9: 分区调度过滤 — 非本节点分区的任务跳过
+        PartitionLeaderManager partitionManager = partitionLeaderManagerProvider.getIfAvailable();
+        if (partitionManager != null && !partitionManager.isMyPartition(job)) {
+            log.debug("[JobScanner] 任务不属于本节点分区, 跳过: key={} partition={}",
+                    job.getJobKey(), partitionManager.computePartition(job));
+            if (skipCount != null) skipCount.incrementAndGet();
+            return;
+        }
+        // P6-1: 为每个任务派发生成独立 traceId，保证任务间链路隔离
+        TraceIdUtil.getOrCreate();
+        try {
+            // P2-2: Misfire 判定
+            MisfirePolicy policy = MisfirePolicy.parse(job.getMisfirePolicy());
+            boolean misfired = isMisfired(job, now);
+            if (misfired && policy == MisfirePolicy.SKIP) {
+                // 仅推进 next_fire_time，不派发
                 LocalDateTime newNext = nextFireTime(job.getCronExpression());
-                boolean advanced = advanceNextFireTime(job, oldNext, newNext, now);
-                if (!advanced) {
-                    log.debug("[JobScanner] 任务 next_fire_time 已被其他节点推进, 跳过: key={}",
-                            job.getJobKey());
-                    continue;
+                boolean advanced = advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
+                // P6-2: Misfire SKIP 计数
+                if (metrics != null) {
+                    metrics.incMisfire("SKIP");
                 }
-                // P2-2: 选择 triggerType
-                //  - 非 Misfire: TRIGGER_CRON
-                //  - Misfire + FIRE_NOW: TRIGGER_CRON（保持默认行为）
-                //  - Misfire + COALESCE: TRIGGER_MISFIRED（日志可识别）
-                String triggerType = DefaultTaskDispatcher.TRIGGER_CRON;
-                if (misfired && policy == MisfirePolicy.COALESCE) {
-                    triggerType = DefaultTaskDispatcher.TRIGGER_MISFIRED;
-                    // P6-2: Misfire COALESCE 计数
-                    if (metrics != null) {
-                        metrics.incMisfire("COALESCE");
-                    }
-                    log.info("[JobScanner] Misfire COALESCE 派发（日志标记 MISFIRED）: key={}",
-                            job.getJobKey());
-                } else if (misfired) {
-                    // P6-2: Misfire FIRE_NOW 计数
-                    if (metrics != null) {
-                        metrics.incMisfire("FIRE_NOW");
-                    }
-                    log.info("[JobScanner] Misfire FIRE_NOW 立即派发: key={}", job.getJobKey());
-                }
-                String logId = taskDispatcher.dispatch(job, null, triggerType);
-                if (logId == null) {
-                    // P1-7: null 可能是异步派发（CRON/RETRY/DEPENDENT/MISFIRED）或锁被持有
-                    log.debug("[JobScanner] 任务异步派发或被跳过: key={} triggerType={}",
-                            job.getJobKey(), triggerType);
-                } else {
-                    log.info("[JobScanner] 任务派发成功: key={} logId={} triggerType={} traceId={}",
-                            job.getJobKey(), logId, triggerType, TraceIdUtil.get());
-                }
-            } catch (Exception e) {
-                log.error("[JobScanner] 任务派发失败: key={} reason={}",
-                        job.getJobKey(), e.getMessage(), e);
-            } finally {
-                // P6-1: 清理 MDC，避免 traceId 串到下一个任务
-                TraceIdUtil.clear();
+                log.info("[JobScanner] Misfire SKIP 跳过派发: key={} advanced={}",
+                        job.getJobKey(), advanced);
+                if (skipCount != null) skipCount.incrementAndGet();
+                return;
             }
+            // 计算新的 next_fire_time 并 CAS 推进
+            LocalDateTime oldNext = job.getNextFireTime();
+            LocalDateTime newNext = nextFireTime(job.getCronExpression());
+            boolean advanced = advanceNextFireTime(job, oldNext, newNext, now);
+            if (!advanced) {
+                log.debug("[JobScanner] 任务 next_fire_time 已被其他节点推进, 跳过: key={}",
+                        job.getJobKey());
+                if (skipCount != null) skipCount.incrementAndGet();
+                return;
+            }
+            // P2-2: 选择 triggerType
+            String triggerType = DefaultTaskDispatcher.TRIGGER_CRON;
+            if (misfired && policy == MisfirePolicy.COALESCE) {
+                triggerType = DefaultTaskDispatcher.TRIGGER_MISFIRED;
+                if (metrics != null) {
+                    metrics.incMisfire("COALESCE");
+                }
+                log.info("[JobScanner] Misfire COALESCE 派发（日志标记 MISFIRED）: key={}",
+                        job.getJobKey());
+            } else if (misfired) {
+                if (metrics != null) {
+                    metrics.incMisfire("FIRE_NOW");
+                }
+                log.info("[JobScanner] Misfire FIRE_NOW 立即派发: key={}", job.getJobKey());
+            }
+            String logId = taskDispatcher.dispatch(job, null, triggerType);
+            if (logId == null) {
+                log.debug("[JobScanner] 任务异步派发或被跳过: key={} triggerType={}",
+                        job.getJobKey(), triggerType);
+            } else {
+                log.info("[JobScanner] 任务派发成功: key={} logId={} triggerType={} traceId={}",
+                        job.getJobKey(), logId, triggerType, TraceIdUtil.get());
+            }
+            if (successCount != null) successCount.incrementAndGet();
+        } catch (Exception e) {
+            log.error("[JobScanner] 任务派发失败: key={} reason={}",
+                    job.getJobKey(), e.getMessage(), e);
+            if (failCount != null) failCount.incrementAndGet();
+        } finally {
+            // P6-1: 清理 MDC，避免 traceId 串到下一个任务
+            TraceIdUtil.clear();
         }
     }
 
@@ -275,6 +358,11 @@ public class JobScanner {
     @PreDestroy
     public void shutdown() {
         log.info("[JobScanner] 关闭: role={}", leaderRole);
+        // P0-2: 关闭并行派发线程池
+        if (dispatchPool != null && !dispatchPool.isShutdown()) {
+            dispatchPool.shutdown();
+            log.info("[JobScanner] 并行派发线程池已关闭");
+        }
     }
 
     /**

@@ -594,6 +594,37 @@ public class PmisWorkflowFacade implements WorkflowFacade {
             steps.get(i).put("stepIndex", i);
         }
 
+        // P1-4: 增强回放 — 在第一步中嵌入进度摘要
+        if (!steps.isEmpty()) {
+            Map<String, Object> progressSummary = new HashMap<>();
+            int totalSteps = steps.size();
+            int completedSteps = (int) steps.stream()
+                    .filter(s -> {
+                        String type = (String) s.get("type");
+                        return "HIS_TASK".equals(type) || "START".equals(type) || "END".equals(type);
+                    })
+                    .count();
+            int activeSteps = (int) steps.stream()
+                    .filter(s -> "CURRENT_TASK".equals(s.get("type")))
+                    .count();
+            progressSummary.put("totalSteps", totalSteps);
+            progressSummary.put("completedSteps", completedSteps);
+            progressSummary.put("activeSteps", activeSteps);
+            progressSummary.put("progressPercent",
+                    totalSteps > 0 ? Math.round((float) completedSteps / totalSteps * 100) : 0);
+            progressSummary.put("instanceStatus", instance.getFlowStatus());
+            progressSummary.put("instanceId", instance.getId());
+            progressSummary.put("flowName", instance.getFlowName());
+            progressSummary.put("title", instance.getTitle());
+            progressSummary.put("initiatorId", instance.getInitiatorId());
+            progressSummary.put("initiatorName", instance.getInitiatorName());
+            progressSummary.put("startAt", instance.getStartAt());
+            progressSummary.put("endAt", instance.getEndAt());
+            progressSummary.put("durationMs", instance.getDurationMs());
+            // 嵌入到返回结果的第一步中（前端可从 steps[0]._progress 提取）
+            steps.get(0).put("_progress", progressSummary);
+        }
+
         return steps;
     }
 

@@ -1,134 +1,159 @@
 <!--
-  @fileoverview 行内编辑组件 (P2-15)
-  @description 双击文本进入编辑态，支持 text/number/select/date 四种编辑类型：
-  - Props: modelValue / type / options / width / placeholder / disabled / rules
-  - Emits: update:modelValue / commit
-  - Enter 提交、Escape 取消、blur 自动提交
-  - 支持自定义校验规则，校验失败不退出编辑态
-  - 场景: 表格单元格、详情页字段就地编辑
+  @fileoverview 行内编辑组件
+  @description 在表格单元格中实现点击即编辑的能力：
+    - 支持 text/number/select/date 多种输入类型
+    - 点击文本进入编辑模式，失焦/回车确认，Esc 取消
+    - 支持 v-model 双向绑定
+    - 支持前置验证（before-save 事件返回 false 阻止保存）
   @module components/common/InlineEdit
-  @author ydsz-pmis-team
-  @since 1.0.0
 -->
 <script setup lang="ts">
-/**
- * 行内编辑
- *
- * - 双击(display-value)进入编辑态, 显示对应类型的编辑控件
- * - Enter 提交(commit 事件 + update:modelValue), Escape 取消, blur 自动提交
- * - rules 校验失败时不退出编辑态并保持焦点
- */
-import { ref, nextTick } from 'vue'
-import { Edit } from '@element-plus/icons-vue'
+import { ref, nextTick, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-type EditType = 'text' | 'number' | 'select' | 'date'
+export type InlineEditType = 'text' | 'number' | 'select' | 'date' | 'textarea'
 
-/** 可聚焦的编辑控件最小接口（el-input/el-select/el-date-picker 均满足） */
-interface Focusable {
-  focus?: () => void
-}
-
-interface Props {
-  modelValue: string | number | undefined
-  type?: EditType
-  options?: Array<{ label: string; value: string | number }>
-  width?: string
-  placeholder?: string
-  disabled?: boolean
-  rules?: Array<(val: string | number) => string | true>
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  type: 'text',
-  width: '200px',
-  placeholder: '请输入',
-  disabled: false,
-})
+const props = withDefaults(
+  defineProps<{
+    /** 绑定值 */
+    modelValue: string | number | null
+    /** 输入类型 */
+    type?: InlineEditType
+    /** select 类型的选项 */
+    options?: { label: string; value: string | number }[]
+    /** 占位符 */
+    placeholder?: string
+    /** 是否禁用 */
+    disabled?: boolean
+    /** 数字类型最小值 */
+    min?: number
+    /** 数字类型最大值 */
+    max?: number
+    /** 文本最大长度 */
+    maxlength?: number
+    /** 是否需要确认按钮（false 时失焦即保存） */
+    requireConfirm?: boolean
+    /** 空值显示文本 */
+    emptyText?: string
+  }>(),
+  {
+    type: 'text',
+    disabled: false,
+    requireConfirm: false,
+    emptyText: '—',
+  },
+)
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string | number]
-  commit: [value: string | number]
+  'update:modelValue': [value: string | number | null]
+  save: [value: string | number | null, oldValue: string | number | null]
+  cancel: []
 }>()
 
-const editing = ref(false)
-const editValue = ref<string | number>('')
-const inputRef = ref<Focusable | null>(null)
-const errorMsg = ref('')
+const { t } = useI18n()
+const isEditing = ref(false)
+const editValue = ref<string | number | null>('')
+const inputRef = ref<HTMLElement | null>(null)
+const oldValue = ref<string | number | null>('')
 
-const startEdit = () => {
+/** 显示文本 */
+const displayText = computed(() => {
+  if (props.modelValue === null || props.modelValue === undefined || props.modelValue === '') {
+    return props.emptyText
+  }
+  if (props.type === 'select' && props.options) {
+    const opt = props.options.find((o) => o.value === props.modelValue)
+    return opt?.label || String(props.modelValue)
+  }
+  return String(props.modelValue)
+})
+
+/** 进入编辑模式 */
+async function startEdit() {
   if (props.disabled) return
-  editing.value = true
-  editValue.value = props.modelValue ?? ''
-  errorMsg.value = ''
-  nextTick(() => {
-    inputRef.value?.focus?.()
-  })
+  oldValue.value = props.modelValue
+  editValue.value = props.modelValue
+  isEditing.value = true
+  await nextTick()
+  // 聚焦输入框
+  const el = inputRef.value?.querySelector('input, textarea, .el-select')
+  if (el instanceof HTMLElement) {
+    el.focus()
+  }
 }
 
-const commitEdit = () => {
-  // 校验
-  if (props.rules) {
-    for (const rule of props.rules) {
-      const result = rule(editValue.value)
-      if (result !== true) {
-        errorMsg.value = result
-        return
-      }
-    }
+/** 保存编辑 */
+function saveEdit() {
+  if (!isEditing.value) return
+  // 值未变化时不触发保存
+  if (editValue.value === oldValue.value) {
+    isEditing.value = false
+    return
   }
-  editing.value = false
-  errorMsg.value = ''
   emit('update:modelValue', editValue.value)
-  emit('commit', editValue.value)
+  emit('save', editValue.value, oldValue.value)
+  isEditing.value = false
 }
 
-const cancelEdit = () => {
-  editing.value = false
-  errorMsg.value = ''
-  editValue.value = props.modelValue ?? ''
+/** 取消编辑 */
+function cancelEdit() {
+  isEditing.value = false
+  editValue.value = oldValue.value
+  emit('cancel')
 }
 
-const handleKeydown = (e: Event | KeyboardEvent) => {
-  const ke = e as KeyboardEvent
-  if (ke.key === 'Enter') {
-    ke.preventDefault()
-    commitEdit()
-  } else if (ke.key === 'Escape') {
-    ke.preventDefault()
-    cancelEdit()
+/** 失焦处理 */
+function handleBlur() {
+  if (!props.requireConfirm) {
+    saveEdit()
   }
+}
+
+/** 回车确认 */
+function handleEnter() {
+  saveEdit()
+}
+
+/** Esc 取消 */
+function handleEscape() {
+  cancelEdit()
 }
 </script>
 
 <template>
-  <div class="inline-edit" :style="{ width }">
-    <template v-if="!editing">
-      <span class="display-value" :class="{ disabled }" @dblclick="startEdit">
-        {{ modelValue || placeholder }}
-        <el-icon v-if="!disabled" class="edit-icon" @click="startEdit">
-          <Edit />
-        </el-icon>
-      </span>
-    </template>
-    <template v-else>
+  <div class="inline-edit" ref="inputRef">
+    <!-- 编辑模式 -->
+    <div v-if="isEditing" class="inline-edit__editor" @click.stop>
       <el-input
-        v-if="type === 'text' || type === 'number'"
-        ref="inputRef"
-        v-model="editValue"
+        v-if="type === 'text' || type === 'textarea'"
         :type="type"
+        v-model="editValue as string"
         :placeholder="placeholder"
+        :maxlength="maxlength"
+        :min="min"
+        :max="max"
         size="small"
-        @keydown="handleKeydown"
-        @blur="commitEdit"
+        @blur="handleBlur"
+        @keyup.enter="handleEnter"
+        @keyup.escape="handleEscape"
+      />
+      <el-input-number
+        v-else-if="type === 'number'"
+        v-model="editValue as number"
+        :min="min"
+        :max="max"
+        size="small"
+        @blur="handleBlur"
+        @keyup.enter="handleEnter"
+        @keyup.escape="handleEscape"
       />
       <el-select
         v-else-if="type === 'select'"
-        ref="inputRef"
         v-model="editValue"
         :placeholder="placeholder"
         size="small"
-        style="width: 100%"
-        @blur="commitEdit"
+        @blur="handleBlur"
+        @change="saveEdit"
       >
         <el-option
           v-for="opt in options"
@@ -139,50 +164,82 @@ const handleKeydown = (e: Event | KeyboardEvent) => {
       </el-select>
       <el-date-picker
         v-else-if="type === 'date'"
-        ref="inputRef"
         v-model="editValue"
         type="date"
-        value-format="YYYY-MM-DD"
         size="small"
-        style="width: 100%"
-        @blur="commitEdit"
+        @blur="handleBlur"
+        @change="saveEdit"
       />
-    </template>
+
+      <!-- 确认按钮（requireConfirm 模式） -->
+      <template v-if="requireConfirm">
+        <el-button text size="small" type="primary" @click="saveEdit">
+          <el-icon><Check /></el-icon>
+        </el-button>
+        <el-button text size="small" @click="cancelEdit">
+          <el-icon><Close /></el-icon>
+        </el-button>
+      </template>
+    </div>
+
+    <!-- 展示模式 -->
+    <div
+      v-else
+      class="inline-edit__display"
+      :class="{ 'is-disabled': disabled, 'is-empty': !modelValue }"
+      @click="startEdit"
+    >
+      <span>{{ displayText }}</span>
+      <el-icon v-if="!disabled" class="inline-edit__icon"><Edit /></el-icon>
+    </div>
   </div>
 </template>
-
-<script lang="ts">
-export default { name: 'InlineEdit' }
-</script>
 
 <style lang="scss" scoped>
 .inline-edit {
   display: inline-block;
-}
-.display-value {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: background 0.2s;
-  min-height: 24px;
-}
-.display-value:hover {
-  background: var(--el-fill-color-light);
-}
-.display-value.disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-.edit-icon {
-  font-size: 12px;
-  color: var(--el-text-color-placeholder);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.display-value:hover .edit-icon {
-  opacity: 1;
+  width: 100%;
+
+  &__editor {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__display {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    min-height: 24px;
+
+    &:hover {
+      background: var(--el-fill-color-light);
+
+      .inline-edit__icon {
+        opacity: 1;
+      }
+    }
+
+    &.is-disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    &.is-empty {
+      color: var(--el-text-color-placeholder);
+      font-style: italic;
+    }
+  }
+
+  &__icon {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
 }
 </style>

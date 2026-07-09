@@ -34,44 +34,25 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     public Map<String, Object> overview(LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
         String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
 
-        // 历史任务统计
-        LambdaQueryWrapper<FlowHisTaskDO> hisWrapper = new LambdaQueryWrapper<FlowHisTaskDO>()
-                .eq(FlowHisTaskDO::getTenantId, tid)
-                .eq(FlowHisTaskDO::getDeleted, 0);
-        if (startTime != null) {
-            hisWrapper.ge(FlowHisTaskDO::getFinishAt, startTime);
+        // P1-5: 使用单 SQL 聚合查询替代多次 COUNT（5 次 → 1 次）
+        Map<String, Object> hisStats = hisTaskMapper.selectOverviewStats(tid, startTime, endTime);
+        if (hisStats == null) {
+            hisStats = new LinkedHashMap<>();
         }
-        if (endTime != null) {
-            hisWrapper.le(FlowHisTaskDO::getFinishAt, endTime);
-        }
-        long totalHis = hisTaskMapper.selectCount(hisWrapper);
 
-        long completedCount = hisTaskMapper.selectCount(
-                new LambdaQueryWrapper<FlowHisTaskDO>()
-                        .eq(FlowHisTaskDO::getTenantId, tid)
-                        .eq(FlowHisTaskDO::getTaskStatus, "COMPLETED")
-                        .eq(FlowHisTaskDO::getDeleted, 0)
-                        .ge(startTime != null, FlowHisTaskDO::getFinishAt, startTime)
-                        .le(endTime != null, FlowHisTaskDO::getFinishAt, endTime)
-        );
-        long rejectedCount = hisTaskMapper.selectCount(
-                new LambdaQueryWrapper<FlowHisTaskDO>()
-                        .eq(FlowHisTaskDO::getTenantId, tid)
-                        .eq(FlowHisTaskDO::getTaskStatus, "REJECTED")
-                        .eq(FlowHisTaskDO::getDeleted, 0)
-                        .ge(startTime != null, FlowHisTaskDO::getFinishAt, startTime)
-                        .le(endTime != null, FlowHisTaskDO::getFinishAt, endTime)
-        );
+        long totalHis = toLong(hisStats.get("totalTasks"));
+        long completedCount = toLong(hisStats.get("completedTasks"));
+        long rejectedCount = toLong(hisStats.get("rejectedTasks"));
+        double rejectionRate = toDouble(hisStats.get("rejectionRate"));
+        double avgDurationMs = toDouble(hisStats.get("avgDurationMs"));
 
-        // 待办数
+        // 待办数 + 超期数（run_task 表，无法与 his_task 合并查询）
         long pendingCount = runTaskMapper.selectCount(
                 new LambdaQueryWrapper<FlowRunTaskDO>()
                         .eq(FlowRunTaskDO::getTenantId, tid)
                         .eq(FlowRunTaskDO::getDeleted, 0)
                         .in(FlowRunTaskDO::getTaskStatus, "TODO", "CLAIMED")
         );
-
-        // 超期数（dueAt < now 且未完成）
         long overdueCount = runTaskMapper.selectCount(
                 new LambdaQueryWrapper<FlowRunTaskDO>()
                         .eq(FlowRunTaskDO::getTenantId, tid)
@@ -79,28 +60,6 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
                         .in(FlowRunTaskDO::getTaskStatus, "TODO", "CLAIMED")
                         .lt(FlowRunTaskDO::getDueAt, LocalDateTime.now())
         );
-
-        // 驳回率
-        double rejectionRate = totalHis > 0 ? (double) rejectedCount / totalHis : 0.0;
-
-        // 平均耗时（复用已有的节点统计方法，取所有流程的平均值）
-        List<Map<String, Object>> efficiencyData = hisTaskMapper.selectFlowEfficiencyComparison(tid, startTime, endTime);
-        double avgDurationMs = 0;
-        long totalDuration = 0;
-        long totalCompleted = 0;
-        for (Map<String, Object> row : efficiencyData) {
-            Object avgDur = row.get("avgDurationMs");
-            Object compCnt = row.get("completedCount");
-            if (avgDur != null && compCnt != null) {
-                long dur = ((Number) avgDur).longValue();
-                long cnt = ((Number) compCnt).longValue();
-                totalDuration += dur * cnt;
-                totalCompleted += cnt;
-            }
-        }
-        if (totalCompleted > 0) {
-            avgDurationMs = (double) totalDuration / totalCompleted;
-        }
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("totalTasks", totalHis);
@@ -136,15 +95,34 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
     @Override
     public Object approvalTrend(LocalDateTime startTime, LocalDateTime endTime, String tenantId, String granularity) {
-        // 简单实现：复用 flowEfficiencyComparison 并按时间粒度在前端聚合
-        // 完整实现需要 SQL GROUP BY date_trunc
         String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
-        List<Map<String, Object>> data = hisTaskMapper.selectFlowEfficiencyComparison(tid, startTime, endTime);
+        // P1-5: 使用 SQL date_trunc 聚合，替代前端聚合
+        String gran = granularity != null ? granularity.toLowerCase() : "day";
+        // 校验粒度值，防止 SQL 注入
+        if (!"day".equals(gran) && !"week".equals(gran) && !"month".equals(gran)
+                && !"hour".equals(gran) && !"quarter".equals(gran) && !"year".equals(gran)) {
+            gran = "day";
+        }
+        List<Map<String, Object>> data = hisTaskMapper.selectApprovalTrend(tid, startTime, endTime, gran);
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("granularity", granularity != null ? granularity : "DAY");
+        result.put("granularity", gran.toUpperCase());
         result.put("data", data);
         result.put("startTime", startTime);
         result.put("endTime", endTime);
         return result;
+    }
+
+    // ============================== 工具方法 ==============================
+
+    private long toLong(Object obj) {
+        if (obj == null) return 0;
+        if (obj instanceof Number n) return n.longValue();
+        try { return Long.parseLong(String.valueOf(obj)); } catch (NumberFormatException e) { return 0; }
+    }
+
+    private double toDouble(Object obj) {
+        if (obj == null) return 0.0;
+        if (obj instanceof Number n) return n.doubleValue();
+        try { return Double.parseDouble(String.valueOf(obj)); } catch (NumberFormatException e) { return 0.0; }
     }
 }

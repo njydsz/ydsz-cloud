@@ -1,0 +1,97 @@
+# =============================================================================
+# SkyWalking Java Agent 配置
+# -----------------------------------------------------------------------------
+# 作用: 为所有微服务注入 SkyWalking Java Agent, 实现自动链路追踪
+# 方案: 使用 init-container 下载 agent, 通过共享 volume 挂载到主容器
+# 使用: 各 Deployment 添加 SW_AGENT 配置 + volumeMounts, 参考 patch-skywalking.yaml
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skywalking-agent-config
+  namespace: pmis
+  labels:
+    app: skywalking-agent
+data:
+  # SkyWalking OAP Server 地址 (集群内服务名)
+  SW_AGENT_COLLECTOR_BACKEND_SERVICES: "skywalking-oap.monitoring:11800"
+  # 服务实例名称前缀 (各服务通过 env 覆盖 SERVICE_NAME)
+  SW_AGENT_NAME: "ydsz-pmis"
+  # 采样率: -1 表示全量采样, 生产环境可调整为 1000 (每秒 1000 条)
+  SW_AGENT_SAMPLE: "-1"
+  # 忽略指定路径 (健康检查/actuator 不上报)
+  SW_AGENT_IGNORE_SUFFIX: ".jpg,.jpeg,.png,.gif,.ico,.css,.js,.html,.svg"
+  # SQL 参数化 (避免敏感数据泄漏)
+  SW_AGENT_PLUGIN_JDBC_TRACE_SQL_PARAMETERS: "true"
+  # 链路中记录 Spring MVC 参数
+  SW_AGENT_PLUGIN_SPRINGMVC_COLLECT_HTTP_ARGUMENTS: "false"
+  # Redis 指标采集
+  SW_AGENT_PLUGIN_REDIS_TRACE_ENABLED: "true"
+  # RocketMQ 消息链路
+  SW_AGENT_PLUGIN_ROCKETMQ_TRACE_ENABLED: "true"
+  # Kafka 消息链路 (如使用)
+  SW_AGENT_PLUGIN_KAFKA_TRACE_ENABLED: "true"
+  # 日志中注入 traceId (配合 logback-spring.xml 的 %tid)
+  SW_AGENT_PLUGIN_LOG4J2_FORMAT_CONFIG_ENABLED: "true"
+  SW_AGENT_PLUGIN_LOGBACK_FORMAT_CONFIG_ENABLED: "true"
+  # 异常上报
+  SW_AGENT_EXCEPTION_CHECK_DEPTH: "10"
+  # 超时时间
+  SW_AGENT_COLLECTOR_GET_AGENT_DYNAMIC_CONFIG_INTERVAL: "20"
+
+---
+# SkyWalking Agent 下载 Init Container 模板 (供各 Deployment 参考)
+# 使用方法: 将以下内容合并到各 Deployment 的 spec.template.spec 中
+# 并在主容器添加 envFrom + volumeMounts + JAVA_TOOL_OPTIONS
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skywalking-agent-template
+  namespace: pmis
+  labels:
+    app: skywalking-agent
+data:
+  README.md: |
+    # SkyWalking Agent 注入说明
+
+    ## 前置条件
+    - SkyWalking OAP Server 已部署在 monitoring namespace
+    - 已创建 skywalking-agent-config ConfigMap
+
+    ## 各 Deployment 需要添加的配置
+
+    ### 1. Init Container (下载 Agent)
+    ```yaml
+    initContainers:
+      - name: skywalking-agent
+        image: apache/skywalking-java-agent:9.4.0-java17
+        command:
+          - sh
+          - -c
+          - |
+            cp -r /skywalking/agent /skywalking/agent-shared/
+        volumeMounts:
+          - name: skywalking-agent
+            mountPath: /skywalking/agent-shared
+    ```
+
+    ### 2. 主容器添加配置
+    ```yaml
+    containers:
+      - name: your-service
+        envFrom:
+          - configMapRef:
+              name: skywalking-agent-config
+        env:
+          - name: SW_AGENT_NAME
+            value: "ydsz-pmis-gateway"  # 各服务替换为实际名称
+        volumeMounts:
+          - name: skywalking-agent
+            mountPath: /skywalking/agent
+            readOnly: true
+        # 通过 JAVA_TOOL_OPTIONS 注入 agent (无需修改 Dockerfile)
+        # 也可在 Dockerfile ENTRYPOINT 中添加 -javaagent
+    volumes:
+      - name: skywalking-agent
+        emptyDir: {}
+    ```

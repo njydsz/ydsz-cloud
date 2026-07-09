@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
+import com.njydsz.pmis.agent.engine.llm.StructuredOutputValidator;
 import com.njydsz.pmis.agent.engine.memory.ChatMemory;
 import com.njydsz.pmis.agent.engine.memory.ChatMessage;
 import com.njydsz.pmis.agent.engine.prompt.PromptTemplateCodes;
@@ -68,6 +69,30 @@ public class ReActLoop {
      * 默认最大循环次数（防止无限循环，P2-4 调整为 10）。
      */
     public static final int DEFAULT_MAX_STEPS = 10;
+
+    /**
+     * JSON 解析/Schema 校验失败时的最大自动重试次数（P0-2 落地）。
+     *
+     * <p>当 LLM 返回的 JSON 格式不正确或不符合 ReActDecision Schema 时，
+     * 将错误信息追加到 prompt 中让 LLM 重新生成，最多重试此次数。
+     */
+    public static final int MAX_JSON_RETRY = 2;
+
+    /**
+     * ReActDecision 的 JSON Schema 定义（P0-2 落地）。
+     *
+     * <p>用于 {@link StructuredOutputValidator} 校验 LLM 输出格式，
+     * 确保 thought/action/parameters/finalAnswer 字段类型正确。
+     */
+    private static final Map<String, Object> REACT_DECISION_SCHEMA = Map.of(
+            "type", "object",
+            "properties", Map.of(
+                    "thought", Map.of("type", "string"),
+                    "action", Map.of("type", "string"),
+                    "finalAnswer", Map.of("type", "string")
+            ),
+            "required", List.of("thought", "action")
+    );
 
     /**
      * 配置的最大循环次数（P2-4：可配置）。
@@ -212,42 +237,69 @@ public class ReActLoop {
                 ReActStep stepRecord = new ReActStep();
                 stepRecord.setStepIndex(currentStep);
 
-                // 1. 调用 LLM，获取决策
-                ReActDecision decision;
-                try {
-                    // P4-1：当 LLM Provider 支持流式时，使用 chatStream 逐 token 回调
-                    LlmProvider llm = llmProviderRouter.active();
-                    // 追加 JSON 格式指令（替代原 chatForJson 的默认行为）
-                    String enhancedPrompt = currentUserPrompt.toString()
-                            + "\n\n请严格输出 JSON 格式（不要使用 markdown 代码块包裹）。";
-                    String llmRaw;
-                    final int stepForCallback = currentStep;
-                    if (llm.supportsStreaming()) {
-                        llmRaw = llm.chatStream(fullSystemPrompt,
-                                enhancedPrompt, ctx,
-                                delta -> safeNotify(listener, l -> l.onToken(stepForCallback, delta)));
-                    } else {
-                        llmRaw = llm.chat(fullSystemPrompt,
-                                enhancedPrompt, ctx);
+                // 1. 调用 LLM，获取决策（P0-2：集成 StructuredOutputValidator 自动重试）
+                ReActDecision decision = null;
+                String lastJsonError = null;
+                for (int retry = 0; retry <= MAX_JSON_RETRY; retry++) {
+                    try {
+                        LlmProvider llm = llmProviderRouter.active();
+                        // 构建增强 prompt：原始 prompt + JSON 格式指令 + （重试时）错误提示
+                        String enhancedPrompt = currentUserPrompt.toString()
+                                + "\n\n请严格输出 JSON 格式（不要使用 markdown 代码块包裹）。";
+                        if (lastJsonError != null) {
+                            enhancedPrompt += "\n\n[上次输出有误] " + lastJsonError
+                                    + "\n请修正后重新输出正确的 JSON。";
+                        }
+                        String llmRaw;
+                        final int stepForCallback = currentStep;
+                        if (llm.supportsStreaming()) {
+                            llmRaw = llm.chatStream(fullSystemPrompt,
+                                    enhancedPrompt, ctx,
+                                    delta -> safeNotify(listener, l -> l.onToken(stepForCallback, delta)));
+                        } else {
+                            llmRaw = llm.chat(fullSystemPrompt,
+                                    enhancedPrompt, ctx);
+                        }
+                        // 解析 JSON 为 ReActDecision
+                        String json = LlmProvider.stripMarkdownCodeFence(llmRaw);
+
+                        // P0-2：先做 Schema 校验
+                        StructuredOutputValidator.ValidationResult vr =
+                                StructuredOutputValidator.validate(json, REACT_DECISION_SCHEMA);
+                        if (!vr.isValid()) {
+                            lastJsonError = vr.toString();
+                            log.warn("[ReAct] step={} retry={} Schema 校验失败: {}",
+                                    currentStep, retry, lastJsonError);
+                            if (retry < MAX_JSON_RETRY) {
+                                continue; // 重试
+                            }
+                        }
+
+                        decision = JSON.parseObject(json, ReActDecision.class);
+                        break; // 解析成功
+                    } catch (Exception e) {
+                        lastJsonError = e.getMessage();
+                        log.warn("[ReAct] step={} retry={} LLM 调用或 JSON 解析异常: {}",
+                                currentStep, retry, e.getMessage());
+                        if (retry >= MAX_JSON_RETRY) {
+                            stepRecord.setThought("[LLM 异常] " + e.getMessage());
+                            stepRecord.setAction(ACTION_FINAL_ANSWER);
+                            stepRecord.setFinalAnswer(null);
+                            steps.add(stepRecord);
+                            finalResult = ReActResult.failure(
+                                    "LLM 调用失败: " + e.getMessage(), steps);
+                            safeNotify(listener, l -> l.onStepEnd(currentStep));
+                            safeNotifyComplete(listener, finalResult);
+                            return finalResult;
+                        }
                     }
-                    // 解析 JSON 为 ReActDecision
-                    String json = LlmProvider.stripMarkdownCodeFence(llmRaw);
-                    decision = JSON.parseObject(json, ReActDecision.class);
-                } catch (Exception e) {
-                    log.warn("[ReAct] step={} LLM 调用或 JSON 解析异常: {}", currentStep, e.getMessage());
-                    stepRecord.setThought("[LLM 异常] " + e.getMessage());
-                    stepRecord.setAction(ACTION_FINAL_ANSWER);
-                    stepRecord.setFinalAnswer(null);
-                    steps.add(stepRecord);
-                    finalResult = ReActResult.failure(
-                            "LLM 调用失败: " + e.getMessage(), steps);
-                    safeNotify(listener, l -> l.onStepEnd(currentStep));
-                    safeNotifyComplete(listener, finalResult);
-                    return finalResult;
                 }
 
+                // P0-2：用 final 变量承接，供后续 lambda 使用
+                final ReActDecision finalDecision = decision;
+
                 // 防御：LLM 返回 null
-                if (decision == null || decision.getAction() == null) {
+                if (finalDecision == null || finalDecision.getAction() == null) {
                     log.warn("[ReAct] step={} LLM 返回空决策", currentStep);
                     stepRecord.setThought("[空决策]");
                     stepRecord.setAction(ACTION_FINAL_ANSWER);
@@ -260,28 +312,28 @@ public class ReActLoop {
                 }
 
                 // P1-7：对 LLM 输出做 schema 级收敛
-                decision.sanitize();
+                finalDecision.sanitize();
 
                 // 记录 Thought + Action
-                stepRecord.setThought(decision.getThought());
-                stepRecord.setAction(decision.getAction());
-                stepRecord.setParameters(decision.getParameters());
+                stepRecord.setThought(finalDecision.getThought());
+                stepRecord.setAction(finalDecision.getAction());
+                stepRecord.setParameters(finalDecision.getParameters());
 
                 log.info("[ReAct] step={} thought={} action={}", currentStep,
-                        truncate(decision.getThought(), 80), decision.getAction());
+                        truncate(finalDecision.getThought(), 80), finalDecision.getAction());
 
-                safeNotify(listener, l -> l.onThought(currentStep, decision.getThought()));
-                safeNotify(listener, l -> l.onAction(currentStep, decision));
+                safeNotify(listener, l -> l.onThought(currentStep, finalDecision.getThought()));
+                safeNotify(listener, l -> l.onAction(currentStep, finalDecision));
 
                 // 2. 判断是否为终止步骤
-                if (decision.isTerminal()) {
-                    stepRecord.setFinalAnswer(decision.getFinalAnswer());
+                if (finalDecision.isTerminal()) {
+                    stepRecord.setFinalAnswer(finalDecision.getFinalAnswer());
                     steps.add(stepRecord);
-                    safeNotify(listener, l -> l.onFinalAnswer(currentStep, decision.getFinalAnswer()));
+                    safeNotify(listener, l -> l.onFinalAnswer(currentStep, finalDecision.getFinalAnswer()));
                     safeNotify(listener, l -> l.onStepEnd(currentStep));
                     log.info("[ReAct] 循环完成, steps={}, finalAnswer.length={}",
-                            currentStep, decision.getFinalAnswer() == null ? 0 : decision.getFinalAnswer().length());
-                    finalResult = ReActResult.success(decision.getFinalAnswer(), steps);
+                            currentStep, finalDecision.getFinalAnswer() == null ? 0 : finalDecision.getFinalAnswer().length());
+                    finalResult = ReActResult.success(finalDecision.getFinalAnswer(), steps);
                     // P1-1：成功路径写入对话记忆
                     persistToMemory(ctx, originalUserPrompt, finalResult);
                     safeNotifyComplete(listener, finalResult);
@@ -291,7 +343,7 @@ public class ReActLoop {
                 // 3. 执行工具调用，得到 Observation（P3-4：含 HITL 审批检查）
                 String observation;
                 try {
-                    observation = executeTool(decision, ctx, currentStep);
+                    observation = executeTool(finalDecision, ctx, currentStep);
                 } catch (HitlPauseException e) {
                     // P3-4: HITL 暂停 — 补充快照中循环局部状态，返回暂停结果
                     ReActSnapshot snapshot = e.getSnapshot();

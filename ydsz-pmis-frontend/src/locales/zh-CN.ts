@@ -720,6 +720,8 @@ dashboardExitCustomize: '退出拖拽模式',
   },
   login: {
     slogan: '项目运营管理系统',
+    subtitle: '欢迎回来，请登录以继续',
+    copyright: '© 2024 南京远东数字智造 · PMIS 团队',
     features: {
       integration: '业财一体化 · 全生命周期管控',
       rate: 'L1-L18 职级费率 · EVM 挣值管理',

@@ -2,6 +2,7 @@ package com.njydsz.pmis.cronjob.core.handler;
 
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.common.job.JobLoggerHolder;
+import com.njydsz.pmis.cronjob.core.executor.SandboxScriptExecutor;
 import com.njydsz.pmis.cronjob.entity.GlueCodeDO;
 import com.njydsz.pmis.cronjob.service.GlueCodeService;
 import groovy.lang.GroovyClassLoader;
@@ -12,31 +13,46 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * GLUE 在线编码任务处理器（P1-2 GLUE 在线编码）。
+ * GLUE 在线编码任务处理器（P1-2 GLUE 在线编码，P1-7 多语言支持扩展）。
  *
- * <p>支持 {@code jobType=GLUE} 的任务，业务侧通过在线编辑器编写 Groovy 脚本，
+ * <p>支持 {@code jobType=GLUE} 的任务，业务侧通过在线编辑器编写脚本，
  * 调度执行时由本处理器从 {@code pmis_job_glue} 表读取最新版本源代码，
- * 使用 {@link GroovyClassLoader} 动态编译为 Class 并实例化执行。
+ * 根据 {@code language} 字段选择对应的执行引擎。
  *
- * <h3>脚本约定</h3>
+ * <h3>多语言支持（P1-7 扩展）</h3>
+ * <ul>
+ *   <li>{@code GROOVY}（默认）: 通过 {@link GroovyClassLoader} 动态编译执行</li>
+ *   <li>{@code PYTHON}: 通过 {@link SandboxScriptExecutor} 在沙箱中执行 Python3 脚本</li>
+ *   <li>{@code SHELL}: 通过 {@link SandboxScriptExecutor} 在沙箱中执行 Bash 脚本</li>
+ *   <li>{@code JAVASCRIPT}: 通过 {@link ScriptEngine} 执行 JS 脚本（Nashorn/GraalJS）</li>
+ *   <li>{@code JAVA}: 预留扩展，当前按 GROOVY 处理</li>
+ * </ul>
+ *
+ * <h3>Groovy 脚本约定</h3>
  * <p>Groovy 代码需满足以下任一约定：
  * <ul>
  *   <li>实现 {@link JobHandler} 接口（推荐，与 BEAN 模式一致）</li>
  *   <li>定义 {@code Object execute(String paramsJson)} 方法（脚本式写法）</li>
  * </ul>
  *
+ * <h3>Python/Shell 脚本约定</h3>
+ * <p>paramsJson 通过环境变量 {@code JOB_PARAMS} 传入脚本，
+ * 脚本退出码 0 为成功，非 0 为失败，stdout 作为执行结果。
+ *
+ * <h3>JavaScript 脚本约定</h3>
+ * <p>paramsJson 通过 {@code paramsJson} 全局变量传入，
+ * 脚本需定义 {@code execute(paramsJson)} 函数或直接返回结果。
+ *
  * <h3>缓存策略</h3>
  * <p>以 jobId + sourceCode 哈希为 key 缓存编译结果（Class 对象），
  * 源代码未变更时直接复用，避免重复编译开销。新版本保存后自动失效旧缓存。
- *
- * <h3>jobId 传递</h3>
- * <p>调度执行时通过 {@code JobContextHolder.getJobId()} 获取当前任务 ID，
- * 由 {@code DefaultTaskDispatcher.executeJob} 在执行前设置。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -52,14 +68,37 @@ public class GlueJobHandler implements JobHandler {
     /** GLUE 代码服务（可选注入，未配置时 GLUE 任务降级到 BEAN 模式） */
     private final ObjectProvider<GlueCodeService> glueCodeServiceProvider;
 
+    /** P1-7: 沙箱脚本执行器（Python/Shell 语言支持） */
+    private final ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider;
+
+    /** P1-7: JavaScript 脚本引擎（Nashorn/GraalJS） */
+    private final ScriptEngine jsEngine;
+
     /** 编译缓存: cacheKey → 编译后的 Class */
     private final Map<String, Class<?>> compiledClassCache = new HashMap<>();
 
     /** ClassLoader 缓存: cacheKey → GroovyClassLoader（用于隔离不同任务的类空间） */
     private final Map<String, GroovyClassLoader> classLoaderCache = new HashMap<>();
 
-    public GlueJobHandler(ObjectProvider<GlueCodeService> glueCodeServiceProvider) {
+    public GlueJobHandler(ObjectProvider<GlueCodeService> glueCodeServiceProvider,
+                          ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider) {
         this.glueCodeServiceProvider = glueCodeServiceProvider;
+        this.sandboxExecutorProvider = sandboxExecutorProvider;
+        // 初始化 JavaScript 引擎
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("nashorn");
+        if (engine == null) {
+            engine = manager.getEngineByName("graal.js");
+        }
+        if (engine == null) {
+            engine = manager.getEngineByName("js");
+        }
+        this.jsEngine = engine;
+        if (engine != null) {
+            log.info("[GlueJobHandler] JavaScript 引擎已加载: {}", engine.getClass().getName());
+        } else {
+            log.warn("[GlueJobHandler] JavaScript 引擎不可用, JS 类型 GLUE 任务将无法执行");
+        }
     }
 
     @Override
@@ -82,21 +121,93 @@ public class GlueJobHandler implements JobHandler {
         }
 
         String sourceCode = glueCode.getSourceCode();
+        String language = glueCode.getLanguage() != null ? glueCode.getLanguage().toUpperCase() : "GROOVY";
         log.info("[GlueJobHandler] 执行 GLUE 任务: jobId={} version={} language={}",
-                jobId, glueCode.getVersion(), glueCode.getLanguage());
+                jobId, glueCode.getVersion(), language);
 
-        // 编译（带缓存）
+        // P1-7: 根据语言类型选择执行引擎
+        return switch (language) {
+            case "GROOVY", "JAVA" -> executeGroovy(jobId, sourceCode, paramsJson);
+            case "PYTHON" -> executePython(sourceCode, paramsJson);
+            case "SHELL" -> executeShell(sourceCode, paramsJson);
+            case "JAVASCRIPT", "JS" -> executeJavaScript(sourceCode, paramsJson);
+            default -> throw new IllegalStateException("不支持的 GLUE 语言类型: " + language);
+        };
+    }
+
+    /**
+     * P1-7: 执行 Groovy 脚本（原有逻辑）。
+     */
+    private Object executeGroovy(String jobId, String sourceCode, String paramsJson) throws Exception {
         Class<?> clazz = compileWithCache(jobId, sourceCode);
-
-        // 实例化并执行
         Object instance;
         try {
             instance = clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             throw new RuntimeException("GLUE 代码实例化失败: " + e.getMessage(), e);
         }
-
         return invokeExecute(instance, paramsJson);
+    }
+
+    /**
+     * P1-7: 执行 Python 脚本（通过沙箱执行器）。
+     *
+     * <p>paramsJson 通过环境变量 {@code JOB_PARAMS} 传入，
+     * stdout 作为执行结果返回。
+     */
+    private Object executePython(String sourceCode, String paramsJson) throws Exception {
+        SandboxScriptExecutor executor = sandboxExecutorProvider.getIfAvailable();
+        if (executor == null) {
+            throw new IllegalStateException("SandboxScriptExecutor 未注册，Python GLUE 任务无法执行");
+        }
+        Map<String, String> envVars = new HashMap<>();
+        envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
+        SandboxScriptExecutor.SandboxResult result = executor.execute(sourceCode, "PYTHON", 300, envVars);
+        if (!result.success()) {
+            throw new RuntimeException("Python 脚本执行失败: " + result.errorMessage());
+        }
+        return result.output();
+    }
+
+    /**
+     * P1-7: 执行 Shell 脚本（通过沙箱执行器）。
+     *
+     * <p>paramsJson 通过环境变量 {@code JOB_PARAMS} 传入，
+     * stdout 作为执行结果返回。
+     */
+    private Object executeShell(String sourceCode, String paramsJson) throws Exception {
+        SandboxScriptExecutor executor = sandboxExecutorProvider.getIfAvailable();
+        if (executor == null) {
+            throw new IllegalStateException("SandboxScriptExecutor 未注册，Shell GLUE 任务无法执行");
+        }
+        Map<String, String> envVars = new HashMap<>();
+        envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
+        SandboxScriptExecutor.SandboxResult result = executor.execute(sourceCode, "SHELL", 300, envVars);
+        if (!result.success()) {
+            throw new RuntimeException("Shell 脚本执行失败: " + result.errorMessage());
+        }
+        return result.output();
+    }
+
+    /**
+     * P1-7: 执行 JavaScript 脚本（通过 ScriptEngine）。
+     *
+     * <p>paramsJson 通过全局变量 {@code paramsJson} 传入，
+     * 脚本可通过 {@code execute(paramsJson)} 函数返回结果，
+     * 或直接将最后一行表达式作为返回值。
+     */
+    private Object executeJavaScript(String sourceCode, String paramsJson) throws Exception {
+        if (jsEngine == null) {
+            throw new IllegalStateException("JavaScript 引擎不可用，请添加 Nashorn 或 GraalJS 依赖");
+        }
+        try {
+            jsEngine.put("paramsJson", paramsJson != null ? paramsJson : "{}");
+            Object result = jsEngine.eval(sourceCode);
+            logToJobLogger("JavaScript 脚本执行完成: result={}", result);
+            return result != null ? result.toString() : "null";
+        } catch (Exception e) {
+            throw new RuntimeException("JavaScript 脚本执行失败: " + e.getMessage(), e);
+        }
     }
 
     /**

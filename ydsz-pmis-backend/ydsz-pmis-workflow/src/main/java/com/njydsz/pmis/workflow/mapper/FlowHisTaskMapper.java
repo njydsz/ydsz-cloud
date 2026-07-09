@@ -145,4 +145,33 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
     List<Map<String, Object>> selectFlowEfficiencyComparison(@Param("tenantId") String tenantId,
                                                               @Param("startTime") LocalDateTime startTime,
                                                               @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * P1-5: 单 SQL 聚合概览统计（替代多次 COUNT 查询，5 次 → 1 次）。
+     *
+     * <p>使用 PostgreSQL 条件聚合（COUNT ... FILTER）一次性返回：
+     * totalTasks / completedTasks / rejectedTasks / rejectionRate / avgDurationMs
+     *
+     * @param tenantId  租户 ID（可空）
+     * @param startTime finish_at 下界（可空）
+     * @param endTime   finish_at 上界（可空）
+     * @return 单行统计结果 Map
+     */
+    Map<String, Object> selectOverviewStats(@Param("tenantId") String tenantId,
+                                             @Param("startTime") LocalDateTime startTime,
+                                             @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * P1-5: 审批趋势 — 按时间粒度分组聚合（date_trunc）。
+     *
+     * @param tenantId    租户 ID（可空）
+     * @param startTime   finish_at 下界（可空）
+     * @param endTime     finish_at 上界（可空）
+     * @param granularity 时间粒度：day / week / month
+     * @return 每个时间粒度一行：date / totalCount / completedCount / rejectedCount / avgDurationMs
+     */
+    List<Map<String, Object>> selectApprovalTrend(@Param("tenantId") String tenantId,
+                                                    @Param("startTime") LocalDateTime startTime,
+                                                    @Param("endTime") LocalDateTime endTime,
+                                                    @Param("granularity") String granularity);
 }

@@ -9,6 +9,7 @@ import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
@@ -164,7 +165,11 @@ public class FlowTaskRejectService {
     // ============================== 私有辅助 ==============================
 
     /**
-     * P1-2: 退回到发起人 — 解析 startNode 下游第一个节点作为退回目标
+     * P0-1 修复: 退回到发起人 — 解析 startNode 下游第一个审批节点作为退回目标。
+     *
+     * <p>原实现直接返回 startNode.getNodeCode()（开始节点本身），
+     * 导致退回后不会生成有意义的待办任务。修正为沿 PASS 出边找到
+     * 第一个 APPROVAL 类型节点，找不到时回退到开始节点。
      */
     private String resolveInitiatorNodeCode(String definitionId) {
         if (definitionCacheService == null || definitionId == null) {
@@ -175,14 +180,51 @@ public class FlowTaskRejectService {
             if (startNode == null) {
                 return null;
             }
-            // 找到 startNode 下游第一个非空节点
-            // 这里简化为从 Advancer 解析（外部实现可能不直接暴露），
-            // 实际可考虑由 DefinitionCacheService 提供 findNextNode 方法
-            return startNode.getNodeCode();
+            // 沿 PASS 出边找下游第一个 APPROVAL 节点
+            String found = findFirstApprovalNode(definitionId, startNode.getNodeCode(),
+                    new java.util.HashSet<>());
+            return found != null ? found : startNode.getNodeCode();
         } catch (Exception e) {
             log.warn("[Flow] 解析开始节点下游失败: definitionId={} err={}", definitionId, e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * P0-1 修复: BFS 遍历，找定义中从指定节点出发可达的第一个 APPROVAL 节点。
+     *
+     * @param definitionId  流程定义 ID
+     * @param startNodeCode 遍历起点
+     * @param visited       已访问节点（防环路）
+     * @return 第一个 APPROVAL 节点编码，未找到返回 null
+     */
+    private String findFirstApprovalNode(String definitionId, String startNodeCode,
+                                          java.util.Set<String> visited) {
+        java.util.Queue<String> queue = new java.util.ArrayDeque<>();
+        queue.add(startNodeCode);
+        visited.add(startNodeCode);
+        while (!queue.isEmpty()) {
+            String currentCode = queue.poll();
+            List<FlowSkipDO> skips = definitionCacheService.getSkipsByNodeCode(definitionId, currentCode);
+            for (FlowSkipDO skip : skips) {
+                String nextCode = skip.getNextNodeCode();
+                if (nextCode == null || visited.contains(nextCode)) {
+                    continue;
+                }
+                visited.add(nextCode);
+                FlowNodeDO nextNode = definitionCacheService.getNodeByCode(definitionId, nextCode);
+                if (nextNode != null
+                        && nextNode.getNodeType() == com.njydsz.pmis.workflow.enums.FlowNodeType.APPROVAL.getCode()) {
+                    return nextCode;
+                }
+                // 跳过 CC/SERVICE/END 等非审批节点，继续 BFS
+                if (nextNode != null
+                        && nextNode.getNodeType() != com.njydsz.pmis.workflow.enums.FlowNodeType.END.getCode()) {
+                    queue.add(nextCode);
+                }
+            }
+        }
+        return null;
     }
 
     /**

@@ -163,6 +163,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     public static final String TRIGGER_API = "API";
     /** P0-2: 故障转移触发（JobNodeReaper 重建派发时使用） */
     public static final String TRIGGER_FAILOVER = "FAILOVER";
+    /** P0-4: 事件驱动触发（MQ 消息触发时使用） */
+    public static final String TRIGGER_EVENT = "EVENT";
 
     /**
      * P0-4: 暴露全局执行线程池引用，供 ThreadPoolHotUpdateListener 动态调整参数。

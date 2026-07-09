@@ -1,0 +1,313 @@
+# =============================================================================
+# SkyWalking Agent 注入补丁 (Prod)
+# -----------------------------------------------------------------------------
+# 为所有微服务 Deployment 添加:
+#   1. init-container 下载 SkyWalking Java Agent
+#   2. 共享 volume 挂载 agent 目录
+#   3. JAVA_TOOL_OPTIONS 环境变量注入 -javaagent
+#   4. SW_AGENT_NAME 标识服务名
+# 使用 kustomize strategic merge patch 覆盖各 Deployment
+# =============================================================================
+
+# Gateway
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-gateway
+  namespace: pmis
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: skywalking-agent
+          image: apache/skywalking-java-agent:9.4.0-java17
+          command:
+            - sh
+            - -c
+            - cp -r /skywalking/agent /skywalking/agent-shared/
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent-shared
+      containers:
+        - name: gateway
+          envFrom:
+            - configMapRef:
+                name: skywalking-agent-config
+          env:
+            - name: SW_AGENT_NAME
+              value: "ydsz-pmis-gateway"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/skywalking/agent/skywalking-agent.jar"
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent
+              readOnly: true
+      volumes:
+        - name: skywalking-agent
+          emptyDir: {}
+
+---
+# UserInfo Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-userinfo
+  namespace: pmis
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: skywalking-agent
+          image: apache/skywalking-java-agent:9.4.0-java17
+          command:
+            - sh
+            - -c
+            - cp -r /skywalking/agent /skywalking/agent-shared/
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent-shared
+      containers:
+        - name: userinfo
+          envFrom:
+            - configMapRef:
+                name: skywalking-agent-config
+          env:
+            - name: SW_AGENT_NAME
+              value: "ydsz-pmis-userinfo"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/skywalking/agent/skywalking-agent.jar"
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent
+              readOnly: true
+      volumes:
+        - name: skywalking-agent
+          emptyDir: {}
+
+---
+# System Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-system
+  namespace: pmis
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: skywalking-agent
+          image: apache/skywalking-java-agent:9.4.0-java17
+          command:
+            - sh
+            - -c
+            - cp -r /skywalking/agent /skywalking/agent-shared/
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent-shared
+      containers:
+        - name: system
+          envFrom:
+            - configMapRef:
+                name: skywalking-agent-config
+          env:
+            - name: SW_AGENT_NAME
+              value: "ydsz-pmis-system"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/skywalking/agent/skywalking-agent.jar"
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent
+              readOnly: true
+      volumes:
+        - name: skywalking-agent
+          emptyDir: {}
+
+---
+# Project Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-project
+  namespace: pmis
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: skywalking-agent
+          image: apache/skywalking-java-agent:9.4.0-java17
+          command:
+            - sh
+            - -c
+            - cp -r /skywalking/agent /skywalking/agent-shared/
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent-shared
+      containers:
+        - name: project
+          envFrom:
+            - configMapRef:
+                name: skywalking-agent-config
+          env:
+            - name: SW_AGENT_NAME
+              value: "ydsz-pmis-project"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/skywalking/agent/skywalking-agent.jar"
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent
+              readOnly: true
+      volumes:
+        - name: skywalking-agent
+          emptyDir: {}
+
+---
+# Message Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-message
+  namespace: pmis
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: skywalking-agent
+          image: apache/skywalking-java-agent:9.4.0-java17
+          command:
+            - sh
+            - -c
+            - cp -r /skywalking/agent /skywalking/agent-shared/
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent-shared
+      containers:
+        - name: message
+          envFrom:
+            - configMapRef:
+                name: skywalking-agent-config
+          env:
+            - name: SW_AGENT_NAME
+              value: "ydsz-pmis-message"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/skywalking/agent/skywalking-agent.jar"
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent
+              readOnly: true
+      volumes:
+        - name: skywalking-agent
+          emptyDir: {}
+
+---
+# Workflow Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-workflow
+  namespace: pmis
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: skywalking-agent
+          image: apache/skywalking-java-agent:9.4.0-java17
+          command:
+            - sh
+            - -c
+            - cp -r /skywalking/agent /skywalking/agent-shared/
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent-shared
+      containers:
+        - name: workflow
+          envFrom:
+            - configMapRef:
+                name: skywalking-agent-config
+          env:
+            - name: SW_AGENT_NAME
+              value: "ydsz-pmis-workflow"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/skywalking/agent/skywalking-agent.jar"
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent
+              readOnly: true
+      volumes:
+        - name: skywalking-agent
+          emptyDir: {}
+
+---
+# Agent Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-agent
+  namespace: pmis
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: skywalking-agent
+          image: apache/skywalking-java-agent:9.4.0-java17
+          command:
+            - sh
+            - -c
+            - cp -r /skywalking/agent /skywalking/agent-shared/
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent-shared
+      containers:
+        - name: agent
+          envFrom:
+            - configMapRef:
+                name: skywalking-agent-config
+          env:
+            - name: SW_AGENT_NAME
+              value: "ydsz-pmis-agent"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/skywalking/agent/skywalking-agent.jar"
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent
+              readOnly: true
+      volumes:
+        - name: skywalking-agent
+          emptyDir: {}
+
+---
+# CronJob Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-cronjob
+  namespace: pmis
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: skywalking-agent
+          image: apache/skywalking-java-agent:9.4.0-java17
+          command:
+            - sh
+            - -c
+            - cp -r /skywalking/agent /skywalking/agent-shared/
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent-shared
+      containers:
+        - name: cronjob
+          envFrom:
+            - configMapRef:
+                name: skywalking-agent-config
+          env:
+            - name: SW_AGENT_NAME
+              value: "ydsz-pmis-cronjob"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/skywalking/agent/skywalking-agent.jar"
+          volumeMounts:
+            - name: skywalking-agent
+              mountPath: /skywalking/agent
+              readOnly: true
+      volumes:
+        - name: skywalking-agent
+          emptyDir: {}

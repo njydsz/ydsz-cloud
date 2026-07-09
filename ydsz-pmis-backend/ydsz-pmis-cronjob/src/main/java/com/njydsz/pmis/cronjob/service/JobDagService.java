@@ -2,6 +2,7 @@ package com.njydsz.pmis.cronjob.service;
 
 import com.njydsz.pmis.cronjob.dto.JobDagSaveDTO;
 import com.njydsz.pmis.cronjob.entity.JobDagDO;
+import com.njydsz.pmis.cronjob.entity.JobDagVersionDO;
 
 import java.util.List;
 
@@ -98,4 +99,39 @@ public interface JobDagService {
      * @throws com.njydsz.pmis.common.exception.BizException 当 DAG 不存在、未启用或并发已达上限时抛出
      */
     String triggerDag(String dagKey, String triggerBy);
+
+    // ==================== P1-8: 工作流版本管理 ====================
+
+    /**
+     * P1-8: 查询 DAG 版本历史。
+     *
+     * @param dagId DAG ID
+     * @param limit 最多返回条数（默认 50）
+     * @return 版本历史列表（按版本号倒序）
+     */
+    List<JobDagVersionDO> listDagVersions(String dagId, int limit);
+
+    /**
+     * P1-8: 查询指定版本的 DAG 快照。
+     *
+     * @param dagId   DAG ID
+     * @param version 版本号
+     * @return 版本快照
+     * @throws com.njydsz.pmis.common.exception.BizException 当版本不存在时抛出
+     */
+    JobDagVersionDO getDagVersion(String dagId, int version);
+
+    /**
+     * P1-8: 回滚 DAG 到指定版本。
+     *
+     * <p>将指定版本的 dagDefinition 复制到当前 DAG 定义，并创建新的版本快照。
+     * 回滚本身也是一个新版本，版本号继续递增（不重用旧版本号）。
+     *
+     * @param dagId    DAG ID
+     * @param version  要回滚到的版本号
+     * @param changedBy 操作人
+     * @return 回滚后的新版本号
+     * @throws com.njydsz.pmis.common.exception.BizException 当 DAG 或版本不存在时抛出
+     */
+    int rollbackDagVersion(String dagId, int version, String changedBy);
 }

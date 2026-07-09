@@ -16,6 +16,8 @@ import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowAttachmentService;
+import com.njydsz.pmis.workflow.form.FlowFormEngineService;
+import com.njydsz.pmis.workflow.form.FlowFormSchema;
 import com.njydsz.pmis.workflow.service.FlowFormFieldPermService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
@@ -29,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -68,6 +71,8 @@ public class FlowTaskPassService {
     private final FlowTaskAuditService auditService;
     private final CountersignStrategyFactory strategyFactory;
     private final FlowFormFieldPermService formFieldPermService;
+    /** P0-3: 表单引擎服务 */
+    private final FlowFormEngineService formEngineService;
     /** P1-6: 审批附件服务 */
     private final FlowAttachmentService attachmentService;
     /** P1-7: 待办数 WebSocket 推送服务 */
@@ -163,17 +168,27 @@ public class FlowTaskPassService {
     }
 
     /**
-     * 表单字段权限校验
+     * 表单字段权限校验 + P0-3 表单 Schema 校验
      */
     private void validateFormFieldPerms(FlowRunTaskDO task, Map<String, Object> variables,
                                        FlowInstanceDO instance) {
         FlowNodeDO formNode = nodeMapper.selectByCode(task.getDefinitionId(), task.getNodeCode());
-        if (formNode != null && StringUtils.hasText(formNode.getFormFieldsConfig())) {
-            Map<String, String> fieldPerms = formFieldPermService.parseFieldPerms(formNode.getFormFieldsConfig());
+        if (formNode == null) {
+            return;
+        }
+        // 字段权限校验
+        Map<String, String> fieldPerms = null;
+        if (StringUtils.hasText(formNode.getFormFieldsConfig())) {
+            fieldPerms = formFieldPermService.parseFieldPerms(formNode.getFormFieldsConfig());
             if (!fieldPerms.isEmpty()) {
                 Map<String, Object> existingVars = mergeVariables(instance, Collections.emptyMap());
                 formFieldPermService.validateFieldPerms(fieldPerms, variables, existingVars);
             }
+        }
+        // P0-3: 表单 Schema 校验
+        FlowFormSchema schema = formEngineService.getFormSchema(formNode.getExt());
+        if (schema != null) {
+            formEngineService.validateAndThrow(schema, variables, fieldPerms);
         }
     }
 
