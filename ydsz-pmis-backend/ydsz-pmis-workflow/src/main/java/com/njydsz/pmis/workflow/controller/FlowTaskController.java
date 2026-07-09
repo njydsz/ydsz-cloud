@@ -654,7 +654,9 @@ public class FlowTaskController {
     }
 
     /**
-     * P2-1: 检查 AI Agent 服务是否可用
+     * P2-1: 检查 AI Agent 服务是否可用。
+     *
+     * @return AI 可用状态与支持的 Agent 列表
      */
     @GetMapping("/ai/status")
     public Result<Map<String, Object>> aiStatus() {

@@ -43,6 +43,7 @@ import java.util.Map;
 @Validated
 public class FlowTemplateController {
 
+    /** 流程模板服务，负责模板查询、导入、导出与版本管理 */
     private final FlowTemplateService templateService;
 
     /**

@@ -27,10 +27,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class FlowNotifyPreferenceController {
 
+    /** 通知偏好服务，负责用户免打扰时段与通知聚合偏好的查询与保存 */
     private final FlowNotifyPreferenceService preferenceService;
 
     /**
-     * 查询当前用户的通知偏好
+     * 查询当前用户的通知偏好。
+     *
+     * @return 通知偏好配置
      */
     @GetMapping
     public Result<FlowNotifyPreferenceDO> get() {
@@ -40,7 +43,10 @@ public class FlowNotifyPreferenceController {
     }
 
     /**
-     * 保存（新增或更新）当前用户的通知偏好
+     * 保存（新增或更新）当前用户的通知偏好。
+     *
+     * @param preference 通知偏好配置
+     * @return 保存结果
      */
     @Idempotent(key = "flow-notify-preference:save", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping

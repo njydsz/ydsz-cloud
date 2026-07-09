@@ -34,8 +34,14 @@ import java.util.List;
 @Tag(name = "审批常用语", description = "常用审批意见管理")
 public class FlowQuickCommentController {
 
+    /** 审批常用语服务，负责常用语的增删改查与使用次数统计 */
     private final FlowQuickCommentService quickCommentService;
 
+    /**
+     * 查询当前用户的常用语列表。
+     *
+     * @return 常用语列表
+     */
     @GetMapping
     @Operation(summary = "查询当前用户的常用语列表")
     public Result<List<FlowQuickCommentDO>> list() {
@@ -44,6 +50,12 @@ public class FlowQuickCommentController {
         return Result.ok(quickCommentService.listByUser(userId, tenantId));
     }
 
+    /**
+     * 新增常用语。
+     *
+     * @param dto 常用语信息
+     * @return 新建常用语 ID
+     */
     @Idempotent(key = "flow-quick-comment:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "新增常用语")
@@ -53,6 +65,12 @@ public class FlowQuickCommentController {
         return Result.ok(quickCommentService.create(dto, userId, tenantId));
     }
 
+    /**
+     * 编辑常用语。
+     *
+     * @param dto 常用语信息
+     * @return 空响应
+     */
     @Idempotent(key = "flow-quick-comment:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "编辑常用语")
@@ -62,6 +80,12 @@ public class FlowQuickCommentController {
         return Result.ok();
     }
 
+    /**
+     * 删除常用语。
+     *
+     * @param id 常用语 ID
+     * @return 空响应
+     */
     @Idempotent(key = "flow-quick-comment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除常用语")
@@ -71,6 +95,12 @@ public class FlowQuickCommentController {
         return Result.ok();
     }
 
+    /**
+     * 增加使用次数（审批时调用）。
+     *
+     * @param id 常用语 ID
+     * @return 空响应
+     */
     @Idempotent(key = "flow-quick-comment:increment-use-count", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/use")
     @Operation(summary = "增加使用次数（审批时调用）")

@@ -266,7 +266,11 @@ public class FlowMonitorController {
     }
 
     /**
-     * 将 efficiencyService 返回的异常 Map 映射为前端 AnomalyInstanceDTO 字段
+     * 将 efficiencyService 返回的异常 Map 映射为前端 AnomalyInstanceDTO 字段。
+     *
+     * @param a        原始异常数据
+     * @param tenantId 租户 ID
+     * @return 映射后的前端 DTO 结构
      */
     private Map<String, Object> mapAnomaly(Map<String, Object> a, String tenantId) {
         String type = String.valueOf(a.getOrDefault("type", "UNKNOWN"));
@@ -630,7 +634,10 @@ public class FlowMonitorController {
     // ============== P2-7: 私有辅助方法 ==============
 
     /**
-     * P2-7: 构建监控概览数据（复用 monitorOverview 逻辑，供 dashboard 聚合调用）
+     * P2-7: 构建监控概览数据（复用 monitorOverview 逻辑，供 dashboard 聚合调用）。
+     *
+     * @param tenantId 租户 ID
+     * @return 概览统计数据 Map
      */
     private Map<String, Object> buildOverview(String tenantId) {
         Map<String, Object> overview = new LinkedHashMap<>();
@@ -683,7 +690,11 @@ public class FlowMonitorController {
     }
 
     /**
-     * P2-7: 构建实例趋势数据（复用 monitorInstanceTrend 逻辑，供 dashboard 聚合调用）
+     * P2-7: 构建实例趋势数据（复用 monitorInstanceTrend 逻辑，供 dashboard 聚合调用）。
+     *
+     * @param tenantId 租户 ID
+     * @param days     统计天数
+     * @return 趋势列表
      */
     private List<Map<String, Object>> buildInstanceTrend(String tenantId, int days) {
         int effectiveDays = (days == 30) ? 30 : 7;
@@ -728,7 +739,10 @@ public class FlowMonitorController {
     }
 
     /**
-     * P2-4: 解析日期时间字符串（yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd）
+     * P2-4: 解析日期时间字符串（yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd）。
+     *
+     * @param str 日期时间字符串
+     * @return 解析后的 LocalDateTime，解析失败返回 null
      */
     private LocalDateTime parseDateTime(String str) {
         if (str == null || str.isBlank()) return null;

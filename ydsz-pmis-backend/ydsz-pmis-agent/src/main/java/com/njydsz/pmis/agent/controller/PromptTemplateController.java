@@ -39,6 +39,12 @@ public class PromptTemplateController {
     /** Prompt 模板服务 */
     private final PromptTemplateService service;
 
+    /**
+     * 创建模板（默认非生效，需手动激活）。
+     *
+     * @param dto 模板创建参数
+     * @return 落库后的模板
+     */
     @Idempotent(key = "prompt-template:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建模板", description = "创建新的 Prompt 模板（默认非生效，需手动激活）")
@@ -46,6 +52,12 @@ public class PromptTemplateController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 激活模板（同 code 的其他版本自动失效）。
+     *
+     * @param id 模板 ID
+     * @return 激活后的模板
+     */
     @Idempotent(key = "prompt-template:activate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/activate")
     @Operation(summary = "激活模板", description = "激活指定模板版本，同 code 的其他版本自动失效")
@@ -53,18 +65,36 @@ public class PromptTemplateController {
         return Result.ok(service.activate(id));
     }
 
+    /**
+     * 查询模板详情。
+     *
+     * @param id 模板 ID
+     * @return 模板详情
+     */
     @GetMapping("/{id}")
     @Operation(summary = "查询模板详情")
     public Result<AgentPromptTemplateDO> getById(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询模板。
+     *
+     * @param query 查询条件
+     * @return 分页结果
+     */
     @GetMapping
     @Operation(summary = "分页查询模板")
     public Result<PageResult<AgentPromptTemplateDO>> page(PromptTemplateQueryDTO query) {
         return Result.ok(service.page(query));
     }
 
+    /**
+     * 删除模板（软删除）。
+     *
+     * @param id 模板 ID
+     * @return 空响应
+     */
     @Idempotent(key = "prompt-template:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除模板", description = "软删除指定模板")

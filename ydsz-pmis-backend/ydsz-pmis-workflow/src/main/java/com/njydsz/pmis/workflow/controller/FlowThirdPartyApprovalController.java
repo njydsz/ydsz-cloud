@@ -53,6 +53,7 @@ import java.util.Map;
 @Validated
 public class FlowThirdPartyApprovalController {
 
+    /** 三方账号映射服务，负责 openId → 系统用户 ID 的反查 */
     private final FlowThirdPartyAccountService thirdPartyAccountService;
     /** 嵌入式审批服务（驱动工作流通过/驳回/撤回） */
     private final FlowEmbeddedApprovalService embeddedApprovalService;
@@ -282,7 +283,10 @@ public class FlowThirdPartyApprovalController {
     }
 
     /**
-     * 从回调 body 中提取加密载荷
+     * 从回调 body 中提取加密载荷。
+     *
+     * @param body 回调原始数据
+     * @return 加密载荷字符串，无则返回 null
      */
     private String extractEncrypt(Map<String, Object> body) {
         if (body == null) {
@@ -295,6 +299,13 @@ public class FlowThirdPartyApprovalController {
         return enc == null ? null : enc.toString();
     }
 
+    /**
+     * 从 Map 中安全提取字符串值。
+     *
+     * @param body 数据源
+     * @param key  键名
+     * @return 字符串值，null 或不存在时返回 null
+     */
     private String mapStr(Map<String, Object> body, String key) {
         if (body == null) {
             return null;
@@ -303,12 +314,23 @@ public class FlowThirdPartyApprovalController {
         return v == null ? null : v.toString();
     }
 
+    /**
+     * 构造成功响应 Map。
+     *
+     * @return 包含 success=true 的 Map
+     */
     private Map<String, Object> ok() {
         Map<String, Object> r = new LinkedHashMap<>();
         r.put("success", true);
         return r;
     }
 
+    /**
+     * 构造失败响应 Map。
+     *
+     * @param msg 错误信息
+     * @return 包含 success=false 与 errorMsg 的 Map
+     */
     private Map<String, Object> fail(String msg) {
         Map<String, Object> r = new LinkedHashMap<>();
         r.put("success", false);

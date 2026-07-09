@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class FlowEmbeddedApprovalController {
 
+    /** 嵌入式审批服务，负责业务侧审批面板数据加载与快捷操作 */
     private final FlowEmbeddedApprovalService embeddedApprovalService;
 
     /**
@@ -105,9 +106,14 @@ public class FlowEmbeddedApprovalController {
     }
 
     /**
-     * 嵌入式快捷操作（按业务类型 + 业务 ID）
+     * 嵌入式快捷操作（按业务类型 + 业务 ID）。
      *
      * <p>URL 形式：/workflow/embedded/{businessType}/{businessId}/action
+     *
+     * @param businessType 业务类型
+     * @param businessId   业务 ID
+     * @param dto          嵌入式快捷操作参数
+     * @return 空响应
      */
     @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
     @Idempotent(key = "flow-embedded-approval:quick-action-by-path", ttlSeconds = 5, message = "请勿重复提交")

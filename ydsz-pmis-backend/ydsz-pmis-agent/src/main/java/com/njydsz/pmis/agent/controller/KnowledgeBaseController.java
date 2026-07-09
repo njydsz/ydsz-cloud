@@ -152,9 +152,12 @@ public class KnowledgeBaseController {
      */
     @Data
     public static class UploadDocumentRequest {
+        /** 文档名称 */
         @NotBlank
         private String name;
+        /** 来源类型（TEXT / URL / FILE 等） */
         private String sourceType;
+        /** 文档内容（纯文本） */
         @NotBlank
         private String content;
     }
@@ -164,6 +167,7 @@ public class KnowledgeBaseController {
      */
     @Data
     public static class SearchRequest {
+        /** 检索查询文本 */
         @NotBlank
         private String query;
     }

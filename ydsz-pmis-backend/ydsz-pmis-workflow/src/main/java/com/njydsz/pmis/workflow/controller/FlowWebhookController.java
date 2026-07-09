@@ -30,8 +30,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowWebhookController {
 
+    /** Webhook 事件订阅服务，负责订阅的增删改查 */
     private final FlowWebhookService webhookService;
 
+    /**
+     * 创建 Webhook 订阅。
+     *
+     * @param subscription 订阅配置
+     * @return 新建订阅 ID
+     */
     @Idempotent(key = "flow-webhook:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody FlowWebhookSubscriptionDO subscription) {
@@ -41,6 +48,12 @@ public class FlowWebhookController {
         return Result.ok(webhookService.create(subscription));
     }
 
+    /**
+     * 更新 Webhook 订阅。
+     *
+     * @param subscription 订阅配置
+     * @return 空响应
+     */
     @Idempotent(key = "flow-webhook:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@Valid @RequestBody FlowWebhookSubscriptionDO subscription) {
@@ -48,6 +61,12 @@ public class FlowWebhookController {
         return Result.ok();
     }
 
+    /**
+     * 删除 Webhook 订阅。
+     *
+     * @param id 订阅 ID
+     * @return 空响应
+     */
     @Idempotent(key = "flow-webhook:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
@@ -55,11 +74,22 @@ public class FlowWebhookController {
         return Result.ok();
     }
 
+    /**
+     * 按 ID 查询 Webhook 订阅详情。
+     *
+     * @param id 订阅 ID
+     * @return 订阅详情
+     */
     @GetMapping("/{id}")
     public Result<FlowWebhookSubscriptionDO> getById(@PathVariable String id) {
         return Result.ok(webhookService.getById(id));
     }
 
+    /**
+     * 查询全部 Webhook 订阅列表。
+     *
+     * @return 订阅列表
+     */
     @GetMapping("/list")
     public Result<List<FlowWebhookSubscriptionDO>> listAll() {
         return Result.ok(webhookService.listAll());

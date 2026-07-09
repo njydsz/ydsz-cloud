@@ -124,6 +124,12 @@ public class AgentEvaluationController {
         return Result.ok(evaluators);
     }
 
+    /**
+     * 获取评估器类型的中文描述。
+     *
+     * @param type 评估器类型枚举
+     * @return 中文描述
+     */
     private String getEvaluatorDesc(EvaluationCase.EvaluatorType type) {
         return switch (type) {
             case EXACT_MATCH -> "精确匹配";

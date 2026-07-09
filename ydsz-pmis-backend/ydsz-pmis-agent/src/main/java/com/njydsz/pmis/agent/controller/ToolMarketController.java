@@ -58,6 +58,12 @@ public class ToolMarketController {
     /** 工具市场服务 */
     private final ToolMarketService service;
 
+    /**
+     * 注册工具（手动注册单个 HTTP API 工具到工具市场）。
+     *
+     * @param dto 工具注册参数
+     * @return 落库后的工具条目
+     */
     @Idempotent(key = "tool-market:register", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/register")
     @Operation(summary = "注册工具", description = "手动注册单个 HTTP API 工具到工具市场")
@@ -65,6 +71,12 @@ public class ToolMarketController {
         return Result.ok(service.register(dto));
     }
 
+    /**
+     * OpenAPI 批量导入（通过 OpenAPI 3.x 规范 URL 批量导入工具）。
+     *
+     * @param specUrl OpenAPI 规范 URL
+     * @return 导入的工具条目列表
+     */
     @Idempotent(key = "tool-market:register-from-open-api", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/register-openapi")
     @Operation(summary = "OpenAPI 批量导入", description = "通过 OpenAPI 3.x 规范 URL 批量导入工具")
@@ -74,6 +86,12 @@ public class ToolMarketController {
         return Result.ok(service.registerFromOpenApi(specUrl));
     }
 
+    /**
+     * 注销工具（软删除 + 从 ToolRegistry 移除）。
+     *
+     * @param toolName 工具名称
+     * @return 空响应
+     */
     @Idempotent(key = "tool-market:unregister", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{toolName}")
     @Operation(summary = "注销工具", description = "从工具市场注销指定工具（软删除 + 从 ToolRegistry 移除）")
@@ -82,6 +100,12 @@ public class ToolMarketController {
         return Result.ok();
     }
 
+    /**
+     * 启用工具（注册到 ToolRegistry 供 Agent 调用）。
+     *
+     * @param toolName 工具名称
+     * @return 更新后的工具条目
+     */
     @Idempotent(key = "tool-market:enable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{toolName}/enable")
     @Operation(summary = "启用工具", description = "启用指定工具，注册到 ToolRegistry 供 Agent 调用")
@@ -89,6 +113,12 @@ public class ToolMarketController {
         return Result.ok(service.enable(toolName));
     }
 
+    /**
+     * 禁用工具（从 ToolRegistry 移除）。
+     *
+     * @param toolName 工具名称
+     * @return 更新后的工具条目
+     */
     @Idempotent(key = "tool-market:disable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{toolName}/disable")
     @Operation(summary = "禁用工具", description = "禁用指定工具，从 ToolRegistry 移除")
@@ -96,18 +126,37 @@ public class ToolMarketController {
         return Result.ok(service.disable(toolName));
     }
 
+    /**
+     * 查询工具详情。
+     *
+     * @param id 工具 ID
+     * @return 工具详情
+     */
     @GetMapping("/{id}")
     @Operation(summary = "查询工具详情")
     public Result<ToolMarketEntryDO> getById(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询工具列表。
+     *
+     * @param query 查询条件
+     * @return 分页结果
+     */
     @GetMapping
     @Operation(summary = "分页查询工具列表")
     public Result<PageResult<ToolMarketEntryDO>> page(ToolMarketQueryDTO query) {
         return Result.ok(service.page(query));
     }
 
+    /**
+     * 测试工具调用（不影响 ToolRegistry 状态）。
+     *
+     * @param toolName  工具名称
+     * @param parameters 调用参数
+     * @return 工具执行结果
+     */
     @Idempotent(key = "tool-market:test-tool", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{toolName}/test")
     @Operation(summary = "测试工具调用", description = "使用指定参数测试工具调用，不影响 ToolRegistry 状态")
