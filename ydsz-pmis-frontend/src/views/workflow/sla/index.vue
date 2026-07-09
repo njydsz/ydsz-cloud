@@ -19,8 +19,9 @@
  *   2. 超时任务列表：支持手动扫描和单任务处理
  *   3. SLA 策略说明（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）
  */
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import {
   listOverdueTasks,
@@ -90,7 +91,7 @@ async function loadNodeSlaConfig(defId: number) {
       })
     }
   } catch (e) {
-    ElMessage.error('加载 SLA 规则失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.sla.msg.loadRuleFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     ruleLoading.value = false
   }
@@ -122,19 +123,21 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 
 // ==================== SLA 策略映射 ====================
-const slaStrategyMap: Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }> = {
-  REMIND: { label: '提醒', type: 'warning' },
-  ESCALATE: { label: '升级', type: 'danger' },
-  AUTO_PASS: { label: '自动通过', type: 'success' },
-  AUTO_REJECT: { label: '自动驳回', type: 'danger' },
-}
+const { t } = useI18n()
 
-const slaStrategyOptions = [
-  { label: '提醒', value: 'REMIND', desc: '超时后发送提醒通知给处理人' },
-  { label: '升级', value: 'ESCALATE', desc: '超时后升级给上级处理人' },
-  { label: '自动通过', value: 'AUTO_PASS', desc: '超时后自动通过任务' },
-  { label: '自动驳回', value: 'AUTO_REJECT', desc: '超时后自动驳回任务' },
-]
+const slaStrategyMap = computed<Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }>>(() => ({
+  REMIND: { label: t('workflow.sla.strategy.remind'), type: 'warning' },
+  ESCALATE: { label: t('workflow.sla.strategy.escalate'), type: 'danger' },
+  AUTO_PASS: { label: t('workflow.sla.strategy.autoPass'), type: 'success' },
+  AUTO_REJECT: { label: t('workflow.sla.strategy.autoReject'), type: 'danger' },
+}))
+
+const slaStrategyOptions = computed(() => [
+  { label: t('workflow.sla.strategy.remind'), value: 'REMIND', desc: t('workflow.sla.strategyDesc.remind') },
+  { label: t('workflow.sla.strategy.escalate'), value: 'ESCALATE', desc: t('workflow.sla.strategyDesc.escalate') },
+  { label: t('workflow.sla.strategy.autoPass'), value: 'AUTO_PASS', desc: t('workflow.sla.strategyDesc.autoPass') },
+  { label: t('workflow.sla.strategy.autoReject'), value: 'AUTO_REJECT', desc: t('workflow.sla.strategyDesc.autoReject') },
+])
 
 // ==================== 加载超时任务列表 ====================
 async function loadOverdueTasks() {
@@ -149,7 +152,7 @@ async function loadOverdueTasks() {
       total.value = res.data.data.total || 0
     }
   } catch (e) {
-    ElMessage.error('加载超时任务失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.sla.msg.loadTasksFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     loading.value = false
   }
@@ -163,21 +166,23 @@ function handlePageChange(page: number) {
 // ==================== 手动扫描 ====================
 async function handleScan() {
   try {
-    await ElMessageBox.confirm('确认手动扫描 SLA 超时任务？扫描将触发超时策略执行。', '扫描确认', {
-      type: 'warning',
-    })
+    await ElMessageBox.confirm(
+      t('workflow.sla.msg.scanConfirm'),
+      t('workflow.sla.msg.scanConfirmTitle'),
+      { type: 'warning' },
+    )
     scanning.value = true
     const res = await scanSla()
     if (res.data?.code === 0) {
       const count = res.data.data
-      ElMessage.success(`扫描完成，共处理 ${count || 0} 个超时任务`)
+      ElMessage.success(t('workflow.sla.msg.scanComplete', { count: count || 0 }))
       loadOverdueTasks()
     } else {
-      ElMessage.error(res.data?.message || '扫描失败')
+      ElMessage.error(res.data?.message || t('workflow.sla.msg.scanFailed'))
     }
   } catch (e) {
     if (e !== 'cancel') {
-      ElMessage.error('扫描失败：' + (e as Error).message)
+      ElMessage.error(t('workflow.sla.msg.scanFailedWithMsg', { reason: (e as Error).message }))
     }
   } finally {
     scanning.value = false
@@ -188,20 +193,20 @@ async function handleScan() {
 async function handleProcessTask(row: FlowTaskDTO) {
   try {
     await ElMessageBox.confirm(
-      `确认处理任务「${row.nodeName || row.nodeCode}」（实例：${row.instanceId}）？`,
-      '任务处理确认',
+      t('workflow.sla.msg.processConfirm', { name: row.nodeName || row.nodeCode, instanceId: row.instanceId }),
+      t('workflow.sla.msg.processConfirmTitle'),
       { type: 'warning' },
     )
     const res = await processSlaTask(row.id)
     if (res.data?.code === 0) {
-      ElMessage.success('任务处理成功')
+      ElMessage.success(t('workflow.sla.msg.processSuccess'))
       loadOverdueTasks()
     } else {
-      ElMessage.error(res.data?.message || '处理失败')
+      ElMessage.error(res.data?.message || t('workflow.sla.msg.processFailed'))
     }
   } catch (e) {
     if (e !== 'cancel') {
-      ElMessage.error('处理失败：' + (e as Error).message)
+      ElMessage.error(t('workflow.sla.msg.processFailedWithMsg', { reason: (e as Error).message }))
     }
   }
 }
@@ -232,11 +237,11 @@ onMounted(() => {
     <div class="page-header">
       <div class="page-header-row">
         <div>
-          <h2>SLA 管理</h2>
-          <p class="page-header__sub">监控流程超时任务，手动触发 SLA 扫描和单任务处理</p>
+          <h2>{{ t('workflow.sla.title') }}</h2>
+          <p class="page-header__sub">{{ t('workflow.sla.subtitle') }}</p>
         </div>
         <el-button type="primary" :loading="scanning" @click="handleScan">
-          <el-icon><Refresh /></el-icon>手动扫描
+          <el-icon><Refresh /></el-icon>{{ t('workflow.sla.manualScan') }}
         </el-button>
       </div>
     </div>
@@ -244,7 +249,7 @@ onMounted(() => {
     <!-- SLA 策略说明卡片 -->
     <el-card shadow="never" class="strategy-card">
       <template #header>
-        <span class="card-title">SLA 策略说明</span>
+        <span class="card-title">{{ t('workflow.sla.strategyTitle') }}</span>
       </template>
       <div class="strategy-list">
         <div v-for="opt in slaStrategyOptions" :key="opt.value" class="strategy-item">
@@ -260,10 +265,10 @@ onMounted(() => {
     <el-card shadow="never" class="page-body">
       <template #header>
         <div class="card-header">
-          <span class="card-title">SLA 规则预览</span>
+          <span class="card-title">{{ t('workflow.sla.rulePreview') }}</span>
           <el-select
             v-model="selectedDefinitionId"
-            placeholder="选择流程定义查看节点 SLA 配置"
+            :placeholder="t('workflow.sla.selectDefinitionPlaceholder')"
             clearable
             filterable
             size="small"
@@ -286,27 +291,27 @@ onMounted(() => {
         border
         stripe
         size="small"
-        empty-text="请选择流程定义查看节点 SLA 配置"
+        :empty-text="t('workflow.sla.ruleEmptyText')"
       >
-        <el-table-column prop="nodeCode" label="节点编码" min-width="120" show-overflow-tooltip />
-        <el-table-column prop="nodeName" label="节点名称" min-width="120">
+        <el-table-column prop="nodeCode" :label="t('workflow.sla.columns.nodeCode')" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="nodeName" :label="t('workflow.sla.columns.nodeName')" min-width="120">
           <template #default="{ row }">
             {{ row.nodeName || row.nodeCode }}
           </template>
         </el-table-column>
-        <el-table-column label="SLA 状态" width="100" align="center">
+        <el-table-column :label="t('workflow.sla.columns.slaStatus')" width="100" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.slaEnabled" type="success" size="small">已启用</el-tag>
-            <el-tag v-else type="info" size="small">未配置</el-tag>
+            <el-tag v-if="row.slaEnabled" type="success" size="small">{{ t('workflow.sla.slaStatus.enabled') }}</el-tag>
+            <el-tag v-else type="info" size="small">{{ t('workflow.sla.slaStatus.unconfigured') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="超时阈值" width="110" align="center">
+        <el-table-column :label="t('workflow.sla.columns.timeoutThreshold')" width="110" align="center">
           <template #default="{ row }">
-            <span v-if="row.slaEnabled">{{ row.timeoutMinutes }} 分钟</span>
+            <span v-if="row.slaEnabled">{{ row.timeoutMinutes }} {{ t('workflow.sla.units.minutes') }}</span>
             <span v-else class="text-muted">-</span>
           </template>
         </el-table-column>
-        <el-table-column label="超时动作" width="110" align="center">
+        <el-table-column :label="t('workflow.sla.columns.timeoutAction')" width="110" align="center">
           <template #default="{ row }">
             <el-tag
               v-if="row.action"
@@ -318,19 +323,19 @@ onMounted(() => {
             <span v-else class="text-muted">-</span>
           </template>
         </el-table-column>
-        <el-table-column label="提醒间隔" width="100" align="center">
+        <el-table-column :label="t('workflow.sla.columns.reminderInterval')" width="100" align="center">
           <template #default="{ row }">
-            <span v-if="row.slaEnabled">{{ row.reminderIntervalMinutes || 60 }} 分钟</span>
+            <span v-if="row.slaEnabled">{{ row.reminderIntervalMinutes || 60 }} {{ t('workflow.sla.units.minutes') }}</span>
             <span v-else class="text-muted">-</span>
           </template>
         </el-table-column>
-        <el-table-column label="最大提醒" width="90" align="center">
+        <el-table-column :label="t('workflow.sla.columns.maxReminders')" width="90" align="center">
           <template #default="{ row }">
-            <span v-if="row.slaEnabled">{{ row.maxReminders ?? 3 }} 次</span>
+            <span v-if="row.slaEnabled">{{ row.maxReminders ?? 3 }} {{ t('workflow.sla.units.times') }}</span>
             <span v-else class="text-muted">-</span>
           </template>
         </el-table-column>
-        <el-table-column label="升级用户" width="90" align="center">
+        <el-table-column :label="t('workflow.sla.columns.escalateUser')" width="90" align="center">
           <template #default="{ row }">
             <span v-if="row.action === 'ESCALATE' && row.escalateUserId">
               {{ row.escalateUserId }}
@@ -340,7 +345,7 @@ onMounted(() => {
         </el-table-column>
       </el-table>
       <div class="sla-rule-tip">
-        提示：SLA 配置在流程设计器节点属性面板中维护，发布后在此预览。任务超时后由系统每 60 秒自动扫描触发。
+        {{ t('workflow.sla.ruleTip') }}
       </div>
     </el-card>
 
@@ -348,48 +353,48 @@ onMounted(() => {
     <el-card shadow="never" class="page-body">
       <template #header>
         <div class="card-header">
-          <span class="card-title">超时任务列表</span>
-          <el-tag type="danger" size="small">共 {{ total }} 条</el-tag>
+          <span class="card-title">{{ t('workflow.sla.overdueTaskList') }}</span>
+          <el-tag type="danger" size="small">{{ t('workflow.sla.overdueTotal', { count: total }) }}</el-tag>
         </div>
       </template>
 
       <el-table v-loading="loading" :data="taskList" border stripe>
-        <el-table-column prop="id" label="任务 ID" width="80" />
-        <el-table-column prop="instanceId" label="实例 ID" width="80" />
-        <el-table-column prop="flowName" label="流程名称" min-width="120">
+        <el-table-column prop="id" :label="t('workflow.sla.columns.taskId')" width="80" />
+        <el-table-column prop="instanceId" :label="t('workflow.sla.columns.instanceId')" width="80" />
+        <el-table-column prop="flowName" :label="t('workflow.sla.columns.flowName')" min-width="120">
           <template #default="{ row }">
             {{ row.flowName || row.flowCode }}
           </template>
         </el-table-column>
-        <el-table-column prop="nodeName" label="节点名称" min-width="120">
+        <el-table-column prop="nodeName" :label="t('workflow.sla.columns.nodeName')" min-width="120">
           <template #default="{ row }">
             {{ row.nodeName || row.nodeCode }}
           </template>
         </el-table-column>
-        <el-table-column prop="assigneeName" label="处理人" min-width="100">
+        <el-table-column prop="assigneeName" :label="t('workflow.sla.columns.assignee')" min-width="100">
           <template #default="{ row }">
             {{ row.assigneeName || row.assigneeId || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="title" label="任务标题" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="createTime" label="创建时间" min-width="150">
+        <el-table-column prop="title" :label="t('workflow.sla.columns.taskTitle')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="createTime" :label="t('workflow.sla.columns.createTime')" min-width="150">
           <template #default="{ row }">
             {{ row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD HH:mm') : '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="dueAt" label="截止时间" min-width="150">
+        <el-table-column prop="dueAt" :label="t('workflow.sla.columns.dueAt')" min-width="150">
           <template #default="{ row }">
             <span :class="{ 'overdue-text': row.dueAt && dayjs(row.dueAt).isBefore(dayjs()) }">
               {{ row.dueAt ? dayjs(row.dueAt).format('YYYY-MM-DD HH:mm') : '-' }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="超时天数" width="90">
+        <el-table-column :label="t('workflow.sla.columns.overdueDays')" width="90">
           <template #default="{ row }">
-            <el-tag type="danger" size="small">{{ getOverdueDays(row as FlowTaskDTO) }} 天</el-tag>
+            <el-tag type="danger" size="small">{{ getOverdueDays(row as FlowTaskDTO) }} {{ t('workflow.sla.units.days') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="SLA 策略" width="100">
+        <el-table-column :label="t('workflow.sla.columns.slaStrategy')" width="100">
           <template #default="{ row }">
             <el-tag
               :type="slaStrategyMap[getSlaStrategy(row as FlowTaskDTO)]?.type || 'info'"
@@ -399,14 +404,14 @@ onMounted(() => {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
+        <el-table-column :label="t('workflow.sla.columns.operation')" width="120" fixed="right">
           <template #default="{ row }">
             <el-button
               size="small"
               type="primary"
               link
               @click="handleProcessTask(row as FlowTaskDTO)"
-            >处理</el-button>
+            >{{ t('workflow.sla.processBtn') }}</el-button>
           </template>
         </el-table-column>
       </el-table>

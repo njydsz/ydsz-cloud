@@ -72,7 +72,7 @@ public class FlowDefinitionController {
     @Operation(summary = "BPMN 部署包 .zip 批量导入")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public Result<Map<String, Object>> batchDeployFromZip(
-            @org.springframework.web.bind.annotation.RequestParam("file")
+            @RequestParam("file")
             org.springframework.web.multipart.MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return Result.fail("zip 文件不能为空");

@@ -15,6 +15,7 @@ import com.njydsz.pmis.message.producer.RocketMQMessageProducer;
 import com.njydsz.pmis.message.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -54,14 +55,14 @@ public class MessageController {
     @Operation(summary = "发送消息(基于共享请求)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/send")
-    public Result<MessageResult> send(@RequestBody MessageRequest request) {
+    public Result<MessageResult> send(@Valid @RequestBody MessageRequest request) {
         return Result.ok(messageService.send(request));
     }
 
     @Operation(summary = "直接发送消息(本模块 DTO)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/send-direct")
-    public Result<MessageResult> sendDirect(@RequestBody MessageSendDTO dto) {
+    public Result<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
         return Result.ok(messageService.sendDirect(dto));
     }
 
@@ -75,7 +76,7 @@ public class MessageController {
     @Operation(summary = "异步发送消息(投递 RocketMQ)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/send-async")
-    public Result<MessageResult> sendAsync(@RequestBody MessageRequest request) {
+    public Result<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
         if (request == null) {
             return Result.failed(BizErrorCode.BAD_REQUEST, "消息请求为空");
         }
@@ -116,7 +117,7 @@ public class MessageController {
     @Operation(summary = "事务消息发送(RocketMQ 半消息)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/send-transactional")
-    public Result<MessageResult> sendTransactionally(@RequestBody MessageRequest request) {
+    public Result<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
         return Result.ok(messageService.sendTransactionally(request));
     }
 
@@ -130,7 +131,7 @@ public class MessageController {
     @Operation(summary = "批量发送消息(限制 100 条/批)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/batch-send")
-    public Result<BatchSendResult> batchSend(@RequestBody List<MessageRequest> requests,
+    public Result<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
                                              @RequestParam String batchId) {
         if (requests == null || requests.isEmpty()) {
             return Result.failed(BizErrorCode.BAD_REQUEST, "消息列表为空");

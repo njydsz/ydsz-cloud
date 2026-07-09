@@ -10,6 +10,7 @@ import com.njydsz.pmis.message.entity.MsgBatchDO;
 import com.njydsz.pmis.message.service.BatchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,7 +51,7 @@ public class BatchController {
     @Operation(summary = "异步批量发送消息")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/send")
-    public Result<MsgBatchDO> submitBatch(@RequestBody BatchSendRequestDTO dto) {
+    public Result<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
         if (dto == null) {
             return Result.failed(BizErrorCode.BAD_REQUEST, "批量发送参数为空");
         }

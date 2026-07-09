@@ -9,6 +9,7 @@ import com.njydsz.pmis.message.entity.MsgRouteRuleDO;
 import com.njydsz.pmis.message.service.RouteRuleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,14 +39,14 @@ public class RouteRuleController {
     @Operation(summary = "创建路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
     @PostMapping
-    public Result<MsgRouteRuleDO> create(@RequestBody RouteRuleUpsertDTO dto) {
+    public Result<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
         return Result.ok(routeRuleService.create(dto));
     }
 
     @Operation(summary = "更新路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
     @PutMapping("/{id}")
-    public Result<MsgRouteRuleDO> update(@PathVariable String id, @RequestBody RouteRuleUpsertDTO dto) {
+    public Result<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
         return Result.ok(routeRuleService.update(id, dto));
     }
 

@@ -183,4 +183,22 @@ public class TimeEntryController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate) {
         return Result.ok(service.detectCrossProject(employeeId, entryDate));
     }
+
+    /**
+     * 工时异常统计（按项目 + 月份）
+     *
+     * <p>聚合指定项目在指定月份的工时异常情况，供 Agent 工具 / 周报月报场景调用。
+     *
+     * @param initiationId 项目立项 ID
+     * @param month        月份（yyyy-MM），为空时取当前月
+     * @return 异常统计 Map（overtimeCount/missingCount/abnormalCount/totalHours）
+     */
+    @Operation(summary = "工时异常统计")
+    @PrePermission("execution:time:list")
+    @GetMapping("/abnormal-stat")
+    public Result<Map<String, Object>> abnormalStat(
+            @RequestParam String initiationId,
+            @RequestParam(required = false) String month) {
+        return Result.ok(service.abnormalStat(initiationId, month));
+    }
 }

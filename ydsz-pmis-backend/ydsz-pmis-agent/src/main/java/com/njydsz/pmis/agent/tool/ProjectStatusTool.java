@@ -1,7 +1,10 @@
 package com.njydsz.pmis.agent.tool;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
+import com.njydsz.pmis.agent.feign.ProjectServiceClient;
+import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -54,6 +57,14 @@ public class ProjectStatusTool implements AgentTool {
      */
     @Value("${pmis.agent.tool.mock-enabled:true}")
     protected boolean mockEnabled = true;
+
+    /**
+     * 项目执行模块 Feign 客户端（真实数据源模式使用）。
+     *
+     * <p>使用 {@code @Autowired} 字段注入，保证单元测试直接 new 实例时该字段为 null。
+     */
+    @Autowired
+    protected ProjectServiceClient projectServiceClient;
 
     @Override
     public String name() {
@@ -118,17 +129,104 @@ public class ProjectStatusTool implements AgentTool {
     /**
      * 获取真实项目指标数据（生产环境使用）。
      *
-     * <p>当前为占位实现，后续接入真实项目指标服务（如 EVM 模块的 Feign 客户端）后覆盖此方法。
-     * 建议通过 Feign 调用 execution 模块的 EVM 看板接口获取 CPI/SPI/成本超支率等指标。
+     * <p>通过 Feign 调用 project 模块的两个接口聚合项目指标：
+     * <ul>
+     *   <li>{@code /execution/evm/dashboard}：获取 CPI / SPI / VAC 等挣值指标</li>
+     *   <li>{@code /execution/risk/page}：获取风险事件总数（riskEventCount）</li>
+     * </ul>
      *
-     * @param projectId 项目 ID
+     * <p>派生指标：
+     * <ul>
+     *   <li>{@code costOverrunRatio}：由 CPI 派生，= 1/CPI - 1（CPI &gt; 0 时），CPI ≤ 0 时返回 0</li>
+     *   <li>{@code marginRatio}：利润率需要收入数据，EVM 仪表盘暂未提供，返回 0</li>
+     * </ul>
+     *
+     * <p>project 服务不可用时返回零值指标，避免 Agent 推理链路中断。
+     *
+     * @param projectId 项目 ID（对应 project 模块的 initiationId）
      * @param ctx       Agent 上下文（可用于获取 tenantId、traceId 等）
      * @return 项目指标数据 Map
-     * @throws UnsupportedOperationException 当未实现真实数据源时抛出
      */
     protected Map<String, Object> fetchRealData(String projectId, AgentContext ctx) {
-        // TO_DO P1-5: 接入真实项目指标服务（EVM 看板 Feign 调用）
-        throw new UnsupportedOperationException(
-                "ProjectStatusTool 真实数据源未实现，请配置 pmis.agent.tool.mock-enabled=true 或实现 fetchRealData 方法");
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("projectId", projectId);
+        data.put("cpi", 0.0);
+        data.put("spi", 0.0);
+        data.put("costOverrunRatio", 0.0);
+        data.put("riskEventCount", 0);
+        data.put("marginRatio", 0.0);
+
+        if (projectServiceClient == null) {
+            log.warn("[ProjectStatusTool] projectServiceClient 未注入，返回零值指标 projectId={}", projectId);
+            return data;
+        }
+
+        // 1. 调用 EVM 仪表盘获取 CPI / SPI
+        try {
+            Result<Map<String, Object>> dashResult = projectServiceClient.evmDashboard(projectId);
+            if (dashResult != null && dashResult.isSuccess() && dashResult.getData() != null) {
+                Map<String, Object> dash = dashResult.getData();
+                double cpi = toDouble(dash.get("latestCpi"));
+                double spi = toDouble(dash.get("latestSpi"));
+                data.put("cpi", cpi);
+                data.put("spi", spi);
+                // 成本超支率 = 1/CPI - 1（CPI = EV/AC，超支率 = (AC-EV)/EV = 1/CPI - 1）
+                data.put("costOverrunRatio", cpi > 0 ? (1.0 / cpi - 1.0) : 0.0);
+            } else {
+                log.warn("[ProjectStatusTool] EVM 仪表盘调用失败 projectId={}, result={}",
+                        projectId, dashResult == null ? "null" : dashResult.getCode());
+            }
+        } catch (Exception e) {
+            log.warn("[ProjectStatusTool] EVM 仪表盘调用异常 projectId={}: {}", projectId, e.getMessage());
+        }
+
+        // 2. 调用风险分页获取风险事件总数
+        try {
+            Result<Map<String, Object>> riskResult = projectServiceClient.riskPage(1, 1, projectId, null);
+            if (riskResult != null && riskResult.isSuccess() && riskResult.getData() != null) {
+                Object totalObj = riskResult.getData().get("total");
+                data.put("riskEventCount", toInt(totalObj));
+            } else {
+                log.warn("[ProjectStatusTool] 风险分页调用失败 projectId={}, result={}",
+                        projectId, riskResult == null ? "null" : riskResult.getCode());
+            }
+        } catch (Exception e) {
+            log.warn("[ProjectStatusTool] 风险分页调用异常 projectId={}: {}", projectId, e.getMessage());
+        }
+
+        // marginRatio 需要收入数据，EVM 仪表盘暂未提供，保持 0.0
+        return data;
+    }
+
+    /**
+     * 安全转换 Object 为 double。
+     *
+     * @param value 原始值
+     * @return double 值，null 或无法解析时返回 0.0
+     */
+    private static double toDouble(Object value) {
+        if (value == null) return 0.0;
+        if (value instanceof Number n) return n.doubleValue();
+        try {
+            return Double.parseDouble(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * 安全转换 Object 为 int。
+     *
+     * @param value 原始值
+     * @return int 值，null 或无法解析时返回 0
+     */
+    private static int toInt(Object value) {
+        if (value == null) return 0;
+        if (value instanceof Number n) return n.intValue();
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }

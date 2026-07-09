@@ -1,0 +1,311 @@
+package com.njydsz.pmis.userinfo.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.userinfo.dto.EmployeeCreateDTO;
+import com.njydsz.pmis.userinfo.dto.EmployeeUpdateDTO;
+import com.njydsz.pmis.userinfo.entity.DepartmentDO;
+import com.njydsz.pmis.userinfo.entity.EmployeeDO;
+import com.njydsz.pmis.userinfo.entity.JobLevelDO;
+import com.njydsz.pmis.userinfo.entity.JobLevelRateDO;
+import com.njydsz.pmis.userinfo.entity.PartTimeRateDO;
+import com.njydsz.pmis.userinfo.entity.PositionDO;
+import com.njydsz.pmis.userinfo.enums.EmployeeType;
+import com.njydsz.pmis.userinfo.mapper.DepartmentMapper;
+import com.njydsz.pmis.userinfo.mapper.EmployeeMapper;
+import com.njydsz.pmis.userinfo.mapper.JobLevelMapper;
+import com.njydsz.pmis.userinfo.mapper.JobLevelRateMapper;
+import com.njydsz.pmis.userinfo.mapper.PartTimeRateMapper;
+import com.njydsz.pmis.userinfo.mapper.PositionMapper;
+import com.njydsz.pmis.userinfo.service.EmployeeService;
+import com.njydsz.pmis.userinfo.vo.EmployeeVO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 员工服务实现
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class EmployeeServiceImpl implements EmployeeService {
+
+    /** 默认雇佣类型 */
+    private static final String DEFAULT_EMPLOYEE_TYPE = EmployeeType.FULL_TIME.getCode();
+    /** 默认在职状态 */
+    private static final String DEFAULT_WORK_STATUS = "ACTIVE";
+
+    private final EmployeeMapper employeeMapper;
+    private final DepartmentMapper departmentMapper;
+    private final PositionMapper positionMapper;
+    private final JobLevelMapper jobLevelMapper;
+    private final JobLevelRateMapper jobLevelRateMapper;
+    private final PartTimeRateMapper partTimeRateMapper;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String create(EmployeeCreateDTO dto) {
+        if (dto == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "员工创建表单不能为空");
+        }
+        // 雇佣类型默认 FULL_TIME
+        String employeeType = StringUtils.hasText(dto.getEmployeeType())
+                ? dto.getEmployeeType() : DEFAULT_EMPLOYEE_TYPE;
+        validateEmployeeType(employeeType);
+        validatePartTimeRate(employeeType, dto.getPartTimeRateId());
+
+        // empCode 唯一性校验（排除已删除）
+        if (employeeMapper.selectByEmpCode(dto.getEmpCode()) != null) {
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "员工编码已存在: " + dto.getEmpCode());
+        }
+
+        EmployeeDO entity = new EmployeeDO();
+        BeanUtils.copyProperties(dto, entity);
+        entity.setEmployeeType(employeeType);
+        // 兼职类型之外强制清空单价级别 ID
+        if (!EmployeeType.PART_TIME.getCode().equals(employeeType)) {
+            entity.setPartTimeRateId(null);
+        }
+        if (!StringUtils.hasText(entity.getWorkStatus())) {
+            entity.setWorkStatus(DEFAULT_WORK_STATUS);
+        }
+        if (entity.getTenantId() == null) {
+            entity.setTenantId(TenantContext.getTenantId());
+        }
+        employeeMapper.insert(entity);
+        log.info("[Employee] 新增员工: id={}, empCode={}, type={}", entity.getId(), entity.getEmpCode(), employeeType);
+        return entity.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void update(String id, EmployeeUpdateDTO dto) {
+        if (!StringUtils.hasText(id)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "员工 ID 不能为空");
+        }
+        if (dto == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "员工更新表单不能为空");
+        }
+        EmployeeDO existing = employeeMapper.selectById(id);
+        if (existing == null) {
+            throw new BizException(BizErrorCode.EMPLOYEE_NOT_FOUND);
+        }
+
+        // 雇佣类型：传入则校验，未传入沿用原值
+        String employeeType = StringUtils.hasText(dto.getEmployeeType())
+                ? dto.getEmployeeType() : existing.getEmployeeType();
+        validateEmployeeType(employeeType);
+        validatePartTimeRate(employeeType, dto.getPartTimeRateId());
+
+        // empCode 唯一性校验（排除自身与已删除）
+        EmployeeDO sameCode = employeeMapper.selectByEmpCode(dto.getEmpCode());
+        if (sameCode != null && !sameCode.getId().equals(id)) {
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "员工编码已存在: " + dto.getEmpCode());
+        }
+
+        // 在职状态流转校验
+        if (StringUtils.hasText(dto.getWorkStatus())
+                && StringUtils.hasText(existing.getWorkStatus())
+                && !dto.getWorkStatus().equals(existing.getWorkStatus())) {
+            if (!canWorkStatusTransit(existing.getWorkStatus(), dto.getWorkStatus())) {
+                throw new BizException(BizErrorCode.BIZ_ERROR,
+                        "在职状态不允许从 " + existing.getWorkStatus() + " 流转到 " + dto.getWorkStatus());
+            }
+        }
+
+        EmployeeDO entity = new EmployeeDO();
+        BeanUtils.copyProperties(dto, entity);
+        entity.setId(id);
+        // 兼职类型之外强制清空单价级别 ID
+        if (!EmployeeType.PART_TIME.getCode().equals(employeeType)) {
+            entity.setPartTimeRateId(null);
+        }
+        employeeMapper.updateById(entity);
+        log.info("[Employee] 更新员工: id={}, empCode={}", id, dto.getEmpCode());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(String id) {
+        if (!StringUtils.hasText(id)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "员工 ID 不能为空");
+        }
+        EmployeeDO existing = employeeMapper.selectById(id);
+        if (existing == null) {
+            throw new BizException(BizErrorCode.EMPLOYEE_NOT_FOUND);
+        }
+        employeeMapper.deleteById(id);
+        log.info("[Employee] 删除员工: id={}, empCode={}", id, existing.getEmpCode());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmployeeDO getById(String id) {
+        EmployeeDO entity = employeeMapper.selectById(id);
+        if (entity == null) {
+            throw new BizException(BizErrorCode.EMPLOYEE_NOT_FOUND);
+        }
+        return entity;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmployeeDO> page(int page, int size, String keyword, String departmentId,
+                                 String employeeType, String workStatus) {
+        Page<EmployeeDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<EmployeeDO> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            wrapper.and(w -> w.like(EmployeeDO::getEmpCode, keyword)
+                    .or().like(EmployeeDO::getEmpName, keyword));
+        }
+        if (StringUtils.hasText(departmentId)) {
+            wrapper.eq(EmployeeDO::getDepartmentId, departmentId);
+        }
+        if (StringUtils.hasText(employeeType)) {
+            wrapper.eq(EmployeeDO::getEmployeeType, employeeType);
+        }
+        if (StringUtils.hasText(workStatus)) {
+            wrapper.eq(EmployeeDO::getWorkStatus, workStatus);
+        }
+        wrapper.orderByDesc(EmployeeDO::getCreatedAt);
+        return employeeMapper.selectPage(p, wrapper);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeDO> listByDepartment(String departmentId) {
+        if (!StringUtils.hasText(departmentId)) {
+            return List.of();
+        }
+        LambdaQueryWrapper<EmployeeDO> wrapper = new LambdaQueryWrapper<EmployeeDO>()
+                .eq(EmployeeDO::getDepartmentId, departmentId)
+                .orderByDesc(EmployeeDO::getCreatedAt);
+        return employeeMapper.selectList(wrapper);
+    }
+
+    @Override
+    public EmployeeVO assemble(EmployeeDO entity) {
+        if (entity == null) {
+            return null;
+        }
+        EmployeeVO vo = new EmployeeVO();
+        BeanUtils.copyProperties(entity, vo);
+        vo.setDepartmentName(resolveDepartmentName(entity.getDepartmentId()));
+        vo.setPositionName(resolvePositionName(entity.getPositionId()));
+        vo.setLevelName(resolveLevelName(entity.getLevelCode()));
+        return vo;
+    }
+
+    /**
+     * 校验雇佣类型枚举合法性
+     *
+     * @param employeeType 雇佣类型编码
+     */
+    private void validateEmployeeType(String employeeType) {
+        if (EmployeeType.fromCode(employeeType) == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "无效的雇佣类型: " + employeeType);
+        }
+    }
+
+    /**
+     * 校验兼职工时单价级别：PART_TIME 必填，其余类型必须为空
+     *
+     * @param employeeType   雇佣类型编码
+     * @param partTimeRateId 兼职工时单价级别 ID
+     */
+    private void validatePartTimeRate(String employeeType, String partTimeRateId) {
+        if (EmployeeType.PART_TIME.getCode().equals(employeeType)) {
+            if (!StringUtils.hasText(partTimeRateId)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "兼职类型员工必须填写兼职工时单价级别 ID");
+            }
+        } else if (StringUtils.hasText(partTimeRateId)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "非兼职类型员工的兼职工时单价级别 ID 必须为空");
+        }
+    }
+
+    /**
+     * 在职状态流转校验（参考 AssignmentStatus.canTransitTo 写法）
+     *
+     * <p>流转规则：ACTIVE ↔ SUSPENDED；ACTIVE/SUSPENDED → LEAVE；LEAVE 为终态。
+     *
+     * @param from 当前状态
+     * @param to   目标状态
+     * @return 允许流转返回 true
+     */
+    private boolean canWorkStatusTransit(String from, String to) {
+        if (from == null || to == null || from.equals(to)) {
+            return true;
+        }
+        return switch (from) {
+            case "ACTIVE" -> "SUSPENDED".equals(to) || "LEAVE".equals(to);
+            case "SUSPENDED" -> "ACTIVE".equals(to) || "LEAVE".equals(to);
+            case "LEAVE" -> false;
+            default -> false;
+        };
+    }
+
+    /**
+     * 装配部门名称，失败降级为 null
+     */
+    private String resolveDepartmentName(String departmentId) {
+        if (departmentId == null) {
+            return null;
+        }
+        try {
+            DepartmentDO dept = departmentMapper.selectById(departmentId);
+            return dept == null ? null : dept.getDeptName();
+        } catch (Exception e) {
+            log.warn("[Employee] 装配部门名称失败: deptId={}, msg={}", departmentId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 装配岗位名称，失败降级为 null
+     */
+    private String resolvePositionName(String positionId) {
+        if (positionId == null) {
+            return null;
+        }
+        try {
+            PositionDO pos = positionMapper.selectById(positionId);
+            return pos == null ? null : pos.getPositionName();
+        } catch (Exception e) {
+            log.warn("[Employee] 装配岗位名称失败: positionId={}, msg={}", positionId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 装配职级名称，失败降级为 null
+     */
+    private String resolveLevelName(String levelCode) {
+        if (levelCode == null) {
+            return null;
+        }
+        try {
+            JobLevelDO level = jobLevelMapper.selectByCode(levelCode);
+            return level == null ? null : level.getLevelName();
+        } catch (Exception e) {
+            log.warn("[Employee] 装配职级名称失败: levelCode={}, msg={}", levelCode, e.getMessage());
+            return null;
+        }
+    }
+}

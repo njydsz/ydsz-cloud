@@ -11,6 +11,7 @@ import com.njydsz.pmis.message.entity.MsgTemplateVersionDO;
 import com.njydsz.pmis.message.service.TemplateVersionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,7 +58,7 @@ public class TemplateVersionController {
     @Operation(summary = "预览模板渲染结果")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_VIEW)
     @PostMapping("/preview")
-    public Result<String> preview(@RequestBody TemplatePreviewDTO dto) {
+    public Result<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
         if (dto == null) {
             return Result.failed(BizErrorCode.BAD_REQUEST, "预览参数为空");
         }
@@ -67,7 +68,7 @@ public class TemplateVersionController {
     @Operation(summary = "试发模板（向测试接收人发送）")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @PostMapping("/test-send")
-    public Result<MessageResult> testSend(@RequestBody TemplateTestSendDTO dto) {
+    public Result<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
         if (dto == null) {
             return Result.failed(BizErrorCode.BAD_REQUEST, "试发参数为空");
         }

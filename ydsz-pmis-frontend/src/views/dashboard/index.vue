@@ -548,7 +548,7 @@ onMounted(async () => {
           <!-- 迷你 sparkline（批次 30-3） -->
           <div v-if="!kpiLoading && buildSparklinePath(m.sparkline)" class="metric-sparkline">
             <svg :width="SPARKLINE_W" :height="SPARKLINE_H" :viewBox="`0 0 ${SPARKLINE_W} ${SPARKLINE_H}`" preserveAspectRatio="none">
-              <path :d="buildSparklinePath(m.sparkline)" :stroke="m.color" :fill="none" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+              <path :d="buildSparklinePath(m.sparkline)" :stroke="m.color" fill="none" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
             </svg>
           </div>
         </el-card>

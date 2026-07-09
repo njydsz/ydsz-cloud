@@ -15,8 +15,9 @@
  * @description P1-2: 委托授权管理，包含"我设置的"和"代理给我的"两个 Tab，
  *   支持创建/撤回/启停授权，以及查看代理处理记录和被代理记录。
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import {
   pageMyDelegateAuth,
@@ -63,19 +64,21 @@ const createForm = reactive<Omit<CreateDelegateAuthDTO, 'delegateId'> & { delega
 const dateRange = ref<[string, string] | null>(null)
 
 // ==================== 范围类型映射 ====================
-const scopeTypeMap: Record<DelegateScopeType, string> = {
-  ALL: '全部流程',
-  FLOW: '指定流程',
-  FLOW_NODE: '指定流程节点',
-  ROLE: '指定角色',
-}
+const { t } = useI18n()
 
-const scopeTypeOptions = [
-  { label: '全部流程', value: 'ALL' },
-  { label: '指定流程', value: 'FLOW' },
-  { label: '指定流程节点', value: 'FLOW_NODE' },
-  { label: '指定角色', value: 'ROLE' },
-]
+const scopeTypeMap = computed<Record<DelegateScopeType, string>>(() => ({
+  ALL: t('workflow.delegate.scope.all'),
+  FLOW: t('workflow.delegate.scope.flow'),
+  FLOW_NODE: t('workflow.delegate.scope.flowNode'),
+  ROLE: t('workflow.delegate.scope.role'),
+}))
+
+const scopeTypeOptions = computed(() => [
+  { label: t('workflow.delegate.scope.all'), value: 'ALL' },
+  { label: t('workflow.delegate.scope.flow'), value: 'FLOW' },
+  { label: t('workflow.delegate.scope.flowNode'), value: 'FLOW_NODE' },
+  { label: t('workflow.delegate.scope.role'), value: 'ROLE' },
+])
 
 // ==================== 加载数据 ====================
 async function loadData() {
@@ -107,7 +110,7 @@ async function loadData() {
       }
     }
   } catch (e) {
-    ElMessage.error('加载数据失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.delegate.msg.loadFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     loading.value = false
   }
@@ -159,11 +162,11 @@ function onDelegateUserPicked(user: UserVO | UserVO[] | null) {
 
 async function submitCreate() {
   if (!createForm.delegateId) {
-    ElMessage.warning('请选择代理人')
+    ElMessage.warning(t('workflow.delegate.msg.delegateRequired'))
     return
   }
   if (createForm.scopeType !== 'ALL' && !createForm.scopeValue?.trim()) {
-    ElMessage.warning('请输入范围值')
+    ElMessage.warning(t('workflow.delegate.msg.scopeValueRequired'))
     return
   }
 
@@ -177,14 +180,14 @@ async function submitCreate() {
   try {
     const res = await createDelegateAuth(createForm as CreateDelegateAuthDTO)
     if (res.data?.code === 0) {
-      ElMessage.success('授权创建成功')
+      ElMessage.success(t('workflow.delegate.msg.createSuccess'))
       createDialog.value = false
       loadData()
     } else {
-      ElMessage.error(res.data?.message || '创建失败')
+      ElMessage.error(res.data?.message || t('workflow.delegate.msg.createFailed'))
     }
   } catch (e) {
-    ElMessage.error('创建失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.delegate.msg.createFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     creating.value = false
   }
@@ -193,15 +196,17 @@ async function submitCreate() {
 // ==================== 撤回授权 ====================
 async function handleRevoke(row: DelegateAuthDTO) {
   try {
-    await ElMessageBox.confirm(`确认撤回对「${row.delegateName || row.delegateId}」的授权？`, '撤回确认', {
-      type: 'warning',
-    })
+    await ElMessageBox.confirm(
+      t('workflow.delegate.msg.revokeConfirm', { name: row.delegateName || row.delegateId }),
+      t('workflow.delegate.msg.revokeConfirmTitle'),
+      { type: 'warning' },
+    )
     const res = await revokeDelegateAuth(row.id)
     if (res.data?.code === 0) {
-      ElMessage.success('已撤回')
+      ElMessage.success(t('workflow.delegate.msg.revokeSuccess'))
       loadData()
     } else {
-      ElMessage.error(res.data?.message || '撤回失败')
+      ElMessage.error(res.data?.message || t('workflow.delegate.msg.revokeFailed'))
     }
   } catch {
     // 用户取消
@@ -210,17 +215,19 @@ async function handleRevoke(row: DelegateAuthDTO) {
 
 // ==================== 启停授权 ====================
 async function handleToggle(row: DelegateAuthDTO) {
-  const action = row.enabled ? '停用' : '启用'
+  const action = row.enabled ? t('workflow.delegate.action.disable') : t('workflow.delegate.action.enable')
   try {
-    await ElMessageBox.confirm(`确认${action}对「${row.delegateName || row.delegateId}」的授权？`, `${action}确认`, {
-      type: 'warning',
-    })
+    await ElMessageBox.confirm(
+      t('workflow.delegate.msg.toggleConfirm', { action, name: row.delegateName || row.delegateId }),
+      t('workflow.delegate.msg.toggleConfirmTitle', { action }),
+      { type: 'warning' },
+    )
     const res = await toggleDelegateAuth(row.id, !row.enabled)
     if (res.data?.code === 0) {
-      ElMessage.success(`${action}成功`)
+      ElMessage.success(t('workflow.delegate.msg.toggleSuccess', { action }))
       loadData()
     } else {
-      ElMessage.error(res.data?.message || `${action}失败`)
+      ElMessage.error(res.data?.message || t('workflow.delegate.msg.toggleFailed', { action }))
     }
   } catch {
     // 用户取消
@@ -235,11 +242,11 @@ onMounted(() => loadData())
     <div class="page-header">
       <div class="page-header-row">
         <div>
-          <h2>委托授权管理</h2>
-          <p class="page-header__sub">管理工作流审批委托授权，支持将审批任务委托给他人代理</p>
+          <h2>{{ t('workflow.delegate.title') }}</h2>
+          <p class="page-header__sub">{{ t('workflow.delegate.subtitle') }}</p>
         </div>
         <el-button type="primary" @click="openCreateDialog">
-          <el-icon><Plus /></el-icon>创建授权
+          <el-icon><Plus /></el-icon>{{ t('workflow.delegate.create') }}
         </el-button>
       </div>
     </div>
@@ -247,42 +254,42 @@ onMounted(() => loadData())
     <el-card shadow="never" class="page-body">
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <!-- 我设置的 -->
-        <el-tab-pane label="我设置的" name="mine">
+        <el-tab-pane :label="t('workflow.delegate.tabs.mine')" name="mine">
           <el-table v-loading="loading" :data="myList" border stripe>
-            <el-table-column prop="delegateName" label="代理人" min-width="100">
+            <el-table-column prop="delegateName" :label="t('workflow.delegate.columns.delegate')" min-width="100">
               <template #default="{ row }">
                 {{ row.delegateName || row.delegateId }}
               </template>
             </el-table-column>
-            <el-table-column prop="scopeType" label="授权范围" min-width="120">
+            <el-table-column prop="scopeType" :label="t('workflow.delegate.columns.scope')" min-width="120">
               <template #default="{ row }">
                 <el-tag size="small">{{ scopeTypeMap[row.scopeType as DelegateScopeType] || row.scopeType }}</el-tag>
                 <span v-if="row.scopeValue" class="scope-value">{{ row.scopeValue }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="startTime" label="开始时间" min-width="150">
+            <el-table-column prop="startTime" :label="t('workflow.delegate.columns.startTime')" min-width="150">
               <template #default="{ row }">
                 {{ row.startTime ? dayjs(row.startTime).format('YYYY-MM-DD HH:mm') : '-' }}
               </template>
             </el-table-column>
-            <el-table-column prop="endTime" label="结束时间" min-width="150">
+            <el-table-column prop="endTime" :label="t('workflow.delegate.columns.endTime')" min-width="150">
               <template #default="{ row }">
                 {{ row.endTime ? dayjs(row.endTime).format('YYYY-MM-DD HH:mm') : '-' }}
               </template>
             </el-table-column>
-            <el-table-column prop="enabled" label="状态" width="100">
+            <el-table-column prop="enabled" :label="t('workflow.delegate.columns.status')" width="100">
               <template #default="{ row }">
-                <el-tag v-if="row.revoked" type="info" size="small">已撤回</el-tag>
-                <el-tag v-else-if="row.enabled" type="success" size="small">启用</el-tag>
-                <el-tag v-else type="warning" size="small">已停用</el-tag>
+                <el-tag v-if="row.revoked" type="info" size="small">{{ t('workflow.delegate.status.revoked') }}</el-tag>
+                <el-tag v-else-if="row.enabled" type="success" size="small">{{ t('workflow.delegate.status.enabled') }}</el-tag>
+                <el-tag v-else type="warning" size="small">{{ t('workflow.delegate.status.disabled') }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="createTime" label="创建时间" min-width="150">
+            <el-table-column prop="createTime" :label="t('workflow.delegate.columns.createTime')" min-width="150">
               <template #default="{ row }">
                 {{ row.createTime ? dayjs(row.createTime).format('YYYY-MM-DD HH:mm') : '-' }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="180" fixed="right">
+            <el-table-column :label="t('workflow.delegate.columns.operation')" width="180" fixed="right">
               <template #default="{ row }">
                 <el-button
                   v-if="!row.revoked"
@@ -290,65 +297,65 @@ onMounted(() => loadData())
                   :type="row.enabled ? 'warning' : 'success'"
                   link
                   @click="handleToggle(row as DelegateAuthDTO)"
-                >{{ row.enabled ? '停用' : '启用' }}</el-button>
+                >{{ row.enabled ? t('workflow.delegate.action.disable') : t('workflow.delegate.action.enable') }}</el-button>
                 <el-button
                   v-if="!row.revoked"
                   size="small"
                   type="danger"
                   link
                   @click="handleRevoke(row as DelegateAuthDTO)"
-                >撤回</el-button>
+                >{{ t('workflow.delegate.action.revoke') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
 
         <!-- 代理给我的 -->
-        <el-tab-pane label="代理给我的" name="toMe">
+        <el-tab-pane :label="t('workflow.delegate.tabs.toMe')" name="toMe">
           <el-table v-loading="loading" :data="toMeList" border stripe>
-            <el-table-column prop="ownerName" label="授权人" min-width="100">
+            <el-table-column prop="ownerName" :label="t('workflow.delegate.columns.owner')" min-width="100">
               <template #default="{ row }">
                 {{ row.ownerName || row.ownerId }}
               </template>
             </el-table-column>
-            <el-table-column prop="scopeType" label="授权范围" min-width="120">
+            <el-table-column prop="scopeType" :label="t('workflow.delegate.columns.scope')" min-width="120">
               <template #default="{ row }">
                 <el-tag size="small">{{ scopeTypeMap[row.scopeType as DelegateScopeType] || row.scopeType }}</el-tag>
                 <span v-if="row.scopeValue" class="scope-value">{{ row.scopeValue }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="startTime" label="开始时间" min-width="150">
+            <el-table-column prop="startTime" :label="t('workflow.delegate.columns.startTime')" min-width="150">
               <template #default="{ row }">
                 {{ row.startTime ? dayjs(row.startTime).format('YYYY-MM-DD HH:mm') : '-' }}
               </template>
             </el-table-column>
-            <el-table-column prop="endTime" label="结束时间" min-width="150">
+            <el-table-column prop="endTime" :label="t('workflow.delegate.columns.endTime')" min-width="150">
               <template #default="{ row }">
                 {{ row.endTime ? dayjs(row.endTime).format('YYYY-MM-DD HH:mm') : '-' }}
               </template>
             </el-table-column>
-            <el-table-column prop="enabled" label="状态" width="100">
+            <el-table-column prop="enabled" :label="t('workflow.delegate.columns.status')" width="100">
               <template #default="{ row }">
-                <el-tag v-if="row.revoked" type="info" size="small">已撤回</el-tag>
-                <el-tag v-else-if="row.enabled" type="success" size="small">启用</el-tag>
-                <el-tag v-else type="warning" size="small">已停用</el-tag>
+                <el-tag v-if="row.revoked" type="info" size="small">{{ t('workflow.delegate.status.revoked') }}</el-tag>
+                <el-tag v-else-if="row.enabled" type="success" size="small">{{ t('workflow.delegate.status.enabled') }}</el-tag>
+                <el-tag v-else type="warning" size="small">{{ t('workflow.delegate.status.disabled') }}</el-tag>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
 
         <!-- 代理处理记录 -->
-        <el-tab-pane label="代理处理记录" name="delegateLog">
+        <el-tab-pane :label="t('workflow.delegate.tabs.delegateLog')" name="delegateLog">
           <el-table v-loading="loading" :data="delegateLogList" border stripe>
-            <el-table-column prop="ownerName" label="原授权人" min-width="100">
+            <el-table-column prop="ownerName" :label="t('workflow.delegate.columns.originalOwner')" min-width="100">
               <template #default="{ row }">
                 {{ row.ownerName || row.ownerId }}
               </template>
             </el-table-column>
-            <el-table-column prop="flowName" label="流程名称" min-width="120" />
-            <el-table-column prop="nodeName" label="节点名称" min-width="120" />
-            <el-table-column prop="action" label="操作" min-width="80" />
-            <el-table-column prop="operateTime" label="操作时间" min-width="150">
+            <el-table-column prop="flowName" :label="t('workflow.delegate.columns.flowName')" min-width="120" />
+            <el-table-column prop="nodeName" :label="t('workflow.delegate.columns.nodeName')" min-width="120" />
+            <el-table-column prop="action" :label="t('workflow.delegate.columns.action')" min-width="80" />
+            <el-table-column prop="operateTime" :label="t('workflow.delegate.columns.operateTime')" min-width="150">
               <template #default="{ row }">
                 {{ row.operateTime ? dayjs(row.operateTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
               </template>
@@ -357,17 +364,17 @@ onMounted(() => loadData())
         </el-tab-pane>
 
         <!-- 被代理记录 -->
-        <el-tab-pane label="被代理记录" name="ownerLog">
+        <el-tab-pane :label="t('workflow.delegate.tabs.ownerLog')" name="ownerLog">
           <el-table v-loading="loading" :data="ownerLogList" border stripe>
-            <el-table-column prop="delegateName" label="代理人" min-width="100">
+            <el-table-column prop="delegateName" :label="t('workflow.delegate.columns.delegate')" min-width="100">
               <template #default="{ row }">
                 {{ row.delegateName || row.delegateId }}
               </template>
             </el-table-column>
-            <el-table-column prop="flowName" label="流程名称" min-width="120" />
-            <el-table-column prop="nodeName" label="节点名称" min-width="120" />
-            <el-table-column prop="action" label="操作" min-width="80" />
-            <el-table-column prop="operateTime" label="操作时间" min-width="150">
+            <el-table-column prop="flowName" :label="t('workflow.delegate.columns.flowName')" min-width="120" />
+            <el-table-column prop="nodeName" :label="t('workflow.delegate.columns.nodeName')" min-width="120" />
+            <el-table-column prop="action" :label="t('workflow.delegate.columns.action')" min-width="80" />
+            <el-table-column prop="operateTime" :label="t('workflow.delegate.columns.operateTime')" min-width="150">
               <template #default="{ row }">
                 {{ row.operateTime ? dayjs(row.operateTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
               </template>
@@ -389,16 +396,16 @@ onMounted(() => loadData())
     </el-card>
 
     <!-- 创建授权弹窗 -->
-    <el-dialog v-model="createDialog" title="创建委托授权" width="520px">
+    <el-dialog v-model="createDialog" :title="t('workflow.delegate.dialog.createTitle')" width="520px">
       <el-form :model="createForm" label-width="100px">
-        <el-form-item label="代理人" required>
+        <el-form-item :label="t('workflow.delegate.dialog.delegate')" required>
           <UserPicker
             :model-value="createForm.delegateId"
-            placeholder="搜索并选择代理人"
+            :placeholder="t('workflow.delegate.dialog.delegatePlaceholder')"
             @change="(_v, user) => onDelegateUserPicked(user)"
           />
         </el-form-item>
-        <el-form-item label="授权范围" required>
+        <el-form-item :label="t('workflow.delegate.dialog.scope')" required>
           <el-select v-model="createForm.scopeType" style="width: 100%">
             <el-option
               v-for="opt in scopeTypeOptions"
@@ -408,23 +415,23 @@ onMounted(() => loadData())
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="createForm.scopeType !== 'ALL'" label="范围值" required>
+        <el-form-item v-if="createForm.scopeType !== 'ALL'" :label="t('workflow.delegate.dialog.scopeValue')" required>
           <el-input
             v-model="createForm.scopeValue"
             :placeholder="
-              createForm.scopeType === 'FLOW' ? '流程编码（如 leave_approval）' :
-              createForm.scopeType === 'FLOW_NODE' ? '流程编码:节点编码（如 leave_approval:manager_approve）' :
-              '角色编码（如 dept_manager）'
+              createForm.scopeType === 'FLOW' ? t('workflow.delegate.dialog.scopeValueFlowPlaceholder') :
+              createForm.scopeType === 'FLOW_NODE' ? t('workflow.delegate.dialog.scopeValueFlowNodePlaceholder') :
+              t('workflow.delegate.dialog.scopeValueRolePlaceholder')
             "
           />
         </el-form-item>
-        <el-form-item label="有效时间">
+        <el-form-item :label="t('workflow.delegate.dialog.validTime')">
           <el-date-picker
             v-model="dateRange"
             type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
+            :range-separator="t('workflow.delegate.dialog.dateSeparator')"
+            :start-placeholder="t('workflow.delegate.dialog.startDate')"
+            :end-placeholder="t('workflow.delegate.dialog.endDate')"
             format="YYYY-MM-DD HH:mm:ss"
             value-format="YYYY-MM-DD HH:mm:ss"
             style="width: 100%"
@@ -432,8 +439,8 @@ onMounted(() => loadData())
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="createDialog = false">取消</el-button>
-        <el-button type="primary" :loading="creating" @click="submitCreate">确认创建</el-button>
+        <el-button @click="createDialog = false">{{ t('workflow.delegate.dialog.cancel') }}</el-button>
+        <el-button type="primary" :loading="creating" @click="submitCreate">{{ t('workflow.delegate.dialog.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>

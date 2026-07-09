@@ -34,6 +34,7 @@ import com.njydsz.pmis.cronjob.service.TenantQuotaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
@@ -140,7 +141,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private String nodeId;
 
     /** P0-5: 服务端口（通过 @Value 注入，修正 JobNodeHeartbeat 之前返回 PID 的问题） */
-    @org.springframework.beans.factory.annotation.Value("${server.port:0}")
+    @Value("${server.port:0}")
     private int serverPort;
 
     /** P1-1: 重试调度线程池（延迟调度失败重试） */

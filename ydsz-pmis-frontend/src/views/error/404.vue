@@ -5,16 +5,17 @@
 -->
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
-/** 路由实例，用于返回首页跳转 */
 const router = useRouter()
+const { t } = useI18n()
 </script>
 
 <template>
   <div class="error-page">
-    <el-result icon="warning" title="404" sub-title="抱歉，您访问的页面不存在">
+    <el-result icon="warning" title="404" :sub-title="t('common.notFoundSubtitle')">
       <template #extra>
-        <el-button type="primary" @click="router.push('/')">返回首页</el-button>
+        <el-button type="primary" @click="router.push('/')">{{ t('common.backHome') }}</el-button>
       </template>
     </el-result>
   </div>

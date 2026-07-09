@@ -29,6 +29,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import {
   getHistoryConfig,
   triggerArchive,
@@ -39,6 +40,8 @@ import type {
   FlowHistoryArchiveResult,
   FlowHistoryPurgeResult,
 } from '@/api/workflow'
+
+const { t } = useI18n()
 
 // ==================== 配置展示 ====================
 const config = ref<FlowHistoryConfig>({
@@ -59,10 +62,10 @@ async function loadConfig() {
     if (res.data?.code === 0 && res.data.data) {
       config.value = res.data.data
     } else {
-      ElMessage.warning('加载归档配置失败')
+      ElMessage.warning(t('workflow.history.msg.loadConfigFailed'))
     }
   } catch (e) {
-    ElMessage.error('加载归档配置失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.history.msg.loadConfigFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     configLoading.value = false
   }
@@ -90,17 +93,21 @@ async function doArchive() {
     if (res.data?.code === 0 && res.data.data) {
       archiveResult.value = res.data.data
       if (res.data.data.ok === false) {
-        ElMessage.error('归档失败：' + (res.data.data.error || '未知错误'))
+        ElMessage.error(t('workflow.history.msg.archiveFailedWithMsg', { reason: res.data.data.error || t('workflow.history.msg.unknownError') }))
       } else {
         ElMessage.success(
-          `归档完成：归档 ${res.data.data.archived ?? 0} 条，跳过 ${res.data.data.missing ?? 0} 条，异常 ${res.data.data.errors ?? 0} 条`,
+          t('workflow.history.msg.archiveComplete', {
+            archived: res.data.data.archived ?? 0,
+            missing: res.data.data.missing ?? 0,
+            errors: res.data.data.errors ?? 0,
+          }),
         )
       }
     } else {
-      ElMessage.error(res.data?.message || '归档失败')
+      ElMessage.error(res.data?.message || t('workflow.history.msg.archiveFailed'))
     }
   } catch (e) {
-    ElMessage.error('归档请求失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.history.msg.archiveRequestFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     archiveLoading.value = false
   }
@@ -125,11 +132,11 @@ async function doPurge() {
   const purgeDays = purgeForm.purgeDays ?? config.value.purgeDays
   try {
     await ElMessageBox.confirm(
-      `确认立即清理归档表中超过 ${purgeDays} 天的冷数据？此操作不可恢复，将物理删除归档实例与变量行。`,
-      '高危操作确认',
+      t('workflow.history.msg.purgeConfirm', { days: purgeDays }),
+      t('workflow.history.msg.purgeConfirmTitle'),
       {
-        confirmButtonText: '确认清理',
-        cancelButtonText: '取消',
+        confirmButtonText: t('workflow.history.msg.purgeConfirmBtn'),
+        cancelButtonText: t('workflow.history.msg.cancel'),
         type: 'warning',
         confirmButtonClass: 'el-button--danger',
       },
@@ -142,11 +149,11 @@ async function doPurge() {
   if (!config.value.purgeEnabled) {
     try {
       await ElMessageBox.confirm(
-        '当前 purgeEnabled=false（配置未开启自动清理）。手动接口仍可强制执行，是否继续？',
-        '配置未开启',
+        t('workflow.history.msg.purgeForceConfirm'),
+        t('workflow.history.msg.purgeForceConfirmTitle'),
         {
-          confirmButtonText: '强制执行',
-          cancelButtonText: '取消',
+          confirmButtonText: t('workflow.history.msg.purgeForceBtn'),
+          cancelButtonText: t('workflow.history.msg.cancel'),
           type: 'warning',
         },
       )
@@ -162,19 +169,22 @@ async function doPurge() {
     if (res.data?.code === 0 && res.data.data) {
       purgeResult.value = res.data.data
       if (res.data.data.skipped) {
-        ElMessage.warning('清理已跳过：' + (res.data.data.reason || 'purgeEnabled=false'))
+        ElMessage.warning(t('workflow.history.msg.purgeSkippedWithMsg', { reason: res.data.data.reason || t('workflow.history.msg.purgeDisabledHint') }))
       } else if (res.data.data.ok === false) {
-        ElMessage.error('清理失败：' + (res.data.data.error || '未知错误'))
+        ElMessage.error(t('workflow.history.msg.purgeFailedWithMsg', { reason: res.data.data.error || t('workflow.history.msg.unknownError') }))
       } else {
         ElMessage.success(
-          `清理完成：删除归档实例 ${res.data.data.purgedInstances ?? 0} 条，变量行 ${res.data.data.purgedVariables ?? 0} 行`,
+          t('workflow.history.msg.purgeComplete', {
+            instances: res.data.data.purgedInstances ?? 0,
+            variables: res.data.data.purgedVariables ?? 0,
+          }),
         )
       }
     } else {
-      ElMessage.error(res.data?.message || '清理失败')
+      ElMessage.error(res.data?.message || t('workflow.history.msg.purgeFailed'))
     }
   } catch (e) {
-    ElMessage.error('清理请求失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.history.msg.purgeRequestFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     purgeLoading.value = false
   }
@@ -195,9 +205,9 @@ onMounted(() => {
   <div class="history-archive-page" v-loading="configLoading">
     <!-- 页面标题 -->
     <div class="page-header">
-      <h2>流程历史数据归档</h2>
+      <h2>{{ t('workflow.history.title') }}</h2>
       <p class="page-header__sub">
-        管理流程实例的冷热数据分离策略，支持手动触发归档与清理，避免主表数据膨胀影响查询性能。
+        {{ t('workflow.history.subtitle') }}
       </p>
     </div>
 
@@ -205,35 +215,35 @@ onMounted(() => {
     <el-card shadow="never" class="section">
       <template #header>
         <div class="card-header">
-          <span>当前归档策略</span>
-          <el-button size="small" text @click="loadConfig">刷新</el-button>
+          <span>{{ t('workflow.history.strategy.current') }}</span>
+          <el-button size="small" text @click="loadConfig">{{ t('workflow.history.strategy.refresh') }}</el-button>
         </div>
       </template>
       <el-descriptions :column="3" border>
-        <el-descriptions-item label="自动归档">
+        <el-descriptions-item :label="t('workflow.history.strategy.archiveEnabled')">
           <el-tag :type="config.archiveEnabled ? 'success' : 'info'" size="small">
-            {{ config.archiveEnabled ? '已启用' : '已停用' }}
+            {{ config.archiveEnabled ? t('workflow.history.status.enabled') : t('workflow.history.status.disabled') }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="归档阈值天数">
-          {{ config.retentionDays }} 天
+        <el-descriptions-item :label="t('workflow.history.strategy.retentionDays')">
+          {{ config.retentionDays }} {{ t('workflow.history.units.days') }}
         </el-descriptions-item>
-        <el-descriptions-item label="单次批量大小">
-          {{ config.batchSize }} 条
+        <el-descriptions-item :label="t('workflow.history.strategy.batchSize')">
+          {{ config.batchSize }} {{ t('workflow.history.units.records') }}
         </el-descriptions-item>
-        <el-descriptions-item label="单次最大耗时">
-          {{ config.maxProcessMs }} ms
+        <el-descriptions-item :label="t('workflow.history.strategy.maxProcessMs')">
+          {{ config.maxProcessMs }} {{ t('workflow.history.units.ms') }}
         </el-descriptions-item>
-        <el-descriptions-item label="Cron 表达式">
+        <el-descriptions-item :label="t('workflow.history.strategy.cronExpression')">
           <code>{{ config.cronExpression }}</code>
         </el-descriptions-item>
-        <el-descriptions-item label="自动清理">
+        <el-descriptions-item :label="t('workflow.history.strategy.purgeEnabled')">
           <el-tag :type="config.purgeEnabled ? 'success' : 'info'" size="small">
-            {{ config.purgeEnabled ? '已启用' : '已停用' }}
+            {{ config.purgeEnabled ? t('workflow.history.status.enabled') : t('workflow.history.status.disabled') }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="清理阈值天数">
-          {{ config.purgeDays }} 天（约 {{ Math.round(config.purgeDays / 365 * 10) / 10 }} 年）
+        <el-descriptions-item :label="t('workflow.history.strategy.purgeDays')">
+          {{ config.purgeDays }} {{ t('workflow.history.units.days') }}（{{ t('workflow.history.units.about') }} {{ Math.round(config.purgeDays / 365 * 10) / 10 }} {{ t('workflow.history.units.years') }}）
         </el-descriptions-item>
       </el-descriptions>
       <div class="config-tip">
@@ -241,8 +251,8 @@ onMounted(() => {
           type="info"
           :closable="false"
           show-icon
-          title="配置说明"
-          description="归档策略通过 application.yml 的 pmis.flow.history.* 配置，支持 Nacos 动态刷新。本页仅提供查看与手动触发能力，不修改配置。"
+          :title="t('workflow.history.strategy.configTipTitle')"
+          :description="t('workflow.history.strategy.configTipDesc')"
         />
       </div>
     </el-card>
@@ -250,39 +260,39 @@ onMounted(() => {
     <!-- 手动归档 -->
     <el-card shadow="never" class="section">
       <template #header>
-        <span>手动归档</span>
+        <span>{{ t('workflow.history.archive.title') }}</span>
       </template>
       <p class="section-desc">
-        立即触发一次归档。参数留空则使用上方配置的默认值。适用于磁盘空间告急、上线前验证归档逻辑等场景。
+        {{ t('workflow.history.archive.sectionDesc') }}
       </p>
       <el-form :model="archiveForm" label-width="140px" inline>
-        <el-form-item label="归档阈值天数">
+        <el-form-item :label="t('workflow.history.archive.retentionDays')">
           <el-input-number
             v-model="archiveForm.retentionDays"
             :min="1"
             :max="3650"
-            placeholder="默认 30"
+            :placeholder="t('workflow.history.archive.retentionPlaceholder')"
             controls-position="right"
             style="width: 160px"
           />
         </el-form-item>
-        <el-form-item label="单次批量大小">
+        <el-form-item :label="t('workflow.history.archive.batchSize')">
           <el-input-number
             v-model="archiveForm.batchSize"
             :min="1"
             :max="10000"
-            placeholder="默认 100"
+            :placeholder="t('workflow.history.archive.batchPlaceholder')"
             controls-position="right"
             style="width: 160px"
           />
         </el-form-item>
-        <el-form-item label="单次最大耗时(ms)">
+        <el-form-item :label="t('workflow.history.archive.maxProcessMs')">
           <el-input-number
             v-model="archiveForm.maxProcessMs"
             :min="1000"
             :max="3600000"
             :step="1000"
-            placeholder="默认 30000"
+            :placeholder="t('workflow.history.archive.maxProcessMsPlaceholder')"
             controls-position="right"
             style="width: 180px"
           />
@@ -293,36 +303,36 @@ onMounted(() => {
             :loading="archiveLoading"
             @click="doArchive"
           >
-            立即归档
+            {{ t('workflow.history.archive.trigger') }}
           </el-button>
-          <el-button @click="resetArchiveForm">重置</el-button>
+          <el-button @click="resetArchiveForm">{{ t('workflow.history.archive.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
       <!-- 归档结果 -->
       <div v-if="archiveResult" class="result-box">
-        <el-descriptions :column="3" border size="small" title="归档结果">
-          <el-descriptions-item label="状态">
+        <el-descriptions :column="3" border size="small" :title="t('workflow.history.result.archiveTitle')">
+          <el-descriptions-item :label="t('workflow.history.result.status')">
             <el-tag :type="archiveResult.ok === false ? 'danger' : 'success'" size="small">
-              {{ archiveResult.ok === false ? '失败' : '成功' }}
+              {{ archiveResult.ok === false ? t('workflow.history.status.failed') : t('workflow.history.status.success') }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="候选总数">
+          <el-descriptions-item :label="t('workflow.history.result.total')">
             {{ archiveResult.total ?? 0 }}
           </el-descriptions-item>
-          <el-descriptions-item label="已归档">
+          <el-descriptions-item :label="t('workflow.history.result.archived')">
             <span class="num-success">{{ archiveResult.archived ?? 0 }}</span>
           </el-descriptions-item>
-          <el-descriptions-item label="跳过(任务未终态)">
+          <el-descriptions-item :label="t('workflow.history.result.missing')">
             <span class="num-warning">{{ archiveResult.missing ?? 0 }}</span>
           </el-descriptions-item>
-          <el-descriptions-item label="异常">
+          <el-descriptions-item :label="t('workflow.history.result.errors')">
             <span class="num-danger">{{ archiveResult.errors ?? 0 }}</span>
           </el-descriptions-item>
-          <el-descriptions-item label="耗时">
-            {{ archiveResult.costMs ?? 0 }} ms
+          <el-descriptions-item :label="t('workflow.history.result.costMs')">
+            {{ archiveResult.costMs ?? 0 }} {{ t('workflow.history.units.ms') }}
           </el-descriptions-item>
-          <el-descriptions-item v-if="archiveResult.error" label="错误信息" :span="3">
+          <el-descriptions-item v-if="archiveResult.error" :label="t('workflow.history.result.errorMsg')" :span="3">
             <span class="num-danger">{{ archiveResult.error }}</span>
           </el-descriptions-item>
         </el-descriptions>
@@ -333,20 +343,20 @@ onMounted(() => {
     <el-card shadow="never" class="section">
       <template #header>
         <div class="card-header">
-          <span>手动清理（Purge）</span>
-          <el-tag type="danger" size="small" effect="dark">高危</el-tag>
+          <span>{{ t('workflow.history.purge.title') }}</span>
+          <el-tag type="danger" size="small" effect="dark">{{ t('workflow.history.purge.highRisk') }}</el-tag>
         </div>
       </template>
       <p class="section-desc">
-        物理删除归档表中超过阈值天数的冷数据，回收存储空间。即使 purgeEnabled=false，本接口仍可强制执行。
+        {{ t('workflow.history.purge.sectionDesc') }}
       </p>
       <el-form :model="purgeForm" label-width="140px" inline>
-        <el-form-item label="清理阈值天数">
+        <el-form-item :label="t('workflow.history.purge.purgeDays')">
           <el-input-number
             v-model="purgeForm.purgeDays"
             :min="1"
             :max="36500"
-            placeholder="默认 1825"
+            :placeholder="t('workflow.history.purge.purgeDaysPlaceholder')"
             controls-position="right"
             style="width: 160px"
           />
@@ -357,45 +367,45 @@ onMounted(() => {
             :loading="purgeLoading"
             @click="doPurge"
           >
-            立即清理
+            {{ t('workflow.history.purge.trigger') }}
           </el-button>
-          <el-button @click="resetPurgeForm">重置</el-button>
+          <el-button @click="resetPurgeForm">{{ t('workflow.history.purge.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
       <!-- 清理结果 -->
       <div v-if="purgeResult" class="result-box">
-        <el-descriptions :column="3" border size="small" title="清理结果">
-          <el-descriptions-item label="状态">
+        <el-descriptions :column="3" border size="small" :title="t('workflow.history.result.purgeTitle')">
+          <el-descriptions-item :label="t('workflow.history.result.status')">
             <el-tag
               v-if="purgeResult.skipped"
               type="warning"
               size="small"
-            >跳过</el-tag>
+            >{{ t('workflow.history.status.skipped') }}</el-tag>
             <el-tag
               v-else
               :type="purgeResult.ok === false ? 'danger' : 'success'"
               size="small"
             >
-              {{ purgeResult.ok === false ? '失败' : '成功' }}
+              {{ purgeResult.ok === false ? t('workflow.history.status.failed') : t('workflow.history.status.success') }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="清理阈值">
-            {{ purgeResult.purgeDays ?? 0 }} 天
+          <el-descriptions-item :label="t('workflow.history.result.purgeDays')">
+            {{ purgeResult.purgeDays ?? 0 }} {{ t('workflow.history.units.days') }}
           </el-descriptions-item>
-          <el-descriptions-item label="已清理实例">
+          <el-descriptions-item :label="t('workflow.history.result.purgedInstances')">
             <span class="num-danger">{{ purgeResult.purgedInstances ?? 0 }}</span>
           </el-descriptions-item>
-          <el-descriptions-item label="已清理变量行">
+          <el-descriptions-item :label="t('workflow.history.result.purgedVariables')">
             <span class="num-danger">{{ purgeResult.purgedVariables ?? 0 }}</span>
           </el-descriptions-item>
-          <el-descriptions-item label="耗时">
-            {{ purgeResult.costMs ?? 0 }} ms
+          <el-descriptions-item :label="t('workflow.history.result.costMs')">
+            {{ purgeResult.costMs ?? 0 }} {{ t('workflow.history.units.ms') }}
           </el-descriptions-item>
-          <el-descriptions-item v-if="purgeResult.reason" label="跳过原因" :span="3">
+          <el-descriptions-item v-if="purgeResult.reason" :label="t('workflow.history.result.skipReason')" :span="3">
             {{ purgeResult.reason }}
           </el-descriptions-item>
-          <el-descriptions-item v-if="purgeResult.error" label="错误信息" :span="3">
+          <el-descriptions-item v-if="purgeResult.error" :label="t('workflow.history.result.errorMsg')" :span="3">
             <span class="num-danger">{{ purgeResult.error }}</span>
           </el-descriptions-item>
         </el-descriptions>

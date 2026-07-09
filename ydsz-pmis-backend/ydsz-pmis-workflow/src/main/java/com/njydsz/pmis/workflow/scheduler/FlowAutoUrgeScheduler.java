@@ -5,6 +5,7 @@ import com.njydsz.pmis.workflow.engine.FlowClusterLockHelper;
 import com.njydsz.pmis.workflow.engine.FlowNotificationHelper;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.impl.FlowTaskUrgeService;
@@ -87,7 +88,7 @@ public class FlowAutoUrgeScheduler {
         // 查询超时未处理的待办任务
         LambdaQueryWrapper<FlowRunTaskDO> wrapper = new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(FlowRunTaskDO::getDeleted, 0)
-                .in(FlowRunTaskDO::getTaskStatus, "TODO", "CLAIMED")
+                .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
                 .le(FlowRunTaskDO::getCreatedAt, thresholdTime)
                 .last("LIMIT " + batchSize);
         List<FlowRunTaskDO> overdueTasks = taskMapper.selectList(wrapper);

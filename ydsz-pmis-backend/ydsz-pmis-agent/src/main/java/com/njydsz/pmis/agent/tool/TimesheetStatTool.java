@@ -1,7 +1,10 @@
 package com.njydsz.pmis.agent.tool;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
+import com.njydsz.pmis.agent.feign.ProjectServiceClient;
+import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -44,6 +47,15 @@ public class TimesheetStatTool implements AgentTool {
      */
     @Value("${pmis.agent.tool.mock-enabled:true}")
     protected boolean mockEnabled = true;
+
+    /**
+     * 项目执行模块 Feign 客户端（真实数据源模式使用）。
+     *
+     * <p>使用 {@code @Autowired} 字段注入，保证单元测试直接 new 实例时该字段为 null，
+     * 而 fetchRealData 在 mockEnabled=true 时不会被调用，从而无需 mock Feign 客户端。
+     */
+    @Autowired
+    protected ProjectServiceClient projectServiceClient;
 
     @Override
     public String name() {
@@ -104,19 +116,61 @@ public class TimesheetStatTool implements AgentTool {
     /**
      * 获取真实工时统计数据（生产环境使用）。
      *
-     * <p>当前为占位实现，后续接入真实工时数据源后覆盖此方法。
-     * 建议通过 Feign 调用 execution 模块的工时查询接口。
+     * <p>通过 Feign 调用 project 模块的 {@code /execution/time-entry/abnormal-stat} 接口，
+     * 获取指定项目在指定月份的工时异常统计（加班超时 / 漏报 / 异常 / 总工时）。
+     * project 服务不可用时返回零值统计，避免 Agent 推理链路中断。
      *
-     * @param projectId 项目 ID
+     * @param projectId 项目 ID（对应 project 模块的 initiationId）
      * @param month     月份（yyyy-MM）
      * @param ctx       Agent 上下文
      * @return 工时统计数据 Map
-     * @throws UnsupportedOperationException 当未实现真实数据源时抛出
      */
     protected Map<String, Object> fetchRealData(String projectId, String month, AgentContext ctx) {
-        // TO_DO P1-5: 接入真实工时数据源（execution 模块 Feign 调用）
-        throw new UnsupportedOperationException(
-                "TimesheetStatTool 真实数据源未实现，请配置 pmis.agent.tool.mock-enabled=true 或实现 fetchRealData 方法");
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("projectId", projectId);
+        data.put("month", month);
+        data.put("overtimeCount", 0);
+        data.put("missingCount", 0);
+        data.put("abnormalCount", 0);
+        data.put("totalHours", 0);
+
+        if (projectServiceClient == null) {
+            log.warn("[TimesheetStatTool] projectServiceClient 未注入，返回零值统计 projectId={}", projectId);
+            return data;
+        }
+
+        try {
+            Result<Map<String, Object>> result = projectServiceClient.timeEntryAbnormalStat(projectId, month);
+            if (result == null || !result.isSuccess() || result.getData() == null) {
+                log.warn("[TimesheetStatTool] Feign 调用失败或返回空 projectId={}, result={}",
+                        projectId, result == null ? "null" : result.getCode());
+                return data;
+            }
+            Map<String, Object> remote = result.getData();
+            data.put("overtimeCount", toInt(remote.get("overtimeCount")));
+            data.put("missingCount", toInt(remote.get("missingCount")));
+            data.put("abnormalCount", toInt(remote.get("abnormalCount")));
+            data.put("totalHours", toInt(remote.get("totalHours")));
+        } catch (Exception e) {
+            log.warn("[TimesheetStatTool] Feign 调用异常 projectId={}: {}", projectId, e.getMessage());
+        }
+        return data;
+    }
+
+    /**
+     * 安全转换 Object 为 int，处理 Number / String / null 等类型。
+     *
+     * @param value 原始值
+     * @return int 值，null 或无法解析时返回 0
+     */
+    private static int toInt(Object value) {
+        if (value == null) return 0;
+        if (value instanceof Number n) return n.intValue();
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     /**

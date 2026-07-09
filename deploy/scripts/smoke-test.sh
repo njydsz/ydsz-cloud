@@ -76,13 +76,18 @@ fi
 # ----------------------------------------------------------------------------
 echo ""
 echo "▶ 3. 后端微服务健康检查（通过 Gateway 路由）"
+# 端口分配（2026-07-08 统一，与 cd-deploy.yml matrix 一致）:
+#   gateway 9000 / userinfo 9001 / system 9002 / project 9003 / message 9004
+#   cronjob 9005 / workflow 9006 / agent 9007
+# 通过 Gateway 路由访问，端口仅作参考（实际由 Gateway 转发）
 SERVICES=(
-    "ydsz-pmis-system:9001"
-    "ydsz-pmis-userinfo:9002"
+    "ydsz-pmis-userinfo:9001"
+    "ydsz-pmis-system:9002"
     "ydsz-pmis-project:9003"
-    "ydsz-pmis-cronjob:9004"
-    "ydsz-pmis-workflow:9005"
-    "ydsz-pmis-agent:9006"
+    "ydsz-pmis-message:9004"
+    "ydsz-pmis-cronjob:9005"
+    "ydsz-pmis-workflow:9006"
+    "ydsz-pmis-agent:9007"
 )
 for SVC in "${SERVICES[@]}"; do
     NAME="${SVC%%:*}"

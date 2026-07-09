@@ -7,6 +7,7 @@ import com.njydsz.pmis.message.dto.RecallRequestDTO;
 import com.njydsz.pmis.message.service.RecallService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,7 +34,7 @@ public class RecallController {
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @PostMapping("/notification")
     public Result<Boolean> recallNotification(@RequestParam String userId,
-                                              @RequestBody RecallRequestDTO dto) {
+                                              @Valid @RequestBody RecallRequestDTO dto) {
         return Result.ok(recallService.recallNotification(userId, dto.getId()));
     }
 
@@ -62,7 +63,7 @@ public class RecallController {
     @Operation(summary = "按业务类型+单据 ID 批量撤回")
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @PostMapping("/batch")
-    public Result<Integer> recallBatch(@RequestBody RecallRequestDTO dto) {
+    public Result<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {
         return Result.ok(recallService.recallBatch(dto.getBizType(), dto.getBizId()));
     }
 }

@@ -8,6 +8,7 @@ import com.njydsz.pmis.message.dto.OrchestrationResultVO;
 import com.njydsz.pmis.message.service.OrchestrationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,7 +36,7 @@ public class OrchestrationController {
     @Operation(summary = "执行编排流程")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/execute")
-    public Result<OrchestrationResultVO> execute(@RequestBody OrchestrationFlowDTO flow) {
+    public Result<OrchestrationResultVO> execute(@Valid @RequestBody OrchestrationFlowDTO flow) {
         return Result.ok(orchestrationService.execute(flow));
     }
 }

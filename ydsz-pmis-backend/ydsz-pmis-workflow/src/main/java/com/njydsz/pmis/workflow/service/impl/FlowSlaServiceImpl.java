@@ -14,6 +14,7 @@ import com.njydsz.pmis.workflow.service.FlowSlaService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -49,7 +50,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     private final FlowRunTaskMapper taskMapper;
     private final FlowNodeMapper nodeMapper;
     /** P1-6: 用 @Lazy 打破 FlowSlaService ↔ FlowTaskService 循环依赖 */
-    @org.springframework.context.annotation.Lazy
+    @Lazy
     private final FlowTaskService taskService;
     private final FlowNotificationHelper notificationHelper;
     /** P2-3: Prometheus 指标（可能为 null：测试环境） */

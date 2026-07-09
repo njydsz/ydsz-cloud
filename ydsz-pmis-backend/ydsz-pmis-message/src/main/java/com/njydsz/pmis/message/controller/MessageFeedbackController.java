@@ -9,6 +9,7 @@ import com.njydsz.pmis.message.entity.MsgFeedbackDO;
 import com.njydsz.pmis.message.service.MessageFeedbackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +38,7 @@ public class MessageFeedbackController {
 
     @Operation(summary = "提交消息反馈")
     @PostMapping
-    public Result<String> submitFeedback(@RequestBody MessageFeedbackDTO dto) {
+    public Result<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
         return Result.ok(messageFeedbackService.submitFeedback(dto));
     }
 

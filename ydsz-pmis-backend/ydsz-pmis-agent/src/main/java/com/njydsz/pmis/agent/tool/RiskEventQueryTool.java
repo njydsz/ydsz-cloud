@@ -1,7 +1,10 @@
 package com.njydsz.pmis.agent.tool;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
+import com.njydsz.pmis.agent.feign.ProjectServiceClient;
+import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -44,6 +47,14 @@ public class RiskEventQueryTool implements AgentTool {
      */
     @Value("${pmis.agent.tool.mock-enabled:true}")
     protected boolean mockEnabled = true;
+
+    /**
+     * 项目执行模块 Feign 客户端（真实数据源模式使用）。
+     *
+     * <p>使用 {@code @Autowired} 字段注入，保证单元测试直接 new 实例时该字段为 null。
+     */
+    @Autowired
+    protected ProjectServiceClient projectServiceClient;
 
     @Override
     public String name() {
@@ -132,19 +143,53 @@ public class RiskEventQueryTool implements AgentTool {
     /**
      * 获取真实风险事件数据（生产环境使用）。
      *
-     * <p>当前为占位实现，后续接入真实风险事件数据源后覆盖此方法。
-     * 建议通过 Feign 调用 execution 模块的风险查询接口。
+     * <p>通过 Feign 调用 project 模块的 {@code /execution/risk/page} 接口，
+     * 按项目立项 ID 和风险等级查询风险列表。project 服务不可用时返回空列表。
      *
-     * @param projectId 项目 ID
-     * @param severity  严重级别
+     * <p>字段映射：project 模块的 {@code riskTitle} → 工具输出 {@code name}，
+     * {@code riskLevel} → {@code severity}，{@code description} 保持不变。
+     *
+     * @param projectId 项目 ID（对应 project 模块的 initiationId）
+     * @param severity  严重级别（HIGH / MEDIUM / LOW / ALL）
      * @param ctx       Agent 上下文
      * @return 风险事件列表
-     * @throws UnsupportedOperationException 当未实现真实数据源时抛出
      */
     protected List<Map<String, Object>> fetchRealData(String projectId, String severity, AgentContext ctx) {
-        // TO_DO P1-5: 接入真实风险事件数据源（execution 模块 Feign 调用）
-        throw new UnsupportedOperationException(
-                "RiskEventQueryTool 真实数据源未实现，请配置 pmis.agent.tool.mock-enabled=true 或实现 fetchRealData 方法");
+        if (projectServiceClient == null) {
+            log.warn("[RiskEventQueryTool] projectServiceClient 未注入，返回空列表 projectId={}", projectId);
+            return List.of();
+        }
+
+        // ALL 时不传 riskLevel 过滤参数
+        String riskLevelFilter = "ALL".equals(severity) ? null : severity;
+        try {
+            Result<Map<String, Object>> result = projectServiceClient.riskPage(1, 100, projectId, riskLevelFilter);
+            if (result == null || !result.isSuccess() || result.getData() == null) {
+                log.warn("[RiskEventQueryTool] Feign 调用失败或返回空 projectId={}, result={}",
+                        projectId, result == null ? "null" : result.getCode());
+                return List.of();
+            }
+            Map<String, Object> pageData = result.getData();
+            Object recordsObj = pageData.get("records");
+            if (!(recordsObj instanceof List<?> rawRecords)) {
+                return List.of();
+            }
+
+            List<Map<String, Object>> events = new ArrayList<>();
+            for (Object record : rawRecords) {
+                if (!(record instanceof Map<?, ?> r)) continue;
+                Map<String, Object> event = new LinkedHashMap<>();
+                // 字段映射：riskTitle → name, riskLevel → severity, description → description
+                event.put("name", r.get("riskTitle"));
+                event.put("severity", r.get("riskLevel"));
+                event.put("description", r.get("description"));
+                events.add(event);
+            }
+            return events;
+        } catch (Exception e) {
+            log.warn("[RiskEventQueryTool] Feign 调用异常 projectId={}: {}", projectId, e.getMessage());
+            return List.of();
+        }
     }
 
     /**

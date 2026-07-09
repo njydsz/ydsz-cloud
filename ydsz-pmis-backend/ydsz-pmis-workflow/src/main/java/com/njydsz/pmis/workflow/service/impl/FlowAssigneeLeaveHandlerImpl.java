@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowDelegateAuthMapper;
@@ -78,7 +79,7 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
         LambdaQueryWrapper<FlowRunTaskDO> wrapper = new LambdaQueryWrapper<FlowRunTaskDO>()
                 .eq(FlowRunTaskDO::getAssigneeId, userId)
                 .eq(FlowRunTaskDO::getDeleted, 0)
-                .in(FlowRunTaskDO::getTaskStatus, "TODO", "CLAIMED");
+                .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name());
         List<FlowRunTaskDO> tasks = taskMapper.selectList(wrapper);
 
         if (tasks.isEmpty()) {

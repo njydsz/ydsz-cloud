@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -247,5 +248,69 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     public List<Map<String, Object>> detectCrossProject(String employeeId, LocalDate entryDate) {
         if (employeeId == null || entryDate == null) return List.of();
         return timeEntryMapper.detectCrossProject(employeeId, entryDate);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> abnormalStat(String initiationId, String month) {
+        Map<String, Object> stat = new LinkedHashMap<>();
+        stat.put("initiationId", initiationId);
+        stat.put("month", month);
+        stat.put("overtimeCount", 0);
+        stat.put("missingCount", 0);
+        stat.put("abnormalCount", 0);
+        stat.put("totalHours", BigDecimal.ZERO);
+
+        if (initiationId == null || initiationId.isBlank()) {
+            return stat;
+        }
+
+        // 解析月份为日期范围 [月初, 月末]
+        String safeMonth = (month == null || month.isBlank())
+                ? LocalDate.now().format(PERIOD_FMT) : month;
+        LocalDate from;
+        LocalDate to;
+        try {
+            LocalDate firstDay = LocalDate.parse(safeMonth + "-01");
+            from = firstDay;
+            to = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
+        } catch (Exception e) {
+            log.warn("[abnormalStat] 月份格式非法 month={}, 使用当前月", safeMonth);
+            LocalDate firstDay = LocalDate.now().withDayOfMonth(1);
+            from = firstDay;
+            to = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
+            safeMonth = firstDay.format(PERIOD_FMT);
+        }
+        stat.put("month", safeMonth);
+
+        List<TimeEntryDO> records = timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
+        if (records == null || records.isEmpty()) {
+            return stat;
+        }
+
+        int overtimeCount = 0;
+        int missingCount = 0;
+        int abnormalCount = 0;
+        BigDecimal totalHours = BigDecimal.ZERO;
+        for (TimeEntryDO r : records) {
+            if (r.getOvertime() != null && r.getOvertime().compareTo(BigDecimal.ZERO) > 0) {
+                overtimeCount++;
+            }
+            if (TimeEntryStatus.DRAFT.getCode().equalsIgnoreCase(r.getStatus())) {
+                missingCount++;
+            }
+            if (TimeEntryStatus.REJECTED.getCode().equalsIgnoreCase(r.getStatus())) {
+                abnormalCount++;
+            }
+            if (r.getHours() != null) {
+                totalHours = totalHours.add(r.getHours());
+            }
+        }
+
+        stat.put("overtimeCount", overtimeCount);
+        stat.put("missingCount", missingCount);
+        stat.put("abnormalCount", abnormalCount);
+        stat.put("totalHours", totalHours);
+        return stat;
     }
 }

@@ -113,4 +113,21 @@ public interface TimeEntryService {
      * @return 冲突明细列表
      */
     List<Map<String, Object>> detectCrossProject(String employeeId, LocalDate entryDate);
+
+    /**
+     * 工时异常统计（按项目 + 月份）
+     *
+     * <p>聚合指定项目在指定月份的工时异常情况，供 Agent 工具 / 周报月报场景调用：
+     * <ul>
+     *   <li>{@code overtimeCount}：加班记录数（overtime &gt; 0）</li>
+     *   <li>{@code missingCount}：漏报记录数（状态为 DRAFT 视为未提交/漏报）</li>
+     *   <li>{@code abnormalCount}：异常记录数（状态为 REJECTED）</li>
+     *   <li>{@code totalHours}：总工时（小时）</li>
+     * </ul>
+     *
+     * @param initiationId 项目立项ID
+     * @param month        月份（yyyy-MM），为 null 时取当前月
+     * @return 异常统计 Map
+     */
+    Map<String, Object> abnormalStat(String initiationId, String month);
 }

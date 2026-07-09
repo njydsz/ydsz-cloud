@@ -13,6 +13,7 @@ import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.service.FlowOfflineAutoForwardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +38,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     private final FlowDelegateAuthMapper authMapper;
     private final FlowDelegateLogMapper logMapper;
     /** P2-5: 离线代理自动转发（@Lazy 避免循环依赖） */
-    @org.springframework.context.annotation.Lazy
+    @Lazy
     private final FlowOfflineAutoForwardService offlineAutoForwardService;
 
     @Override

@@ -15,8 +15,9 @@
  * @description P1-2: 灰度发布管理，显示流程定义列表，支持启动灰度/调整比例/全量发布/回滚操作，
  *   展示发布历史日志。
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import {
   pageDefinitions,
@@ -65,18 +66,20 @@ const logDialog = ref(false)
 const logLoading = ref(false)
 const rolloutLogs = ref<CanaryRolloutLogDTO[]>([])
 
-const strategyOptions = [
-  { label: '按比例', value: 'PERCENTAGE' },
-  { label: '白名单', value: 'WHITELIST' },
-  { label: '比例+白名单', value: 'PERCENTAGE_AND_WHITELIST' },
-]
+const { t } = useI18n()
 
-const actionMap: Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }> = {
-  PUBLISH: { label: '启动灰度', type: 'primary' },
-  ADJUST: { label: '调整比例', type: 'warning' },
-  PROMOTE: { label: '全量发布', type: 'success' },
-  ROLLBACK: { label: '回滚', type: 'danger' },
-}
+const strategyOptions = computed(() => [
+  { label: t('workflow.canary.strategy.percentage'), value: 'PERCENTAGE' },
+  { label: t('workflow.canary.strategy.whitelist'), value: 'WHITELIST' },
+  { label: t('workflow.canary.strategy.percentageAndWhitelist'), value: 'PERCENTAGE_AND_WHITELIST' },
+])
+
+const actionMap = computed<Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }>>(() => ({
+  PUBLISH: { label: t('workflow.canary.action.publish'), type: 'primary' },
+  ADJUST: { label: t('workflow.canary.action.adjust'), type: 'warning' },
+  PROMOTE: { label: t('workflow.canary.action.promote'), type: 'success' },
+  ROLLBACK: { label: t('workflow.canary.action.rollback'), type: 'danger' },
+}))
 
 // ==================== 加载流程定义列表 ====================
 async function loadDefinitions() {
@@ -94,7 +97,7 @@ async function loadDefinitions() {
       total.value = res.data.data.total || 0
     }
   } catch (e) {
-    ElMessage.error('加载流程定义失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.canary.msg.loadFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     loading.value = false
   }
@@ -126,7 +129,7 @@ function addWhitelist() {
     .map((s) => Number(s.trim()))
     .filter((n) => !isNaN(n) && n > 0)
   if (ids.length === 0) {
-    ElMessage.warning('请输入有效的用户 ID')
+    ElMessage.warning(t('workflow.canary.msg.invalidUserId'))
     return
   }
   publishForm.whitelist = [...new Set([...(publishForm.whitelist || []), ...ids])]
@@ -140,11 +143,11 @@ function removeWhitelist(id: number) {
 async function submitPublish() {
   if (!currentDefinition.value) return
   if (publishForm.strategy !== 'WHITELIST' && (publishForm.percentage === undefined || publishForm.percentage < 0 || publishForm.percentage > 100)) {
-    ElMessage.warning('请输入有效的灰度比例（0-100）')
+    ElMessage.warning(t('workflow.canary.msg.invalidPercentage'))
     return
   }
   if (publishForm.strategy !== 'PERCENTAGE' && (!publishForm.whitelist || publishForm.whitelist.length === 0)) {
-    ElMessage.warning('请添加白名单用户')
+    ElMessage.warning(t('workflow.canary.msg.whitelistRequired'))
     return
   }
 
@@ -152,14 +155,14 @@ async function submitPublish() {
   try {
     const res = await publishCanary(currentDefinition.value.id, publishForm)
     if (res.data?.code === 0) {
-      ElMessage.success('灰度发布已启动')
+      ElMessage.success(t('workflow.canary.msg.publishStarted'))
       publishDialog.value = false
       loadDefinitions()
     } else {
-      ElMessage.error(res.data?.message || '启动失败')
+      ElMessage.error(res.data?.message || t('workflow.canary.msg.publishFailed'))
     }
   } catch (e) {
-    ElMessage.error('启动失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.canary.msg.publishFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     publishing.value = false
   }
@@ -175,21 +178,21 @@ function openAdjustDialog(row: FlowDefinitionDTO) {
 async function submitAdjust() {
   if (!currentDefinition.value) return
   if (adjustPercentage.value < 0 || adjustPercentage.value > 100) {
-    ElMessage.warning('请输入有效的灰度比例（0-100）')
+    ElMessage.warning(t('workflow.canary.msg.invalidPercentage'))
     return
   }
   adjusting.value = true
   try {
     const res = await adjustCanary(currentDefinition.value.id, adjustPercentage.value)
     if (res.data?.code === 0) {
-      ElMessage.success('灰度比例已调整')
+      ElMessage.success(t('workflow.canary.msg.adjustSuccess'))
       adjustDialog.value = false
       loadDefinitions()
     } else {
-      ElMessage.error(res.data?.message || '调整失败')
+      ElMessage.error(res.data?.message || t('workflow.canary.msg.adjustFailed'))
     }
   } catch (e) {
-    ElMessage.error('调整失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.canary.msg.adjustFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     adjusting.value = false
   }
@@ -199,20 +202,20 @@ async function submitAdjust() {
 async function handlePromote(row: FlowDefinitionDTO) {
   try {
     await ElMessageBox.confirm(
-      `确认对流程「${row.flowName || row.flowCode}」执行全量发布？全量发布后灰度将转为正式版本。`,
-      '全量发布确认',
+      t('workflow.canary.msg.promoteConfirm', { name: row.flowName || row.flowCode }),
+      t('workflow.canary.msg.promoteConfirmTitle'),
       { type: 'warning' },
     )
     const res = await promoteCanary(row.id)
     if (res.data?.code === 0) {
-      ElMessage.success('全量发布成功')
+      ElMessage.success(t('workflow.canary.msg.promoteSuccess'))
       loadDefinitions()
     } else {
-      ElMessage.error(res.data?.message || '发布失败')
+      ElMessage.error(res.data?.message || t('workflow.canary.msg.promoteFailed'))
     }
   } catch (e) {
     if (e !== 'cancel') {
-      ElMessage.error('发布失败：' + (e as Error).message)
+      ElMessage.error(t('workflow.canary.msg.promoteFailedWithMsg', { reason: (e as Error).message }))
     }
   }
 }
@@ -221,20 +224,20 @@ async function handlePromote(row: FlowDefinitionDTO) {
 async function handleRollback(row: FlowDefinitionDTO) {
   try {
     await ElMessageBox.confirm(
-      `确认对流程「${row.flowName || row.flowCode}」执行灰度回滚？回滚后灰度版本将被废弃。`,
-      '回滚确认',
+      t('workflow.canary.msg.rollbackConfirm', { name: row.flowName || row.flowCode }),
+      t('workflow.canary.msg.rollbackConfirmTitle'),
       { type: 'warning' },
     )
     const res = await rollbackCanary(row.id)
     if (res.data?.code === 0) {
-      ElMessage.success('回滚成功')
+      ElMessage.success(t('workflow.canary.msg.rollbackSuccess'))
       loadDefinitions()
     } else {
-      ElMessage.error(res.data?.message || '回滚失败')
+      ElMessage.error(res.data?.message || t('workflow.canary.msg.rollbackFailed'))
     }
   } catch (e) {
     if (e !== 'cancel') {
-      ElMessage.error('回滚失败：' + (e as Error).message)
+      ElMessage.error(t('workflow.canary.msg.rollbackFailedWithMsg', { reason: (e as Error).message }))
     }
   }
 }
@@ -250,7 +253,7 @@ async function openLogDialog(row: FlowDefinitionDTO) {
       rolloutLogs.value = res.data.data || []
     }
   } catch (e) {
-    ElMessage.error('加载发布历史失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.canary.msg.loadLogFailedWithMsg', { reason: (e as Error).message }))
   } finally {
     logLoading.value = false
   }
@@ -264,8 +267,8 @@ onMounted(() => loadDefinitions())
     <div class="page-header">
       <div class="page-header-row">
         <div>
-          <h2>灰度发布管理</h2>
-          <p class="page-header__sub">管理流程定义的灰度发布，支持按比例/白名单灰度、调整、全量发布和回滚</p>
+          <h2>{{ t('workflow.canary.title') }}</h2>
+          <p class="page-header__sub">{{ t('workflow.canary.subtitle') }}</p>
         </div>
       </div>
     </div>
@@ -275,42 +278,42 @@ onMounted(() => loadDefinitions())
       <div class="search-bar">
         <el-input
           v-model="searchForm.flowCode"
-          placeholder="流程编码"
+          :placeholder="t('workflow.canary.search.flowCode')"
           clearable
           style="width: 180px"
           @keyup.enter="handleSearch"
         />
         <el-input
           v-model="searchForm.flowName"
-          placeholder="流程名称"
+          :placeholder="t('workflow.canary.search.flowName')"
           clearable
           style="width: 180px"
           @keyup.enter="handleSearch"
         />
         <el-select
           v-model="searchForm.status"
-          placeholder="状态"
+          :placeholder="t('workflow.canary.search.status')"
           clearable
           style="width: 140px"
         >
-          <el-option label="草稿" value="DRAFT" />
-          <el-option label="已发布" value="PUBLISHED" />
-          <el-option label="已停用" value="DEPRECATED" />
-          <el-option label="已下线" value="OFFLINE" />
+          <el-option :label="t('workflow.canary.status.draft')" value="DRAFT" />
+          <el-option :label="t('workflow.canary.status.published')" value="PUBLISHED" />
+          <el-option :label="t('workflow.canary.status.deprecated')" value="DEPRECATED" />
+          <el-option :label="t('workflow.canary.status.offline')" value="OFFLINE" />
         </el-select>
         <el-button type="primary" @click="handleSearch">
-          <el-icon><Search /></el-icon>查询
+          <el-icon><Search /></el-icon>{{ t('workflow.canary.search.query') }}
         </el-button>
       </div>
 
       <!-- 流程定义列表 -->
       <el-table v-loading="loading" :data="definitionList" border stripe>
-        <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="flowCode" label="流程编码" min-width="140" />
-        <el-table-column prop="flowName" label="流程名称" min-width="140" />
-        <el-table-column prop="version" label="版本" width="70" />
-        <el-table-column prop="category" label="类别" width="90" />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="id" :label="t('workflow.canary.columns.id')" width="60" />
+        <el-table-column prop="flowCode" :label="t('workflow.canary.columns.flowCode')" min-width="140" />
+        <el-table-column prop="flowName" :label="t('workflow.canary.columns.flowName')" min-width="140" />
+        <el-table-column prop="version" :label="t('workflow.canary.columns.version')" width="70" />
+        <el-table-column prop="category" :label="t('workflow.canary.columns.category')" width="90" />
+        <el-table-column prop="status" :label="t('workflow.canary.columns.status')" width="100">
           <template #default="{ row }">
             <el-tag
               :type="
@@ -321,25 +324,25 @@ onMounted(() => loadDefinitions())
               "
               size="small"
             >
-              {{ row.status === 'PUBLISHED' ? '已发布' :
-                 row.status === 'DRAFT' ? '草稿' :
-                 row.status === 'DEPRECATED' ? '已停用' :
-                 row.status === 'OFFLINE' ? '已下线' : row.status }}
+              {{ row.status === 'PUBLISHED' ? t('workflow.canary.status.published') :
+                 row.status === 'DRAFT' ? t('workflow.canary.status.draft') :
+                 row.status === 'DEPRECATED' ? t('workflow.canary.status.deprecated') :
+                 row.status === 'OFFLINE' ? t('workflow.canary.status.offline') : row.status }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="updateTime" label="更新时间" min-width="150">
+        <el-table-column prop="updateTime" :label="t('workflow.canary.columns.updateTime')" min-width="150">
           <template #default="{ row }">
             {{ row.updateTime ? dayjs(row.updateTime).format('YYYY-MM-DD HH:mm') : '-' }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="320" fixed="right">
+        <el-table-column :label="t('workflow.canary.columns.operation')" width="320" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" type="primary" link @click="openPublishDialog(row as FlowDefinitionDTO)">启动灰度</el-button>
-            <el-button size="small" type="warning" link @click="openAdjustDialog(row as FlowDefinitionDTO)">调整比例</el-button>
-            <el-button size="small" type="success" link @click="handlePromote(row as FlowDefinitionDTO)">全量发布</el-button>
-            <el-button size="small" type="danger" link @click="handleRollback(row as FlowDefinitionDTO)">回滚</el-button>
-            <el-button size="small" link @click="openLogDialog(row as FlowDefinitionDTO)">发布历史</el-button>
+            <el-button size="small" type="primary" link @click="openPublishDialog(row as FlowDefinitionDTO)">{{ t('workflow.canary.action.publish') }}</el-button>
+            <el-button size="small" type="warning" link @click="openAdjustDialog(row as FlowDefinitionDTO)">{{ t('workflow.canary.action.adjust') }}</el-button>
+            <el-button size="small" type="success" link @click="handlePromote(row as FlowDefinitionDTO)">{{ t('workflow.canary.action.promote') }}</el-button>
+            <el-button size="small" type="danger" link @click="handleRollback(row as FlowDefinitionDTO)">{{ t('workflow.canary.action.rollback') }}</el-button>
+            <el-button size="small" link @click="openLogDialog(row as FlowDefinitionDTO)">{{ t('workflow.canary.action.log') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -357,12 +360,12 @@ onMounted(() => loadDefinitions())
     </el-card>
 
     <!-- 启动灰度弹窗 -->
-    <el-dialog v-model="publishDialog" title="启动灰度发布" width="520px">
+    <el-dialog v-model="publishDialog" :title="t('workflow.canary.publish.title')" width="520px">
       <el-form :model="publishForm" label-width="100px">
-        <el-form-item label="流程">
+        <el-form-item :label="t('workflow.canary.publish.flow')">
           <span>{{ currentDefinition?.flowName || currentDefinition?.flowCode }}</span>
         </el-form-item>
-        <el-form-item label="灰度策略" required>
+        <el-form-item :label="t('workflow.canary.publish.strategy')" required>
           <el-select v-model="publishForm.strategy" style="width: 100%">
             <el-option
               v-for="opt in strategyOptions"
@@ -372,18 +375,18 @@ onMounted(() => loadDefinitions())
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="publishForm.strategy !== 'WHITELIST'" label="灰度比例" required>
+        <el-form-item v-if="publishForm.strategy !== 'WHITELIST'" :label="t('workflow.canary.publish.percentage')" required>
           <el-slider v-model="publishForm.percentage" :min="0" :max="100" show-input style="width: 100%" />
         </el-form-item>
-        <el-form-item v-if="publishForm.strategy !== 'PERCENTAGE'" label="白名单用户" required>
+        <el-form-item v-if="publishForm.strategy !== 'PERCENTAGE'" :label="t('workflow.canary.publish.whitelist')" required>
           <div class="whitelist-section">
             <div class="whitelist-input-row">
               <el-input
                 v-model="whitelistInput"
-                placeholder="输入用户 ID，逗号分隔"
+                :placeholder="t('workflow.canary.publish.whitelistPlaceholder')"
                 @keyup.enter="addWhitelist"
               />
-              <el-button @click="addWhitelist">添加</el-button>
+              <el-button @click="addWhitelist">{{ t('workflow.canary.publish.add') }}</el-button>
             </div>
             <div class="whitelist-tags">
               <el-tag
@@ -398,62 +401,62 @@ onMounted(() => loadDefinitions())
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="publishDialog = false">取消</el-button>
-        <el-button type="primary" :loading="publishing" @click="submitPublish">确认启动</el-button>
+        <el-button @click="publishDialog = false">{{ t('workflow.canary.publish.cancel') }}</el-button>
+        <el-button type="primary" :loading="publishing" @click="submitPublish">{{ t('workflow.canary.publish.confirm') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 调整比例弹窗 -->
-    <el-dialog v-model="adjustDialog" title="调整灰度比例" width="420px">
+    <el-dialog v-model="adjustDialog" :title="t('workflow.canary.adjust.title')" width="420px">
       <el-form label-width="80px">
-        <el-form-item label="流程">
+        <el-form-item :label="t('workflow.canary.adjust.flow')">
           <span>{{ currentDefinition?.flowName || currentDefinition?.flowCode }}</span>
         </el-form-item>
-        <el-form-item label="灰度比例">
+        <el-form-item :label="t('workflow.canary.adjust.percentage')">
           <el-slider v-model="adjustPercentage" :min="0" :max="100" show-input />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="adjustDialog = false">取消</el-button>
-        <el-button type="primary" :loading="adjusting" @click="submitAdjust">确认调整</el-button>
+        <el-button @click="adjustDialog = false">{{ t('workflow.canary.adjust.cancel') }}</el-button>
+        <el-button type="primary" :loading="adjusting" @click="submitAdjust">{{ t('workflow.canary.adjust.confirm') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 发布历史弹窗 -->
-    <el-dialog v-model="logDialog" title="灰度发布历史" width="720px">
+    <el-dialog v-model="logDialog" :title="t('workflow.canary.log.title')" width="720px">
       <el-table v-loading="logLoading" :data="rolloutLogs" border stripe max-height="400">
-        <el-table-column prop="action" label="操作类型" width="120">
+        <el-table-column prop="action" :label="t('workflow.canary.columns.actionType')" width="120">
           <template #default="{ row }">
             <el-tag :type="actionMap[row.action]?.type || 'info'" size="small">
               {{ actionMap[row.action]?.label || row.action }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="flowName" label="流程名称" min-width="120">
+        <el-table-column prop="flowName" :label="t('workflow.canary.columns.flowName')" min-width="120">
           <template #default="{ row }">
             {{ row.flowName || row.flowCode }}
           </template>
         </el-table-column>
-        <el-table-column prop="percentage" label="灰度比例" width="90">
+        <el-table-column prop="percentage" :label="t('workflow.canary.columns.percentage')" width="90">
           <template #default="{ row }">
             {{ row.percentage !== undefined ? row.percentage + '%' : '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="operatorName" label="操作人" min-width="100">
+        <el-table-column prop="operatorName" :label="t('workflow.canary.columns.operator')" min-width="100">
           <template #default="{ row }">
             {{ row.operatorName || row.operatorId || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="detail" label="详情" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="operateTime" label="操作时间" min-width="150">
+        <el-table-column prop="detail" :label="t('workflow.canary.columns.detail')" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="operateTime" :label="t('workflow.canary.columns.operateTime')" min-width="150">
           <template #default="{ row }">
             {{ row.operateTime ? dayjs(row.operateTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
           </template>
         </el-table-column>
       </el-table>
-      <el-empty v-if="!logLoading && rolloutLogs.length === 0" description="暂无发布历史" />
+      <el-empty v-if="!logLoading && rolloutLogs.length === 0" :description="t('workflow.canary.log.empty')" />
       <template #footer>
-        <el-button @click="logDialog = false">关闭</el-button>
+        <el-button @click="logDialog = false">{{ t('workflow.canary.log.close') }}</el-button>
       </template>
     </el-dialog>
   </div>

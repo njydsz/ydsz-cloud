@@ -11,6 +11,7 @@ import com.njydsz.pmis.message.entity.MsgTemplateDO;
 import com.njydsz.pmis.message.service.TemplateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,14 +39,14 @@ public class TemplateController {
     @Operation(summary = "创建模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_CREATE)
     @PostMapping
-    public Result<MsgTemplateDO> create(@RequestBody TemplateCreateDTO dto) {
+    public Result<MsgTemplateDO> create(@Valid @RequestBody TemplateCreateDTO dto) {
         return Result.ok(templateService.create(dto));
     }
 
     @Operation(summary = "更新模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
     @PutMapping("/{id}")
-    public Result<MsgTemplateDO> update(@PathVariable String id, @RequestBody TemplateCreateDTO dto) {
+    public Result<MsgTemplateDO> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
         return Result.ok(templateService.update(id, dto));
     }
 
@@ -74,7 +75,7 @@ public class TemplateController {
     @Operation(summary = "审核模板")
     @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
     @PostMapping("/{id}/audit")
-    public Result<Void> audit(@PathVariable String id, @RequestBody TemplateAuditDTO dto) {
+    public Result<Void> audit(@PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {
         dto.setId(id);
         templateService.audit(id, dto);
         return Result.ok();

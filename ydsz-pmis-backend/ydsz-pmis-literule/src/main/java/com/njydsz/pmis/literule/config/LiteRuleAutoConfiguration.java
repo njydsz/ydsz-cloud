@@ -25,7 +25,9 @@ import com.njydsz.pmis.literule.core.MicrometerRuleMetrics;
 import com.njydsz.pmis.literule.core.EvaluationResultCache;
 import com.njydsz.pmis.literule.core.RuleCanaryRouter;
 import com.njydsz.pmis.literule.core.RuleCircuitBreaker;
+import com.njydsz.pmis.literule.core.RuleDocumentationService;
 import com.njydsz.pmis.literule.core.RuleEffectivenessService;
+import com.njydsz.pmis.literule.core.RuleLifecycleService;
 import com.njydsz.pmis.literule.core.ParallelRuleEvaluator;
 import com.njydsz.pmis.literule.core.RuleMetrics;
 import com.njydsz.pmis.literule.core.RuleTimeoutExecutor;
@@ -969,14 +971,14 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnProperty(
             prefix = "pmis.literule.lifecycle", name = "enabled",
             havingValue = "true", matchIfMissing = true)
-    public com.njydsz.pmis.literule.core.RuleLifecycleService ruleLifecycleService(
+    public RuleLifecycleService ruleLifecycleService(
             RuleEngine ruleEngine,
             RuleConfigProvider configProvider,
             RuleAdminService ruleAdminService,
             ObjectProvider<RuleVersionRepository> versionRepoProvider,
             LiteRuleProperties properties) {
-        com.njydsz.pmis.literule.core.RuleLifecycleService service =
-                new com.njydsz.pmis.literule.core.RuleLifecycleService(
+        RuleLifecycleService service =
+                new RuleLifecycleService(
                         ruleEngine, configProvider, ruleAdminService,
                         versionRepoProvider.getIfAvailable());
         service.configure(properties.getLifecycle());
@@ -1011,15 +1013,15 @@ public class LiteRuleAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(RuleConfigProvider.class)
-    public com.njydsz.pmis.literule.core.RuleDocumentationService ruleDocumentationService(
+    public RuleDocumentationService ruleDocumentationService(
             RuleConfigProvider configProvider,
             RuleEngine ruleEngine,
             ObjectProvider<RuleVersionRepository> versionRepoProvider,
-            ObjectProvider<com.njydsz.pmis.literule.core.RuleEffectivenessService> effectivenessServiceProvider) {
-        com.njydsz.pmis.literule.core.RuleDocumentationService service =
-                new com.njydsz.pmis.literule.core.RuleDocumentationService(
+            ObjectProvider<RuleEffectivenessService> effectivenessServiceProvider) {
+        RuleDocumentationService service =
+                new RuleDocumentationService(
                         configProvider, ruleEngine, versionRepoProvider.getIfAvailable());
-        com.njydsz.pmis.literule.core.RuleEffectivenessService effectivenessService =
+        RuleEffectivenessService effectivenessService =
                 effectivenessServiceProvider.getIfAvailable();
         if (effectivenessService != null) {
             service.setEffectivenessService(effectivenessService);

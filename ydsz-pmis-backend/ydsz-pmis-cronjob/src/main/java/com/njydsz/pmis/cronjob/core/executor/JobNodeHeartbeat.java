@@ -8,6 +8,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -52,7 +53,7 @@ public class JobNodeHeartbeat {
     private final CronjobProperties cronjobProperties;
 
     /** P0-5: 服务端口（通过 @Value 注入，修正之前返回 PID 的问题） */
-    @org.springframework.beans.factory.annotation.Value("${server.port:0}")
+    @Value("${server.port:0}")
     private int serverPort;
 
     /** 当前节点 ID（hostname:port，P0-5 修复：之前用 hostname:pid 导致重启后僵尸记录） */

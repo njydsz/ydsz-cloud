@@ -8,6 +8,7 @@ import com.njydsz.pmis.message.entity.MsgReceiptDO;
 import com.njydsz.pmis.message.service.ReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,7 +36,7 @@ public class ReceiptController {
     @Operation(summary = "回执回调")
     @PrePermission(PermissionCodes.MESSAGE_RECEIPT_CALLBACK)
     @PostMapping("/callback")
-    public Result<Void> callback(@RequestBody ReceiptCallbackDTO dto) {
+    public Result<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {
         receiptService.callback(dto);
         return Result.ok();
     }

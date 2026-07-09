@@ -8,6 +8,7 @@ import com.njydsz.pmis.message.entity.MsgSubscriptionDO;
 import com.njydsz.pmis.message.service.SubscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +37,7 @@ public class SubscriptionController {
     @Operation(summary = "新增/更新订阅")
     @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
     @PostMapping
-    public Result<MsgSubscriptionDO> upsert(@RequestBody SubscriptionUpsertDTO dto) {
+    public Result<MsgSubscriptionDO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
         return Result.ok(subscriptionService.upsert(dto));
     }
 

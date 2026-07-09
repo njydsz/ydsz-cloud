@@ -68,12 +68,12 @@ const dateRange = ref<[string, string] | null>(null)
 type QuickTag = 'today' | 'thisWeek' | 'overdue' | 'urgent' | null
 const activeQuickTag = ref<QuickTag>(null)
 
-const quickTagOptions: { value: QuickTag; label: string; type: 'danger' | 'warning' | 'info' }[] = [
-  { value: 'overdue', label: '已超期', type: 'danger' },
-  { value: 'today', label: '今日到期', type: 'warning' },
-  { value: 'thisWeek', label: '本周到期', type: 'info' },
-  { value: 'urgent', label: '紧急', type: 'danger' },
-]
+const quickTagOptions = computed<{ value: QuickTag; label: string; type: 'danger' | 'warning' | 'info' }[]>(() => [
+  { value: 'overdue', label: t('workflow.approval.todo.chips.overdue'), type: 'danger' },
+  { value: 'today', label: t('workflow.approval.todo.chips.today'), type: 'warning' },
+  { value: 'thisWeek', label: t('workflow.approval.todo.chips.thisWeek'), type: 'info' },
+  { value: 'urgent', label: t('workflow.approval.todo.chips.urgent'), type: 'danger' },
+])
 
 function onQuickTagClick(tag: QuickTag) {
   activeQuickTag.value = activeQuickTag.value === tag ? null : tag
@@ -226,7 +226,7 @@ const columnOptions = computed<ColumnOption[]>(() => [
   { key: 'flowName', label: t('workflow.approval.columns.flowName') },
   { key: 'nodeName', label: t('workflow.approval.columns.nodeName') },
   { key: 'assignorName', label: t('workflow.approval.columns.assignorName') },
-  { key: 'priority', label: '优先级' },
+  { key: 'priority', label: t('workflow.approval.columns.priority') },
   { key: 'createTime', label: t('workflow.approval.columns.createTime') },
   { key: 'status', label: t('workflow.approval.columns.status') },
   { key: 'operation', label: t('workflow.approval.columns.operation'), fixed: true },
@@ -260,10 +260,10 @@ function isColumnVisible(key: string): boolean {
 // P1-1: 优先级标签
 function priorityTag(priority?: number): { label: string; type: 'danger' | 'warning' | 'info' | 'success' } {
   const p = priority ?? 50
-  if (p >= 76) return { label: '紧急', type: 'danger' }
-  if (p >= 51) return { label: '高', type: 'warning' }
-  if (p >= 26) return { label: '中', type: 'info' }
-  return { label: '低', type: 'success' }
+  if (p >= 76) return { label: t('workflow.approval.todo.priority.urgent'), type: 'danger' }
+  if (p >= 51) return { label: t('workflow.approval.todo.priority.high'), type: 'warning' }
+  if (p >= 26) return { label: t('workflow.approval.todo.priority.medium'), type: 'info' }
+  return { label: t('workflow.approval.todo.priority.low'), type: 'success' }
 }
 
 // ===========================================
@@ -300,7 +300,7 @@ watch([todoList, groupByFlow], () => {
     if (!map.has(code)) {
       map.set(code, {
         flowCode: code,
-        flowName: task.flowName || task.flowCode || '未知流程',
+        flowName: task.flowName || task.flowCode || t('workflow.approval.todo.unknownFlow'),
         tasks: [],
         _expanded: true,
         _selected: [],
@@ -456,17 +456,17 @@ const {
 // ===========================================
 const batchActions = computed<BatchAction[]>(() => [
   {
-    label: `批量通过 (${todoSelection.value.length})`,
+    label: t('workflow.approval.todo.batchPass', { count: todoSelection.value.length }),
     type: 'primary',
     handler: () => quickBatchPass(todoSelection.value.map((t) => t.id)),
   },
   {
-    label: '批量签收',
+    label: t('workflow.approval.todo.batchClaim'),
     type: 'success',
     handler: () => quickBatchClaim(todoSelection.value),
   },
   {
-    label: '批量已阅',
+    label: t('workflow.approval.todo.batchMarkRead'),
     type: 'info',
     handler: () => quickBatchMarkRead(todoSelection.value),
   },
@@ -580,12 +580,12 @@ onMounted(() => {
         </el-button>
 
         <!-- P1-3: 分组展示切换 -->
-        <el-tooltip content="按流程类型分组展示" placement="top">
+        <el-tooltip :content="t('workflow.approval.todo.groupByTip')" placement="top">
           <el-switch
             v-model="groupByFlow"
             inline-prompt
-            active-text="分组"
-            inactive-text="平铺"
+            :active-text="t('workflow.approval.todo.groupBy')"
+            :inactive-text="t('workflow.approval.todo.flatView')"
             size="small"
           />
         </el-tooltip>
@@ -613,7 +613,7 @@ onMounted(() => {
 
       <!-- P1-3: 快捷标签 chips -->
       <div class="filter-bar-enhanced__row filter-bar-enhanced__row--chips">
-        <span class="chips-label">快捷筛选：</span>
+        <span class="chips-label">{{ t('workflow.approval.todo.quickFilter') }}</span>
         <el-tag
           v-for="tag in quickTagOptions"
           :key="tag.value || 'none'"
@@ -695,7 +695,7 @@ onMounted(() => {
       <!-- P1-1: 任务优先级 -->
       <el-table-column
         v-if="isColumnVisible('priority')"
-        label="优先级"
+        :label="t('workflow.approval.columns.priority')"
         width="80"
         align="center"
       >
@@ -778,7 +778,7 @@ onMounted(() => {
             <!-- 更多操作（移动端承载全部操作） -->
             <el-dropdown size="small">
               <el-button size="small">
-                {{ isMobile ? '操作' : t('workflow.approval.actions.more') }}<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                {{ isMobile ? t('workflow.approval.actions.operation') : t('workflow.approval.actions.more') }}<el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
@@ -838,7 +838,7 @@ onMounted(() => {
 
     <!-- P1-3: 分组模式（按流程类型聚合） -->
     <div v-if="groupByFlow" v-loading="todoLoading" class="group-view">
-      <el-empty v-if="todoGroupedByFlow.length === 0" description="暂无待办" :image-size="60" />
+      <el-empty v-if="todoGroupedByFlow.length === 0" :description="t('workflow.approval.todo.empty')" :image-size="60" />
       <div v-for="group in todoGroupedByFlow" :key="group.flowCode" class="group-card">
         <div class="group-card__header" @click="group._expanded = !group._expanded">
           <el-icon class="group-card__arrow">
@@ -846,7 +846,7 @@ onMounted(() => {
             <ArrowRight v-else />
           </el-icon>
           <span class="group-card__name">{{ group.flowName }}</span>
-          <el-tag size="small" type="info">{{ group.tasks.length }} 个待办</el-tag>
+          <el-tag size="small" type="info">{{ t('workflow.approval.todo.count', { count: group.tasks.length }) }}</el-tag>
         </div>
         <el-table
           v-if="group._expanded"
@@ -857,28 +857,28 @@ onMounted(() => {
           @selection-change="(v: FlowTaskDTO[]) => onGroupSelectionChange(group.flowCode, v)"
         >
           <el-table-column type="selection" width="45" />
-          <el-table-column prop="title" label="任务标题" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="nodeName" label="节点" min-width="100" show-overflow-tooltip>
+          <el-table-column prop="title" :label="t('workflow.approval.todo.columns.taskTitle')" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="nodeName" :label="t('workflow.approval.todo.columns.node')" min-width="100" show-overflow-tooltip>
             <template #default="{ row }">{{ row.nodeName || row.nodeCode }}</template>
           </el-table-column>
-          <el-table-column prop="assigneeName" label="处理人" min-width="90">
+          <el-table-column prop="assigneeName" :label="t('workflow.approval.todo.columns.assignee')" min-width="90">
             <template #default="{ row }">{{ row.assigneeName || row.assigneeId || '-' }}</template>
           </el-table-column>
-          <el-table-column label="优先级" width="80">
+          <el-table-column :label="t('workflow.approval.columns.priority')" width="80">
             <template #default="{ row }">
               <el-tag :type="priorityTag(row.priority).type" size="small">
                 {{ priorityTag(row.priority).label }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="createTime" label="创建时间" min-width="140">
+          <el-table-column prop="createTime" :label="t('workflow.approval.todo.columns.createTime')" min-width="140">
             <template #default="{ row }">
               {{ row.createTime ? formatTime(row.createTime) : '-' }}
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="100" fixed="right">
+          <el-table-column :label="t('workflow.approval.columns.operation')" width="100" fixed="right">
             <template #default="{ row }">
-              <el-button size="small" type="primary" link @click="goInstance(row.instanceId)">详情</el-button>
+              <el-button size="small" type="primary" link @click="goInstance(row.instanceId)">{{ t('workflow.approval.todo.detail') }}</el-button>
             </template>
           </el-table-column>
         </el-table>

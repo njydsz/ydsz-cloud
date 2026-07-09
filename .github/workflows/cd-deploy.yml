@@ -214,21 +214,23 @@ jobs:
       - name: Deploy to Staging
         run: |
           # 更新所有微服务镜像（命名空间统一为 pmis，与 deploy/k8s/base/namespace.yaml 一致）
+          # Deployment 命名遵循 deploy/k8s/base/*.yaml 的 ydsz-pmis- 前缀（P0-2 修复命名一致性）
+          # Container 命名遵循 deploy/k8s/base/*.yaml 的容器名（与 service 同名，无 ydsz-pmis- 前缀）
           for svc in gateway userinfo system project message cronjob workflow agent; do
-            kubectl set image deployment/pmis-${svc} \
-              pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
+            kubectl set image deployment/ydsz-pmis-${svc} \
+              ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
           done
-          # 更新前端镜像
-          kubectl set image deployment/pmis-frontend \
-            pmis-frontend=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }} \
+          # 更新前端镜像（前端容器名为 frontend，与后端服务命名规则一致）
+          kubectl set image deployment/ydsz-pmis-frontend \
+            frontend=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }} \
             -n ${{ env.K8S_NAMESPACE }}
 
       - name: Wait for Rollout
         run: |
           for svc in gateway userinfo system project message cronjob workflow agent frontend; do
-            echo "Waiting for pmis-${svc} rollout..."
-            kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+            echo "Waiting for ydsz-pmis-${svc} rollout..."
+            kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
           done
 
       - name: Smoke Test
@@ -257,19 +259,19 @@ jobs:
           # 错误率阈值：5 分钟窗口内 5xx 比例 > 1% 即判定失败并回滚
           ERROR_RATE_THRESHOLD=0.01
           for svc in gateway userinfo system project message cronjob workflow agent frontend; do
-            echo "==> 开始滚动更新: pmis-${svc}"
+            echo "==> 开始滚动更新: ydsz-pmis-${svc}"
 
-            # 更新镜像触发滚动更新
-            kubectl set image deployment/pmis-${svc} \
-              pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
+            # 更新镜像触发滚动更新（P0-2 修复：Deployment 名为 ydsz-pmis-${svc}，容器名为 ${svc}）
+            kubectl set image deployment/ydsz-pmis-${svc} \
+              ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
 
             # 等待滚动更新完成（超时 10 分钟）
-            echo "Waiting for pmis-${svc} rollout..."
-            if ! kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=600s; then
-              echo "ERROR: pmis-${svc} 滚动更新超时，执行回滚"
-              kubectl rollout undo deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
-              kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+            echo "Waiting for ydsz-pmis-${svc} rollout..."
+            if ! kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=600s; then
+              echo "ERROR: ydsz-pmis-${svc} 滚动更新超时，执行回滚"
+              kubectl rollout undo deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
+              kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
               exit 1
             fi
 
@@ -277,30 +279,31 @@ jobs:
             sleep 30
 
             # 通过 Prometheus 查询错误率（5xx / 总请求，最近 5 分钟）
+            # Pod 命名遵循 <deployment>-<hash>，故正则用 ydsz-pmis-${svc}.*
             ERROR_RATE=$(curl -s "http://prometheus-server.monitoring.svc.cluster.local:9090/query" \
-              --data-urlencode "query=sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"pmis-${svc}.*\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"pmis-${svc}.*\"}[5m]))" \
+              --data-urlencode "query=sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"ydsz-pmis-${svc}.*\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"ydsz-pmis-${svc}.*\"}[5m]))" \
               | jq -r '.data.result[0].value[1] // "0"')
-            echo "pmis-${svc} 当前 5xx 错误率: ${ERROR_RATE}"
+            echo "ydsz-pmis-${svc} 当前 5xx 错误率: ${ERROR_RATE}"
 
             if [ "$(echo "${ERROR_RATE} > ${ERROR_RATE_THRESHOLD}" | bc -l)" = "1" ]; then
-              echo "ERROR: pmis-${svc} 错误率 ${ERROR_RATE} 超过阈值 ${ERROR_RATE_THRESHOLD}，执行回滚！"
-              kubectl rollout undo deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
-              kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+              echo "ERROR: ydsz-pmis-${svc} 错误率 ${ERROR_RATE} 超过阈值 ${ERROR_RATE_THRESHOLD}，执行回滚！"
+              kubectl rollout undo deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
+              kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
               exit 1
             fi
 
-            # 检查 Pod 健康状态
-            UNHEALTHY=$(kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=pmis-${svc} \
+            # 检查 Pod 健康状态（Pod label app=ydsz-pmis-${svc}，与 deploy/k8s/base/*.yaml 一致）
+            UNHEALTHY=$(kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=ydsz-pmis-${svc} \
               --field-selector=status.phase!=Running,status.phase!=Succeeded \
               --no-headers 2>/dev/null | wc -l)
             if [ "${UNHEALTHY}" -gt "0" ]; then
-              echo "ERROR: pmis-${svc} 有 ${UNHEALTHY} 个 Pod 不健康，执行回滚！"
-              kubectl rollout undo deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
-              kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+              echo "ERROR: ydsz-pmis-${svc} 有 ${UNHEALTHY} 个 Pod 不健康，执行回滚！"
+              kubectl rollout undo deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
+              kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
               exit 1
             fi
 
-            echo "✅ pmis-${svc} 部署成功"
+            echo "✅ ydsz-pmis-${svc} 部署成功"
           done
 
       - name: Production Smoke Test
@@ -331,8 +334,8 @@ jobs:
       - name: Rollback Production
         run: |
           for svc in gateway userinfo system project message cronjob workflow agent frontend; do
-            echo "==> 回滚 pmis-${svc} 到上一版本"
-            kubectl rollout undo deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
-            kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+            echo "==> 回滚 ydsz-pmis-${svc} 到上一版本"
+            kubectl rollout undo deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
+            kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
           done
           echo "✅ 所有服务已回滚到上一版本"

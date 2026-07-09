@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.service.impl.strategy;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowPerformType;
@@ -36,8 +38,8 @@ public class ParallelCountersignStrategy implements CountersignStrategy {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             // 乐观锁冲突，抛异常由调用方处理
-            throw new com.njydsz.pmis.common.exception.BizException(
-                    com.njydsz.pmis.common.api.BizErrorCode.RESOURCE_CONFLICT,
+            throw new BizException(
+                    BizErrorCode.RESOURCE_CONFLICT,
                     "error.workflow.msg_199e8ba1", task.getId());
         }
         archiveService.completeAndArchive(task, dto.getComment());

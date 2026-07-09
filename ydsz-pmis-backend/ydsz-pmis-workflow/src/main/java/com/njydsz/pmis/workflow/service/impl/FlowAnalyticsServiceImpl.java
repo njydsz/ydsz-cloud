@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowAnalyticsService;
@@ -51,13 +52,13 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
                 new LambdaQueryWrapper<FlowRunTaskDO>()
                         .eq(FlowRunTaskDO::getTenantId, tid)
                         .eq(FlowRunTaskDO::getDeleted, 0)
-                        .in(FlowRunTaskDO::getTaskStatus, "TODO", "CLAIMED")
+                        .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
         );
         long overdueCount = runTaskMapper.selectCount(
                 new LambdaQueryWrapper<FlowRunTaskDO>()
                         .eq(FlowRunTaskDO::getTenantId, tid)
                         .eq(FlowRunTaskDO::getDeleted, 0)
-                        .in(FlowRunTaskDO::getTaskStatus, "TODO", "CLAIMED")
+                        .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
                         .lt(FlowRunTaskDO::getDueAt, LocalDateTime.now())
         );
 

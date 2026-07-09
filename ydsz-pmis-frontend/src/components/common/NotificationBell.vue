@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Bell, InfoFilled, WarningFilled, CircleCloseFilled, WarnFilled, ArrowRight } from '@element-plus/icons-vue'
+import { Bell, InfoFilled, WarningFilled, CircleCloseFilled, ArrowRight } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import {
   getUnreadCount,
@@ -59,7 +59,7 @@ const categoryTabs = computed(() => [
 function getLevelMeta(level: string | undefined): { icon: typeof InfoFilled; class: string } {
   switch (level) {
     case 'URGENT':
-      return { icon: WarnFilled, class: 'level-urgent' }
+      return { icon: WarningFilled, class: 'level-urgent' }
     case 'ERROR':
       return { icon: CircleCloseFilled, class: 'level-error' }
     case 'WARN':

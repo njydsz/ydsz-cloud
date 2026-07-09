@@ -14,6 +14,7 @@ import com.njydsz.pmis.message.service.NotificationService;
 import com.njydsz.pmis.message.service.RecallService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +47,7 @@ public class NotificationController {
     @Operation(summary = "发送站内通知")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping("/send")
-    public Result<Integer> send(@RequestBody NotificationSendDTO dto) {
+    public Result<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
         return Result.ok(notificationService.send(dto));
     }
 
@@ -81,7 +82,7 @@ public class NotificationController {
     @Operation(summary = "删除通知(仅删自己的)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_DELETE)
     @DeleteMapping
-    public Result<Void> delete(@RequestBody List<String> ids) {
+    public Result<Void> delete(@Valid @RequestBody List<String> ids) {
         notificationService.delete(SecurityContext.getUserId(), ids);
         return Result.ok();
     }
@@ -99,7 +100,7 @@ public class NotificationController {
     public Result<Map<String, Object>> push(
             @RequestParam String userId,
             @RequestParam String type,
-            @RequestBody RealtimePushDTO payload) {
+            @Valid @RequestBody RealtimePushDTO payload) {
         Object data = payload != null ? payload.getData() : null;
         realtimePushService.pushToUser(userId, type, data);
         return Result.ok(Map.of("success", true, "userId", userId, "type", type));
@@ -110,7 +111,7 @@ public class NotificationController {
     @PostMapping("/broadcast")
     public Result<Map<String, Object>> broadcast(
             @RequestParam String type,
-            @RequestBody Object payload) {
+            @Valid @RequestBody Object payload) {
         realtimePushService.broadcast(type, payload);
         return Result.ok(Map.of("success", true, "type", type));
     }

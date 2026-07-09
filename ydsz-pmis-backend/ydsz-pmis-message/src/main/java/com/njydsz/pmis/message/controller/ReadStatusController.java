@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.service.ReadStatusSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,7 +46,7 @@ public class ReadStatusController {
     @Operation(summary = "批量标记消息已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @PostMapping("/read-batch")
-    public Result<Integer> markReadBatch(@RequestBody List<String> msgIds,
+    public Result<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
                                           @RequestParam String userId) {
         return Result.ok(readStatusSyncService.markReadBatch(msgIds, userId));
     }

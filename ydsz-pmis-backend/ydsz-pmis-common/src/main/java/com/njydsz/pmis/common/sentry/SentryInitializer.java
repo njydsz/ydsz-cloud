@@ -6,6 +6,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -31,8 +33,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(prefix = "pmis.sentry", name = "enabled", havingValue = "true")
-@org.springframework.boot.autoconfigure.condition.ConditionalOnClass(name = "io.sentry.Sentry")
+@ConditionalOnProperty(prefix = "pmis.sentry", name = "enabled", havingValue = "true")
+@ConditionalOnClass(name = "io.sentry.Sentry")
 public class SentryInitializer {
 
     private final SentryProperties sentryProperties;

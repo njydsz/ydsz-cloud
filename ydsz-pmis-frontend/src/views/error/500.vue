@@ -6,9 +6,10 @@
 -->
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
-/** 路由实例，用于返回首页跳转 */
 const router = useRouter()
+const { t } = useI18n()
 
 /** 刷新当前页：通过 location.reload 触发整页重载，规避 chunk 缓存问题 */
 function reload() {
@@ -18,10 +19,10 @@ function reload() {
 
 <template>
   <div class="error-page">
-    <el-result icon="error" title="500" sub-title="抱歉，服务器开小差了，请稍后重试或联系管理员">
+    <el-result icon="error" title="500" :sub-title="t('common.serverErrorSubtitle')">
       <template #extra>
-        <el-button type="primary" @click="router.push('/')">返回首页</el-button>
-        <el-button @click="reload">刷新重试</el-button>
+        <el-button type="primary" @click="router.push('/')">{{ t('common.backHome') }}</el-button>
+        <el-button @click="reload">{{ t('common.refreshRetry') }}</el-button>
       </template>
     </el-result>
   </div>

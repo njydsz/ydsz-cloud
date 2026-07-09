@@ -10,6 +10,7 @@ import com.njydsz.pmis.message.entity.MsgCanaryDO;
 import com.njydsz.pmis.message.service.CanaryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +37,7 @@ public class CanaryController {
     @Operation(summary = "新增/更新灰度桶")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_UPDATE)
     @PostMapping
-    public Result<MsgCanaryDO> upsert(@RequestBody CanaryUpsertDTO dto) {
+    public Result<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
         return Result.ok(canaryService.upsert(dto));
     }
 

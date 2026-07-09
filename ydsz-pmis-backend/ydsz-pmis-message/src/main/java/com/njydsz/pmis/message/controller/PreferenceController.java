@@ -8,6 +8,7 @@ import com.njydsz.pmis.message.entity.MsgPreferenceDO;
 import com.njydsz.pmis.message.service.PreferenceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +37,7 @@ public class PreferenceController {
     @Operation(summary = "新增/更新偏好")
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
     @PostMapping
-    public Result<MsgPreferenceDO> upsert(@RequestBody PreferenceUpsertDTO dto) {
+    public Result<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
         return Result.ok(preferenceService.upsert(dto));
     }
 
