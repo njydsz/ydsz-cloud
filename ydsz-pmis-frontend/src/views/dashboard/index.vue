@@ -16,6 +16,7 @@
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import type { EChartsOption } from '@/utils/echarts'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { formatDate } from '@/utils/format'
@@ -30,6 +31,7 @@ import SkeletonTable from '@/components/common/SkeletonTable.vue'
 import { useDashboardLayout, type WidgetConfig } from '@/composables/useDashboardLayout'
 
 const { t } = useI18n()
+const router = useRouter()
 
 // ===== Dashboard 拖拽布局 =====
 const dashboardWidgets: WidgetConfig[] = [
@@ -122,8 +124,54 @@ const fmtPercent = (v: number | undefined) => {
   return `${(Number(v) * 100).toFixed(1)}%`
 }
 
+// ===== KPI 卡片交互（批次 30-3） =====
+/** sparkline 宽度 */
+const SPARKLINE_W = 100
+/** sparkline 高度 */
+const SPARKLINE_H = 28
+
+/**
+ * 将数值数组转换为 SVG path d 属性字符串
+ * - 自动归一化到 [0, SPARKLINE_H] 区间
+ * - 空数组或单点返回空字符串
+ * @param data 数值序列
+ * @returns SVG path d 属性字符串
+ */
+function buildSparklinePath(data: number[] | undefined): string {
+  if (!data || data.length === 0) return ''
+  const arr = data.filter((v) => typeof v === 'number' && !isNaN(v))
+  if (arr.length === 0) return ''
+  const min = Math.min(...arr)
+  const max = Math.max(...arr)
+  const range = max - min || 1
+  const stepX = arr.length > 1 ? SPARKLINE_W / (arr.length - 1) : 0
+  return arr
+    .map((v, i) => {
+      const x = i * stepX
+      const y = SPARKLINE_H - ((v - min) / range) * SPARKLINE_H
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
+}
+
+/**
+ * 点击 KPI 卡片跳转到下钻路由
+ * @param metric KPI 卡片数据
+ */
+function handleMetricClick(metric: DashboardMetric): void {
+  if (!metric.drillRoute) return
+  router.push(metric.drillRoute).catch(() => { /* 路由跳转失败已被全局拦截 */ })
+}
+
 // ===== KPI 列表 (动态计算) =====
-/** KPI 卡片数据结构 */
+/**
+ * KPI 卡片数据结构
+ *
+ * 批次 30-3 增强：
+ *  - mtdGrowth: 环比增长率（小数 0.15 = +15%），来自 KpiTrendVO
+ *  - sparkline: 迷你趋势数据序列，用于在卡片底部渲染 SVG sparkline
+ *  - drillRoute: 点击卡片跳转的路由路径
+ */
 interface DashboardMetric {
   title: string
   value: string
@@ -132,6 +180,12 @@ interface DashboardMetric {
   icon: string
   /** 可选副标题（如毛利率） */
   sub?: string
+  /** 环比增长率（0.15 表示 +15%），undefined 表示无数据 */
+  mtdGrowth?: number
+  /** 迷你趋势数据（最近 6 期），用于渲染 sparkline */
+  sparkline?: number[]
+  /** 点击卡片跳转的路由 */
+  drillRoute?: string
 }
 /** 顶部 4 个 KPI 卡片数据 */
 const metrics = computed<DashboardMetric[]>(() => [
@@ -141,6 +195,8 @@ const metrics = computed<DashboardMetric[]>(() => [
     unit: t('dashboard.unit.count'),
     color: chartColors.primary,
     icon: 'Document',
+    sparkline: trendData.value?.activeProjectsSeries,
+    drillRoute: '/execution/wbs-task',
   },
   {
     title: t('dashboard.metrics.monthlyContractAmount'),
@@ -148,6 +204,9 @@ const metrics = computed<DashboardMetric[]>(() => [
     unit: t('dashboard.unit.tenThousand'),
     color: chartColors.success,
     icon: 'Money',
+    mtdGrowth: trendData.value?.contractMtdGrowth,
+    sparkline: trendData.value?.contractAmountSeries,
+    drillRoute: '/cockpit',
   },
   {
     title: t('dashboard.metrics.recognizedRevenue'),
@@ -155,6 +214,9 @@ const metrics = computed<DashboardMetric[]>(() => [
     unit: t('dashboard.unit.tenThousand'),
     color: chartColors.purple,
     icon: 'TrendCharts',
+    mtdGrowth: trendData.value?.revenueMtdGrowth,
+    sparkline: trendData.value?.confirmedRevenueSeries,
+    drillRoute: '/execution/profit',
   },
   {
     title: t('dashboard.metrics.monthlyGrossProfit'),
@@ -163,6 +225,9 @@ const metrics = computed<DashboardMetric[]>(() => [
     color: chartColors.orange,
     sub: t('dashboard.metrics.grossMargin', { rate: fmtPercent(kpi.value?.grossMargin) }),
     icon: 'DataAnalysis',
+    mtdGrowth: trendData.value?.profitMtdGrowth,
+    sparkline: trendData.value?.grossProfitSeries,
+    drillRoute: '/execution/profit',
   },
 ])
 
@@ -445,20 +510,46 @@ onMounted(async () => {
 
     <el-row :gutter="16" class="metric-row">
       <el-col v-for="m in metrics" :key="m.title" :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
-        <el-card class="metric-card" shadow="hover">
+        <el-card
+          class="metric-card"
+          :class="{ 'metric-card--clickable': !!m.drillRoute }"
+          shadow="hover"
+          @click="handleMetricClick(m)"
+        >
           <SkeletonCard v-if="kpiLoading" :rows="3" />
           <div v-else class="metric-content">
             <div class="metric-icon" :style="{ background: m.color }">
               <el-icon :size="24"><component :is="m.icon" /></el-icon>
             </div>
             <div class="metric-info">
-              <p class="metric-title">{{ m.title }}</p>
+              <p class="metric-title">
+                {{ m.title }}
+                <!-- 环比箭头（批次 30-3） -->
+                <span
+                  v-if="m.mtdGrowth !== undefined"
+                  class="metric-mtd"
+                  :class="m.mtdGrowth >= 0 ? 'is-up' : 'is-down'"
+                  :title="t('dashboard.metrics.mtdTooltip')"
+                >
+                  <el-icon :size="12">
+                    <CaretTop v-if="m.mtdGrowth >= 0" />
+                    <CaretBottom v-else />
+                  </el-icon>
+                  {{ m.mtdGrowth >= 0 ? '+' : '' }}{{ (m.mtdGrowth * 100).toFixed(1) }}%
+                </span>
+              </p>
               <p class="metric-value">
                 <span class="value">{{ m.value }}</span>
                 <span class="unit">{{ m.unit }}</span>
               </p>
               <p v-if="m.sub" class="metric-sub">{{ m.sub }}</p>
             </div>
+          </div>
+          <!-- 迷你 sparkline（批次 30-3） -->
+          <div v-if="!kpiLoading && buildSparklinePath(m.sparkline)" class="metric-sparkline">
+            <svg :width="SPARKLINE_W" :height="SPARKLINE_H" :viewBox="`0 0 ${SPARKLINE_W} ${SPARKLINE_H}`" preserveAspectRatio="none">
+              <path :d="buildSparklinePath(m.sparkline)" :stroke="m.color" :fill="none" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+            </svg>
           </div>
         </el-card>
       </el-col>
@@ -647,6 +738,49 @@ onMounted(async () => {
   .metric-sub {
     font-size: $font-size-xs;
     color: $success-color;
+  }
+
+  /* 批次 30-3：可点击卡片样式 */
+  &--clickable {
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  /* 批次 30-3：环比箭头 */
+  .metric-mtd {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: $spacing-xs;
+    font-size: $font-size-xs;
+    font-weight: 600;
+    vertical-align: middle;
+
+    &.is-up {
+      color: $success-color;
+    }
+
+    &.is-down {
+      color: $danger-color;
+    }
+  }
+
+  /* 批次 30-3：迷你 sparkline */
+  .metric-sparkline {
+    margin-top: $spacing-sm;
+    width: 100%;
+    height: 28px;
+    overflow: hidden;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
   }
 }
 
