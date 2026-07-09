@@ -347,6 +347,8 @@ onMounted(() => {
     :total="total"
     :loading="loading"
     :error="error"
+    search-collapsible
+    :search-collapse-count="3"
     empty-preset="list"
     :empty-action-text="t('change.button.create')"
     @query="handleQuery"

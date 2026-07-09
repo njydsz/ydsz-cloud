@@ -7,7 +7,7 @@
   - Emits: update:page / update:size / selection-change / sort-change / column-setting-change / density-change
   - 泛型 T 为行数据类型；配合 useTable composable 使用
 
-  批次 29-2 新增能力（对齐 Ant Design ProTable）：
+  批次 29-2 新增能力（对齐企业级高级表格规范）：
   1. 列设置（columnSetting）：显隐切换 + 拖拽排序 + 宽度持久化（localStorage）
   2. 密度切换（density）：large/default/small 三档，影响行高
   3. 合计行（summary）：通过 summaryMethod 自定义合计逻辑

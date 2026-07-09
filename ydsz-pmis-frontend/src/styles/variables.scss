@@ -1,11 +1,11 @@
 /**
  * @file SCSS 全局变量定义（设计令牌体系）
- * @description 对标 Ant Design 5 / TDesign / Arco Design Pro，集中声明主题色、文字、边框、背景、
+ * @description 基于 Element Plus 设计体系，集中声明主题色、文字、边框、背景、
  *              布局尺寸、字号、圆角、阴影、间距、响应式断点与 z-index 等设计令牌，供全局样式与业务页面复用。
  *
  * 设计令牌体系（批次 29-1）：
- *  - 主题色统一为 #1677ff（Ant Design 5 标准），与 Element Plus 默认 #409eff 对齐通过覆盖 --el-color-primary
- *  - 状态色（success/warning/danger/info）采用 Ant 5 色板，与图表色板保持一致
+ *  - 主题色统一为 #1677ff（品牌主色），通过覆盖 --el-color-primary 与 Element Plus 对齐
+ *  - 状态色（success/warning/danger/info）采用统一色板，与图表色板保持一致
  *  - 图表色板通过 CSS 变量 --chart-color-* 暴露，支持暗黑模式自动切换
  *  - 暗黑模式策略：文字/边框/背景/阴影/图表色等需随主题切换的令牌，以 CSS 变量形式定义在 index.scss
  *    的 :root / .dark 块中；此文件中的同名 SCSS 变量引用这些 CSS 变量，实现全局自动切换。
@@ -14,11 +14,11 @@
  * @module styles/variables
  */
 
-// ===== 主题色（纯 SCSS 值，Ant Design 5 标准色板） =====
+// ===== 主题色（纯 SCSS 值，品牌标准色板） =====
 
-// 主品牌色（Ant Design 5 primary：#1677ff，对齐现代企业后台视觉）
+// 主品牌色（#1677ff，对齐现代企业后台视觉）
 $primary-color: #1677ff;
-// 状态色（Ant Design 5 标准色板，与 Element Plus 默认色差异已通过 element-overrides 覆盖）
+// 状态色（统一色板，与 Element Plus 默认色差异已通过 element-overrides 覆盖）
 $success-color: #52c41a;
 $warning-color: #faad14;
 $danger-color: #ff4d4f;
@@ -73,7 +73,7 @@ $breadcrumb-height: 40px;
 $footer-height: 48px;
 $tags-view-height: 36px;
 
-// 字号（对齐 Ant Design 5 字号 token：12/14/16/20/24/30）
+// 字号（企业后台标准字号阶：12/14/16/20/24/30）
 $font-size-xs: 12px;
 $font-size-sm: 13px;
 $font-size-base: 14px;

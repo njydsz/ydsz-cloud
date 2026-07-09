@@ -74,10 +74,11 @@ public class AgentEvaluationController {
                     .build());
         }
 
-        AgentEvaluationFramework framework = new AgentEvaluationFramework(
-                toEvaluable(agent), null, req.getParallelism() > 0 ? req.getParallelism() : 1);
-        EvaluationReport report = framework.run(cases);
-        return Result.ok(report);
+        try (AgentEvaluationFramework framework = new AgentEvaluationFramework(
+                toEvaluable(agent), null, req.getParallelism() > 0 ? req.getParallelism() : 1)) {
+            EvaluationReport report = framework.run(cases);
+            return Result.ok(report);
+        }
     }
 
     /**

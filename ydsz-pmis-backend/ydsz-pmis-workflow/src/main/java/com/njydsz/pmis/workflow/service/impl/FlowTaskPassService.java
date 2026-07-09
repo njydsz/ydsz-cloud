@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,7 +65,6 @@ public class FlowTaskPassService {
     private final FlowAdvancer advancer;
     private final FlowInstanceService instanceService;
     private final FlowTaskSupport support;
-    private final FlowTaskArchiveService archiveService;
     private final FlowTaskNotificationService notificationService;
     private final FlowTaskAuditService auditService;
     private final CountersignStrategyFactory strategyFactory;

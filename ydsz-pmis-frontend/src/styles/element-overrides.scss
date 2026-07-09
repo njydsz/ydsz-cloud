@@ -4,14 +4,14 @@
  *              表格表头、对话框等高频组件做细节样式调优，保持企业级管理后台视觉一致性。
  *
  * 批次 29-1 增强：
- *  - 主题色统一为 #1677ff（Ant Design 5 标准），覆盖 Element Plus 默认 #409eff
+ *  - 主题色统一为 #1677ff（品牌主色），覆盖 Element Plus 默认 #409eff
  *  - 圆角覆盖扩展至 large 档位（8px），与设计令牌体系对齐
  *  - 暗黑模式下 el-menu 自动适配（覆盖组件 props 硬编码色值）
  *  - 生成主题色 10 阶 light 系列（Element Plus 运行时计算在浅色下正常，暗黑下需手动修正）
  * @module styles/element-overrides
  */
 :root {
-  // 主题色（Ant Design 5 标准 #1677ff，覆盖 Element Plus 默认 #409eff）
+  // 主题色（品牌主色 #1677ff，覆盖 Element Plus 默认 #409eff）
   --el-color-primary: #{$primary-color};
   --el-color-success: #{$success-color};
   --el-color-warning: #{$warning-color};

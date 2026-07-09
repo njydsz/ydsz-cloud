@@ -25,8 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * DAG 实例执行器（P2 DAG 增强）。
@@ -822,9 +820,9 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             if (st == null) continue;
             switch (st) {
                 case SUCCESS -> success++;
-                case FAILED -> failed++;
+                case FAILED, APPROVAL_REJECTED -> failed++;
                 case SKIPPED -> skipped++;
-                case PENDING -> pending++;
+                case PENDING, WAITING_FOR_APPROVAL -> pending++;
                 case RUNNING -> running++;
                 case RETRYING -> pending++;
             }

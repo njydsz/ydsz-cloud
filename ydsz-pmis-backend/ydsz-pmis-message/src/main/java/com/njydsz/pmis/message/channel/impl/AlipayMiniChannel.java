@@ -111,7 +111,7 @@ public class AlipayMiniChannel implements MessageChannel {
             String respBody = resp.getBody();
 
             // 解析响应（支付宝返回 JSON）
-            @SuppressWarnings({"rawtypes", "unchecked"})
+            @SuppressWarnings("unchecked")
             Map<String, Object> result = (Map<String, Object>) com.njydsz.pmis.common.util.JsonUtils.parseObject(respBody, Map.class);
             if (result != null) {
                 Map<?, ?> alipayResp = (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");

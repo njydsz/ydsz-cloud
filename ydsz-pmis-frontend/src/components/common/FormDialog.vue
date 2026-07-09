@@ -18,7 +18,7 @@
  * 集中处理 el-dialog 的打开/关闭/提交/loading 状态，
  * 避免每个页面重复实现弹窗样板代码。
  *
- * 批次 29-4 增强（对齐 Ant Design / Arco Design 表单弹窗规范）：
+ * 批次 29-4 增强（对齐企业级表单弹窗规范）：
  * 1. 默认禁止遮罩关闭（closeOnClickModal 默认 false），避免误触丢失数据
  * 2. 全屏切换（fullscreen prop），内容多时可切换全屏编辑
  * 3. 自动聚焦（autofocus prop），打开后自动聚焦第一个可聚焦元素

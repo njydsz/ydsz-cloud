@@ -63,7 +63,7 @@ function onError(err: unknown, info: string) {
 #app {
   width: 100%;
   height: 100vh;
-  // 字体栈对齐 Ant Design 5，优先中文字体保证跨平台渲染一致
+  // 字体栈优先中文字体，保证跨平台渲染一致
   // macOS: PingFang SC / Hiragino Sans GB
   // Windows: Microsoft YaHei
   // HarmonyOS: HarmonyOS Sans
