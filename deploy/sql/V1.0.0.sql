@@ -460,6 +460,8 @@ CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
     fund_company        NUMERIC(10,2)  NOT NULL,
     fund_personal       NUMERIC(10,2)  NOT NULL,
     take_home           NUMERIC(10,2)  NOT NULL,
+    travel_reimbursement NUMERIC(10,2) NOT NULL DEFAULT 0,
+    travel_allowance    NUMERIC(10,2)  NOT NULL DEFAULT 0,
     total_cost          NUMERIC(10,2)  NOT NULL,
     billable_target     NUMERIC(5,4)   NOT NULL,
     effective_date      DATE           NOT NULL,
@@ -476,9 +478,10 @@ CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
     CONSTRAINT ck_pjlr_external_nonneg CHECK (external_daily >= 0 AND internal_daily >= 0),
     CONSTRAINT ck_pjlr_billable_range  CHECK (billable_target >= 0 AND billable_target <= 1),
     CONSTRAINT ck_pjlr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
-    CONSTRAINT ck_pjlr_deleted_enum    CHECK (deleted IN (0, 1))
+    CONSTRAINT ck_pjlr_deleted_enum    CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_pjlr_cost_valid      CHECK (total_cost = base_salary + social_company + fund_company + travel_reimbursement + travel_allowance)
 );
-COMMENT ON TABLE pmis_job_level_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金成本拆解,支持版本化生效';
+COMMENT ON TABLE pmis_job_level_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金+差旅成本拆解,支持版本化生效';
 COMMENT ON COLUMN pmis_job_level_rate.id IS '主键 ID';
 COMMENT ON COLUMN pmis_job_level_rate.level_code IS '职级编码(L1-L18,关联 pmis_job_level.level_code)';
 COMMENT ON COLUMN pmis_job_level_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
@@ -489,7 +492,9 @@ COMMENT ON COLUMN pmis_job_level_rate.social_personal IS '个人社保部分(元
 COMMENT ON COLUMN pmis_job_level_rate.fund_company IS '公司公积金部分(元/月)';
 COMMENT ON COLUMN pmis_job_level_rate.fund_personal IS '个人公积金部分(元/月,从工资扣除)';
 COMMENT ON COLUMN pmis_job_level_rate.take_home IS '税后到手工资(元/月)';
-COMMENT ON COLUMN pmis_job_level_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company)';
+COMMENT ON COLUMN pmis_job_level_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_job_level_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_job_level_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company+travel_reimbursement+travel_allowance)';
 COMMENT ON COLUMN pmis_job_level_rate.billable_target IS '可计费利用率目标(0.0-1.0,如 0.78=78%)';
 COMMENT ON COLUMN pmis_job_level_rate.effective_date IS '生效日期';
 COMMENT ON COLUMN pmis_job_level_rate.expire_date IS '失效日期(NULL 表示长期有效)';
@@ -522,8 +527,9 @@ CREATE TABLE IF NOT EXISTS pmis_employee(
     department_id   VARCHAR(20)         NOT NULL,
     position_id     VARCHAR(20),
     level_code      VARCHAR(8)     NOT NULL,
-    employee_type   VARCHAR(16)    NOT NULL DEFAULT 'FULL_TIME',
-    part_time_rate_id VARCHAR(20),
+employee_type   VARCHAR(16)    NOT NULL DEFAULT 'FULL_TIME',
+part_time_rate_id VARCHAR(20),
+outsource_rate_id VARCHAR(20),
     hire_date       DATE           NOT NULL,
     leave_date      DATE,
     work_status     VARCHAR(16)    NOT NULL DEFAULT 'ACTIVE',
@@ -565,6 +571,7 @@ COMMENT ON COLUMN pmis_employee.position_id IS '岗位 ID(关联 pmis_position.i
 COMMENT ON COLUMN pmis_employee.level_code IS '职级编码(全职 L1-L18 / 兼职 P1-P18,关联 pmis_job_level 或 pmis_part_time_rate)';
 COMMENT ON COLUMN pmis_employee.employee_type IS '雇佣类型: FULL_TIME 全职 / PART_TIME 兼职 / OUTSOURCE 外包';
 COMMENT ON COLUMN pmis_employee.part_time_rate_id IS '兼职费率 ID(仅 PART_TIME 类型填写,关联 pmis_part_time_rate.id)';
+COMMENT ON COLUMN pmis_employee.outsource_rate_id IS '外包费率 ID(仅 OUTSOURCE 类型填写,关联 pmis_outsource_rate.id)';
 COMMENT ON COLUMN pmis_employee.hire_date IS '入职日期';
 COMMENT ON COLUMN pmis_employee.leave_date IS '离职日期(在职为 NULL)';
 COMMENT ON COLUMN pmis_employee.work_status IS '在职状态: ACTIVE 在职 / LEAVE 离职 / SUSPEND 停薪留职 / PROBATION 试用期';
@@ -601,6 +608,8 @@ CREATE TABLE IF NOT EXISTS pmis_part_time_rate(
     level_segment       VARCHAR(16)    NOT NULL,
     monthly_salary      NUMERIC(10,2)  NOT NULL,
     commercial_insurance NUMERIC(10,2) NOT NULL DEFAULT 0,
+    travel_reimbursement NUMERIC(10,2) NOT NULL DEFAULT 0,
+    travel_allowance    NUMERIC(10,2)  NOT NULL DEFAULT 0,
     total_cost          NUMERIC(10,2)  NOT NULL,
     external_daily      NUMERIC(10,2)  NOT NULL DEFAULT 0,
     internal_daily      NUMERIC(10,2)  NOT NULL DEFAULT 0,
@@ -622,16 +631,18 @@ CREATE TABLE IF NOT EXISTS pmis_part_time_rate(
     CONSTRAINT ck_ptr_status_enum     CHECK (status IN ('ACTIVE', 'INACTIVE')),
     CONSTRAINT ck_ptr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
     CONSTRAINT ck_ptr_deleted_enum    CHECK (deleted IN (0, 1)),
-    CONSTRAINT ck_ptr_cost_valid      CHECK (total_cost = monthly_salary + commercial_insurance)
+    CONSTRAINT ck_ptr_cost_valid      CHECK (total_cost = monthly_salary + commercial_insurance + travel_reimbursement + travel_allowance)
 );
-COMMENT ON TABLE pmis_part_time_rate IS '兼职职级费率表(P1-P18): 月薪+商业保险成本拆解,支持版本化生效';
+COMMENT ON TABLE pmis_part_time_rate IS '兼职职级费率表(P1-P18): 月薪+商业保险+差旅成本拆解,支持版本化生效';
 COMMENT ON COLUMN pmis_part_time_rate.id IS '主键 ID';
 COMMENT ON COLUMN pmis_part_time_rate.rate_code IS '兼职级别编码(P1-P18)';
 COMMENT ON COLUMN pmis_part_time_rate.rate_name IS '级别名称(如兼职初级工程师)';
 COMMENT ON COLUMN pmis_part_time_rate.level_segment IS '级别段: PRIMARY 初级(P1-P3) / MIDDLE 中级(P4-P6) / SENIOR 高级(P7-P9) / EXPERT 专家(P10-P12) / STRATEGIC 战略(P13-P18)';
 COMMENT ON COLUMN pmis_part_time_rate.monthly_salary IS '月度薪资(元/月)';
 COMMENT ON COLUMN pmis_part_time_rate.commercial_insurance IS '商业保险-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_part_time_rate.total_cost IS '公司总人力成本(元/月,=monthly_salary+commercial_insurance)';
+COMMENT ON COLUMN pmis_part_time_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_part_time_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_part_time_rate.total_cost IS '公司总人力成本(元/月,=monthly_salary+commercial_insurance+travel_reimbursement+travel_allowance)';
 COMMENT ON COLUMN pmis_part_time_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
 COMMENT ON COLUMN pmis_part_time_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
 COMMENT ON COLUMN pmis_part_time_rate.billable_target IS '可计费利用率目标(0.0-1.0)';
@@ -652,6 +663,68 @@ CREATE INDEX IF NOT EXISTS idx_ptr_code ON pmis_part_time_rate (rate_code) WHERE
 CREATE INDEX IF NOT EXISTS idx_ptr_effective ON pmis_part_time_rate (effective_date, expire_date);
 CREATE INDEX IF NOT EXISTS idx_ptr_tenant ON pmis_part_time_rate(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_ptr_tenant_sort ON pmis_part_time_rate(tenant_id, sort_order) WHERE deleted = 0;
+
+-- 外包职级费率表 (V1-V18, 月薪+差旅报销+差旅补贴)
+CREATE TABLE IF NOT EXISTS pmis_outsource_rate(
+    id                  VARCHAR(20)      PRIMARY KEY,
+    rate_code           VARCHAR(8)     NOT NULL,
+    rate_name           VARCHAR(64)    NOT NULL,
+    level_segment       VARCHAR(16)    NOT NULL,
+    monthly_salary      NUMERIC(10,2)  NOT NULL,
+    travel_reimbursement NUMERIC(10,2) NOT NULL DEFAULT 0,
+    travel_allowance    NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    total_cost          NUMERIC(10,2)  NOT NULL,
+    external_daily      NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    internal_daily      NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    billable_target     NUMERIC(5,4)   NOT NULL DEFAULT 0.70,
+    sort_order          INTEGER        NOT NULL DEFAULT 0,
+    effective_date      DATE           NOT NULL,
+    expire_date         DATE,
+    version             INTEGER        NOT NULL DEFAULT 1,
+    description         TEXT,
+    status              VARCHAR(16)    NOT NULL DEFAULT 'ACTIVE',
+    created_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_pmis_outsource_rate UNIQUE (rate_code, version, deleted),
+    CONSTRAINT ck_por_segment         CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
+    CONSTRAINT ck_por_status_enum     CHECK (status IN ('ACTIVE', 'INACTIVE')),
+    CONSTRAINT ck_por_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
+    CONSTRAINT ck_por_deleted_enum    CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_por_cost_valid      CHECK (total_cost = monthly_salary + travel_reimbursement + travel_allowance)
+);
+COMMENT ON TABLE pmis_outsource_rate IS '外包职级费率表(V1-V18): 月薪+差旅报销+差旅补贴成本拆解,支持版本化生效';
+COMMENT ON COLUMN pmis_outsource_rate.id IS '主键 ID';
+COMMENT ON COLUMN pmis_outsource_rate.rate_code IS '外包级别编码(V1-V18)';
+COMMENT ON COLUMN pmis_outsource_rate.rate_name IS '级别名称(如外包初级工程师)';
+COMMENT ON COLUMN pmis_outsource_rate.level_segment IS '级别段: PRIMARY 初级(V1-V3) / MIDDLE 中级(V4-V6) / SENIOR 高级(V7-V9) / EXPERT 专家(V10-V12) / STRATEGIC 战略(V13-V18)';
+COMMENT ON COLUMN pmis_outsource_rate.monthly_salary IS '月度薪资(元/月)';
+COMMENT ON COLUMN pmis_outsource_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_outsource_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_outsource_rate.total_cost IS '公司总人力成本(元/月,=monthly_salary+travel_reimbursement+travel_allowance)';
+COMMENT ON COLUMN pmis_outsource_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
+COMMENT ON COLUMN pmis_outsource_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
+COMMENT ON COLUMN pmis_outsource_rate.billable_target IS '可计费利用率目标(0.0-1.0)';
+COMMENT ON COLUMN pmis_outsource_rate.sort_order IS '排序序号';
+COMMENT ON COLUMN pmis_outsource_rate.effective_date IS '生效日期';
+COMMENT ON COLUMN pmis_outsource_rate.expire_date IS '失效日期(NULL 表示长期有效)';
+COMMENT ON COLUMN pmis_outsource_rate.version IS '版本号(同级别可有多版本,通过 effective_date 区分)';
+COMMENT ON COLUMN pmis_outsource_rate.description IS '费率版本说明';
+COMMENT ON COLUMN pmis_outsource_rate.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
+COMMENT ON COLUMN pmis_outsource_rate.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_outsource_rate.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_outsource_rate.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_outsource_rate.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_outsource_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_outsource_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
+
+CREATE INDEX IF NOT EXISTS idx_por_code ON pmis_outsource_rate (rate_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_por_effective ON pmis_outsource_rate (effective_date, expire_date);
+CREATE INDEX IF NOT EXISTS idx_por_tenant ON pmis_outsource_rate(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_por_tenant_sort ON pmis_outsource_rate(tenant_id, sort_order) WHERE deleted = 0;
 
 -- 员工标签表
 CREATE TABLE IF NOT EXISTS pmis_employee_tag(
@@ -1096,50 +1169,74 @@ ON CONFLICT DO NOTHING;
 
 -- 初始化职级费率 (V3.2 双列直出)
 INSERT INTO pmis_job_level_rate
-(level_code, external_daily, internal_daily, base_salary, social_company, social_personal, fund_company, fund_personal, take_home, total_cost, billable_target, effective_date, version, created_by)
+(level_code, external_daily, internal_daily, base_salary, social_company, social_personal, fund_company, fund_personal, take_home, travel_reimbursement, travel_allowance, total_cost, billable_target, effective_date, version, created_by)
 VALUES
-    ('L1',  400,  200,  4000,  980,  430,  200,  200,  3370,  5180,  0.78, '2026-01-01', 1, 0),
-    ('L2',  500,  250,  5000,  1225, 535,  250,  250,  4215,  6475,  0.78, '2026-01-01', 1, 0),
-    ('L3',  600,  300,  6000,  1470, 640,  300,  300,  5060,  7770,  0.80, '2026-01-01', 1, 0),
-    ('L4',  700,  350,  7000,  1715, 745,  350,  350,  5905,  9065,  0.82, '2026-01-01', 1, 0),
-    ('L5',  800,  400,  8000,  1960, 850,  400,  400,  6750,  10360, 0.82, '2026-01-01', 1, 0),
-    ('L6',  900,  450,  9000,  2205, 955,  450,  450,  7595,  11655, 0.82, '2026-01-01', 1, 0),
-    ('L7',  1000, 500,  10000, 2450, 1060, 500,  500,  8440,  12950, 0.80, '2026-01-01', 1, 0),
-    ('L8',  1100, 550,  11000, 2695, 1165, 550,  550,  9285,  14245, 0.80, '2026-01-01', 1, 0),
-    ('L9',  1200, 600,  12000, 2940, 1270, 600,  600,  10130, 15540, 0.75, '2026-01-01', 1, 0),
-    ('L10', 1300, 650,  13000, 3185, 1375, 650,  650,  10975, 16835, 0.70, '2026-01-01', 1, 0),
-    ('L11', 1400, 700,  14000, 3430, 1480, 700,  700,  11820, 18130, 0.70, '2026-01-01', 1, 0),
-    ('L12', 1500, 750,  15000, 3675, 1585, 750,  750,  12665, 19425, 0.65, '2026-01-01', 1, 0),
-    ('L13', 1600, 800,  16000, 3920, 1690, 800,  800,  13510, 20720, 0.60, '2026-01-01', 1, 0),
-    ('L14', 1700, 850,  17000, 4165, 1795, 850,  850,  14355, 22015, 0.55, '2026-01-01', 1, 0),
-    ('L15', 1800, 900,  18000, 4410, 1900, 900,  900,  15200, 23310, 0.50, '2026-01-01', 1, 0),
-    ('L16', 1900, 950,  19000, 4655, 2005, 950,  950,  16045, 24605, 0.45, '2026-01-01', 1, 0),
-    ('L17', 2000, 1000, 20000, 4900, 2110, 1000, 1000, 16890, 25900, 0.40, '2026-01-01', 1, 0),
-    ('L18', 2100, 1050, 21000, 5145, 2215, 1050, 1050, 17735, 27195, 0.40, '2026-01-01', 1, 0)
+    ('L1',  400,  200,  4000,  980,  430,  200,  200,  3370,  500,  300,  5980,  0.78, '2026-01-01', 1, 0),
+    ('L2',  500,  250,  5000,  1225, 535,  250,  250,  4215,  500,  300,  7275,  0.78, '2026-01-01', 1, 0),
+    ('L3',  600,  300,  6000,  1470, 640,  300,  300,  5060,  500,  300,  8570,  0.80, '2026-01-01', 1, 0),
+    ('L4',  700,  350,  7000,  1715, 745,  350,  350,  5905,  800,  500,  10365, 0.82, '2026-01-01', 1, 0),
+    ('L5',  800,  400,  8000,  1960, 850,  400,  400,  6750,  800,  500,  11660, 0.82, '2026-01-01', 1, 0),
+    ('L6',  900,  450,  9000,  2205, 955,  450,  450,  7595,  800,  500,  12955, 0.82, '2026-01-01', 1, 0),
+    ('L7',  1000, 500,  10000, 2450, 1060, 500,  500,  8440,  1200, 800,  14950, 0.80, '2026-01-01', 1, 0),
+    ('L8',  1100, 550,  11000, 2695, 1165, 550,  550,  9285,  1200, 800,  16245, 0.80, '2026-01-01', 1, 0),
+    ('L9',  1200, 600,  12000, 2940, 1270, 600,  600,  10130, 1200, 800,  17540, 0.75, '2026-01-01', 1, 0),
+    ('L10', 1300, 650,  13000, 3185, 1375, 650,  650,  10975, 1500, 1000, 19335, 0.70, '2026-01-01', 1, 0),
+    ('L11', 1400, 700,  14000, 3430, 1480, 700,  700,  11820, 1500, 1000, 20630, 0.70, '2026-01-01', 1, 0),
+    ('L12', 1500, 750,  15000, 3675, 1585, 750,  750,  12665, 1500, 1000, 21925, 0.65, '2026-01-01', 1, 0),
+    ('L13', 1600, 800,  16000, 3920, 1690, 800,  800,  13510, 2000, 1500, 24220, 0.60, '2026-01-01', 1, 0),
+    ('L14', 1700, 850,  17000, 4165, 1795, 850,  850,  14355, 2000, 1500, 25515, 0.55, '2026-01-01', 1, 0),
+    ('L15', 1800, 900,  18000, 4410, 1900, 900,  900,  15200, 2000, 1500, 26810, 0.50, '2026-01-01', 1, 0),
+    ('L16', 1900, 950,  19000, 4655, 2005, 950,  950,  16045, 2500, 2000, 29105, 0.45, '2026-01-01', 1, 0),
+    ('L17', 2000, 1000, 20000, 4900, 2110, 1000, 1000, 16890, 2500, 2000, 30400, 0.40, '2026-01-01', 1, 0),
+    ('L18', 2100, 1050, 21000, 5145, 2215, 1050, 1050, 17735, 2500, 2000, 31695, 0.40, '2026-01-01', 1, 0)
 ON CONFLICT DO NOTHING;
 
 -- 初始化兼职职级费率 (P1-P18, 月薪+商业保险)
 INSERT INTO pmis_part_time_rate
-(rate_code, rate_name, level_segment, monthly_salary, commercial_insurance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
+(rate_code, rate_name, level_segment, monthly_salary, commercial_insurance, travel_reimbursement, travel_allowance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
 VALUES
-    ('P1',  '兼职助理工程师',     'PRIMARY',   3000,  50,  3050,  300,  150,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P2',  '兼职初级开发工程师', 'PRIMARY',   3500,  50,  3550,  350,  175,  0.78,  2, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P3',  '兼职开发工程师',     'PRIMARY',   4000,  50,  4050,  400,  200,  0.80,  3, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P4',  '兼职中级工程师',     'MIDDLE',    5000,  80,  5080,  500,  250,  0.82,  4, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P5',  '兼职高级工程师',     'MIDDLE',    6000,  80,  6080,  600,  300,  0.82,  5, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P6',  '兼职资深工程师',     'MIDDLE',    7000,  80,  7080,  700,  350,  0.82,  6, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P7',  '兼职高级工程师/项目经理', 'SENIOR', 8000, 100,  8100,  800,  400,  0.80,  7, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P8',  '兼职资深工程师/高级项目经理', 'SENIOR', 9000, 100,  9100,  900,  450,  0.80,  8, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P9',  '兼职架构师/项目总监', 'SENIOR',  10000, 100, 10100, 1000, 500,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P10', '兼职资深架构师',     'EXPERT',   11000, 120, 11120, 1100, 550,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P11', '兼职技术专家/交付总监', 'EXPERT', 12000, 120, 12120, 1200, 600,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P12', '兼职资深技术专家',   'EXPERT',   13000, 120, 13120, 1300, 650,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P13', '兼职首席架构师',     'STRATEGIC',14000, 150, 14150, 1400, 700,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P14', '兼职技术总监',       'STRATEGIC',15000, 150, 15150, 1500, 750,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P15', '兼职CTO/事业部总经理', 'STRATEGIC',16000, 150, 16150, 1600, 800,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P16', '兼职技术副总裁',     'STRATEGIC',17000, 150, 17150, 1700, 850,  0.45, 16, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P17', '兼职执行副总裁',     'STRATEGIC',18000, 200, 18200, 1800, 900,  0.40, 17, '2026-01-01', 1, 'ACTIVE', 0),
-    ('P18', '兼职首席科学家',     'STRATEGIC',19000, 200, 19200, 1900, 950,  0.40, 18, '2026-01-01', 1, 'ACTIVE', 0)
+    ('P1',  '兼职助理工程师',     'PRIMARY',   3000,  50,  300,  200,  3550,  300,  150,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P2',  '兼职初级开发工程师', 'PRIMARY',   3500,  50,  300,  200,  4050,  350,  175,  0.78,  2, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P3',  '兼职开发工程师',     'PRIMARY',   4000,  50,  300,  200,  4550,  400,  200,  0.80,  3, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P4',  '兼职中级工程师',     'MIDDLE',    5000,  80,  500,  300,  5880,  500,  250,  0.82,  4, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P5',  '兼职高级工程师',     'MIDDLE',    6000,  80,  500,  300,  6880,  600,  300,  0.82,  5, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P6',  '兼职资深工程师',     'MIDDLE',    7000,  80,  500,  300,  7880,  700,  350,  0.82,  6, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P7',  '兼职高级工程师/项目经理', 'SENIOR', 8000, 100,  800,  500,  9400,  800,  400,  0.80,  7, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P8',  '兼职资深工程师/高级项目经理', 'SENIOR', 9000, 100,  800,  500, 10400,  900,  450,  0.80,  8, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P9',  '兼职架构师/项目总监', 'SENIOR',  10000, 100,  800,  500, 11400, 1000,  500,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P10', '兼职资深架构师',     'EXPERT',   11000, 120, 1000,  600, 12720, 1100,  550,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P11', '兼职技术专家/交付总监', 'EXPERT', 12000, 120, 1000,  600, 13720, 1200,  600,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P12', '兼职资深技术专家',   'EXPERT',   13000, 120, 1000,  600, 14720, 1300,  650,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P13', '兼职首席架构师',     'STRATEGIC',14000, 150, 1500,  800, 16450, 1400,  700,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P14', '兼职技术总监',       'STRATEGIC',15000, 150, 1500,  800, 17450, 1500,  750,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P15', '兼职CTO/事业部总经理', 'STRATEGIC',16000, 150, 1500,  800, 18450, 1600,  800,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P16', '兼职技术副总裁',     'STRATEGIC',17000, 150, 1500,  800, 19450, 1700,  850,  0.45, 16, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P17', '兼职执行副总裁',     'STRATEGIC',18000, 200, 2000, 1000, 21200, 1800,  900,  0.40, 17, '2026-01-01', 1, 'ACTIVE', 0),
+    ('P18', '兼职首席科学家',     'STRATEGIC',19000, 200, 2000, 1000, 22200, 1900,  950,  0.40, 18, '2026-01-01', 1, 'ACTIVE', 0)
+ON CONFLICT DO NOTHING;
+
+-- 初始化外包职级费率 (V1-V18, 月薪+差旅报销+差旅补贴)
+INSERT INTO pmis_outsource_rate
+(rate_code, rate_name, level_segment, monthly_salary, travel_reimbursement, travel_allowance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
+VALUES
+    ('V1',  '外包助理工程师',     'PRIMARY',   2500,  300,  200,  3000,  250,  120,  0.78,  1, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V2',  '外包初级开发工程师', 'PRIMARY',   3000,  300,  200,  3500,  300,  150,  0.78,  2, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V3',  '外包开发工程师',     'PRIMARY',   3500,  300,  200,  4000,  350,  180,  0.80,  3, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V4',  '外包中级工程师',     'MIDDLE',    4000,  500,  300,  4800,  400,  200,  0.82,  4, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V5',  '外包高级工程师',     'MIDDLE',    5000,  500,  300,  5800,  500,  250,  0.82,  5, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V6',  '外包资深工程师',     'MIDDLE',    6000,  500,  300,  6800,  600,  300,  0.82,  6, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V7',  '外包高级工程师/项目经理', 'SENIOR', 7000,  800,  500,  8300,  700,  350,  0.80,  7, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V8',  '外包资深工程师/高级项目经理', 'SENIOR', 8000,  800,  500,  9300,  800,  400,  0.80,  8, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V9',  '外包架构师/项目总监', 'SENIOR',   9000,  800,  500, 10300,  900,  450,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V10', '外包资深架构师',     'EXPERT',   10000, 1000,  600, 11600, 1000,  500,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V11', '外包技术专家/交付总监', 'EXPERT', 11000, 1000,  600, 12600, 1100,  550,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V12', '外包资深技术专家',   'EXPERT',   12000, 1000,  600, 13600, 1200,  600,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V13', '外包首席架构师',     'STRATEGIC',13000, 1500,  800, 15300, 1300,  650,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V14', '外包技术总监',       'STRATEGIC',14000, 1500,  800, 16300, 1400,  700,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V15', '外包CTO/事业部总经理', 'STRATEGIC',15000, 1500,  800, 17300, 1500,  750,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V16', '外包技术副总裁',     'STRATEGIC',16000, 1500,  800, 18300, 1600,  800,  0.45, 16, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V17', '外包执行副总裁',     'STRATEGIC',17000, 2000, 1000, 20000, 1700,  850,  0.40, 17, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V18', '外包首席科学家',     'STRATEGIC',18000, 2000, 1000, 21000, 1800,  900,  0.40, 18, '2026-01-01', 1, 'ACTIVE', 0)
 ON CONFLICT DO NOTHING;
 
 -- 初始化根部门

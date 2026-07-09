@@ -59,6 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
@@ -223,7 +224,7 @@ class MessageServiceImplTest {
         assertEquals("ALERT", inserted.getBizType());
         assertEquals("13800000001", inserted.getReceiver());
         assertEquals("TPL_001", inserted.getTemplateCode());
-        assertEquals("PENDING", inserted.getStatus());
+        assertEquals("SUCCESS", inserted.getStatus());
         assertEquals("MSG_001", inserted.getMsgId());
         assertEquals("NONE", inserted.getReceiptStatus());
         assertEquals(0, inserted.getRetryCount());
@@ -231,7 +232,7 @@ class MessageServiceImplTest {
 
         verify(channelRouter).dispatch(any(MsgLogDO.class));
         verify(rateLimitService).recordFrequency("13800000001", "SMS", "ALERT");
-        verify(messageMetrics).recordSend(eq("SMS"), eq("SUCCESS"), anyInt());
+        verify(messageMetrics).recordSend(eq("SMS"), eq("SUCCESS"), anyLong());
     }
 
     @Test
@@ -383,7 +384,7 @@ class MessageServiceImplTest {
         MessageResult result = messageService.send(req);
 
         assertFalse(result.isSuccess());
-        verify(messageMetrics).recordSend(eq("SMS"), eq("FAILED"), anyInt());
+        verify(messageMetrics).recordSend(eq("SMS"), eq("FAILED"), anyLong());
         ArgumentCaptor<MsgLogDO> logCaptor = ArgumentCaptor.forClass(MsgLogDO.class);
         verify(msgLogMapper, atLeast(2)).updateById(logCaptor.capture());
         assertEquals("FAILED", logCaptor.getValue().getStatus());

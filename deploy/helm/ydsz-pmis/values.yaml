@@ -51,6 +51,12 @@ backend:
 
   # 探针配置
   probes:
+    startup:
+      path: /actuator/health/liveness
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 30
     readiness:
       path: /actuator/health/readiness
       initialDelaySeconds: 30
@@ -63,6 +69,13 @@ backend:
       periodSeconds: 20
       timeoutSeconds: 5
       failureThreshold: 5
+
+  # Pod 调度策略（HA：反亲和 + 拓扑分布 + 节点选择 + 容忍）
+  affinity:
+    enabled: false
+  topologySpreadConstraints: []
+  nodeSelector: {}
+  tolerations: []
 
   # 默认资源（被 services.*.resources 覆盖）
   resources:

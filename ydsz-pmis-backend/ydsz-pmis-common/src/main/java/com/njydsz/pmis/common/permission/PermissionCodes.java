@@ -360,11 +360,18 @@ public final class PermissionCodes {
     // 每日对账
     public static final String EXECUTION_RECONCILE_RUN = "execution:reconcile:run";
 
-    // 预算管理
+    // ==================== 预算管理 ====================
+
     public static final String EXECUTION_BUDGET_VIEW = "execution:budget:view";
 
-    // ==================== 财务模块 ====================
+    // ==================== 规则引擎 ====================
 
+    public static final String EXECUTION_RULE_ENGINE_VIEW = "execution:rule-engine:view";
+    public static final String EXECUTION_RULE_ENGINE_DESIGN = "execution:rule-engine:design";
+    public static final String EXECUTION_RULE_ENGINE_TRACES = "execution:rule-engine:traces";
+    public static final String EXECUTION_RULE_ENGINE_PACK_MARKET = "execution:rule-engine:pack-market";
+
+    // ==================== 财务模块 ====================
     // 开票管理
     public static final String FINANCE_INVOICE_LIST = "finance:invoice:list";
     public static final String FINANCE_INVOICE_CREATE = "finance:invoice:create";

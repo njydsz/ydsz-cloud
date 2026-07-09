@@ -11,6 +11,7 @@ import com.njydsz.pmis.userinfo.entity.DepartmentDO;
 import com.njydsz.pmis.userinfo.entity.EmployeeDO;
 import com.njydsz.pmis.userinfo.entity.JobLevelDO;
 import com.njydsz.pmis.userinfo.entity.JobLevelRateDO;
+import com.njydsz.pmis.userinfo.entity.OutsourceRateDO;
 import com.njydsz.pmis.userinfo.entity.PartTimeRateDO;
 import com.njydsz.pmis.userinfo.entity.PositionDO;
 import com.njydsz.pmis.userinfo.enums.EmployeeType;
@@ -18,6 +19,7 @@ import com.njydsz.pmis.userinfo.mapper.DepartmentMapper;
 import com.njydsz.pmis.userinfo.mapper.EmployeeMapper;
 import com.njydsz.pmis.userinfo.mapper.JobLevelMapper;
 import com.njydsz.pmis.userinfo.mapper.JobLevelRateMapper;
+import com.njydsz.pmis.userinfo.mapper.OutsourceRateMapper;
 import com.njydsz.pmis.userinfo.mapper.PartTimeRateMapper;
 import com.njydsz.pmis.userinfo.mapper.PositionMapper;
 import com.njydsz.pmis.userinfo.service.EmployeeService;
@@ -56,6 +58,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final JobLevelMapper jobLevelMapper;
     private final JobLevelRateMapper jobLevelRateMapper;
     private final PartTimeRateMapper partTimeRateMapper;
+    private final OutsourceRateMapper outsourceRateMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -67,7 +70,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         String employeeType = StringUtils.hasText(dto.getEmployeeType())
                 ? dto.getEmployeeType() : DEFAULT_EMPLOYEE_TYPE;
         validateEmployeeType(employeeType);
-        validatePartTimeRate(employeeType, dto.getPartTimeRateId());
+        validateRateIds(employeeType, dto.getPartTimeRateId(), dto.getOutsourceRateId());
 
         // empCode 唯一性校验（排除已删除）
         if (employeeMapper.selectByEmpCode(dto.getEmpCode()) != null) {
@@ -77,9 +80,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         EmployeeDO entity = new EmployeeDO();
         BeanUtils.copyProperties(dto, entity);
         entity.setEmployeeType(employeeType);
-        // 兼职类型之外强制清空单价级别 ID
+        // 兼职类型之外强制清空兼职费率 ID
         if (!EmployeeType.PART_TIME.getCode().equals(employeeType)) {
             entity.setPartTimeRateId(null);
+        }
+        // 外包类型之外强制清空外包费率 ID
+        if (!EmployeeType.OUTSOURCE.getCode().equals(employeeType)) {
+            entity.setOutsourceRateId(null);
         }
         if (!StringUtils.hasText(entity.getWorkStatus())) {
             entity.setWorkStatus(DEFAULT_WORK_STATUS);
@@ -110,7 +117,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         String employeeType = StringUtils.hasText(dto.getEmployeeType())
                 ? dto.getEmployeeType() : existing.getEmployeeType();
         validateEmployeeType(employeeType);
-        validatePartTimeRate(employeeType, dto.getPartTimeRateId());
+        validateRateIds(employeeType, dto.getPartTimeRateId(), dto.getOutsourceRateId());
 
         // empCode 唯一性校验（排除自身与已删除）
         EmployeeDO sameCode = employeeMapper.selectByEmpCode(dto.getEmpCode());
@@ -131,9 +138,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         EmployeeDO entity = new EmployeeDO();
         BeanUtils.copyProperties(dto, entity);
         entity.setId(id);
-        // 兼职类型之外强制清空单价级别 ID
+        // 兼职类型之外强制清空兼职费率 ID
         if (!EmployeeType.PART_TIME.getCode().equals(employeeType)) {
             entity.setPartTimeRateId(null);
+        }
+        // 外包类型之外强制清空外包费率 ID
+        if (!EmployeeType.OUTSOURCE.getCode().equals(employeeType)) {
+            entity.setOutsourceRateId(null);
         }
         employeeMapper.updateById(entity);
         log.info("[Employee] 更新员工: id={}, empCode={}", id, dto.getEmpCode());
@@ -209,6 +220,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         vo.setPositionName(resolvePositionName(entity.getPositionId()));
         vo.setLevelName(resolveLevelName(entity.getLevelCode()));
         vo.setPartTimeRateName(resolvePartTimeRateName(entity.getPartTimeRateId()));
+        vo.setOutsourceRateName(resolveOutsourceRateName(entity.getOutsourceRateId()));
         return vo;
     }
 
@@ -227,16 +239,17 @@ public class EmployeeServiceImpl implements EmployeeService {
         profile.put("employeeType", employeeType);
         profile.put("levelCode", emp.getLevelCode());
         profile.put("partTimeRateId", emp.getPartTimeRateId());
+        profile.put("outsourceRateId", emp.getOutsourceRateId());
 
         if (EmployeeType.FULL_TIME.getCode().equals(employeeType)) {
-            // 全职：月薪 + 社保公积金（公司承担），取 pmis_job_level_rate.total_cost
+            // 全职：月薪 + 社保公积金 + 差旅报销 + 差旅补贴（公司承担），取 pmis_job_level_rate.total_cost
             LocalDate today = LocalDate.now();
             JobLevelRateDO rate = jobLevelRateMapper.selectEffective(emp.getLevelCode(), today);
             profile.put("monthlyTotalCost", rate != null ? rate.getTotalCost() : null);
             profile.put("hourlyRate", null);
             profile.put("overtimeRate", null);
         } else if (EmployeeType.PART_TIME.getCode().equals(employeeType)) {
-            // 兼职：月薪 + 商业保险（公司承担），取 pmis_part_time_rate.total_cost
+            // 兼职：月薪 + 商业保险 + 差旅报销 + 差旅补贴（公司承担），取 pmis_part_time_rate.total_cost
             PartTimeRateDO rate = null;
             if (StringUtils.hasText(emp.getPartTimeRateId())) {
                 rate = partTimeRateMapper.selectById(emp.getPartTimeRateId());
@@ -244,8 +257,16 @@ public class EmployeeServiceImpl implements EmployeeService {
             profile.put("monthlyTotalCost", rate != null ? rate.getTotalCost() : null);
             profile.put("hourlyRate", null);
             profile.put("overtimeRate", null);
+        } else if (EmployeeType.OUTSOURCE.getCode().equals(employeeType)) {
+            // 外包：月薪 + 差旅报销 + 差旅补贴（公司承担），取 pmis_outsource_rate.total_cost
+            OutsourceRateDO rate = null;
+            if (StringUtils.hasText(emp.getOutsourceRateId())) {
+                rate = outsourceRateMapper.selectById(emp.getOutsourceRateId());
+            }
+            profile.put("monthlyTotalCost", rate != null ? rate.getTotalCost() : null);
+            profile.put("hourlyRate", null);
+            profile.put("overtimeRate", null);
         } else {
-            // 外包：预留扩展
             profile.put("monthlyTotalCost", null);
             profile.put("hourlyRate", null);
             profile.put("overtimeRate", null);
@@ -265,18 +286,34 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     /**
-     * 校验兼职费率：PART_TIME 必填，其余类型必须为空
+     * 校验费率 ID：PART_TIME 必填 partTimeRateId，OUTSOURCE 必填 outsourceRateId，其余必须为空
      *
-     * @param employeeType   雇佣类型编码
-     * @param partTimeRateId 兼职费率 ID
+     * @param employeeType    雇佣类型编码
+     * @param partTimeRateId  兼职费率 ID
+     * @param outsourceRateId 外包费率 ID
      */
-    private void validatePartTimeRate(String employeeType, String partTimeRateId) {
+    private void validateRateIds(String employeeType, String partTimeRateId, String outsourceRateId) {
         if (EmployeeType.PART_TIME.getCode().equals(employeeType)) {
             if (!StringUtils.hasText(partTimeRateId)) {
                 throw new BizException(BizErrorCode.BAD_REQUEST, "兼职类型员工必须填写兼职费率 ID");
             }
-        } else if (StringUtils.hasText(partTimeRateId)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "非兼职类型员工的兼职费率 ID 必须为空");
+            if (StringUtils.hasText(outsourceRateId)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "兼职类型员工的外包费率 ID 必须为空");
+            }
+        } else if (EmployeeType.OUTSOURCE.getCode().equals(employeeType)) {
+            if (!StringUtils.hasText(outsourceRateId)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "外包类型员工必须填写外包费率 ID");
+            }
+            if (StringUtils.hasText(partTimeRateId)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "外包类型员工的兼职费率 ID 必须为空");
+            }
+        } else {
+            if (StringUtils.hasText(partTimeRateId)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "非兼职类型员工的兼职费率 ID 必须为空");
+            }
+            if (StringUtils.hasText(outsourceRateId)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "非外包类型员工的外包费率 ID 必须为空");
+            }
         }
     }
 
@@ -361,6 +398,22 @@ public class EmployeeServiceImpl implements EmployeeService {
             return rate == null ? null : rate.getRateName();
         } catch (Exception e) {
             log.warn("[Employee] 装配兼职费率名称失败: partTimeRateId={}, msg={}", partTimeRateId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 装配外包费率名称，失败降级为 null
+     */
+    private String resolveOutsourceRateName(String outsourceRateId) {
+        if (outsourceRateId == null) {
+            return null;
+        }
+        try {
+            OutsourceRateDO rate = outsourceRateMapper.selectById(outsourceRateId);
+            return rate == null ? null : rate.getRateName();
+        } catch (Exception e) {
+            log.warn("[Employee] 装配外包费率名称失败: outsourceRateId={}, msg={}", outsourceRateId, e.getMessage());
             return null;
         }
     }

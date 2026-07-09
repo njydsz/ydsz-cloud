@@ -65,3 +65,14 @@ spec:
   selector:
     matchLabels:
       app: ydsz-pmis-agent
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-message
+  namespace: pmis
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-message

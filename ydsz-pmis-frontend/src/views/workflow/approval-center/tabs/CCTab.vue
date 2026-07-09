@@ -15,12 +15,14 @@
  * @module views/workflow/approval-center/tabs/CCTab
  * @description 从原 index.vue 拆分，负责"抄送我的"列表展示、已读状态筛选与标记已读。
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { pageCc, ccMarkRead, ccMarkAllRead } from '@/api/workflow'
 import type { FlowCcDTO, FlowCcQuery } from '@/api/workflow/types'
+import { ProTable } from '@/components/common'
+import type { ProTableColumn } from '@/components/common'
 import { formatTime } from '../composables/useApprovalActions'
 
 const emit = defineEmits<{
@@ -40,14 +42,24 @@ const ccList = ref<FlowCcDTO[]>([])
 const ccTotal = ref(0)
 const ccLoading = ref(false)
 
+const columns = computed<ProTableColumn<FlowCcDTO>[]>(() => [
+  { prop: 'title', label: t('workflow.approval.columns.ccTitle'), minWidth: 220, showOverflowTooltip: true },
+  { prop: 'flowName', label: t('workflow.approval.columns.flowName'), width: 160 },
+  { prop: 'nodeName', label: t('workflow.approval.columns.triggerNode'), width: 120 },
+  { prop: 'triggerUserName', label: t('workflow.approval.columns.triggerUserName'), width: 100 },
+  { prop: 'content', label: t('workflow.approval.columns.content'), minWidth: 200, showOverflowTooltip: true },
+  { prop: 'status', label: t('workflow.approval.columns.status'), width: 100, slot: 'status' },
+  { prop: 'readTime', label: t('workflow.approval.columns.readTime'), width: 160, slot: 'readTime' },
+  { prop: 'operation', label: t('workflow.approval.columns.operation'), width: 180, fixed: 'right', slot: 'operation' },
+])
+
 async function loadCc() {
   ccLoading.value = true
   try {
     const res = await pageCc(ccQuery)
     if (res.data?.code === 0) {
-      // 后端分页返回 records/total 字段（MyBatis-Plus Page），与前端 PageResult 类型不一致，用类型断言收敛
-      const pageData = res.data?.data as unknown as { records?: FlowCcDTO[]; total?: number } | undefined
-      ccList.value = pageData?.records || []
+      const pageData = res.data?.data
+      ccList.value = pageData?.list || []
       ccTotal.value = pageData?.total || 0
     }
   } finally {
@@ -99,47 +111,40 @@ onMounted(loadCc)
       <el-button type="primary" @click="loadCc">{{ t('workflow.approval.buttons.query') }}</el-button>
       <el-button type="warning" @click="markAllCcRead">{{ t('workflow.approval.buttons.markAllRead') }}</el-button>
     </div>
-    <el-table v-loading="ccLoading" :data="ccList" stripe>
-      <el-table-column prop="title" :label="t('workflow.approval.columns.ccTitle')" min-width="220" show-overflow-tooltip />
-      <el-table-column prop="flowName" :label="t('workflow.approval.columns.flowName')" width="160" />
-      <el-table-column prop="nodeName" :label="t('workflow.approval.columns.triggerNode')" width="120" />
-      <el-table-column prop="triggerUserName" :label="t('workflow.approval.columns.triggerUserName')" width="100" />
-      <el-table-column prop="content" :label="t('workflow.approval.columns.content')" min-width="200" show-overflow-tooltip />
-      <el-table-column :label="t('workflow.approval.columns.status')" width="100">
-        <template #default="{ row }">
-          <el-tag :type="row.readStatus === 'READ' ? 'info' : 'danger'" size="small">
-            {{ row.readStatus === 'READ' ? t('workflow.approval.status.read') : t('workflow.approval.status.unread') }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column :label="t('workflow.approval.columns.readTime')" width="160">
-        <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
-      </el-table-column>
-      <el-table-column :label="t('workflow.approval.columns.operation')" width="180" fixed="right">
-        <template #default="{ row }">
-          <el-button
-            v-if="row.readStatus === 'UNREAD'"
-            size="small"
-            text
-            type="primary"
-            @click="quickCcRead(row as FlowCcDTO)"
-          >
-            {{ t('workflow.approval.buttons.markRead') }}
-          </el-button>
-          <el-button size="small" text @click="goInstance(row.instanceId)">{{ t('workflow.approval.actions.viewFlow') }}</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-pagination
-      v-model:current-page="ccQuery.pageNum"
-      v-model:page-size="ccQuery.pageSize"
+    <ProTable
+      :columns="columns"
+      :data="ccList"
+      :loading="ccLoading"
       :total="ccTotal"
+      v-model:page="ccQuery.pageNum"
+      v-model:size="ccQuery.pageSize"
       :page-sizes="[10, 20, 50, 100]"
-      layout="total, sizes, prev, pager, next, jumper"
-      class="pagination"
-      @current-change="loadCc"
+      :stripe="true"
+      :border="false"
+      :toolbar="false"
+      row-key="id"
+      @page-change="loadCc"
       @size-change="loadCc"
-    />
+    >
+      <template #status="{ row }">
+        <el-tag :type="row.readStatus === 'READ' ? 'info' : 'danger'" size="small">
+          {{ row.readStatus === 'READ' ? t('workflow.approval.status.read') : t('workflow.approval.status.unread') }}
+        </el-tag>
+      </template>
+      <template #readTime="{ row }">{{ formatTime(row.createTime) }}</template>
+      <template #operation="{ row }">
+        <el-button
+          v-if="row.readStatus === 'UNREAD'"
+          size="small"
+          text
+          type="primary"
+          @click="quickCcRead(row as FlowCcDTO)"
+        >
+          {{ t('workflow.approval.buttons.markRead') }}
+        </el-button>
+        <el-button size="small" text @click="goInstance(row.instanceId)">{{ t('workflow.approval.actions.viewFlow') }}</el-button>
+      </template>
+    </ProTable>
   </div>
 </template>
 
@@ -148,11 +153,6 @@ onMounted(loadCc)
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
-}
-
-.pagination {
-  margin-top: 16px;
-  justify-content: flex-end;
 }
 
 /* P2-6: 移动端 H5 适配 */
@@ -182,17 +182,17 @@ onMounted(loadCc)
     }
   }
 
-  .pagination {
+  :deep(.pro-table__pagination) {
     margin-top: 8px;
     justify-content: center;
 
-    :deep(.el-pagination__total),
-    :deep(.el-pagination__sizes),
-    :deep(.el-pagination__jump) {
+    .el-pagination__total,
+    .el-pagination__sizes,
+    .el-pagination__jump {
       display: none;
     }
 
-    :deep(.el-pagination__pages) {
+    .el-pagination__pages {
       flex-wrap: wrap;
       justify-content: center;
     }

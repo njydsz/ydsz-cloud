@@ -51,6 +51,10 @@ public class JobLevelRateDO extends BaseDO {
     private BigDecimal fundPersonal;
     /** 税后到手 */
     private BigDecimal takeHome;
+    /** 差旅报销-公司承担部分 */
+    private BigDecimal travelReimbursement;
+    /** 差旅补贴-公司承担部分 */
+    private BigDecimal travelAllowance;
     /** 用工总成本 */
     private BigDecimal totalCost;
 

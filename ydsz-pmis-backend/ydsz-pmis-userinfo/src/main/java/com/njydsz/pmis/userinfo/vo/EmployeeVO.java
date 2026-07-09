@@ -32,4 +32,7 @@ public class EmployeeVO extends EmployeeDO {
 
     /** 兼职费率名称（仅 PART_TIME 类型） */
     private String partTimeRateName;
+
+    /** 外包费率名称（仅 OUTSOURCE 类型） */
+    private String outsourceRateName;
 }

@@ -89,6 +89,16 @@ export const PC = {
   RESOURCE_BENCH_OUT: 'resource:bench:out',
   RESOURCE_UTILIZATION_LIST: 'resource:utilization:list',
 
+  RESOURCE_EMPLOYEE_LIST: 'resource:employee:list',
+  RESOURCE_EMPLOYEE_CREATE: 'resource:employee:create',
+  RESOURCE_EMPLOYEE_UPDATE: 'resource:employee:update',
+  RESOURCE_EMPLOYEE_DELETE: 'resource:employee:delete',
+
+  RESOURCE_PART_TIME_RATE_LIST: 'resource:part-time-rate:list',
+  RESOURCE_PART_TIME_RATE_CREATE: 'resource:part-time-rate:create',
+  RESOURCE_PART_TIME_RATE_UPDATE: 'resource:part-time-rate:update',
+  RESOURCE_PART_TIME_RATE_DELETE: 'resource:part-time-rate:delete',
+
   // ============= 个人安全与 2FA =============
   AUTH_USER_2FA_BIND: 'auth:user:bind-2fa',
   AUTH_USER_2FA_VERIFY: 'auth:user:verify-2fa',
@@ -259,6 +269,12 @@ export const PC = {
 
   // 预算管理
   EXECUTION_BUDGET_VIEW: 'execution:budget:view',
+
+  // 规则引擎
+  EXECUTION_RULE_ENGINE_VIEW: 'execution:rule-engine:view',
+  EXECUTION_RULE_ENGINE_DESIGN: 'execution:rule-engine:design',
+  EXECUTION_RULE_ENGINE_TRACES: 'execution:rule-engine:traces',
+  EXECUTION_RULE_ENGINE_PACK_MARKET: 'execution:rule-engine:pack-market',
 
   // ============= 售后管理(aftersales) =============
   // 质保期

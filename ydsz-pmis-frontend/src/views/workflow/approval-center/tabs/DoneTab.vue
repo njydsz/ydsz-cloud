@@ -14,11 +14,13 @@
  * @module views/workflow/approval-center/tabs/DoneTab
  * @description 从原 index.vue 拆分，负责"我的已办"列表展示与查询。
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { pageDoneTasks } from '@/api/workflow'
 import type { FlowTaskDTO, FlowTaskQuery } from '@/api/workflow/types'
+import { ProTable } from '@/components/common'
+import type { ProTableColumn } from '@/components/common'
 import { formatTime, durationLabel } from '../composables/useApprovalActions'
 
 const router = useRouter()
@@ -32,14 +34,23 @@ const doneList = ref<FlowTaskDTO[]>([])
 const doneTotal = ref(0)
 const doneLoading = ref(false)
 
+const columns = computed<ProTableColumn<FlowTaskDTO>[]>(() => [
+  { prop: 'title', label: t('workflow.approval.columns.title'), minWidth: 220, showOverflowTooltip: true },
+  { prop: 'flowName', label: t('workflow.approval.columns.flowName'), width: 160 },
+  { prop: 'nodeName', label: t('workflow.approval.columns.nodeName'), width: 120 },
+  { prop: 'comment', label: t('workflow.approval.columns.comment'), minWidth: 180, showOverflowTooltip: true },
+  { prop: 'duration', label: t('workflow.approval.columns.duration'), width: 100, slot: 'duration' },
+  { prop: 'finishAt', label: t('workflow.approval.columns.finishAt'), width: 160, slot: 'finishAt' },
+  { prop: 'operation', label: t('workflow.approval.columns.operation'), width: 120, fixed: 'right', slot: 'operation' },
+])
+
 async function loadDone() {
   doneLoading.value = true
   try {
     const res = await pageDoneTasks(doneQuery)
     if (res.data?.code === 0) {
-      // 后端分页返回 records/total 字段（MyBatis-Plus Page），与前端 PageResult 类型不一致，用类型断言收敛
-      const pageData = res.data?.data as unknown as { records?: FlowTaskDTO[]; total?: number } | undefined
-      doneList.value = pageData?.records || []
+      const pageData = res.data?.data
+      doneList.value = pageData?.list || []
       doneTotal.value = pageData?.total || 0
     }
   } finally {
@@ -66,33 +77,27 @@ onMounted(loadDone)
       />
       <el-button type="primary" @click="loadDone">{{ t('workflow.approval.buttons.query') }}</el-button>
     </div>
-    <el-table v-loading="doneLoading" :data="doneList" stripe>
-      <el-table-column prop="title" :label="t('workflow.approval.columns.title')" min-width="220" show-overflow-tooltip />
-      <el-table-column prop="flowName" :label="t('workflow.approval.columns.flowName')" width="160" />
-      <el-table-column prop="nodeName" :label="t('workflow.approval.columns.nodeName')" width="120" />
-      <el-table-column prop="comment" :label="t('workflow.approval.columns.comment')" min-width="180" show-overflow-tooltip />
-      <el-table-column :label="t('workflow.approval.columns.duration')" width="100">
-        <template #default="{ row }">{{ durationLabel(row.durationMs) }}</template>
-      </el-table-column>
-      <el-table-column :label="t('workflow.approval.columns.finishAt')" width="160">
-        <template #default="{ row }">{{ formatTime(row.finishAt) }}</template>
-      </el-table-column>
-      <el-table-column :label="t('workflow.approval.columns.operation')" width="120" fixed="right">
-        <template #default="{ row }">
-          <el-button size="small" text @click="goInstance(row.instanceId)">{{ t('workflow.approval.actions.viewFlow') }}</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-pagination
-      v-model:current-page="doneQuery.pageNum"
-      v-model:page-size="doneQuery.pageSize"
+    <ProTable
+      :columns="columns"
+      :data="doneList"
+      :loading="doneLoading"
       :total="doneTotal"
+      v-model:page="doneQuery.pageNum"
+      v-model:size="doneQuery.pageSize"
       :page-sizes="[10, 20, 50, 100]"
-      layout="total, sizes, prev, pager, next, jumper"
-      class="pagination"
-      @current-change="loadDone"
+      :stripe="true"
+      :border="false"
+      :toolbar="false"
+      row-key="id"
+      @page-change="loadDone"
       @size-change="loadDone"
-    />
+    >
+      <template #duration="{ row }">{{ durationLabel(row.durationMs) }}</template>
+      <template #finishAt="{ row }">{{ formatTime(row.finishAt) }}</template>
+      <template #operation="{ row }">
+        <el-button size="small" text @click="goInstance(row.instanceId)">{{ t('workflow.approval.actions.viewFlow') }}</el-button>
+      </template>
+    </ProTable>
   </div>
 </template>
 
@@ -101,11 +106,6 @@ onMounted(loadDone)
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
-}
-
-.pagination {
-  margin-top: 16px;
-  justify-content: flex-end;
 }
 
 /* P2-6: 移动端 H5 适配 */
@@ -131,17 +131,17 @@ onMounted(loadDone)
     }
   }
 
-  .pagination {
+  :deep(.pro-table__pagination) {
     margin-top: 8px;
     justify-content: center;
 
-    :deep(.el-pagination__total),
-    :deep(.el-pagination__sizes),
-    :deep(.el-pagination__jump) {
+    .el-pagination__total,
+    .el-pagination__sizes,
+    .el-pagination__jump {
       display: none;
     }
 
-    :deep(.el-pagination__pages) {
+    .el-pagination__pages {
       flex-wrap: wrap;
       justify-content: center;
     }

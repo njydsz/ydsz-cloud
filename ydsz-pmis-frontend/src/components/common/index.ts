@@ -5,6 +5,8 @@
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
+export { default as ProTable } from './ProTable.vue'
+export type { ProTableColumn } from './ProTable.vue'
 export { default as SkeletonTable } from './SkeletonTable.vue'
 export { default as SkeletonCard } from './SkeletonCard.vue'
 export { default as SkeletonDetail } from './SkeletonDetail.vue'

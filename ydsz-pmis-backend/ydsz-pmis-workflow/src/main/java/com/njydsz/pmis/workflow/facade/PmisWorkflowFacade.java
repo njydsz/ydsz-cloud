@@ -132,15 +132,18 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      *
      * <p>复用 {@link FlowInstanceService#page}，不按 initiatorId 过滤，返回当前租户下所有实例。
      * 上层 Controller 应通过 {@code @PrePermission(PermissionCodes.WORKFLOW_MONITOR)} 拦截非管理员访问。
+     *
+     * <p>P0-2 修复：返回 {@link PageResult}，保留 total / page / size，避免前端假分页。
      */
     @Override
-    public List<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
-                                                       LocalDateTime startTime, LocalDateTime endTime,
-                                                       int page, int size) {
+    public PageResult<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
+                                                            LocalDateTime startTime, LocalDateTime endTime,
+                                                            int page, int size) {
         PageResult<FlowInstanceDO> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
                 SecurityContext.getTenantIdOrDefault("1"), page, size);
-        return pageResult.getList().stream().map(this::instanceToMap).toList();
+        List<Map<String, Object>> list = pageResult.getList().stream().map(this::instanceToMap).toList();
+        return PageResult.of(list, pageResult.getTotal(), pageResult.getPage(), pageResult.getSize());
     }
 
     @Override

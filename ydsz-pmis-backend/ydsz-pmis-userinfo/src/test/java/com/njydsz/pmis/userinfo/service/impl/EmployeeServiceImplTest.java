@@ -8,12 +8,14 @@ import com.njydsz.pmis.userinfo.dto.EmployeeUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.DepartmentDO;
 import com.njydsz.pmis.userinfo.entity.EmployeeDO;
 import com.njydsz.pmis.userinfo.entity.JobLevelDO;
+import com.njydsz.pmis.userinfo.entity.OutsourceRateDO;
 import com.njydsz.pmis.userinfo.entity.PartTimeRateDO;
 import com.njydsz.pmis.userinfo.entity.PositionDO;
 import com.njydsz.pmis.userinfo.mapper.DepartmentMapper;
 import com.njydsz.pmis.userinfo.mapper.EmployeeMapper;
 import com.njydsz.pmis.userinfo.mapper.JobLevelMapper;
 import com.njydsz.pmis.userinfo.mapper.JobLevelRateMapper;
+import com.njydsz.pmis.userinfo.mapper.OutsourceRateMapper;
 import com.njydsz.pmis.userinfo.mapper.PartTimeRateMapper;
 import com.njydsz.pmis.userinfo.mapper.PositionMapper;
 import com.njydsz.pmis.userinfo.vo.EmployeeVO;
@@ -46,7 +48,7 @@ import static org.mockito.Mockito.when;
  * EmployeeServiceImpl 单元测试
  *
  * <p>覆盖员工 CRUD 核心行为与业务规则校验：empCode 唯一性、雇佣类型与兼职费率联动、
- * 在职状态流转、默认值填充、外键名称装配降级、成本档案查询。使用 Mockito 纯 mock，不启动 Spring 上下文。
+ * 在职状态流转、默认值填充、外键名称装配降级、成本档案查询（全职/兼职/外包）。使用 Mockito 纯 mock，不启动 Spring 上下文。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -67,6 +69,8 @@ class EmployeeServiceImplTest {
     private JobLevelRateMapper jobLevelRateMapper;
     @Mock
     private PartTimeRateMapper partTimeRateMapper;
+    @Mock
+    private OutsourceRateMapper outsourceRateMapper;
 
     @InjectMocks
     private EmployeeServiceImpl service;
@@ -465,6 +469,27 @@ class EmployeeServiceImplTest {
         assertNotNull(profile);
         assertEquals("PART_TIME", profile.get("employeeType"));
         assertEquals(new BigDecimal("4050"), profile.get("monthlyTotalCost"));
+    }
+
+    @Test
+    @DisplayName("getCostProfile 外包: 返回 OutsourceRate.totalCost")
+    void getCostProfile_outsource() {
+        EmployeeDO emp = new EmployeeDO();
+        emp.setId("E3");
+        emp.setEmployeeType("OUTSOURCE");
+        emp.setOutsourceRateId("OR1");
+        when(employeeMapper.selectById("E3")).thenReturn(emp);
+
+        OutsourceRateDO rate = new OutsourceRateDO();
+        rate.setTotalCost(new BigDecimal("5800"));
+        when(outsourceRateMapper.selectById("OR1")).thenReturn(rate);
+
+        Map<String, Object> profile = service.getCostProfile("E3");
+
+        assertNotNull(profile);
+        assertEquals("OUTSOURCE", profile.get("employeeType"));
+        assertEquals("OR1", profile.get("outsourceRateId"));
+        assertEquals(new BigDecimal("5800"), profile.get("monthlyTotalCost"));
     }
 
     @Test

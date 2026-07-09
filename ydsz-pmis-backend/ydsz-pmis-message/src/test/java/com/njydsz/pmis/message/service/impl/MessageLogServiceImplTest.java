@@ -151,11 +151,11 @@ class MessageLogServiceImplTest {
     // ==================== markRetry ====================
 
     @Test
-    @DisplayName("正常场景：PENDING → RETRY 状态流转")
-    void pendingToRetry状态流转() {
+    @DisplayName("正常场景：SENDING → RETRY 状态流转")
+    void sendingToRetry状态流转() {
         MsgLogDO entity = new MsgLogDO();
         entity.setId("1");
-        entity.setStatus(MessageStatusEnum.PENDING.name());
+        entity.setStatus(MessageStatusEnum.SENDING.name());
         entity.setRetryCount(0);
         when(msgLogMapper.selectById("1")).thenReturn(entity);
 

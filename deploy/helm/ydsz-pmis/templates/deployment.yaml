@@ -37,6 +37,29 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml $root.Values.podSecurityContext | nindent 8 }}
+      {{- if $root.Values.backend.affinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ydsz-pmis-{{ $svc.name }}
+                topologyKey: kubernetes.io/hostname
+      {{- end }}
+      {{- with $root.Values.backend.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ $svc.name }}
           image: {{ include "ydsz-pmis.image" (dict "registry" $registry "repository" $backend.image.repository "name" $svc.name "tag" ($svc.tag | default $globalTag)) | quote }}
@@ -68,6 +91,16 @@ spec:
             {{- else }}
             {{- toYaml $backend.resources | nindent 12 }}
             {{- end }}
+          {{- if $root.Values.backend.probes.startup }}
+          startupProbe:
+            httpGet:
+              path: {{ $backend.probes.startup.path }}
+              port: {{ $svc.port }}
+            initialDelaySeconds: {{ $backend.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ $backend.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ $backend.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ $backend.probes.startup.failureThreshold }}
+          {{- end }}
           readinessProbe:
             httpGet:
               path: {{ $backend.probes.readiness.path }}

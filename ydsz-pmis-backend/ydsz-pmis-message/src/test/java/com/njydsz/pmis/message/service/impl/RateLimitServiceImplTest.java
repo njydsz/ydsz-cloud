@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -80,7 +81,7 @@ class RateLimitServiceImplTest {
         boolean result = rateLimitService.tryAcquire(key, 1);
 
         assertTrue(result);
-        verify(rateLimiter).trySetRate(eq(RateType.OVERALL), eq(1), eq(1), eq(RateIntervalUnit.SECONDS));
+        verify(rateLimiter).trySetRate(eq(RateType.OVERALL), eq(1L), eq(1L), eq(RateIntervalUnit.SECONDS));
         verify(rateLimiter).tryAcquire(1);
     }
 
@@ -241,8 +242,8 @@ class RateLimitServiceImplTest {
 
         rateLimitService.recordFrequency("u1", "SMS", "default");
 
-        // 首次 increment 返回 1 时设置 expire
-        verify(stringRedisTemplate).expire(any(String.class), anyLong(), eq(TimeUnit.SECONDS));
+        // hourly 与 daily 两个计数器 increment 均返回 1，各触发一次 expire
+        verify(stringRedisTemplate, times(2)).expire(any(String.class), anyLong(), eq(TimeUnit.SECONDS));
     }
 
     @Test
@@ -331,13 +332,13 @@ class RateLimitServiceImplTest {
         MessageProperties.RateLimitConfig cfg = new MessageProperties.RateLimitConfig();
         when(messageProperties.getRateLimit()).thenReturn(cfg);
         when(redissonClient.getRateLimiter(any(String.class))).thenReturn(rateLimiter);
-        when(rateLimiter.tryAcquire(any(int.class))).thenReturn(true);
+        when(rateLimiter.tryAcquire(anyLong())).thenReturn(true);
 
         boolean result = rateLimitService.checkSendLimit("SMS", "u1", "tpl", "t1", "URGENT");
 
         assertTrue(result);
         // URGENT 仅调用一次 tryAcquire（receiver 维度）
-        verify(rateLimiter).tryAcquire(any(int.class));
+        verify(rateLimiter).tryAcquire(anyLong());
     }
 
     @Test
@@ -346,7 +347,7 @@ class RateLimitServiceImplTest {
         MessageProperties.RateLimitConfig cfg = new MessageProperties.RateLimitConfig();
         when(messageProperties.getRateLimit()).thenReturn(cfg);
         when(redissonClient.getRateLimiter(any(String.class))).thenReturn(rateLimiter);
-        when(rateLimiter.tryAcquire(any(int.class))).thenReturn(false);
+        when(rateLimiter.tryAcquire(anyLong())).thenReturn(false);
 
         boolean result = rateLimitService.checkSendLimit("SMS", "u1", "tpl", "t1", "URGENT");
 
@@ -392,7 +393,7 @@ class RateLimitServiceImplTest {
         MessageProperties.RateLimitConfig cfg = new MessageProperties.RateLimitConfig();
         when(messageProperties.getRateLimit()).thenReturn(cfg);
         when(redissonClient.getRateLimiter(any(String.class))).thenReturn(rateLimiter);
-        when(rateLimiter.tryAcquire(any(int.class))).thenReturn(true);
+        when(rateLimiter.tryAcquire(anyLong())).thenReturn(true);
 
         boolean result = rateLimitService.checkSendLimit("SMS", "u1", "tpl", "t1", "NORMAL");
 

@@ -70,6 +70,10 @@ public class EmployeeUpdateDTO implements Serializable {
     @Size(max = 20)
     private String partTimeRateId;
 
+    /** 外包费率 ID */
+    @Size(max = 20)
+    private String outsourceRateId;
+
     /** 入职日期 */
     private LocalDate hireDate;
 

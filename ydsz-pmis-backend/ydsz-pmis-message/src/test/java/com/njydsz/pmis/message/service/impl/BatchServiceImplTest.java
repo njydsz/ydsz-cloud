@@ -208,6 +208,12 @@ class BatchServiceImplTest {
         dto.setReceiverList(List.of("13800000001", "13800000002"));
         dto.setAsync(false);
 
+        // doExecuteBatch 会通过 selectOne 重新加载批次记录
+        MsgBatchDO batch = new MsgBatchDO();
+        batch.setBatchId("BATCH_SYNC_OK");
+        batch.setStatus("PENDING");
+        when(msgBatchMapper.selectOne(any())).thenReturn(batch);
+
         when(messageService.send(any(MessageRequest.class)))
                 .thenReturn(MessageResult.ok("SMS", "trace-1"));
 
@@ -234,6 +240,11 @@ class BatchServiceImplTest {
         dto.setReceiverList(List.of("13800000001"));
         dto.setAsync(false);
 
+        MsgBatchDO batch = new MsgBatchDO();
+        batch.setBatchId("BATCH_BIZ");
+        batch.setStatus("PENDING");
+        when(msgBatchMapper.selectOne(any())).thenReturn(batch);
+
         when(messageService.send(any(MessageRequest.class)))
                 .thenReturn(MessageResult.ok("SMS", "trace"));
 
@@ -255,6 +266,10 @@ class BatchServiceImplTest {
         dto.setTemplateCode("TPL_001");
         dto.setReceiverList(List.of("13800000001", "13800000002"));
         dto.setAsync(false);
+
+        MsgBatchDO batch = new MsgBatchDO();
+        batch.setStatus("PENDING");
+        when(msgBatchMapper.selectOne(any())).thenReturn(batch);
 
         when(messageService.send(any(MessageRequest.class)))
                 .thenThrow(new RuntimeException("网络异常"))
@@ -278,6 +293,11 @@ class BatchServiceImplTest {
         dto.setTemplateCode("TPL_001");
         dto.setReceiverList(List.of("13800000001", "13800000002", "13800000003"));
         dto.setAsync(false);
+
+        // doExecuteBatch 会通过 selectOne 重新加载批次记录
+        MsgBatchDO batch = new MsgBatchDO();
+        batch.setStatus("PENDING");
+        when(msgBatchMapper.selectOne(any())).thenReturn(batch);
 
         when(messageService.send(any(MessageRequest.class)))
                 .thenReturn(MessageResult.ok("SMS", "trace-1"))
@@ -331,6 +351,11 @@ class BatchServiceImplTest {
         dto.setReceiverList(receivers);
         dto.setAsync(false);
 
+        // doExecuteBatch 会通过 selectOne 重新加载批次记录
+        MsgBatchDO batch = new MsgBatchDO();
+        batch.setStatus("PENDING");
+        when(msgBatchMapper.selectOne(any())).thenReturn(batch);
+
         when(messageService.send(any(MessageRequest.class)))
                 .thenReturn(MessageResult.ok("SMS", "trace"));
 
@@ -370,13 +395,14 @@ class BatchServiceImplTest {
 
         ArgumentCaptor<MsgBatchDO> captor = ArgumentCaptor.forClass(MsgBatchDO.class);
         verify(msgBatchMapper, atLeast(2)).updateById(captor.capture());
-        // 第一次更新应为 PROCESSING
-        assertEquals("PROCESSING", captor.getAllValues().get(0).getStatus());
-        assertNotNull(captor.getAllValues().get(0).getStartedAt());
-        // 最后一次更新应为 COMPLETED
+        // doExecuteBatch 复用同一 batch 对象引用，ArgumentCaptor 捕获的是被持续修改的同一对象，
+        // 中间状态（PROCESSING）已被后续修改覆盖，因此只验证最终状态。
+        // 至少触发两次 updateById：PROCESSING 初始化 + COMPLETED 完成
+        assertTrue(captor.getAllValues().size() >= 2);
         MsgBatchDO lastUpdate = captor.getValue();
         assertEquals("COMPLETED", lastUpdate.getStatus());
         assertEquals(1, lastUpdate.getSuccess());
+        assertNotNull(lastUpdate.getStartedAt());
         assertNotNull(lastUpdate.getCompletedAt());
     }
 

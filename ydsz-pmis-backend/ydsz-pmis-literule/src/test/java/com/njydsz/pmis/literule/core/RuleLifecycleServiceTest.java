@@ -182,7 +182,7 @@ class RuleLifecycleServiceTest {
             RuleDefinition rule = buildRule("R_LOW", "PUBLISHED", 1);
             when(configProvider.loadAllRules()).thenReturn(List.of(rule));
             Map<String, RuleEngineStats.RuleStat> perRule = new HashMap<>();
-            perRule.put("R_LOW", buildStat(1000, 1, 0));
+            perRule.put("R_LOW", buildStat(2000, 1, 0));
             when(ruleEngine.getStats()).thenReturn(buildStats(perRule));
 
             List<RetirementSuggestion> result = lifecycleService.detectRetirementCandidates();

@@ -286,11 +286,47 @@ public class FlowInstanceController {
     }
 
     /**
+     * P0-1: 我发起的流程实例分页查询（登录用户视图）
+     *
+     * <p>对标钉钉/飞书/企微审批中心"我发起的"Tab。按当前登录用户 ID 过滤，
+     * 仅返回当前用户发起的流程实例。
+     *
+     * <p>前端传入的 flowCode / flowName 参数与 {@link FlowInstanceService#page}
+     * 的入参无直接对应（flowCode 不等于 businessType），本端点忽略这两个参数，
+     * 仅使用 status / startTime / endTime / pageNum / pageSize。
+     *
+     * @param flowCode  流程编码（可选，当前不参与过滤，保留以兼容前端入参）
+     * @param flowName  流程名称（可选，当前不参与过滤，保留以兼容前端入参）
+     * @param status    流程状态（可选，对应 flowStatus）
+     * @param startTime 开始时间下界（可选）
+     * @param endTime   开始时间上界（可选）
+     * @param pageNum   页码（默认 1）
+     * @param pageSize  每页大小（默认 20，最大 100）
+     * @return 统一响应结果，包含分页实例列表
+     */
+    @GetMapping("/instance/my")
+    public Result<PageResult<FlowInstanceDO>> instanceMy(
+            @RequestParam(required = false) String flowCode,
+            @RequestParam(required = false) String flowName,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) LocalDateTime startTime,
+            @RequestParam(required = false) LocalDateTime endTime,
+            @RequestParam(defaultValue = "1") @Min(1) int pageNum,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
+        return Result.ok(instanceService.page(null, SecurityContext.getUserId(), status,
+                startTime, endTime, SecurityContext.getTenantIdOrDefault("1"),
+                pageNum, pageSize));
+    }
+
+    /**
      * GAP-P0-1: 全部流程实例查询（管理员视图）
      *
      * <p>对标钉钉/飞书/企微审批中心"全部"Tab。需要 {@code workflow:monitor:view} 权限。
      * 与 {@code /instance/page} 的区别：本端点语义为"管理员看全部"，强制不按 initiatorId 过滤，
      * 返回精简 Map 结构（避免泄露定义内部字段）。
+     *
+     * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code PageResult<Map>}，
+     * 保留 total / page / size，避免前端假分页。
      *
      * @param page         页码
      * @param size         每页大小
@@ -298,11 +334,11 @@ public class FlowInstanceController {
      * @param flowStatus   流程状态（可选）
      * @param startTime    开始时间下界（可选）
      * @param endTime      开始时间上界（可选）
-     * @return 统一响应结果，包含实例 Map 列表
+     * @return 统一响应结果，包含分页实例 Map 列表
      */
     @GetMapping("/instance/all")
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
-    public Result<List<Map<String, Object>>> instanceAll(
+    public Result<PageResult<Map<String, Object>>> instanceAll(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String businessType,

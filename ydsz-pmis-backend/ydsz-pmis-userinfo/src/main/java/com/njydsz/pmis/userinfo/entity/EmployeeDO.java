@@ -81,6 +81,9 @@ public class EmployeeDO extends BaseDO {
     /** 兼职费率 ID（仅 PART_TIME 类型填写，关联 pmis_part_time_rate.id） */
     private String partTimeRateId;
 
+    /** 外包费率 ID（仅 OUTSOURCE 类型填写，关联 pmis_outsource_rate.id） */
+    private String outsourceRateId;
+
     /** 入职日期 */
     private LocalDate hireDate;
 

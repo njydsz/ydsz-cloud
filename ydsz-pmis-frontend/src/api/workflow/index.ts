@@ -165,7 +165,7 @@ export function listAllInstances(params: {
   page?: number
   size?: number
 }) {
-  return http.get<ApiResponse<FlowInstanceDTO[]>>(
+  return http.get<ApiResponse<PageResult<FlowInstanceDTO>>>(
     '/workflow/engine/instance/all',
     { params },
   )

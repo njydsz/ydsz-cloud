@@ -181,8 +181,8 @@ RESULTS=$(find "$BACKEND_DIR" -type f -name "*Controller.java" -print0 \
       # 输出 TSV: 模块 \t 类名 \t 方法名 \t HTTP方法 \t 路径 \t 状态
       print module_name "\t" class_name "\t" method_name "\t" http_method "\t" full_path "\t" (has_idempotent ? "COVERED" : "UNCOVERED")
     }
-  ' </dev/null
-)
+  ')
+
 
 # -----------------------------------------------------------------------------
 # 汇总统计

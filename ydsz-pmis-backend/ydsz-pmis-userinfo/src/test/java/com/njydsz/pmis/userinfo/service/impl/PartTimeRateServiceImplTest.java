@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 /**
  * PartTimeRateServiceImpl 单元测试
  *
- * <p>覆盖兼职职级费率 CRUD 核心行为：月薪+商业保险自动计算 totalCost、
+ * <p>覆盖兼职职级费率 CRUD 核心行为：月薪+商业保险+差旅报销+差旅补贴自动计算 totalCost、
  * 级别编码+版本唯一性校验、级别段位校验、日期校验、生效费率匹配。
  *
  * @author ydsz-pmis-team
@@ -52,7 +52,7 @@ class PartTimeRateServiceImplTest {
     // ==================== create ====================
 
     @Test
-    @DisplayName("创建成功: 自动计算 totalCost = monthlySalary + commercialInsurance")
+    @DisplayName("创建成功: 自动计算 totalCost = monthlySalary + commercialInsurance + travelReimbursement + travelAllowance")
     void create_success_calculatesTotalCost() {
         PartTimeRateCreateDTO dto = new PartTimeRateCreateDTO();
         dto.setRateCode("P5");
@@ -60,6 +60,8 @@ class PartTimeRateServiceImplTest {
         dto.setLevelSegment("MIDDLE");
         dto.setMonthlySalary(new BigDecimal("6000"));
         dto.setCommercialInsurance(new BigDecimal("80"));
+        dto.setTravelReimbursement(new BigDecimal("500"));
+        dto.setTravelAllowance(new BigDecimal("300"));
         dto.setEffectiveDate(LocalDate.of(2026, 1, 1));
         when(partTimeRateMapper.selectOne(any())).thenReturn(null);
         doAnswer(inv -> {
@@ -73,7 +75,7 @@ class PartTimeRateServiceImplTest {
         verify(partTimeRateMapper).insert(captor.capture());
         PartTimeRateDO saved = captor.getValue();
         assertEquals("P5", saved.getRateCode());
-        assertEquals(new BigDecimal("6080.00"), saved.getTotalCost());
+        assertEquals(new BigDecimal("6880.00"), saved.getTotalCost());
         assertEquals("ACTIVE", saved.getStatus());
         assertEquals(1, saved.getVersion());
         assertEquals("PTR-GENERATED", id);

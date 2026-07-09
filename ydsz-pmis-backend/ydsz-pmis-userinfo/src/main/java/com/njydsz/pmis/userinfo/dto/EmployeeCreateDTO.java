@@ -77,6 +77,10 @@ public class EmployeeCreateDTO implements Serializable {
     @Size(max = 20)
     private String partTimeRateId;
 
+    /** 外包费率 ID（仅 OUTSOURCE 类型必填） */
+    @Size(max = 20)
+    private String outsourceRateId;
+
     /** 入职日期 */
     @NotNull
     private LocalDate hireDate;

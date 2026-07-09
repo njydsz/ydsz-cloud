@@ -53,7 +53,8 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         PartTimeRateDO entity = new PartTimeRateDO();
         BeanUtils.copyProperties(dto, entity);
         // 自动计算 totalCost = monthlySalary + commercialInsurance
-        entity.setTotalCost(calculateTotalCost(dto.getMonthlySalary(), dto.getCommercialInsurance()));
+        entity.setTotalCost(calculateTotalCost(dto.getMonthlySalary(), dto.getCommercialInsurance(),
+                dto.getTravelReimbursement(), dto.getTravelAllowance()));
         if (entity.getStatus() == null) {
             entity.setStatus(DEFAULT_STATUS);
         }
@@ -106,8 +107,10 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
         // 重新计算 totalCost
         BigDecimal salary = dto.getMonthlySalary() != null ? dto.getMonthlySalary() : exists.getMonthlySalary();
         BigDecimal insurance = dto.getCommercialInsurance() != null ? dto.getCommercialInsurance() : exists.getCommercialInsurance();
+        BigDecimal reimbursement = dto.getTravelReimbursement() != null ? dto.getTravelReimbursement() : exists.getTravelReimbursement();
+        BigDecimal allowance = dto.getTravelAllowance() != null ? dto.getTravelAllowance() : exists.getTravelAllowance();
         if (salary != null) {
-            entity.setTotalCost(calculateTotalCost(salary, insurance));
+            entity.setTotalCost(calculateTotalCost(salary, insurance, reimbursement, allowance));
         }
         partTimeRateMapper.updateById(entity);
         log.info("[PartTimeRate] 更新兼职费率: id={}", id);
@@ -179,18 +182,23 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     // ==================== private ====================
 
     /**
-     * 计算公司总人力成本 = 月薪 + 商业保险
+     * 计算公司总人力成本 = 月薪 + 商业保险 + 差旅报销 + 差旅补贴
      *
      * @param monthlySalary       月度薪资
      * @param commercialInsurance 商业保险（为 null 时按 0 处理）
+     * @param travelReimbursement 差旅报销（为 null 时按 0 处理）
+     * @param travelAllowance     差旅补贴（为 null 时按 0 处理）
      * @return 总成本（保留 2 位小数）
      */
-    private BigDecimal calculateTotalCost(BigDecimal monthlySalary, BigDecimal commercialInsurance) {
+    private BigDecimal calculateTotalCost(BigDecimal monthlySalary, BigDecimal commercialInsurance,
+                                          BigDecimal travelReimbursement, BigDecimal travelAllowance) {
         if (monthlySalary == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "月度薪资不能为空");
         }
         BigDecimal insurance = commercialInsurance != null ? commercialInsurance : BigDecimal.ZERO;
-        return monthlySalary.add(insurance).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal reimbursement = travelReimbursement != null ? travelReimbursement : BigDecimal.ZERO;
+        BigDecimal allowance = travelAllowance != null ? travelAllowance : BigDecimal.ZERO;
+        return monthlySalary.add(insurance).add(reimbursement).add(allowance).setScale(2, RoundingMode.HALF_UP);
     }
 
     /**

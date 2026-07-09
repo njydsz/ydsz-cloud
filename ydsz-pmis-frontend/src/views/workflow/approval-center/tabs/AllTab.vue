@@ -18,11 +18,13 @@
  *   仅 workflow:monitor:view 权限可见，展示当前租户下所有流程实例。
  *   复用 listAllInstances API（/workflow/engine/instance/all）。
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { listAllInstances } from '@/api/workflow'
 import type { FlowInstanceDTO } from '@/api/workflow/types'
+import { ProTable } from '@/components/common'
+import type { ProTableColumn } from '@/components/common'
 import {
   formatTime,
   instanceStatusLabel,
@@ -42,16 +44,25 @@ const list = ref<FlowInstanceDTO[]>([])
 const total = ref(0)
 const loading = ref(false)
 
+const columns = computed<ProTableColumn<FlowInstanceDTO>[]>(() => [
+  { prop: 'title', label: t('workflow.approval.columns.title'), minWidth: 220, showOverflowTooltip: true },
+  { prop: 'flowName', label: t('workflow.approval.columns.flowName'), width: 160 },
+  { prop: 'businessNo', label: t('workflow.approval.columns.businessNo'), width: 160 },
+  { prop: 'initiatorName', label: t('workflow.approval.columns.initiatorName'), width: 120 },
+  { prop: 'status', label: t('workflow.approval.columns.status'), width: 100, slot: 'status' },
+  { prop: 'currentNodeName', label: t('workflow.approval.columns.currentNodeName'), width: 120 },
+  { prop: 'startTime', label: t('workflow.approval.columns.startTime'), width: 160, slot: 'startTime' },
+  { prop: 'operation', label: t('workflow.approval.columns.operation'), width: 120, fixed: 'right', slot: 'operation' },
+])
+
 async function load() {
   loading.value = true
   try {
     const res = await listAllInstances(query)
     if (res.data?.code === 0) {
-      // 后端返回 List<Map>（非分页对象），直接作为数组使用
-      const data = res.data.data as unknown as FlowInstanceDTO[] | undefined
-      list.value = data || []
-      // 后端未返回 total，使用数组长度作为本地 total（前端分页友好降级）
-      total.value = list.value.length
+      const pageData = res.data?.data
+      list.value = pageData?.list || []
+      total.value = pageData?.total || 0
     }
   } finally {
     loading.value = false
@@ -88,38 +99,31 @@ onMounted(load)
       </el-select>
       <el-button type="primary" @click="load">{{ t('workflow.approval.buttons.query') }}</el-button>
     </div>
-    <el-table v-loading="loading" :data="list" stripe>
-      <el-table-column prop="title" :label="t('workflow.approval.columns.title')" min-width="220" show-overflow-tooltip />
-      <el-table-column prop="flowName" :label="t('workflow.approval.columns.flowName')" width="160" />
-      <el-table-column prop="businessNo" :label="t('workflow.approval.columns.businessNo')" width="160" />
-      <el-table-column prop="initiatorName" :label="t('workflow.approval.columns.initiatorName')" width="120" />
-      <el-table-column :label="t('workflow.approval.columns.status')" width="100">
-        <template #default="{ row }">
-          <el-tag :type="instanceStatusType(row.flowStatus || row.status)" size="small">
-            {{ instanceStatusLabel(row.flowStatus || row.status) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="currentNodeName" :label="t('workflow.approval.columns.currentNodeName')" width="120" />
-      <el-table-column :label="t('workflow.approval.columns.startTime')" width="160">
-        <template #default="{ row }">{{ formatTime(row.startAt || row.startTime) }}</template>
-      </el-table-column>
-      <el-table-column :label="t('workflow.approval.columns.operation')" width="120" fixed="right">
-        <template #default="{ row }">
-          <el-button size="small" text @click="goInstance(row.id)">{{ t('workflow.approval.actions.viewFlow') }}</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-pagination
-      v-model:current-page="query.page"
-      v-model:page-size="query.size"
+    <ProTable
+      :columns="columns"
+      :data="list"
+      :loading="loading"
       :total="total"
+      v-model:page="query.page"
+      v-model:size="query.size"
       :page-sizes="[10, 20, 50, 100]"
-      layout="total, sizes, prev, pager, next, jumper"
-      class="pagination"
-      @current-change="load"
+      :stripe="true"
+      :border="false"
+      :toolbar="false"
+      row-key="id"
+      @page-change="load"
       @size-change="load"
-    />
+    >
+      <template #status="{ row }">
+        <el-tag :type="instanceStatusType(row.flowStatus || row.status)" size="small">
+          {{ instanceStatusLabel(row.flowStatus || row.status) }}
+        </el-tag>
+      </template>
+      <template #startTime="{ row }">{{ formatTime(row.startAt || row.startTime) }}</template>
+      <template #operation="{ row }">
+        <el-button size="small" text @click="goInstance(row.id)">{{ t('workflow.approval.actions.viewFlow') }}</el-button>
+      </template>
+    </ProTable>
   </div>
 </template>
 
@@ -128,11 +132,6 @@ onMounted(load)
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
-}
-
-.pagination {
-  margin-top: 16px;
-  justify-content: flex-end;
 }
 
 /* 移动端 H5 适配 */
@@ -159,17 +158,17 @@ onMounted(load)
     }
   }
 
-  .pagination {
+  :deep(.pro-table__pagination) {
     margin-top: 8px;
     justify-content: center;
 
-    :deep(.el-pagination__total),
-    :deep(.el-pagination__sizes),
-    :deep(.el-pagination__jump) {
+    .el-pagination__total,
+    .el-pagination__sizes,
+    .el-pagination__jump {
       display: none;
     }
 
-    :deep(.el-pagination__pages) {
+    .el-pagination__pages {
       flex-wrap: wrap;
       justify-content: center;
     }

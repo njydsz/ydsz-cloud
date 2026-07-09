@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow;
 
+import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
@@ -90,18 +91,21 @@ public interface WorkflowFacade {
      * <p>对标钉钉/飞书/企微审批中心的"全部"Tab，管理员可查看当前租户下所有流程实例。
      * 非管理员调用应由上层权限拦截（需要 workflow:monitor:view 权限）。
      *
+     * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code PageResult<Map>}，
+     * 保留 total / page / size，避免前端假分页。
+     *
      * @param businessType 业务类型（可空）
      * @param flowStatus   流程状态（可空）
      * @param startTime    开始时间下界（可空）
      * @param endTime      开始时间上界（可空）
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @return 实例 Map 列表
+     * @return 分页实例 Map 列表
      */
-    List<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
-                                                LocalDateTime startTime,
-                                                LocalDateTime endTime,
-                                                int page, int size);
+    PageResult<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
+                                                     LocalDateTime startTime,
+                                                     LocalDateTime endTime,
+                                                     int page, int size);
 
     /**
      * 前加签

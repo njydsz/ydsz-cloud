@@ -12,11 +12,13 @@
 
 # ---------- 数据源（所有服务共用） ----------
 # 安全说明: DB_PASSWORD 无默认值，必须通过环境变量/Nacos 配置注入
+# HA 说明: 生产环境 PG 流复制 HA 时，DB_HOST 可填逗号分隔的多主机
+#          如 DB_HOST=pg-primary,pg-standby，配合 DB_HA_PARAMS=targetServerType=primary
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
     username: ${DB_USER:pmis}
     # ⚠️ 生产环境必须使用 Jasypt 加密：password: ENC(加密后的密码串)
     # 开发环境可使用明文/环境变量，生产通过 JASYPT_ENCRYPTOR_PASSWORD 环境变量注入主密码后自动解密
@@ -59,13 +61,14 @@ spring:
     strict: true
     datasource:
       master:
-        url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8
+        url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8${DB_HA_PARAMS:}
         username: ${DB_USER:pmis}
         password: ${DB_PASSWORD}
         driver-class-name: org.postgresql.Driver
       # 从库：当前指向同一数据库 URL，生产环境分离后修改为从库地址
+      # HA：生产环境可设置 DB_SLAVE_HOST 指向流复制从库
       slave:
-        url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8
+        url: jdbc:postgresql://${DB_SLAVE_HOST:${DB_HOST:127.0.0.1}}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8
         username: ${DB_USER:pmis}
         password: ${DB_PASSWORD}
         driver-class-name: org.postgresql.Driver
@@ -96,6 +99,12 @@ spring:
       password: ${REDIS_PASSWORD}
       database: ${REDIS_DB:0}
       timeout: 5s
+      # HA：Redis Sentinel 模式（生产环境设置 REDIS_SENTINEL_MASTER 即启用）
+      # 开发环境不设置 REDIS_SENTINEL_MASTER，自动回退到单机 host:port
+      sentinel:
+        master: ${REDIS_SENTINEL_MASTER:}
+        nodes: ${REDIS_SENTINEL_NODES:}
+        password: ${REDIS_SENTINEL_PASSWORD:}
       lettuce:
         pool:
           max-active: 16

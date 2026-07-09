@@ -5,9 +5,9 @@ import lombok.Getter;
 /**
  * 雇佣类型枚举
  *
- * <p>全职 FULL_TIME：L1-L18 职级体系，成本 = 月薪 + 社保公积金（公司承担）
- * <p>兼职 PART_TIME：P1-P18 职级体系，成本 = 月薪 + 商业保险（公司承担）
- * <p>外包 OUTSOURCE：按合同单价核算（预留扩展）
+ * <p>全职 FULL_TIME：L1-L18 职级体系，成本 = 月薪 + 社保公积金 + 差旅报销 + 差旅补贴（公司承担）
+ * <p>兼职 PART_TIME：P1-P18 职级体系，成本 = 月薪 + 商业保险 + 差旅报销 + 差旅补贴（公司承担）
+ * <p>外包 OUTSOURCE：V1-V18 职级体系，成本 = 月薪 + 差旅报销 + 差旅补贴（公司承担）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

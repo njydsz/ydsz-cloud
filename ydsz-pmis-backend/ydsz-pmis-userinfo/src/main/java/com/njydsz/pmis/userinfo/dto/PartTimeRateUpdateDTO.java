@@ -39,6 +39,12 @@ public class PartTimeRateUpdateDTO implements Serializable {
     /** 商业保险-公司承担部分 (元/月) */
     private BigDecimal commercialInsurance;
 
+    /** 差旅报销-公司承担部分 (元/月) */
+    private BigDecimal travelReimbursement;
+
+    /** 差旅补贴-公司承担部分 (元/月) */
+    private BigDecimal travelAllowance;
+
     /** 公司总人力成本 (元/月) */
     private BigDecimal totalCost;
 
