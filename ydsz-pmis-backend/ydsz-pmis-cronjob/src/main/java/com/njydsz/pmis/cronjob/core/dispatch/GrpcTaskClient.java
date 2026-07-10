@@ -1,5 +1,6 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.entity.job.JobNodeDO;
 import com.njydsz.pmis.cronjob.grpc.TaskExecutionRequest;

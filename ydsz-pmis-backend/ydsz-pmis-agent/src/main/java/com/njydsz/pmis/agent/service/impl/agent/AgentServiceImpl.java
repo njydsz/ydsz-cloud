@@ -81,6 +81,22 @@ public class AgentServiceImpl implements AgentService {
         this.agentExecutor = agentExecutor;
     }
 
+    /**
+     * 同步执行 Agent，结果落库
+     *
+     * <p>执行流程：
+     * <ol>
+     *   <li>校验请求并查找已注册 Agent</li>
+     *   <li>构建 AgentContext（注入 traceId）并启动链路追踪</li>
+     *   <li>插入 RUNNING 状态预测记录</li>
+     *   <li>执行 Agent 并更新记录（成功/失败均落库）</li>
+     *   <li>结束链路追踪</li>
+     * </ol>
+     *
+     * @param req Agent 执行请求
+     * @return 落库后的预测记录
+     * @throws BizException 执行失败或限流时抛出
+     */
     @Override
     @SentinelResource(value = "agent:run", blockHandler = "runBlockHandler", fallback = "runFallback")
     public AgentPredictionDO run(AgentRunRequestDTO req) {
@@ -219,6 +235,14 @@ public class AgentServiceImpl implements AgentService {
         });
     }
 
+    /**
+     * 内存执行 Agent（不落库），用于实时交互场景
+     *
+     * @param agentType Agent 类型编码
+     * @param context   Agent 执行上下文
+     * @return Agent 执行结果
+     * @throws BizException agentType 无效或未注册时抛出
+     */
     @Override
     public AgentResult executeInMemory(String agentType, AgentContext context) {
         AgentType type = AgentType.fromCode(agentType);
@@ -304,6 +328,13 @@ public class AgentServiceImpl implements AgentService {
         }
     }
 
+    /**
+     * 根据 ID 查询 Agent 预测记录
+     *
+     * @param id 记录 ID
+     * @return 预测记录
+     * @throws BizException 记录不存在时抛出
+     */
     @Override
     @Transactional(readOnly = true)
     public AgentPredictionDO getById(String id) {
@@ -314,6 +345,18 @@ public class AgentServiceImpl implements AgentService {
         return r;
     }
 
+    /**
+     * 分页查询 Agent 预测记录
+     *
+     * @param page       页码（从 1 开始）
+     * @param size       每页大小
+     * @param agentType  Agent 类型（可空）
+     * @param alertLevel 告警等级（可空）
+     * @param status     执行状态（可空）
+     * @param bizType    关联业务类型（可空）
+     * @param bizId      关联业务 ID（可空）
+     * @return 分页结果（按创建时间倒序）
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<AgentPredictionDO> page(int page, int size, String agentType, String alertLevel,
@@ -329,6 +372,14 @@ public class AgentServiceImpl implements AgentService {
         return predictionMapper.selectPage(p, w);
     }
 
+    /**
+     * 查询最近的 Agent 预测记录
+     *
+     * @param agentType  Agent 类型（可空）
+     * @param alertLevel 告警等级（可空）
+     * @param limit      返回条数，默认 20
+     * @return 最近记录列表
+     */
     @Override
     @Transactional(readOnly = true)
     public List<AgentPredictionDO> listRecent(String agentType, String alertLevel, Integer limit) {
@@ -336,6 +387,12 @@ public class AgentServiceImpl implements AgentService {
         return predictionMapper.selectByAgentType(agentType, alertLevel, limit);
     }
 
+    /**
+     * 按 Agent 类型与告警等级聚合计数
+     *
+     * @param tenantId 租户 ID（可空，默认 "1"）
+     * @return 聚合结果列表（每行包含 agentType、alertLevel、count）
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByType(String tenantId) {
@@ -343,6 +400,14 @@ public class AgentServiceImpl implements AgentService {
         return predictionMapper.aggregateByType(tenantId);
     }
 
+    /**
+     * 按告警等级统计 Agent 记录数量
+     *
+     * @param alertLevel 告警等级（可空）
+     * @param agentType  Agent 类型（可空）
+     * @param tenantId   租户 ID（可空，默认 "1"）
+     * @return 记录数量字符串
+     */
     @Override
     @Transactional(readOnly = true)
     public String countByAlertLevel(String alertLevel, String agentType, String tenantId) {

@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -81,8 +80,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     @Override
     public void recordSend(String providerType, boolean success) {
         try {
-            String daySuffix = java.time.LocalDateTime.now()
-                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String daySuffix = LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
             String totalKey = "pmis:sms:stats:" + providerType + ":" + daySuffix + ":total";
             redisTemplate.opsForValue().increment(totalKey);
             if (!success) {
@@ -99,10 +98,10 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
 
     @Override
     public Map<String, long[]> getProviderStats() {
-        Map<String, long[]> stats = new java.util.HashMap<>();
+        Map<String, long[]> stats = new HashMap<>();
         try {
-            String daySuffix = java.time.LocalDateTime.now()
-                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String daySuffix = LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
             for (String provider : new String[]{"aliyun", "tencent", "mock"}) {
                 String totalKey = "pmis:sms:stats:" + provider + ":" + daySuffix + ":total";
                 String failKey = "pmis:sms:stats:" + provider + ":" + daySuffix + ":failed";

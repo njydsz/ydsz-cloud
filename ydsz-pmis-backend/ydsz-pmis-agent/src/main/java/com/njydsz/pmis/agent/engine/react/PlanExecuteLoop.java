@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -290,7 +291,7 @@ public class PlanExecuteLoop {
                 // 解析 parameters
                 JSONObject params = obj.getJSONObject("parameters");
                 if (params != null) {
-                    step.setParameters(new java.util.HashMap<>(params));
+                    step.setParameters(new HashMap<>(params));
                 }
                 plan.add(step);
             }

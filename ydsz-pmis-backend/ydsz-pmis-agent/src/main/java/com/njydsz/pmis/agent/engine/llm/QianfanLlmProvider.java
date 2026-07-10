@@ -6,6 +6,7 @@ import com.njydsz.pmis.agent.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
@@ -139,7 +140,7 @@ public class QianfanLlmProvider extends AbstractHttpLlmProvider {
                 // P0-5 修复：显式处理 4xx/5xx 错误响应，解析千帆错误码并抛出带语义的异常
                 .onStatus(HttpStatusCode::is4xxClientError, this::handleErrorResponse)
                 .onStatus(HttpStatusCode::is5xxServerError, this::handleErrorResponse)
-                .body(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {});
+                .body(new ParameterizedTypeReference<Map<String, Object>>() {});
         if (response == null) return "";
         Object choices = response.get("choices");
         if (!(choices instanceof List<?> list) || list.isEmpty()) return "";

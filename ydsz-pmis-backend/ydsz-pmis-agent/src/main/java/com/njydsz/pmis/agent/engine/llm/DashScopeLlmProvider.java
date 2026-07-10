@@ -3,10 +3,12 @@ package com.njydsz.pmis.agent.engine.llm;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.TypeReference;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
@@ -196,7 +198,7 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, this::handleErrorResponse)
                 .onStatus(HttpStatusCode::is5xxServerError, this::handleErrorResponse)
-                .body(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {});
+                .body(new ParameterizedTypeReference<Map<String, Object>>() {});
         if (response == null) return null;
 
         if (context != null) {
@@ -246,10 +248,10 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
     private <T> T executeWithGuardCallable(Callable<T> call, AgentContext context) throws Exception {
         String result = executeWithGuard(() -> {
             T r = call.call();
-            return r == null ? "" : com.alibaba.fastjson2.JSON.toJSONString(r);
+            return r == null ? "" : JSON.toJSONString(r);
         }, context);
         if (result == null || result.isEmpty()) return null;
-        return com.alibaba.fastjson2.JSON.parseObject(result, new com.alibaba.fastjson2.TypeReference<T>() {});
+        return JSON.parseObject(result, new TypeReference<T>() {});
     }
 
     /**
@@ -311,7 +313,7 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
                 // P0-5 修复：显式处理 4xx/5xx 错误响应，解析 DashScope 错误码并抛出带语义的异常
                 .onStatus(HttpStatusCode::is4xxClientError, this::handleErrorResponse)
                 .onStatus(HttpStatusCode::is5xxServerError, this::handleErrorResponse)
-                .body(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {});
+                .body(new ParameterizedTypeReference<Map<String, Object>>() {});
         if (response == null) return "";
         // P1-4: 提取 DashScope request_id 写入 AgentContext，用于审计/账单核对
         if (context != null) {

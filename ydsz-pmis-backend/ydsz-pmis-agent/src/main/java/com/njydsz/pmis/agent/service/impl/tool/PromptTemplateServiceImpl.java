@@ -34,6 +34,12 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
     /** Prompt 模板注册中心（内存缓存 + 热刷新） */
     private final PromptTemplateRegistry registry;
 
+    /**
+     * 创建 Prompt 模板（默认非生效，需手动激活）
+     *
+     * @param dto 模板创建参数（code、name、agentType、role、content 等）
+     * @return 落库后的模板实体
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AgentPromptTemplateDO create(PromptTemplateCreateDTO dto) {
@@ -52,6 +58,20 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
         return entity;
     }
 
+    /**
+     * 激活指定模板版本（同 code 的其他版本自动失效）
+     *
+     * <p>激活流程：
+     * <ol>
+     *   <li>排他 deactivate：同 templateCode 的其他版本置为 isActive=false</li>
+     *   <li>激活当前版本 isActive=true</li>
+     *   <li>刷新 PromptTemplateRegistry 缓存</li>
+     * </ol>
+     *
+     * @param id 模板 ID
+     * @return 激活后的模板实体
+     * @throws BizException 模板不存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AgentPromptTemplateDO activate(String id) {
@@ -70,11 +90,26 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
         return template;
     }
 
+    /**
+     * 根据 ID 查询模板详情
+     *
+     * @param id 模板 ID
+     * @return 模板实体；不存在返回 null
+     */
     @Override
     public AgentPromptTemplateDO getById(String id) {
         return mapper.selectById(id);
     }
 
+    /**
+     * 分页查询模板列表
+     *
+     * <p>支持按 templateCode（LIKE）、agentType、promptRole、isActive 过滤，
+     * 按创建时间倒序排列。
+     *
+     * @param query 查询条件
+     * @return 分页结果
+     */
     @Override
     public PageResult<AgentPromptTemplateDO> page(PromptTemplateQueryDTO query) {
         LambdaQueryWrapper<AgentPromptTemplateDO> wrapper = new LambdaQueryWrapper<>();
@@ -98,6 +133,13 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
         return PageResult.ofPage(mapper.selectPage(page, wrapper));
     }
 
+    /**
+     * 删除模板（软删除）
+     *
+     * <p>若删除的是当前生效模板，删除后刷新注册中心缓存以降级为内置默认模板。
+     *
+     * @param id 模板 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {

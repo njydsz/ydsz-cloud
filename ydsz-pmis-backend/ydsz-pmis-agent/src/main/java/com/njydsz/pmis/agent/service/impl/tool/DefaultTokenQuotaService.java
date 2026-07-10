@@ -64,6 +64,15 @@ public class DefaultTokenQuotaService implements TokenQuotaService {
                 properties.isEnabled(), properties.getDefaultMonthlyQuota(), properties.isAutoInit());
     }
 
+    /**
+     * 检查租户当月 Token 配额是否充足
+     *
+     * <p>配额开关关闭时直接放行；首次访问时自动初始化当月配额（autoInit=true 时）。
+     *
+     * @param tenantId       租户 ID
+     * @param estimatedTokens 预估 Token 消耗量
+     * @throws BizException 配额不足时抛出（QUOTA_EXCEEDED）
+     */
     @Override
     public void checkQuota(String tenantId, long estimatedTokens) {
         if (!properties.isEnabled()) {
@@ -88,6 +97,14 @@ public class DefaultTokenQuotaService implements TokenQuotaService {
         }
     }
 
+    /**
+     * 记录 Token 使用量并递增配额
+     *
+     * <p>无论配额开关是否启用，都会写入使用明细日志（供审计/账单核对）。
+     * 仅当配额开关启用时，才递增租户当月已用配额（SQL 原子递增）。
+     *
+     * @param usage Token 使用量信息（含租户、模型、Token 数、耗时等）
+     */
     @Override
     public void recordUsage(TokenUsage usage) {
         if (usage == null) {
@@ -136,6 +153,12 @@ public class DefaultTokenQuotaService implements TokenQuotaService {
         }
     }
 
+    /**
+     * 查询租户当月配额概览
+     *
+     * @param tenantId 租户 ID
+     * @return 配额概览（总量、已用、状态、重置时间）；无记录时返回默认概览
+     */
     @Override
     public QuotaSummary getQuotaSummary(String tenantId) {
         TokenQuotaMapper mapper = quotaMapperProvider.getIfAvailable();
@@ -151,6 +174,13 @@ public class DefaultTokenQuotaService implements TokenQuotaService {
                 quota.getUsedTokens(), quota.getStatus(), quota.getResetAt());
     }
 
+    /**
+     * 重置租户当月配额（运维操作）
+     *
+     * <p>将已用 Token 清零，状态重置为 ACTIVE，记录重置时间。
+     *
+     * @param tenantId 租户 ID
+     */
     @Override
     public void resetQuota(String tenantId) {
         TokenQuotaMapper mapper = quotaMapperProvider.getIfAvailable();

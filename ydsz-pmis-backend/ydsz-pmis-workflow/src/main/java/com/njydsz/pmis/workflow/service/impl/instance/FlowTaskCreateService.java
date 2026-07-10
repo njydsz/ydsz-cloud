@@ -708,7 +708,7 @@ public class FlowTaskCreateService {
             task.setVotePassRate(BigDecimal.valueOf(n.doubleValue()));
         } else if (rate instanceof String s && !s.isBlank()) {
             try {
-                task.setVotePassRate(new java.math.BigDecimal(s.trim()));
+                task.setVotePassRate(new BigDecimal(s.trim()));
             } catch (NumberFormatException ignore) {
                 // keep default
             }
