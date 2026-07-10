@@ -2,7 +2,9 @@
 -- PMIS agent module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
-
+-- 本脚本 DDL 对应后端 agent 服务 (ydsz-pmis-agent) 的 Mapper / DO,
+--   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
+--   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
 -- =====================================================
 -- 6. AI 智能体预测/推荐结果表 pmis_agent_prediction
 -- =====================================================
