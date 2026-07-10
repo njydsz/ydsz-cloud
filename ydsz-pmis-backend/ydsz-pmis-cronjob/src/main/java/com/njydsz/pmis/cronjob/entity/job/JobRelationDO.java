@@ -17,9 +17,14 @@ import java.io.Serial;
  *
  * <p>多条边组成 DAG（有向无环图），由 {@code DagParser} 负责解析与环检测。
  *
+ * @deprecated P3-2-merge: 推荐使用 {@code pmis_job_dag} 表的 DAG 定义（JSON 格式）
+ * 管理任务间依赖关系。DAG 定义支持更丰富的工作流特性。
+ * 本实体保留向后兼容，新功能应使用 DAG 体系。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
+@Deprecated
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("pmis_job_relation")

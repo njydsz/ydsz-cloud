@@ -661,11 +661,12 @@ CREATE INDEX IF NOT EXISTS idx_pjsl_created
     ON pmis_job_slow_log (created_at DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P4-1] 任务依赖关系表 pmis_job_relation
+-- [P4-1] 任务依赖关系表 pmis_job_relation（已废弃 — P3-2-merge 推荐使用 pmis_job_dag DAG 定义）
 -- ----------------------------------------------------------------------------
--- 存储 DAG 工作流中任务之间的依赖边（parent_job → child_job）。
--- 当 parent_job 执行成功后，根据 fail_strategy 决定是否触发 child_job。
--- 对标 XXL-Job 子任务依赖 / PowerJob 工作流实例。
+-- [DEPRECATED] 本表已废弃，推荐使用 pmis_job_dag 表的 DAG 定义（JSON 格式 nodes+edges）
+-- 管理任务间依赖关系。DAG 定义支持更丰富的工作流特性：条件分支、并行节点、可视化编辑、
+-- 版本管理等。DependencyPatrolScanner 保留向后兼容但会在后续版本迁移到 DAG 实例执行模式。
+-- 保留本表 DDL 仅用于存量数据迁移参考，新部署可跳过创建。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_relation(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),

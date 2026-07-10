@@ -22,9 +22,13 @@ import java.util.List;
  *
  * <p>提供任务依赖关系的增删查 API，支持构建 DAG 工作流。
  *
+ * @deprecated P3-2-merge: 推荐使用 DAG 管理 API ({@code /cronjob/dag}) 管理工作流。
+ * 本 Controller 保留向后兼容，新功能应使用 DAG 体系。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
+@Deprecated
 @Tag(name = "任务依赖关系")
 @RestController
 @RequestMapping("/cronjob/relation")

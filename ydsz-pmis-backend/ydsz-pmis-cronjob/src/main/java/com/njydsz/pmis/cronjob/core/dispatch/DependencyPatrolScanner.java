@@ -43,6 +43,9 @@ import java.util.stream.Collectors;
  *
  * <p>对标 Airflow 的 DAG 解析校验和 PowerJob 的任务健康检查。
  *
+ * <p>P3-2-merge: JobRelation（pmis_job_relation）已标记为 @Deprecated，
+ * 本扫描器对 JobRelation 的巡检逻辑保留向后兼容，后续版本将完全迁移到 DAG 体系。
+ *
  * @author ydsz-pmis-team
  * @since 1.3.0
  */

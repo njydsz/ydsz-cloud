@@ -7,9 +7,13 @@ import java.util.List;
 /**
  * 任务依赖关系服务接口（P4 DAG 工作流）。
  *
+ * @deprecated P3-2-merge: 推荐使用 DAG 定义服务 ({@code JobDagService}) 管理任务依赖。
+ * 本接口保留向后兼容，新功能应使用 DAG 体系。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
+@Deprecated
 public interface JobRelationService {
 
     /**

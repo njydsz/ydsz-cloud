@@ -26,9 +26,12 @@ import java.util.List;
  *   <li>校验自依赖</li>
  * </ul>
  *
+ * @deprecated P3-2-merge: 推荐使用 DAG 定义服务 ({@code JobDagService}) 管理任务依赖。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
+@Deprecated
 @Slf4j
 @Service
 @RequiredArgsConstructor
