@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.service;
+package com.njydsz.pmis.agent.service.tool;
 
 import com.njydsz.pmis.agent.dto.tool.ToolMarketQueryDTO;
 import com.njydsz.pmis.agent.dto.tool.ToolRegisterDTO;

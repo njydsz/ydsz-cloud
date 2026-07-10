@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.message.service.core;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.message.dto.core.MessageFeedbackDTO;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.dto;
+package com.njydsz.pmis.agent.dto.tool;
 
 import lombok.Builder;
 import lombok.Data;

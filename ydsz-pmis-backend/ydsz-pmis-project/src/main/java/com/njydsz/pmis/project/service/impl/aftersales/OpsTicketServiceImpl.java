@@ -38,8 +38,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class OpsTicketServiceImpl implements OpsTicketService {
 
+    /** 运维工单 Mapper */
     private final OpsTicketMapper ticketMapper;
 
+    /** 允许的工单分类集合 */
     private static final Set<String> ALLOWED_CATEGORIES = Set.of("BUG", "DATA", "CONFIG", "PROCESS", "OTHER");
 
     @Override

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.service;
 
-import com.njydsz.pmis.message.dto.UserReachProfileDTO;
+import com.njydsz.pmis.message.dto.core.UserReachProfileDTO;
 
 import java.util.List;
 

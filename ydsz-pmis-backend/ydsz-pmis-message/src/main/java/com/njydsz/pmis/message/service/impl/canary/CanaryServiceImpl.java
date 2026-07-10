@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service.impl;
+package com.njydsz.pmis.message.service.impl.canary;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

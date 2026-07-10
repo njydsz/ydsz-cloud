@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.dto;
+package com.njydsz.pmis.message.dto.canary;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;

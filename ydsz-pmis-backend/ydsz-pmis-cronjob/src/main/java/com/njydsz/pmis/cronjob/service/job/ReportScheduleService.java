@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.service;
+package com.njydsz.pmis.cronjob.service.job;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service.impl;
+package com.njydsz.pmis.userinfo.service.impl.org;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.api.BizErrorCode;

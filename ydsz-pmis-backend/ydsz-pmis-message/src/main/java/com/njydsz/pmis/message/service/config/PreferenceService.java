@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.message.service.config;
 
 import com.njydsz.pmis.message.dto.config.PreferenceUpsertDTO;
 import com.njydsz.pmis.message.entity.config.MsgPreferenceDO;

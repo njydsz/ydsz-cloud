@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.entity;
+package com.njydsz.pmis.cronjob.entity.schedule;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

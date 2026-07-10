@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.controller;
+package com.njydsz.pmis.message.controller.config;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service;
+package com.njydsz.pmis.userinfo.service.auth;
 
 import com.njydsz.pmis.userinfo.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.dto.auth.LoginDTO;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.entity;
+package com.njydsz.pmis.userinfo.entity.org;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

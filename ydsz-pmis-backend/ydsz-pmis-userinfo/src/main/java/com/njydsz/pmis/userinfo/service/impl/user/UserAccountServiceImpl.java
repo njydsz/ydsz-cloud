@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service.impl;
+package com.njydsz.pmis.userinfo.service.impl.user;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

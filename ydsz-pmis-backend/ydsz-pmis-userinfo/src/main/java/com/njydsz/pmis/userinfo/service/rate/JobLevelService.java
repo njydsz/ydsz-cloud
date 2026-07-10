@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service;
+package com.njydsz.pmis.userinfo.service.rate;
 
 import com.njydsz.pmis.userinfo.entity.rate.JobLevelDO;
 import com.njydsz.pmis.userinfo.entity.rate.JobLevelRateDO;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service.impl;
+package com.njydsz.pmis.userinfo.service.impl.rate;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;

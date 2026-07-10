@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.dto;
+package com.njydsz.pmis.userinfo.dto.org;
 
 import com.njydsz.pmis.common.entity.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;

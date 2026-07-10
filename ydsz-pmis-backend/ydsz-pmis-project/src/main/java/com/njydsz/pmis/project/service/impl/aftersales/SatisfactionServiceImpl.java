@@ -34,6 +34,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SatisfactionServiceImpl implements SatisfactionService {
 
+    /** 满意度评价 Mapper */
     private final SatisfactionMapper satisfactionMapper;
 
     @Override

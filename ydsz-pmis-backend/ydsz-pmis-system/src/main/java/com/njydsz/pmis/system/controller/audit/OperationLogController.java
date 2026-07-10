@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.controller;
+package com.njydsz.pmis.system.controller.audit;
 
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service;
+package com.njydsz.pmis.userinfo.service.auth;
 
 import com.njydsz.pmis.userinfo.dto.auth.ReAuthRequest;
 import com.njydsz.pmis.userinfo.dto.auth.ReAuthResult;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.service;
+package com.njydsz.pmis.system.service.config;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.system.dto.config.ConfigFormDTO;

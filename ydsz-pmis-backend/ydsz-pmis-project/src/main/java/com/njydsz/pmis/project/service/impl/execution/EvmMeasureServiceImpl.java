@@ -38,7 +38,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class EvmMeasureServiceImpl implements EvmMeasureService {
 
+    /** EVM 挣值度量 Mapper */
     private final EvmMeasureMapper evmMapper;
+    /** 阈值配置提供者（SPI/CPI 红黄灯阈值） */
     private final ThresholdProvider thresholdProvider;
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service.impl;
+package com.njydsz.pmis.message.service.impl.receipt;
 
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.message.service.receipt.ReadReceiptService;

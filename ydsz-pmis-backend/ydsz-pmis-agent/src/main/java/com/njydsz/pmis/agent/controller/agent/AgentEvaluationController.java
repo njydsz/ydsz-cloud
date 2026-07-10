@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.controller;
+package com.njydsz.pmis.agent.controller.agent;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 

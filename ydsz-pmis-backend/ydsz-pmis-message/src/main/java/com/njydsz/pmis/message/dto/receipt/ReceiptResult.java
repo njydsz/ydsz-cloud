@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.dto;
+package com.njydsz.pmis.message.dto.receipt;
 
 
 import com.njydsz.pmis.message.enums.receipt.ReceiptStatusEnum;

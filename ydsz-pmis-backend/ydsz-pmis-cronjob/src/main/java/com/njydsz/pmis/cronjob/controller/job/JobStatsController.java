@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.controller;
+package com.njydsz.pmis.cronjob.controller.job;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;

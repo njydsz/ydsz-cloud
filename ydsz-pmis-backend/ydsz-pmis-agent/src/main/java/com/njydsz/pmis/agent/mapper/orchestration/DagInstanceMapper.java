@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.mapper;
+package com.njydsz.pmis.agent.mapper.orchestration;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.agent.entity.orchestration.DagInstanceDO;

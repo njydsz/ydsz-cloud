@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.config.MessageProperties;
-import com.njydsz.pmis.message.entity.MsgLogDO;
+import com.njydsz.pmis.message.entity.core.MsgLogDO;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;

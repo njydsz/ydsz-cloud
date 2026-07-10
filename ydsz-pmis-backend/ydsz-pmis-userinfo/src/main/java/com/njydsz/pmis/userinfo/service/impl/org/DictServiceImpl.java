@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service.impl;
+package com.njydsz.pmis.userinfo.service.impl.org;
 
 import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.userinfo.entity.org.DictItemDO;

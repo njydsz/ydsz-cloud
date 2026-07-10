@@ -6,7 +6,7 @@ import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.config.MessageProperties;
-import com.njydsz.pmis.message.entity.MsgTemplateDO;
+import com.njydsz.pmis.message.entity.template.MsgTemplateDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;

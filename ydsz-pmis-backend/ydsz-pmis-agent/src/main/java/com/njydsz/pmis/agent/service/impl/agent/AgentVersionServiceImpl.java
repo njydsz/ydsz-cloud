@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.service.impl;
+package com.njydsz.pmis.agent.service.impl.agent;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.engine.version.AgentVersionManager;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.template;
 
 import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.message.dto.RichMediaContent;
+import com.njydsz.pmis.message.dto.core.RichMediaContent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

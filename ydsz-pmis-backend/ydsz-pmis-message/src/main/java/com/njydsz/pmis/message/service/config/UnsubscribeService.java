@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.message.service.config;
 
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.message.dto.config.UnsubscribeQueryDTO;

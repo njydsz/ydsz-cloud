@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.channel.sms;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.message.entity.MsgTemplateDO;
+import com.njydsz.pmis.message.entity.template.MsgTemplateDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

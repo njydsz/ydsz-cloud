@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.enums;
+package com.njydsz.pmis.userinfo.enums.resource;
 
 /**
  * Bench 闲置状态

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.message.service.batch;
 
 
 import com.njydsz.pmis.message.dto.batch.BatchProgressVO;

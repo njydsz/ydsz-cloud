@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.message.entity.MsgOfflineDO;
+import com.njydsz.pmis.message.entity.config.MsgOfflineDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;

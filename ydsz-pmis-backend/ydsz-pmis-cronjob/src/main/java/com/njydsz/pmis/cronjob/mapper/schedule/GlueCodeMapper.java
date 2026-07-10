@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.mapper;
+package com.njydsz.pmis.cronjob.mapper.schedule;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.cronjob.entity.schedule.GlueCodeDO;

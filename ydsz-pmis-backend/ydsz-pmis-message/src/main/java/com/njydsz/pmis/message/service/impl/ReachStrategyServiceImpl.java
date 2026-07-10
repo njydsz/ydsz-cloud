@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.service.impl;
 
-import com.njydsz.pmis.message.dto.UserReachProfileDTO;
+import com.njydsz.pmis.message.dto.core.UserReachProfileDTO;
 import com.njydsz.pmis.message.service.ReachStrategyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

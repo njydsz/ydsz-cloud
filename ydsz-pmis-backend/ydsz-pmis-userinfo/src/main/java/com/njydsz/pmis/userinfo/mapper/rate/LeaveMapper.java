@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.mapper;
+package com.njydsz.pmis.userinfo.mapper.rate;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.userinfo.entity.rate.LeaveDO;

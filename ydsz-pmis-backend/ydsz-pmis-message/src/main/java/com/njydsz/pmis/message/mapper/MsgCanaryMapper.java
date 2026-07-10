@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.message.entity.MsgCanaryDO;
+import com.njydsz.pmis.message.entity.canary.MsgCanaryDO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

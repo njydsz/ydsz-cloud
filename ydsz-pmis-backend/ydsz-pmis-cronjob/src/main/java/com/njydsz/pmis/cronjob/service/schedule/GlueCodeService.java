@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.service;
+package com.njydsz.pmis.cronjob.service.schedule;
 
 import com.njydsz.pmis.cronjob.entity.schedule.GlueCodeDO;
 

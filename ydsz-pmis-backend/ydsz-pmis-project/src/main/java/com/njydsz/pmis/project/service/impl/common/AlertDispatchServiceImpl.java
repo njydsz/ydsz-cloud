@@ -42,7 +42,9 @@ import java.util.stream.Collectors;
 @Service
 public class AlertDispatchServiceImpl implements AlertDispatchService {
 
+    /** 预警分发 Mapper */
     private final AlertDispatchMapper mapper;
+    /** 消息服务 Feign 客户端（发送预警消息） */
     private final MessageServiceClient messageClient;
     /** 通知实时推送 Feign 客户端（P0-2，通过 notification 服务 WebSocket 下发） */
     private final NotificationPushClient pushClient;

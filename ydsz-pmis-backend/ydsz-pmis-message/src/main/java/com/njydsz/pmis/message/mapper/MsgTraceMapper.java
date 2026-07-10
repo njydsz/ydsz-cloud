@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.message.entity.MsgTraceDO;
+import com.njydsz.pmis.message.entity.config.MsgTraceDO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

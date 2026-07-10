@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.mapper;
+package com.njydsz.pmis.userinfo.mapper.user;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.userinfo.entity.user.UserRoleDO;

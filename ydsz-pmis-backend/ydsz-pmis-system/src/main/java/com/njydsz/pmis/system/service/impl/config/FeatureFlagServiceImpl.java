@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.service.impl;
+package com.njydsz.pmis.system.service.impl.config;
 
 import com.njydsz.pmis.common.featureflag.FeatureFlag;
 import com.njydsz.pmis.common.featureflag.FeatureFlagService;

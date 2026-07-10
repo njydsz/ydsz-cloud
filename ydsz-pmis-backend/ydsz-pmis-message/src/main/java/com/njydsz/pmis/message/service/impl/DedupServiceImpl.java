@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.service.impl;
 
 import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.constant.MessageConstants;
-import com.njydsz.pmis.message.service.DedupService;
+import com.njydsz.pmis.message.service.core.DedupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;

@@ -39,11 +39,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ImportServiceImpl implements ImportService {
 
+    /** 支持的日期格式（兼容 yyyy-MM-dd 与 yyyy/MM/dd） */
     private static final DateTimeFormatter[] DATE_FORMATS = {
             DateTimeFormatter.ISO_LOCAL_DATE,
             DateTimeFormatter.ofPattern("yyyy/MM/dd")
     };
 
+    /** 费率卡服务（批量导入费率卡） */
     private final RateCardService rateCardService;
 
     @Override

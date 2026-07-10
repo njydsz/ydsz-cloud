@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.service.impl;
 
-import com.njydsz.pmis.message.service.DeliveryTimeOptimizer;
+import com.njydsz.pmis.message.service.core.DeliveryTimeOptimizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;

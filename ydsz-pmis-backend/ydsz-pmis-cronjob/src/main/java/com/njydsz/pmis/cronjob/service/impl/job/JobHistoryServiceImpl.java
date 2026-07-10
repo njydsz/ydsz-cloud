@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.service.impl;
+package com.njydsz.pmis.cronjob.service.impl.job;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;

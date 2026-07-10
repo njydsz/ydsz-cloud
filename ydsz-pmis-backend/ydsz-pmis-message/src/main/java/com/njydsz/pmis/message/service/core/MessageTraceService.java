@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.message.service.core;
 
 import com.njydsz.pmis.message.entity.config.MsgTraceDO;
 import com.njydsz.pmis.message.entity.config.MsgTraceDO.Node;

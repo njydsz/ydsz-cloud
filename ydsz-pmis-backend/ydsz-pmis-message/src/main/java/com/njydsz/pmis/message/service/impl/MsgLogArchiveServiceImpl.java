@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.service.impl;
 
-import com.njydsz.pmis.message.service.MsgLogArchiveService;
+import com.njydsz.pmis.message.service.core.MsgLogArchiveService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

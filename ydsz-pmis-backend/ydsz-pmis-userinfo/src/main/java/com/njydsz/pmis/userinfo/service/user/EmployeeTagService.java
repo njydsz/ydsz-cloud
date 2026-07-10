@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service;
+package com.njydsz.pmis.userinfo.service.user;
 
 import com.njydsz.pmis.userinfo.dto.user.EmployeeTagCreateDTO;
 import com.njydsz.pmis.userinfo.entity.user.EmployeeTagDO;

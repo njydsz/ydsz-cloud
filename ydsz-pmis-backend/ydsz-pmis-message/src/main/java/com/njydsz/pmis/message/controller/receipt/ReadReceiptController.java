@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.controller;
+package com.njydsz.pmis.message.controller.receipt;
 
 import com.njydsz.pmis.message.service.receipt.ReadReceiptService;
 import io.swagger.v3.oas.annotations.Operation;

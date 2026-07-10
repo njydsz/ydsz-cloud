@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.message.service.template;
 
 import com.njydsz.pmis.message.dto.template.TemplatePreviewDTO;
 import com.njydsz.pmis.message.dto.template.TemplateTestSendDTO;

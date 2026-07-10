@@ -1,11 +1,11 @@
-package com.njydsz.pmis.userinfo.service.impl;
+package com.njydsz.pmis.userinfo.service.impl.user;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeTagCreateDTO;
 import com.njydsz.pmis.userinfo.entity.user.EmployeeTagDO;
-import com.njydsz.pmis.userinfo.enums.TagType;
+import com.njydsz.pmis.userinfo.enums.user.TagType;
 import com.njydsz.pmis.userinfo.mapper.user.EmployeeTagMapper;
 import com.njydsz.pmis.userinfo.service.user.EmployeeTagService;
 import lombok.RequiredArgsConstructor;

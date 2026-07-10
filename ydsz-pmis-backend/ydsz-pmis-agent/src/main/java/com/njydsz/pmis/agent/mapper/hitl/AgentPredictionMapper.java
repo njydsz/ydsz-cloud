@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.mapper;
+package com.njydsz.pmis.agent.mapper.hitl;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.agent.entity.hitl.AgentPredictionDO;

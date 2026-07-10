@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.service.impl;
+package com.njydsz.pmis.cronjob.service.impl.schedule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;

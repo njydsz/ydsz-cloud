@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.controller;
+package com.njydsz.pmis.cronjob.controller.dag;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 

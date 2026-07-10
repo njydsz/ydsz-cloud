@@ -40,8 +40,11 @@ import java.util.Objects;
 @Transactional(readOnly = true)
 public class BillableUtilizationServiceImpl implements BillableUtilizationService {
 
+    /** 工时 Mapper（利用率计算数据源） */
     private final TimeEntryMapper timeEntryMapper;
+    /** 人效快照 Mapper */
     private final BillableUtilizationSnapshotMapper snapshotMapper;
+    /** 内部费率 Mapper */
     private final RateInternalMapper rateInternalMapper;
 
     // HUNDRED reserved for future percentage calculations

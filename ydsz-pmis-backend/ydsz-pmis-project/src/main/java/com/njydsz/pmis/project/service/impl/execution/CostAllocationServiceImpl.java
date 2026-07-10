@@ -28,6 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CostAllocationServiceImpl implements CostAllocationService {
 
+    /** 成本分摊 Mapper */
     private final CostAllocationMapper costAllocationMapper;
 
     @Override

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.controller;
+package com.njydsz.pmis.message.controller.canary;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;

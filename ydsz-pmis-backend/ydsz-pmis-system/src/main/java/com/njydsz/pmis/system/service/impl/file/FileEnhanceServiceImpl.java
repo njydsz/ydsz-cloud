@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.service.impl;
+package com.njydsz.pmis.system.service.impl.file;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;

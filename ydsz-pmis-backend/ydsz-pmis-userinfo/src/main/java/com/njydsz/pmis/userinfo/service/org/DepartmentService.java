@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service;
+package com.njydsz.pmis.userinfo.service.org;
 
 import com.njydsz.pmis.userinfo.dto.org.DepartmentFormDTO;
 import com.njydsz.pmis.userinfo.entity.org.DepartmentDO;

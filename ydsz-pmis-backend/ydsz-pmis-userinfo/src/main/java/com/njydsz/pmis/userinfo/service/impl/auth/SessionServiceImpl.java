@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service.impl;
+package com.njydsz.pmis.userinfo.service.impl.auth;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;

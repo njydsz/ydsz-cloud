@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service.impl;
+package com.njydsz.pmis.userinfo.service.impl.rate;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import cn.hutool.core.util.IdUtil;

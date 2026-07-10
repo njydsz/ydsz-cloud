@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.service.impl;
+package com.njydsz.pmis.agent.service.impl.agent;
 
 import com.njydsz.pmis.agent.engine.Agent;
 import com.njydsz.pmis.agent.orchestration.AgentCoordinator;

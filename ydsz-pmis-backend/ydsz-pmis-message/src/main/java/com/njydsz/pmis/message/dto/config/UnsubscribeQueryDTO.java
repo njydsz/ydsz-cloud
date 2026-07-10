@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.dto;
+package com.njydsz.pmis.message.dto.config;
 
 import com.njydsz.pmis.common.entity.PageQuery;
 import lombok.Data;

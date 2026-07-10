@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service.impl;
+package com.njydsz.pmis.message.service.impl.core;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.message.config.MessageProperties;

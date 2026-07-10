@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.service.impl;
+package com.njydsz.pmis.cronjob.service.impl.job;
 
 import com.njydsz.pmis.cronjob.entity.job.JobArtifactDO;
 import com.njydsz.pmis.cronjob.mapper.job.JobArtifactMapper;

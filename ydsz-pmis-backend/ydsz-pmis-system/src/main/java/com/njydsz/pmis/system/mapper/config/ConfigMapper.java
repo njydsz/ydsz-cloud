@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.mapper;
+package com.njydsz.pmis.system.mapper.config;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.system.entity.config.ConfigDO;

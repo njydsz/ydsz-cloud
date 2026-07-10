@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.controller;
+package com.njydsz.pmis.cronjob.controller.job;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.Result;

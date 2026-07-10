@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.dto;
+package com.njydsz.pmis.system.dto.config;
 
 import com.njydsz.pmis.common.entity.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;

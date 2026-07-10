@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.message.service.receipt;
 
 import com.njydsz.pmis.message.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.pmis.message.entity.receipt.MsgReceiptDO;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.controller;
+package com.njydsz.pmis.userinfo.controller.user;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 

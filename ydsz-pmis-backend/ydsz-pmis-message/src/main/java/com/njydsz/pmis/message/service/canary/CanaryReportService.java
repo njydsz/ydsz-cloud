@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.message.service.canary;
 
 
 import com.njydsz.pmis.message.dto.canary.CanaryReportVO;
