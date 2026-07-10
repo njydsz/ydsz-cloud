@@ -1,5 +1,6 @@
 package com.njydsz.pmis.agent.orchestration.dag;
 
+import com.njydsz.pmis.common.dag.DagFailureStrategy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

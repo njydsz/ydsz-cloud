@@ -509,15 +509,6 @@ public class RuleChain {
         };
     }
 
-    /** 已废弃：使用 transient 字段传递并行参数，存在线程安全隐患 */
-    @Deprecated(since = "1.6.0", forRemoval = true)
-    @SuppressWarnings("unused")
-    private transient ExecutorService currentParallelExecutor;
-    /** 已废弃：使用 transient 字段传递超时参数，存在线程安全隐患 */
-    @Deprecated(since = "1.6.0", forRemoval = true)
-    @SuppressWarnings("unused")
-    private transient long currentTimeoutMs;
-
     /**
      * THEN 语义：顺序执行全部节点，收集触发结果
      *

@@ -8,7 +8,6 @@
  * <h3>核心组件</h3>
  * <ul>
  *   <li>{@link com.njydsz.pmis.project.config.MinioConfig} - MinIO 客户端配置（异步导出报表上传）</li>
- *   <li>{@link com.njydsz.pmis.project.config.CockpitCacheConfig} - 驾驶舱缓存（已迁移至 common，保留为废弃文档）</li>
  * </ul>
  *
  * <h3>设计原则</h3>
@@ -21,7 +20,6 @@
  * <h3>使用规范</h3>
  * <ul>
  *   <li>新增配置类需在 {@code application.yml} 提供默认值与注释说明</li>
- *   <li>已标记 {@code @Deprecated} 的类（如 CockpitCacheConfig）禁止在新代码中引用</li>
  * </ul>
  *
  * @author ydsz-pmis-team

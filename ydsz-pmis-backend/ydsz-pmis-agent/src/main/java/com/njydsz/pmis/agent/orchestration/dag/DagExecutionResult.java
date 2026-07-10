@@ -1,5 +1,7 @@
 package com.njydsz.pmis.agent.orchestration.dag;
 
+import com.njydsz.pmis.common.dag.DagInstanceStatus;
+import com.njydsz.pmis.common.dag.DagNodeStatus;
 import lombok.Builder;
 import lombok.Data;
 

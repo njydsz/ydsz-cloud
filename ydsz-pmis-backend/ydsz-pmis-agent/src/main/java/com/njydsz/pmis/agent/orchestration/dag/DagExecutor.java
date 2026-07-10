@@ -3,6 +3,10 @@ package com.njydsz.pmis.agent.orchestration.dag;
 import com.njydsz.pmis.agent.engine.Agent;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
+import com.njydsz.pmis.common.dag.DagFailureStrategy;
+import com.njydsz.pmis.common.dag.DagGraph;
+import com.njydsz.pmis.common.dag.DagInstanceStatus;
+import com.njydsz.pmis.common.dag.DagNodeStatus;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.expression.EvaluationContext;
@@ -80,8 +84,9 @@ public class DagExecutor {
     public DagExecutionResult execute(DagDefinition dag, Map<String, Agent> agents,
                                        Map<String, Object> globalInputs, AgentContext agentCtx) {
         // 1. 校验 DAG 定义（含环检测）
-        DagTopology.validate(dag);
-        List<List<String>> layers = DagTopology.layeredSort(dag);
+        Map<String, List<String>> adj = buildAdjacencyFromDag(dag);
+        DagGraph.validate(adj, dag.getName());
+        List<List<String>> layers = DagGraph.layeredSort(adj);
 
         // 2. 构造执行上下文
         String instanceId = "dag-" + UUID.randomUUID();
@@ -145,6 +150,22 @@ public class DagExecutor {
                 totalCost);
 
         return buildResult(ctx, dag, finalStatus, totalCost, abortReason);
+    }
+
+    /**
+     * 从 DagDefinition 构建邻接表（适配 common.DagGraph）。
+     */
+    private Map<String, List<String>> buildAdjacencyFromDag(DagDefinition dag) {
+        Map<String, List<String>> adj = new HashMap<>();
+        for (DagNode node : dag.getNodes()) {
+            adj.computeIfAbsent(node.getName(), k -> new java.util.ArrayList<>());
+            if (node.getDependsOn() != null) {
+                for (String dep : node.getDependsOn()) {
+                    adj.computeIfAbsent(dep, k -> new java.util.ArrayList<>()).add(node.getName());
+                }
+            }
+        }
+        return adj;
     }
 
     /**
@@ -232,7 +253,7 @@ public class DagExecutor {
                                 "节点执行失败（重试耗尽）: " + e.getMessage(), null);
                         log.error("[DAG:{}] 节点 {} 执行失败", dag.getName(), node.getName(), e);
                         return switch (strategy) {
-                            case ABORT, RETRY -> NodeOutcome.ABORT; // RETRY 耗尽后按 ABORT
+                            case ABORT, RETRY, SKIP_SUBSEQUENT -> NodeOutcome.ABORT;
                             case CONTINUE -> NodeOutcome.CONTINUE;
                         };
                     }
