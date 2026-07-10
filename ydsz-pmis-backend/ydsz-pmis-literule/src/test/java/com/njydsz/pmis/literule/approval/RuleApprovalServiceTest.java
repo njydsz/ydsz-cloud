@@ -1,7 +1,6 @@
 package com.njydsz.pmis.literule.approval;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

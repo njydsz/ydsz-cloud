@@ -257,7 +257,6 @@ public class FlowFormValidator {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void validateAttachment(FlowFormField field, Object value,
                                      FlowFormField.ValidationRule validation,
                                      List<FlowFormValidationError> errors, String fieldKey) {

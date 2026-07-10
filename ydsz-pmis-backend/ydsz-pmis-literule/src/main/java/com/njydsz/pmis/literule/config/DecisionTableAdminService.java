@@ -113,8 +113,8 @@ public class DecisionTableAdminService {
         if (def == null) {
             return null;
         }
-        com.njydsz.pmis.literule.api.RuleContext context =
-                com.njydsz.pmis.literule.api.RuleContext.of(facts, "DRY_RUN", "MANUAL");
+        RuleContext context =
+                RuleContext.of(facts, "DRY_RUN", "MANUAL");
         DecisionTableRule rule = new DecisionTableRule(def, null);
         return rule.evaluate(context);
     }

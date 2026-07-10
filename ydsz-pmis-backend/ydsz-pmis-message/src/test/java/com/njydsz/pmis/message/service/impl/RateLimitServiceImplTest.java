@@ -4,6 +4,7 @@ import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.entity.config.MsgPreferenceDO;
 import com.njydsz.pmis.message.service.config.PreferenceService;
+import com.njydsz.pmis.message.service.impl.core.RateLimitServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

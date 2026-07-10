@@ -8,6 +8,7 @@ import com.njydsz.pmis.workflow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.entity.instance.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.definition.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.enums.definition.FlowNodeType;
 import com.njydsz.pmis.workflow.enums.definition.FlowPerformType;
 import com.njydsz.pmis.workflow.enums.instance.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;

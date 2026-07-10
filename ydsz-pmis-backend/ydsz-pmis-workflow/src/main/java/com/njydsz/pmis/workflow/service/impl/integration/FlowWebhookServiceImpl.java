@@ -42,6 +42,13 @@ public class FlowWebhookServiceImpl implements FlowWebhookService {
     /** 通知发件箱 Mapper，Webhook 投递失败时写入 outbox 重试 */
     private final FlowNotifyOutboxMapper outboxMapper;
 
+    /**
+     * 创建 Webhook 订阅
+     *
+     * @param subscription 订阅信息（名称、回调 URL、事件类型等）
+     * @return 订阅 ID
+     * @throws BizException 必填字段为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(FlowWebhookSubscriptionDO subscription) {
@@ -58,6 +65,12 @@ public class FlowWebhookServiceImpl implements FlowWebhookService {
         return subscription.getId();
     }
 
+    /**
+     * 更新 Webhook 订阅
+     *
+     * @param subscription 订阅信息（必须包含 ID）
+     * @throws BizException ID 为空或必填字段缺失时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(FlowWebhookSubscriptionDO subscription) {
@@ -69,6 +82,11 @@ public class FlowWebhookServiceImpl implements FlowWebhookService {
         log.info("[FlowWebhook] 更新订阅: id={}", subscription.getId());
     }
 
+    /**
+     * 删除 Webhook 订阅
+     *
+     * @param id 订阅 ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
@@ -76,18 +94,41 @@ public class FlowWebhookServiceImpl implements FlowWebhookService {
         log.info("[FlowWebhook] 删除订阅: id={}", id);
     }
 
+    /**
+     * 根据 ID 查询 Webhook 订阅详情
+     *
+     * @param id 订阅 ID
+     * @return 订阅信息；不存在返回 null
+     */
     @Override
     @Transactional(readOnly = true)
     public FlowWebhookSubscriptionDO getById(String id) {
         return subscriptionMapper.selectById(id);
     }
 
+    /**
+     * 查询全部 Webhook 订阅列表
+     *
+     * @return 订阅列表
+     */
     @Override
     @Transactional(readOnly = true)
     public List<FlowWebhookSubscriptionDO> listAll() {
         return subscriptionMapper.selectAll();
     }
 
+    /**
+     * 向匹配的 Webhook 订阅者投递事件
+     *
+     * <p>查询当前租户下订阅了该事件类型的启用订阅，为每个订阅构造载荷
+     * （含 HMAC-SHA256 签名）并写入 outbox，由异步扫描器执行 HTTP POST。
+     *
+     * @param tenantId  租户 ID（可空，默认 "1"）
+     * @param eventType 事件类型（如 TASK_CREATED / TASK_COMPLETED）
+     * @param instanceId 流程实例 ID
+     * @param taskId    任务 ID（可空）
+     * @param payload   事件载荷
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void dispatchEvent(String tenantId, String eventType, String instanceId,

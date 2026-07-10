@@ -63,11 +63,29 @@ public class DefaultTemplateEngine implements TemplateEngine {
             "\\{\\{#each\\s+([\\w.]+)\\}\\}(.*?)\\{\\{/each\\}\\}",
             Pattern.DOTALL);
 
+    /**
+     * 渲染模板（无必填参数校验）
+     *
+     * @param template 模板内容
+     * @param params   参数映射（可为 null）
+     * @return 渲染后的字符串；模板为空时返回空串
+     */
     @Override
     public String render(String template, Map<String, Object> params) {
         return render(template, params, null);
     }
 
+    /**
+     * 渲染模板（支持必填参数校验）
+     *
+     * <p>渲染顺序：each 块 → if 块 → 变量替换（由内向外）。
+     *
+     * @param template    模板内容
+     * @param params      参数映射
+     * @param requiredKeys 必填参数 key 集合（可为 null 或空）
+     * @return 渲染后的字符串
+     * @throws BizException 必填参数缺失或为空时抛出
+     */
     @Override
     public String render(String template, Map<String, Object> params, Set<String> requiredKeys) {
         if (template == null || template.isEmpty()) {

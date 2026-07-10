@@ -28,11 +28,25 @@ public class VoteCountersignStrategy implements CountersignStrategy {
     /** 任务归档服务，票签达到阈值后完成 + 归档到历史表 */
     private final FlowTaskArchiveService archiveService;
 
+    /**
+     * 返回该策略支持的办理类型
+     *
+     * @return VOTE（票签）
+     */
     @Override
     public FlowPerformType supportedType() {
         return FlowPerformType.VOTE;
     }
 
+    /**
+     * 票签用户通过处理
+     *
+     * <p>递增已通过计数，完成当前用户任务并归档。
+     *
+     * @param task 运行时任务
+     * @param dto  任务操作 DTO（含审批意见）
+     * @throws BizException 乐观锁更新失败时抛出
+     */
     @Override
     public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
@@ -45,6 +59,14 @@ public class VoteCountersignStrategy implements CountersignStrategy {
         archiveService.completeAndArchive(task, dto.getComment());
     }
 
+    /**
+     * 判断票签是否应该推进到下一节点
+     *
+     * <p>通过阈值计算：默认过半数（50% + 1），可由 votePassRate 配置。
+     *
+     * @param task 运行时任务
+     * @return true 表示已通过人数达到阈值
+     */
     @Override
     public boolean shouldAdvance(FlowRunTaskDO task) {
         int finished = task.getApproveFinished() == null ? 0 : task.getApproveFinished();
@@ -62,6 +84,14 @@ public class VoteCountersignStrategy implements CountersignStrategy {
         return finished >= threshold;
     }
 
+    /**
+     * 票签达到阈值后的推进处理
+     *
+     * <p>跳过同节点剩余 PENDING 任务（状态置为 SKIPPED）。
+     *
+     * @param task 运行时任务
+     * @param dto  任务操作 DTO
+     */
     @Override
     public void onAdvance(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
         // 票签达到阈值后跳过同节点剩余 PENDING 任务

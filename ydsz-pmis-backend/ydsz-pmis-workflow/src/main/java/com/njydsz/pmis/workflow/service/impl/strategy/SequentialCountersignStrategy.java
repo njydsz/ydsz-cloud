@@ -34,11 +34,26 @@ public class SequentialCountersignStrategy implements CountersignStrategy {
     /** 任务归档服务，顺序会签全部通过后完成 + 归档到历史表 */
     private final FlowTaskArchiveService archiveService;
 
+    /**
+     * 返回该策略支持的办理类型
+     *
+     * @return SEQUENTIAL（顺序会签）
+     */
     @Override
     public FlowPerformType supportedType() {
         return FlowPerformType.SEQUENTIAL;
     }
 
+    /**
+     * 顺序会签用户通过处理
+     *
+     * <p>递增已通过计数，若未达到总人数则切换到下一个未处理用户，
+     * 若已全部通过则完成并归档任务。
+     *
+     * @param task 运行时任务
+     * @param dto  任务操作 DTO（含审批意见）
+     * @throws BizException 乐观锁更新失败时抛出
+     */
     @Override
     public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
@@ -64,6 +79,12 @@ public class SequentialCountersignStrategy implements CountersignStrategy {
         }
     }
 
+    /**
+     * 判断顺序会签是否应该推进到下一节点
+     *
+     * @param task 运行时任务
+     * @return true 表示已通过人数达到要求总数
+     */
     @Override
     public boolean shouldAdvance(FlowRunTaskDO task) {
         int finished = task.getApproveFinished() == null ? 0 : task.getApproveFinished();

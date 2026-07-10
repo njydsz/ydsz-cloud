@@ -493,7 +493,7 @@ public class RuleAttributionService {
             }
         }
         payload.put("factors", factorList);
-        return com.alibaba.fastjson2.JSON.toJSONString(payload);
+        return JSON.toJSONString(payload);
     }
 
     /**

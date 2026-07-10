@@ -132,7 +132,6 @@ class RuleStressTestServiceTest {
 
         @Test
         @DisplayName("正常场景：factsList 为 null 时使用空 Map")
-        @SuppressWarnings("unchecked")
         void shouldUseEmptyMapWhenFactsListNull() {
             when(ruleAdminService.dryRun(anyString(), any()))
                     .thenReturn(List.of(RuleResult.notTriggered("R1")));

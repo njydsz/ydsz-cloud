@@ -166,6 +166,7 @@ class ReceiptServiceImplTest {
 
     @Test
     @DisplayName("正常场景：按 logId 查询回执列表")
+    @SuppressWarnings("unchecked")
     void 按logId查询回执列表() {
         MsgReceiptDO r1 = new MsgReceiptDO();
         r1.setLogId("log-001");

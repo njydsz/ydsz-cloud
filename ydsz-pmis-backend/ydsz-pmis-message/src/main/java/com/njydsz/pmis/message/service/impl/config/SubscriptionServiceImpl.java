@@ -33,6 +33,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     /** 订阅关系 Mapper */
     private final MsgSubscriptionMapper msgSubscriptionMapper;
 
+    /**
+     * 新增或更新订阅关系
+     *
+     * <p>按 (userId, topicCode, channel) 唯一约束 upsert。新增时插入，已存在时更新状态。
+     *
+     * @param dto 订阅 upsert 参数
+     * @return 落库后的订阅记录
+     * @throws BizException 必填字段为空时抛出
+     */
     @Override
     public MsgSubscriptionDO upsert(SubscriptionUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId())
@@ -72,6 +81,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return existing;
     }
 
+    /**
+     * 查询指定用户的所有订阅记录
+     *
+     * @param userId 用户 ID
+     * @return 订阅记录列表（按创建时间倒序）；userId 为空时返回空列表
+     */
     @Override
     public List<MsgSubscriptionDO> listByUser(String userId) {
         if (!StringUtils.hasText(userId)) {
@@ -82,6 +97,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .orderByDesc(MsgSubscriptionDO::getCreatedAt));
     }
 
+    /**
+     * 查询指定主题下的活跃订阅列表
+     *
+     * @param topicCode 主题编码
+     * @param channel   消息通道（可空，空时查全部通道）
+     * @return 订阅状态为 SUBSCRIBED 的记录列表
+     */
     @Override
     public List<MsgSubscriptionDO> listByTopic(String topicCode, String channel) {
         if (!StringUtils.hasText(topicCode)) {
@@ -96,6 +118,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return msgSubscriptionMapper.selectList(w);
     }
 
+    /**
+     * 判断用户是否已订阅指定主题与通道
+     *
+     * @param userId    用户 ID
+     * @param topicCode 主题编码
+     * @param channel   消息通道（可空）
+     * @return true 表示已订阅（SUBSCRIBED 状态）
+     */
     @Override
     public boolean isSubscribed(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode)) {
@@ -109,6 +139,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return count != null && count > 0;
     }
 
+    /**
+     * 判断用户是否已退订指定主题与通道
+     *
+     * @param userId    用户 ID
+     * @param topicCode 主题编码
+     * @param channel   消息通道（可空）
+     * @return true 表示已退订（UNSUBSCRIBED 状态）
+     */
     @Override
     public boolean isBlocked(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode)) {
@@ -122,6 +160,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return count != null && count > 0;
     }
 
+    /**
+     * 执行退订操作
+     *
+     * <p>将指定用户+主题+通道的订阅状态更新为 UNSUBSCRIBED。
+     * 无记录时新建 UNSUBSCRIBED 记录（防止默认订阅语义下 isBlocked 返回 false）。
+     *
+     * @param userId    用户 ID
+     * @param topicCode 主题编码
+     * @param channel   消息通道
+     * @return 更新后的订阅记录
+     * @throws BizException 必填字段为空时抛出
+     */
     @Override
     public MsgSubscriptionDO unsubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {

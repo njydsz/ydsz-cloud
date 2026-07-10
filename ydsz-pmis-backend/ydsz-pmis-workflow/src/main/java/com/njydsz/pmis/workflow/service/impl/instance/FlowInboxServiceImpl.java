@@ -1,6 +1,5 @@
 package com.njydsz.pmis.workflow.service.impl.instance;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.api.BizErrorCode;

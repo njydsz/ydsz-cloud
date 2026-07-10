@@ -2,6 +2,7 @@ package com.njydsz.pmis.message.service.impl;
 
 import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.constant.MessageConstants;
+import com.njydsz.pmis.message.service.impl.core.DedupServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

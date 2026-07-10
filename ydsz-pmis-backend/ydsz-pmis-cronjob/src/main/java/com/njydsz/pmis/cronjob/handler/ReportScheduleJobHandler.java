@@ -84,8 +84,7 @@ public class ReportScheduleJobHandler implements JobHandler {
         // 尝试 JSON 解析 {"type":"DAILY"}
         if (trimmed.startsWith("{")) {
             try {
-                com.alibaba.fastjson2.JSONObject obj =
-                        com.alibaba.fastjson2.JSON.parseObject(trimmed);
+                JSONObject obj = JSON.parseObject(trimmed);
                 if (obj != null && obj.containsKey("type")) {
                     return obj.getString("type");
                 }
