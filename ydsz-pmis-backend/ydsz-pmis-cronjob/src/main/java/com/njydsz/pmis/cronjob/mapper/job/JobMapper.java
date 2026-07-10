@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.cronjob.entity.job.JobDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -103,25 +105,25 @@ public interface JobMapper extends BaseMapper<JobDO> {
     /**
      * P1-6: 重置连续失败计数为 0（任务执行成功时调用）。
      */
-    @org.apache.ibatis.annotations.Update("UPDATE pmis_job SET consecutive_fail_count = 0 WHERE id = #{id}")
+    @Update("UPDATE pmis_job SET consecutive_fail_count = 0 WHERE id = #{id}")
     int resetConsecutiveFail(@Param("id") String id);
 
     /**
      * P1-6: 递增连续失败计数（任务执行失败时调用）。
      */
-    @org.apache.ibatis.annotations.Update("UPDATE pmis_job SET consecutive_fail_count = consecutive_fail_count + 1 WHERE id = #{id}")
+    @Update("UPDATE pmis_job SET consecutive_fail_count = consecutive_fail_count + 1 WHERE id = #{id}")
     int incrementConsecutiveFail(@Param("id") String id);
 
     /**
      * P1-6: 标记任务为 AUTO_PAUSED（熔断自动暂停）。
      */
-    @org.apache.ibatis.annotations.Update("UPDATE pmis_job SET status = 'AUTO_PAUSED' WHERE id = #{id} AND status = 'NORMAL'")
+    @Update("UPDATE pmis_job SET status = 'AUTO_PAUSED' WHERE id = #{id} AND status = 'NORMAL'")
     int markAutoPaused(@Param("id") String id);
 
     /**
      * P1-6: 查询连续失败计数。
      */
-    @org.apache.ibatis.annotations.Select("SELECT consecutive_fail_count FROM pmis_job WHERE id = #{id}")
+    @Select("SELECT consecutive_fail_count FROM pmis_job WHERE id = #{id}")
     Integer selectConsecutiveFailCount(@Param("id") String id);
 
     /**
@@ -133,7 +135,7 @@ public interface JobMapper extends BaseMapper<JobDO> {
      * @param now 当前时间
      * @return 可自动恢复的任务列表
      */
-    @org.apache.ibatis.annotations.Select("SELECT id, job_name, job_group, job_key, handler, cron_expression, "
+    @Select("SELECT id, job_name, job_group, job_key, handler, cron_expression, "
             + "       schedule_type, fixed_rate_ms, fixed_delay_ms, params_json, status, remark, "
             + "       next_fire_time, last_fire_time, fire_count, success_count, fail_count, "
             + "       lock_ttl_ms, timeout_ms, misfire_policy, shard_total, timezone, tenant_id, "
@@ -155,7 +157,7 @@ public interface JobMapper extends BaseMapper<JobDO> {
      * @param id 任务 ID
      * @return 受影响行数
      */
-    @org.apache.ibatis.annotations.Update("UPDATE pmis_job SET status = 'NORMAL', "
+    @Update("UPDATE pmis_job SET status = 'NORMAL', "
             + "       consecutive_fail_count = 0, updated_at = CURRENT_TIMESTAMP "
             + "WHERE id = #{id} AND status = 'AUTO_PAUSED' AND deleted = 0")
     int resumeAutoPaused(@Param("id") String id);

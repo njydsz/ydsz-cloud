@@ -36,10 +36,15 @@ import java.util.UUID;
 @Slf4j
 public class RuleAdminService {
 
+    /** 规则引擎实例，用于规则注册/注销和 dry-run 仿真 */
     private final RuleEngine ruleEngine;
+    /** 表达式求值器，用于编译条件/严重度表达式并构建 ExpressionRule */
     private final ExpressionEvaluator evaluator;
+    /** 规则配置提供者（SPI），从数据库/配置中心加载规则定义 */
     private final RuleConfigProvider configProvider;
+    /** 规则版本仓库（SPI），保存规则变更版本以支持回滚；为 null 时不支持版本管理 */
     private final RuleVersionRepository versionRepository;
+    /** Spring 事件发布器，变更后发布 RuleConfigRefreshEvent 触发热加载 */
     private final ApplicationEventPublisher eventPublisher;
 
     /** 分布式广播器（可选，配置后支持多实例热加载一致性） */

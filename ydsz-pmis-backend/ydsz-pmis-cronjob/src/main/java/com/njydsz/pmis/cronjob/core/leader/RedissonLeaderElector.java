@@ -1,6 +1,7 @@
 package com.njydsz.pmis.cronjob.core.leader;
 
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +64,7 @@ public class RedissonLeaderElector implements LeaderElector {
     @Value("${server.port:0}")
     private int serverPort;
 
-    @jakarta.annotation.PostConstruct
+    @PostConstruct
     private void initNodeId() {
         try {
             String hostname = InetAddress.getLocalHost().getHostName();

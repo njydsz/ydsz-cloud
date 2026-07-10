@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.time.LocalDateTime;
 
 /**
  * Agent 版本管理实体（P0-4 落地）。
@@ -50,7 +51,7 @@ public class AgentVersionDO extends BaseDO {
 
     /** 发布时间 */
     @TableField("published_at")
-    private java.time.LocalDateTime publishedAt;
+    private LocalDateTime publishedAt;
 
     /** 是否为当前活跃版本（1=是, 0=否） */
     private Integer isActive;

@@ -39,7 +39,7 @@ public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAc
     /**
      * P2-6: 取平台下任一激活账号（用于读取平台级 cancelWebhookUrl）
      */
-    @org.apache.ibatis.annotations.Select(
+    @Select(
             "SELECT * FROM pmis_flow_third_party_account WHERE platform = #{platform} " +
             "AND status = 'ACTIVE' LIMIT 1")
     FlowThirdPartyAccountDO selectActiveByPlatform(@Param("platform") String platform);

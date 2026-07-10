@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.controller.common;
+package com.njydsz.pmis.project.controller.common;
 
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.project.dto.report.CockpitAlertSummaryVO;

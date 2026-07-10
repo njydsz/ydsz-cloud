@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.mapper.initiation;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.project.entity.initiation.InitiationDO;
+import com.njydsz.pmis.project.search.ProjectSearchVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -69,7 +70,7 @@ public interface InitiationMapper extends BaseMapper<InitiationDO> {
      * @param limit 分页大小
      * @return 匹配的项目搜索结果列表
      */
-    List<com.njydsz.pmis.project.search.ProjectSearchVO> searchByFullText(
+    List<ProjectSearchVO> searchByFullText(
             @Param("keyword") String keyword,
             @Param("tenantId") String tenantId,
             @Param("offset") int offset,

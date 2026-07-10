@@ -12,7 +12,7 @@ import com.njydsz.pmis.cronjob.mapper.dag.JobDagInstanceMapper;
 import com.njydsz.pmis.cronjob.mapper.dag.JobDagMapper;
 import com.njydsz.pmis.cronjob.mapper.dag.JobDagNodeInstanceMapper;
 import com.njydsz.pmis.cronjob.service.dag.JobDagInstanceService;
-import com.njydsz.pmis.cronjob.vo.dag.DagInstanceVisualizationVO;
+import com.njydsz.pmis.cronjob.vo.DagInstanceVisualizationVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

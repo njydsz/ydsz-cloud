@@ -99,7 +99,7 @@ public interface JobTaskMapper extends BaseMapper<JobTaskDO> {
             + "WHERE id = #{id} AND deleted = 0")
     int updateExecNodeId(@Param("id") String id,
                          @Param("execNodeId") String execNodeId,
-                         @Param("now") java.time.LocalDateTime now);
+                         @Param("now") LocalDateTime now);
 
     /**
      * P2-2: 批量清理过期 MapReduce 子任务记录（硬删除）。

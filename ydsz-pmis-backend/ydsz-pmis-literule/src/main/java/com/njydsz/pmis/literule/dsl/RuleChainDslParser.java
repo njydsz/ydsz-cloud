@@ -207,7 +207,7 @@ public class RuleChainDslParser {
     /**
      * 追加节点列表（逗号分隔）
      */
-    private static void appendNodes(StringBuilder sb, List<com.njydsz.pmis.literule.orchestrator.RuleNode> nodes) {
+    private static void appendNodes(StringBuilder sb, List<RuleNode> nodes) {
         if (nodes == null) return;
         for (int i = 0; i < nodes.size(); i++) {
             if (i > 0) sb.append(", ");

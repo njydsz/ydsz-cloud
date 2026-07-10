@@ -238,9 +238,7 @@ public class OutsourceRateServiceImpl implements OutsourceRateService {
         if (!StringUtils.hasText(dto.getRateName())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "外包级别名称不能为空");
         }
-        if (dto.getMonthlySalary() == null || dto.getMonthlySalary().signum() <= 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "月度薪资必须大于 0");
-        }
+        // monthlySalary 由 dailyRate × monthlyDays 服务端自动计算（见 create 方法），不在 create 入参校验
         if (dto.getDailyRate() == null || dto.getDailyRate().signum() <= 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "人天单价必须大于 0");
         }

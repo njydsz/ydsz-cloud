@@ -78,9 +78,9 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含 successCount / failedCount / instanceIds / failedItems
      */
     @PostMapping("/instance/batch-start")
-    @io.swagger.v3.oas.annotations.Operation(summary = "批量启动流程实例")
+    @Operation(summary = "批量启动流程实例")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
-    public Result<java.util.Map<String, Object>> batchStartInstances(
+    public Result<Map<String, Object>> batchStartInstances(
             @Valid @RequestBody List<FlowStartProcessDTO> dtos) {
         return Result.ok(instanceService.batchStartInstances(dtos));
     }

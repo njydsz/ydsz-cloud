@@ -117,7 +117,7 @@ public class FlowEventController {
      * @return 订阅列表（含 WAITING / COMPLETED / CANCELLED 状态）
      */
     @GetMapping("/instance/{instanceId}/event-subscriptions")
-    public Result<List<com.njydsz.pmis.workflow.entity.FlowEventSubscriptionDO>> listEventSubscriptions(
+    public Result<List<FlowEventSubscriptionDO>> listEventSubscriptions(
             @PathVariable String instanceId) {
         return Result.ok(eventSubscriptionService.listByInstance(instanceId));
     }

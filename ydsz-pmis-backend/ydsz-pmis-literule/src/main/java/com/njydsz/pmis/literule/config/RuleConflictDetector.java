@@ -53,6 +53,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class RuleConflictDetector {
 
+    /** 规则配置提供者（SPI），用于加载同租户同分类下的现有规则以检测冲突 */
     private final RuleConfigProvider configProvider;
 
     /** 简单比较表达式模式：var OP number（用于范围重叠分析） */

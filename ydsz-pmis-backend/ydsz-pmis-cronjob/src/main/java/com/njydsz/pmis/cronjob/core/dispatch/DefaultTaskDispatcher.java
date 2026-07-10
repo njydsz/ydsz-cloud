@@ -45,7 +45,10 @@ import org.springframework.scheduling.TriggerContext;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.scheduling.support.SimpleTriggerContext;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -55,6 +58,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -145,10 +159,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private int serverPort;
 
     /** P1-1: 重试调度线程池（延迟调度失败重试） */
-    private java.util.concurrent.ScheduledExecutorService retryScheduler;
+    private ScheduledExecutorService retryScheduler;
 
     /** P1-7: 任务执行线程池（隔离调度线程与执行线程，限制并发） */
-    private java.util.concurrent.ThreadPoolExecutor taskExecutorPool;
+    private ThreadPoolExecutor taskExecutorPool;
 
     /** P2-6: COVER 策略防递归标记（ThreadLocal），避免重新派发时锁仍被持有导致无限递归 */
     private static final ThreadLocal<Boolean> COVER_REDISPATCHING = ThreadLocal.withInitial(() -> false);
@@ -172,7 +186,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      *
      * @return 全局执行线程池；未初始化时返回 null
      */
-    public java.util.concurrent.ThreadPoolExecutor getTaskExecutorPool() {
+    public ThreadPoolExecutor getTaskExecutorPool() {
         return taskExecutorPool;
     }
 
@@ -251,13 +265,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         try {
             // P2-5: 线程池租户隔离（isolation-strategy=none 时返回 null，使用全局池）
             TenantAwareExecutorPool pool = tenantAwareExecutorPoolProvider.getIfAvailable();
-            java.util.concurrent.ExecutorService executor = (pool != null)
+            ExecutorService executor = (pool != null)
                     ? pool.getExecutor(job.getTenantId(), job.getJobGroup())
                     : null;
             if (executor == null) {
                 executor = taskExecutorPool;
             }
-            final java.util.concurrent.ExecutorService finalExecutor = executor;
+            final ExecutorService finalExecutor = executor;
             // P0-3: 包装为 PriorityRunnable 实现优先级调度
             PriorityRunnable priorityTask = new PriorityRunnable(job.getPriority(), () -> {
                 try {
@@ -268,14 +282,14 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 }
             });
             executor.execute(priorityTask);
-            if (finalExecutor instanceof java.util.concurrent.ThreadPoolExecutor tpe) {
+            if (finalExecutor instanceof ThreadPoolExecutor tpe) {
                 log.debug("[Dispatcher] 任务异步派发: key={} triggerType={} pool={} active={} queue={}",
                         job.getJobKey(), triggerType,
                         tpe.getPoolSize(),
                         tpe.getActiveCount(),
                         tpe.getQueue().size());
             }
-        } catch (java.util.concurrent.RejectedExecutionException e) {
+        } catch (RejectedExecutionException e) {
             // CallerRunsPolicy 已配置，理论上不会走到这里；防御性处理
             log.warn("[Dispatcher] 线程池拒绝提交, 降级同步执行: key={} reason={}",
                     job.getJobKey(), e.getMessage());
@@ -672,7 +686,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (selector == null) {
             return null;
         }
-        com.njydsz.pmis.cronjob.entity.JobNodeDO worker = selector.selectWorker();
+        JobNodeDO worker = selector.selectWorker();
         if (worker == null) {
             return null;
         }
@@ -1377,7 +1391,7 @@ try {
                     log.error("[Dispatcher] 重试执行异常: key={} retry={} reason={}",
                             job.getJobKey(), nextRetry, e.getMessage(), e);
                 }
-            }, delayMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+            }, delayMs, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             log.error("[Dispatcher] 调度重试失败: key={} retry={} reason={}",
                     job.getJobKey(), nextRetry, e.getMessage(), e);
@@ -1435,16 +1449,16 @@ try {
      *
      * <p>在 @PostConstruct 中调用，确保 serverPort 已通过 @Value 注入。
      */
-    @jakarta.annotation.PostConstruct
+    @PostConstruct
     private void initNodeId() {
         try {
-            String hostname = java.net.InetAddress.getLocalHost().getHostName();
+            String hostname = InetAddress.getLocalHost().getHostName();
             this.nodeId = hostname + ":" + serverPort;
         } catch (Exception e) {
             this.nodeId = INSTANCE_ID;
         }
         // P1-1: 初始化重试调度线程池
-        this.retryScheduler = java.util.concurrent.Executors.newScheduledThreadPool(
+        this.retryScheduler = Executors.newScheduledThreadPool(
                 2, r -> {
                     Thread t = new Thread(r, "pmis-job-retry");
                     t.setDaemon(true);
@@ -1456,32 +1470,32 @@ try {
         int corePoolSize = Math.max(1, execConfig.getMaxConcurrent());
         int maxPoolSize = Math.max(corePoolSize, execConfig.getMaxConcurrent());
         int queueCapacity = Math.max(0, execConfig.getQueueCapacity());
-        java.util.concurrent.BlockingQueue<Runnable> workQueue =
+        BlockingQueue<Runnable> workQueue =
                 queueCapacity == 0
-                        ? new java.util.concurrent.SynchronousQueue<>()
-                        : new java.util.concurrent.PriorityBlockingQueue<>();
-        java.util.concurrent.atomic.AtomicInteger threadCounter = new java.util.concurrent.atomic.AtomicInteger(0);
-        this.taskExecutorPool = new java.util.concurrent.ThreadPoolExecutor(
-                corePoolSize, maxPoolSize, 60L, java.util.concurrent.TimeUnit.SECONDS,
+                        ? new SynchronousQueue<>()
+                        : new PriorityBlockingQueue<>();
+        AtomicInteger threadCounter = new AtomicInteger(0);
+        this.taskExecutorPool = new ThreadPoolExecutor(
+                corePoolSize, maxPoolSize, 60L, TimeUnit.SECONDS,
                 workQueue,
                 r -> {
                     Thread t = new Thread(r, execConfig.getThreadNamePrefix() + threadCounter.incrementAndGet());
                     t.setDaemon(true);
                     return t;
                 },
-                new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+                new ThreadPoolExecutor.CallerRunsPolicy());
         log.info("[Dispatcher] 节点 ID 初始化完成: nodeId={} instanceId={} serverPort={}",
                 nodeId, INSTANCE_ID, serverPort);
         log.info("[Dispatcher] P1-7 执行线程池初始化: core={} max={} queue={} policy=CallerRunsPolicy",
                 corePoolSize, maxPoolSize, queueCapacity);
     }
 
-    @jakarta.annotation.PreDestroy
+    @PreDestroy
     private void shutdownRetryScheduler() {
         if (retryScheduler != null) {
             retryScheduler.shutdown();
             try {
-                if (!retryScheduler.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS)) {
+                if (!retryScheduler.awaitTermination(10, TimeUnit.SECONDS)) {
                     retryScheduler.shutdownNow();
                 }
             } catch (InterruptedException e) {
@@ -1495,7 +1509,7 @@ try {
             try {
                 if (!taskExecutorPool.awaitTermination(
                         cronjobProperties.getExecutor().getDrainTimeoutSeconds(),
-                        java.util.concurrent.TimeUnit.SECONDS)) {
+                        TimeUnit.SECONDS)) {
                     taskExecutorPool.shutdownNow();
                 }
             } catch (InterruptedException e) {

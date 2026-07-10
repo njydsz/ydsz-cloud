@@ -51,9 +51,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RuleHotReloader {
 
+    /** 规则引擎实例，热加载后将构建的 Rule 实例注册/注销到引擎 */
     private final RuleEngine ruleEngine;
+    /** 表达式求值器，用于构建表达式规则（ExpressionRule） */
     private final ExpressionEvaluator evaluator;
+    /** 规则配置提供者（SPI），从数据库/配置中心加载规则定义 */
     private final RuleConfigProvider configProvider;
+    /** LiteRule 配置属性，控制 dry-run、热加载开关等行为 */
     private final LiteRuleProperties properties;
 
     /** 决策表配置提供者（可选，1.4.0 起支持） */

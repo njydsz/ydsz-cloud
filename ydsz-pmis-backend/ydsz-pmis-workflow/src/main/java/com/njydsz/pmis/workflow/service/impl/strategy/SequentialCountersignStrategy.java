@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.entity.integration.FlowUserDO;
 import com.njydsz.pmis.workflow.enums.definition.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.definition.FlowPerformType;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
@@ -50,11 +51,11 @@ public class SequentialCountersignStrategy implements CountersignStrategy {
         }
         if (finished < required) {
             // 切换下一个未处理的人
-            List<com.njydsz.pmis.workflow.entity.FlowUserDO> unprocessed =
+            List<FlowUserDO> unprocessed =
                     userMapper.selectUnprocessedByInstanceAndNode(
                             task.getInstanceId(), task.getNodeCode());
             if (!unprocessed.isEmpty()) {
-                com.njydsz.pmis.workflow.entity.FlowUserDO next = unprocessed.get(0);
+                FlowUserDO next = unprocessed.get(0);
                 taskMapper.updateAssignee(task.getId(), next.getUserId(), next.getUserName(),
                         FlowAssigneeType.USER.name());
             }

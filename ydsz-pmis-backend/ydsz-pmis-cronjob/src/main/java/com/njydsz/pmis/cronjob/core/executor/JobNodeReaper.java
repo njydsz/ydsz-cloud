@@ -5,6 +5,7 @@ import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.log.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.job.JobNodeMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -80,7 +81,7 @@ public class JobNodeReaper {
 
     private String leaderRole;
 
-    @jakarta.annotation.PostConstruct
+    @PostConstruct
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();
         log.info("[JobNodeReaper] 初始化完成, role={} retentionMinutes={}",

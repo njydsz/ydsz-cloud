@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.dto.report;
 
+import com.njydsz.pmis.project.dto.common.AlertEventDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

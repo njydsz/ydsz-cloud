@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.service.instance;
 
+import com.njydsz.pmis.workflow.entity.instance.FlowInboxDO;
+
 import java.util.List;
 
 /**
@@ -52,7 +54,7 @@ public interface FlowInboxService {
      * @param limit      每页大小
      * @return 站内信列表
      */
-    List<com.njydsz.pmis.workflow.entity.instance.FlowInboxDO> listInbox(String receiverId, String tenantId,
+    List<FlowInboxDO> listInbox(String receiverId, String tenantId,
                                                                   boolean onlyUnread, int offset, int limit);
 
     /**
