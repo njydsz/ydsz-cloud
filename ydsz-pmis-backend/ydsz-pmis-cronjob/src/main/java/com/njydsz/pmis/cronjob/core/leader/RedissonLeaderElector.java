@@ -64,6 +64,12 @@ public class RedissonLeaderElector implements LeaderElector {
     @Value("${server.port:0}")
     private int serverPort;
 
+    /**
+     * 初始化当前节点 ID（hostname:port）
+     *
+     * <p>在 @PostConstruct 中调用，确保 serverPort 已通过 @Value 注入。
+     * 用于 getCurrentLeader 返回真实节点标识。
+     */
     @PostConstruct
     private void initNodeId() {
         try {
@@ -75,6 +81,16 @@ public class RedissonLeaderElector implements LeaderElector {
         log.info("[LeaderElector] 节点 ID 初始化: nodeId={}", nodeId);
     }
 
+    /**
+     * 尝试抢占指定角色的 Leader 锁
+     *
+     * <p>使用 Redisson tryLock(0, lease, MILLISECONDS) 非阻塞获取，
+     * 仅当当前无 Leader 时成功。成功后写入 holder 标识供 getCurrentLeader 读取。
+     *
+     * @param role Leader 角色（如 job-scheduler）
+     * @param lease 租约时长（到期后自动释放，需在到期前 renew）
+     * @return true 抢占成功；false 已有其他节点持有
+     */
     @Override
     public boolean tryAcquire(String role, Duration lease) {
         String key = LOCK_KEY_PREFIX + role;
@@ -97,6 +113,15 @@ public class RedissonLeaderElector implements LeaderElector {
         }
     }
 
+    /**
+     * 续期 Leader 租约
+     *
+     * <p>Redisson RLock 内部通过 scheduleExpirationRenewal 自动续期，
+     * 本方法仅续期 holder 标识 key，供 getCurrentLeader 读取真实节点。
+     *
+     * @param role Leader 角色
+     * @return true 续期成功；false 未持有锁或续期失败
+     */
     @Override
     public boolean renew(String role) {
         RLock lock = heldLocks.get(role);
@@ -123,12 +148,26 @@ public class RedissonLeaderElector implements LeaderElector {
         }
     }
 
+    /**
+     * 判断当前节点是否为指定角色的 Leader
+     *
+     * @param role Leader 角色
+     * @return true 当前节点持有该角色的 Leader 锁
+     */
     @Override
     public boolean isLeader(String role) {
         RLock lock = heldLocks.get(role);
         return lock != null && lock.isHeldByCurrentThread();
     }
 
+    /**
+     * 释放指定角色的 Leader 锁
+     *
+     * <p>优雅下线时调用，主动释放锁和 holder 标识，
+     * 让 Follower 节点能立即抢占（无需等待 lease 到期）。
+     *
+     * @param role Leader 角色
+     */
     @Override
     public void release(String role) {
         RLock lock = heldLocks.remove(role);
@@ -145,6 +184,15 @@ public class RedissonLeaderElector implements LeaderElector {
         }
     }
 
+    /**
+     * 获取指定角色的当前 Leader 节点标识
+     *
+     * <p>优先从 holder key 读取真实节点 ID（hostname:port）；
+     * holder key 不存在时检查锁是否存在，存在返回 "unknown"，不存在返回 null。
+     *
+     * @param role Leader 角色
+     * @return Leader 节点标识；无 Leader 时返回 null
+     */
     @Override
     public String getCurrentLeader(String role) {
         // P0-3: 从 holder key 读取真实 Leader 节点标识

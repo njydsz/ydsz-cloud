@@ -8,10 +8,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 多短信服务商策略服务实现。
@@ -175,7 +179,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
      * 解析权重配置。
      */
     private Map<String, Integer> parseWeights() {
-        Map<String, Integer> weights = new java.util.HashMap<>();
+        Map<String, Integer> weights = new HashMap<>();
         if (weightsConfig != null && !weightsConfig.isBlank()) {
             for (String pair : weightsConfig.split(",")) {
                 String[] kv = pair.split(":");

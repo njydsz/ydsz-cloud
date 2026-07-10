@@ -17,6 +17,7 @@ import com.njydsz.pmis.literule.spi.RuleVersionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -200,7 +201,7 @@ public class RuleAdminService {
             keywords = query.trim().toLowerCase().split("\\s+");
         }
         // 2. 过滤
-        List<RuleDefinition> filtered = new java.util.ArrayList<>();
+        List<RuleDefinition> filtered = new ArrayList<>();
         for (RuleDefinition def : all) {
             // 状态过滤
             if (status != null && !status.isBlank()) {

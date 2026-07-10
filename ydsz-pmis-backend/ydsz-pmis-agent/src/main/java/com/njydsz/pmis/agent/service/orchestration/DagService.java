@@ -21,9 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * DAG 编排服务（P3-2 落地）。
@@ -187,10 +190,10 @@ public class DagService {
             return ValidationResult.failure("DAG 节点列表为空");
         }
 
-        List<String> errors = new java.util.ArrayList<>();
+        List<String> errors = new ArrayList<>();
 
         // 1. 节点名唯一性检查
-        java.util.Set<String> nodeNames = new java.util.HashSet<>();
+        Set<String> nodeNames = new HashSet<>();
         for (var node : dag.getNodes()) {
             if (node.getName() == null || node.getName().isBlank()) {
                 errors.add("存在未命名的节点");

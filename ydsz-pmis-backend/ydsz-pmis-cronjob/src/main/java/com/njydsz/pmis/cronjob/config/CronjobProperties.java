@@ -518,7 +518,7 @@ public class CronjobProperties {
     @Data
     public static class Clusters {
         /** 集群端点配置: clusterName -> baseUrl */
-        private Map<String, String> endpoints = new java.util.HashMap<>();
+        private Map<String, String> endpoints = new HashMap<>();
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.literule.ai;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
@@ -129,7 +131,7 @@ public class RuleLLMService {
         // 提取 JSON 片段（有些 LLM 会包裹 ```json ... ```）
         String json = extractJsonBlock(raw);
         try {
-            com.alibaba.fastjson2.JSONObject obj = com.alibaba.fastjson2.JSON.parseObject(json);
+            JSONObject obj = JSON.parseObject(json);
             if (obj == null) {
                 return builder.build();
             }
@@ -185,7 +187,7 @@ public class RuleLLMService {
         m.put("severityExpression", rule.getSeverityExpression());
         m.put("defaultSeverity", rule.getDefaultSeverity() == null ? null : rule.getDefaultSeverity().name());
         m.put("description", rule.getDescription());
-        return com.alibaba.fastjson2.JSON.toJSONString(m);
+        return JSON.toJSONString(m);
     }
 
     private String extractJsonBlock(String raw) {

@@ -147,7 +147,7 @@ public class DagDefinitionCodec {
         }
 
         // 校验边的 from/to 必须存在于节点列表
-        java.util.Set<String> nodeKeys = new java.util.HashSet<>();
+        Set<String> nodeKeys = new HashSet<>();
         for (DagNode node : nodes) {
             nodeKeys.add(node.jobKey());
         }

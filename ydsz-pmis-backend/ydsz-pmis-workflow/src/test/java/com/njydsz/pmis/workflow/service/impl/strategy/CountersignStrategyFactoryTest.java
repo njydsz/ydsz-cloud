@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -14,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * CountersignStrategyFactory 单元测试
@@ -45,12 +48,12 @@ class CountersignStrategyFactoryTest {
     @BeforeEach
     void setUp() {
         // Stub supportedType 行为
-        org.mockito.Mockito.when(orStrategy.supportedType()).thenReturn(FlowPerformType.OR);
-        org.mockito.Mockito.when(parallelStrategy.supportedType()).thenReturn(FlowPerformType.PARALLEL);
-        org.mockito.Mockito.when(sequentialStrategy.supportedType()).thenReturn(FlowPerformType.SEQUENTIAL);
-        org.mockito.Mockito.when(voteStrategy.supportedType()).thenReturn(FlowPerformType.VOTE);
-        org.mockito.Mockito.when(weightedVoteStrategy.supportedType()).thenReturn(FlowPerformType.WEIGHTED_VOTE);
-        org.mockito.Mockito.when(foreachStrategy.supportedType()).thenReturn(FlowPerformType.FOREACH_PARALLEL);
+        Mockito.when(orStrategy.supportedType()).thenReturn(FlowPerformType.OR);
+        Mockito.when(parallelStrategy.supportedType()).thenReturn(FlowPerformType.PARALLEL);
+        Mockito.when(sequentialStrategy.supportedType()).thenReturn(FlowPerformType.SEQUENTIAL);
+        Mockito.when(voteStrategy.supportedType()).thenReturn(FlowPerformType.VOTE);
+        Mockito.when(weightedVoteStrategy.supportedType()).thenReturn(FlowPerformType.WEIGHTED_VOTE);
+        Mockito.when(foreachStrategy.supportedType()).thenReturn(FlowPerformType.FOREACH_PARALLEL);
 
         factory = new CountersignStrategyFactory(List.of(
                 orStrategy, parallelStrategy, sequentialStrategy,
@@ -128,9 +131,9 @@ class CountersignStrategyFactoryTest {
     @Test
     @DisplayName("重复注册时新策略覆盖旧策略并发出告警")
     void registry_DuplicateOverwrite() {
-        org.mockito.Mockito.when(orStrategy.supportedType()).thenReturn(FlowPerformType.OR);
-        CountersignStrategy dupOrStrategy = org.mockito.Mockito.mock(OrCountersignStrategy.class);
-        org.mockito.Mockito.when(dupOrStrategy.supportedType()).thenReturn(FlowPerformType.OR);
+        Mockito.when(orStrategy.supportedType()).thenReturn(FlowPerformType.OR);
+        CountersignStrategy dupOrStrategy = Mockito.mock(OrCountersignStrategy.class);
+        Mockito.when(dupOrStrategy.supportedType()).thenReturn(FlowPerformType.OR);
 
         CountersignStrategyFactory dupFactory = new CountersignStrategyFactory(List.of(orStrategy, dupOrStrategy));
         dupFactory.init();

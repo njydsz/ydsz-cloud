@@ -176,7 +176,7 @@ public class GrpcTaskClient extends RemoteTaskClient {
 
             if (response.getCode() == 0) {
                 // 构造与 HTTP 兼容的结果 JSON
-                var result = new com.alibaba.fastjson2.JSONObject();
+                var result = new JSONObject();
                 result.put("success", response.getSuccess());
                 result.put("result", response.getResultJson());
                 result.put("errorMessage", response.getErrorMessage());

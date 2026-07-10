@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -650,7 +651,7 @@ public class AdaptiveThresholdService {
         double currentThreshold = ti.getThreshold();
 
         // 去重后的候选阈值
-        List<Double> candidates = new ArrayList<>(new java.util.LinkedHashSet<>(values));
+        List<Double> candidates = new ArrayList<>(new LinkedHashSet<>(values));
         Collections.sort(candidates);
         if (candidates.isEmpty()) {
             return stats.getP95();

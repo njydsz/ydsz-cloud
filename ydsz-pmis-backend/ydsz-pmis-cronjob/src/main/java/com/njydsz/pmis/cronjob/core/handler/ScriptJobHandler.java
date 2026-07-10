@@ -1,6 +1,7 @@
 package com.njydsz.pmis.cronjob.core.handler;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.common.job.JobLogger;
@@ -195,7 +196,7 @@ public class ScriptJobHandler implements JobHandler {
             scriptContent = Files.readString(Path.of(path), StandardCharsets.UTF_8);
         }
         // 构建环境变量（从系统环境变量中选取白名单项）
-        java.util.Map<String, String> envVars = new java.util.HashMap<>();
+        Map<String, String> envVars = new HashMap<>();
         envVars.put("PATH", System.getenv().getOrDefault("PATH", "/usr/bin:/bin"));
         envVars.put("HOME", System.getenv().getOrDefault("HOME", "/tmp"));
         // 将参数作为环境变量传递（ARGS_0, ARGS_1, ...）
@@ -416,7 +417,7 @@ public class ScriptJobHandler implements JobHandler {
     /**
      * 解析参数列表。
      */
-    private List<String> parseArgs(com.alibaba.fastjson2.JSONArray argsArray) {
+    private List<String> parseArgs(JSONArray argsArray) {
         if (argsArray == null || argsArray.isEmpty()) {
             return new ArrayList<>();
         }

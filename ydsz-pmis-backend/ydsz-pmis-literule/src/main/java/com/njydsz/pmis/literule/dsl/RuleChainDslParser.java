@@ -4,6 +4,7 @@ import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.orchestrator.RuleChain;
+import com.njydsz.pmis.literule.orchestrator.RuleNode;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -122,7 +123,7 @@ public class RuleChainDslParser {
             }
             case ELIF -> {
                 sb.append("ELIF(");
-                List<Map.Entry<String, com.njydsz.pmis.literule.orchestrator.RuleNode>> branches = chain.getElifBranches();
+                List<Map.Entry<String, RuleNode>> branches = chain.getElifBranches();
                 if (branches != null) {
                     for (int i = 0; i < branches.size(); i++) {
                         if (i > 0) sb.append(", ");
@@ -140,7 +141,7 @@ public class RuleChainDslParser {
             case SWITCH -> {
                 sb.append("SWITCH(\"").append(chain.getBranchKey()).append("\"");
                 if (chain.getBranchMap() != null) {
-                    for (Map.Entry<String, com.njydsz.pmis.literule.orchestrator.RuleNode> entry : chain.getBranchMap().entrySet()) {
+                    for (Map.Entry<String, RuleNode> entry : chain.getBranchMap().entrySet()) {
                         sb.append(", ").append(entry.getKey()).append(": ");
                         appendNode(sb, entry.getValue());
                     }
@@ -218,7 +219,7 @@ public class RuleChainDslParser {
     /**
      * 追加单个节点
      */
-    private static void appendNode(StringBuilder sb, com.njydsz.pmis.literule.orchestrator.RuleNode node) {
+    private static void appendNode(StringBuilder sb, RuleNode node) {
         if (node == null) return;
         switch (node.getNodeType()) {
             case SINGLE -> {

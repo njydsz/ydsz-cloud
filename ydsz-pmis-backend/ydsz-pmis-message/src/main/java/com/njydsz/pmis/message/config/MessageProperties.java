@@ -121,21 +121,21 @@ public class MessageProperties {
         /** 成本追踪开关（关闭后 cost 始终为 0） */
         private boolean enabled = true;
         /** 通道单条成本（元），key 为通道大写名 */
-        private Map<String, java.math.BigDecimal> unitPrices = defaultUnitPrices();
+        private Map<String, BigDecimal> unitPrices = defaultUnitPrices();
 
-        private static Map<String, java.math.BigDecimal> defaultUnitPrices() {
+        private static Map<String, BigDecimal> defaultUnitPrices() {
             // 使用 LinkedHashMap 保持插入顺序,使成本看板输出顺序稳定且可测试
-            Map<String, java.math.BigDecimal> m = new java.util.LinkedHashMap<>();
-            m.put("SMS", new java.math.BigDecimal("0.0450"));
-            m.put("EMAIL", new java.math.BigDecimal("0.0010"));
-            m.put("PUSH", new java.math.BigDecimal("0.0001"));
-            m.put("INAPP", java.math.BigDecimal.ZERO);
-            m.put("WEBHOOK", java.math.BigDecimal.ZERO);
-            m.put("DINGTALK", java.math.BigDecimal.ZERO);
-            m.put("WECOM", java.math.BigDecimal.ZERO);
-            m.put("FEISHU", java.math.BigDecimal.ZERO);
-            m.put("WX_MINI", java.math.BigDecimal.ZERO);
-            m.put("ALIPAY_MINI", java.math.BigDecimal.ZERO);
+            Map<String, BigDecimal> m = new LinkedHashMap<>();
+            m.put("SMS", new BigDecimal("0.0450"));
+            m.put("EMAIL", new BigDecimal("0.0010"));
+            m.put("PUSH", new BigDecimal("0.0001"));
+            m.put("INAPP", BigDecimal.ZERO);
+            m.put("WEBHOOK", BigDecimal.ZERO);
+            m.put("DINGTALK", BigDecimal.ZERO);
+            m.put("WECOM", BigDecimal.ZERO);
+            m.put("FEISHU", BigDecimal.ZERO);
+            m.put("WX_MINI", BigDecimal.ZERO);
+            m.put("ALIPAY_MINI", BigDecimal.ZERO);
             return m;
         }
     }

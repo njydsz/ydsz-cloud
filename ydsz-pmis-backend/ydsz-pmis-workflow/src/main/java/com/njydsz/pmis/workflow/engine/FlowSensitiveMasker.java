@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -109,7 +110,7 @@ public class FlowSensitiveMasker {
             return data;
         }
         // 浅拷贝，避免修改原始 Map
-        java.util.Map<String, Object> copy = new java.util.LinkedHashMap<>(data);
+        Map<String, Object> copy = new LinkedHashMap<>(data);
         for (String key : fieldKeys) {
             if (key == null || !copy.containsKey(key)) {
                 continue;

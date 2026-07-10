@@ -1,10 +1,14 @@
 package com.njydsz.pmis.cronjob.core.scheduler;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -103,12 +107,12 @@ public class CalendarScheduleFilter {
             return Set.of();
         }
         try {
-            com.alibaba.fastjson2.JSONObject params = com.alibaba.fastjson2.JSON.parseObject(paramsJson);
-            com.alibaba.fastjson2.JSONArray holidaysArr = params.getJSONArray("holidays");
+            JSONObject params = JSON.parseObject(paramsJson);
+            JSONArray holidaysArr = params.getJSONArray("holidays");
             if (holidaysArr == null || holidaysArr.isEmpty()) {
                 return Set.of();
             }
-            Set<LocalDate> holidays = new java.util.HashSet<>();
+            Set<LocalDate> holidays = new HashSet<>();
             for (int i = 0; i < holidaysArr.size(); i++) {
                 try {
                     holidays.add(LocalDate.parse(holidaysArr.getString(i)));
@@ -134,7 +138,7 @@ public class CalendarScheduleFilter {
             return DEFAULT_CALENDAR_TYPE;
         }
         try {
-            com.alibaba.fastjson2.JSONObject params = com.alibaba.fastjson2.JSON.parseObject(paramsJson);
+            JSONObject params = JSON.parseObject(paramsJson);
             String type = params.getString("calendarType");
             return type != null ? type.toUpperCase() : DEFAULT_CALENDAR_TYPE;
         } catch (Exception e) {

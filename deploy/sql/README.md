@@ -52,12 +52,51 @@ deploy/sql/
 
 ```text
 deploy/sql/
-├── V1.0.0.sql   # 唯一 SQL 文件,包含:
-│                #   - 全部 pmis_* 表 / 索引 / 约束 / 视图 / 函数
-│                #   - 全部种子数据(管理员账号、字典、流程定义等)
-│                #   - 全部历史 schema 调整(已合并到此文件内)
-└── README.md    # 本文件
+├── V1.0.0.sql          # 唯一汇总 SQL 文件(完整 DDL + DML,新环境初始化用)
+├── README.md            # 本文件
+└── modules/             # 按后端子模块拆分的独立 SQL(便于单独初始化/审查)
+    ├── V1.0.0_all.sql       # 模块引用脚本(\i 依次引用各子模块,等价于 V1.0.0.sql)
+    ├── V1.0.0_common.sql    # 公共基础 (字典/扩展/事务/触发器/字段统一)
+    ├── V1.0.0_system.sql    # 系统管理 (配置/文件/审计/导出/索引调优)
+    ├── V1.0.0_userinfo.sql  # 用户信息 (认证/用户/组织/权限/资源/考勤)
+    ├── V1.0.0_project.sql   # 项目管理 (商机/立项/合同/执行/财务/结项/售后/报表)
+    ├── V1.0.0_cronjob.sql   # 定时任务 (作业/DAG/调度/告警/日志/配额)
+    ├── V1.0.0_message.sql   # 消息中心 (通知/模板/回执/批量/灰度/偏好)
+    ├── V1.0.0_workflow.sql  # 工作流引擎 (定义/实例/委派/通知/DMN/集成/AI辅助)
+    ├── V1.0.0_agent.sql     # AI Agent (Agent/编排/知识库/工具/人机协同)
+    └── V1.0.0_literule.sql  # 规则引擎 (规则/决策表/评分卡/AB测试/变量)
 ```
+
+### 3.1 汇总文件 vs 模块文件
+
+| 场景 | 使用文件 | 说明 |
+|---|---|---|
+| **新环境完整初始化** | `V1.0.0.sql` | 一把梭,所有 DDL + DML 都在里面 |
+| **新环境模块化初始化** | `modules/V1.0.0_all.sql` | 通过 `\i` 依次引用各子模块,等价于 V1.0.0.sql |
+| **单独初始化某模块** | `modules/V1.0.0_{module}.sql` | 仅初始化对应模块的表(需先跑 common 模块) |
+| **Schema 变更** | 直接编辑 `V1.0.0.sql` | **唯一事实源**,模块文件由拆分生成 |
+
+### 3.2 模块与表的数量分布
+
+| 模块 | 表数量 | 主要表前缀 |
+|---|---|---|
+| common | 4 | `pmis_dict_*`, `undo_log` |
+| system | 8 | `pmis_config`, `pmis_operation_log`, `pmis_file` |
+| userinfo | 19 | `pmis_role`, `pmis_permission`, `pmis_employee`, `pmis_user_*` |
+| project | 37 | `pmis_project_*`, `pmis_execution_*`, `pmis_cost_*`, `pmis_finance_*` |
+| cronjob | 22 | `pmis_job_*`, `pmis_tenant_quota` |
+| message | 24 | `pmis_msg_*` (含 7 张月度分区表) |
+| workflow | 34 | `pmis_flow_*` |
+| agent | 12 | `pmis_agent_*` |
+| literule | 17 | `pmis_rule_*` |
+| **合计** | **177** | |
+
+### 3.3 模块拆分规则
+
+- 拆分依据:数据库表名前缀与后端子模块的对应关系
+- `V1.0.0.sql` 为**唯一事实源**,`modules/` 下的文件由其拆分生成
+- 任何 schema 变更**直接编辑 `V1.0.0.sql`**,然后重新运行拆分脚本同步模块文件
+- 模块文件中不包含 `BEGIN`/`COMMIT`(事务包装在汇总文件或 `V1.0.0_all.sql` 中)
 
 文件顶部使用清晰的 `=====` 注释块对每张表/视图进行分段,便于 PR Review 与 diff 阅读。
 
@@ -112,6 +151,11 @@ PGPASSWORD=<your-postgres-password> createdb -h 127.0.0.1 -U postgres ydsz-pmis
 PGPASSWORD=<your-postgres-password> psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
   -v ON_ERROR_STOP=1 \
   -f deploy/sql/V1.0.0.sql
+
+#    或者使用模块化引用脚本(等价于上面的单文件,按模块顺序执行):
+# PGPASSWORD=<your-postgres-password> psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
+#   -v ON_ERROR_STOP=1 \
+#   -f deploy/sql/modules/V1.0.0_all.sql
 
 # 3. 导入 Nacos 配置
 ./deploy/ubuntu/scripts/import-nacos-config.sh pmis dev

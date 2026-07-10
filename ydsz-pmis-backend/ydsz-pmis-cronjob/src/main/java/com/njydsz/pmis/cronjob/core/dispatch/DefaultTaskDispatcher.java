@@ -190,6 +190,25 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         return taskExecutorPool;
     }
 
+    /**
+     * 派发任务执行
+     *
+     * <p>根据任务类型和配置选择执行路径：
+     * <ol>
+     *   <li>跨集群任务：通过 CrossClusterDispatcher 派发到目标集群</li>
+     *   <li>分片任务：通过 ShardingStrategy 分配到多个节点执行</li>
+     *   <li>调度器-执行器分离模式：通过 WorkerNodeSelector 选择 Worker 节点远程派发</li>
+     *   <li>默认：本地执行（MANUAL 同步，其他异步）</li>
+     * </ol>
+     *
+     * <p>配额检查：非 MANUAL 触发时检查租户并发配额和日执行配额，超限拒绝派发。
+     * 分布式锁：非 MANUAL/CONCURRENT 触发时抢占任务级锁，防止重复执行。
+     *
+     * @param job          任务定义
+     * @param executorNode 指定执行节点（当前版本忽略，始终本地执行）
+     * @param triggerType  触发类型（CRON/MANUAL/RETRY/DEPENDENT/MISFIRED/API/FAILOVER/EVENT）
+     * @return 执行日志 ID；锁被持有或配额超限时返回 null
+     */
     @Override
     public String dispatch(JobDO job, String executorNode, String triggerType) {
         // P3-12: 跨集群调度 — 任务指定了目标集群时，通过 CrossClusterDispatcher 派发
@@ -999,7 +1018,7 @@ try {
             return;
         }
         try {
-            java.util.Map<String, Object> payload = new java.util.HashMap<>();
+            Map<String, Object> payload = new HashMap<>();
             payload.put("jobKey", job.getJobKey());
             payload.put("jobName", job.getJobName());
             payload.put("logId", log0.getId());

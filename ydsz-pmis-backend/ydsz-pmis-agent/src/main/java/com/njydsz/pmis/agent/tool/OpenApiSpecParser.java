@@ -2,6 +2,7 @@ package com.njydsz.pmis.agent.tool;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.njydsz.pmis.agent.dto.tool.ToolRegisterDTO;
 import lombok.extern.slf4j.Slf4j;
 
@@ -126,8 +127,7 @@ public class OpenApiSpecParser {
         }
         // 尝试 YAML 解析（使用 SnakeYAML + Jackson）
         try {
-            com.fasterxml.jackson.dataformat.yaml.YAMLMapper yamlMapper =
-                    new com.fasterxml.jackson.dataformat.yaml.YAMLMapper();
+            YAMLMapper yamlMapper = new YAMLMapper();
             return yamlMapper.readTree(content);
         } catch (NoClassDefFoundError e) {
             throw new IllegalStateException("YAML 格式需要 jackson-dataformat-yaml 依赖", e);

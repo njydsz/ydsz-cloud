@@ -85,7 +85,7 @@ class WeightedVoteCountersignStrategyTest {
 
         strategy.onUserPassed(task, dto);
 
-        verify(userMapper, org.mockito.Mockito.never()).markProcessed(anyString(), anyString(), anyString(), any());
+        verify(userMapper, never()).markProcessed(anyString(), anyString(), anyString(), any());
     }
 
     @Test

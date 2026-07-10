@@ -487,10 +487,10 @@ public class MessageServiceImpl implements MessageService {
      */
     private List<String> resolveFallbackChannels(MsgRouteRuleDO matchedRule, String currentChannel) {
         if (matchedRule == null) {
-            return java.util.Collections.emptyList();
+            return Collections.emptyList();
         }
         String chain = matchedRule.getFallbackChain();
-        java.util.List<String> result = new java.util.ArrayList<>();
+        List<String> result = new ArrayList<>();
         if (StringUtils.hasText(chain)) {
             for (String ch : chain.split(",")) {
                 String trimmed = ch == null ? "" : ch.trim();
@@ -524,7 +524,7 @@ public class MessageServiceImpl implements MessageService {
     private MessageResult tryFallbackChain(MsgLogDO logDO, List<String> fallbackChannels, long prevCost) {
         String origChannel = logDO.getChannel();
         long accumulatedCost = prevCost;
-        java.util.List<String> tried = new java.util.ArrayList<>();
+        List<String> tried = new ArrayList<>();
         tried.add(origChannel);
         for (String fallbackChannel : fallbackChannels) {
             long start = System.currentTimeMillis();

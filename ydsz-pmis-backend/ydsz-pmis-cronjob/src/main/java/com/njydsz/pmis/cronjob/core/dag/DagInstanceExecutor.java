@@ -410,7 +410,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
                 dagInstanceId, node.jobKey(), branches);
 
         // 使用 CompletableFuture 并行派发所有下游分支
-        List<CompletableFuture<Void>> futures = new java.util.ArrayList<>();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (DagEdge edge : outgoing) {
             DagNode branchNode = definition.findNode(edge.to());
             if (branchNode == null) {

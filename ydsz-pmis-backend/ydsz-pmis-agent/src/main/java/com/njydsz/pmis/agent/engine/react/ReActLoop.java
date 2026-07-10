@@ -611,7 +611,7 @@ public class ReActLoop {
             StringBuilder combined = new StringBuilder();
             for (int i = 0; i < futures.size(); i++) {
                 try {
-                    String result = futures.get(i).get(30, java.util.concurrent.TimeUnit.SECONDS);
+                    String result = futures.get(i).get(30, TimeUnit.SECONDS);
                     combined.append("[工具 ").append(i + 1).append(" 结果]\n").append(result).append("\n\n");
                 } catch (Exception e) {
                     combined.append("[工具 ").append(i + 1).append(" 超时或异常: ")

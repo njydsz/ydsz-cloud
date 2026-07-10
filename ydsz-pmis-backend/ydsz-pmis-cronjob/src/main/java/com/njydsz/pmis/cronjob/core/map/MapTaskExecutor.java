@@ -1,6 +1,7 @@
 package com.njydsz.pmis.cronjob.core.map;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.job.JobLoggerHolder;
 import com.njydsz.pmis.common.job.MapContext;
 import com.njydsz.pmis.common.job.MapProcessor;
@@ -362,7 +363,7 @@ public class MapTaskExecutor {
                 result = ProcessResult.failed("远程派发失败: 响应为空");
             } else {
                 // ProcessResult 使用 final 字段，手动解析避免反射问题
-                com.alibaba.fastjson2.JSONObject jsonObj = JSON.parseObject(responseJson);
+                JSONObject jsonObj = JSON.parseObject(responseJson);
                 boolean success = jsonObj.getBooleanValue("success");
                 String res = jsonObj.getString("result");
                 String errMsg = jsonObj.getString("errorMessage");

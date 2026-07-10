@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.controller.ruleengine;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.literule.cep.CEPEngine;
 import com.njydsz.pmis.literule.cep.CEPEvent;
@@ -62,7 +63,7 @@ public class CEPController {
     private final List<CEPHit> recentHits = new ArrayList<>();
 
     /** ObjectMapper 用于 CEP 模式反序列化（P2-7 测试模式端点使用） */
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 启动时注册 CEP 命中监听器

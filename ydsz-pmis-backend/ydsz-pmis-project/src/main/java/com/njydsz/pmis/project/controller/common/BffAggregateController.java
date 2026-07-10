@@ -49,6 +49,22 @@ public class BffAggregateController {
     /** 报表服务 */
     private final ReportService reportService;
 
+    /**
+     * 项目详情聚合接口
+     *
+     * <p>一次请求返回项目全维度数据，减少前端网络往返：
+     * <ul>
+     *   <li>立项信息（全生命周期台账）</li>
+     *   <li>EVM 摘要（利润表含 CPI/SPI 等挣值指标）</li>
+     *   <li>合同 / 回款台账列表</li>
+     *   <li>WBS 概览（成本归集明细）</li>
+     * </ul>
+     *
+     * <p>各维度独立 try-catch，单维度异常不影响其他维度返回（降级为 error section）。
+     *
+     * @param initiationId 立项 ID（必填）
+     * @return 聚合视图对象（各维度独立填充，异常维度返回 fail section）
+     */
     @GetMapping("/project-detail/{initiationId}")
     @RateLimit(key = "bff", qps = 20, windowSeconds = 60)
     @Operation(summary = "项目详情聚合", description = "一次返回立项+合同+WBS概览+EVM摘要")
@@ -87,6 +103,21 @@ public class BffAggregateController {
         return result;
     }
 
+    /**
+     * 首页仪表盘聚合接口
+     *
+     * <p>一次请求返回首页所需的全部数据：
+     * <ul>
+     *   <li>KPI 核心指标（驾驶舱总览）</li>
+     *   <li>告警事件摘要（严重度计数 + 顶部事件）</li>
+     *   <li>待办计数（当前模块返回空列表占位）</li>
+     * </ul>
+     *
+     * <p>各维度独立 try-catch，单维度异常不影响其他维度返回。
+     *
+     * @param userId 用户 ID（从请求头 X-User-Id 获取，可选）
+     * @return 聚合数据 Map（key: kpi/alerts/todos）
+     */
     @GetMapping("/dashboard-summary")
     @RateLimit(key = "bff", qps = 20, windowSeconds = 60)
     @Operation(summary = "首页仪表盘聚合", description = "一次返回KPI+图表+待办数据")

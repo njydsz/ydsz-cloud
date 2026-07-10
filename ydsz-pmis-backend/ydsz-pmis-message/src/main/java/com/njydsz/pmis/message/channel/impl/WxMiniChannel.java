@@ -138,7 +138,7 @@ public class WxMiniChannel implements MessageChannel {
                 String token = (String) body.get("access_token");
                 int expiresIn = body.containsKey("expires_in") ? (Integer) body.get("expires_in") : 7200;
                 redisTemplate.opsForValue().set(ACCESS_TOKEN_CACHE_KEY, token,
-                        java.time.Duration.ofSeconds(expiresIn - 300));
+                        Duration.ofSeconds(expiresIn - 300));
                 return token;
             }
             log.error("[WxMiniChannel] 获取 access_token 失败: {}",
@@ -158,7 +158,7 @@ public class WxMiniChannel implements MessageChannel {
         if (request.getParams() == null) {
             return Map.of();
         }
-        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        Map<String, Object> result = new HashMap<>();
         for (Map.Entry<String, Object> entry : request.getParams().entrySet()) {
             result.put(entry.getKey(), Map.of("value",
                     entry.getValue() == null ? "" : String.valueOf(entry.getValue())));

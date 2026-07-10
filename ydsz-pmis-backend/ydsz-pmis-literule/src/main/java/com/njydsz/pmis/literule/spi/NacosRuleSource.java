@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.function.Consumer;
 
 /**
@@ -110,11 +111,11 @@ public class NacosRuleSource implements RuleSource {
             // 触发 ConfigService 类加载（NacosFactory.createConfigService 内部会引用）
             Class.forName("com.alibaba.nacos.api.config.ConfigService");
             // properties.put("serverAddr", serverAddr)
-            java.util.Properties properties = new java.util.Properties();
+            Properties properties = new Properties();
             properties.put("serverAddr", serverAddr);
             // NacosFactory.createConfigService(properties)
             configService = factoryClass
-                    .getMethod("createConfigService", java.util.Properties.class)
+                    .getMethod("createConfigService", Properties.class)
                     .invoke(null, properties);
 
             // 注册配置变更监听器：configService.addListener(dataId, group, listener)

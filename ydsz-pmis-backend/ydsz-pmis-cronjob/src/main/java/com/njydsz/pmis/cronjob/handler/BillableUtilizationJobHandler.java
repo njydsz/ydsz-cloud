@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.handler;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.ExecutionClient;
 import com.njydsz.pmis.common.job.JobHandler;
@@ -55,8 +57,7 @@ public class BillableUtilizationJobHandler implements JobHandler {
 
         if (paramsJson != null && !paramsJson.isBlank()) {
             try {
-                com.alibaba.fastjson2.JSONObject obj =
-                        com.alibaba.fastjson2.JSON.parseObject(paramsJson);
+                JSONObject obj = JSON.parseObject(paramsJson);
                 if (obj != null) {
                     period = obj.getString("period");
                     recomputeAll = Boolean.TRUE.equals(obj.getBoolean("recomputeAll"));

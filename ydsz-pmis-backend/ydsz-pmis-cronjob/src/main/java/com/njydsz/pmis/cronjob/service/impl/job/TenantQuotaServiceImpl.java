@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -307,6 +308,6 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
      * 获取今日日期后缀（yyyyMMdd，Asia/Shanghai 时区）。
      */
     private String todaySuffix() {
-        return LocalDate.now(java.time.ZoneId.of("Asia/Shanghai")).format(DATE_FMT);
+        return LocalDate.now(ZoneId.of("Asia/Shanghai")).format(DATE_FMT);
     }
 }
