@@ -64,6 +64,8 @@ public class FlowCommentServiceImpl implements FlowCommentService {
         comment.setParentCommentId(dto.getParentCommentId());
         comment.setReplyToUserId(dto.getReplyToUserId());
         comment.setReplyToUserName(dto.getReplyToUserName());
+        // 评论类型默认 COMMENT（吸收 task_comment 功能后新增字段）
+        comment.setType("COMMENT");
         commentMapper.insert(comment);
         log.info("[FlowComment] 新增评论: commentId={} instanceId={} userId={} isReply={}",
                 comment.getId(), dto.getInstanceId(), userId,

@@ -672,20 +672,6 @@ export interface FlowTemplateDTO {
   updatedAt?: string
 }
 
-/** P3-1: 通知通道配置 */
-export interface NotifyChannelDTO {
-  id?: number
-  tenantId?: number
-  /** 通道类型：INAPP / EMAIL / SMS / WEBHOOK / DINGTALK / WECHAT */
-  channelType: string
-  channelName: string
-  /** JSON 配置（webhook URL / SMS 模板编码等） */
-  config: string
-  enabled: boolean
-  createdAt?: string
-  updatedAt?: string
-}
-
 /** P3-3: 实例迁移入参 */
 export interface InstanceMigrationDTO {
   sourceDefinitionId: number

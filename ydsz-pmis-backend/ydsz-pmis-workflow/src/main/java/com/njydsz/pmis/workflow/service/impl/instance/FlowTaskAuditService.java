@@ -1,10 +1,10 @@
 package com.njydsz.pmis.workflow.service.impl.instance;
 
+import com.njydsz.pmis.workflow.entity.analytics.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.delegate.FlowDelegateAuthDO;
-import com.njydsz.pmis.workflow.entity.delegate.FlowDelegateLogDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.mapper.delegate.FlowDelegateLogMapper;
+import com.njydsz.pmis.workflow.mapper.analytics.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.service.delegate.FlowDelegateAuthService;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +17,17 @@ import java.time.LocalDateTime;
  * 任务审计/委派代理日志服务
  *
  * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"代理操作审计"职责。
- * FlowTaskSupport 已提供通用 audit 方法（写入 pmis_flow_audit_log），本服务
- * 专门处理委派代理场景的扩展日志（写入 pmis_flow_delegate_log）。
+ * 委派代理日志已合并到 {@code pmis_flow_audit_log}（businessType=DELEGATE_PROXY），
+ * 不再使用独立的 {@code pmis_flow_delegate_log} 表。
  *
- * <p>委派代理日志用于追溯"谁在什么时间被代理处理了什么任务"，是审计追溯
- * 的重要补充（P1-4 引入）。
+ * <p>审计日志字段映射：
+ * <ul>
+ *   <li>businessType = "DELEGATE_PROXY" — 标识委派代理操作</li>
+ *   <li>action = PASS/REJECT/CLAIM/... — 实际办理动作</li>
+ *   <li>operatorId = 代理人 ID</li>
+ *   <li>targetId = 授权人 ID</li>
+ *   <li>comment = 办理意见</li>
+ * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.7.0
@@ -31,7 +37,10 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class FlowTaskAuditService {
 
-    private final FlowDelegateLogMapper delegateLogMapper;
+    /** 委派代理操作的业务类型标识 */
+    public static final String BIZ_TYPE_DELEGATE_PROXY = "DELEGATE_PROXY";
+
+    private final FlowAuditLogMapper auditLogMapper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowDelegateAuthService delegateAuthService;
 
@@ -43,10 +52,10 @@ public class FlowTaskAuditService {
      *
      * @param task   当前任务（assignorId=授权人，assigneeId=被委派人）
      * @param action 动作类型（CLAIM/PASS/DELEGATE_RETURN/...）
-     * @param opType 操作类型：ACT=办理 / VIEW=查看
+     * @param opType 操作类型：ACT=办理 / VIEW=查看（已废弃，保留参数兼容）
      */
     public void logDelegateOperation(FlowRunTaskDO task, String action, String opType) {
-        if (task == null || delegateLogMapper == null) {
+        if (task == null || auditLogMapper == null) {
             return;
         }
         try {
@@ -55,23 +64,22 @@ public class FlowTaskAuditService {
             if (ownerId == null || delegateId == null) {
                 return; // 非代理场景
             }
-            FlowDelegateLogDO log = new FlowDelegateLogDO();
-            log.setTenantId(task.getTenantId());
-            // P0-3 修复：重新匹配授权规则以获取 authId（不再硬编码 0L）
-            log.setAuthId(resolveDelegateAuthId(task, ownerId));
-            log.setInstanceId(task.getInstanceId());
-            log.setTaskId(task.getId());
-            log.setNodeCode(task.getNodeCode());
-            log.setOwnerUserId(ownerId);
-            log.setDelegateUserId(delegateId);
-            log.setOpType(opType == null ? "ACT" : opType);
-            log.setAction(action);
-            log.setComment(task.getComment());
-            log.setProviderTraceId(task.getProviderTraceId());
+            FlowAuditLogDO logEntry = new FlowAuditLogDO();
+            logEntry.setTenantId(task.getTenantId());
+            logEntry.setInstanceId(task.getInstanceId());
+            logEntry.setTaskId(task.getId());
+            logEntry.setNodeCode(task.getNodeCode());
+            logEntry.setBusinessType(BIZ_TYPE_DELEGATE_PROXY);
+            logEntry.setAction(action);
+            logEntry.setOperatorId(delegateId);
+            logEntry.setTargetId(ownerId);
+            logEntry.setComment(task.getComment());
+            logEntry.setOperatedAt(LocalDateTime.now());
+            logEntry.setProviderTraceId(task.getProviderTraceId());
             LocalDateTime now = LocalDateTime.now();
-            log.setCreatedAt(now);
-            log.setUpdatedAt(now);
-            delegateLogMapper.insert(log);
+            logEntry.setCreatedAt(now);
+            logEntry.setUpdatedAt(now);
+            auditLogMapper.insert(logEntry);
         } catch (Exception e) {
             FlowTaskAuditService.log.warn("[Flow] 委派代理日志写入失败: taskId={} err={}",
                     task.getId(), e.getMessage());
@@ -97,6 +105,7 @@ public class FlowTaskAuditService {
      * <p>查询当前任务实例，按租户/授权人/流程/节点匹配最合适的授权规则，
      * 用于审计日志中关联授权记录。
      */
+    @SuppressWarnings("unused")
     private String resolveDelegateAuthId(FlowRunTaskDO task, String ownerId) {
         try {
             FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());

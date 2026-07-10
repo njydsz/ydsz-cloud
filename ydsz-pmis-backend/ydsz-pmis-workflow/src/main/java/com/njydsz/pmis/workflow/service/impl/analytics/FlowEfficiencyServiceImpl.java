@@ -1,15 +1,16 @@
 package com.njydsz.pmis.workflow.service.impl.analytics;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.workflow.entity.delegate.FlowDelegateLogDO;
+import com.njydsz.pmis.workflow.entity.analytics.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.mapper.delegate.FlowDelegateLogMapper;
+import com.njydsz.pmis.workflow.mapper.analytics.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.analytics.FlowEfficiencyService;
+import com.njydsz.pmis.workflow.service.impl.instance.FlowTaskAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
  * <ul>
  *   <li>totalCount — 审批单量</li>
  *   <li>avgDurationMs — 平均耗时（毫秒）</li>
- *   <li>proxyRate — 代批率（委派代理人完成 PASS/REJECT 的任务占比，数据来源 pmis_flow_delegate_log）</li>
+ *   <li>proxyRate — 代批率（委派代理人完成 PASS/REJECT 的任务占比，数据来源 pmis_flow_audit_log）</li>
  *   <li>overdueRate — 超期率（taskStatus=TIMEOUT 的占比）</li>
  * </ul>
  *
@@ -54,8 +55,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
     /** 历史任务 Mapper，查询审批效率统计的基础数据源 */
     private final FlowHisTaskMapper hisTaskMapper;
-    /** P0-2: 委派代理日志 Mapper（用于统计真实代批率） */
-    private final FlowDelegateLogMapper delegateLogMapper;
+    /** P0-2: 审计日志 Mapper（用于统计真实代批率，数据来源 pmis_flow_audit_log） */
+    private final FlowAuditLogMapper auditLogMapper;
     /** 待办任务 Mapper（用于卡单检测） */
     private final FlowRunTaskMapper taskMapper;
     /** 流程实例 Mapper（用于长期运行实例检测） */
@@ -90,7 +91,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                     .average()
                     .orElse(0.0);
 
-            // P0-2 修复：代批率 = 委派代理人完成 PASS/REJECT 的操作数 / 总任务数（数据来源 delegate_log）
+            // P0-2 修复：代批率 = 委派代理人完成 PASS/REJECT 的操作数 / 总任务数（数据来源 audit_log, businessType=DELEGATE_PROXY）
             long proxyCount = countDelegateActions(tenantId, startTime, endTime);
             double proxyRate = totalCount > 0 ? (double) proxyCount / totalCount : 0.0;
 
@@ -122,23 +123,24 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     /**
      * P0-2: 统计指定时间段内的代批操作数（委派代理人完成 PASS/REJECT 的审批数）
      *
-     * <p>数据来源为 {@code pmis_flow_delegate_log}，仅统计 action 为 PASS/REJECT 的记录，
+     * <p>数据来源为 {@code pmis_flow_audit_log}，统计 businessType=DELEGATE_PROXY 且 action 为 PASS/REJECT 的记录，
      * 即代理人真正代替原办理人完成审批的操作数。
      */
     private long countDelegateActions(String tenantId, String startTime, String endTime) {
         try {
-            LambdaQueryWrapper<FlowDelegateLogDO> wrapper = new LambdaQueryWrapper<>();
+            LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY);
             if (tenantId != null) {
-                wrapper.eq(FlowDelegateLogDO::getTenantId, tenantId);
+                wrapper.eq(FlowAuditLogDO::getTenantId, tenantId);
             }
-            wrapper.in(FlowDelegateLogDO::getAction, "PASS", "REJECT");
+            wrapper.in(FlowAuditLogDO::getAction, "PASS", "REJECT");
             if (StringUtils.hasText(startTime)) {
-                wrapper.ge(FlowDelegateLogDO::getCreatedAt, LocalDateTime.parse(startTime, DT_FMT));
+                wrapper.ge(FlowAuditLogDO::getCreatedAt, LocalDateTime.parse(startTime, DT_FMT));
             }
             if (StringUtils.hasText(endTime)) {
-                wrapper.le(FlowDelegateLogDO::getCreatedAt, LocalDateTime.parse(endTime, DT_FMT));
+                wrapper.le(FlowAuditLogDO::getCreatedAt, LocalDateTime.parse(endTime, DT_FMT));
             }
-            return delegateLogMapper.selectCount(wrapper);
+            return auditLogMapper.selectCount(wrapper);
         } catch (Exception e) {
             log.warn("[FlowEfficiency] 代批操作统计异常: {}", e.getMessage());
             return 0;

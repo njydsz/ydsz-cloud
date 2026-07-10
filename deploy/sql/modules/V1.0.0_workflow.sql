@@ -2972,3 +2972,83 @@ CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_task_created
 CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_user_action
     ON pmis_flow_ai_feedback (tenant_id, recommended_user_id, action) WHERE deleted = 0;
 
+-- ====================================================================
+-- ============================ [072] 通知体系精简 + 影子表补齐 ============
+-- ====================================================================
+-- 通知基础设施（outbox/template/channel/preference/webhook/inbox/mention）
+-- 已移除，通知能力由独立的消息通知引擎 ydsz-pmis-message 承载。
+-- 工作流模块仅保留 FlowNotificationService 作为 Feign 适配器。
+-- ----------------------------------------------------------------------------
+
+-- 1. 补齐 pmis_flow_admin_role DDL（P1-6 影子表，DO 已存在但无 DDL）
+CREATE TABLE IF NOT EXISTS pmis_flow_admin_role (
+    id              VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    tenant_id       VARCHAR(20)       NOT NULL DEFAULT '1',
+    user_id         VARCHAR(20)       NOT NULL,
+    role_code       VARCHAR(64)       NOT NULL,
+    enabled         SMALLINT          NOT NULL DEFAULT 1,
+    granted_by      VARCHAR(20),
+    granted_at      TIMESTAMPTZ       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expire_at       TIMESTAMPTZ,
+    created_by      VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT          NOT NULL DEFAULT 0,
+    provider_trace_id VARCHAR(64),
+    CONSTRAINT ck_pfar_role_code   CHECK (role_code IN ('FLOW_ADMIN','FLOW_DESIGNER','FLOW_AUDITOR')),
+    CONSTRAINT ck_pfar_enabled     CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_pfar_deleted     CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_flow_admin_role IS 'P1-6: 流程管理员角色映射表 — 用户与流程管理员角色的映射关系';
+
+COMMENT ON COLUMN pmis_flow_admin_role.role_code IS '角色编码: FLOW_ADMIN/FLOW_DESIGNER/FLOW_AUDITOR';
+
+COMMENT ON COLUMN pmis_flow_admin_role.enabled IS '是否启用 1=是 0=否';
+
+COMMENT ON COLUMN pmis_flow_admin_role.granted_by IS '授权人 ID';
+
+COMMENT ON COLUMN pmis_flow_admin_role.granted_at IS '授权时间';
+
+COMMENT ON COLUMN pmis_flow_admin_role.expire_at IS '过期时间（NULL=永不过期）';
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfar_tenant_user_role
+    ON pmis_flow_admin_role (tenant_id, user_id, role_code)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pfar_tenant_role
+    ON pmis_flow_admin_role (tenant_id, role_code, enabled)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pfar_trace
+    ON pmis_flow_admin_role (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+-- 2. 移除通知体系表（幂等 DROP，已删除的表不影响）
+DROP TABLE IF EXISTS pmis_flow_notify_outbox CASCADE;
+DROP TABLE IF EXISTS pmis_flow_notify_template CASCADE;
+DROP TABLE IF EXISTS pmis_flow_notify_channel CASCADE;
+DROP TABLE IF EXISTS pmis_flow_notify_preference CASCADE;
+DROP TABLE IF EXISTS pmis_flow_webhook_subscription CASCADE;
+DROP TABLE IF EXISTS pmis_flow_inbox CASCADE;
+DROP TABLE IF EXISTS pmis_flow_mention CASCADE;
+
+-- 3. 合并 pmis_flow_task_comment → pmis_flow_comment（统一评论表）
+--    pmis_flow_comment 增加 type 列（COMMENT/QUESTION/REPLY），吸收 task_comment 功能
+ALTER TABLE pmis_flow_comment ADD COLUMN IF NOT EXISTS type VARCHAR(16) NOT NULL DEFAULT 'COMMENT';
+
+COMMENT ON COLUMN pmis_flow_comment.type IS '评论类型: COMMENT / QUESTION / REPLY（默认 COMMENT）';
+
+DROP TABLE IF EXISTS pmis_flow_task_comment CASCADE;
+
+-- 4. 合并 pmis_flow_delegate_log → pmis_flow_audit_log（统一审计日志）
+--    委派代理操作日志不再独立建表，写入 audit_log 时 businessType=DELEGATE_PROXY 标识
+DROP TABLE IF EXISTS pmis_flow_delegate_log CASCADE;
+
+-- 5. 移除 pmis_flow_delegate_message（委派沟通留言合并到 pmis_flow_comment）
+DROP TABLE IF EXISTS pmis_flow_delegate_message CASCADE;
+
+-- 6. 移除 pmis_flow_his_variable（归档变量以 JSON blob 存储在 his_instance.variable 中）
+DROP TABLE IF EXISTS pmis_flow_his_variable CASCADE;
+

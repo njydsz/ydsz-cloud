@@ -11,18 +11,14 @@
  *       {@link com.njydsz.pmis.workflow.mapper.FlowHisInstanceMapper}</li>
  *   <li>任务 - {@link com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper}、
  *       {@link com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper}、
- *       {@link com.njydsz.pmis.workflow.mapper.FlowHisVariableMapper}、
- *       {@link com.njydsz.pmis.workflow.mapper.FlowTaskCommentMapper}</li>
+ *       {@link com.njydsz.pmis.workflow.mapper.FlowCommentMapper}</li>
  *   <li>定义 / 节点 - {@link com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper}、
  *       {@link com.njydsz.pmis.workflow.mapper.FlowNodeMapper}、
  *       {@link com.njydsz.pmis.workflow.mapper.FlowSkipMapper}、
  *       {@link com.njydsz.pmis.workflow.mapper.FlowTemplateMapper}</li>
  *   <li>DMN - {@link com.njydsz.pmis.workflow.mapper.FlowDmnTableMapper}</li>
  *   <li>抄送 / 委派 - {@link com.njydsz.pmis.workflow.mapper.FlowCcMapper}、
- *       {@link com.njydsz.pmis.workflow.mapper.FlowDelegateAuthMapper}、
- *       {@link com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper}</li>
- *   <li>通知 - {@link com.njydsz.pmis.workflow.mapper.FlowNotifyChannelMapper}、
- *       {@link com.njydsz.pmis.workflow.mapper.FlowNotifyOutboxMapper}</li>
+ *       {@link com.njydsz.pmis.workflow.mapper.FlowDelegateAuthMapper}</li>
  *   <li>三方对接 - {@link com.njydsz.pmis.workflow.mapper.FlowThirdPartyAccountMapper}、
  *       {@link com.njydsz.pmis.workflow.mapper.FlowThirdPartyLogMapper}</li>
  *   <li>自动化 / 监控 - {@link com.njydsz.pmis.workflow.mapper.FlowAutoTriggerMapper}、

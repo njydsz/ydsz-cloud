@@ -429,7 +429,7 @@ public class CronjobProperties {
      *   <li>{@link #batchSize} 单批删除条数（避免大事务锁表，默认 1000 条/批）</li>
      * </ul>
      *
-     * <p>清理范围：pmis_job_log / pmis_job_log_content / pmis_job_slow_log /
+     * <p>清理范围：pmis_job_log / pmis_job_log_content /
      * pmis_job_alert_log / pmis_job_task，每天凌晨 3 点由 Leader 节点执行。
      */
     @Data

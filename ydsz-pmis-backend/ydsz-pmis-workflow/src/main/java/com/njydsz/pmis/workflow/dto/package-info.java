@@ -24,7 +24,7 @@
  *       {@link com.njydsz.pmis.workflow.dto.EmbeddedApprovalViewDTO}</li>
  *   <li>委派 / 抄送 / 通知类 - {@link com.njydsz.pmis.workflow.dto.FlowDelegateAuthSaveDTO}、
  *       {@link com.njydsz.pmis.workflow.dto.FlowCcQueryDTO}、
- *       {@link com.njydsz.pmis.workflow.dto.FlowNotifyChannelSaveDTO}</li>
+ *       {@link com.njydsz.pmis.workflow.dto.FlowCommentCreateDTO}</li>
  *   <li>实例迁移类 - {@link com.njydsz.pmis.workflow.dto.InstanceMigrationDTO}、
  *       {@link com.njydsz.pmis.workflow.dto.InstanceMigrationResultDTO}</li>
  * </ul>

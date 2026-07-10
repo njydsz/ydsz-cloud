@@ -11,7 +11,6 @@
  *       {@link com.njydsz.pmis.workflow.service.FlowInstanceMigrationService}、
  *       {@link com.njydsz.pmis.workflow.service.FlowSubProcessService}</li>
  *   <li>任务 - {@link com.njydsz.pmis.workflow.service.FlowTaskService}、
- *       {@link com.njydsz.pmis.workflow.service.FlowTaskCommentService}、
  *       {@link com.njydsz.pmis.workflow.service.FlowTaskQueryService}、
  *       {@link com.njydsz.pmis.workflow.service.FlowTaskBatchService}、
  *       {@link com.njydsz.pmis.workflow.service.FlowTaskCompleteService}、

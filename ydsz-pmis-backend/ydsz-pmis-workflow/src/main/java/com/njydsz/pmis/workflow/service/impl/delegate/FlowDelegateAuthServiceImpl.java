@@ -5,10 +5,12 @@ import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.workflow.entity.analytics.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.delegate.FlowDelegateAuthDO;
-import com.njydsz.pmis.workflow.entity.delegate.FlowDelegateLogDO;
+import com.njydsz.pmis.workflow.mapper.analytics.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.delegate.FlowDelegateAuthMapper;
-import com.njydsz.pmis.workflow.mapper.delegate.FlowDelegateLogMapper;
+import com.njydsz.pmis.workflow.service.impl.instance.FlowTaskAuditService;
 import com.njydsz.pmis.workflow.service.delegate.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.service.delegate.FlowOfflineAutoForwardService;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +39,8 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     /** 委派授权 Mapper，负责 pmis_flow_delegate_auth 表的增删改查 */
     private final FlowDelegateAuthMapper authMapper;
-    /** 委派操作日志 Mapper，查询代理人审批操作记录 */
-    private final FlowDelegateLogMapper logMapper;
+    /** 审计日志 Mapper，委派代理操作日志已合并到 pmis_flow_audit_log */
+    private final FlowAuditLogMapper auditLogMapper;
     /** P2-5: 离线代理自动转发（@Lazy 避免循环依赖） */
     @Lazy
     private final FlowOfflineAutoForwardService offlineAutoForwardService;
@@ -224,28 +226,35 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<FlowDelegateLogDO> listDelegateLog(String delegateUserId, int page, int size) {
+    public PageResult<?> listDelegateLog(String delegateUserId, int page, int size) {
         if (delegateUserId == null) {
             return PageResult.empty();
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
-        int offset = (safePage - 1) * safeSize;
-        List<FlowDelegateLogDO> list = logMapper.selectByDelegateUser(delegateUserId, offset, safeSize);
-        // 简化：直接用 list.size() 作为 total，更精确可以加 count
+        LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
+               .eq(FlowAuditLogDO::getOperatorId, delegateUserId)
+               .orderByDesc(FlowAuditLogDO::getCreatedAt)
+               .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
+        List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
         return PageResult.of(list, list.size(), safePage, safeSize);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<FlowDelegateLogDO> listOwnerLog(String ownerUserId, int page, int size) {
+    public PageResult<?> listOwnerLog(String ownerUserId, int page, int size) {
         if (ownerUserId == null) {
             return PageResult.empty();
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
-        int offset = (safePage - 1) * safeSize;
-        List<FlowDelegateLogDO> list = logMapper.selectByOwnerUser(ownerUserId, offset, safeSize);
+        LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
+               .eq(FlowAuditLogDO::getTargetId, ownerUserId)
+               .orderByDesc(FlowAuditLogDO::getCreatedAt)
+               .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
+        List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
         return PageResult.of(list, list.size(), safePage, safeSize);
     }
 }

@@ -193,6 +193,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- P3-16: Spring Cloud Contract 契约测试 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -202,6 +208,16 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <skip>true</skip>
+                </configuration>
+            </plugin>
+            <!-- P3-16: Spring Cloud Contract 插件 — 自动生成契约测试代码 -->
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <baseClassForTests>com.njydsz.pmis.common.contract.ContractTestBase</baseClassForTests>
+                    <testFramework>JUNIT5</testFramework>
                 </configuration>
             </plugin>
         </plugins>

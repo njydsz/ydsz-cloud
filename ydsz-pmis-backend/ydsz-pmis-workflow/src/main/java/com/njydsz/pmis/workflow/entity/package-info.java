@@ -8,21 +8,17 @@
  * <ul>
  *   <li>实例 / 任务 - {@link com.njydsz.pmis.workflow.entity.FlowInstanceDO}、
  *       {@link com.njydsz.pmis.workflow.entity.FlowRunTaskDO}、
- *       {@link com.njydsz.pmis.workflow.entity.FlowTaskCommentDO}</li>
+ *       {@link com.njydsz.pmis.workflow.entity.FlowCommentDO}</li>
  *   <li>定义 / 节点 - {@link com.njydsz.pmis.workflow.entity.FlowDefinitionDO}、
  *       {@link com.njydsz.pmis.workflow.entity.FlowNodeDO}、
  *       {@link com.njydsz.pmis.workflow.entity.FlowSkipDO}、
  *       {@link com.njydsz.pmis.workflow.entity.FlowTemplateDO}</li>
  *   <li>历史归档 - {@link com.njydsz.pmis.workflow.entity.FlowHisInstanceDO}、
- *       {@link com.njydsz.pmis.workflow.entity.FlowHisTaskDO}、
- *       {@link com.njydsz.pmis.workflow.entity.FlowHisVariableDO}</li>
+ *       {@link com.njydsz.pmis.workflow.entity.FlowHisTaskDO}</li>
  *   <li>DMN - {@link com.njydsz.pmis.workflow.entity.FlowDmnTableDO}</li>
  *   <li>抄送 / 委派 - {@link com.njydsz.pmis.workflow.entity.FlowCcDO}、
  *       {@link com.njydsz.pmis.workflow.entity.FlowCcRuleDO}、
- *       {@link com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO}、
- *       {@link com.njydsz.pmis.workflow.entity.FlowDelegateLogDO}</li>
- *   <li>通知 - {@link com.njydsz.pmis.workflow.entity.FlowNotifyChannelDO}、
- *       {@link com.njydsz.pmis.workflow.entity.FlowNotifyOutboxDO}</li>
+ *       {@link com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO}</li>
  *   <li>三方对接 - {@link com.njydsz.pmis.workflow.entity.FlowThirdPartyAccountDO}、
  *       {@link com.njydsz.pmis.workflow.entity.FlowThirdPartyLogDO}</li>
  *   <li>自动化 / 监控 - {@link com.njydsz.pmis.workflow.entity.FlowAutoTriggerDO}、

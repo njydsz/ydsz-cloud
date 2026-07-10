@@ -45,7 +45,6 @@ import type {
   SimulateResultDTO,
   TaskCommentDTO,
   FlowTemplateDTO,
-  NotifyChannelDTO,
   InstanceMigrationDTO,
   InstanceMigrationResultDTO,
 } from './types'
@@ -995,39 +994,6 @@ export function exportAsTemplate(
     `/workflow/template/export/${definitionId}`,
     undefined,
     { params: { templateName, category: category || 'GENERAL' } },
-  )
-}
-
-// ==================== P3-1: 通知通道配置 ====================
-
-/** 查询通知通道列表 */
-export function listNotifyChannels() {
-  return http.get<ApiResponse<NotifyChannelDTO[]>>(
-    '/workflow/engine/notify-channel/list',
-  )
-}
-
-/** 保存通知通道（新增/更新） */
-export function saveNotifyChannel(data: Partial<NotifyChannelDTO>) {
-  return http.post<ApiResponse<null>>(
-    '/workflow/engine/notify-channel/save',
-    data,
-  )
-}
-
-/** 启用/停用通知通道 */
-export function toggleNotifyChannel(id: number, enabled: boolean) {
-  return http.put<ApiResponse<null>>(
-    `/workflow/engine/notify-channel/${id}/toggle`,
-    undefined,
-    { params: { enabled } },
-  )
-}
-
-/** 删除通知通道 */
-export function deleteNotifyChannel(id: number) {
-  return http.delete<ApiResponse<null>>(
-    `/workflow/engine/notify-channel/${id}`,
   )
 }
 

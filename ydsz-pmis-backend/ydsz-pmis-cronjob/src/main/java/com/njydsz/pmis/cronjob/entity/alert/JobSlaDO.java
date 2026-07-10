@@ -11,10 +11,12 @@ import java.io.Serial;
 import java.math.BigDecimal;
 
 /**
- * 任务 SLA 管理实体（P2-7 SLA 管理）。
+ * 任务 SLA 管理实体（P2-7 SLA 管理, P2-2-merge 重构为视图 DTO）。
  *
- * <p>对应 {@code pmis_job_sla} 表，定义任务的 SLA 约束（最大执行时长/最大失败率/最小成功率）。
- * 由 {@code SlaScanner} 定期检查，违约时复用 {@code AlertDispatcher} 触发告警。
+ * <p>P2-2-merge: 原对应 {@code pmis_job_sla} 表，现已迁移到 {@code pmis_job_alert_rule}
+ * （source_type='SLA'）。本类保留为视图 DTO，由 {@code JobSlaServiceImpl} 从多条
+ * alert_rule 记录聚合而成，对外 API 保持兼容。
+ * 由 {@code AlertScanner} 统一扫描 source_type='SLA' 的规则并触发告警。
  *
  * <h3>约束字段</h3>
  * <ul>

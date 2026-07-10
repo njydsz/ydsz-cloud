@@ -85,6 +85,13 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private String internalSignSecret;
 
     /**
+     * CSP 策略是否允许 unsafe-eval（默认 false）。
+     * <p>仅开发环境可设置为 true（Vue DevTools 需要），生产环境必须为 false。
+     */
+    @Value("${pmis.security.csp.unsafe-eval:false}")
+    private boolean cspUnsafeEval;
+
+    /**
      * 核心过滤逻辑：路径规范化 → 链路追踪 → 白名单放行 → Token 校验
      * → 黑名单检查 → 剥离伪造头 → 注入签名头 → 用户信息透传
      *
@@ -300,7 +307,10 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             response.getHeaders().add("Referrer-Policy", "strict-origin-when-cross-origin");
             response.getHeaders().add("X-CSRF-Protection", "1");
             // CSP 策略: 限制脚本/样式/图片/连接来源
-            // - script-src: self + unsafe-inline(Vue 模板) + unsafe-eval(开发环境)
+            // P3-13: 移除 'unsafe-eval'（生产环境不需要，Vue 模板预编译）
+            //         移除 script-src 的 'unsafe-inline'（防 XSS 注入）
+            //         保留 style-src 的 'unsafe-inline'（Element Plus 运行时样式注入需要）
+            // - script-src: self（仅允许同源脚本）
             // - style-src: self + unsafe-inline(Element Plus 样式注入)
             // - img-src: self + data:(base64) + blob:(URL) + https:(CDN 图片)
             // - connect-src: self + ws/wss(WebSocket) + https(API/Sentry)
@@ -308,9 +318,12 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             // - frame-ancestors: none(防点击劫持)
             // - base-uri: self(防 base 标签注入)
             // - form-action: self(防表单提交到外部)
+            String scriptSrc = cspUnsafeEval
+                    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                    : "script-src 'self'; ";
             response.getHeaders().add("Content-Security-Policy",
                 "default-src 'self'; "
-                + "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                + scriptSrc
                 + "style-src 'self' 'unsafe-inline'; "
                 + "img-src 'self' data: blob: https:; "
                 + "font-src 'self' data:; "

@@ -57,6 +57,9 @@ public class FlowCommentDO extends BaseDO {
     /** 评论内容 */
     private String content;
 
+    /** 评论类型：COMMENT / QUESTION / REPLY（默认 COMMENT） */
+    private String type;
+
     /** 父评论 ID（一级评论为 null） */
     private String parentCommentId;
 

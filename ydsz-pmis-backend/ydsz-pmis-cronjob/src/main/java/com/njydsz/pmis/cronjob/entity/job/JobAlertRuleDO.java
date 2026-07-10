@@ -79,6 +79,9 @@ public class JobAlertRuleDO extends BaseDO {
     /** 是否启用: 0 禁用 / 1 启用 */
     private Integer enabled;
 
+    /** 规则来源: MANUAL 手动创建(默认) / SLA 由SLA规则自动生成(P2-2-merge 合并自 pmis_job_sla) */
+    private String sourceType;
+
     /** 最后告警时间（用于冷却判断） */
     private LocalDateTime lastAlertAt;
 

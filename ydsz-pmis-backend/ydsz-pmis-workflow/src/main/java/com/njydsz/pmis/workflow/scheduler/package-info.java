@@ -10,9 +10,8 @@
  *
  * <h3>核心组件</h3>
  * <ul>
- *   <li>{@link com.njydsz.pmis.workflow.scheduler.NotifyOutboxScanner} - 通知外发箱扫描器，
- *   定期扫描 {@code pmis_flow_notify_outbox} 中 PENDING 行并投递到通知中心，
- *   失败按指数退避重试，超阈值转死信</li>
+ *   <li>{@link com.njydsz.pmis.workflow.scheduler.FlowAutoUrgeScheduler} - 自动催办调度器，
+ *   定期扫描 SLA 超时任务并发送催办通知</li>
  * </ul>
  *
  * <h3>设计原则</h3>

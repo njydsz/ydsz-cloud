@@ -2,13 +2,11 @@
  * 工作流事件监听器。
  *
  * <p>监听 {@code FlowEventPublisher} 发布的流程事件（任务创建、任务完成、实例启动、
- * 实例结束等），用于在引擎主干之外完成解耦业务：通知落 outbox、业务回调（如项目立项后
+ * 实例结束等），用于在引擎主干之外完成解耦业务：通知转发到 ydsz-pmis-message、业务回调（如项目立项后
  * 写入项目台账）、AI 统计、指标埋点等。
  *
  * <h3>核心组件</h3>
  * <ul>
- *   <li>{@link com.njydsz.pmis.workflow.listener.FlowNotifyOutboxListener} - 通知外发箱写入监听器，
- *   在事务内将事件写入 {@code pmis_flow_notify_outbox}，由 {@code NotifyOutboxScanner} 异步投递</li>
  *   <li>{@link com.njydsz.pmis.workflow.listener.ProjectInitiationFlowListener} - 项目立项流程监听器，
  *   实例完成 / 回滚时同步业务侧项目台账（如初始化项目编号、创建默认里程碑）</li>
  * </ul>

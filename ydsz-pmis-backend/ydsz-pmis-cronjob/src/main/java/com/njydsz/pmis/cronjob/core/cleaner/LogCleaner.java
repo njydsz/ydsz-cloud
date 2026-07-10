@@ -6,7 +6,6 @@ import com.njydsz.pmis.cronjob.mapper.job.JobAlertLogMapper;
 import com.njydsz.pmis.cronjob.mapper.job.JobHistoryMapper;
 import com.njydsz.pmis.cronjob.mapper.log.JobLogContentMapper;
 import com.njydsz.pmis.cronjob.mapper.log.JobLogMapper;
-import com.njydsz.pmis.cronjob.mapper.job.JobSlowLogMapper;
 import com.njydsz.pmis.cronjob.mapper.job.JobTaskMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +24,8 @@ import java.time.LocalDateTime;
  *
  * <h3>清理范围</h3>
  * <ul>
- *   <li>pmis_job_log：任务执行日志</li>
+ *   <li>pmis_job_log：任务执行日志（含 is_slow 慢任务标记, P2-1-merge 合并了原 slow_log）</li>
  *   <li>pmis_job_log_content：任务日志内容（在线日志白屏化）</li>
- *   <li>pmis_job_slow_log：慢任务诊断日志</li>
  *   <li>pmis_job_alert_log：告警日志</li>
  *   <li>pmis_job_task：MapReduce 子任务记录</li>
  *   <li>pmis_job_history：任务配置历史版本</li>
@@ -58,7 +56,6 @@ public class LogCleaner {
 
     private final JobLogMapper jobLogMapper;
     private final JobLogContentMapper jobLogContentMapper;
-    private final JobSlowLogMapper jobSlowLogMapper;
     private final JobAlertLogMapper jobAlertLogMapper;
     private final JobTaskMapper jobTaskMapper;
     private final JobHistoryMapper jobHistoryMapper;
@@ -108,7 +105,6 @@ public class LogCleaner {
         // 每张表独立清理，单表异常不影响其他表
         totalCleaned += cleanTable("pmis_job_log", before, batchSize, jobLogMapper::cleanExpiredLogs);
         totalCleaned += cleanTable("pmis_job_log_content", before, batchSize, jobLogContentMapper::cleanExpiredLogs);
-        totalCleaned += cleanTable("pmis_job_slow_log", before, batchSize, jobSlowLogMapper::cleanExpiredLogs);
         totalCleaned += cleanTable("pmis_job_alert_log", before, batchSize, jobAlertLogMapper::cleanExpiredLogs);
         totalCleaned += cleanTable("pmis_job_task", before, batchSize, jobTaskMapper::cleanExpiredLogs);
         totalCleaned += cleanTable("pmis_job_history", before, batchSize, jobHistoryMapper::cleanExpiredLogs);

@@ -1,0 +1,40 @@
+# Spring Cloud Contract 契约定义（P3-16 落地）
+#
+# 定义 NotificationClient.send 接口的契约。
+# Provider 端 (ydsz-pmis-message) 必须满足此契约，
+# Consumer 端 (ydsz-pmis-workflow 等) 可使用此契约生成的 stub 进行测试。
+#
+# 参见: ContractTestBase.java
+
+name: "notification send contract"
+description: "通知发送接口契约 — 验证 /notifications/send 的请求/响应格式"
+
+request:
+  method: POST
+  url: /notifications/send
+  body:
+    title: "审批通知"
+    content: "您有新的审批任务待处理"
+    receiverIds:
+      - "user001"
+    channel: "IN_APP"
+    priority: "NORMAL"
+  headers:
+    Content-Type: application/json
+    X-Internal-Sig: "stub-signature"
+    X-Internal-Ts: "1700000000"
+
+response:
+  status: 200
+  body:
+    code: 200
+    message: "success"
+    data: 1
+  headers:
+    Content-Type: application/json
+  matchers:
+    body:
+      - path: $.data
+        type: by_equality
+      - path: $.code
+        type: by_equality

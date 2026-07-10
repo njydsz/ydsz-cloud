@@ -26,7 +26,7 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRuleDO> {
      */
     @Select("SELECT id, rule_name, job_id, job_key, alert_type, alert_level, "
             + "threshold, time_window_minutes, channels, receivers, "
-            + "cooldown_minutes, enabled, last_alert_at, tenant_id, "
+            + "cooldown_minutes, enabled, source_type, last_alert_at, tenant_id, "
             + "created_by, created_at, updated_by, updated_at, deleted "
             + "FROM pmis_job_alert_rule "
             + "WHERE deleted = 0 AND enabled = 1")
@@ -42,7 +42,7 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRuleDO> {
      */
     @Select("SELECT id, rule_name, job_id, job_key, alert_type, alert_level, "
             + "threshold, time_window_minutes, channels, receivers, "
-            + "cooldown_minutes, enabled, last_alert_at, tenant_id, "
+            + "cooldown_minutes, enabled, source_type, last_alert_at, tenant_id, "
             + "created_by, created_at, updated_by, updated_at, deleted "
             + "FROM pmis_job_alert_rule "
             + "WHERE deleted = 0 AND enabled = 1 "
@@ -60,11 +60,28 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRuleDO> {
      */
     @Select("SELECT id, rule_name, job_id, job_key, alert_type, alert_level, "
             + "threshold, time_window_minutes, channels, receivers, "
-            + "cooldown_minutes, enabled, last_alert_at, tenant_id, "
+            + "cooldown_minutes, enabled, source_type, last_alert_at, tenant_id, "
             + "created_by, created_at, updated_by, updated_at, deleted "
             + "FROM pmis_job_alert_rule "
             + "WHERE alert_type = #{alertType} AND enabled = 1 AND deleted = 0")
     List<JobAlertRuleDO> selectByAlertType(@Param("alertType") String alertType);
+
+    /**
+     * P2-2-merge: 查询指定任务的 SLA 来源告警规则（source_type='SLA'）。
+     *
+     * <p>用于 SLA CRUD 代理查询：通过 alert_rule 表管理 SLA 规则，
+     * 替代原 pmis_job_sla 独立表查询。
+     *
+     * @param jobId 任务 ID
+     * @return SLA 来源的告警规则列表
+     */
+    @Select("SELECT id, rule_name, job_id, job_key, alert_type, alert_level, "
+            + "threshold, time_window_minutes, channels, receivers, "
+            + "cooldown_minutes, enabled, source_type, last_alert_at, tenant_id, "
+            + "created_by, created_at, updated_by, updated_at, deleted "
+            + "FROM pmis_job_alert_rule "
+            + "WHERE job_id = #{jobId} AND source_type = 'SLA' AND deleted = 0")
+    List<JobAlertRuleDO> selectSlaRulesByJobId(@Param("jobId") String jobId);
 
     /**
      * 原子更新最后告警时间（CAS 语义，避免并发重复告警）。

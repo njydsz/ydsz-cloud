@@ -280,6 +280,10 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     shard_index     INTEGER,
     -- [P1-4] 分片总数: 非分片任务为 NULL; 分片任务为 shardTotal 值
     shard_total     INTEGER,
+    -- [P2-1-merge] 慢任务标记: 0=非慢 / 1=慢（合并自 pmis_job_slow_log, 由 SlowTaskDetector 标记）
+    is_slow         SMALLINT       NOT NULL DEFAULT 0,
+    -- [P2-1-merge] 慢任务阈值快照（毫秒）: 执行时从 pmis_job.slow_threshold_ms 快照, NULL=未配置慢任务检测
+    slow_threshold_ms BIGINT,
     -- [INLINE-OPT] P0-D3 内联:MQ 投递元信息字段
     msg_id          VARCHAR(20),
     topic           VARCHAR(128),
@@ -294,6 +298,8 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     CONSTRAINT ck_pjl_times_valid   CHECK (end_time IS NULL OR end_time >= start_time),
     CONSTRAINT ck_pjl_reconsume_nonneg CHECK (reconsume_times >= 0),
     CONSTRAINT ck_pjl_trigger_type_enum CHECK (trigger_type IN ('CRON', 'MANUAL', 'RETRY', 'MISFIRED', 'DEPENDENT', 'API', 'FAILOVER')),
+    CONSTRAINT ck_pjl_is_slow_enum    CHECK (is_slow IN (0, 1)),
+    CONSTRAINT ck_pjl_slow_threshold_nonneg CHECK (slow_threshold_ms IS NULL OR slow_threshold_ms > 0),
     CONSTRAINT ck_pjl_deleted_enum  CHECK (deleted IN (0, 1))
 );
 
@@ -363,6 +369,10 @@ CREATE INDEX IF NOT EXISTS idx_pjl_job_start
 -- [INLINE-OPT] 链路追踪 ID 索引(分布式排障)
 CREATE INDEX IF NOT EXISTS idx_pjl_trace_id
     ON pmis_job_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
+
+-- [P2-1-merge] 慢任务部分索引: 替代 pmis_job_slow_log 独立表, 直接从 job_log 查询慢任务
+CREATE INDEX IF NOT EXISTS idx_pjl_slow
+    ON pmis_job_log (job_id, duration_ms DESC) WHERE is_slow = 1 AND deleted = 0;
 
 -- ============================================================================
 -- [P0-2] 任务执行日志明细表 pmis_job_log_content
@@ -580,13 +590,13 @@ CREATE INDEX IF NOT EXISTS idx_pjh_job_id
     ON pmis_job_history (job_id, version DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P6-3] 慢任务诊断日志表 pmis_job_slow_log
+-- [P6-3] 慢任务诊断日志表 pmis_job_slow_log（已废弃 — P2-1-merge 合并到 pmis_job_log.is_slow）
 -- ----------------------------------------------------------------------------
--- 当任务执行耗时超过 pmis_job.slow_threshold_ms 时，自动记录到本表。
--- 与 pmis_job_log 的区别：
---   - job_log 记录全部执行（RUNNING/SUCCESS/FAILED/TIMEOUT），用于审计
---   - slow_log 仅记录慢执行，用于性能趋势分析与优化决策
--- 由 SlowTaskDetector 定期扫描 job_log 并写入，不影响任务执行主流程。
+-- [DEPRECATED] 本表已废弃，慢任务标记已合并到 pmis_job_log.is_slow 字段。
+-- pmis_job_log 新增 is_slow (0/1) 和 slow_threshold_ms (快照) 字段，
+-- 配合部分索引 idx_pjl_slow 替代独立 slow_log 表。
+-- 原有逻辑由 SlowTaskDetector 标记 is_slow=1 而非插入独立表。
+-- 保留本表 DDL 仅用于存量数据迁移参考，新部署可跳过创建。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_slow_log(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
@@ -1048,6 +1058,8 @@ CREATE TABLE IF NOT EXISTS pmis_job_alert_rule(
     cooldown_minutes      INTEGER       NOT NULL DEFAULT 10,
     -- 是否启用: 0 禁用 / 1 启用
     enabled               SMALLINT      NOT NULL DEFAULT 1,
+    -- [P2-2-merge] 规则来源: MANUAL 手动创建(默认) / SLA 由SLA规则自动生成(合并自 pmis_job_sla)
+    source_type           VARCHAR(32)   NOT NULL DEFAULT 'MANUAL',
     -- 最后告警时间 (用于冷却判断)
     last_alert_at         TIMESTAMPTZ,
     created_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
@@ -1063,6 +1075,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_alert_rule(
     CONSTRAINT ck_pjar_window_nonneg     CHECK (time_window_minutes IS NULL OR time_window_minutes > 0),
     CONSTRAINT ck_pjar_cooldown_nonneg   CHECK (cooldown_minutes >= 0),
     CONSTRAINT ck_pjar_enabled_enum      CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_pjar_source_type_enum  CHECK (source_type IN ('MANUAL', 'SLA')),
     CONSTRAINT ck_pjar_deleted_enum      CHECK (deleted IN (0, 1)),
     -- [P5-2] 阈值约束: FAIL_RATE / SLOW / DURATION_P95 必须配置阈值
     CONSTRAINT ck_pjar_threshold_required CHECK (
@@ -1131,9 +1144,12 @@ CREATE INDEX IF NOT EXISTS idx_pjar_tenant_created
     ON pmis_job_alert_rule (tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P5-1] 任务告警日志表 pmis_job_alert_log
+-- [P5-1] 任务告警日志表 pmis_job_alert_log（已废弃 — P3-1-merge 合并到 pmis_alert_dispatch）
 -- ----------------------------------------------------------------------------
--- 记录每次告警派发的实际情况，用于审计、去重判断和告警效果统计。
+-- [DEPRECATED] 本表已废弃，告警日志已合并到 pmis_alert_dispatch（source_type='CRONJOB'）。
+-- AlertDispatcher 现直接写入 pmis_alert_dispatch，cronjob 专用字段（rule_id, trigger_log_id,
+-- trigger_value, threshold）已添加到 pmis_alert_dispatch 表。
+-- 保留本表 DDL 仅用于存量数据迁移参考，新部署可跳过创建。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_alert_log(
     id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
@@ -1289,10 +1305,14 @@ CREATE INDEX IF NOT EXISTS idx_pjds_job_date
     ON pmis_job_daily_stats (job_id, stats_date DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P2-7] 任务 SLA 管理表 pmis_job_sla
+-- [P2-7] 任务 SLA 管理表 pmis_job_sla（已废弃 — P2-2-merge 合并到 pmis_job_alert_rule）
 -- ----------------------------------------------------------------------------
--- 定义任务的 SLA 约束（最大执行时长/最大失败率/最小成功率），
--- 由 AlertScanner 定期检查，违约时触发告警。
+-- [DEPRECATED] 本表已废弃，SLA 约束已合并到 pmis_job_alert_rule（source_type='SLA'）。
+-- - max_duration_ms → alert_type='DURATION_P95', threshold=max_duration_ms, time_window_minutes=60
+-- - max_fail_rate   → alert_type='FAIL_RATE', threshold=max_fail_rate, time_window_minutes=60
+-- - min_success_rate→ alert_type='FAIL_RATE', threshold=100-min_success_rate, time_window_minutes=60
+-- 由 AlertScanner 统一扫描 source_type='SLA' 的规则并触发告警，SlaScanner 已移除。
+-- 保留本表 DDL 仅用于存量数据迁移参考，新部署可跳过创建。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_sla(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
@@ -1348,9 +1368,10 @@ COMMENT ON COLUMN pmis_job_sla.deleted IS '逻辑删除标记: 0 未删除 / 1 �
 -- ============================================================================
 
 -- ============================================================================
--- [P2-7] 任务版本历史表 pmis_job_version_history
+-- [P2-7] 任务版本历史表 pmis_job_version_history（已废弃 — P1-6-merge 合并到 pmis_job_history）
 -- ----------------------------------------------------------------------------
--- 每次任务定义变更时记录一条版本快照，支持版本回溯和差异对比。
+-- [DEPRECATED] 本表已废弃，版本历史已合并到 pmis_job_history（新增 change_type / before_snapshot 字段）。
+-- 保留本表 DDL 仅用于存量数据迁移参考，新部署可跳过创建。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_version_history(
     id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
@@ -1524,9 +1545,14 @@ CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     source_id           VARCHAR(20),
     title               VARCHAR(256) NOT NULL,
     content             TEXT,
-    target_role         VARCHAR(64)  NOT NULL,
+    target_role         VARCHAR(64),
     target_user_ids     VARCHAR(1024),
     push_channels       VARCHAR(64)  NOT NULL DEFAULT 'INAPP',
+    -- [P3-1-merge] cronjob 告警专用字段（source_type='CRONJOB' 时使用）
+    rule_id             VARCHAR(20),
+    trigger_log_id      VARCHAR(20),
+    trigger_value       VARCHAR(128),
+    threshold           BIGINT,
     dispatched_at       TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dispatched_by       VARCHAR(64),
     status              VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
@@ -1538,12 +1564,12 @@ CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    -- 枚举约束
-    CONSTRAINT ck_pad_alert_type       CHECK (alert_type  IN ('BUDGET','EVM','SLA','RISK','PROFIT','BENCH','UTILIZATION','OTHER')),
-    CONSTRAINT ck_pad_alert_level      CHECK (alert_level IN ('YELLOW','RED')),
-    CONSTRAINT ck_pad_source_type      CHECK (source_type IN ('PROJECT','EVM','TICKET','BENCH','CONFIG','OTHER')),
-    CONSTRAINT ck_pad_push_channels    CHECK (push_channels ~ '^(INAPP|EMAIL|SMS|WECHAT)(,(INAPP|EMAIL|SMS|WECHAT))*$'),
-    CONSTRAINT ck_pad_status_enum      CHECK (status IN ('PENDING','SENT','FAILED','RETRYING')),
+    -- 枚举约束（P3-1-merge: 扩展支持 cronjob 告警类型和级别）
+    CONSTRAINT ck_pad_alert_type       CHECK (alert_type  IN ('BUDGET','EVM','SLA','RISK','PROFIT','BENCH','UTILIZATION','OTHER','FAIL','TIMEOUT','SLOW','FAIL_RATE','DURATION_P95')),
+    CONSTRAINT ck_pad_alert_level      CHECK (alert_level IN ('YELLOW','RED','INFO','WARN','ERROR','CRITICAL')),
+    CONSTRAINT ck_pad_source_type      CHECK (source_type IN ('PROJECT','EVM','TICKET','BENCH','CONFIG','OTHER','CRONJOB')),
+    CONSTRAINT ck_pad_push_channels    CHECK (push_channels ~ '^(INAPP|EMAIL|SMS|WECHAT|DINGTALK|WECOM|WEBHOOK)(,(INAPP|EMAIL|SMS|WECHAT|DINGTALK|WECOM|WEBHOOK))*$'),
+    CONSTRAINT ck_pad_status_enum      CHECK (status IN ('PENDING','SENT','FAILED','RETRYING','SUCCESS','PARTIAL','SUCCESS_RECOVERY','PARTIAL_RECOVERY','FAILED_RECOVERY')),
     CONSTRAINT ck_pad_retry_count      CHECK (retry_count >= 0 AND retry_count <= 10),
     CONSTRAINT ck_pad_deleted          CHECK (deleted IN (0, 1))
 );

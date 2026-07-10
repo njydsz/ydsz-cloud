@@ -305,12 +305,16 @@ public class AlertDispatcher {
     }
 
     /**
-     * 持久化告警日志。
+     * 持久化告警日志（P3-1-merge: 写入 pmis_alert_dispatch 表）。
      */
     private void persistAlertLog(AlertContext context, JobAlertRuleDO rule,
                                   String status, String errorMessage) {
         try {
             JobAlertLogDO alertLog = new JobAlertLogDO();
+            // P3-1-merge: 生成唯一 alert_code
+            alertLog.setAlertCode("CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
+            // P3-1-merge: 标记来源为 CRONJOB
+            alertLog.setSourceType("CRONJOB");
             alertLog.setRuleId(rule.getId());
             alertLog.setRuleName(rule.getRuleName());
             alertLog.setJobId(context.jobId());
@@ -319,7 +323,8 @@ public class AlertDispatcher {
             alertLog.setAlertLevel(rule.getAlertLevel());
             alertLog.setTriggerValue(context.triggerValue());
             alertLog.setThreshold(rule.getThreshold());
-            alertLog.setChannels(rule.getChannels());
+            // P3-1-merge: channels 从 JSON 数组转为逗号分隔
+            alertLog.setChannels(convertChannelsToCsv(rule.getChannels()));
             alertLog.setStatus(status);
             alertLog.setErrorMessage(errorMessage);
             alertLog.setTraceId(context.traceId());
@@ -332,6 +337,29 @@ public class AlertDispatcher {
             // 日志写入失败不影响告警主流程
             log.error("[AlertDispatcher] 告警日志写入失败: ruleId={} jobId={} reason={}",
                     rule.getId(), context.jobId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * P3-1-merge: 将 JSON 数组通道格式转换为逗号分隔格式。
+     * 如 ["EMAIL","DINGTALK"] → EMAIL,DINGTALK
+     */
+    private String convertChannelsToCsv(String channelsJson) {
+        if (channelsJson == null || channelsJson.isBlank()) {
+            return "INAPP";
+        }
+        try {
+            JSONArray array = JSON.parseArray(channelsJson);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < array.size(); i++) {
+                if (i > 0) {
+                    sb.append(",");
+                }
+                sb.append(array.getString(i));
+            }
+            return sb.length() > 0 ? sb.toString() : "INAPP";
+        } catch (Exception e) {
+            return "INAPP";
         }
     }
 }

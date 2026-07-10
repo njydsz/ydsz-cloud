@@ -1,18 +1,14 @@
 package com.njydsz.pmis.workflow.service.impl.analytics;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.workflow.config.FlowHistoryProperties;
 import com.njydsz.pmis.workflow.entity.instance.FlowHisInstanceDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowHisTaskDO;
-import com.njydsz.pmis.workflow.entity.instance.FlowHisVariableDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.instance.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.mapper.instance.FlowHisInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.mapper.instance.FlowHisVariableMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.analytics.FlowHistoryArchiveService;
@@ -40,7 +36,7 @@ import java.util.Set;
  * <ol>
  *   <li>查询已结束 + 结束时间超过阈值的实例（最多 batchSize 条）</li>
  *   <li>逐实例校验所有任务均已归档到 his_task</li>
- *   <li>写入 his_instance + his_variable（拆分 JSON）</li>
+ *   <li>写入 his_instance（variable 以 JSON blob 存储）</li>
  *   <li>批量物理删除主表已归档实例</li>
  *   <li>达到 maxProcessMs 上限时剩余实例留待下次执行</li>
  * </ol>
@@ -48,7 +44,6 @@ import java.util.Set;
  * <p>清理流程：
  * <ol>
  *   <li>查询 his_instance 中 archived_at 早于阈值的记录</li>
- *   <li>批量删除 his_variable（按 instance_id 外键级联）</li>
  *   <li>批量删除 his_instance</li>
  * </ol>
  *
@@ -68,8 +63,6 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     private final FlowRunTaskMapper taskMapper;
     /** 历史实例 Mapper，写入归档实例记录 */
     private final FlowHisInstanceMapper hisInstanceMapper;
-    /** 历史变量 Mapper，写入拆分后的流程变量行 */
-    private final FlowHisVariableMapper hisVariableMapper;
     /** 历史归档配置属性，控制保留天数/批大小/最大耗时等 */
     private final FlowHistoryProperties properties;
 
@@ -201,24 +194,13 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         if (candidates == null || candidates.isEmpty()) {
             log.info("[FlowHistoryPurge] 无需清理 purgeDays={}", days);
             result.put("ok", true);
-            result.put("purgedInstances", 0);
-            result.put("purgedVariables", 0);
-            result.put("costMs", System.currentTimeMillis() - start);
+        result.put("purgedInstances", 0);
+        result.put("costMs", System.currentTimeMillis() - start);
             return result;
         }
 
-        // 2. 批量删除 his_variable（按 instance_id）
+        // 2. 批量删除 his_instance
         List<String> instanceIds = candidates.stream().map(FlowHisInstanceDO::getId).toList();
-        int purgedVariables = 0;
-        try {
-            LambdaQueryWrapper<FlowHisVariableDO> varWrapper = new LambdaQueryWrapper<>();
-            varWrapper.in(FlowHisVariableDO::getInstanceId, instanceIds);
-            purgedVariables = hisVariableMapper.delete(varWrapper);
-        } catch (Exception e) {
-            log.warn("[FlowHistoryPurge] 清理 his_variable 失败: {}", e.getMessage(), e);
-        }
-
-        // 3. 批量删除 his_instance
         int purgedInstances = 0;
         try {
             LambdaQueryWrapper<FlowHisInstanceDO> insWrapper = new LambdaQueryWrapper<>();
@@ -229,12 +211,11 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         }
 
         long cost = System.currentTimeMillis() - start;
-        log.info("[FlowHistoryPurge] 完成 purgedInstances={} purgedVariables={} costMs={}",
-                purgedInstances, purgedVariables, cost);
+        log.info("[FlowHistoryPurge] 完成 purgedInstances={} costMs={}",
+                purgedInstances, cost);
 
         result.put("ok", true);
         result.put("purgedInstances", purgedInstances);
-        result.put("purgedVariables", purgedVariables);
         result.put("costMs", cost);
         return result;
     }
@@ -286,22 +267,9 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
             }
         }
 
-        // 2. 写入归档表（his_instance + his_variable）
+        // 2. 写入归档表（his_instance，variable 以 JSON blob 存储）
         FlowHisInstanceDO hisInstance = toHisInstance(instance);
         hisInstanceMapper.insert(hisInstance);
-
-        // 拆分 variable JSON 到独立行
-        if (instance.getVariable() != null && !instance.getVariable().isBlank()) {
-            try {
-                List<FlowHisVariableDO> variables = parseVariables(hisInstance.getId(), instance.getVariable());
-                if (!variables.isEmpty()) {
-                    hisVariableMapper.batchInsert(variables);
-                }
-            } catch (Exception e) {
-                log.warn("[FlowHistoryArchive] 拆分 variable 失败 instanceId={} err={}",
-                        instanceId, e.getMessage());
-            }
-        }
 
         log.info("[FlowHistoryArchive] 归档实例 instanceId={} status={} endAt={} taskCount={} hisCount={}",
                 instanceId, instance.getFlowStatus(), instance.getEndAt(),
@@ -341,35 +309,6 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         his.setTenantId(ins.getTenantId());
         his.setProviderTraceId(ins.getProviderTraceId());
         return his;
-    }
-
-    /**
-     * 解析 variable JSON 字符串为变量行列表
-     */
-    private List<FlowHisVariableDO> parseVariables(String instanceId, String variableJson) {
-        List<FlowHisVariableDO> out = new ArrayList<>();
-        try {
-            JSONObject obj = JSON.parseObject(variableJson);
-            if (obj == null) return out;
-            for (String key : obj.keySet()) {
-                FlowHisVariableDO v = new FlowHisVariableDO();
-                v.setInstanceId(instanceId);
-                v.setVarKey(key);
-                Object value = obj.get(key);
-                v.setVarValue(value == null ? null : JSON.toJSONString(value));
-                v.setArchivedAt(LocalDateTime.now());
-                out.add(v);
-            }
-        } catch (Exception e) {
-            // 非 JSON 格式（可能是简单字符串）整行存储
-            FlowHisVariableDO v = new FlowHisVariableDO();
-            v.setInstanceId(instanceId);
-            v.setVarKey("__raw__");
-            v.setVarValue(variableJson);
-            v.setArchivedAt(LocalDateTime.now());
-            out.add(v);
-        }
-        return out;
     }
 
     /**

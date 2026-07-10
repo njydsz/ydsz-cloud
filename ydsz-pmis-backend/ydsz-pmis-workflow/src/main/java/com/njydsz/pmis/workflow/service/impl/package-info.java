@@ -13,7 +13,6 @@
  *       {@link com.njydsz.pmis.workflow.service.impl.FlowJoinTokenServiceImpl}、
  *       {@link com.njydsz.pmis.workflow.service.impl.FlowTaskSupport}</li>
  *   <li>任务 - {@link com.njydsz.pmis.workflow.service.impl.FlowTaskServiceImpl}、
- *       {@link com.njydsz.pmis.workflow.service.impl.FlowTaskCommentServiceImpl}、
  *       {@link com.njydsz.pmis.workflow.service.impl.FlowTaskQueryServiceImpl}、
  *       {@link com.njydsz.pmis.workflow.service.impl.FlowTaskBatchServiceImpl}、
  *       {@link com.njydsz.pmis.workflow.service.impl.FlowTaskCompleteServiceImpl}、
