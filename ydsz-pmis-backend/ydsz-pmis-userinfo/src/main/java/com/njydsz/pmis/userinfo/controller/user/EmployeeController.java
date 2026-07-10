@@ -11,7 +11,7 @@ import com.njydsz.pmis.userinfo.dto.user.EmployeePageDTO;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.user.EmployeeDO;
 import com.njydsz.pmis.userinfo.service.user.EmployeeService;
-import com.njydsz.pmis.userinfo.vo.user.EmployeeVO;
+import com.njydsz.pmis.userinfo.vo.EmployeeVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.service.org;
 
 import com.njydsz.pmis.userinfo.dto.org.DepartmentFormDTO;
 import com.njydsz.pmis.userinfo.entity.org.DepartmentDO;
-import com.njydsz.pmis.userinfo.vo.org.DepartmentTreeVO;
+import com.njydsz.pmis.userinfo.vo.DepartmentTreeVO;
 
 import java.util.List;
 

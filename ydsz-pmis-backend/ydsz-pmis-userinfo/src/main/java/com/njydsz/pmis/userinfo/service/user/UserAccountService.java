@@ -5,7 +5,7 @@ import com.njydsz.pmis.userinfo.dto.auth.LoginRequest;
 import com.njydsz.pmis.userinfo.dto.auth.LoginResult;
 import com.njydsz.pmis.userinfo.dto.user.UserQueryDTO;
 import com.njydsz.pmis.userinfo.entity.user.UserAccountDO;
-import com.njydsz.pmis.userinfo.vo.user.UserVO;
+import com.njydsz.pmis.userinfo.vo.UserVO;
 
 import java.time.LocalDateTime;
 import java.util.List;

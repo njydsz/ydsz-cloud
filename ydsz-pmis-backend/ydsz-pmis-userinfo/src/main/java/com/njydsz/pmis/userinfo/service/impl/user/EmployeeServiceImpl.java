@@ -23,7 +23,7 @@ import com.njydsz.pmis.userinfo.mapper.rate.OutsourceRateMapper;
 import com.njydsz.pmis.userinfo.mapper.rate.PartTimeRateMapper;
 import com.njydsz.pmis.userinfo.mapper.org.PositionMapper;
 import com.njydsz.pmis.userinfo.service.user.EmployeeService;
-import com.njydsz.pmis.userinfo.vo.user.EmployeeVO;
+import com.njydsz.pmis.userinfo.vo.EmployeeVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;

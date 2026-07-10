@@ -33,7 +33,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowCategoryServiceImpl implements FlowCategoryService {
 
+    /** 流程分类 Mapper，用于分类的增删改查 */
     private final FlowCategoryMapper categoryMapper;
+    /** 流程定义 Mapper，删除分类前校验是否有关联的流程定义 */
     private final FlowDefinitionMapper definitionMapper;
 
     @Override

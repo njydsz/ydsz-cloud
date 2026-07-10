@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.dto.user;
 
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.userinfo.vo.user.UserVO;
+import com.njydsz.pmis.userinfo.vo.UserVO;
 
 import java.util.List;
 

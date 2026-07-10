@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeCreateDTO;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.user.EmployeeDO;
-import com.njydsz.pmis.userinfo.vo.user.EmployeeVO;
+import com.njydsz.pmis.userinfo.vo.EmployeeVO;
 
 import java.util.List;
 import java.util.Map;

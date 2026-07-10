@@ -35,9 +35,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
 
+    /** 流程节点 Mapper，用于读取和更新节点 ext 配置 */
     private final FlowNodeMapper nodeMapper;
+    /** 运行时任务 Mapper，用于查询按钮执行关联的待办任务 */
     private final FlowRunTaskMapper taskMapper;
+    /** 流程定义缓存服务，按钮配置变更后主动失效缓存 */
     private final FlowDefinitionCacheService definitionCacheService;
+    /** 流程任务服务，按钮动作（通过/驳回/转办/委派）的执行入口 */
     private final FlowTaskService taskService;
 
     @Override
