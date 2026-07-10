@@ -1,9 +1,9 @@
 package com.njydsz.pmis.cronjob.core.dag;
 
-import com.njydsz.pmis.cronjob.entity.JobDO;
-import com.njydsz.pmis.cronjob.entity.JobRelationDO;
-import com.njydsz.pmis.cronjob.mapper.JobMapper;
-import com.njydsz.pmis.cronjob.mapper.JobRelationMapper;
+import com.njydsz.pmis.cronjob.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.entity.job.JobRelationDO;
+import com.njydsz.pmis.cronjob.mapper.job.JobMapper;
+import com.njydsz.pmis.cronjob.mapper.job.JobRelationMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

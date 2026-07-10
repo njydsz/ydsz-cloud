@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.core.leader;
 
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.entity.JobDO;
+import com.njydsz.pmis.cronjob.entity.job.JobDO;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;

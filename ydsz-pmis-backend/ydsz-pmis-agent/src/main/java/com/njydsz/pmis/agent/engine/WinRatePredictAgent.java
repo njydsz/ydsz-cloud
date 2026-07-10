@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.engine;
 
-import com.njydsz.pmis.agent.enums.AgentAlertLevel;
-import com.njydsz.pmis.agent.enums.AgentType;
+import com.njydsz.pmis.agent.enums.agent.AgentAlertLevel;
+import com.njydsz.pmis.agent.enums.agent.AgentType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

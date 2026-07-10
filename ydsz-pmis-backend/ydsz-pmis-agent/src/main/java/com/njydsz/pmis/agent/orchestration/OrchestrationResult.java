@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.orchestration;
 
 import com.njydsz.pmis.agent.engine.AgentResult;
-import com.njydsz.pmis.agent.enums.AgentAlertLevel;
+import com.njydsz.pmis.agent.enums.agent.AgentAlertLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

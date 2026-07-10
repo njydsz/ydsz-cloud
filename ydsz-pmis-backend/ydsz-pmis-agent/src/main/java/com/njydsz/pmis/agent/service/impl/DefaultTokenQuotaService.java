@@ -1,13 +1,13 @@
 package com.njydsz.pmis.agent.service.impl;
 
 import com.njydsz.pmis.agent.config.TokenQuotaProperties;
-import com.njydsz.pmis.agent.dto.QuotaSummary;
-import com.njydsz.pmis.agent.dto.TokenUsage;
-import com.njydsz.pmis.agent.entity.TokenQuotaDO;
-import com.njydsz.pmis.agent.entity.TokenUsageLogDO;
-import com.njydsz.pmis.agent.mapper.TokenQuotaMapper;
-import com.njydsz.pmis.agent.mapper.TokenUsageLogMapper;
-import com.njydsz.pmis.agent.service.TokenQuotaService;
+import com.njydsz.pmis.agent.dto.tool.QuotaSummary;
+import com.njydsz.pmis.agent.dto.tool.TokenUsage;
+import com.njydsz.pmis.agent.entity.tool.TokenQuotaDO;
+import com.njydsz.pmis.agent.entity.tool.TokenUsageLogDO;
+import com.njydsz.pmis.agent.mapper.tool.TokenQuotaMapper;
+import com.njydsz.pmis.agent.mapper.tool.TokenUsageLogMapper;
+import com.njydsz.pmis.agent.service.tool.TokenQuotaService;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;

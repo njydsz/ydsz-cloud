@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.feign;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.userinfo.dto.LoginContextDTO;
+import com.njydsz.pmis.userinfo.dto.auth.LoginContextDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;

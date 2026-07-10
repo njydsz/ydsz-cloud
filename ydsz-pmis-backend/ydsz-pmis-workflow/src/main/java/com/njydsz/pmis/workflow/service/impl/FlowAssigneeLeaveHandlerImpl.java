@@ -1,14 +1,14 @@
 package com.njydsz.pmis.workflow.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
-import com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO;
-import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.mapper.FlowDelegateAuthMapper;
-import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.enums.instance.FlowTaskStatus;
+import com.njydsz.pmis.workflow.entity.delegate.FlowDelegateAuthDO;
+import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.mapper.delegate.FlowDelegateAuthMapper;
+import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowAssigneeLeaveHandler;
-import com.njydsz.pmis.workflow.service.FlowTaskService;
+import com.njydsz.pmis.workflow.service.instance.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

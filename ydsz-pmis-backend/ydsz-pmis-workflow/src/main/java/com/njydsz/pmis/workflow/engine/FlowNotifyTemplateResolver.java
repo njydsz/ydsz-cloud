@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.engine;
 
-import com.njydsz.pmis.workflow.entity.FlowNotifyTemplateDO;
-import com.njydsz.pmis.workflow.mapper.FlowNotifyTemplateMapper;
+import com.njydsz.pmis.workflow.entity.notification.FlowNotifyTemplateDO;
+import com.njydsz.pmis.workflow.mapper.notification.FlowNotifyTemplateMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;

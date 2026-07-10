@@ -40,6 +40,7 @@ import java.util.List;
 @DS(DataSourceConstants.SLAVE)
 public class SearchServiceImpl implements SearchService {
 
+    /** 立项 Mapper（全文检索） */
     private final InitiationMapper initiationMapper;
 
     /**

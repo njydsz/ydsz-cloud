@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.scheduler;
 
-import com.njydsz.pmis.workflow.service.FlowNotifyOutboxService;
+import com.njydsz.pmis.workflow.service.notification.FlowNotifyOutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

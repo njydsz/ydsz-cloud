@@ -6,7 +6,7 @@ import com.njydsz.pmis.cronjob.grpc.SubTaskExecutionResponse;
 import com.njydsz.pmis.cronjob.grpc.TaskExecutionRequest;
 import com.njydsz.pmis.cronjob.grpc.TaskExecutionResponse;
 import com.njydsz.pmis.cronjob.grpc.TaskExecutionServiceGrpc;
-import com.njydsz.pmis.cronjob.entity.JobDO;
+import com.njydsz.pmis.cronjob.entity.job.JobDO;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;

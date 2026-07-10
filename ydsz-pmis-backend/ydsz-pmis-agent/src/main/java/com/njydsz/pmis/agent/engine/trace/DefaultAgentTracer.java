@@ -2,8 +2,8 @@ package com.njydsz.pmis.agent.engine.trace;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.engine.AgentContext;
-import com.njydsz.pmis.agent.entity.AgentTraceDO;
-import com.njydsz.pmis.agent.mapper.AgentTraceMapper;
+import com.njydsz.pmis.agent.entity.agent.AgentTraceDO;
+import com.njydsz.pmis.agent.mapper.agent.AgentTraceMapper;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import lombok.extern.slf4j.Slf4j;

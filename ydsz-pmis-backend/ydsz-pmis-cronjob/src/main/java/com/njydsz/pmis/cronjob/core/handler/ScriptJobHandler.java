@@ -7,7 +7,7 @@ import com.njydsz.pmis.common.job.JobLogger;
 import com.njydsz.pmis.common.job.JobLoggerHolder;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.executor.SandboxScriptExecutor;
-import com.njydsz.pmis.cronjob.entity.JobDO;
+import com.njydsz.pmis.cronjob.entity.job.JobDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

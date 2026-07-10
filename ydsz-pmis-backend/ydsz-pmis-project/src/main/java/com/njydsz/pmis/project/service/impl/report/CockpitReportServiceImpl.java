@@ -66,14 +66,23 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class CockpitReportServiceImpl implements CockpitReportService {
 
+    /** 发票 Mapper */
     private final InvoiceMapper invoiceMapper;
+    /** 回款 Mapper */
     private final PaymentMapper paymentMapper;
+    /** 成本分摊 Mapper */
     private final CostAllocationMapper costAllocationMapper;
+    /** 采购成本 Mapper */
     private final PurchaseMapper purchaseMapper;
+    /** 费用报销 Mapper */
     private final ExpenseMapper expenseMapper;
+    /** EVM 挣值度量 Mapper */
     private final EvmMeasureMapper evmMeasureMapper;
+    /** 项目风险 Mapper */
     private final RiskMapper riskMapper;
+    /** 人效快照 Mapper */
     private final BillableUtilizationSnapshotMapper utilizationSnapshotMapper;
+    /** 人效服务 */
     private final BillableUtilizationService billableUtilizationService;
     /** Bench 资源 Feign 客户端，用于查询闲置人员成本（用户模块） */
     private final BenchResourceClient benchResourceClient;

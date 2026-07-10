@@ -1,11 +1,11 @@
 package com.njydsz.pmis.workflow.engine;
 
-import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
-import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowSkipDO;
-import com.njydsz.pmis.workflow.service.FlowInstanceService;
-import com.njydsz.pmis.workflow.service.FlowRoutingService;
+import com.njydsz.pmis.workflow.dto.instance.FlowInstanceViewDTO;
+import com.njydsz.pmis.workflow.entity.instance.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.definition.FlowNodeDO;
+import com.njydsz.pmis.workflow.entity.instance.FlowSkipDO;
+import com.njydsz.pmis.workflow.service.instance.FlowInstanceService;
+import com.njydsz.pmis.workflow.service.instance.FlowRoutingService;
 
 import java.util.List;
 import java.util.Map;

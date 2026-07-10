@@ -1,6 +1,6 @@
 package com.njydsz.pmis.agent.engine;
 
-import com.njydsz.pmis.agent.enums.AgentType;
+import com.njydsz.pmis.agent.enums.agent.AgentType;
 
 /**
  * Agent 统一接口

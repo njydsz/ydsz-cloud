@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
-import com.njydsz.pmis.cronjob.entity.JobDO;
+import com.njydsz.pmis.cronjob.entity.job.JobDO;
 
 /**
  * 任务派发接口。

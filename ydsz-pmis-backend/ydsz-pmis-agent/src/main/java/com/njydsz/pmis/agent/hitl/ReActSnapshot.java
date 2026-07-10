@@ -2,7 +2,7 @@ package com.njydsz.pmis.agent.hitl;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.react.ReActStep;
-import com.njydsz.pmis.agent.enums.HitlApprovalStatus;
+import com.njydsz.pmis.agent.enums.hitl.HitlApprovalStatus;
 import lombok.Data;
 
 import java.io.Serial;

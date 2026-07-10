@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.message.channel.MessageChannel;
-import com.njydsz.pmis.message.service.ReadReceiptService;
+import com.njydsz.pmis.message.service.receipt.ReadReceiptService;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

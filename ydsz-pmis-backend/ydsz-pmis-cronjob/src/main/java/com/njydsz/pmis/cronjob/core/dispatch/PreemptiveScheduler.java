@@ -1,10 +1,10 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.cronjob.entity.JobDO;
-import com.njydsz.pmis.cronjob.entity.JobLogDO;
-import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
-import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.entity.log.JobLogDO;
+import com.njydsz.pmis.cronjob.mapper.log.JobLogMapper;
+import com.njydsz.pmis.cronjob.mapper.job.JobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;

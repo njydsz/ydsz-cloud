@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.core.alert;
 
-import com.njydsz.pmis.cronjob.entity.JobAlertRuleDO;
+import com.njydsz.pmis.cronjob.entity.job.JobAlertRuleDO;
 
 import java.io.Serializable;
 

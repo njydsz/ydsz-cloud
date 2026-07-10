@@ -32,7 +32,9 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PurchaseServiceImpl implements PurchaseService {
 
+    /** 采购成本 Mapper */
     private final PurchaseMapper purchaseMapper;
+    /** 预算守卫（采购超预算校验） */
     private final BudgetGuard budgetGuard;
 
     @Override

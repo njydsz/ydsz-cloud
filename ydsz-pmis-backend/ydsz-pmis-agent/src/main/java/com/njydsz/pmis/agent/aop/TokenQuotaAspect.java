@@ -2,11 +2,11 @@ package com.njydsz.pmis.agent.aop;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.config.TokenQuotaProperties;
-import com.njydsz.pmis.agent.dto.TokenUsage;
+import com.njydsz.pmis.agent.dto.tool.TokenUsage;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.memory.TokenCounter;
-import com.njydsz.pmis.agent.service.TokenQuotaService;
+import com.njydsz.pmis.agent.service.tool.TokenQuotaService;
 import com.njydsz.pmis.common.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

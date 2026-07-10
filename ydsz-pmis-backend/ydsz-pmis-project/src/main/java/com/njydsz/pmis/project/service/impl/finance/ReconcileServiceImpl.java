@@ -28,6 +28,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class ReconcileServiceImpl implements ReconcileService {
 
+    /** 对账处理器（执行-财务对账） */
     private final ReconcileHandler reconcileHandler;
 
     @Override

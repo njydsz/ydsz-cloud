@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.vo;
 
-import com.njydsz.pmis.userinfo.entity.EmployeeDO;
+import com.njydsz.pmis.userinfo.entity.user.EmployeeDO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

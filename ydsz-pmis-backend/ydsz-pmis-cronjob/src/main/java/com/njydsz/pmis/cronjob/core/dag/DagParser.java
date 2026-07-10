@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.core.dag;
 
-import com.njydsz.pmis.cronjob.entity.JobRelationDO;
+import com.njydsz.pmis.cronjob.entity.job.JobRelationDO;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayDeque;

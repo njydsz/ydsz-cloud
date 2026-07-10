@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.core.sharding;
 
 import com.njydsz.pmis.cronjob.core.discovery.NodeDiscoveryStrategy;
-import com.njydsz.pmis.cronjob.entity.JobNodeDO;
+import com.njydsz.pmis.cronjob.entity.job.JobNodeDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;

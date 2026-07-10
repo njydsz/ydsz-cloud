@@ -11,7 +11,7 @@ import com.njydsz.pmis.agent.engine.prompt.PromptTemplateCodes;
 import com.njydsz.pmis.agent.engine.prompt.PromptTemplateRegistry;
 import com.njydsz.pmis.agent.engine.stream.NoOpReActEventListener;
 import com.njydsz.pmis.agent.engine.stream.ReActEventListener;
-import com.njydsz.pmis.agent.enums.HitlApprovalStatus;
+import com.njydsz.pmis.agent.enums.hitl.HitlApprovalStatus;
 import com.njydsz.pmis.agent.hitl.HitlPauseException;
 import com.njydsz.pmis.agent.hitl.ReActSnapshot;
 import com.njydsz.pmis.agent.tool.AgentTool;

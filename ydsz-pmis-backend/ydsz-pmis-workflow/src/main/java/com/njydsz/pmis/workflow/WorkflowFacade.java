@@ -1,9 +1,9 @@
 package com.njydsz.pmis.workflow;
 
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
-import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
-import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.dto.instance.FlowInstanceViewDTO;
+import com.njydsz.pmis.workflow.dto.instance.FlowStartProcessDTO;
+import com.njydsz.pmis.workflow.dto.instance.FlowTaskOperateDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;

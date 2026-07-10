@@ -2,8 +2,8 @@ package com.njydsz.pmis.message.service.impl;
 
 import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.constant.MessageConstants;
-import com.njydsz.pmis.message.entity.MsgPreferenceDO;
-import com.njydsz.pmis.message.service.PreferenceService;
+import com.njydsz.pmis.message.entity.config.MsgPreferenceDO;
+import com.njydsz.pmis.message.service.config.PreferenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.service.impl;
 
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
-import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

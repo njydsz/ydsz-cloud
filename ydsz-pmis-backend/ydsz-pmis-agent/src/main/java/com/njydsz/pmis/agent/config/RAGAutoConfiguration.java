@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.config;
 
 import com.njydsz.pmis.agent.engine.embedding.EmbeddingProvider;
-import com.njydsz.pmis.agent.mapper.DocumentChunkMapper;
+import com.njydsz.pmis.agent.mapper.knowledge.DocumentChunkMapper;
 import com.njydsz.pmis.agent.rag.InMemoryVectorStore;
 import com.njydsz.pmis.agent.rag.PgVectorStore;
 import com.njydsz.pmis.agent.rag.RAGService;

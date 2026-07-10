@@ -2,9 +2,9 @@ package com.njydsz.pmis.cronjob.core.executor;
 
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
-import com.njydsz.pmis.cronjob.entity.JobLogDO;
-import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
-import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
+import com.njydsz.pmis.cronjob.entity.log.JobLogDO;
+import com.njydsz.pmis.cronjob.mapper.log.JobLogMapper;
+import com.njydsz.pmis.cronjob.mapper.job.JobNodeMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

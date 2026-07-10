@@ -1,8 +1,8 @@
 package com.njydsz.pmis.userinfo.job;
 
 import com.njydsz.pmis.common.job.JobHandler;
-import com.njydsz.pmis.userinfo.dto.PasswordScanResultDTO;
-import com.njydsz.pmis.userinfo.service.PasswordScanService;
+import com.njydsz.pmis.userinfo.dto.auth.PasswordScanResultDTO;
+import com.njydsz.pmis.userinfo.service.auth.PasswordScanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

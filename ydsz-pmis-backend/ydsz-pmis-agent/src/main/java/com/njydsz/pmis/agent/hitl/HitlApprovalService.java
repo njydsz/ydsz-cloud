@@ -2,7 +2,7 @@ package com.njydsz.pmis.agent.hitl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.agent.engine.react.ReActResult;
-import com.njydsz.pmis.agent.entity.HitlApprovalRequestDO;
+import com.njydsz.pmis.agent.entity.hitl.HitlApprovalRequestDO;
 
 import java.util.List;
 

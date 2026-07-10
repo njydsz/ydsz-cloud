@@ -45,8 +45,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CustomerCreditServiceImpl implements CustomerCreditService {
 
+    /** 客户信用 Mapper */
     private final CustomerCreditMapper creditMapper;
+    /** 发票 Mapper（欠款统计） */
     private final InvoiceMapper invoiceMapper;
+    /** 回款 Mapper（回款统计） */
     private final PaymentMapper paymentMapper;
 
     @Override

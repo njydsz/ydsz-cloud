@@ -1,8 +1,8 @@
 package com.njydsz.pmis.cronjob.vo;
 
 import com.njydsz.pmis.cronjob.core.dag.DagDefinition;
-import com.njydsz.pmis.cronjob.entity.JobDagInstanceDO;
-import com.njydsz.pmis.cronjob.entity.JobDagNodeInstanceDO;
+import com.njydsz.pmis.cronjob.entity.dag.JobDagInstanceDO;
+import com.njydsz.pmis.cronjob.entity.dag.JobDagNodeInstanceDO;
 import lombok.Data;
 
 import java.util.List;

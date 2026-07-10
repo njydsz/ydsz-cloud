@@ -1,8 +1,8 @@
 package com.njydsz.pmis.cronjob.core.executor;
 
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.entity.JobNodeDO;
-import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
+import com.njydsz.pmis.cronjob.entity.job.JobNodeDO;
+import com.njydsz.pmis.cronjob.mapper.job.JobNodeMapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;

@@ -2,12 +2,12 @@ package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
-import com.njydsz.pmis.cronjob.entity.JobDO;
-import com.njydsz.pmis.cronjob.entity.JobLogDO;
-import com.njydsz.pmis.cronjob.entity.JobSlowLogDO;
-import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
-import com.njydsz.pmis.cronjob.mapper.JobMapper;
-import com.njydsz.pmis.cronjob.mapper.JobSlowLogMapper;
+import com.njydsz.pmis.cronjob.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.entity.log.JobLogDO;
+import com.njydsz.pmis.cronjob.entity.job.JobSlowLogDO;
+import com.njydsz.pmis.cronjob.mapper.log.JobLogMapper;
+import com.njydsz.pmis.cronjob.mapper.job.JobMapper;
+import com.njydsz.pmis.cronjob.mapper.job.JobSlowLogMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

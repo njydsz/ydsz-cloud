@@ -1,8 +1,8 @@
 package com.njydsz.pmis.agent.rag;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.agent.entity.DocumentChunkDO;
-import com.njydsz.pmis.agent.mapper.DocumentChunkMapper;
+import com.njydsz.pmis.agent.entity.knowledge.DocumentChunkDO;
+import com.njydsz.pmis.agent.mapper.knowledge.DocumentChunkMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 

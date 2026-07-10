@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.core.discovery;
 
-import com.njydsz.pmis.cronjob.entity.JobNodeDO;
+import com.njydsz.pmis.cronjob.entity.job.JobNodeDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

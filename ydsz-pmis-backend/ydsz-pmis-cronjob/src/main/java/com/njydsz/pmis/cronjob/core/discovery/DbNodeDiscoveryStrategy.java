@@ -2,8 +2,8 @@ package com.njydsz.pmis.cronjob.core.discovery;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.entity.JobNodeDO;
-import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
+import com.njydsz.pmis.cronjob.entity.job.JobNodeDO;
+import com.njydsz.pmis.cronjob.mapper.job.JobNodeMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

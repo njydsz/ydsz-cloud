@@ -33,6 +33,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WarrantyServiceImpl implements WarrantyService {
 
+    /** 质保期 Mapper */
     private final WarrantyMapper warrantyMapper;
 
     @Override

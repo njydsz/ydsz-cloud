@@ -2,7 +2,7 @@ package com.njydsz.pmis.agent.tool;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.agent.dto.ToolRegisterDTO;
+import com.njydsz.pmis.agent.dto.tool.ToolRegisterDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;

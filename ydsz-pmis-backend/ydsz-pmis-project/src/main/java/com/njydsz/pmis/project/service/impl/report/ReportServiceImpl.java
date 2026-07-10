@@ -41,10 +41,15 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
 
+    /** 利润快照 Mapper */
     private final ProfitSnapshotMapper profitSnapshotMapper;
+    /** 成本分摊 Mapper */
     private final CostAllocationMapper costAllocationMapper;
+    /** 费用报销 Mapper */
     private final ExpenseMapper expenseMapper;
+    /** 采购成本 Mapper */
     private final PurchaseMapper purchaseMapper;
+    /** 收入确认 Mapper */
     private final RevenueMapper revenueMapper;
 
     @Override

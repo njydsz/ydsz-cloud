@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.service.impl.strategy;
 
-import com.njydsz.pmis.workflow.enums.FlowPerformType;
+import com.njydsz.pmis.workflow.enums.definition.FlowPerformType;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

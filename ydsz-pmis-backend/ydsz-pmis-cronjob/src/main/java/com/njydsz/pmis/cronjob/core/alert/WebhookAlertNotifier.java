@@ -3,7 +3,7 @@ package com.njydsz.pmis.cronjob.core.alert;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.cronjob.config.AlertProperties;
-import com.njydsz.pmis.cronjob.entity.JobAlertRuleDO;
+import com.njydsz.pmis.cronjob.entity.job.JobAlertRuleDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

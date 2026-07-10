@@ -1,13 +1,13 @@
 package com.njydsz.pmis.workflow.service.impl.strategy;
 
-import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.entity.FlowUserDO;
-import com.njydsz.pmis.workflow.enums.FlowPerformType;
-import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
-import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
-import com.njydsz.pmis.workflow.service.impl.FlowTaskArchiveService;
+import com.njydsz.pmis.workflow.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.entity.integration.FlowUserDO;
+import com.njydsz.pmis.workflow.enums.definition.FlowPerformType;
+import com.njydsz.pmis.workflow.enums.instance.FlowTaskStatus;
+import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.mapper.integration.FlowUserMapper;
+import com.njydsz.pmis.workflow.service.impl.instance.FlowTaskArchiveService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

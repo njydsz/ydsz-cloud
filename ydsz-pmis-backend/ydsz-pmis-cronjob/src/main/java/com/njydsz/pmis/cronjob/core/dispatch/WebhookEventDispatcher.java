@@ -2,8 +2,8 @@ package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.cronjob.entity.JobWebhookDO;
-import com.njydsz.pmis.cronjob.mapper.JobWebhookMapper;
+import com.njydsz.pmis.cronjob.entity.job.JobWebhookDO;
+import com.njydsz.pmis.cronjob.mapper.job.JobWebhookMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

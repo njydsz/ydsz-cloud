@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.workflow.config.FlowHistoryProperties;
-import com.njydsz.pmis.workflow.service.FlowHistoryArchiveService;
+import com.njydsz.pmis.workflow.service.analytics.FlowHistoryArchiveService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

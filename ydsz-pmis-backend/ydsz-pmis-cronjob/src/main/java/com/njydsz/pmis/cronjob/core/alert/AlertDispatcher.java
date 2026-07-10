@@ -2,10 +2,10 @@ package com.njydsz.pmis.cronjob.core.alert;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
-import com.njydsz.pmis.cronjob.entity.JobAlertLogDO;
-import com.njydsz.pmis.cronjob.entity.JobAlertRuleDO;
-import com.njydsz.pmis.cronjob.mapper.JobAlertLogMapper;
-import com.njydsz.pmis.cronjob.mapper.JobAlertRuleMapper;
+import com.njydsz.pmis.cronjob.entity.job.JobAlertLogDO;
+import com.njydsz.pmis.cronjob.entity.job.JobAlertRuleDO;
+import com.njydsz.pmis.cronjob.mapper.job.JobAlertLogMapper;
+import com.njydsz.pmis.cronjob.mapper.job.JobAlertRuleMapper;
 import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

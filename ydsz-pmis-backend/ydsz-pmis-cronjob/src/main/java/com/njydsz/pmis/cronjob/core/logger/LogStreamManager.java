@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.core.logger;
 
-import com.njydsz.pmis.cronjob.entity.JobLogContentDO;
+import com.njydsz.pmis.cronjob.entity.log.JobLogContentDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;

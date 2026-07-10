@@ -3,7 +3,7 @@ package com.njydsz.pmis.agent.engine.llm;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
-import com.njydsz.pmis.agent.enums.AgentAlertLevel;
+import com.njydsz.pmis.agent.enums.agent.AgentAlertLevel;
 
 import java.math.BigDecimal;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.feign;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.userinfo.dto.LoginContextDTO;
+import com.njydsz.pmis.userinfo.dto.auth.LoginContextDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;

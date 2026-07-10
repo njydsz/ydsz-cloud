@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.core.discovery;
 
-import com.njydsz.pmis.cronjob.entity.JobNodeDO;
+import com.njydsz.pmis.cronjob.entity.job.JobNodeDO;
 
 import java.util.List;
 

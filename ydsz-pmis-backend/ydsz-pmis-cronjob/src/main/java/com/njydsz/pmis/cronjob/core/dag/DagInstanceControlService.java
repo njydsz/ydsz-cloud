@@ -1,12 +1,12 @@
 package com.njydsz.pmis.cronjob.core.dag;
 
-import com.njydsz.pmis.cronjob.entity.JobDagInstanceDO;
-import com.njydsz.pmis.cronjob.entity.JobDagNodeInstanceDO;
-import com.njydsz.pmis.cronjob.entity.JobDO;
-import com.njydsz.pmis.cronjob.mapper.JobDagInstanceMapper;
-import com.njydsz.pmis.cronjob.mapper.JobDagMapper;
-import com.njydsz.pmis.cronjob.mapper.JobDagNodeInstanceMapper;
-import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.entity.dag.JobDagInstanceDO;
+import com.njydsz.pmis.cronjob.entity.dag.JobDagNodeInstanceDO;
+import com.njydsz.pmis.cronjob.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.mapper.dag.JobDagInstanceMapper;
+import com.njydsz.pmis.cronjob.mapper.dag.JobDagMapper;
+import com.njydsz.pmis.cronjob.mapper.dag.JobDagNodeInstanceMapper;
+import com.njydsz.pmis.cronjob.mapper.job.JobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

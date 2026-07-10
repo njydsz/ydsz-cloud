@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.engine.prompt;
 
-import com.njydsz.pmis.agent.entity.AgentPromptTemplateDO;
-import com.njydsz.pmis.agent.mapper.AgentPromptTemplateMapper;
+import com.njydsz.pmis.agent.entity.agent.AgentPromptTemplateDO;
+import com.njydsz.pmis.agent.mapper.agent.AgentPromptTemplateMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.system.listener;
 
-import com.njydsz.pmis.system.entity.LoginAuditDO;
-import com.njydsz.pmis.system.mapper.LoginAuditMapper;
+import com.njydsz.pmis.system.entity.audit.LoginAuditDO;
+import com.njydsz.pmis.system.mapper.audit.LoginAuditMapper;
 import com.njydsz.pmis.common.security.LoginAuditEvent;
 import com.njydsz.pmis.common.security.LoginStatus;
 import lombok.RequiredArgsConstructor;

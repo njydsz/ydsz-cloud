@@ -2,8 +2,8 @@ package com.njydsz.pmis.message.channel;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.message.dto.ReceiptResult;
-import com.njydsz.pmis.message.entity.MsgLogDO;
+import com.njydsz.pmis.message.dto.receipt.ReceiptResult;
+import com.njydsz.pmis.message.entity.core.MsgLogDO;
 
 import java.util.Optional;
 

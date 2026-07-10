@@ -44,9 +44,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TimeEntryServiceImpl implements TimeEntryService {
 
+    /** 工时 Mapper */
     private final TimeEntryMapper timeEntryMapper;
+    /** 名称装配器（Feign 补齐员工名称） */
     private final NameAssembler nameAssembler;
+    /** 成本分摊服务（工时→成本） */
     private final CostAllocationService costAllocationService;
+    /** 费率卡服务（获取人天单价） */
     private final RateCardService rateCardService;
 
     /** 旧数据无 rate 时的兜底费率（元/人天），向后兼容 */

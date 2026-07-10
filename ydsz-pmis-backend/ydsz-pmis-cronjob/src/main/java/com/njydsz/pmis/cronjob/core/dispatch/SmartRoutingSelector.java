@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.core.dispatch;
 
 import com.njydsz.pmis.cronjob.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.pmis.cronjob.core.executor.JobNodeHeartbeat;
-import com.njydsz.pmis.cronjob.entity.JobNodeDO;
+import com.njydsz.pmis.cronjob.entity.job.JobNodeDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
