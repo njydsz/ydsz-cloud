@@ -2,6 +2,9 @@ package com.njydsz.pmis.agent.tool;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -78,12 +81,12 @@ public interface AgentTool {
         if (schema == null || schema.isEmpty()) {
             return null;
         }
-        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put("type", "object");
-        Map<String, Object> properties = new java.util.LinkedHashMap<>();
-        java.util.List<String> required = new java.util.ArrayList<>();
+        Map<String, Object> properties = new LinkedHashMap<>();
+        List<String> required = new ArrayList<>();
         for (Map.Entry<String, Class<?>> entry : schema.entrySet()) {
-            Map<String, Object> prop = new java.util.LinkedHashMap<>();
+            Map<String, Object> prop = new LinkedHashMap<>();
             prop.put("type", jsonTypeOf(entry.getValue()));
             prop.put("description", entry.getKey());
             properties.put(entry.getKey(), prop);

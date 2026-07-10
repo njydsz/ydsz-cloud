@@ -277,7 +277,7 @@ public class DagExecutor {
                 return result;
             } catch (TimeoutException te) {
                 future.cancel(true);
-                throw new java.util.concurrent.TimeoutException(
+                throw new TimeoutException(
                         "节点 " + node.getName() + " 超时 (" + timeoutMs + "ms)");
             }
         }

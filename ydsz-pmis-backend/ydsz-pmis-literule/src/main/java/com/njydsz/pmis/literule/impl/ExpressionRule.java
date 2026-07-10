@@ -42,21 +42,55 @@ public class ExpressionRule implements Rule {
         this.evaluator = evaluator;
     }
 
+    /**
+     * 获取规则编码（来自规则定义）
+     *
+     * @return 规则编码
+     */
     @Override
     public String getCode() { return definition.getCode(); }
 
+    /**
+     * 获取规则名称（来自规则定义）
+     *
+     * @return 规则名称
+     */
     @Override
     public String getName() { return definition.getName(); }
 
+    /**
+     * 获取规则分类（来自规则定义）
+     *
+     * @return 规则分类
+     */
     @Override
     public String getCategory() { return definition.getCategory(); }
 
+    /**
+     * 获取规则优先级（来自规则定义）
+     *
+     * <p>priority 数值越小越先执行。
+     *
+     * @return 优先级数值
+     */
     @Override
     public int getPriority() { return definition.getPriority(); }
 
+    /**
+     * 获取规则场景范围（来自规则定义）
+     *
+     * @return 场景标识；null 或 "ALL" 表示适用全部场景
+     */
     @Override
     public String getScope() { return definition.getScope(); }
 
+    /**
+     * 获取互斥组标识（来自规则定义）
+     *
+     * <p>同一互斥组内，首个命中的规则触发后，同组后续规则将跳过评估。
+     *
+     * @return 互斥组标识；null 或空表示不参与互斥
+     */
     @Override
     public String getMutexGroup() { return definition.getMutexGroup(); }
 
@@ -98,6 +132,22 @@ public class ExpressionRule implements Rule {
         return env != null ? env : RuleEnvironment.DEFAULT;
     }
 
+    /**
+     * 评估规则条件并返回结果
+     *
+     * <p>执行流程：
+     * <ol>
+     *   <li>求值条件表达式（带缓存，同 context 内仅求值一次）</li>
+     *   <li>条件不满足：返回 triggered=false 的结果</li>
+     *   <li>条件满足：解析动态严重度、渲染标题/描述模板，返回完整触发结果</li>
+     * </ol>
+     *
+     * <p>异常处理：评估过程中任意异常均被捕获，返回 triggered=false 的结果，
+     * 异常信息记录到日志，不向上传播（异常隔离）。
+     *
+     * @param context 规则上下文（包含 facts、场景、租户等）
+     * @return 规则评估结果（包含触发状态、严重度、标题、描述等）
+     */
     @Override
     public RuleResult evaluate(RuleContext context) {
         long start = System.nanoTime();

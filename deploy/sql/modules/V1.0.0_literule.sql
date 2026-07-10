@@ -1,10 +1,7 @@
 -- ====================================================================
--- System.Collections.Hashtable[literule]
--- Module: literule
--- Version: V1.0.0
--- Target: PostgreSQL 18
--- Description: 鏈枃浠剁敱 deploy/sql/V1.0.0.sql 鎷嗗垎鐢熸垚
---   浠呬緵鍗曠嫭鍒濆鍖栧搴旀ā鍧楁椂浣跨敤; 瀹屾暣鍒濆鍖栬浣跨敤 V1.0.0.sql
+-- Rule Engine (Rule/Decision/Scorecard/ABTest/Var)
+-- Module: literule | Version: V1.0.0 | Target: PostgreSQL 18
+-- Generated from deploy/sql/V1.0.0.sql
 -- ====================================================================
 
 -- ============================ [041] init pmis literule schema ============================
@@ -897,3 +894,304 @@ ON CONFLICT (tenant_id, var_name, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- --------------------------------------------------------------------
 
+
+-- 规则模板表（053 漏补）
+ALTER TABLE pmis_rule_template ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_rule_template_tenant ON pmis_rule_template(tenant_id);
+
+-- 规则测试用例表（053 漏补）
+ALTER TABLE pmis_rule_test_case ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_rule_test_case_tenant ON pmis_rule_test_case(tenant_id);
+
+-- ----------------------------------------------------------------
+-- pmis_rule_chain_graph -- P0-1: rule chain visual canvas
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pmis_rule_chain_graph (
+    id                VARCHAR(20)       PRIMARY KEY,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
+    rule_code         VARCHAR(128)    NOT NULL,
+    name              VARCHAR(256),
+    description       VARCHAR(512),
+    scenario          VARCHAR(64),
+    graph_version     INTEGER         NOT NULL DEFAULT 1,
+    status            VARCHAR(16)     NOT NULL DEFAULT 'DRAFT',
+    content_json      TEXT,
+    provider_trace_id VARCHAR(64),
+    created_by        VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(64),
+    updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prcg_tenant_rule        UNIQUE (tenant_id, rule_code, deleted),
+    CONSTRAINT ck_prcg_status             CHECK (status IN ('DRAFT','PUBLISHED','ARCHIVED')),
+    CONSTRAINT ck_prcg_graph_version      CHECK (graph_version > 0),
+    CONSTRAINT ck_prcg_deleted            CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_rule_chain_graph IS 'P0-1: 规则链可视化画布 JSON 存储表';
+COMMENT ON COLUMN pmis_rule_chain_graph.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_chain_graph.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_chain_graph.rule_code IS '关联规则编码';
+COMMENT ON COLUMN pmis_rule_chain_graph.name IS '画布名称';
+COMMENT ON COLUMN pmis_rule_chain_graph.description IS '画布描述';
+COMMENT ON COLUMN pmis_rule_chain_graph.scenario IS '业务场景';
+COMMENT ON COLUMN pmis_rule_chain_graph.graph_version IS '画布版本号';
+COMMENT ON COLUMN pmis_rule_chain_graph.status IS '画布状态: DRAFT/PUBLISHED/ARCHIVED';
+COMMENT ON COLUMN pmis_rule_chain_graph.content_json IS '画布节点/连线 JSON';
+COMMENT ON COLUMN pmis_rule_chain_graph.created_by IS '创建人';
+COMMENT ON COLUMN pmis_rule_chain_graph.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_chain_graph.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_rule_chain_graph.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_rule_chain_graph.deleted IS '逻辑删除 0=未删 1=已删';
+
+-- ----------------------------------------------------------------
+-- pmis_rule_dependency -- P1-8: rule dependency
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pmis_rule_dependency (
+    id                       VARCHAR(20)       PRIMARY KEY,
+    tenant_id                VARCHAR(20)          NOT NULL DEFAULT '1',
+    rule_code                VARCHAR(128)    NOT NULL,
+    depends_on_rule_code     VARCHAR(128)    NOT NULL,
+    dependency_type          VARCHAR(16)     NOT NULL DEFAULT 'EXECUTE',
+    cascade_on_disable       SMALLINT        NOT NULL DEFAULT 0,
+    description              VARCHAR(512),
+    provider_trace_id        VARCHAR(64),
+    created_by               VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at               TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                  SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prd_tenant_rule_dep       UNIQUE (tenant_id, rule_code, depends_on_rule_code, deleted),
+    CONSTRAINT ck_prd_dependency_type       CHECK (dependency_type IN ('EXECUTE','READ_RESULT','SOFT')),
+    CONSTRAINT ck_prd_cascade_on_disable    CHECK (cascade_on_disable IN (0, 1)),
+    CONSTRAINT ck_prd_distinct_rules        CHECK (rule_code <> depends_on_rule_code),
+    CONSTRAINT ck_prd_deleted               CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_rule_dependency IS 'P1-8: 规则间依赖关系表 (EXECUTE/READ_RESULT/SOFT)';
+COMMENT ON COLUMN pmis_rule_dependency.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_dependency.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_dependency.rule_code IS '规则编码';
+COMMENT ON COLUMN pmis_rule_dependency.depends_on_rule_code IS '被依赖的规则编码';
+COMMENT ON COLUMN pmis_rule_dependency.dependency_type IS '依赖类型: EXECUTE/READ_RESULT/SOFT';
+COMMENT ON COLUMN pmis_rule_dependency.cascade_on_disable IS '上游禁用时是否级联禁用 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_dependency.description IS '依赖说明';
+COMMENT ON COLUMN pmis_rule_dependency.created_by IS '创建人';
+COMMENT ON COLUMN pmis_rule_dependency.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_dependency.deleted IS '逻辑删除 0=未删 1=已删';
+
+-- ----------------------------------------------------------------
+-- pmis_rule_ab_policy -- P1-10: AB test auto-rollback policy
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pmis_rule_ab_policy (
+    id                      VARCHAR(20)       PRIMARY KEY,
+    tenant_id               VARCHAR(20)          NOT NULL DEFAULT '1',
+    rule_code               VARCHAR(128)    NOT NULL,
+    auto_rollback_enabled   SMALLINT        NOT NULL DEFAULT 1,
+    rollback_action         VARCHAR(16)     NOT NULL DEFAULT 'AUTO',
+    error_rate_threshold    NUMERIC(5,4)    NOT NULL DEFAULT 0.0500,
+    min_sample_size         INTEGER         NOT NULL DEFAULT 100,
+    check_window_minutes    INTEGER         NOT NULL DEFAULT 5,
+    notify_channels         VARCHAR(128),
+    description             VARCHAR(512),
+    last_evaluated_at       TIMESTAMPTZ,
+    last_rollback_at        TIMESTAMPTZ,
+    provider_trace_id       VARCHAR(64),
+    created_by              VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by              VARCHAR(64),
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                 SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prap_tenant_rule          UNIQUE (tenant_id, rule_code, deleted),
+    CONSTRAINT ck_prap_auto_rollback        CHECK (auto_rollback_enabled IN (0, 1)),
+    CONSTRAINT ck_prap_rollback_action      CHECK (rollback_action IN ('AUTO','NOTIFY')),
+    CONSTRAINT ck_prap_error_rate           CHECK (error_rate_threshold >= 0 AND error_rate_threshold <= 1),
+    CONSTRAINT ck_prap_min_sample           CHECK (min_sample_size > 0),
+    CONSTRAINT ck_prap_check_window         CHECK (check_window_minutes > 0),
+    CONSTRAINT ck_prap_deleted              CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_rule_ab_policy IS 'P1-10: AB Test 自动回滚策略表';
+COMMENT ON COLUMN pmis_rule_ab_policy.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_ab_policy.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_ab_policy.rule_code IS '规则编码';
+COMMENT ON COLUMN pmis_rule_ab_policy.auto_rollback_enabled IS '是否启用自动回滚 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_ab_policy.rollback_action IS '回滚动作: AUTO 自动回滚/NOTIFY 仅通知负责人';
+COMMENT ON COLUMN pmis_rule_ab_policy.error_rate_threshold IS '触发回滚的错误率阈值 (0~1)';
+COMMENT ON COLUMN pmis_rule_ab_policy.min_sample_size IS '最小评估样本数';
+COMMENT ON COLUMN pmis_rule_ab_policy.check_window_minutes IS '评估窗口 (分钟)';
+COMMENT ON COLUMN pmis_rule_ab_policy.notify_channels IS '通知通道 (逗号分隔, 引用 pmis_flow_notify_channel.id)';
+COMMENT ON COLUMN pmis_rule_ab_policy.description IS '策略描述';
+COMMENT ON COLUMN pmis_rule_ab_policy.last_evaluated_at IS '最近一次评估时间';
+COMMENT ON COLUMN pmis_rule_ab_policy.last_rollback_at IS '最近一次回滚时间';
+COMMENT ON COLUMN pmis_rule_ab_policy.created_by IS '创建人';
+COMMENT ON COLUMN pmis_rule_ab_policy.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_ab_policy.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_rule_ab_policy.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_rule_ab_policy.deleted IS '逻辑删除 0=未删 1=已删';
+
+-- ----------------------------------------------------------------
+-- pmis_rule_ab_rollback -- P1-10: AB test rollback history
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pmis_rule_ab_rollback (
+    id                VARCHAR(20)       PRIMARY KEY,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
+    rule_code         VARCHAR(128)    NOT NULL,
+    trigger_reason    VARCHAR(32)     NOT NULL,
+    error_rate        NUMERIC(5,4),
+    sample_size       BIGINT,
+    from_canary       SMALLINT        NOT NULL DEFAULT 0,
+    operator          VARCHAR(64),
+    notify_status     VARCHAR(32),
+    provider_trace_id VARCHAR(64),
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_prar_trigger_reason       CHECK (trigger_reason IN ('ERROR_RATE','MANUAL','OWNER_REQUEST','SCHEDULED')),
+    CONSTRAINT ck_prar_error_rate           CHECK (error_rate IS NULL OR (error_rate >= 0 AND error_rate <= 1)),
+    CONSTRAINT ck_prar_sample_size          CHECK (sample_size IS NULL OR sample_size >= 0),
+    CONSTRAINT ck_prar_from_canary          CHECK (from_canary IN (0, 1)),
+    CONSTRAINT ck_prar_notify_status        CHECK (notify_status IS NULL OR notify_status IN ('PENDING','SUCCESS','FAILED')),
+    CONSTRAINT ck_prar_deleted              CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_rule_ab_rollback IS 'P1-10: AB Test 回滚历史表';
+COMMENT ON COLUMN pmis_rule_ab_rollback.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_ab_rollback.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_ab_rollback.rule_code IS '规则编码';
+COMMENT ON COLUMN pmis_rule_ab_rollback.trigger_reason IS '触发原因: ERROR_RATE/MANUAL/OWNER_REQUEST';
+COMMENT ON COLUMN pmis_rule_ab_rollback.error_rate IS '回滚时的错误率';
+COMMENT ON COLUMN pmis_rule_ab_rollback.sample_size IS '评估样本数';
+COMMENT ON COLUMN pmis_rule_ab_rollback.from_canary IS '是否从灰度版本回滚 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_ab_rollback.operator IS '操作人 (SYSTEM=自动)';
+COMMENT ON COLUMN pmis_rule_ab_rollback.notify_status IS '通知发送状态: PENDING/SUCCESS/FAILED';
+COMMENT ON COLUMN pmis_rule_ab_rollback.created_at IS '回滚时间';
+COMMENT ON COLUMN pmis_rule_ab_rollback.deleted IS '逻辑删除 0=未删 1=已删';
+
+-- ----------------------------------------------------------------
+-- pmis_rule_pack -- P2-14: rule pack marketplace
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pmis_rule_pack (
+    id                VARCHAR(20)       PRIMARY KEY,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
+    pack_code         VARCHAR(128)    NOT NULL,
+    pack_version      VARCHAR(32)     NOT NULL,
+    pack_name         VARCHAR(256)    NOT NULL,
+    industry          VARCHAR(64),
+    tags              VARCHAR(512),
+    rule_codes        TEXT,
+    rule_snapshots    TEXT,
+    previous_version  VARCHAR(32),
+    description       VARCHAR(512),
+    author            VARCHAR(128),
+    download_count    BIGINT          NOT NULL DEFAULT 0,
+    rating            NUMERIC(3,2)    NOT NULL DEFAULT 0,
+    enabled           SMALLINT        NOT NULL DEFAULT 1,
+    official          SMALLINT        NOT NULL DEFAULT 0,
+    provider_trace_id VARCHAR(64),
+    created_by        VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(64),
+    updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prp_tenant_code_version   UNIQUE (tenant_id, pack_code, pack_version, deleted),
+    CONSTRAINT ck_prp_download_count        CHECK (download_count >= 0),
+    CONSTRAINT ck_prp_rating                CHECK (rating >= 0 AND rating <= 5),
+    CONSTRAINT ck_prp_enabled               CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_prp_official              CHECK (official IN (0, 1)),
+    CONSTRAINT ck_prp_deleted               CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_rule_pack IS 'P2-14: 规则集市场表 (按行业/场景打包)';
+COMMENT ON COLUMN pmis_rule_pack.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_pack.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_pack.pack_code IS '规则集编码';
+COMMENT ON COLUMN pmis_rule_pack.pack_version IS '规则集版本号 (语义化)';
+COMMENT ON COLUMN pmis_rule_pack.pack_name IS '规则集名称';
+COMMENT ON COLUMN pmis_rule_pack.industry IS '适用行业';
+COMMENT ON COLUMN pmis_rule_pack.tags IS '标签, 逗号分隔';
+COMMENT ON COLUMN pmis_rule_pack.rule_codes IS '包含的规则编码列表 (逗号分隔)';
+COMMENT ON COLUMN pmis_rule_pack.rule_snapshots IS 'P2-8: 该版本固化的规则定义快照 (RuleDefinition JSON 数组)';
+COMMENT ON COLUMN pmis_rule_pack.previous_version IS 'P2-8: 升级来源版本号 (版本链路追踪)';
+COMMENT ON COLUMN pmis_rule_pack.description IS '描述';
+COMMENT ON COLUMN pmis_rule_pack.author IS '作者';
+COMMENT ON COLUMN pmis_rule_pack.download_count IS '下载次数';
+COMMENT ON COLUMN pmis_rule_pack.rating IS '评分 (0~5)';
+COMMENT ON COLUMN pmis_rule_pack.enabled IS '是否上架 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_pack.official IS '是否官方 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_pack.created_by IS '创建人';
+COMMENT ON COLUMN pmis_rule_pack.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_pack.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_rule_pack.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_rule_pack.deleted IS '逻辑删除 0=未删 1=已删';
+
+-- P2-8: 兼容已存在库，幂等补充知识包版本管理新列
+ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS rule_snapshots    TEXT;
+ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS previous_version  VARCHAR(32);
+
+
+-- ----------------------------------------------------------------
+-- pmis_rule_pack_install -- P2-14: rule pack install history
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS pmis_rule_pack_install (
+    id                VARCHAR(20)       PRIMARY KEY,
+    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
+    pack_code         VARCHAR(128)    NOT NULL,
+    pack_version      VARCHAR(32)     NOT NULL,
+    installed_by      VARCHAR(64),
+    installed_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status            VARCHAR(16)     NOT NULL DEFAULT 'SUCCESS',
+    error_message     TEXT,
+    provider_trace_id VARCHAR(64),
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_prpi_status               CHECK (status IN ('SUCCESS','FAILED','ROLLBACK')),
+    CONSTRAINT ck_prpi_deleted              CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_rule_pack_install IS 'P2-14: 规则集安装历史表 (按租户)';
+COMMENT ON COLUMN pmis_rule_pack_install.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_pack_install.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_pack_install.pack_code IS '规则集编码';
+COMMENT ON COLUMN pmis_rule_pack_install.pack_version IS '规则集版本号';
+COMMENT ON COLUMN pmis_rule_pack_install.installed_by IS '安装操作人';
+COMMENT ON COLUMN pmis_rule_pack_install.installed_at IS '安装时间';
+COMMENT ON COLUMN pmis_rule_pack_install.status IS '安装状态: SUCCESS/FAILED/ROLLBACK';
+COMMENT ON COLUMN pmis_rule_pack_install.error_message IS '失败时的错误信息';
+COMMENT ON COLUMN pmis_rule_pack_install.created_at IS '记录创建时间';
+COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已删';
+-- ============================ [060] field type unification ============================
+-- ====================================================================
+-- V1.0.0_060  H2.7 / P1-1 字段类型统一
+-- ----------------------------------------------------------------------------
+-- 背景:历史演进过程中出现了若干类型不一致:
+--   1. pmis_flow_run_task.assignor_id 为 BIGINT,assignee_id 为 VARCHAR(20) — 同含义字段类型不一致
+--   2. pmis_flow_his_task 完全缺失 assignor_id 列(主表有,历史表没有)
+--   3. pmis_finance_invoice.tax_period 为 VARCHAR(16),但 CHECK 约束限定为 YYYY-MM(7 字符),存余浪费
+--   4. pmis_dict_version 缺 updated_at/updated_by/tenant_id,且 created_at/effective_date 用了 TIMESTAMP 而非 TIMESTAMPTZ
+--
+-- 已审查但**保留原样**的差异(具备合理业务理由):
+--   - 11 张 pmis_rule_* 表的 created_by/updated_by 为 VARCHAR(64) DEFAULT 'SYSTEM'
+--     原因:对应 Java 实体明确使用 String createdBy/updatedBy(rule 责任人可为工号/SSO 用户名等非纯数字 ID)
+--     修改风险:RuleDefinitionDO 等 11 个 DTO/Service/Controller 的 ownerBy 字段全部受影响
+--     决议:保持 VARCHAR(64) 不变,但统一 DEFAULT 值与 COMMENT 文案(见下方)
+-- ====================================================================
+
+-- ----------------------------------------------------------------------------
+-- 0) 11 张 rule 表 created_by/updated_by 文案统一(DEFAULT 'SYSTEM' 已是项目约定,保留)
+--    仅刷新 COMMENT 文案,便于后续维护者理解
+-- ----------------------------------------------------------------------------
+COMMENT ON COLUMN pmis_rule_def.created_by           IS '创建人(VARCHAR(64) 支持工号/SSO用户名,DEFAULT ''SYSTEM'' 表示系统兜底)';
+COMMENT ON COLUMN pmis_rule_pack.created_by          IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_template.created_by      IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_test_case.created_by     IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_execution_trace.created_by IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_decision_table.created_by IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_scorecard.created_by     IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_decision_tree.created_by IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_script.created_by        IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_chain_graph.created_by   IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_dependency.created_by    IS '创建人(同 rule_def)';

@@ -1,12 +1,156 @@
 -- ====================================================================
--- System.Collections.Hashtable[system]
--- Module: system
--- Version: V1.0.0
--- Target: PostgreSQL 18
--- Description: 鏈枃浠剁敱 deploy/sql/V1.0.0.sql 鎷嗗垎鐢熸垚
---   浠呬緵鍗曠嫭鍒濆鍖栧搴旀ā鍧楁椂浣跨敤; 瀹屾暣鍒濆鍖栬浣跨敤 V1.0.0.sql
+-- System Mgmt (Config/File/Audit/Export)
+-- Module: system | Version: V1.0.0 | Target: PostgreSQL 18
+-- Generated from deploy/sql/V1.0.0.sql
 -- ====================================================================
 
+
+-- ====================================================================
+-- 6. 系统配置
+-- ====================================================================
+
+CREATE TABLE IF NOT EXISTS pmis_config(
+    id              VARCHAR(20)      PRIMARY KEY,
+    config_group    VARCHAR(64)    NOT NULL,
+    config_key      VARCHAR(128)   NOT NULL,
+    config_value    TEXT,
+    value_type      VARCHAR(16)    NOT NULL DEFAULT 'STRING',
+    default_value   TEXT,
+    description     TEXT,
+    is_public       SMALLINT       NOT NULL DEFAULT 0,
+    sort_order      INTEGER        NOT NULL DEFAULT 0,
+    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_pmis_config_key UNIQUE (config_group, config_key, deleted),
+    CONSTRAINT ck_pc_value_type    CHECK (value_type IN ('STRING', 'NUMBER', 'BOOLEAN', 'JSON')),
+    CONSTRAINT ck_pc_status_enum   CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pc_public_enum   CHECK (is_public IN (0, 1)),
+    CONSTRAINT ck_pc_deleted_enum  CHECK (deleted IN (0, 1))
+);
+COMMENT ON TABLE pmis_config IS '系统配置表: 业务可热更新的参数(预警阈值/费率/工作流引擎等),按 group 分组';
+COMMENT ON COLUMN pmis_config.id IS '主键 ID';
+COMMENT ON COLUMN pmis_config.config_group IS '配置分组(如 alert/rate/workflow/system)';
+COMMENT ON COLUMN pmis_config.config_key IS '配置键(同组下唯一,如 alert.cpi.yellow)';
+COMMENT ON COLUMN pmis_config.config_value IS '配置值';
+COMMENT ON COLUMN pmis_config.value_type IS '值类型: STRING 字符串 / NUMBER 数值 / BOOLEAN 布尔 / JSON JSON 对象';
+COMMENT ON COLUMN pmis_config.default_value IS '默认值(配置缺失时回退使用)';
+COMMENT ON COLUMN pmis_config.description IS '配置项说明';
+COMMENT ON COLUMN pmis_config.is_public IS '是否对前端公开: 1 公开 / 0 仅后端(避免敏感配置泄漏)';
+COMMENT ON COLUMN pmis_config.sort_order IS '排序号';
+COMMENT ON COLUMN pmis_config.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN pmis_config.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_config.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_config.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_config.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_config.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_config.tenant_id IS '租户 ID(单租户部署默认 1)';
+
+CREATE INDEX IF NOT EXISTS idx_pmis_config_group ON pmis_config (config_group) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_config_tenant ON pmis_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_config_tenant_created
+    ON pmis_config(tenant_id, created_at DESC) WHERE deleted = 0;
+
+-- ====================================================================
+-- 7. 操作日志
+-- ====================================================================
+
+-- V1.0.0_001 P1-4 重构: pmis_operation_log 改为按月 RANGE 分区表
+--   (主键必须包含分区键;BRIN 索引对父表定义,自动传播到所有分区)
+DROP TABLE IF EXISTS pmis_operation_log CASCADE;
+CREATE TABLE IF NOT EXISTS pmis_operation_log(
+    id                VARCHAR(20)      NOT NULL,
+    user_id           VARCHAR(20),
+    username          VARCHAR(64),
+    module            VARCHAR(64)    NOT NULL,
+    action            VARCHAR(128)   NOT NULL,
+    biz_type          VARCHAR(64),
+    biz_id            VARCHAR(20),
+    request_url       VARCHAR(512),
+    -- V1.0.0_008 内联: 字段重命名后的规范名称
+    http_method       VARCHAR(16),
+    method_signature  VARCHAR(256),
+    client_ip         VARCHAR(64),
+    user_agent        VARCHAR(512),
+    params_json       TEXT,
+    response_json     TEXT,
+    -- V1.0.0_040 内联: 审计差异字段(变更前/后快照)
+    before_data       JSONB,
+    after_data        JSONB,
+    cost_ms           BIGINT,
+    status            VARCHAR(16)    NOT NULL DEFAULT 'SUCCESS',
+    error_message     TEXT,
+    trace_id          VARCHAR(20),
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT ck_pol_status_enum  CHECK (status IN ('SUCCESS', 'FAILED')),
+    CONSTRAINT ck_pol_cost_nonneg  CHECK (cost_ms IS NULL OR cost_ms >= 0),
+    -- 分区表主键必须包含分区键
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
+COMMENT ON TABLE pmis_operation_log IS '操作日志表: 用户关键操作全量留存(模块/动作/入参/出参/耗时/IP),用于审计与问题排查';
+COMMENT ON COLUMN pmis_operation_log.id IS '主键 ID';
+COMMENT ON COLUMN pmis_operation_log.user_id IS '操作用户 ID';
+COMMENT ON COLUMN pmis_operation_log.username IS '操作用户名';
+COMMENT ON COLUMN pmis_operation_log.module IS '操作模块(如 project/contract/finance)';
+COMMENT ON COLUMN pmis_operation_log.action IS '操作动作(如 create/update/delete/approve)';
+COMMENT ON COLUMN pmis_operation_log.biz_type IS '业务类型';
+COMMENT ON COLUMN pmis_operation_log.biz_id IS '业务单据 ID';
+COMMENT ON COLUMN pmis_operation_log.request_url IS '请求 URL';
+COMMENT ON COLUMN pmis_operation_log.http_method IS 'V1.0.0_008: HTTP 方法(GET/POST/PUT/DELETE)';
+COMMENT ON COLUMN pmis_operation_log.method_signature IS 'V1.0.0_008: Java 方法签名(如 ProjectController#create)';
+COMMENT ON COLUMN pmis_operation_log.client_ip IS 'V1.0.0_008: 客户端 IP';
+COMMENT ON COLUMN pmis_operation_log.user_agent IS '浏览器/客户端 User-Agent';
+COMMENT ON COLUMN pmis_operation_log.params_json IS 'V1.0.0_008: 请求参数 JSON(敏感字段脱敏)';
+COMMENT ON COLUMN pmis_operation_log.response_json IS 'V1.0.0_008: 响应数据 JSON(失败时为空)';
+COMMENT ON COLUMN pmis_operation_log.before_data IS 'V1.0.0_040: 变更前数据快照(JSONB,update/delete 时填充)';
+COMMENT ON COLUMN pmis_operation_log.after_data IS 'V1.0.0_040: 变更后数据快照(JSONB,create/update 时填充)';
+COMMENT ON COLUMN pmis_operation_log.cost_ms IS '接口耗时(毫秒)';
+COMMENT ON COLUMN pmis_operation_log.status IS '操作状态: SUCCESS 成功 / FAILED 失败';
+COMMENT ON COLUMN pmis_operation_log.error_message IS '错误信息(失败时填充堆栈摘要)';
+COMMENT ON COLUMN pmis_operation_log.trace_id IS 'V1.0.0_008: 系统链路追踪 ID(SkyWalking/TLog)';
+COMMENT ON COLUMN pmis_operation_log.created_at IS '操作时间';
+COMMENT ON COLUMN pmis_operation_log.tenant_id IS '租户 ID(单租户部署默认 1)';
+
+-- P1-4: 父表索引,自动传播到所有月度分区
+CREATE INDEX IF NOT EXISTS idx_pmis_oplog_user ON pmis_operation_log (user_id);
+CREATE INDEX IF NOT EXISTS idx_pmis_oplog_module ON pmis_operation_log (module, action);
+CREATE INDEX IF NOT EXISTS idx_pmis_oplog_created ON pmis_operation_log (created_at);
+CREATE INDEX IF NOT EXISTS idx_pol_tenant ON pmis_operation_log(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pol_tenant_created
+    ON pmis_operation_log(tenant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pmis_oplog_biz
+    ON pmis_operation_log(biz_type, biz_id)
+    WHERE biz_type IS NOT NULL AND biz_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pol_user_created
+    ON pmis_operation_log(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pol_trace
+    ON pmis_operation_log(trace_id) WHERE trace_id IS NOT NULL;
+-- P1-4: BRIN 索引(父表,自动传播) — 时间范围扫描友好
+CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
+    ON pmis_operation_log USING BRIN (created_at)
+    WITH (pages_per_range = 32);
+
+-- 初始化系统配置
+INSERT INTO pmis_config (config_group, config_key, config_value, value_type, description, created_by) VALUES
+    ('system', 'system.name', 'PMIS 项目运营管理系统', 'STRING', '系统名称', 0),
+    ('system', 'system.version', '1.0.0', 'STRING', '系统版本', 0),
+    ('rate', 'rate.social.company.rate', '0.245', 'NUMBER', '公司社保比例', 0),
+    ('rate', 'rate.fund.company.rate', '0.05', 'NUMBER', '公司公积金比例', 0),
+    ('rate', 'rate.workdays.per.month', '21.75', 'NUMBER', '月计薪天数', 0),
+    ('rate', 'rate.hours.per.day', '8', 'NUMBER', '日标准工时', 0),
+    ('workflow', 'workflow.engine', 'pmis', 'STRING', '工作流引擎（自研 pmis_flow_*）', 0),
+    ('alert', 'alert.cpi.yellow', '0.95', 'NUMBER', 'CPI 黄色预警阈值', 0),
+    ('alert', 'alert.cpi.red', '0.85', 'NUMBER', 'CPI 红色预警阈值', 0),
+    ('alert', 'alert.spi.yellow', '0.90', 'NUMBER', 'SPI 黄色预警阈值', 0),
+    ('alert', 'alert.spi.red', '0.80', 'NUMBER', 'SPI 红色预警阈值', 0),
+    ('alert', 'alert.bench.days.yellow', '7', 'NUMBER', 'Bench 黄色预警天数', 0),
+    ('alert', 'alert.bench.days.red', '15', 'NUMBER', 'Bench 红色预警天数', 0)
+ON CONFLICT DO NOTHING;
 -- ============================ [005] init pmis file schema ============================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
@@ -93,6 +237,44 @@ CREATE INDEX IF NOT EXISTS idx_pmis_file_url_expire
 
 -- --------------------------------------------------------------------
 
+-- ============================ [019] init pmis alert thresholds ============================
+
+-- ====================================================================
+-- 预警阈值配置（pmis_config，group=alert）
+--
+--  说明：EVM / Bench / 预算 / 毛利率 / 利用率 等模块的告警阈值从此处读取，
+--       业务模块通过 ConfigClient Feign 调用 ydsz-pmis-system 读取。
+-- ====================================================================
+
+INSERT INTO pmis_config (config_group, config_key, config_value, value_type, description, is_public, created_by)
+VALUES
+    -- EVM 阈值
+    ('alert', 'alert.cpi.yellow', '0.95', 'NUMBER', 'CPI 黄色预警阈值（低于即黄灯）', 0, 0),
+    ('alert', 'alert.cpi.red',    '0.85', 'NUMBER', 'CPI 红色预警阈值（低于即红灯）', 0, 0),
+    ('alert', 'alert.spi.yellow', '0.90', 'NUMBER', 'SPI 黄色预警阈值', 0, 0),
+    ('alert', 'alert.spi.red',    '0.80', 'NUMBER', 'SPI 红色预警阈值', 0, 0),
+    -- Bench 阈值
+    ('alert', 'alert.bench.days.yellow', '7',  'NUMBER', 'Bench 黄色预警天数', 0, 0),
+    ('alert', 'alert.bench.days.red',    '15', 'NUMBER', 'Bench 红色预警天数', 0, 0),
+    ('alert', 'alert.bench.cost.ratio',  '0.08', 'NUMBER', 'Bench 成本占比预警阈值（占总人力成本）', 0, 0),
+    -- EVM 红色项目数
+    ('alert', 'alert.evm.red.count',     '3',        'NUMBER', 'EVM 红色项目数预警阈值', 0, 0),
+    -- 毛利率
+    ('alert', 'alert.margin.yellow',     '0.10',     'NUMBER', '毛利率黄色预警阈值', 0, 0),
+    ('alert', 'alert.margin.red',        '0.05',     'NUMBER', '毛利率红色预警阈值', 0, 0),
+    -- Bench 闲置成本
+    ('alert', 'alert.bench.yellow.cost', '500000',   'NUMBER', 'Bench 闲置成本黄色预警阈值（元）', 0, 0),
+    ('alert', 'alert.bench.red.cost',    '1000000',  'NUMBER', 'Bench 闲置成本红色预警阈值（元）', 0, 0),
+    -- 可计费利用率
+    ('alert', 'alert.utilization.yellow', '0.70',    'NUMBER', '可计费利用率黄色预警阈值', 0, 0),
+    ('alert', 'alert.utilization.red',    '0.50',    'NUMBER', '可计费利用率红色预警阈值', 0, 0),
+    -- 预算使用率
+    ('alert', 'alert.budget.yellow',     '0.80',     'NUMBER', '预算使用率黄色预警阈值', 0, 0),
+    ('alert', 'alert.budget.red',        '0.95',     'NUMBER', '预算使用率红色预警阈值', 0, 0)
+ON CONFLICT (config_group, config_key, deleted) DO UPDATE
+    SET config_value = EXCLUDED.config_value,
+        description   = EXCLUDED.description,
+        updated_at    = CURRENT_TIMESTAMP;
 -- ============================ [031] init report subscription ============================
 
 -- ============================================================
@@ -383,6 +565,21 @@ SELECT '✅ 索引调优完成（共 ' || count(*) || ' 个索引）' AS result
 
 -- --------------------------------------------------------------------
 
+
+-- 16. 配置
+ALTER TABLE pmis_config ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_config_tenant ON pmis_config(tenant_id);
+
+-- 17. 操作日志（V1.0.0_008 已含 tenant_id，跳过 ADD COLUMN，仅补索引）
+CREATE INDEX IF NOT EXISTS idx_pol_tenant ON pmis_operation_log(tenant_id);
+
+-- 报表订阅
+ALTER TABLE pmis_report_subscription ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_report_sub_tenant ON pmis_report_subscription(tenant_id);
+
+-- 异步导出记录（P0-3 合并：原报表导出记录已并入此表）
+ALTER TABLE pmis_export_record ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_export_rec_tenant ON pmis_export_record(tenant_id);
 -- ============================ [061] merge export tables ============================
 -- ====================================================================
 -- V1.0.0_061  P0-3 合并 pmis_export_record 与 pmis_report_export_record
@@ -567,15 +764,6 @@ BEGIN
         );
     END LOOP;
 END $$;
-
--- DEFAULT 兜底分区
-CREATE TABLE IF NOT EXISTS pmis_flow_audit_log_default
-    PARTITION OF pmis_flow_audit_log DEFAULT;
-
-COMMENT ON TABLE pmis_flow_audit_log_default IS
-    'pmis_flow_audit_log 的 DEFAULT 兜底分区:'
-    '接收超出已建月份范围的流程审计数据,运维需监控并及时创建对应月份分区;'
-    '建表语句不可独立 DROP,需先 ALTER TABLE ... DETACH PARTITION';
 
 ANALYZE pmis_operation_log;
 ANALYZE pmis_flow_audit_log;
@@ -998,24 +1186,10 @@ UPDATE pmis_meta_schema_version
         E'\n  - 实施: ALTER TABLE ADD COLUMN,新增索引 idx_pmis_data_export_audit_oplog' ||
         E'\n  - 影响: 导出服务实现需在写导出审计时填这两个字段'
    WHERE version = 'V1.0.0' AND deleted = 0;
-
--- 3) 给出 P3 启用模板(注释,真正启用时去掉 -- 即可)
--- ----------------------------------------------------------------------------
--- [TEMPLATE] P3-14 启用:在 pmis_employee 加密敏感字段
--- ALTER TABLE pmis_employee
---     ADD COLUMN IF NOT EXISTS id_card_cipher VARCHAR(512) NOT NULL DEFAULT '',
---     ADD COLUMN IF NOT EXISTS id_card_hash   VARCHAR(64)  NOT NULL DEFAULT '',
---     ADD COLUMN IF NOT EXISTS phone_cipher   VARCHAR(512) NOT NULL DEFAULT '',
---     ADD COLUMN IF NOT EXISTS phone_hash     VARCHAR(64)  NOT NULL DEFAULT '';
 -- CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_employee_id_card_hash
 --     ON pmis_employee (tenant_id, id_card_hash) WHERE deleted = 0 AND id_card_hash <> '';
 -- CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_employee_phone_hash
 --     ON pmis_employee (tenant_id, phone_hash) WHERE deleted = 0 AND phone_hash <> '';
--- ----------------------------------------------------------------------------
--- [TEMPLATE] P3-15 启用: pmis_data_export_audit 接入 OPLOG
--- ALTER TABLE pmis_data_export_audit
---     ADD COLUMN IF NOT EXISTS op_log_id   VARCHAR(20),
---     ADD COLUMN IF NOT EXISTS op_log_type VARCHAR(32) NOT NULL DEFAULT '';
 -- CREATE INDEX IF NOT EXISTS idx_pmis_data_export_audit_oplog
 --     ON pmis_data_export_audit (op_log_id) WHERE op_log_id IS NOT NULL;
 -- ----------------------------------------------------------------------------

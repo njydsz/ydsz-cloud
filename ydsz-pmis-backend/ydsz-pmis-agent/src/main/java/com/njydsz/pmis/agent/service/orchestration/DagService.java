@@ -214,8 +214,8 @@ public class DagService {
 
         // 3. 环检测（DFS）
         if (errors.isEmpty()) {
-            java.util.Set<String> visiting = new java.util.HashSet<>();
-            java.util.Set<String> visited = new java.util.HashSet<>();
+            Set<String> visiting = new HashSet<>();
+            Set<String> visited = new HashSet<>();
             for (var node : dag.getNodes()) {
                 if (hasCycle(node.getName(), dag, visiting, visited)) {
                     errors.add("DAG 存在循环依赖");
@@ -238,7 +238,7 @@ public class DagService {
      * DFS 环检测。
      */
     private boolean hasCycle(String nodeName, DagDefinition dag,
-                              java.util.Set<String> visiting, java.util.Set<String> visited) {
+                              Set<String> visiting, Set<String> visited) {
         if (visited.contains(nodeName)) return false;
         if (visiting.contains(nodeName)) return true;
 

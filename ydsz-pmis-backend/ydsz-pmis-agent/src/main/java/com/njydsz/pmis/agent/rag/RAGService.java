@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * RAG 文档入库服务（P3-1 落地）。
@@ -109,14 +110,14 @@ public class RAGService {
             properties.setTopK(originalTopK);
         }
         // 去重（按 id）
-        java.util.Map<String, RetrievedChunk> dedup = new java.util.LinkedHashMap<>();
+        Map<String, RetrievedChunk> dedup = new LinkedHashMap<>();
         for (RetrievedChunk chunk : all) {
             if (chunk.getId() != null) {
                 dedup.merge(chunk.getId(), chunk,
                         (a, b) -> a.getScore() != null && b.getScore() != null
                                 && a.getScore() >= b.getScore() ? a : b);
             } else {
-                dedup.put(java.util.UUID.randomUUID().toString(), chunk);
+                dedup.put(UUID.randomUUID().toString(), chunk);
             }
         }
         return new ArrayList<>(dedup.values());

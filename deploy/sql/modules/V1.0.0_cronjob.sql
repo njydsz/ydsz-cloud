@@ -1,12 +1,158 @@
 -- ====================================================================
--- System.Collections.Hashtable[cronjob]
--- Module: cronjob
--- Version: V1.0.0
--- Target: PostgreSQL 18
--- Description: 鏈枃浠剁敱 deploy/sql/V1.0.0.sql 鎷嗗垎鐢熸垚
---   浠呬緵鍗曠嫭鍒濆鍖栧搴旀ā鍧楁椂浣跨敤; 瀹屾暣鍒濆鍖栬浣跨敤 V1.0.0.sql
+-- Cron Job (Job/DAG/Schedule/Alert/Log/Quota)
+-- Module: cronjob | Version: V1.0.0 | Target: PostgreSQL 18
+-- Generated from deploy/sql/V1.0.0.sql
 -- ====================================================================
 
+
+-- 职级表 (L1-L18)
+CREATE TABLE IF NOT EXISTS pmis_job_level(
+    id              VARCHAR(20)      PRIMARY KEY,
+    level_code      VARCHAR(8)     NOT NULL,
+    level_name      VARCHAR(64)    NOT NULL,
+    level_segment   VARCHAR(16)    NOT NULL,
+    sort_order      INTEGER        NOT NULL,
+    description     TEXT,
+    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_pmis_job_level_code UNIQUE (level_code, deleted),
+    CONSTRAINT ck_pjl_segment     CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
+    CONSTRAINT ck_pjl_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pjl_deleted_enum CHECK (deleted IN (0, 1))
+);
+COMMENT ON TABLE pmis_job_level IS '职级表: L1-L18 共 18 级,定义能力晋升阶梯';
+COMMENT ON COLUMN pmis_job_level.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_level.level_code IS '职级编码(L1-L18)';
+COMMENT ON COLUMN pmis_job_level.level_name IS '职级名称(如助理工程师/开发工程师/架构师)';
+COMMENT ON COLUMN pmis_job_level.level_segment IS '职级段: PRIMARY 初级(L1-L3) / MIDDLE 中级(L4-L6) / SENIOR 高级(L7-L9) / EXPERT 专家(L10-L12) / STRATEGIC 战略(L13-L18)';
+COMMENT ON COLUMN pmis_job_level.sort_order IS '职级排序号(升序,L1=1)';
+COMMENT ON COLUMN pmis_job_level.description IS '职级能力要求说明';
+COMMENT ON COLUMN pmis_job_level.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN pmis_job_level.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job_level.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_level.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_job_level.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_job_level.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_job_level.tenant_id IS '租户 ID(单租户部署默认 1)';
+
+CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_job_level_tenant_sort
+    ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
+
+-- 职级费率表 (对外人天 / 对内人天)
+CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
+    id                  VARCHAR(20)      PRIMARY KEY,
+    level_code          VARCHAR(8)     NOT NULL,
+    external_daily      NUMERIC(10,2)  NOT NULL,
+    internal_daily      NUMERIC(10,2)  NOT NULL,
+    base_salary         NUMERIC(10,2)  NOT NULL,
+    social_company      NUMERIC(10,2)  NOT NULL,
+    social_personal     NUMERIC(10,2)  NOT NULL,
+    fund_company        NUMERIC(10,2)  NOT NULL,
+    fund_personal       NUMERIC(10,2)  NOT NULL,
+    take_home           NUMERIC(10,2)  NOT NULL,
+    travel_reimbursement NUMERIC(10,2) NOT NULL DEFAULT 0,
+    travel_allowance    NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    total_cost          NUMERIC(10,2)  NOT NULL,
+    billable_target     NUMERIC(5,4)   NOT NULL,
+    effective_date      DATE           NOT NULL,
+    expire_date         DATE,
+    version             INTEGER        NOT NULL DEFAULT 1,
+    description         TEXT,
+    created_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
+    CONSTRAINT uk_pmis_job_level_rate UNIQUE (level_code, version, deleted),
+    CONSTRAINT ck_pjlr_external_nonneg CHECK (external_daily >= 0 AND internal_daily >= 0),
+    CONSTRAINT ck_pjlr_billable_range  CHECK (billable_target >= 0 AND billable_target <= 1),
+    CONSTRAINT ck_pjlr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
+    CONSTRAINT ck_pjlr_deleted_enum    CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_pjlr_cost_valid      CHECK (total_cost = base_salary + social_company + fund_company + travel_reimbursement + travel_allowance)
+);
+COMMENT ON TABLE pmis_job_level_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金+差旅成本拆解,支持版本化生效';
+COMMENT ON COLUMN pmis_job_level_rate.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_level_rate.level_code IS '职级编码(L1-L18,关联 pmis_job_level.level_code)';
+COMMENT ON COLUMN pmis_job_level_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
+COMMENT ON COLUMN pmis_job_level_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
+COMMENT ON COLUMN pmis_job_level_rate.base_salary IS '月度基础工资(元)';
+COMMENT ON COLUMN pmis_job_level_rate.social_company IS '公司社保部分(元/月)';
+COMMENT ON COLUMN pmis_job_level_rate.social_personal IS '个人社保部分(元/月,从工资扣除)';
+COMMENT ON COLUMN pmis_job_level_rate.fund_company IS '公司公积金部分(元/月)';
+COMMENT ON COLUMN pmis_job_level_rate.fund_personal IS '个人公积金部分(元/月,从工资扣除)';
+COMMENT ON COLUMN pmis_job_level_rate.take_home IS '税后到手工资(元/月)';
+COMMENT ON COLUMN pmis_job_level_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_job_level_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_job_level_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company+travel_reimbursement+travel_allowance)';
+COMMENT ON COLUMN pmis_job_level_rate.billable_target IS '可计费利用率目标(0.0-1.0,如 0.78=78%)';
+COMMENT ON COLUMN pmis_job_level_rate.effective_date IS '生效日期';
+COMMENT ON COLUMN pmis_job_level_rate.expire_date IS '失效日期(NULL 表示长期有效)';
+COMMENT ON COLUMN pmis_job_level_rate.version IS '版本号(同职级可有多版本,通过 effective_date 区分)';
+COMMENT ON COLUMN pmis_job_level_rate.description IS '费率版本说明';
+COMMENT ON COLUMN pmis_job_level_rate.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job_level_rate.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_level_rate.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_job_level_rate.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_job_level_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_job_level_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
+
+CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
+CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
+
+-- 初始化职级 (L1-L18)
+INSERT INTO pmis_job_level (level_code, level_name, level_segment, sort_order, description, created_by)
+VALUES
+    ('L1',  '助理工程师',   'PRIMARY',   1,  '0-1 年（应届大专/中专）', 0),
+    ('L2',  '初级开发工程师','PRIMARY',  2,  '0-1 年（应届本科）', 0),
+    ('L3',  '开发工程师',   'PRIMARY',   3,  '1-2 年', 0),
+    ('L4',  '中级工程师',   'MIDDLE',    4,  '2-3 年', 0),
+    ('L5',  '高级工程师',   'MIDDLE',    5,  '3-5 年', 0),
+    ('L6',  '资深工程师',   'MIDDLE',    6,  '4-6 年', 0),
+    ('L7',  '高级工程师/项目经理', 'SENIOR',  7,  '5-7 年', 0),
+    ('L8',  '资深工程师/高级项目经理','SENIOR',  8,  '6-8 年', 0),
+    ('L9',  '架构师/项目总监', 'SENIOR',  9,  '7-10 年', 0),
+    ('L10', '资深架构师',   'EXPERT',   10,  '8-12 年', 0),
+    ('L11', '技术专家/交付总监', 'EXPERT', 11, '10-13 年', 0),
+    ('L12', '资深技术专家', 'EXPERT',   12, '12-15 年', 0),
+    ('L13', '首席架构师',   'STRATEGIC', 13, '13-17 年', 0),
+    ('L14', '技术总监/事业部副总经理', 'STRATEGIC', 14, '15-20 年', 0),
+    ('L15', 'CTO/事业部总经理', 'STRATEGIC', 15, '20 年以上', 0),
+    ('L16', '技术副总裁/首席架构师', 'STRATEGIC', 16, '22 年以上', 0),
+    ('L17', '执行副总裁/CTO', 'STRATEGIC', 17, '25 年以上', 0),
+    ('L18', '董事会技术顾问/首席科学家', 'STRATEGIC', 18, '28 年以上', 0)
+ON CONFLICT DO NOTHING;
+
+-- 初始化职级费率 (V3.2 双列直出)
+INSERT INTO pmis_job_level_rate
+(level_code, external_daily, internal_daily, base_salary, social_company, social_personal, fund_company, fund_personal, take_home, travel_reimbursement, travel_allowance, total_cost, billable_target, effective_date, version, created_by)
+VALUES
+    ('L1',  400,  200,  4000,  980,  430,  200,  200,  3370,  500,  300,  5980,  0.78, '2026-01-01', 1, 0),
+    ('L2',  500,  250,  5000,  1225, 535,  250,  250,  4215,  500,  300,  7275,  0.78, '2026-01-01', 1, 0),
+    ('L3',  600,  300,  6000,  1470, 640,  300,  300,  5060,  500,  300,  8570,  0.80, '2026-01-01', 1, 0),
+    ('L4',  700,  350,  7000,  1715, 745,  350,  350,  5905,  800,  500,  10365, 0.82, '2026-01-01', 1, 0),
+    ('L5',  800,  400,  8000,  1960, 850,  400,  400,  6750,  800,  500,  11660, 0.82, '2026-01-01', 1, 0),
+    ('L6',  900,  450,  9000,  2205, 955,  450,  450,  7595,  800,  500,  12955, 0.82, '2026-01-01', 1, 0),
+    ('L7',  1000, 500,  10000, 2450, 1060, 500,  500,  8440,  1200, 800,  14950, 0.80, '2026-01-01', 1, 0),
+    ('L8',  1100, 550,  11000, 2695, 1165, 550,  550,  9285,  1200, 800,  16245, 0.80, '2026-01-01', 1, 0),
+    ('L9',  1200, 600,  12000, 2940, 1270, 600,  600,  10130, 1200, 800,  17540, 0.75, '2026-01-01', 1, 0),
+    ('L10', 1300, 650,  13000, 3185, 1375, 650,  650,  10975, 1500, 1000, 19335, 0.70, '2026-01-01', 1, 0),
+    ('L11', 1400, 700,  14000, 3430, 1480, 700,  700,  11820, 1500, 1000, 20630, 0.70, '2026-01-01', 1, 0),
+    ('L12', 1500, 750,  15000, 3675, 1585, 750,  750,  12665, 1500, 1000, 21925, 0.65, '2026-01-01', 1, 0),
+    ('L13', 1600, 800,  16000, 3920, 1690, 800,  800,  13510, 2000, 1500, 24220, 0.60, '2026-01-01', 1, 0),
+    ('L14', 1700, 850,  17000, 4165, 1795, 850,  850,  14355, 2000, 1500, 25515, 0.55, '2026-01-01', 1, 0),
+    ('L15', 1800, 900,  18000, 4410, 1900, 900,  900,  15200, 2000, 1500, 26810, 0.50, '2026-01-01', 1, 0),
+    ('L16', 1900, 950,  19000, 4655, 2005, 950,  950,  16045, 2500, 2000, 29105, 0.45, '2026-01-01', 1, 0),
+    ('L17', 2000, 1000, 20000, 4900, 2110, 1000, 1000, 16890, 2500, 2000, 30400, 0.40, '2026-01-01', 1, 0),
+    ('L18', 2100, 1050, 21000, 5145, 2215, 1050, 1050, 17735, 2500, 2000, 31695, 0.40, '2026-01-01', 1, 0)
+ON CONFLICT DO NOTHING;
 -- ============================ [006] init pmis job schema ============================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
@@ -1201,133 +1347,6 @@ CREATE INDEX IF NOT EXISTS idx_pjw_event_job
 CREATE INDEX IF NOT EXISTS idx_pjw_status
     ON pmis_job_webhook (status) WHERE deleted = 0;
 
--- ============================================================================
--- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
---   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
---   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
---   3) tenant_id 改为 NOT NULL DEFAULT 1
---   4) 内联 status/channel/deleted CHECK 约束
---   5) 内联 P0-D3 MQ 投递元信息(msg_id/topic/reconsume_times)至 message_log
---   6) 内联 (tenant_id, created_at DESC) WHERE deleted = 0 复合部分索引
---   7) 内联 provider_trace_id 索引(按服务商回执 ID 反查发送记录)
--- =====================================================
--- PMIS 消息通道模块 DDL
--- 版本: V1.0.0_007 (merged into V1.0.0.sql)
--- 描述: 短信/邮件/推送/站内信/Webhook 发送日志 + 模板
--- =====================================================
-
--- 消息发送日志表 pmis_msg_log（由原 pmis_message_log 重构升级，新增优先级/聚合/撤回/回执/路由/灰度/重试调度字段）
--- P2-3: 改为 PostgreSQL 月度 RANGE 分区表，按 created_at 分区，便于按时间范围查询与冷数据归档。
--- 分区表主键必须包含分区键 created_at，故采用 (id, created_at) 复合主键。
--- 业务代码通过 MyBatis-Plus BaseMapper 以 id 单字段查询时，PostgreSQL 会扫描所有分区上的本地索引，
--- 配合 partition pruning（带 created_at 范围条件时）能保证查询性能。
-CREATE TABLE IF NOT EXISTS pmis_msg_log(
-    id                VARCHAR(20)    NOT NULL,
-    channel           VARCHAR(32)    NOT NULL,
-    biz_type          VARCHAR(64),
-    biz_id            VARCHAR(20),
-    receiver          VARCHAR(256)   NOT NULL,
-    template_code     VARCHAR(128),
-    template_params   TEXT,
-    content           TEXT,
-    status            VARCHAR(32)    NOT NULL DEFAULT 'PENDING',
-    error_message     TEXT,
-    priority          VARCHAR(16)    NOT NULL DEFAULT 'NORMAL',
-    sender_id         VARCHAR(20),
-    message_group     VARCHAR(64),
-    batch_id          VARCHAR(20),
-    route_rule_id     VARCHAR(20),
-    canary            SMALLINT       NOT NULL DEFAULT 0,
-    -- P1-6: 灰度实验键(命中时记录原始 canaryKey=切换前 templateCode,用于 A/B 报表分组;未命中为 NULL)
-    canary_key        VARCHAR(64),
-    dedup_key         VARCHAR(128),
-    recall_status     VARCHAR(16)    NOT NULL DEFAULT 'NONE',
-    recall_at         TIMESTAMPTZ,
-    receipt_status    VARCHAR(16)    NOT NULL DEFAULT 'NONE',
-    receipt_at        TIMESTAMPTZ,
-    retry_count       INTEGER        NOT NULL DEFAULT 0,
-    next_retry_at     TIMESTAMPTZ,
-    -- 三方服务商回执 + 链路追踪
-    provider_trace_id VARCHAR(128),
-    cost_ms           BIGINT,
-    -- P2-4: 发送成本(元),按通道单价计算
-    cost              NUMERIC(10,4) DEFAULT 0,
-    trace_id          VARCHAR(64),
-    -- MQ 投递元信息
-    msg_id            VARCHAR(64),
-    topic             VARCHAR(128),
-    reconsume_times   INTEGER        NOT NULL DEFAULT 0,
-    -- P2-6: 级联发送父消息 ID(用于追溯级联关系,顶层消息为 NULL)
-    parent_msg_id     VARCHAR(64),
-    -- P0-3: 定时发送时间(非空时 status=SCHEDULED, 到期后由调度器触发发送)
-    scheduled_at      TIMESTAMPTZ,
-    -- 审计字段统一
-    created_by        VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
-    -- 复合主键(分区表要求分区键 created_at 必须在主键中)
-    CONSTRAINT pk_pml PRIMARY KEY (id, created_at),
-    -- 数据完整性约束
-    CONSTRAINT ck_pml_channel_enum      CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pml_status_enum       CHECK (status IN ('PENDING', 'SENDING', 'SUCCESS', 'FAILED', 'RETRY', 'DEAD', 'RECALLED', 'SCHEDULED')),
-    CONSTRAINT ck_pml_priority_enum     CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'URGENT')),
-    CONSTRAINT ck_pml_recall_enum       CHECK (recall_status IN ('NONE', 'RECALLED')),
-    CONSTRAINT ck_pml_receipt_enum      CHECK (receipt_status IN ('NONE', 'DELIVERED', 'READ', 'CLICKED', 'FAILED', 'TIMEOUT')),
-    CONSTRAINT ck_pml_canary_enum       CHECK (canary IN (0, 1)),
-    CONSTRAINT ck_pml_cost_nonneg       CHECK (cost_ms IS NULL OR cost_ms >= 0),
-    CONSTRAINT ck_pml_money_nonneg      CHECK (cost IS NULL OR cost >= 0),
-    CONSTRAINT ck_pml_reconsume_nonneg  CHECK (reconsume_times >= 0),
-    CONSTRAINT ck_pml_retry_nonneg      CHECK (retry_count >= 0),
-    CONSTRAINT ck_pml_deleted_enum      CHECK (deleted IN (0, 1))
-) PARTITION BY RANGE (created_at);
-
--- 月度分区: 预创建 2026 全年 12 个分区 + DEFAULT 兜底分区。
--- 归档策略: 由 MsgLogArchiveService 在每月 1 号 DETACH 90 天前分区并重命名为 pmis_msg_log_archive_yyyymm。
--- 后续新增分区也由该服务动态 CREATE,避免人为遗漏。
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m01 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m02 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m03 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m04 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-04-01') TO ('2026-05-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m05 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-05-01') TO ('2026-06-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m06 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m07 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-07-01') TO ('2026-08-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m08 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-08-01') TO ('2026-09-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m09 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m10 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m11 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-11-01') TO ('2026-12-01');
-CREATE TABLE IF NOT EXISTS pmis_msg_log_y2026m12 PARTITION OF pmis_msg_log FOR VALUES FROM ('2026-12-01') TO ('2027-01-01');
--- DEFAULT 分区: 兜底不在预创建范围内的数据,避免插入失败;运维应监控该分区并补建新分区。
-CREATE TABLE IF NOT EXISTS pmis_msg_log_default PARTITION OF pmis_msg_log DEFAULT;
-
-COMMENT ON TABLE pmis_msg_log IS '消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度';
-COMMENT ON COLUMN pmis_msg_log.channel IS '发送通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
-COMMENT ON COLUMN pmis_msg_log.status IS '发送状态: PENDING 待发送 / SENDING 发送中 / SUCCESS 成功 / FAILED 失败 / RETRY 重试中 / DEAD 死信 / RECALLED 已撤回';
-COMMENT ON COLUMN pmis_msg_log.priority IS '发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与并发)';
-COMMENT ON COLUMN pmis_msg_log.sender_id IS '触发发送的用户 ID(系统发送为 SYSTEM)';
-COMMENT ON COLUMN pmis_msg_log.message_group IS '聚合组(同组消息可合并为摘要发送)';
-COMMENT ON COLUMN pmis_msg_log.batch_id IS '聚合批次 ID(关联 pmis_msg_aggregate.id)';
-COMMENT ON COLUMN pmis_msg_log.route_rule_id IS '命中的路由规则 ID(关联 pmis_msg_route_rule.id)';
-COMMENT ON COLUMN pmis_msg_log.canary IS '是否灰度命中: 0 正式 / 1 灰度';
-COMMENT ON COLUMN pmis_msg_log.canary_key IS 'P1-6: 灰度实验键(命中时记录原始 canaryKey=切换前 templateCode,用于 A/B 报表分组;未命中为 NULL)';
-COMMENT ON COLUMN pmis_msg_log.dedup_key IS '幂等去重键(用于消费端幂等,Redis SET NX EX)';
-COMMENT ON COLUMN pmis_msg_log.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
-COMMENT ON COLUMN pmis_msg_log.receipt_at IS '回执到达时间';
-COMMENT ON COLUMN pmis_msg_log.receipt_status IS '回执状态: NONE 无 / DELIVERED 已送达 / READ 已读 / CLICKED 已点击 / FAILED 失败 / TIMEOUT 超时(ReceiptPuller 标记)';
-COMMENT ON COLUMN pmis_msg_log.retry_count IS '已重试次数';
-COMMENT ON COLUMN pmis_msg_log.next_retry_at IS '下次重试时间(退避调度)';
-COMMENT ON COLUMN pmis_msg_log.provider_trace_id IS '三方服务商回执 ID';
-COMMENT ON COLUMN pmis_msg_log.cost_ms IS '发送耗时(毫秒)';
-COMMENT ON COLUMN pmis_msg_log.cost IS 'P2-4: 发送成本(元),按通道单价计算(SMS/EMAIL/PUSH 有成本,IM/INAPP 免费)';
-COMMENT ON COLUMN pmis_msg_log.trace_id IS '系统链路追踪 ID';
-COMMENT ON COLUMN pmis_msg_log.msg_id IS 'RocketMQ 消息 ID';
-COMMENT ON COLUMN pmis_msg_log.topic IS 'RocketMQ Topic(DLQ 消息填充原 Topic)';
-COMMENT ON COLUMN pmis_msg_log.reconsume_times IS 'RocketMQ 重试次数';
-COMMENT ON COLUMN pmis_msg_log.parent_msg_id IS 'P2-6: 级联发送父消息 ID(顶层消息为 NULL)';
-COMMENT ON COLUMN pmis_msg_log.tenant_id IS '租户 ID(单租户部署默认 1)';
-
 CREATE INDEX IF NOT EXISTS idx_pml_channel
     ON pmis_msg_log (channel) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pml_status
@@ -1359,51 +1378,6 @@ CREATE INDEX IF NOT EXISTS idx_pml_parent
 CREATE INDEX IF NOT EXISTS idx_pml_canary_key
     ON pmis_msg_log (canary_key) WHERE deleted = 0 AND canary_key IS NOT NULL;
 
-
--- 消息模板表 pmis_msg_template（由原 pmis_message_template 重构升级，新增 i18n/版本/审核/分类/场景）
-CREATE TABLE IF NOT EXISTS pmis_msg_template(
-    id              VARCHAR(20)      PRIMARY KEY,
-    template_code   VARCHAR(128)   NOT NULL,
-    channel         VARCHAR(32)    NOT NULL,
-    locale          VARCHAR(16)    NOT NULL DEFAULT 'zh-CN',
-    version         VARCHAR(32)    NOT NULL DEFAULT '1.0.0',
-    category        VARCHAR(64),
-    scene_code      VARCHAR(128),
-    subject         VARCHAR(256),
-    content         TEXT           NOT NULL,
-    provider        VARCHAR(64),
-    provider_key    VARCHAR(128),
-    sign_name       VARCHAR(64),
-    status          VARCHAR(32)    NOT NULL DEFAULT 'ENABLED',
-    audit_status    VARCHAR(32)    NOT NULL DEFAULT 'APPROVED',
-    audit_by        VARCHAR(20),
-    audit_at        TIMESTAMPTZ,
-    audit_remark    VARCHAR(512),
-    description     VARCHAR(512),
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmt_code_chan_locale_tenant UNIQUE (template_code, channel, locale, tenant_id, deleted),
-    CONSTRAINT ck_pmt_channel_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmt_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pmt_audit_enum     CHECK (audit_status IN ('DRAFT', 'AUDITING', 'APPROVED', 'REJECTED')),
-    CONSTRAINT ck_pmt_deleted_enum   CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE pmis_msg_template IS '消息模板表: 支持 ${var} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景';
-COMMENT ON COLUMN pmis_msg_template.template_code IS '模板编码(同 code 不同 channel/locale 形成多版本)';
-COMMENT ON COLUMN pmis_msg_template.locale IS '语言区域(如 zh-CN / en-US),影响 i18n 模板选择';
-COMMENT ON COLUMN pmis_msg_template.version IS '语义版本(如 1.0.0),支持模板版本回滚';
-COMMENT ON COLUMN pmis_msg_template.category IS '模板分类(如 ALERT/APPROVAL/NOTICE/VERIFY)';
-COMMENT ON COLUMN pmis_msg_template.scene_code IS '场景编码(如 BUDGET_YELLOW / CONTRACT_SIGN),用于业务侧精确匹配';
-COMMENT ON COLUMN pmis_msg_template.audit_status IS '审核状态: DRAFT 草稿 / AUDITING 审核中 / APPROVED 已通过 / REJECTED 已驳回';
-COMMENT ON COLUMN pmis_msg_template.audit_by IS '审核人 ID';
-COMMENT ON COLUMN pmis_msg_template.audit_at IS '审核时间';
-COMMENT ON COLUMN pmis_msg_template.audit_remark IS '审核备注';
-
 CREATE INDEX IF NOT EXISTS idx_pmt_channel
     ON pmis_msg_template (channel) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmt_status
@@ -1414,139 +1388,6 @@ CREATE INDEX IF NOT EXISTS idx_pmt_scene
     ON pmis_msg_template (scene_code, channel) WHERE deleted = 0 AND scene_code IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pmt_audit
     ON pmis_msg_template (audit_status) WHERE deleted = 0 AND audit_status IN ('DRAFT', 'AUDITING');
-
-
--- 消息路由规则表 pmis_msg_route_rule（条件路由 / 通道降级）
-CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
-    id                VARCHAR(20)      PRIMARY KEY,
-    rule_code         VARCHAR(128)  NOT NULL,
-    rule_name         VARCHAR(255)  NOT NULL,
-    biz_type          VARCHAR(64),
-    channel           VARCHAR(32),
-    priority          INTEGER       NOT NULL DEFAULT 100,
-    condition_expr    TEXT          NOT NULL,
-    target_channel    VARCHAR(32)   NOT NULL,
-    fallback_channel  VARCHAR(32),
-    fallback_chain    VARCHAR(255),
-    status            VARCHAR(16)   NOT NULL DEFAULT 'ENABLED',
-    description       VARCHAR(512),
-    sort_order        INTEGER       NOT NULL DEFAULT 0,
-    created_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    created_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmrr_code UNIQUE (rule_code, tenant_id, deleted),
-    CONSTRAINT ck_pmrr_chan_enum   CHECK (channel IS NULL OR channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmrr_target_enum CHECK (target_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmrr_fb_enum     CHECK (fallback_channel IS NULL OR fallback_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmrr_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pmrr_deleted_enum CHECK (deleted IN (0, 1)),
-    CONSTRAINT ck_pmrr_priority_nonneg CHECK (priority >= 0)
-);
-COMMENT ON TABLE pmis_msg_route_rule IS '消息路由规则表: 按 biz_type/channel/条件表达式路由到目标通道,支持降级';
-COMMENT ON COLUMN pmis_msg_route_rule.condition_expr IS '路由条件(SpEL 表达式,如 #request.bizType==''ALERT'' and #request.priority==''URGENT'')';
-COMMENT ON COLUMN pmis_msg_route_rule.target_channel IS '命中后目标通道';
-COMMENT ON COLUMN pmis_msg_route_rule.fallback_channel IS '目标通道发送失败时降级通道(单通道,兼容旧版)';
-COMMENT ON COLUMN pmis_msg_route_rule.fallback_chain IS 'P1-8: 多级降级链(逗号分隔通道列表,如 SMS,EMAIL,INAPP),按顺序逐个尝试,优先于 fallback_channel';
-
-CREATE INDEX IF NOT EXISTS idx_pmrt_biz ON pmis_msg_route_rule(biz_type) WHERE deleted = 0 AND status = 'ENABLED';
-CREATE INDEX IF NOT EXISTS idx_pmrt_sort ON pmis_msg_route_rule(status, sort_order) WHERE deleted = 0;
-
-
--- 消息回执表 pmis_msg_receipt（服务商回执 / 已读 / 点击回调）
-CREATE TABLE IF NOT EXISTS pmis_msg_receipt(
-    id                VARCHAR(20)      PRIMARY KEY,
-    log_id            VARCHAR(20)   NOT NULL,
-    provider_trace_id VARCHAR(128),
-    receipt_type      VARCHAR(16)   NOT NULL,
-    receipt_time      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    provider_code     VARCHAR(64),
-    provider_msg      VARCHAR(512),
-    raw_response      TEXT,
-    created_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    created_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
-    CONSTRAINT ck_pmrt_type_enum   CHECK (receipt_type IN ('DELIVERED', 'READ', 'CLICKED', 'FAILED')),
-    CONSTRAINT ck_pmrt_deleted_enum CHECK (deleted IN (0, 1))
-);
-COMMENT ON TABLE pmis_msg_receipt IS '消息回执表: 服务商送达/已读/点击/失败回调记录';
-COMMENT ON COLUMN pmis_msg_receipt.log_id IS '关联 pmis_msg_log.id';
-COMMENT ON COLUMN pmis_msg_receipt.receipt_type IS '回执类型: DELIVERED 送达 / READ 已读 / CLICKED 点击 / FAILED 失败';
-
-CREATE INDEX IF NOT EXISTS idx_pmrc_log ON pmis_msg_receipt(log_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmrc_trace ON pmis_msg_receipt(provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
-
-
--- 聚合批次表 pmis_msg_aggregate（同组消息合并为摘要发送）
-CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
-    id                VARCHAR(20)      PRIMARY KEY,
-    aggregate_group   VARCHAR(64)   NOT NULL,
-    receiver          VARCHAR(256)  NOT NULL,
-    channel           VARCHAR(32)   NOT NULL,
-    batch_status      VARCHAR(16)   NOT NULL DEFAULT 'PENDING',
-    message_count     INTEGER       NOT NULL DEFAULT 0,
-    first_message_at  TIMESTAMPTZ,
-    last_message_at   TIMESTAMPTZ,
-    scheduled_send_at TIMESTAMPTZ,
-    sent_at           TIMESTAMPTZ,
-    digest_content    TEXT,
-    created_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    created_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
-    CONSTRAINT ck_pmag_chan_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmag_status_enum CHECK (batch_status IN ('PENDING', 'READY', 'SENT', 'CANCELLED')),
-    CONSTRAINT ck_pmag_count_nonneg CHECK (message_count >= 0),
-    CONSTRAINT ck_pmag_deleted_enum CHECK (deleted IN (0, 1))
-);
-COMMENT ON TABLE pmis_msg_aggregate IS '聚合批次表: 同 aggregate_group+receiver 的消息按频率合并为摘要发送';
-COMMENT ON COLUMN pmis_msg_aggregate.batch_status IS '批次状态: PENDING 攒批中 / READY 就绪待发 / SENT 已发送 / CANCELLED 已取消';
-COMMENT ON COLUMN pmis_msg_aggregate.scheduled_send_at IS '计划发送时间(到达后触发摘要发送)';
-COMMENT ON COLUMN pmis_msg_aggregate.digest_content IS '聚合后摘要内容(渲染后)';
-
-CREATE INDEX IF NOT EXISTS idx_pmag_group ON pmis_msg_aggregate(aggregate_group, receiver) WHERE deleted = 0 AND batch_status IN ('PENDING', 'READY');
-CREATE INDEX IF NOT EXISTS idx_pmag_due ON pmis_msg_aggregate(scheduled_send_at) WHERE deleted = 0 AND batch_status = 'READY' AND scheduled_send_at IS NOT NULL;
-
-
--- 灰度桶表 pmis_msg_canary（按 template_code/biz_type 灰度发布）
-CREATE TABLE IF NOT EXISTS pmis_msg_canary(
-    id                       VARCHAR(20)      PRIMARY KEY,
-    canary_key               VARCHAR(128)  NOT NULL,
-    bucket_total             INTEGER       NOT NULL DEFAULT 100,
-    bucket_selected          TEXT,
-    percentage               INTEGER       NOT NULL DEFAULT 0,
-    experiment_template_code VARCHAR(128),
-    experiment_channel       VARCHAR(32),
-    status                   VARCHAR(16)   NOT NULL DEFAULT 'ENABLED',
-    description              VARCHAR(512),
-    created_by               VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    created_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    updated_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                  SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id                VARCHAR(20)       NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmc_key UNIQUE (canary_key, tenant_id, deleted),
-    CONSTRAINT ck_pmc_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pmc_pct_range   CHECK (percentage >= 0 AND percentage <= 100),
-    CONSTRAINT ck_pmc_bucket_pos  CHECK (bucket_total > 0),
-    CONSTRAINT ck_pmc_exp_chan_enum CHECK (experiment_channel IS NULL OR experiment_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmc_deleted_enum CHECK (deleted IN (0, 1))
-);
-COMMENT ON TABLE pmis_msg_canary IS '灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布,命中后可切换实验模板/通道';
-COMMENT ON COLUMN pmis_msg_canary.canary_key IS '灰度键(如 template_code 或 biz_type)';
-COMMENT ON COLUMN pmis_msg_canary.bucket_selected IS '命中的桶列表 JSON(如 [0,1,2,...,4] 表示 0-4 号桶命中)';
-COMMENT ON COLUMN pmis_msg_canary.percentage IS '灰度比例(0-100)';
-COMMENT ON COLUMN pmis_msg_canary.experiment_template_code IS '灰度命中后切换的实验模板编码(可空,空则不切换)';
-COMMENT ON COLUMN pmis_msg_canary.experiment_channel IS '灰度命中后切换的实验通道(可空,空则不切换)';
-
-CREATE INDEX IF NOT EXISTS idx_pmc_key ON pmis_msg_canary(canary_key) WHERE deleted = 0 AND status = 'ENABLED';
 
 -- --------------------------------------------------------------------
 
@@ -1644,3 +1485,20 @@ VALUES (
 ) ON CONFLICT DO NOTHING;
 -- --------------------------------------------------------------------
 
+
+-- 10. 职级
+ALTER TABLE pmis_job_level ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
+
+-- 11. 职级费率
+ALTER TABLE pmis_job_level_rate ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
+
+-- ============================================================
+-- 七、补齐遗漏的 10 张业务表 tenant_id 字段
+--   首轮扫描漏掉，启用 TenantLineInnerInterceptor 前必须补齐
+-- ============================================================
+
+-- 任务执行日志表
+ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_job_log_tenant ON pmis_job_log(tenant_id);
