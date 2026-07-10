@@ -36,18 +36,6 @@ public class RiskEventQueryTool implements AgentTool {
     private static final String DEFAULT_SEVERITY = "ALL";
 
     /**
-     * 构造器注入 {@link ProjectServiceClient}，由 Spring 容器调用。
-     *
-     * <p>显式声明构造器（模块未引入 Lombok），
-     * 单元测试可直接 {@code new RiskEventQueryTool(mock)} 注入。
-     *
-     * @param projectServiceClient 项目执行模块 Feign 客户端
-     */
-    public RiskEventQueryTool(ProjectServiceClient projectServiceClient) {
-        this.projectServiceClient = projectServiceClient;
-    }
-
-    /**
      * 是否使用模拟数据（true=模拟，false=真实数据源）。
      *
      * <p>字段默认值为 {@code true}，保证在以下场景都安全降级到 mock 数据：

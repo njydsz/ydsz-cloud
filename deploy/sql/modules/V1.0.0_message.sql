@@ -11,7 +11,7 @@
 
 -- 站内通知表 pmis_msg_notification（由原 pmis_notification 重构升级）
 CREATE TABLE IF NOT EXISTS pmis_msg_notification(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     title           VARCHAR(255)   NOT NULL,
     content         TEXT,
     level           VARCHAR(16)    NOT NULL DEFAULT 'INFO',
@@ -125,7 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_pmn_batch
 
 -- 用户消息偏好表 pmis_msg_preference（免打扰 / 频率上限 / 聚合开关 / 语言）
 CREATE TABLE IF NOT EXISTS pmis_msg_preference(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     user_id           VARCHAR(20)   NOT NULL,
     channel           VARCHAR(32)   NOT NULL,
     biz_type          VARCHAR(64)   NOT NULL DEFAULT '__DEFAULT__',
@@ -189,7 +189,7 @@ CREATE INDEX IF NOT EXISTS idx_pmp_tenant ON pmis_msg_preference(tenant_id);
 
 -- 订阅关系表 pmis_msg_subscription（用户订阅/退订主题）
 CREATE TABLE IF NOT EXISTS pmis_msg_subscription(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     user_id         VARCHAR(20)   NOT NULL,
     topic_code      VARCHAR(128)  NOT NULL,
     channel         VARCHAR(32)   NOT NULL,
@@ -440,7 +440,7 @@ CREATE INDEX IF NOT EXISTS idx_pml_canary_key
 
 -- 消息模板表 pmis_msg_template（由原 pmis_message_template 重构升级，新增 i18n/版本/审核/分类/场景）
 CREATE TABLE IF NOT EXISTS pmis_msg_template(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     template_code   VARCHAR(128)   NOT NULL,
     channel         VARCHAR(32)    NOT NULL,
     locale          VARCHAR(16)    NOT NULL DEFAULT 'zh-CN',
@@ -508,7 +508,7 @@ CREATE INDEX IF NOT EXISTS idx_pmt_audit
 
 -- 消息路由规则表 pmis_msg_route_rule（条件路由 / 通道降级）
 CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     rule_code         VARCHAR(128)  NOT NULL,
     rule_name         VARCHAR(255)  NOT NULL,
     biz_type          VARCHAR(64),
@@ -552,7 +552,7 @@ CREATE INDEX IF NOT EXISTS idx_pmrt_sort ON pmis_msg_route_rule(status, sort_ord
 
 -- 消息回执表 pmis_msg_receipt（服务商回执 / 已读 / 点击回调）
 CREATE TABLE IF NOT EXISTS pmis_msg_receipt(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     log_id            VARCHAR(20)   NOT NULL,
     provider_trace_id VARCHAR(128),
     receipt_type      VARCHAR(16)   NOT NULL,
@@ -582,7 +582,7 @@ CREATE INDEX IF NOT EXISTS idx_pmrc_trace ON pmis_msg_receipt(provider_trace_id)
 
 -- 聚合批次表 pmis_msg_aggregate（同组消息合并为摘要发送）
 CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     aggregate_group   VARCHAR(64)   NOT NULL,
     receiver          VARCHAR(256)  NOT NULL,
     channel           VARCHAR(32)   NOT NULL,
@@ -619,7 +619,7 @@ CREATE INDEX IF NOT EXISTS idx_pmag_due ON pmis_msg_aggregate(scheduled_send_at)
 
 -- 灰度桶表 pmis_msg_canary（按 template_code/biz_type 灰度发布）
 CREATE TABLE IF NOT EXISTS pmis_msg_canary(
-    id                       VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                       VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     canary_key               VARCHAR(128)  NOT NULL,
     bucket_total             INTEGER       NOT NULL DEFAULT 100,
     bucket_selected          TEXT,

@@ -30,7 +30,7 @@
 -- 1. 商机主表 pmis_project_opportunity
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     opportunity_code  VARCHAR(64)    NOT NULL,
     opportunity_name  VARCHAR(256)   NOT NULL,
     customer_id       VARCHAR(20)         NOT NULL,
@@ -154,7 +154,7 @@ CREATE INDEX IF NOT EXISTS idx_ppo_expected_sign
 -- 2. 商机跟进记录 pmis_project_opportunity_follow
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_opportunity_follow(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     opportunity_id    VARCHAR(20)         NOT NULL,
     follow_type       VARCHAR(32)    NOT NULL,
     follow_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -226,7 +226,7 @@ CREATE INDEX IF NOT EXISTS idx_ppof_next_date
 -- 3. 立项主表 pmis_project_initiation
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_initiation(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     project_code      VARCHAR(64)    NOT NULL,
     project_name      VARCHAR(256)   NOT NULL,
     opportunity_id    VARCHAR(20),
@@ -361,7 +361,7 @@ CREATE INDEX IF NOT EXISTS idx_ppi_current_gate
 -- 4. 立项预算明细 pmis_project_budget_item
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_budget_item(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     initiation_id     VARCHAR(20)         NOT NULL,
     category          VARCHAR(32)    NOT NULL,
     sub_category      VARCHAR(64),
@@ -437,7 +437,7 @@ CREATE INDEX IF NOT EXISTS idx_ppbi_tenant_init
 -- 5. 门径评审记录 pmis_project_gate_review
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_gate_review(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     initiation_id     VARCHAR(20)         NOT NULL,
     gate_code         VARCHAR(16)    NOT NULL,
     gate_name         VARCHAR(64),
@@ -517,7 +517,7 @@ CREATE INDEX IF NOT EXISTS idx_ppgr_reviewer_at
 -- 6. 合同主表 pmis_project_contract
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     contract_code     VARCHAR(64)    NOT NULL,
     contract_name     VARCHAR(256)   NOT NULL,
     initiation_id     VARCHAR(20),
@@ -653,7 +653,7 @@ CREATE INDEX IF NOT EXISTS idx_ppc_tenant_created
 -- 7. 合同补充协议 pmis_project_contract_supplement
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     contract_id       VARCHAR(20)         NOT NULL,
     supplement_code   VARCHAR(64)    NOT NULL,
     supplement_name   VARCHAR(256)   NOT NULL,
@@ -733,7 +733,7 @@ CREATE INDEX IF NOT EXISTS idx_ppcs_tenant_status
 -- 8. 合同变更记录 pmis_project_contract_change
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     contract_id       VARCHAR(20)         NOT NULL,
     change_code       VARCHAR(64)    NOT NULL,
     change_type       VARCHAR(32)    NOT NULL,
@@ -843,7 +843,7 @@ CREATE INDEX IF NOT EXISTS idx_ppcc_tenant_approved
 -- 1. 合同模板表 pmis_project_contract_template
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_template(
-    id                     VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                     VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     template_code          VARCHAR(64)  NOT NULL,
     template_name          VARCHAR(256) NOT NULL,
     contract_type          VARCHAR(32)  NOT NULL,            -- FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER
@@ -929,7 +929,7 @@ CREATE INDEX IF NOT EXISTS idx_ppct_tenant_created
 -- 2. 项目变更主表 pmis_project_change
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_change(
-    id                       VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                       VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     change_code              VARCHAR(64)  NOT NULL,
     initiation_id            VARCHAR(20)       NOT NULL,
     change_type              VARCHAR(32)  NOT NULL,            -- SCOPE/COST/CONTRACT/STAFF/SCHEDULE
@@ -1065,7 +1065,7 @@ VALUES
 -- =====================================================
 -- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_rate_card; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_rate_card(
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     rate_code           VARCHAR(64)  NOT NULL,
     level_code          VARCHAR(16)  NOT NULL,                 -- L1-L18
     project_type        VARCHAR(32),                           -- ProjectType
@@ -1139,7 +1139,7 @@ CREATE INDEX IF NOT EXISTS idx_prc_tenant_status_effective
 -- =====================================================
 -- P1-6: 已废弃,无需 DROP
 CREATE TABLE IF NOT EXISTS pmis_rate_internal(
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     rate_code           VARCHAR(64)  NOT NULL,
     level_code          VARCHAR(16)  NOT NULL,
     department_id       VARCHAR(20),                                -- 事业部/部门
@@ -1260,7 +1260,7 @@ VALUES
 -- =====================================================
 -- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_resource_pool; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_resource_pool(
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     pool_code           VARCHAR(64)  NOT NULL,
     pool_name           VARCHAR(256) NOT NULL,
     pool_type           VARCHAR(32)  NOT NULL,                 -- HQ/DIVISION/RESERVE
@@ -1351,7 +1351,7 @@ VALUES
 -- 1) 质保期
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_warranty (
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     warranty_code       VARCHAR(64)  NOT NULL,
     initiation_id       VARCHAR(20)       NOT NULL,
     contract_id         VARCHAR(20),
@@ -1440,7 +1440,7 @@ CREATE INDEX IF NOT EXISTS idx_warranty_tenant_status_end
 -- 3) 每日对账表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_reconcile_daily (
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     reconcile_date      DATE         NOT NULL,
     reconcile_type      VARCHAR(32)  NOT NULL,
     initiation_id       VARCHAR(20),
@@ -1505,7 +1505,7 @@ CREATE INDEX IF NOT EXISTS idx_prd_tenant_status_date
 
 -- 唯一约束：每天每个维度只能有一条
 CREATE UNIQUE INDEX IF NOT EXISTS uk_prd_tenant_date_type_init
-    ON pmis_reconcile_daily(tenant_id, reconcile_date, reconcile_type, COALESCE(initiation_id, 0), deleted);
+    ON pmis_reconcile_daily(tenant_id, reconcile_date, reconcile_type, COALESCE(initiation_id, '0'), deleted);
 
 -- --------------------------------------------------------------------
 

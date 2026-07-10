@@ -8,7 +8,7 @@
 -- =====================================================
 -- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_agent_prediction; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_agent_prediction(
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     task_code           VARCHAR(64)  NOT NULL,
     agent_type          VARCHAR(32)  NOT NULL,                  -- RISK_WARNING/RESOURCE_RECOMMEND/PROFIT_FORECAST/WIN_RATE_PREDICT/TIMESHEET_ANOMALY
     biz_type            VARCHAR(32),                            -- PROJECT/OPPORTUNITY/TIMESHEET/STAFF
@@ -111,7 +111,7 @@ CREATE INDEX IF NOT EXISTS idx_pap_tenant_status_created
 --    支持 ${var} 变量替换 / 版本管理 / 激活排他
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_agent_prompt_template(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     template_code   VARCHAR(128)  NOT NULL,                  -- 模板编码（业务唯一）
     template_name   VARCHAR(256)  NOT NULL,                  -- 模板名称（展示用）
     agent_type      VARCHAR(32)   NOT NULL DEFAULT 'COMMON', -- FLOW_GENERATOR/RISK_WARNING/COMMON
@@ -175,7 +175,7 @@ ON CONFLICT DO NOTHING;
 --    都落一行 span，按 trace_id 串联完整链路，便于查询/审计/性能分析。
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_agent_trace(
-    id                VARCHAR(20)   PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                VARCHAR(20)   PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     trace_id          VARCHAR(64)   NOT NULL,                  -- 链路 ID（与 AgentContext.traceId / Brave traceId 对齐）
     span_id           VARCHAR(20)   NOT NULL,                  -- 本 span ID（雪花算法）
     parent_span_id    VARCHAR(20),                             -- 父 span ID（树形结构，AGENT_START 为根）
@@ -257,7 +257,7 @@ CREATE INDEX IF NOT EXISTS idx_pat_agent_created
 --    pmis_agent_token_usage_log: 每次大模型调用的 token 使用明细
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_agent_token_quota(
-    id                  VARCHAR(20)   PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                  VARCHAR(20)   PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     tenant_id           VARCHAR(20)   NOT NULL,                  -- 租户 ID
     quota_month         VARCHAR(6)    NOT NULL,                  -- 配额月份 YYYYMM（如 202607）
     total_quota         BIGINT        NOT NULL DEFAULT 1000000,  -- 月度配额上限（token 数）
@@ -295,7 +295,7 @@ CREATE INDEX IF NOT EXISTS idx_patq_tenant_month
     WHERE deleted = 0;
 
 CREATE TABLE IF NOT EXISTS pmis_agent_token_usage_log(
-    id                  VARCHAR(20)   PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id                  VARCHAR(20)   PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     tenant_id           VARCHAR(20)   NOT NULL,                  -- 租户 ID
     trace_id            VARCHAR(64)   NOT NULL,                  -- 链路 ID（与 pmis_agent_trace 对齐）
     agent_type          VARCHAR(32),                             -- Agent 类型
@@ -451,7 +451,7 @@ CREATE TABLE IF NOT EXISTS pmis_agent_document_chunk(
     content             TEXT          NOT NULL,
     -- pgvector 向量字段；维度由知识库 embedding_dim 决定
     -- 默认 1536 维（DashScope/OpenAI text-embedding 标准），mock 用 8 维
-    embedding           vector(1536),
+    embedding           TEXT,
     token_count         INT           NOT NULL DEFAULT 0,
     -- 审计字段
     created_by          VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM',
@@ -651,7 +651,7 @@ CREATE INDEX IF NOT EXISTS idx_dag_node_inst
 --     审批通过后通过 snapshot_json 恢复循环。
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_agent_hitl_approval(
-    id               VARCHAR(20)   PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    id               VARCHAR(20)   PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
     tenant_id        VARCHAR(20)   NOT NULL DEFAULT '1',
     trace_id        VARCHAR(64)   NOT NULL DEFAULT '',
     agent_type      VARCHAR(32)   NOT NULL,
