@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import com.njydsz.pmis.agent.engine.llm.LlmProviderRouter;
+import com.njydsz.pmis.agent.engine.llm.LlmToolCallResponse.ToolCall;
 import com.njydsz.pmis.agent.engine.llm.StructuredOutputValidator;
 import com.njydsz.pmis.agent.engine.memory.ChatMemory;
 import com.njydsz.pmis.agent.engine.memory.ChatMessage;
@@ -565,7 +566,7 @@ public class ReActLoop {
      * @return 合并后的 Observation 文本
      */
     public String executeToolsInParallel(
-            List<com.njydsz.pmis.agent.engine.llm.LlmToolCallResponse.ToolCall> toolCalls,
+            List<ToolCall> toolCalls,
             AgentContext ctx, int currentStep, ReActEventListener listener) {
         if (toolCalls == null || toolCalls.isEmpty()) {
             return "无工具调用";

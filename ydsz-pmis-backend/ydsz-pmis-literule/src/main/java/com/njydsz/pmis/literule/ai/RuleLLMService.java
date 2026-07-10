@@ -44,7 +44,9 @@ public class RuleLLMService {
     private static final String OPTIMIZE_SYSTEM_PROMPT = "你是 Aviator 表达式专家。请分析给定的表达式并给出 1~3 条优化建议，"
             + "建议关注：可读性、性能、可测试性、潜在边界条件。每条建议一行，不要带编号和前后缀。";
 
+    /** LLM 客户端，用于自然语言与规则定义之间的相互转换 */
     private final LLMClient llmClient;
+    /** 表达式校验服务，用于校验 LLM 生成的表达式语法合法性 */
     private final ExpressionValidationService expressionValidator;
 
     public RuleLLMService(LLMClient llmClient, ExpressionValidationService expressionValidator) {

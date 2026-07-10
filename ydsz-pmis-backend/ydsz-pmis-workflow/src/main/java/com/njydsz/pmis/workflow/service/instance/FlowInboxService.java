@@ -52,7 +52,7 @@ public interface FlowInboxService {
      * @param limit      每页大小
      * @return 站内信列表
      */
-    List<com.njydsz.pmis.workflow.entity.FlowInboxDO> listInbox(String receiverId, String tenantId,
+    List<com.njydsz.pmis.workflow.entity.instance.FlowInboxDO> listInbox(String receiverId, String tenantId,
                                                                   boolean onlyUnread, int offset, int limit);
 
     /**

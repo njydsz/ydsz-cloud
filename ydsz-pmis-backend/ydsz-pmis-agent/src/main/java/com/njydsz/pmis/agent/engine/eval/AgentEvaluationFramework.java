@@ -1,6 +1,7 @@
 package com.njydsz.pmis.agent.engine.eval;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
+import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.engine.llm.LlmProvider;
 import lombok.extern.slf4j.Slf4j;
 
@@ -138,7 +139,7 @@ public class AgentEvaluationFramework implements AutoCloseable {
                 var executeMethod = agentObject.getClass().getMethod("execute",
                         String.class, AgentContext.class);
                 Object result = executeMethod.invoke(agentObject, input, ctx);
-                if (result instanceof com.njydsz.pmis.agent.engine.AgentResult ar) {
+                if (result instanceof AgentResult ar) {
                     return ar.getSuggestion() != null ? ar.getSuggestion() : ar.toString();
                 }
                 return result == null ? "" : result.toString();

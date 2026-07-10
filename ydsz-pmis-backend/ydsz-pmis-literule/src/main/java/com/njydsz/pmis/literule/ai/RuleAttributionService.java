@@ -54,7 +54,9 @@ public class RuleAttributionService {
             + "2. 一条优化建议（如调整阈值、增加条件、修改严重度等）"
             + "输出格式为 JSON：{\"analysis\": \"...\", \"recommendation\": \"...\"}，不要输出额外解释。";
 
+    /** 规则管理服务（必需），用于查询规则定义和表达式追踪结果 */
     private final RuleAdminService ruleAdminService;
+    /** LLM 客户端（可选），为 null 时仅返回基础归因，不生成 llmAnalysis 和 recommendation */
     private final LLMClient llmClient;
 
     /**

@@ -59,6 +59,7 @@ public class RuleHealthScoreService {
     /** 样本量不足以评估命中率的阈值 */
     private static final long MIN_EVAL_FOR_HIT = 30L;
 
+    /** AI 配置属性，控制复杂度阈值、覆盖率计算等评分参数 */
     private final LiteRuleProperties.Ai aiConfig;
 
     public RuleHealthScoreService(LiteRuleProperties.Ai aiConfig) {

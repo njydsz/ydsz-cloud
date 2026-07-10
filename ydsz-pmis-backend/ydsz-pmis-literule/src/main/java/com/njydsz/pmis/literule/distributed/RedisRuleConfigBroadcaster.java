@@ -40,8 +40,11 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
     /** Redis Topic 名称 */
     private static final String TOPIC_NAME = "literule:config:refresh";
 
+    /** Redisson 客户端，用于获取 RTopic 实现跨实例 Pub/Sub 通信 */
     private final RedissonClient redissonClient;
+    /** 当前节点唯一标识（如 host:port），用于过滤本节点发出的广播消息防止广播风暴 */
     private final String selfNodeId;
+    /** Spring 事件发布器，收到远端广播后转换为本地 ApplicationEvent 以驱动热加载 */
     private final ApplicationEventPublisher eventPublisher;
 
     /** 是否已订阅 */

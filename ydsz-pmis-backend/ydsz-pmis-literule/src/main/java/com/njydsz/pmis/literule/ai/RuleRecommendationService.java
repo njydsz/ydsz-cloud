@@ -52,6 +52,7 @@ public class RuleRecommendationService {
         KEYWORDS = Collections.unmodifiableSet(kw);
     }
 
+    /** AI 配置属性，控制推荐结果 topN、相似度阈值等参数 */
     private final LiteRuleProperties.Ai aiConfig;
 
     public RuleRecommendationService(LiteRuleProperties.Ai aiConfig) {

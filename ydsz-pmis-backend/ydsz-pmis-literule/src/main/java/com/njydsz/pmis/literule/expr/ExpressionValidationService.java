@@ -31,7 +31,9 @@ import java.util.regex.Pattern;
 @Slf4j
 public class ExpressionValidationService {
 
+    /** 表达式求值器，执行底层 Aviator/QLExpress 表达式编译与求值 */
     private final ExpressionEvaluator evaluator;
+    /** 变量注册表，用于校验表达式中引用的变量是否已声明（为 EmptyVariableRegistry 时跳过该校验） */
     private final VariableRegistry variableRegistry;
 
     /** 模板占位符正则：${var} 或 ${ a.b.c } */
