@@ -5,7 +5,7 @@
 
 -- 职级表 (L1-L18)
 CREATE TABLE IF NOT EXISTS pmis_job_level(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     level_code      VARCHAR(8)     NOT NULL,
     level_name      VARCHAR(64)    NOT NULL,
     level_segment   VARCHAR(16)    NOT NULL,
@@ -59,7 +59,7 @@ CREATE INDEX IF NOT EXISTS idx_job_level_tenant_sort
 
 -- 职级费率表 (对外人天 / 对内人天)
 CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
-    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     level_code          VARCHAR(8)     NOT NULL,
     external_daily      NUMERIC(10,2)  NOT NULL,
     internal_daily      NUMERIC(10,2)  NOT NULL,
@@ -201,7 +201,7 @@ ON CONFLICT DO NOTHING;
 -- Leader 节点通过 last_heartbeat 判断节点是否在线，用于任务派发选择执行节点。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_node(
-    node_id         VARCHAR(128)  PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    node_id         VARCHAR(128)  PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     app_name        VARCHAR(128)  NOT NULL,
     host            VARCHAR(128)  NOT NULL,
     port            INTEGER,
@@ -247,7 +247,7 @@ COMMENT ON COLUMN pmis_job_node.tags IS '节点标签（JSON，用于任务亲�
 
 -- 任务执行日志表 pmis_job_log
 CREATE TABLE IF NOT EXISTS pmis_job_log(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
     start_time      TIMESTAMPTZ    NOT NULL,
@@ -364,7 +364,7 @@ CREATE INDEX IF NOT EXISTS idx_pjl_trace_id
 -- 与 pmis_job_log（执行级汇总）互补，本表为行级明细。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_log_content(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     log_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
     line_no         INTEGER        NOT NULL,
@@ -404,7 +404,7 @@ CREATE INDEX IF NOT EXISTS idx_pjlc_log_id
 -- 由 MapTaskExecutor 管理：root task 调用 map() 产生子任务，框架执行后记录结果。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_task(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     log_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
@@ -465,7 +465,7 @@ CREATE INDEX IF NOT EXISTS idx_pjt_status
 -- 存储 GLUE 类型任务的在线代码，支持版本管理和回滚。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_glue(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     source_code     TEXT           NOT NULL,
     language        VARCHAR(16)    NOT NULL DEFAULT 'GROOVY',
@@ -508,7 +508,7 @@ CREATE INDEX IF NOT EXISTS idx_pjg_job_id
 -- 每次任务配置更新时自动保存历史快照，支持版本对比和一键回滚。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_history(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     version         INTEGER        NOT NULL,
     snapshot        TEXT           NOT NULL,
@@ -566,7 +566,7 @@ CREATE INDEX IF NOT EXISTS idx_pjh_job_id
 -- 由 SlowTaskDetector 定期扫描 job_log 并写入，不影响任务执行主流程。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_slow_log(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id            VARCHAR(20)         NOT NULL,
     job_key           VARCHAR(128)   NOT NULL,
     log_id            VARCHAR(20)         NOT NULL,
@@ -635,7 +635,7 @@ CREATE INDEX IF NOT EXISTS idx_pjsl_created
 -- 对标 XXL-Job 子任务依赖 / PowerJob 工作流实例。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_relation(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     parent_job_id   VARCHAR(20)      NOT NULL,
     child_job_id    VARCHAR(20)      NOT NULL,
     -- [P4-3] 失败传播策略: FAIL_FAST 前置失败不触发后继(默认) / CONTINUE_ON_FAIL 前置失败仍触发
@@ -693,7 +693,7 @@ CREATE INDEX IF NOT EXISTS idx_pjr_child
 -- 对标 PowerJob workflow / XXL-Job 子任务链。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_dag(
-    id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     dag_key                 VARCHAR(128)  NOT NULL,
     dag_name                VARCHAR(128)  NOT NULL,
     dag_definition          TEXT          NOT NULL,
@@ -767,13 +767,37 @@ COMMENT ON COLUMN pmis_job_dag.version IS '版本号(乐观锁)';
 
 COMMENT ON COLUMN pmis_job_dag.tenant_id IS '租户 ID';
 
-COMMENT ON COLUMN pmis_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
+-- ----------------------------------------------------------------------------
+-- [P2-1] DAG 节点类型扩展（CONDITION / LOOP / PARALLEL_GATEWAY）
+-- ----------------------------------------------------------------------------
+-- DAG 节点定义存储在 pmis_job_dag.dag_definition JSON 字段中（非独立表），
+-- 节点类型扩展字段（nodeType / conditionExpression / loopCount / parallelBranches）
+-- 直接在 JSON 中管理，无需 ALTER TABLE。
+--
+-- JSON 节点格式（P2-1 增强后）：
+-- {
+--   "jobKey": "nodeA",
+--   "jobId": "1",
+--   "label": "条件判断",
+--   "x": 100, "y": 200,
+--   "paramsJson": "{}",
+--   "nodeType": "CONDITION",            -- TASK(默认) / CONDITION / LOOP / PARALLEL_GATEWAY
+--   "conditionExpression": "${nodeA.result=='success'}",  -- CONDITION 节点
+--   "loopCount": 3,                     -- LOOP 节点循环次数
+--   "parallelBranches": 2               -- PARALLEL_GATEWAY 并行分支数
+-- }
+--
+-- 以下 ALTER 语句用于兼容性（若未来引入独立的 pmis_job_dag_node 表），
+-- 当前为 no-op（表不存在时跳过）。
+ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS node_type VARCHAR(32) NOT NULL DEFAULT 'TASK';
+
+ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS condition_expression VARCHAR(512);
+
+ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS loop_count INTEGER;
+
+ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS parallel_branches INTEGER;
 
 COMMENT ON COLUMN pmis_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';
-
-COMMENT ON COLUMN pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
-
-COMMENT ON COLUMN pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
 
 CREATE INDEX IF NOT EXISTS idx_pjd_status
     ON pmis_job_dag (status) WHERE deleted = 0;
@@ -789,7 +813,7 @@ CREATE INDEX IF NOT EXISTS idx_pjd_tenant
 -- context_json 存储 DAG 实例级上下文，支持跨节点传参。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_dag_instance(
-    id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     dag_id                  VARCHAR(20)   NOT NULL,
     dag_key                 VARCHAR(128)  NOT NULL,
     -- 实例状态: PENDING 待执行 / RUNNING 执行中 / SUCCESS 成功 / FAILED 失败
@@ -876,7 +900,7 @@ CREATE INDEX IF NOT EXISTS idx_pjdi_created_at
 -- 一个 DAG 实例包含若干节点实例，每个节点实例关联一个任务执行日志（pmis_job_log）。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_dag_node_instance(
-    id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     dag_instance_id         VARCHAR(20)   NOT NULL,
     dag_id                  VARCHAR(20)   NOT NULL,
     job_id                  VARCHAR(20)   NOT NULL,
@@ -955,7 +979,7 @@ CREATE INDEX IF NOT EXISTS idx_pjdni_status
 -- 对标 XXL-Job 告警中心 / PowerJob 告警配置。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_alert_rule(
-    id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rule_name             VARCHAR(128)  NOT NULL,
     job_id                VARCHAR(20),
     job_key               VARCHAR(128),
@@ -1063,7 +1087,7 @@ CREATE INDEX IF NOT EXISTS idx_pjar_tenant_created
 -- 记录每次告警派发的实际情况，用于审计、去重判断和告警效果统计。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_alert_log(
-    id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rule_id               VARCHAR(20)   NOT NULL,
     rule_name             VARCHAR(128)  NOT NULL,
     job_id                VARCHAR(20),
@@ -1163,7 +1187,7 @@ CREATE INDEX IF NOT EXISTS idx_pjal_trace_id
 -- 每天凌晨聚合 pmis_job_log 的执行统计，供前端趋势图展示。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_daily_stats(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
     stats_date      DATE           NOT NULL,
@@ -1222,7 +1246,7 @@ CREATE INDEX IF NOT EXISTS idx_pjds_job_date
 -- 由 AlertScanner 定期检查，违约时触发告警。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_sla(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
     max_duration_ms BIGINT,
@@ -1280,7 +1304,7 @@ COMMENT ON COLUMN pmis_job_sla.deleted IS '逻辑删除标记: 0 未删除 / 1 �
 -- 每次任务定义变更时记录一条版本快照，支持版本回溯和差异对比。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_version_history(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id            VARCHAR(20)         NOT NULL,
     job_key           VARCHAR(128)   NOT NULL,
     version           INTEGER        NOT NULL,
@@ -1325,7 +1349,7 @@ CREATE INDEX IF NOT EXISTS idx_pjvh_job_id
 -- 记录任务执行产生的文件/数据产物，支持产物查询、下载和过期清理。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_artifact(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     log_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
@@ -1385,7 +1409,7 @@ CREATE INDEX IF NOT EXISTS idx_pja_expire_at
 -- 记录用户配置的 WebHook 订阅，在任务生命周期事件发生时推送通知。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_webhook(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     name            VARCHAR(128)   NOT NULL,
     event_type      VARCHAR(64)    NOT NULL,
     job_key         VARCHAR(128),
@@ -1443,7 +1467,7 @@ CREATE INDEX IF NOT EXISTS idx_pjw_status
 -- 2) 预警分级推送表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     alert_code          VARCHAR(64)  NOT NULL UNIQUE,
     alert_type          VARCHAR(32)  NOT NULL,
     alert_level         VARCHAR(8)   NOT NULL,
@@ -1577,4 +1601,15 @@ ANALYZE pmis_job_log;
 CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_trace
     ON pmis_alert_dispatch (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
+
+DO $$ BEGIN
+  COMMENT ON COLUMN pmis_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
+  COMMENT ON COLUMN pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
+  COMMENT ON COLUMN pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
+  COMMENT ON COLUMN pmis_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
+  COMMENT ON COLUMN pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
+  COMMENT ON COLUMN pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
+EXCEPTION WHEN undefined_table THEN
+  RAISE NOTICE 'pmis_job_dag_node table not found, skipping column comments';
+END $$;
 

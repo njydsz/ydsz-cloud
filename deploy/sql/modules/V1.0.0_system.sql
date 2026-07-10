@@ -8,7 +8,7 @@
 -- ====================================================================
 
 CREATE TABLE IF NOT EXISTS pmis_config(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     config_group    VARCHAR(64)    NOT NULL,
     config_key      VARCHAR(128)   NOT NULL,
     config_value    TEXT,
@@ -94,7 +94,7 @@ ON CONFLICT DO NOTHING;
 -- [P7-2] 租户级配额表：控制单个租户可创建任务数、并发执行数、日执行总量
 -- 未配置记录的租户视为 unlimited（由应用层 CronjobProperties.Quota.defaultMax* 兜底）
 CREATE TABLE IF NOT EXISTS pmis_tenant_quota(
-    id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                    VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id             VARCHAR(20)      NOT NULL UNIQUE,
     -- 任务数上限（NULL=unlimited；超过此值拒绝创建新任务）
     max_jobs              INTEGER,

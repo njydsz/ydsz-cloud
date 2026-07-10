@@ -9,9 +9,9 @@
 --    消息模板 / 发送日志 / 路由 / 回执 / 聚合 / 灰度 见第 7.x 节
 -- ====================================================================
 
--- 站内通知表 pmis_msg_notification（由原 pmis_notification 重构升级）
+-- 站内通知表 pmis_msg_notification（由原 pmis_msg_notification 重构升级）
 CREATE TABLE IF NOT EXISTS pmis_msg_notification(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     title           VARCHAR(255)   NOT NULL,
     content         TEXT,
     level           VARCHAR(16)    NOT NULL DEFAULT 'INFO',
@@ -125,7 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_pmn_batch
 
 -- 用户消息偏好表 pmis_msg_preference（免打扰 / 频率上限 / 聚合开关 / 语言）
 CREATE TABLE IF NOT EXISTS pmis_msg_preference(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id           VARCHAR(20)   NOT NULL,
     channel           VARCHAR(32)   NOT NULL,
     biz_type          VARCHAR(64)   NOT NULL DEFAULT '__DEFAULT__',
@@ -189,7 +189,7 @@ CREATE INDEX IF NOT EXISTS idx_pmp_tenant ON pmis_msg_preference(tenant_id);
 
 -- 订阅关系表 pmis_msg_subscription（用户订阅/退订主题）
 CREATE TABLE IF NOT EXISTS pmis_msg_subscription(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)   NOT NULL,
     topic_code      VARCHAR(128)  NOT NULL,
     channel         VARCHAR(32)   NOT NULL,
@@ -246,7 +246,7 @@ CREATE INDEX IF NOT EXISTS idx_pms_unsub_status ON pmis_msg_subscription(status,
 -- 描述: 短信/邮件/推送/站内信/Webhook 发送日志 + 模板
 -- =====================================================
 
--- 消息发送日志表 pmis_msg_log（由原 pmis_message_log 重构升级，新增优先级/聚合/撤回/回执/路由/灰度/重试调度字段）
+-- 消息发送日志表 pmis_msg_log（由原 pmis_msg_log 重构升级，新增优先级/聚合/撤回/回执/路由/灰度/重试调度字段）
 -- P2-3: 改为 PostgreSQL 月度 RANGE 分区表，按 created_at 分区，便于按时间范围查询与冷数据归档。
 -- 分区表主键必须包含分区键 created_at，故采用 (id, created_at) 复合主键。
 -- 业务代码通过 MyBatis-Plus BaseMapper 以 id 单字段查询时，PostgreSQL 会扫描所有分区上的本地索引，
@@ -440,7 +440,7 @@ CREATE INDEX IF NOT EXISTS idx_pml_canary_key
 
 -- 消息模板表 pmis_msg_template（由原 pmis_message_template 重构升级，新增 i18n/版本/审核/分类/场景）
 CREATE TABLE IF NOT EXISTS pmis_msg_template(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     template_code   VARCHAR(128)   NOT NULL,
     channel         VARCHAR(32)    NOT NULL,
     locale          VARCHAR(16)    NOT NULL DEFAULT 'zh-CN',
@@ -508,7 +508,7 @@ CREATE INDEX IF NOT EXISTS idx_pmt_audit
 
 -- 消息路由规则表 pmis_msg_route_rule（条件路由 / 通道降级）
 CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rule_code         VARCHAR(128)  NOT NULL,
     rule_name         VARCHAR(255)  NOT NULL,
     biz_type          VARCHAR(64),
@@ -552,7 +552,7 @@ CREATE INDEX IF NOT EXISTS idx_pmrt_sort ON pmis_msg_route_rule(status, sort_ord
 
 -- 消息回执表 pmis_msg_receipt（服务商回执 / 已读 / 点击回调）
 CREATE TABLE IF NOT EXISTS pmis_msg_receipt(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     log_id            VARCHAR(20)   NOT NULL,
     provider_trace_id VARCHAR(128),
     receipt_type      VARCHAR(16)   NOT NULL,
@@ -582,7 +582,7 @@ CREATE INDEX IF NOT EXISTS idx_pmrc_trace ON pmis_msg_receipt(provider_trace_id)
 
 -- 聚合批次表 pmis_msg_aggregate（同组消息合并为摘要发送）
 CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     aggregate_group   VARCHAR(64)   NOT NULL,
     receiver          VARCHAR(256)  NOT NULL,
     channel           VARCHAR(32)   NOT NULL,
@@ -619,7 +619,7 @@ CREATE INDEX IF NOT EXISTS idx_pmag_due ON pmis_msg_aggregate(scheduled_send_at)
 
 -- 灰度桶表 pmis_msg_canary（按 template_code/biz_type 灰度发布）
 CREATE TABLE IF NOT EXISTS pmis_msg_canary(
-    id                       VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                       VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     canary_key               VARCHAR(128)  NOT NULL,
     bucket_total             INTEGER       NOT NULL DEFAULT 100,
     bucket_selected          TEXT,
@@ -669,65 +669,65 @@ CREATE INDEX IF NOT EXISTS idx_pmc_key ON pmis_msg_canary(canary_key) WHERE dele
 -- ============================================================
 
 -- 预算黄色预警
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'INAPP',
        '【预算黄色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%',
        'INAPP', 'PMIS', 'ENABLED', '预算黄色预警(80%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'INAPP');
 
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'EMAIL',
        '【预算黄色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及黄色阈值(80%)。</p>',
        'EMAIL', 'PMIS', 'ENABLED', '预算黄色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'EMAIL');
+WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'EMAIL');
 
 -- 预算红色预警
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'INAPP',
        '【预算红色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%，已触及红色阈值(95%)，请立即关注',
        'INAPP', 'PMIS', 'ENABLED', '预算红色预警(95%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'INAPP');
 
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'EMAIL',
        '【预算红色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及红色阈值(95%)，请立即关注。</p>',
        'EMAIL', 'PMIS', 'ENABLED', '预算红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'EMAIL');
+WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'EMAIL');
 
 -- EVM 红色预警
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'INAPP',
        '【EVM 红色预警】${title}',
        '${content}',
        'INAPP', 'PMIS', 'ENABLED', 'EVM 红色预警(CPI<0.85 或 SPI<0.85)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'INAPP');
 
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'EMAIL',
        '【EVM 红色预警】${title}',
        '<p>${content}</p>',
        'EMAIL', 'PMIS', 'ENABLED', 'EVM 红色预警邮件', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'EMAIL');
+WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'EMAIL');
 
 -- SLA 红色预警（工单超时）
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_SLA_RED', 'INAPP',
        '【SLA 红色预警】工单 ${alertCode} 超时',
        '${content}',
        'INAPP', 'PMIS', 'ENABLED', '运维工单 SLA 超时红色预警', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'INAPP');
 
 -- 通用黄色预警兜底
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
+INSERT INTO pmis_msg_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_OTHER_YELLOW', 'INAPP',
        '【黄色预警】${title}',
        '${content}',
        'INAPP', 'PMIS', 'ENABLED', '黄色预警通用兜底模板', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
-WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'INAPP');
+WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'INAPP');
 
 -- 注：pmis_voucher 表尚未创建，相关索引暂时注释，待凭证表落地后启用
 -- CREATE INDEX IF NOT EXISTS idx_pmis_voucher_period_status
@@ -737,24 +737,24 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALE
 --  7) 时区/时间相关 BRIN 索引（日志/审计表 100w+ 行）
 -- =====================================================================
 -- P1-4: pmis_operation_log 的 BRIN 索引已上移到父表定义处(分区自动传播),此处跳过
---       pmis_message_log 仍非分区表,保留原 BRIN
+--       pmis_msg_log 仍非分区表,保留原 BRIN
 CREATE INDEX IF NOT EXISTS idx_pmis_message_log_brin_sent
-    ON pmis_message_log USING BRIN (created_at)
+    ON pmis_msg_log USING BRIN (created_at)
     WITH (pages_per_range = 32);
 
 -- 15. 通知
-ALTER TABLE pmis_notification ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+ALTER TABLE pmis_msg_notification ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 
-CREATE INDEX IF NOT EXISTS idx_notification_tenant ON pmis_notification(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_notification_tenant ON pmis_msg_notification(tenant_id);
 
 CREATE INDEX IF NOT EXISTS idx_notification_tenant_created
-    ON pmis_notification(tenant_id, created_at DESC) WHERE deleted = 0;
+    ON pmis_msg_notification(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 通知-发送人：按 sender_id 查询"我发出的通知"
 CREATE INDEX IF NOT EXISTS idx_pmis_notif_sender
-    ON pmis_notification(sender_id) WHERE deleted = 0;
+    ON pmis_msg_notification(sender_id) WHERE deleted = 0;
 
-ANALYZE pmis_notification;
+ANALYZE pmis_msg_notification;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT

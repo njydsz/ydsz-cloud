@@ -30,7 +30,7 @@
 -- 1. 商机主表 pmis_project_opportunity
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     opportunity_code  VARCHAR(64)    NOT NULL,
     opportunity_name  VARCHAR(256)   NOT NULL,
     customer_id       VARCHAR(20)         NOT NULL,
@@ -154,7 +154,7 @@ CREATE INDEX IF NOT EXISTS idx_ppo_expected_sign
 -- 2. 商机跟进记录 pmis_project_opportunity_follow
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_opportunity_follow(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     opportunity_id    VARCHAR(20)         NOT NULL,
     follow_type       VARCHAR(32)    NOT NULL,
     follow_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -226,7 +226,7 @@ CREATE INDEX IF NOT EXISTS idx_ppof_next_date
 -- 3. 立项主表 pmis_project_initiation
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_initiation(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     project_code      VARCHAR(64)    NOT NULL,
     project_name      VARCHAR(256)   NOT NULL,
     opportunity_id    VARCHAR(20),
@@ -361,7 +361,7 @@ CREATE INDEX IF NOT EXISTS idx_ppi_current_gate
 -- 4. 立项预算明细 pmis_project_budget_item
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_budget_item(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     initiation_id     VARCHAR(20)         NOT NULL,
     category          VARCHAR(32)    NOT NULL,
     sub_category      VARCHAR(64),
@@ -437,7 +437,7 @@ CREATE INDEX IF NOT EXISTS idx_ppbi_tenant_init
 -- 5. 门径评审记录 pmis_project_gate_review
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_gate_review(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     initiation_id     VARCHAR(20)         NOT NULL,
     gate_code         VARCHAR(16)    NOT NULL,
     gate_name         VARCHAR(64),
@@ -517,7 +517,7 @@ CREATE INDEX IF NOT EXISTS idx_ppgr_reviewer_at
 -- 6. 合同主表 pmis_project_contract
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     contract_code     VARCHAR(64)    NOT NULL,
     contract_name     VARCHAR(256)   NOT NULL,
     initiation_id     VARCHAR(20),
@@ -653,7 +653,7 @@ CREATE INDEX IF NOT EXISTS idx_ppc_tenant_created
 -- 7. 合同补充协议 pmis_project_contract_supplement
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     contract_id       VARCHAR(20)         NOT NULL,
     supplement_code   VARCHAR(64)    NOT NULL,
     supplement_name   VARCHAR(256)   NOT NULL,
@@ -733,7 +733,7 @@ CREATE INDEX IF NOT EXISTS idx_ppcs_tenant_status
 -- 8. 合同变更记录 pmis_project_contract_change
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
-    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     contract_id       VARCHAR(20)         NOT NULL,
     change_code       VARCHAR(64)    NOT NULL,
     change_type       VARCHAR(32)    NOT NULL,
@@ -843,7 +843,7 @@ CREATE INDEX IF NOT EXISTS idx_ppcc_tenant_approved
 -- 1. 合同模板表 pmis_project_contract_template
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_template(
-    id                     VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                     VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     template_code          VARCHAR(64)  NOT NULL,
     template_name          VARCHAR(256) NOT NULL,
     contract_type          VARCHAR(32)  NOT NULL,            -- FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER
@@ -929,7 +929,7 @@ CREATE INDEX IF NOT EXISTS idx_ppct_tenant_created
 -- 2. 项目变更主表 pmis_project_change
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_change(
-    id                       VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                       VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     change_code              VARCHAR(64)  NOT NULL,
     initiation_id            VARCHAR(20)       NOT NULL,
     change_type              VARCHAR(32)  NOT NULL,            -- SCOPE/COST/CONTRACT/STAFF/SCHEDULE
@@ -1065,7 +1065,7 @@ VALUES
 -- =====================================================
 -- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_rate_card; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_rate_card(
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rate_code           VARCHAR(64)  NOT NULL,
     level_code          VARCHAR(16)  NOT NULL,                 -- L1-L18
     project_type        VARCHAR(32),                           -- ProjectType
@@ -1139,7 +1139,7 @@ CREATE INDEX IF NOT EXISTS idx_prc_tenant_status_effective
 -- =====================================================
 -- P1-6: 已废弃,无需 DROP
 CREATE TABLE IF NOT EXISTS pmis_rate_internal(
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rate_code           VARCHAR(64)  NOT NULL,
     level_code          VARCHAR(16)  NOT NULL,
     department_id       VARCHAR(20),                                -- 事业部/部门
@@ -1260,7 +1260,7 @@ VALUES
 -- =====================================================
 -- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_resource_pool; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_resource_pool(
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     pool_code           VARCHAR(64)  NOT NULL,
     pool_name           VARCHAR(256) NOT NULL,
     pool_type           VARCHAR(32)  NOT NULL,                 -- HQ/DIVISION/RESERVE
@@ -1336,6 +1336,92 @@ VALUES
 
 -- --------------------------------------------------------------------
 
+-- ============================ [015] init pmis cockpit views ============================
+
+-- ============================================================
+-- V1.0.0_015  经营驾驶舱 + 高级报表  视图脚本
+-- ============================================================
+-- 说明：为驾驶舱与高级报表提供跨模块聚合视图，避免在 Java 层做
+--      多次单表查询。所有视图 LEFT JOIN + COALESCE 确保 0 收入/0 成本
+--      的项目也能出现在下钻结果中。
+-- ============================================================
+
+-- ----------------------------
+-- 1. 项目收入 + 成本视图（按 initiation × period）
+-- ----------------------------
+-- 优化: 显式带 tenant_id,避免 JOIN 放大导致跨租户数据泄露
+CREATE OR REPLACE VIEW pmis_view_initiation_revenue_cost
+    WITH (security_invoker = true) AS
+SELECT i.tenant_id,
+       i.id              AS initiation_id,
+       COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r
+                  WHERE r.initiation_id = i.id AND r.deleted = 0
+                    AND r.tenant_id = i.tenant_id), 0)         AS total_revenue,
+       COALESCE((SELECT SUM(amount) FROM pmis_finance_invoice p
+                  WHERE p.initiation_id = i.id AND p.deleted = 0
+                    AND p.tenant_id = i.tenant_id), 0)         AS invoiced_amount,
+       COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r2
+                  WHERE r2.initiation_id = i.id AND r2.deleted = 0
+                    AND r2.status = 'CONFIRMED'
+                    AND r2.tenant_id = i.tenant_id), 0)        AS confirmed_revenue,
+       COALESCE((SELECT SUM(amount) FROM pmis_cost_allocation
+                  WHERE initiation_id = i.id AND deleted = 0 AND cost_type = 'LABOR'
+                    AND tenant_id = i.tenant_id), 0)           AS labor_cost,
+       COALESCE((SELECT SUM(amount) FROM pmis_cost_purchase
+                  WHERE initiation_id = i.id AND deleted = 0
+                    AND tenant_id = i.tenant_id), 0)          AS purchase_cost,
+       COALESCE((SELECT SUM(amount) FROM pmis_cost_expense
+                  WHERE initiation_id = i.id AND deleted = 0
+                    AND tenant_id = i.tenant_id), 0)          AS expense_cost
+FROM pmis_project_initiation i
+WHERE i.deleted = 0;
+
+COMMENT ON VIEW pmis_view_initiation_revenue_cost IS '项目收入 + 成本聚合视图: CockpitReportServiceImpl 读取,total_revenue 包含所有收入记录,confirmed_revenue 仅 CONFIRMED 状态;labor/purchase/expense 三类成本分别聚合;LEFT JOIN + COALESCE 保证 0 收入/0 成本项目也出现;每条子查询强制带 tenant_id = i.tenant_id 防止跨租户数据污染';
+
+-- ----------------------------
+-- 2. 项目 EVM 预警分布
+-- ----------------------------
+CREATE OR REPLACE VIEW pmis_view_initiation_evm
+    WITH (security_invoker = true) AS
+SELECT tenant_id,
+       initiation_id,
+       CASE
+           WHEN COUNT(*) FILTER (WHERE alert_level = 'RED') > 0 THEN 'RED'::VARCHAR
+           WHEN COUNT(*) FILTER (WHERE alert_level = 'YELLOW') > 0 THEN 'YELLOW'::VARCHAR
+           ELSE 'NORMAL'::VARCHAR
+       END                                           AS top_alert,
+       COUNT(*) FILTER (WHERE alert_level = 'RED')    AS red_count,
+       COUNT(*) FILTER (WHERE alert_level = 'YELLOW') AS yellow_count,
+       COUNT(*) FILTER (WHERE alert_level = 'NORMAL') AS green_count
+FROM pmis_evm_measure
+WHERE deleted = 0
+GROUP BY tenant_id, initiation_id;
+
+COMMENT ON VIEW pmis_view_initiation_evm IS '项目 EVM 预警分布视图: 按 tenant_id + 立项聚合 RED/YELLOW/NORMAL 计数,AdvancedReportService#evmReport 读取,top_alert 取最高等级';
+
+-- ----------------------------
+-- 3. 经营驾驶舱 KPI 总览视图
+-- ----------------------------
+-- 注意: 多租户场景下,此视图按 tenant_id 分组聚合,确保租户间数据隔离
+CREATE OR REPLACE VIEW pmis_view_cockpit_overview
+    WITH (security_invoker = true) AS
+SELECT
+    tenant_id,
+    (SELECT COUNT(*) FROM pmis_project_initiation
+        WHERE deleted = 0 AND stage IN ('APPROVED','IN_PROGRESS')
+          AND tenant_id = t.tenant_id)                                            AS active_projects,
+    (SELECT COALESCE(SUM(amount), 0) FROM pmis_finance_invoice
+        WHERE deleted = 0 AND status IN ('ISSUED','RED_REVERSED')
+          AND tenant_id = t.tenant_id)                                            AS total_invoiced,
+    (SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
+        WHERE deleted = 0 AND status = 'ALLOCATED'
+          AND tenant_id = t.tenant_id)                                           AS confirmed_revenue
+FROM (SELECT DISTINCT tenant_id FROM pmis_project_initiation WHERE deleted = 0) t;
+
+COMMENT ON VIEW pmis_view_cockpit_overview IS '经营驾驶舱 KPI 总览视图: 按 tenant_id 分组汇总 active_projects/total_invoiced/confirmed_revenue,单租户场景返回单行;多租户需前端按租户过滤;底层子查询都强制带 tenant_id 关联,杜绝跨租户数据污染;CockpitReportController#overview 直接读取';
+
+-- --------------------------------------------------------------------
+
 -- ============================ [017] init pmis after sales schema ============================
 
 -- ============================================================
@@ -1351,7 +1437,7 @@ VALUES
 -- 1) 质保期
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_warranty (
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     warranty_code       VARCHAR(64)  NOT NULL,
     initiation_id       VARCHAR(20)       NOT NULL,
     contract_id         VARCHAR(20),
@@ -1440,7 +1526,7 @@ CREATE INDEX IF NOT EXISTS idx_warranty_tenant_status_end
 -- 3) 每日对账表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_reconcile_daily (
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     reconcile_date      DATE         NOT NULL,
     reconcile_type      VARCHAR(32)  NOT NULL,
     initiation_id       VARCHAR(20),

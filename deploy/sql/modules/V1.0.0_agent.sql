@@ -8,7 +8,7 @@
 -- =====================================================
 -- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_agent_prediction; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_agent_prediction(
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     task_code           VARCHAR(64)  NOT NULL,
     agent_type          VARCHAR(32)  NOT NULL,                  -- RISK_WARNING/RESOURCE_RECOMMEND/PROFIT_FORECAST/WIN_RATE_PREDICT/TIMESHEET_ANOMALY
     biz_type            VARCHAR(32),                            -- PROJECT/OPPORTUNITY/TIMESHEET/STAFF
@@ -111,7 +111,7 @@ CREATE INDEX IF NOT EXISTS idx_pap_tenant_status_created
 --    支持 ${var} 变量替换 / 版本管理 / 激活排他
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_agent_prompt_template(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     template_code   VARCHAR(128)  NOT NULL,                  -- 模板编码（业务唯一）
     template_name   VARCHAR(256)  NOT NULL,                  -- 模板名称（展示用）
     agent_type      VARCHAR(32)   NOT NULL DEFAULT 'COMMON', -- FLOW_GENERATOR/RISK_WARNING/COMMON
@@ -175,7 +175,7 @@ ON CONFLICT DO NOTHING;
 --    都落一行 span，按 trace_id 串联完整链路，便于查询/审计/性能分析。
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_agent_trace(
-    id                VARCHAR(20)   PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)   PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     trace_id          VARCHAR(64)   NOT NULL,                  -- 链路 ID（与 AgentContext.traceId / Brave traceId 对齐）
     span_id           VARCHAR(20)   NOT NULL,                  -- 本 span ID（雪花算法）
     parent_span_id    VARCHAR(20),                             -- 父 span ID（树形结构，AGENT_START 为根）
@@ -257,7 +257,7 @@ CREATE INDEX IF NOT EXISTS idx_pat_agent_created
 --    pmis_agent_token_usage_log: 每次大模型调用的 token 使用明细
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_agent_token_quota(
-    id                  VARCHAR(20)   PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)   PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)   NOT NULL,                  -- 租户 ID
     quota_month         VARCHAR(6)    NOT NULL,                  -- 配额月份 YYYYMM（如 202607）
     total_quota         BIGINT        NOT NULL DEFAULT 1000000,  -- 月度配额上限（token 数）
@@ -295,7 +295,7 @@ CREATE INDEX IF NOT EXISTS idx_patq_tenant_month
     WHERE deleted = 0;
 
 CREATE TABLE IF NOT EXISTS pmis_agent_token_usage_log(
-    id                  VARCHAR(20)   PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)   PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)   NOT NULL,                  -- 租户 ID
     trace_id            VARCHAR(64)   NOT NULL,                  -- 链路 ID（与 pmis_agent_trace 对齐）
     agent_type          VARCHAR(32),                             -- Agent 类型
@@ -485,10 +485,14 @@ COMMENT ON COLUMN pmis_agent_document_chunk.token_count IS '分块 token 数: �
 
 -- IVFFLAT 索引：pgvector 近似最近邻索引，加速余弦相似度检索
 -- lists = sqrt(rows) 经验值，probe = 10 平衡召回率与性能
-CREATE INDEX IF NOT EXISTS idx_padc_embedding
+DO $$ BEGIN
+  CREATE INDEX IF NOT EXISTS idx_padc_embedding
     ON pmis_agent_document_chunk
     USING ivfflat (embedding vector_cosine_ops)
     WITH (lists = 100);
+EXCEPTION WHEN feature_not_supported THEN
+  RAISE NOTICE 'ivfflat index not available (pgvector not installed), skipping';
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_padc_kb_deleted
     ON pmis_agent_document_chunk(knowledge_base_id, deleted)
@@ -651,7 +655,7 @@ CREATE INDEX IF NOT EXISTS idx_dag_node_inst
 --     审批通过后通过 snapshot_json 恢复循环。
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_agent_hitl_approval(
-    id               VARCHAR(20)   PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id               VARCHAR(20)   PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id        VARCHAR(20)   NOT NULL DEFAULT '1',
     trace_id        VARCHAR(64)   NOT NULL DEFAULT '',
     agent_type      VARCHAR(32)   NOT NULL,

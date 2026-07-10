@@ -9,7 +9,7 @@
 
 -- 角色表
 CREATE TABLE IF NOT EXISTS pmis_role(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     role_code       VARCHAR(64)    NOT NULL,
     role_name       VARCHAR(64)    NOT NULL,
     description     TEXT,
@@ -63,7 +63,7 @@ CREATE INDEX IF NOT EXISTS idx_role_tenant_created
 
 -- 权限/菜单表
 CREATE TABLE IF NOT EXISTS pmis_permission(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     parent_id       VARCHAR(20)         NOT NULL DEFAULT 0,
     perm_code       VARCHAR(128)   NOT NULL,
     perm_name       VARCHAR(64)    NOT NULL,
@@ -131,7 +131,7 @@ CREATE INDEX IF NOT EXISTS idx_permission_tenant ON pmis_permission(tenant_id);
 
 -- 用户-角色关联表
 CREATE TABLE IF NOT EXISTS pmis_user_role(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)         NOT NULL,
     role_id         VARCHAR(20)         NOT NULL,
     created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
@@ -166,7 +166,7 @@ CREATE INDEX IF NOT EXISTS idx_user_role_tenant ON pmis_user_role(tenant_id);
 
 -- 角色-权限关联表
 CREATE TABLE IF NOT EXISTS pmis_role_permission(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     role_id         VARCHAR(20)         NOT NULL,
     permission_id   VARCHAR(20)         NOT NULL,
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -199,7 +199,7 @@ CREATE INDEX IF NOT EXISTS idx_role_permission_perm
 
 -- 岗位表
 CREATE TABLE IF NOT EXISTS pmis_position(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     position_code   VARCHAR(64)    NOT NULL,
     position_name   VARCHAR(128)   NOT NULL,
     department_id   VARCHAR(20)         NOT NULL,
@@ -254,7 +254,7 @@ CREATE INDEX IF NOT EXISTS idx_position_tenant_created
 
 -- 员工表
 CREATE TABLE IF NOT EXISTS pmis_employee(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)         NOT NULL,
     emp_code        VARCHAR(64)    NOT NULL,
     emp_name        VARCHAR(64)    NOT NULL,
@@ -384,7 +384,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_emp_position
 
 -- 兼职职级费率表 (P1-P18, 时薪核算月薪+商业保险+差旅)
 CREATE TABLE IF NOT EXISTS pmis_part_time_rate(
-    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rate_code           VARCHAR(8)     NOT NULL,
     rate_name           VARCHAR(64)    NOT NULL,
     level_segment       VARCHAR(16)    NOT NULL,
@@ -483,7 +483,7 @@ CREATE INDEX IF NOT EXISTS idx_ptr_tenant_sort ON pmis_part_time_rate(tenant_id,
 
 -- 外包职级费率表 (V1-V18, 人天核算月薪+差旅报销+差旅补贴)
 CREATE TABLE IF NOT EXISTS pmis_outsource_rate(
-    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rate_code           VARCHAR(8)     NOT NULL,
     rate_name           VARCHAR(64)    NOT NULL,
     level_segment       VARCHAR(16)    NOT NULL,
@@ -579,7 +579,7 @@ CREATE INDEX IF NOT EXISTS idx_por_tenant_sort ON pmis_outsource_rate(tenant_id,
 
 -- 员工标签表
 CREATE TABLE IF NOT EXISTS pmis_employee_tag(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     employee_id     VARCHAR(20)         NOT NULL,
     tag_type        VARCHAR(32)    NOT NULL,
     tag_code        VARCHAR(64)    NOT NULL,
@@ -623,7 +623,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_deleted ON pmis_employee_tag(deleted
 
 -- 用户账号表
 CREATE TABLE IF NOT EXISTS pmis_user_account(
-    id                 VARCHAR(20)      PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     username           VARCHAR(64)    NOT NULL,
     password           VARCHAR(128)   NOT NULL,
     salt               VARCHAR(32)    NOT NULL,
@@ -991,7 +991,7 @@ ON CONFLICT DO NOTHING;
 -- 3) 双因素认证
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_user_2fa (
-    id              VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)        NOT NULL,
     mfa_type        VARCHAR(16)   NOT NULL DEFAULT 'TOTP',
     secret          VARCHAR(128)  NOT NULL,
@@ -1036,7 +1036,7 @@ CREATE INDEX IF NOT EXISTS idx_user_2fa_tenant_user
 -- 6) 用户会话（单点登录/强制下线）
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_user_session (
-    id              VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     user_id         VARCHAR(20)        NOT NULL,
     session_id      VARCHAR(64)   NOT NULL,
     token_jti       VARCHAR(64),

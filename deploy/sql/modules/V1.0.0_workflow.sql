@@ -21,7 +21,7 @@
 -- 0. 流程分类表（P1-6: 对标钉钉/飞书审批的分类管理）
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_category (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     category_code       VARCHAR(64)       NOT NULL,
     category_name       VARCHAR(128)      NOT NULL,
@@ -56,7 +56,7 @@ CREATE INDEX IF NOT EXISTS idx_pfc_parent
 -- -----------------------------------------------------
 -- P1-6: 已废弃,无需 DROP
 CREATE TABLE IF NOT EXISTS pmis_flow_definition(
-    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128) NOT NULL,
     category           VARCHAR(64),
@@ -157,7 +157,7 @@ CREATE INDEX IF NOT EXISTS idx_pfd_tenant_status
 -- -----------------------------------------------------
 -- P1-6: 已废弃,无需 DROP
 CREATE TABLE IF NOT EXISTS pmis_flow_node(
-    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     definition_id      VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     node_type          SMALLINT     NOT NULL,
@@ -228,7 +228,7 @@ CREATE INDEX IF NOT EXISTS idx_pfn_tenant_code
 --    节点之间的有向边：顺序流 / 条件分支 / 退回
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_skip(
-    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     definition_id      VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     skip_name          VARCHAR(128),
@@ -296,7 +296,7 @@ CREATE INDEX IF NOT EXISTS idx_pfs_tenant_def_type
 --    每次启动流程生成一条实例记录
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_instance(
-    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128),
     definition_id      VARCHAR(20)       NOT NULL,
@@ -444,7 +444,7 @@ CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_start
 --      - approve_finished <= approve_count(已通过不能多于要求)
 --      - approve_count / approve_finished 非负
 CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
-    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     instance_id        VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     definition_id      VARCHAR(20)       NOT NULL,
@@ -622,7 +622,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
 --    已完成任务的归档，避免主表膨胀
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
-    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     instance_id        VARCHAR(20)       NOT NULL,
     task_id            VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -750,7 +750,7 @@ CREATE INDEX IF NOT EXISTS idx_pfht_tenant_finish
 --    任务多办理人扩展（一个 task 可挂多个用户）
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_user(
-    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     task_id            VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
@@ -986,7 +986,7 @@ CREATE INDEX IF NOT EXISTS idx_pfal_provider_trace
 -- 1. 抄送主表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_cc(
-    id                 VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
     task_id            VARCHAR(20),
@@ -1074,7 +1074,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_created
 -- 2. 抄送触发配置表（cc 配置由用户/系统预置，无需触发时由节点类型决定）
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_cc_rule(
-    id                 VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
@@ -1193,7 +1193,7 @@ COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 
 -- 1. 定时器实例表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_timer(
-    id                 VARCHAR(20) PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
     definition_id      VARCHAR(20)       NOT NULL,
@@ -1271,7 +1271,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_boundary
 -- 1. 委派代理主表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_auth(
-    id                    VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                    VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
     owner_user_id         VARCHAR(20)       NOT NULL,
     owner_user_name       VARCHAR(64),
@@ -1366,7 +1366,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_flow
 -- 2. 委派代理使用日志（审计追溯：谁在什么时间被代理处理了什么任务）
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_log(
-    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     auth_id            VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
@@ -1504,7 +1504,7 @@ COMMENT ON COLUMN pmis_flow_run_task.sla_escalated    IS '是否已升级（0 �
 
 -- 归档实例表（结构与 pmis_flow_instance 一致 + archived_at 字段）
 CREATE TABLE IF NOT EXISTS pmis_flow_his_instance(
-    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128),
     definition_id      VARCHAR(20),
@@ -1560,7 +1560,7 @@ CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_archived_at
 
 -- 归档变量表（用于归档 instance 时同步迁移 variable 字段中的大 JSON）
 CREATE TABLE IF NOT EXISTS pmis_flow_his_variable(
-    id            VARCHAR(20)    PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id            VARCHAR(20)    PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id     VARCHAR(20)       NOT NULL DEFAULT '1',
     instance_id   VARCHAR(20)       NOT NULL,
     var_key       VARCHAR(128) NOT NULL,
@@ -1575,6 +1575,27 @@ CREATE INDEX IF NOT EXISTS idx_pfhv_tenant_instance
 
 CREATE INDEX IF NOT EXISTS idx_pfhv_tenant_instance_key
     ON pmis_flow_his_variable(tenant_id, instance_id, var_key);
+
+-- 归档统计视图（管理员可见：实例总数/已归档/未归档）
+CREATE OR REPLACE VIEW pmis_view_flow_archive_stats
+    WITH (security_invoker = true) AS
+SELECT
+    COALESCE(main.flow_code, his.flow_code)   AS flow_code,
+    COALESCE(main.tenant_id, his.tenant_id)   AS tenant_id,
+    COALESCE(main.cnt_main, 0)                AS active_count,
+    COALESCE(his.cnt_his, 0)                  AS archived_count
+FROM
+    (SELECT flow_code, tenant_id, COUNT(*) AS cnt_main
+     FROM pmis_flow_instance
+     WHERE deleted = 0
+     GROUP BY flow_code, tenant_id) main
+FULL OUTER JOIN
+    (SELECT flow_code, tenant_id, COUNT(*) AS cnt_his
+     FROM pmis_flow_his_instance
+     GROUP BY flow_code, tenant_id) his
+    ON main.flow_code = his.flow_code AND main.tenant_id = his.tenant_id;
+
+COMMENT ON VIEW pmis_view_flow_archive_stats IS '流程归档统计: active_count 主表实例数 / archived_count 已归档实例数';
 
 -- --------------------------------------------------------------------
 
@@ -1640,7 +1661,7 @@ CREATE INDEX IF NOT EXISTS idx_pfd_canary_status
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS pmis_flow_event_subscription (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id         VARCHAR(20)          NOT NULL,
     definition_id       VARCHAR(20)          NOT NULL,
@@ -1752,7 +1773,7 @@ COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级（1-100�
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     -- 事件标识
     event_type          VARCHAR(64)     NOT NULL,               -- TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等
@@ -1868,7 +1889,7 @@ ANALYZE pmis_flow_his_variable;
 -- 1. 三方审批账号映射表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_third_party_account (
-    id                 VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
     user_id            VARCHAR(20)          NOT NULL,
     platform           VARCHAR(20)     NOT NULL,
@@ -1933,7 +1954,7 @@ CREATE INDEX IF NOT EXISTS idx_pftpa_tenant_platform_union
 -- 2. 三方审批回调日志表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_third_party_log (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     platform            VARCHAR(20)     NOT NULL,
     event_type          VARCHAR(64)     NOT NULL,
@@ -2002,7 +2023,7 @@ CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
 -- DMN 决策表定义表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_dmn_table (
-    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     table_key         VARCHAR(128)    NOT NULL,
     table_name        VARCHAR(128)    NOT NULL,
@@ -2083,7 +2104,7 @@ CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_name
 --       inherit_type / is_latest 字段，支持模板继承与版本化
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_template (
-    id              VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code   VARCHAR(128)    NOT NULL,
     template_name   VARCHAR(256)    NOT NULL,
@@ -2174,7 +2195,7 @@ COMMENT ON COLUMN pmis_flow_template.deleted IS '逻辑删除 0=未删 1=已删'
 -- pmis_flow_auto_trigger -- P3-2: process auto-trigger
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_auto_trigger (
-    id                   VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                   VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id            VARCHAR(20)          NOT NULL DEFAULT '1',
     source_flow_code     VARCHAR(64)     NOT NULL,
     target_flow_code     VARCHAR(64)     NOT NULL,
@@ -2229,7 +2250,7 @@ COMMENT ON COLUMN pmis_flow_auto_trigger.deleted IS '逻辑删除 0=未删 1=已
 -- pmis_flow_notify_channel -- P3-3: notification channel config
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_channel (
-    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     channel_type      VARCHAR(32)     NOT NULL,
     channel_name      VARCHAR(128)    NOT NULL,
@@ -2279,7 +2300,7 @@ COMMENT ON COLUMN pmis_flow_notify_channel.deleted IS '逻辑删除 0=未删 1=�
 -- pmis_flow_task_comment -- P1-3: task comment thread
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_task_comment (
-    id              VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id     VARCHAR(20)          NOT NULL,
     task_id         VARCHAR(20)          NOT NULL,
@@ -2500,7 +2521,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_task_comment_trace
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code       VARCHAR(64)     NOT NULL,               -- 模板编码: TASK_CREATED / TASK_URGED / TASK_TIMEOUT 等
     template_name       VARCHAR(128)    NOT NULL,               -- 模板名称
@@ -2620,7 +2641,7 @@ ON CONFLICT DO NOTHING;
 -- 投递流程：事件触发 → 查匹配订阅 → HMAC-SHA256 签名 → 写入 outbox → 异步 HTTP POST
 
 CREATE TABLE IF NOT EXISTS pmis_flow_webhook_subscription (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     name                VARCHAR(128)    NOT NULL,               -- 订阅名称
     callback_url        VARCHAR(512)    NOT NULL,               -- 回调 URL（HTTPS 推荐）
@@ -2668,7 +2689,7 @@ CREATE INDEX IF NOT EXISTS idx_pfws_trace
 -- 每个用户在租户内至多一条偏好记录（uk_pfnp_tenant_user）
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_preference (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     user_id             VARCHAR(20)       NOT NULL,               -- 用户 ID
     quiet_hours_start   VARCHAR(8),                               -- 免打扰开始时间 HH:mm（如 22:00），NULL=不启用
@@ -2709,7 +2730,7 @@ CREATE INDEX IF NOT EXISTS idx_pfnp_tenant_user
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_attachment (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
     task_id             VARCHAR(20),                              -- 关联任务（可为空：实例级附件）
@@ -2766,7 +2787,7 @@ CREATE INDEX IF NOT EXISTS idx_pffa_trace
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_message (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     task_id             VARCHAR(20)       NOT NULL,               -- 关联被委托任务
     instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
@@ -2816,7 +2837,7 @@ CREATE INDEX IF NOT EXISTS idx_pfdm_trace
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_comment (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
     task_id             VARCHAR(20),                              -- 关联任务（可为空：实例级评论）
@@ -2873,7 +2894,7 @@ CREATE INDEX IF NOT EXISTS idx_pfc_trace
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_quick_comment (
-    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     user_id             VARCHAR(20)       NOT NULL,               -- 所属用户（系统预设时为 'SYSTEM'）
     content             VARCHAR(500)      NOT NULL,               -- 常用语内容
@@ -2941,7 +2962,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '5');
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_ai_feedback (
-    id                      VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                      VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id               VARCHAR(20)          NOT NULL DEFAULT '1',
     trace_id                VARCHAR(64)      NOT NULL,               -- 推荐调用追踪 ID（关联一次 recommendApprovers 调用）
     task_id                 VARCHAR(20),                             -- 任务 ID（可空，草稿态无任务）

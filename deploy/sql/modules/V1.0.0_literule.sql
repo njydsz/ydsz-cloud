@@ -20,7 +20,7 @@
 -- 1. 规则定义主表
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_def (
-    id                    VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                    VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id             VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code             VARCHAR(128)    NOT NULL,
     rule_name             VARCHAR(256)    NOT NULL,
@@ -82,7 +82,7 @@ CREATE INDEX IF NOT EXISTS idx_prd_tenant_mutex_group
 -- 2. 规则版本历史表（审计追踪 + 回滚）
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_version_history (
-    id              VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id              VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code       VARCHAR(128)    NOT NULL,
     version         INTEGER         NOT NULL,
@@ -203,7 +203,7 @@ WHERE NOT EXISTS (
 -- 5. 规则模板表（P2: 规则模板市场）
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_template (
-    id                    VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                    VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id             VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code         VARCHAR(128)    NOT NULL,
     template_name         VARCHAR(256)    NOT NULL,
@@ -333,7 +333,7 @@ ON CONFLICT (tenant_id, template_code, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- 测试用例主表
 CREATE TABLE IF NOT EXISTS pmis_rule_test_case (
-    id                 VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                 VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
     name               VARCHAR(256)    NOT NULL,
     rule_code          VARCHAR(128),
@@ -500,6 +500,9 @@ ALTER TABLE pmis_rule_def
     ADD CONSTRAINT ck_rule_def_status_valid
     CHECK (status IN ('DRAFT', 'REVIEW', 'PUBLISHED', 'DISABLED', 'ARCHIVED'));
 
+COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
+    '规则状态合法性约束，配合应用层 RuleStatus.canTransitionTo 状态机校验';
+
 -- --------------------------------------------------------------------
 
 -- ============================ [053] add rule tenant id ============================
@@ -548,7 +551,7 @@ CREATE INDEX IF NOT EXISTS idx_rule_version_tenant ON pmis_rule_version_history 
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS pmis_rule_variable_def (
-    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     var_name          VARCHAR(128)    NOT NULL,
     var_type          VARCHAR(128)    NOT NULL,
@@ -626,7 +629,7 @@ ANALYZE pmis_rule_test_case;
 -- pmis_rule_chain_graph -- P0-1: rule chain visual canvas
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_chain_graph (
-    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code         VARCHAR(128)    NOT NULL,
     name              VARCHAR(256),
@@ -686,7 +689,7 @@ COMMENT ON COLUMN pmis_rule_chain_graph.deleted IS '逻辑删除 0=未删 1=已�
 -- pmis_rule_dependency -- P1-8: rule dependency
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_dependency (
-    id                       VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                       VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id                VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code                VARCHAR(128)    NOT NULL,
     depends_on_rule_code     VARCHAR(128)    NOT NULL,
@@ -739,7 +742,7 @@ COMMENT ON COLUMN pmis_rule_dependency.deleted IS '逻辑删除 0=未删 1=已�
 -- pmis_rule_pack -- P2-14: rule pack marketplace
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_pack (
-    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     pack_code         VARCHAR(128)    NOT NULL,
     pack_version      VARCHAR(32)     NOT NULL,
@@ -827,7 +830,7 @@ ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS previous_version  VARCHAR(32
 -- pmis_rule_pack_install -- P2-14: rule pack install history
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_pack_install (
-    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(left(replace(gen_random_uuid()::text,'-',''),20),20),
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     pack_code         VARCHAR(128)    NOT NULL,
     pack_version      VARCHAR(32)     NOT NULL,
