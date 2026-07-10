@@ -68,9 +68,11 @@ spring:
         password: ${DB_PASSWORD}
         driver-class-name: org.postgresql.Driver
       slave:
-        url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public&useUnicode=true&characterEncoding=utf8
-        username: ${DB_USER:pmis}
-        password: ${DB_PASSWORD}
+        # P2-10: 从库支持独立配置（生产环境配置只读副本）
+        # 未设置 SLAVE_DB_HOST 时默认与主库相同（开发/测试环境单库复用）
+        url: jdbc:postgresql://${SLAVE_DB_HOST:${DB_HOST:127.0.0.1}}:${SLAVE_DB_PORT:${DB_PORT:5432}}/${SLAVE_DB_NAME:${DB_NAME:ydsz-pmis}}?currentSchema=public&useUnicode=true&characterEncoding=utf8
+        username: ${SLAVE_DB_USER:${DB_USER:pmis}}
+        password: ${SLAVE_DB_PASSWORD:${DB_PASSWORD}}
         driver-class-name: org.postgresql.Driver
     druid:
       initial-size: 5

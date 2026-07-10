@@ -24,9 +24,7 @@
  *       {@link com.njydsz.pmis.workflow.service.impl.FlowTemplateServiceImpl}</li>
  *   <li>抄送 / 委派 - {@link com.njydsz.pmis.workflow.service.impl.FlowCcServiceImpl}、
  *       {@link com.njydsz.pmis.workflow.service.impl.FlowDelegateAuthServiceImpl}</li>
- *   <li>通知 - {@link com.njydsz.pmis.workflow.service.impl.FlowNotificationServiceImpl}、
- *       {@link com.njydsz.pmis.workflow.service.impl.FlowNotifyChannelServiceImpl}、
- *       {@link com.njydsz.pmis.workflow.service.impl.FlowNotifyOutboxServiceImpl}、
+ *   <li>通知 - {@link com.njydsz.pmis.workflow.service.impl.FlowNotificationServiceImpl}（轻量 Feign 适配器）、
  *       {@link com.njydsz.pmis.workflow.service.impl.FlowTodoCountPushServiceImpl}</li>
  *   <li>SLA / 效率 / 灰度 / 自动触发 - {@link com.njydsz.pmis.workflow.service.impl.FlowSlaServiceImpl}、
  *       {@link com.njydsz.pmis.workflow.service.impl.FlowEfficiencyServiceImpl}、

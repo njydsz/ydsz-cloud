@@ -100,8 +100,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             history.setSnapshot(afterJob != null ? JSON.toJSONString(afterJob) : null);
             history.setBeforeSnapshot(beforeJob != null ? JSON.toJSONString(beforeJob) : null);
             history.setChangeRemark(changeRemark);
-            // 冗余字段从 afterJob 取（DELETE 时从 beforeJob 取）
-            JobDO displayJob = afterJob != null ? afterJob : beforeJob;
+            // 冗余字段从 afterJob 取（DELETE 时从 beforeJob 取；referenceJob 已保证非 null）
+            JobDO displayJob = referenceJob;
             history.setJobName(displayJob.getJobName());
             history.setJobKey(displayJob.getJobKey());
             history.setHandler(displayJob.getHandler());

@@ -22,9 +22,7 @@
  *       {@link com.njydsz.pmis.workflow.service.FlowTemplateService}</li>
  *   <li>抄送 / 委派 - {@link com.njydsz.pmis.workflow.service.FlowCcService}、
  *       {@link com.njydsz.pmis.workflow.service.FlowDelegateAuthService}</li>
- *   <li>通知 - {@link com.njydsz.pmis.workflow.service.FlowNotificationService}、
- *       {@link com.njydsz.pmis.workflow.service.FlowNotifyChannelService}、
- *       {@link com.njydsz.pmis.workflow.service.FlowNotifyOutboxService}</li>
+ *   <li>通知 - {@link com.njydsz.pmis.workflow.service.FlowNotificationService}（轻量 Feign 适配器，转发到 ydsz-pmis-message）</li>
  *   <li>SLA / 效率 / 灰度 / 自动触发 - {@link com.njydsz.pmis.workflow.service.FlowSlaService}、
  *       {@link com.njydsz.pmis.workflow.service.FlowEfficiencyService}、
  *       {@link com.njydsz.pmis.workflow.service.FlowCanaryService}、

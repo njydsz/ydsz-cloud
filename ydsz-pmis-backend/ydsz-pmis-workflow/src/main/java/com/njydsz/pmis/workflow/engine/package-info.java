@@ -30,7 +30,7 @@
  *   <li>{@link com.njydsz.pmis.workflow.engine.FlowWorkflowEvent} - 事件 POJO</li>
  *   <li>{@link com.njydsz.pmis.workflow.engine.FlowServiceNodeExecutor} - 服务任务节点执行器</li>
  *   <li>{@link com.njydsz.pmis.workflow.engine.FlowUrgeLimiter} - 催办频次限流（滑动窗口）</li>
- *   <li>{@link com.njydsz.pmis.workflow.engine.FlowNotificationHelper} - 流程通知辅助（消息模板、变量注入）</li>
+ *   <li>{@link com.njydsz.pmis.workflow.engine.FlowNotificationHelper} - 流程通知辅助（转发到 ydsz-pmis-message）</li>
  *   <li>{@link com.njydsz.pmis.workflow.engine.JsonHelper} - 流程变量 JSON 序列化助手</li>
  * </ul>
  *

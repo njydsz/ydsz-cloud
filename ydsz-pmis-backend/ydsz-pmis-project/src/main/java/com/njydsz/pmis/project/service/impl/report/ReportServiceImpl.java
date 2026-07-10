@@ -39,6 +39,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@com.baomidou.dynamic.datasource.annotation.DS(com.njydsz.pmis.common.datasource.DataSourceConstants.SLAVE)
 public class ReportServiceImpl implements ReportService {
 
     /** 利润快照 Mapper */

@@ -2,16 +2,11 @@ package com.njydsz.pmis.workflow.controller.integration;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.entity.integration.FlowEventSubscriptionDO;
-import com.njydsz.pmis.workflow.entity.notification.FlowNotifyChannelDO;
 import com.njydsz.pmis.workflow.service.integration.FlowEventSubscriptionService;
-import com.njydsz.pmis.workflow.service.notification.FlowNotifyChannelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,16 +18,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 事件与通知通道 Controller
+ * 事件 Controller
  *
- * <p>P0-1: BPMN 事件触发 / GAP-V2: 通知通道配置（P1-10 从 FlowEngineController 拆分）。
+ * <p>P0-1: BPMN 事件触发（消息关联 / 错误抛出）。
+ * 通知通道配置已移至独立的消息通知引擎 ydsz-pmis-message。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j
 @RestController
-@Tag(name = "workflow-event", description = "工作流事件与通知通道接口")
+@Tag(name = "workflow-event", description = "工作流事件接口")
 @RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
@@ -42,8 +38,6 @@ public class FlowEventController {
     private final WorkflowFacade workflowFacade;
     /** P0-1: BPMN 事件订阅服务（消息关联 / 错误抛出） */
     private final FlowEventSubscriptionService eventSubscriptionService;
-    /** GAP-V2: 通知通道配置服务 */
-    private final FlowNotifyChannelService notifyChannelService;
 
     // ============== 引擎信息 ==============
 
@@ -121,65 +115,5 @@ public class FlowEventController {
     public Result<List<FlowEventSubscriptionDO>> listEventSubscriptions(
             @PathVariable String instanceId) {
         return Result.ok(eventSubscriptionService.listByInstance(instanceId));
-    }
-
-    // ============== GAP-V2: 通知通道配置 ==============
-
-    /**
-     * 查询所有通知通道配置
-     *
-     * @param tenantId 租户 ID（可选，默认从上下文获取）
-     * @return 通道配置列表
-     */
-    @GetMapping("/notify-channel/list")
-    public Result<List<FlowNotifyChannelDO>> listNotifyChannels(
-            @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(notifyChannelService.listChannels(tid));
-    }
-
-    /**
-     * 新增或更新通知通道配置
-     *
-     * @param dto 通道配置（id 为空时新增，非空时更新）
-     * @return 保存后的通道配置
-     */
-    @Idempotent(key = "flow-event:save-notify-channel", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/notify-channel/save")
-    @PrePermission(PermissionCodes.WORKFLOW_NOTIFY_CONFIG)
-    public Result<FlowNotifyChannelDO> saveNotifyChannel(@RequestBody FlowNotifyChannelDO dto) {
-        if (dto.getTenantId() == null) {
-            dto.setTenantId(SecurityContext.getTenantIdOrDefault("1"));
-        }
-        return Result.ok(notifyChannelService.saveChannel(dto));
-    }
-
-    /**
-     * 启用/停用通知通道
-     *
-     * @param id      通道配置 ID
-     * @param enabled 是否启用
-     * @return 统一响应结果
-     */
-    @Idempotent(key = "flow-event:toggle-notify-channel", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/notify-channel/{id}/toggle")
-    public Result<Void> toggleNotifyChannel(@PathVariable String id,
-                                             @RequestParam Boolean enabled) {
-        notifyChannelService.toggleChannel(id, enabled);
-        return Result.ok();
-    }
-
-    /**
-     * 删除通知通道配置
-     *
-     * @param id 通道配置 ID
-     * @return 统一响应结果
-     */
-    @OperationLog(module = "工作流", action = "删除通知通道", bizType = "FLOW_NOTIFY_CHANNEL")
-    @Idempotent(key = "flow-event:delete-notify-channel", ttlSeconds = 5, message = "请勿重复提交")
-    @DeleteMapping("/notify-channel/{id}")
-    public Result<Void> deleteNotifyChannel(@PathVariable String id) {
-        notifyChannelService.deleteChannel(id);
-        return Result.ok();
     }
 }

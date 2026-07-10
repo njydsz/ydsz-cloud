@@ -53,6 +53,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@com.baomidou.dynamic.datasource.annotation.DS(com.njydsz.pmis.common.datasource.DataSourceConstants.SLAVE)
 public class AdvancedReportServiceImpl implements AdvancedReportService {
 
     /** EVM 挣值度量 Mapper */
