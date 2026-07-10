@@ -14,8 +14,10 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -148,7 +150,7 @@ public class FlowMentionServiceImpl implements FlowMentionService {
     private List<String> extractMentions(String comment) {
         List<String> userIds = new ArrayList<>();
         Matcher matcher = MENTION_PATTERN.matcher(comment);
-        java.util.Set<String> seen = new java.util.HashSet<>();
+        Set<String> seen = new HashSet<>();
         while (matcher.find()) {
             String userId = matcher.group(1).trim();
             if (!userId.isEmpty() && seen.add(userId)) {

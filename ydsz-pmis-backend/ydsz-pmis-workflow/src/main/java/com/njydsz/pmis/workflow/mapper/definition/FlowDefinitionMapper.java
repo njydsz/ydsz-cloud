@@ -5,6 +5,8 @@ import com.njydsz.pmis.workflow.entity.definition.FlowDefinitionDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
+
 /**
  * 流程定义 Mapper
  *
@@ -91,9 +93,9 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      */
     int casLock(@Param("id") String id,
                 @Param("lockedBy") String lockedBy,
-                @Param("lockedAt") java.time.LocalDateTime lockedAt,
+                @Param("lockedAt") LocalDateTime lockedAt,
                 @Param("expectedOldBy") String expectedOldBy,
-                @Param("timeoutExpired") java.time.LocalDateTime timeoutExpired,
+                @Param("timeoutExpired") LocalDateTime timeoutExpired,
                 @Param("version") Integer version);
 
     /**

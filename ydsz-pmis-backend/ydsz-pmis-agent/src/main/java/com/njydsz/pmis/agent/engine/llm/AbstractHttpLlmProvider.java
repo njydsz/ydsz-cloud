@@ -7,6 +7,7 @@ import org.slf4j.MDC;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -234,7 +235,7 @@ public abstract class AbstractHttpLlmProvider implements LlmProvider {
             String result = future.get(timeoutMs, TimeUnit.MILLISECONDS);
             log.debug("[LLM:{}] success in {}ms", name(), System.currentTimeMillis() - start);
             return result;
-        } catch (java.util.concurrent.ExecutionException ee) {
+        } catch (ExecutionException ee) {
             // 包装原始异常便于排查
             Throwable cause = ee.getCause() != null ? ee.getCause() : ee;
             if (cause instanceof Exception ex) throw ex;

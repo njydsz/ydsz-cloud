@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -183,9 +184,9 @@ public class ToolRegistry {
         }
         List<Map<String, Object>> result = new ArrayList<>();
         for (AgentTool tool : tools.values()) {
-            Map<String, Object> fn = new java.util.LinkedHashMap<>();
+            Map<String, Object> fn = new LinkedHashMap<>();
             fn.put("type", "function");
-            Map<String, Object> function = new java.util.LinkedHashMap<>();
+            Map<String, Object> function = new LinkedHashMap<>();
             function.put("name", tool.name());
             function.put("description", tool.description());
             Map<String, Object> schema = tool.jsonSchema();

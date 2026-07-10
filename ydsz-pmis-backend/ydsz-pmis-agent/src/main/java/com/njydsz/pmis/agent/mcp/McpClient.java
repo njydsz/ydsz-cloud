@@ -11,6 +11,7 @@ import com.njydsz.pmis.agent.mcp.model.McpToolDefinition;
 import com.njydsz.pmis.agent.mcp.transport.McpTransport;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +124,7 @@ public class McpClient implements AutoCloseable {
             return List.of();
         }
         JsonNode toolsNode = result.get("tools");
-        List<McpToolDefinition> tools = new java.util.ArrayList<>();
+        List<McpToolDefinition> tools = new ArrayList<>();
         for (JsonNode toolNode : toolsNode) {
             McpToolDefinition tool = objectMapper.treeToValue(toolNode, McpToolDefinition.class);
             tools.add(tool);

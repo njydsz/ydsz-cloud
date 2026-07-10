@@ -99,6 +99,20 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     /** 按规则编码的统计明细 */
     private final ConcurrentHashMap<String, RuleEngineStats.RuleStat> perRuleStats = new ConcurrentHashMap<>();
 
+    /**
+     * 注册规则到引擎
+     *
+     * <p>注册流程：
+     * <ol>
+     *   <li>校验规则非空且 code 非空</li>
+     *   <li>移除同编码旧规则（支持热更新覆盖）</li>
+     *   <li>二分查找按 priority 升序插入（增量保序，避免全量 sort）</li>
+     *   <li>更新规则索引（租户+环境+场景+互斥组+字段倒排）</li>
+     *   <li>规则数首次超过 200 时自动启用索引模式</li>
+     * </ol>
+     *
+     * @param rule 待注册规则；为 null 或 code 为 null 时静默跳过
+     */
     @Override
     public void register(Rule rule) {
         if (rule == null || rule.getCode() == null) {
@@ -146,6 +160,13 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         return low;
     }
 
+    /**
+     * 注销指定编码的规则
+     *
+     * <p>从规则列表和索引中移除指定编码的规则，并同步更新监控指标。
+     *
+     * @param ruleCode 规则编码；为 null 时静默跳过
+     */
     @Override
     public void unregister(String ruleCode) {
         if (ruleCode == null) return;
@@ -163,6 +184,29 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         }
     }
 
+    /**
+     * 评估上下文中所有匹配规则，返回已触发的规则结果列表
+     *
+     * <p>执行流程：
+     * <ol>
+     *   <li>（可选）注入模型输出到 context（P3-1 规则+模型融合）</li>
+     *   <li>索引模式下按租户+环境+场景+互斥组+字段过滤候选规则；
+     *       非索引模式线性遍历并逐条过滤</li>
+     *   <li>互斥组短路：同组已有规则命中则跳过后续规则</li>
+     *   <li>熔断检查：已被熔断的规则跳过评估</li>
+     *   <li>（可选）断点调试回调：onBeforeEvaluate</li>
+     *   <li>灰度路由：按 canaryRatio 分流到候选版本</li>
+     *   <li>执行规则评估（可选超时控制）</li>
+     *   <li>记录统计、监控指标、熔断结果、执行轨迹</li>
+     *   <li>（可选）断点调试回调：onAfterEvaluate</li>
+     * </ol>
+     *
+     * <p>结果按严重度倒序排列（RED → YELLOW → INFO）。
+     * 单规则异常不影响其他规则评估（异常隔离）。
+     *
+     * @param context 规则上下文（包含 facts、场景、租户、环境等）
+     * @return 已触发的规则结果列表（按严重度倒序）；无触发时返回空列表
+     */
     @Override
     public List<RuleResult> evaluate(RuleContext context) {
         // P3-1 规则+模型融合：评估前注入模型输出
@@ -463,12 +507,37 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         return enriched;
     }
 
+    /**
+     * 评估并返回最高严重度的规则结果
+     *
+     * <p>等价于 {@code evaluate(context).get(0)}，仅在需要 Top-1 结果时使用，
+     * 避免调用方手动排序取第一个元素。
+     *
+     * @param context 规则上下文
+     * @return 最高严重度的规则结果；无触发时返回 null
+     */
     @Override
     public RuleResult topResult(RuleContext context) {
         List<RuleResult> all = evaluate(context);
         return all.isEmpty() ? null : all.get(0);
     }
 
+    /**
+     * 仿真评估（dry-run）：返回全部规则结果（含未触发），不记录统计
+     *
+     * <p>与 {@link #evaluate} 的区别：
+     * <ul>
+     *   <li>返回全部规则结果（含 triggered=false 的未触发结果）</li>
+     *   <li>不记录执行统计、监控指标和执行轨迹</li>
+     *   <li>不执行熔断、灰度、断点调试逻辑</li>
+     *   <li>同样遵循租户隔离和环境隔离</li>
+     * </ul>
+     *
+     * <p>适用于规则调试、预检和仿真测试场景。
+     *
+     * @param context 规则上下文
+     * @return 全部匹配规则的结果列表（含未触发）
+     */
     @Override
     public List<RuleResult> dryRun(RuleContext context) {
         // P3-1 规则+模型融合：dry-run 同样注入模型输出
@@ -502,11 +571,24 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         return all;
     }
 
+    /**
+     * 获取当前已注册的全部规则（只读副本）
+     *
+     * @return 不可修改的规则列表
+     */
     @Override
     public List<Rule> getRules() {
         return List.copyOf(rules);
     }
 
+    /**
+     * 获取引擎执行统计快照
+     *
+     * <p>包含全局统计（总评估次数、总触发次数、总异常次数、总耗时）
+     * 和按规则编码的明细统计。统计数据为实时快照，调用后继续累积。
+     *
+     * @return 引擎统计快照
+     */
     @Override
     public RuleEngineStats getStats() {
         Map<String, RuleEngineStats.RuleStat> snapshot = new ConcurrentHashMap<>();

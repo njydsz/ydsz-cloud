@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.dto.integration;
 
+import com.njydsz.pmis.workflow.dto.instance.FlowInstanceViewDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

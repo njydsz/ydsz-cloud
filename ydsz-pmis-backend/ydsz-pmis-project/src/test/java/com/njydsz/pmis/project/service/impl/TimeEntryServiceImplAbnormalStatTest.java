@@ -5,6 +5,7 @@ import com.njydsz.pmis.project.entity.execution.TimeEntryDO;
 import com.njydsz.pmis.project.enums.execution.TimeEntryStatus;
 import com.njydsz.pmis.project.mapper.execution.TimeEntryMapper;
 import com.njydsz.pmis.project.service.execution.CostAllocationService;
+import com.njydsz.pmis.project.service.impl.execution.TimeEntryServiceImpl;
 import com.njydsz.pmis.project.service.resource.RateCardService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -13,6 +13,7 @@ import com.njydsz.pmis.project.entity.opportunity.OpportunityDO;
 import com.njydsz.pmis.project.enums.opportunity.OpportunityStatus;
 import com.njydsz.pmis.project.mapper.opportunity.OpportunityMapper;
 import com.njydsz.pmis.project.service.initiation.InitiationService;
+import com.njydsz.pmis.project.service.impl.opportunity.OpportunityServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

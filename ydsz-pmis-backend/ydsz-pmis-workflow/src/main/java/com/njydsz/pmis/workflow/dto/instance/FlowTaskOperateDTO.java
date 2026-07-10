@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.dto.instance;
 
+import com.njydsz.pmis.workflow.dto.integration.FlowAttachmentDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

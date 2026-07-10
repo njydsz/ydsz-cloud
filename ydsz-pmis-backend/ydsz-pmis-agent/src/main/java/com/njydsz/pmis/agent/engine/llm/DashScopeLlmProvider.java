@@ -14,6 +14,8 @@ import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -175,7 +177,7 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
     private LlmToolCallResponse invokeDashScopeWithTools(String systemPrompt, String userPrompt,
                                                           List<Map<String, Object>> tools,
                                                           AgentContext context) throws Exception {
-        Map<String, Object> body = new java.util.HashMap<>();
+        Map<String, Object> body = new HashMap<>();
         body.put("model", model);
         body.put("messages", List.of(
                 Map.of("role", "system", "content", systemPrompt == null ? "" : systemPrompt),
@@ -216,7 +218,7 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
         // 解析 tool_calls（可能并行多个）
         Object toolCallsObj = m.get("tool_calls");
         if (toolCallsObj instanceof List<?> tcList && !tcList.isEmpty()) {
-            List<LlmToolCallResponse.ToolCall> toolCalls = new java.util.ArrayList<>();
+            List<LlmToolCallResponse.ToolCall> toolCalls = new ArrayList<>();
             for (int i = 0; i < tcList.size(); i++) {
                 Object tcObj = tcList.get(i);
                 if (!(tcObj instanceof Map<?, ?> tcMap)) continue;
@@ -415,7 +417,7 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
     private String invokeDashScopeStream(String systemPrompt, String userPrompt,
                                           AgentContext context,
                                           java.util.function.Consumer<String> tokenConsumer) throws Exception {
-        Map<String, Object> body = new java.util.HashMap<>();
+        Map<String, Object> body = new HashMap<>();
         body.put("model", model);
         body.put("messages", List.of(
                 Map.of("role", "system", "content", systemPrompt == null ? "" : systemPrompt),

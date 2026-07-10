@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,7 +53,7 @@ public class McpToolDefinition {
             return Map.of();
         }
         JsonNode props = inputSchema.get("properties");
-        Map<String, Class<?>> schema = new java.util.LinkedHashMap<>();
+        Map<String, Class<?>> schema = new LinkedHashMap<>();
         props.properties().forEach(entry -> {
             String paramName = entry.getKey();
             JsonNode paramDef = entry.getValue();
@@ -74,7 +76,7 @@ public class McpToolDefinition {
             case "number" -> Double.class;
             case "integer" -> Integer.class;
             case "boolean" -> Boolean.class;
-            case "array" -> java.util.List.class;
+            case "array" -> List.class;
             case "object" -> Map.class;
             default -> String.class;
         };

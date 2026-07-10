@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.service.impl.instance;
 
-import com.njydsz.pmis.project.service.DecisionTableEvalService;
+import com.njydsz.pmis.project.service.ruleengine.DecisionTableEvalService;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;

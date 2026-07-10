@@ -210,7 +210,7 @@ public final class RuleContext implements Serializable {
      */
     public Map<String, Object> getExpressionCache() {
         if (expressionCache == null) {
-            expressionCache = new java.util.concurrent.ConcurrentHashMap<>();
+            expressionCache = new ConcurrentHashMap<>();
         }
         return expressionCache;
     }

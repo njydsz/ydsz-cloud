@@ -224,7 +224,7 @@ public class FlowTaskPassService {
      */
     private void updateInstanceNode(FlowInstanceDO instance, List<FlowNodeDO> nextNodes) {
         if (!nextNodes.isEmpty() && nextNodes.get(0).getNodeType()
-                != com.njydsz.pmis.workflow.enums.FlowNodeType.END.getCode()) {
+                != FlowNodeType.END.getCode()) {
             instanceMapper.updateStatus(instance.getId(), instance.getFlowStatus(),
                     nextNodes.get(0).getNodeCode(), nextNodes.get(0).getNodeName(),
                     null, null);

@@ -944,8 +944,8 @@ public class RuleChain {
                             // 节点级超时（2.0.0）
                             if (node.hasTimeout()) {
                                 final RuleContext ctx = context;
-                                java.util.concurrent.CompletableFuture<RuleResult> future =
-                                        java.util.concurrent.CompletableFuture.supplyAsync(
+                                CompletableFuture<RuleResult> future =
+                                        CompletableFuture.supplyAsync(
                                                 () -> node.getRule().evaluate(ctx));
                                 try {
                                     result = future.get(node.getTimeoutMs(), TimeUnit.MILLISECONDS);

@@ -28,6 +28,7 @@ import jakarta.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -587,7 +588,7 @@ public class ReActLoop {
 
         // 多工具并行执行（P3-1：使用共享线程池）
         log.info("[ReAct] step={} 并行执行 {} 个工具", currentStep, toolCalls.size());
-        List<java.util.concurrent.Future<String>> futures = new java.util.ArrayList<>();
+        List<Future<String>> futures = new ArrayList<>();
 
         try {
             for (var tc : toolCalls) {

@@ -10,6 +10,7 @@ import com.njydsz.pmis.workflow.entity.instance.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.definition.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowSkipDO;
+import com.njydsz.pmis.workflow.enums.definition.FlowNodeType;
 import com.njydsz.pmis.workflow.enums.instance.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.instance.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;
@@ -23,6 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Queue;
+import java.util.Set;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
@@ -189,7 +195,7 @@ public class FlowTaskRejectService {
             }
             // 沿 PASS 出边找下游第一个 APPROVAL 节点
             String found = findFirstApprovalNode(definitionId, startNode.getNodeCode(),
-                    new java.util.HashSet<>());
+                    new HashSet<>());
             return found != null ? found : startNode.getNodeCode();
         } catch (Exception e) {
             log.warn("[Flow] 解析开始节点下游失败: definitionId={} err={}", definitionId, e.getMessage());
@@ -206,8 +212,8 @@ public class FlowTaskRejectService {
      * @return 第一个 APPROVAL 节点编码，未找到返回 null
      */
     private String findFirstApprovalNode(String definitionId, String startNodeCode,
-                                          java.util.Set<String> visited) {
-        java.util.Queue<String> queue = new java.util.ArrayDeque<>();
+                                          Set<String> visited) {
+        Queue<String> queue = new ArrayDeque<>();
         queue.add(startNodeCode);
         visited.add(startNodeCode);
         while (!queue.isEmpty()) {
@@ -221,12 +227,12 @@ public class FlowTaskRejectService {
                 visited.add(nextCode);
                 FlowNodeDO nextNode = definitionCacheService.getNodeByCode(definitionId, nextCode);
                 if (nextNode != null
-                        && nextNode.getNodeType() == com.njydsz.pmis.workflow.enums.FlowNodeType.APPROVAL.getCode()) {
+                        && nextNode.getNodeType() == FlowNodeType.APPROVAL.getCode()) {
                     return nextCode;
                 }
                 // 跳过 CC/SERVICE/END 等非审批节点，继续 BFS
                 if (nextNode != null
-                        && nextNode.getNodeType() != com.njydsz.pmis.workflow.enums.FlowNodeType.END.getCode()) {
+                        && nextNode.getNodeType() != FlowNodeType.END.getCode()) {
                     queue.add(nextCode);
                 }
             }

@@ -29,7 +29,7 @@ public class RuleSourceManager {
 
     private final Map<RuleSource.SourceType, RuleSource> sources = new ConcurrentHashMap<>();
     private volatile RuleSource activeSource;
-    private final List<Consumer<List<RuleDefinition>>> globalListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final List<Consumer<List<RuleDefinition>>> globalListeners = new CopyOnWriteArrayList<>();
 
     /**
      * 注册数据源

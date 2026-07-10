@@ -149,7 +149,7 @@ public interface JobMapper extends BaseMapper<JobDO> {
             + "  AND auto_resume_after_minutes > 0 "
             + "  AND deleted = 0 "
             + "  AND updated_at + (auto_resume_after_minutes || ' minutes')::interval <= #{now}")
-    List<JobDO> selectAutoResumeCandidates(@Param("now") java.time.LocalDateTime now);
+    List<JobDO> selectAutoResumeCandidates(@Param("now") LocalDateTime now);
 
     /**
      * P1-5: 恢复 AUTO_PAUSED 任务为 NORMAL（重置连续失败计数）。
