@@ -44,7 +44,9 @@ public class FlowNotifyOutboxServiceImpl implements FlowNotifyOutboxService {
     private static final long[] BACKOFF_SECONDS = {30L, 60L, 120L, 240L, 480L, 900L, 1800L};
 
     /** 通知中心 Feign 客户端（注入失败时由 fallback 返回错误码） */
+    /** 通知中心 Feign 客户端，通过 Feign 调用 notification 模块投递通知（注入失败时由 fallback 返回错误码） */
     private final NotificationClient notificationClient;
+    /** 通知外发箱 Mapper，负责 pmis_flow_notify_outbox 表的增删改查及待投递行锁定 */
     private final FlowNotifyOutboxMapper flowNotifyOutboxMapper;
 
     /**

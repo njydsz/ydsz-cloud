@@ -32,6 +32,7 @@ public class FlowNotifyPreferenceServiceImpl implements FlowNotifyPreferenceServ
     /** digestMode=1 表示启用聚合（免打扰时段内延迟投递） */
     private static final int DIGEST_MODE_AGGREGATE = 1;
 
+    /** 通知偏好 Mapper，负责 pmis_flow_notify_preference 表的增删改查及按租户+用户查询偏好配置 */
     private final FlowNotifyPreferenceMapper preferenceMapper;
 
     @Override
