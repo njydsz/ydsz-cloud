@@ -31,7 +31,9 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class DedupServiceImpl implements DedupService {
 
+    /** Redis 模板（SET NX EX 原子去重） */
     private final StringRedisTemplate stringRedisTemplate;
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
     @Override

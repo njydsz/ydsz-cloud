@@ -42,8 +42,11 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class TenantQuotaServiceImpl implements TenantQuotaService {
 
+    /** 租户配额 Mapper */
     private final TenantQuotaMapper tenantQuotaMapper;
+    /** 任务定义 Mapper（统计任务数配额） */
     private final JobMapper jobMapper;
+    /** 定时任务模块配置属性 */
     private final CronjobProperties cronjobProperties;
     /** P7-3: Redis 计数器（并发 + 日执行量） */
     private final StringRedisTemplate redisTemplate;

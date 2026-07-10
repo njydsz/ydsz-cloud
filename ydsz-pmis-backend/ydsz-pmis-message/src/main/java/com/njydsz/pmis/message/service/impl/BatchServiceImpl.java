@@ -49,7 +49,9 @@ public class BatchServiceImpl implements BatchService {
     /** 单批最大条数 */
     private static final int MAX_BATCH_SIZE = 10000;
 
+    /** 批次记录 Mapper */
     private final MsgBatchMapper msgBatchMapper;
+    /** 消息发送服务（逐条发送） */
     private final MessageService messageService;
 
     @Override

@@ -30,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
 
+    /** 订阅关系 Mapper */
     private final MsgSubscriptionMapper msgSubscriptionMapper;
 
     @Override

@@ -31,8 +31,11 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class ExpenseServiceImpl implements ExpenseService {
 
+    /** 费用报销 Mapper */
     private final ExpenseMapper expenseMapper;
+    /** 名称装配器（Feign 补齐员工名称） */
     private final NameAssembler nameAssembler;
+    /** 预算守卫（费用超预算校验） */
     private final BudgetGuard budgetGuard;
 
     @Override

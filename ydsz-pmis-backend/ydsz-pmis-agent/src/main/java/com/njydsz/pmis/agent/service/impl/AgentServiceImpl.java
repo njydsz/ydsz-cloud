@@ -352,6 +352,13 @@ public class AgentServiceImpl implements AgentService {
 
     // ========== 私有方法 ==========
 
+    /**
+     * 从已注册的 Agent 列表中查找指定类型的 Agent。
+     *
+     * @param type Agent 类型
+     * @return 匹配的 Agent 实例
+     * @throws BizException 当未找到匹配的 Agent 时抛出
+     */
     private Agent findAgent(AgentType type) {
         return agents.stream()
                 .filter(a -> a.type() == type)
@@ -360,6 +367,13 @@ public class AgentServiceImpl implements AgentService {
                         "未注册 Agent: " + type.getCode()));
     }
 
+    /**
+     * 校验 Agent 执行请求。
+     *
+     * @param req Agent 执行请求
+     * @return 解析后的 Agent 类型
+     * @throws BizException 当请求为空或 agentType 无效时抛出
+     */
     private AgentType validate(AgentRunRequestDTO req) {
         if (req == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_d9712a58");
@@ -392,6 +406,14 @@ public class AgentServiceImpl implements AgentService {
                 + "-" + SnowflakeIdGenerator.nextIdStr();
     }
 
+    /**
+     * 安全地将对象序列化为 JSON 字符串。
+     *
+     * <p>序列化失败时降级为 {@code toString()}，不抛出异常。
+     *
+     * @param o 待序列化对象
+     * @return JSON 字符串；入参为 null 时返回 null
+     */
     private String safeJson(Object o) {
         if (o == null) return null;
         try {

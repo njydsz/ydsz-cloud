@@ -28,6 +28,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JobLogContentServiceImpl implements JobLogContentService {
 
+    /** 任务日志内容 Mapper（分页/增量查询） */
     private final JobLogContentMapper jobLogContentMapper;
 
     @Override

@@ -34,8 +34,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JobRelationServiceImpl implements JobRelationService {
 
+    /** 任务依赖关系 Mapper */
     private final JobRelationMapper jobRelationMapper;
+    /** 任务定义 Mapper（校验任务存在性） */
     private final JobMapper jobMapper;
+    /** DAG 解析器（环检测） */
     private final DagParser dagParser;
 
     @Override

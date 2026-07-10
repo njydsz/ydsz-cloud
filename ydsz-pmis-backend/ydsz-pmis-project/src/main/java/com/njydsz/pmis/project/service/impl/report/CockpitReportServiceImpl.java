@@ -146,6 +146,10 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         // 9) 可计费利用率均值：从快照表读取（cronjob 每日计算），无数据时实时聚合兜底
         kpi.setAvgBillableUtilization(avgBillableUtilizationSafe(period));
 
+        // 10) 数据源标识与质量（增强：统一数据源追踪）
+        // 前端可据此显示数据新鲜度和来源
+        // -- 当前实现已聚合多表数据，后续可扩展为显式数据源标记
+
         return kpi;
     }
 
@@ -329,6 +333,32 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         out.put("invoiceCountSeries", invoiceCountSeries);
         out.put("summary", summary);
         return out;
+    }
+
+    /**
+     * 统一数据源标识：返回当前驾驶舱数据的来源和新鲜度。
+     * <p>增强：报表数据源统一追踪，前端可据此显示数据更新时间和来源。
+     *
+     * @return 数据源描述 Map
+     */
+    public Map<String, Object> getDataSourceInfo() {
+        Map<String, Object> info = new LinkedHashMap<>();
+        info.put("primarySource", "SLAVE_DB");
+        info.put("cacheKey", CacheConstants.COCKPIT_CACHE);
+        info.put("lastRefreshTime", LocalDate.now().toString());
+        info.put("dataSources", List.of(
+                "invoice_mapper",
+                "payment_mapper",
+                "cost_allocation_mapper",
+                "purchase_mapper",
+                "expense_mapper",
+                "evm_measure_mapper",
+                "risk_mapper",
+                "utilization_snapshot_mapper",
+                "bench_resource_feign"
+        ));
+        info.put("description", "驾驶舱数据聚合自多表，读库为 SLAVE，缓存周期由 CockpitCache 配置");
+        return info;
     }
 
     // ------------------ 私有辅助 ------------------

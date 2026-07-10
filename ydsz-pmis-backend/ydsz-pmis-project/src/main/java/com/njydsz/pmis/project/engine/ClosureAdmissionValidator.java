@@ -113,8 +113,10 @@ public class ClosureAdmissionValidator {
             }
         }
         if (fails.isEmpty()) {
-            log.info("[ClosureAdmission] {} 准入通过", type);
-            return AdmissionCheck.ok(List.of("通过"), false);
+            // 准入通过时生成经验教训检查清单
+            List<String> lessons = generateLessonsLearned(type, m);
+            log.info("[ClosureAdmission] {} 准入通过，经验教训: {}", type, lessons);
+            return AdmissionCheck.ok(lessons, false);
         }
         log.info("[ClosureAdmission] {} 准入失败: {}", type, fails);
         return AdmissionCheck.fail(fails);
@@ -129,6 +131,56 @@ public class ClosureAdmissionValidator {
     private static String fmt(BigDecimal v) {
         if (v == null) return "N/A";
         return v.setScale(4, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    /**
+     * 结项通过时生成经验教训检查清单。
+     * <p>根据结项指标自动识别项目执行中的亮点和待改进点，
+     * 供结项复盘参考。
+     *
+     * @param type 结项类型
+     * @param m    准入指标
+     * @return 经验教训列表
+     */
+    private static List<String> generateLessonsLearned(ClosureType type, ClosureMetrics m) {
+        List<String> lessons = new ArrayList<>();
+        lessons.add("准入通过");
+
+        // CPI 分析
+        if (m.cpi() != null) {
+            if (m.cpi().compareTo(new BigDecimal("1.05")) >= 0) {
+                lessons.add("亮点：CPI=" + fmt(m.cpi()) + "，成本控制优秀，建议总结成本管理经验");
+            } else if (m.cpi().compareTo(new BigDecimal("0.95")) < 0) {
+                lessons.add("待改进：CPI=" + fmt(m.cpi()) + "，成本略有超支，建议分析超支原因");
+            }
+        }
+
+        // 回款分析
+        if (m.receivedRatio() != null) {
+            if (m.receivedRatio().compareTo(new BigDecimal("1.0")) >= 0) {
+                lessons.add("亮点：回款比例100%，客户付款及时");
+            } else if (m.receivedRatio().compareTo(new BigDecimal("0.95")) < 0) {
+                lessons.add("待改进：回款比例" + fmt(m.receivedRatio()) + "，建议加强回款管理");
+            }
+        }
+
+        // 毛利率分析
+        if (m.grossMargin() != null) {
+            if (m.grossMargin().compareTo(new BigDecimal("0.30")) >= 0) {
+                lessons.add("亮点：毛利率" + fmt(m.grossMargin()) + "，盈利能力良好");
+            } else if (m.grossMargin().signum() < 0) {
+                lessons.add("待改进：毛利率为负，需深入分析亏损原因并制定改进措施");
+            } else if (m.grossMargin().compareTo(new BigDecimal("0.10")) < 0) {
+                lessons.add("待改进：毛利率较低(" + fmt(m.grossMargin()) + ")，建议优化报价策略");
+            }
+        }
+
+        // 交付验收分析
+        if (Boolean.TRUE.equals(m.allDeliveredAccepted())) {
+            lessons.add("亮点：所有交付物均已验收通过");
+        }
+
+        return lessons;
     }
 
     /**

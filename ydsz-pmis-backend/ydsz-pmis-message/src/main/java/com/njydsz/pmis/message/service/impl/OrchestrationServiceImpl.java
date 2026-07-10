@@ -42,9 +42,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrchestrationServiceImpl implements OrchestrationService {
 
+    /** SpEL 表达式解析器（条件求值） */
     private static final ExpressionParser SPEL_PARSER = new SpelExpressionParser();
+    /** 节点最大重试次数 */
     private static final int MAX_RETRY = 3;
 
+    /** 消息发送服务（节点执行时调用） */
     private final MessageService messageService;
 
     @Override

@@ -37,6 +37,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
 
+    /** Redis 模板（用户活跃度画像） */
     private final StringRedisTemplate redisTemplate;
 
     /** Redis key 前缀 */

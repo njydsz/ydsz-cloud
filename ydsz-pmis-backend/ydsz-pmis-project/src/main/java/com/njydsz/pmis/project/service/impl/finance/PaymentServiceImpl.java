@@ -41,7 +41,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
+    /** 回款 Mapper */
     private final PaymentMapper paymentMapper;
+    /** 发票 Mapper（核销关联） */
     private final InvoiceMapper invoiceMapper;
 
     @Override

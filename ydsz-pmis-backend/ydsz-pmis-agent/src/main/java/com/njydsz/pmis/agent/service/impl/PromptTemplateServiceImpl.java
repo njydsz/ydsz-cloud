@@ -29,7 +29,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class PromptTemplateServiceImpl implements PromptTemplateService {
 
+    /** Prompt 模板 Mapper（CRUD） */
     private final AgentPromptTemplateMapper mapper;
+    /** Prompt 模板注册中心（内存缓存 + 热刷新） */
     private final PromptTemplateRegistry registry;
 
     @Override

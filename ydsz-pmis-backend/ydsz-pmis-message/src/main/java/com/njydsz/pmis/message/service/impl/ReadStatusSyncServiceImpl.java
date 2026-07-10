@@ -41,9 +41,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
 
+    /** 消息日志 Mapper */
     private final MsgLogMapper msgLogMapper;
+    /** 站内通知 Mapper */
     private final MsgNotificationMapper msgNotificationMapper;
+    /** 实时推送服务（已读状态变更通知） */
     private final RealtimePushService realtimePushService;
+    /** 智能推送时间优化器（记录用户活跃行为） */
     private final DeliveryTimeOptimizer deliveryTimeOptimizer;
 
     @Override

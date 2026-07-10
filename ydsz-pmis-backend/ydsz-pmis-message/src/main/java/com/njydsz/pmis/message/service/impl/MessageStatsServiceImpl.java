@@ -37,7 +37,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MessageStatsServiceImpl implements MessageStatsService {
 
+    /** 消息日志 Mapper（聚合统计查询） */
     private final MsgLogMapper msgLogMapper;
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
     @Override

@@ -40,11 +40,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class MessageLogServiceImpl implements MessageLogService {
 
+    /** 消息日志 Mapper */
     private final MsgLogMapper msgLogMapper;
+    /** 通道路由器（重发时分发） */
     private final ChannelRouter channelRouter;
+    /** 重试策略解析器 */
     private final RetryStrategyResolver retryStrategyResolver;
+    /** Spring 事件发布器（死信告警） */
     private final ApplicationEventPublisher eventPublisher;
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
+    /** 消息指标采集 */
     private final MessageMetrics messageMetrics;
 
     /** P1-4: 通道 → 上次告警时间戳(ms),用于告警冷却去重 */

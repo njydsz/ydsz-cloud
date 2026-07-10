@@ -49,6 +49,7 @@ public class MsgLogArchiveServiceImpl implements MsgLogArchiveService {
     /** 归档表名前缀 */
     private static final String ARCHIVE_PREFIX = "pmis_msg_log_archive_";
 
+    /** JDBC 模板（分区归档 DDL 执行） */
     private final JdbcTemplate jdbcTemplate;
 
     /**

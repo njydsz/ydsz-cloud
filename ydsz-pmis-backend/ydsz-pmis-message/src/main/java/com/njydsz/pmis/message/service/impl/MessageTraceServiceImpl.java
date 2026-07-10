@@ -32,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MessageTraceServiceImpl implements MessageTraceService {
 
+    /** 消息轨迹 Mapper（异步写入） */
     private final MsgTraceMapper msgTraceMapper;
 
     @Override

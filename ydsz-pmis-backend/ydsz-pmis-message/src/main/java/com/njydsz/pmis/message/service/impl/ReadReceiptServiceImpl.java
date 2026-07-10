@@ -37,6 +37,7 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class ReadReceiptServiceImpl implements ReadReceiptService {
 
+    /** Redis 模板（短链映射 / 已读状态） */
     private final StringRedisTemplate redisTemplate;
 
     /** 追踪像素基础 URL */

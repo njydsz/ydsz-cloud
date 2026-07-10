@@ -4,6 +4,7 @@ import com.njydsz.pmis.project.enums.execution.EvmAlertLevel;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 
 /**
  * EVM 挣值计算引擎
@@ -115,6 +116,8 @@ public class EvmCalculator {
         r.tcpi = BigDecimal.valueOf(tcpi).setScale(4, RoundingMode.HALF_UP);
         r.alertLevel = level;
         r.alertReason = reason;
+        r.forecastCompletionDate = forecastCompletionDate(spi, pvN, evN);
+        r.recommendedAction = recommendedAction(level, cpi, spi);
         return r;
     }
 
@@ -150,6 +153,62 @@ public class EvmCalculator {
     }
 
     /**
+     * 基于SPI预测完工日期。
+     * <p>公式：预计完工日期 = 当前日期 + (剩余工期 / SPI)
+     * <p>SPI < 1 时完工日期将延后，SPI > 1 时可能提前。
+     *
+     * @param spi        进度绩效指数
+     * @param pv         计划值
+     * @param ev         挣值
+     * @return 预测完工日期；无法预测返回 null
+     */
+    private static LocalDate forecastCompletionDate(double spi, BigDecimal pv, BigDecimal ev) {
+        if (spi <= 0 || spi >= 1.0) {
+            // SPI≥1 说明进度正常或提前，不需要预警
+            return null;
+        }
+        // 剩余工作量 = PV - EV
+        BigDecimal remaining = pv.subtract(ev);
+        if (remaining.signum() <= 0) {
+            return null;
+        }
+        // 按当前进度，剩余工作需要的时间 = 剩余量 / (总量/已用时间) / SPI
+        // 简化模型：剩余天数 ≈ 剩余工作量占比 * 总工期 / SPI
+        // 这里仅提供方向性预测，实际需结合项目日历
+        long estimatedDelayDays = Math.round(remaining.divide(pv, 4, RoundingMode.HALF_UP).doubleValue() / spi * 30);
+        return LocalDate.now().plusDays(estimatedDelayDays);
+    }
+
+    /**
+     * 根据EVM指标生成推荐操作。
+     *
+     * @param level 告警级别
+     * @param cpi   成本绩效指数
+     * @param spi   进度绩效指数
+     * @return 推荐操作描述
+     */
+    private static String recommendedAction(EvmAlertLevel level, double cpi, double spi) {
+        if (level == EvmAlertLevel.NORMAL) {
+            return "项目运行正常，继续保持";
+        }
+        StringBuilder sb = new StringBuilder();
+        if (cpi < 0.85) {
+            sb.append("成本严重超支，建议立即启动成本审查并调整预算；");
+        } else if (cpi < 0.95) {
+            sb.append("成本略有超支，建议关注成本趋势并优化资源配置；");
+        }
+        if (spi < 0.85) {
+            sb.append("进度严重滞后，建议增加人力资源或调整交付范围；");
+        } else if (spi < 0.95) {
+            sb.append("进度略有滞后，建议加快关键路径任务执行；");
+        }
+        if (sb.length() == 0) {
+            sb.append("建议持续监控");
+        }
+        return sb.toString();
+    }
+
+    /**
      * EVM 指标结果集
      */
     public static class EVMResult {
@@ -181,5 +240,9 @@ public class EvmCalculator {
         public EvmAlertLevel alertLevel;
         /** 告警原因 */
         public String alertReason;
+        /** 预测完工日期（SPI<1时预警） */
+        public LocalDate forecastCompletionDate;
+        /** 推荐操作 */
+        public String recommendedAction;
     }
 }

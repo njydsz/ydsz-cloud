@@ -111,6 +111,85 @@ public final class SlaCalculator {
     }
 
     /**
+     * 获取SLA告警级别（基于剩余时间比例）。
+     * <p>规则：
+     * <ul>
+     *   <li>已超时 → CRITICAL（红色）</li>
+     *   <li>剩余时间 < 总时间的 20% → WARNING（黄色）</li>
+     *   <li>剩余时间 < 总时间的 50% → NOTICE（蓝色）</li>
+     *   <li>其余 → NORMAL（绿色）</li>
+     * </ul>
+     *
+     * @param t          工单
+     * @param now        当前时间
+     * @param slaType    SLA类型（RESPONSE/RESOLVE）
+     * @return 告警级别字符串
+     */
+    public static String getSlaAlertLevel(OpsTicketDO t, LocalDateTime now, String slaType) {
+        if (t == null || now == null) return "NORMAL";
+        LocalDateTime due;
+        LocalDateTime created;
+        if ("RESOLVE".equalsIgnoreCase(slaType)) {
+            due = t.getResolveDueAt();
+            created = t.getCreatedAt();
+        } else {
+            due = t.getResponseDueAt();
+            created = t.getCreatedAt();
+        }
+        if (due == null || created == null) return "NORMAL";
+        if (now.isAfter(due)) return "CRITICAL";
+        long total = ChronoUnit.MINUTES.between(created, due);
+        long remain = ChronoUnit.MINUTES.between(now, due);
+        if (total <= 0) return "NORMAL";
+        double ratio = (double) remain / total;
+        if (ratio < 0.2) return "WARNING";
+        if (ratio < 0.5) return "NOTICE";
+        return "NORMAL";
+    }
+
+    /**
+     * 判断工单是否需要升级处理。
+     * <p>当响应SLA或解决SLA超时且工单仍未关闭时，需要升级处理。
+     *
+     * @param t          工单
+     * @param now        当前时间
+     * @return true 表示需要升级
+     */
+    public static boolean needsEscalation(OpsTicketDO t, LocalDateTime now) {
+        if (t == null || now == null) return false;
+        OpsTicketStatus s = OpsTicketStatus.fromCode(t.getStatus());
+        if (s == OpsTicketStatus.CLOSED || s == OpsTicketStatus.RESOLVED) return false;
+        return isResponseBreached(t, now) || isResolveBreached(t, now);
+    }
+
+    /**
+     * 获取升级建议。
+     * <p>根据超时类型和工单优先级生成升级建议。
+     *
+     * @param t          工单
+     * @param now        当前时间
+     * @return 升级建议字符串；无需升级返回 null
+     */
+    public static String getEscalationSuggestion(OpsTicketDO t, LocalDateTime now) {
+        if (!needsEscalation(t, now)) return null;
+        StringBuilder sb = new StringBuilder();
+        if (isResponseBreached(t, now)) {
+            sb.append("响应SLA已超时");
+        }
+        if (isResolveBreached(t, now)) {
+            if (sb.length() > 0) sb.append("，");
+            sb.append("解决SLA已超时");
+        }
+        OpsTicketPriority p = OpsTicketPriority.fromCode(t.getPriority());
+        if (p == OpsTicketPriority.P1 || p == OpsTicketPriority.P2) {
+            sb.append("，建议立即升级至主管处理");
+        } else {
+            sb.append("，建议提醒责任人加快处理");
+        }
+        return sb.toString();
+    }
+
+    /**
      * SLA 截止时间
      *
      * @param responseDueAt 首次响应截止

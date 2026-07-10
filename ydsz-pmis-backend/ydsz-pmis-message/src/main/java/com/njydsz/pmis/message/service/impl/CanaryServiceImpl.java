@@ -32,8 +32,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CanaryServiceImpl implements CanaryService {
 
+    /** 默认灰度桶总数 */
     private static final int DEFAULT_BUCKET_TOTAL = 100;
 
+    /** 灰度配置 Mapper */
     private final MsgCanaryMapper msgCanaryMapper;
 
     @Override

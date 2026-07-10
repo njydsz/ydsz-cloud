@@ -31,6 +31,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProfitServiceImpl implements ProfitService {
 
+    /** 利润快照 Mapper */
     private final ProfitSnapshotMapper snapshotMapper;
 
     @Override

@@ -69,23 +69,41 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
 
+    /** 通道路由器（负责通道选择与消息分发） */
     private final ChannelRouter channelRouter;
+    /** 模板引擎（变量占位符渲染） */
     private final TemplateEngine templateEngine;
+    /** 模板管理服务（加载/校验模板） */
     private final TemplateService templateService;
+    /** 消息日志 Mapper（落库 / 查询） */
     private final MsgLogMapper msgLogMapper;
+    /** 路由规则服务（通道动态路由） */
     private final RouteRuleService routeRuleService;
+    /** 限流服务（通道 / 用户 / 模板多维限流） */
     private final RateLimitService rateLimitService;
+    /** 灰度服务（A/B 实验命中判断） */
     private final CanaryService canaryService;
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
+    /** 消息指标采集（Prometheus） */
     private final MessageMetrics messageMetrics;
+    /** 订阅管理服务（退订校验） */
     private final SubscriptionService subscriptionService;
+    /** 用户偏好服务（DND / locale / 聚合） */
     private final PreferenceService preferenceService;
+    /** 消息聚合服务（批量摘要发送） */
     private final AggregateService aggregateService;
+    /** 敏感词过滤器 */
     private final SensitiveWordFilter sensitiveWordFilter;
+    /** 重试策略解析器（按通道解析最大重试次数与退避间隔） */
     private final RetryStrategyResolver retryStrategyResolver;
+    /** 去重服务（Redis SET NX EX 幂等去重） */
     private final DedupService dedupService;
+    /** 消息全链路追踪服务 */
     private final MessageTraceService messageTraceService;
+    /** 智能推送时间优化器（用户活跃度画像） */
     private final DeliveryTimeOptimizer deliveryTimeOptimizer;
+    /** 富媒体内容渲染器（HTML / Markdown / 纯文本） */
     private final RichMediaRenderer richMediaRenderer;
 
     /** P2-3: RocketMQ 事务消息生产者（可选,未配置 RocketMQ 时为 null） */

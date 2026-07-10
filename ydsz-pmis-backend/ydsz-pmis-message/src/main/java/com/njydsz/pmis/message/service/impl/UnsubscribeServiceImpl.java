@@ -34,9 +34,13 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class UnsubscribeServiceImpl implements UnsubscribeService {
 
+    /** 退订 token 工具（签名/校验） */
     private final UnsubscribeTokenUtil unsubscribeTokenUtil;
+    /** 订阅关系服务（状态变更） */
     private final SubscriptionService subscriptionService;
+    /** 订阅关系 Mapper（退订查询） */
     private final MsgSubscriptionMapper msgSubscriptionMapper;
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
     @Override

@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class TemplateServiceImpl implements TemplateService {
 
+    /** 消息模板 Mapper（CRUD / locale 回退查询） */
     private final MsgTemplateMapper msgTemplateMapper;
 
     @Override

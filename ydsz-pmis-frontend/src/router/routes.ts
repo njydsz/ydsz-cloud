@@ -162,6 +162,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         meta: { title: 'route.projectOpportunity', icon: 'Aim', keepAlive: true, permCode: PC.PROJECT_OPPORTUNITY_LIST },
       },
       {
+        path: 'opportunity-follow',
+        name: 'ProjectOpportunityFollow',
+        component: () => import('@/views/project/opportunity-follow/index.vue'),
+        meta: { title: 'route.projectOpportunityFollow', icon: 'ChatLineRound', keepAlive: true },
+      },
+      {
         path: 'initiation',
         name: 'ProjectInitiation',
         component: () => import('@/views/project/initiation/index.vue'),
@@ -184,6 +190,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'ProjectContractChange',
         component: () => import('@/views/project/contract-change/index.vue'),
         meta: { title: 'route.projectContractChange', icon: 'Refresh', keepAlive: true, permCode: PC.PROJECT_CONTRACT_CHANGE_LIST },
+      },
+      {
+        path: 'contract-supplement',
+        name: 'ProjectContractSupplement',
+        component: () => import('@/views/project/contract-supplement/index.vue'),
+        meta: { title: 'route.projectContractSupplement', icon: 'Document', keepAlive: true },
       },
       {
         path: 'change',
@@ -216,6 +228,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'ExecutionPurchase',
         component: () => import('@/views/execution/purchase/index.vue'),
         meta: { title: 'route.executionPurchase', icon: 'ShoppingCart', keepAlive: true, permCode: PC.EXECUTION_PURCHASE_LIST },
+      },
+      {
+        path: 'budget',
+        name: 'ExecutionBudget',
+        component: () => import('@/views/execution/budget/index.vue'),
+        meta: { title: 'route.executionBudget', icon: 'Money', keepAlive: true },
       },
       {
         path: 'risk',
@@ -300,6 +318,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/execution/rule-engine/cep-pattern-editor.vue'),
         meta: { title: 'rule-engine.cepPatterns', icon: 'Cpu', activeMenu: '/execution/rule-engine', hidden: true, permCode: PC.EXECUTION_RULE_ENGINE_DESIGN },
       },
+      {
+        path: 'rule-engine/variables',
+        name: 'RuleEngineVariables',
+        component: () => import('@/views/rule-engine/variables/index.vue'),
+        meta: { title: 'rule-engine.variables', icon: 'Setting', activeMenu: '/execution/rule-engine', keepAlive: true, permCode: PC.EXECUTION_RULE_ENGINE_VIEW },
+      },
     ],
   },
   {
@@ -375,6 +399,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'FinanceReconcile',
         component: () => import('@/views/finance/reconcile/index.vue'),
         meta: { title: 'route.financeReconcile', icon: 'Document', keepAlive: true, permCode: PC.EXECUTION_RECONCILE_VIEW },
+      },
+      {
+        path: 'revenue',
+        name: 'FinanceRevenue',
+        component: () => import('@/views/finance/revenue/index.vue'),
+        meta: { title: 'route.financeRevenue', icon: 'Gold', keepAlive: true },
       },
     ],
   },
@@ -497,6 +527,24 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'ReportExecutive',
         component: () => import('@/views/report/executive/index.vue'),
         meta: { title: 'route.reportExecutive', icon: 'TrendCharts', keepAlive: true, permCode: PC.REPORT_EXECUTIVE_VIEW },
+      },
+      {
+        path: 'advanced',
+        name: 'ReportAdvanced',
+        component: () => import('@/views/report/advanced/index.vue'),
+        meta: { title: 'route.reportAdvanced', icon: 'DataAnalysis', keepAlive: true },
+      },
+      {
+        path: 'cockpit',
+        name: 'ReportCockpit',
+        component: () => import('@/views/report/cockpit/index.vue'),
+        meta: { title: 'route.reportCockpit', icon: 'Odometer', keepAlive: true },
+      },
+      {
+        path: 'export',
+        name: 'ReportExport',
+        component: () => import('@/views/report/export/index.vue'),
+        meta: { title: 'route.reportExport', icon: 'Download', keepAlive: true },
       },
     ],
   },

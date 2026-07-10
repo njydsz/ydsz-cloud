@@ -46,8 +46,11 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ToolMarketServiceImpl implements ToolMarketService {
 
+    /** 工具市场条目 Mapper（CRUD） */
     private final ToolMarketEntryMapper mapper;
+    /** 工具注册中心（内存注册表，供 Agent 运行时调用） */
     private final ToolRegistry toolRegistry;
+    /** JSON 序列化/反序列化工具 */
     private final ObjectMapper objectMapper;
 
     /** 来源类型常量 */

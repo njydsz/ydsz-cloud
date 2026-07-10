@@ -53,10 +53,15 @@ public class AggregateServiceImpl implements AggregateService {
     /** 默认摘要模板内容(未配置摘要模板时回退) */
     private static final String DEFAULT_DIGEST_TEMPLATE = "您有 ${count} 条 ${group} 相关消息,请及时查看";
 
+    /** 聚合批次 Mapper */
     private final MsgAggregateMapper msgAggregateMapper;
+    /** 消息发送服务（flush 时回调发送） */
     private final MessageService messageService;
+    /** 模板引擎（摘要渲染） */
     private final TemplateEngine templateEngine;
+    /** 模板管理服务（加载摘要模板） */
     private final TemplateService templateService;
+    /** Redisson 客户端（分布式锁） */
     private final RedissonClient redissonClient;
 
     @Override

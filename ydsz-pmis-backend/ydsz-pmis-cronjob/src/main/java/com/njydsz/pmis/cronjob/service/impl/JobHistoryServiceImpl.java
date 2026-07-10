@@ -42,7 +42,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class JobHistoryServiceImpl implements JobHistoryService {
 
+    /** 任务历史版本 Mapper */
     private final JobHistoryMapper jobHistoryMapper;
+    /** 任务定义 Mapper（回滚时更新当前配置） */
     private final JobMapper jobMapper;
 
     /** 需要对比的配置字段及其展示名（顺序保持一致便于前端渲染） */

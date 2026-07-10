@@ -46,8 +46,11 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
     /** MinIO 报表对象前缀 */
     private static final String REPORT_PREFIX = "report/";
 
+    /** JDBC 模板（报表数据查询） */
     private final JdbcTemplate jdbcTemplate;
+    /** MinIO 客户端（报表文件上传） */
     private final MinioClient minioClient;
+    /** MinIO 配置（bucket 名称等） */
     private final MinioConfig minioConfig;
     /** P1-8: 报表分发邮件通知（Feign 调用 message 模块） */
     private final MessageFeignClient messageFeignClient;

@@ -37,7 +37,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DeliveryServiceImpl implements DeliveryService {
 
+    /** 交付标准 Mapper */
     private final DeliveryStandardMapper standardMapper;
+    /** 交付物 Mapper */
     private final DeliveryItemMapper itemMapper;
 
     // ========== 标准管理 ==========

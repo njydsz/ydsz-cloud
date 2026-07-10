@@ -31,7 +31,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReceiptServiceImpl implements ReceiptService {
 
+    /** 消息回执 Mapper */
     private final MsgReceiptMapper msgReceiptMapper;
+    /** 消息日志服务（联动更新回执状态） */
     private final MessageLogService messageLogService;
 
     @Override

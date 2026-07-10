@@ -33,6 +33,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RevenueServiceImpl implements RevenueService {
 
+    /** 收入确认 Mapper */
     private final RevenueMapper revenueMapper;
 
     @Override

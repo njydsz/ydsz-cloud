@@ -38,12 +38,18 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class RateLimitServiceImpl implements RateLimitService {
 
+    /** 小时维度格式化器 */
     private static final DateTimeFormatter HOUR_FMT = DateTimeFormatter.ofPattern("yyyyMMddHH");
+    /** 天维度格式化器 */
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
+    /** Redisson 客户端（令牌桶限流） */
     private final RedissonClient redissonClient;
+    /** Redis 模板（频率计数） */
     private final StringRedisTemplate stringRedisTemplate;
+    /** 用户偏好服务（获取频率上限） */
     private final PreferenceService preferenceService;
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
     @Override

@@ -39,6 +39,7 @@ public class CanaryReportServiceImpl implements CanaryReportService {
     /** 灰度报表默认回溯天数 */
     private static final int DEFAULT_LOOKBACK_DAYS = 7;
 
+    /** 消息日志 Mapper（A/B 聚合统计） */
     private final MsgLogMapper msgLogMapper;
 
     @Override

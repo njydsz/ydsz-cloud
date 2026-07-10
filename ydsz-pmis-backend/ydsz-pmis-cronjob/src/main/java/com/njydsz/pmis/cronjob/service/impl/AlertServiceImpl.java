@@ -29,7 +29,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AlertServiceImpl implements AlertService {
 
+    /** 告警规则 Mapper（CRUD） */
     private final JobAlertRuleMapper jobAlertRuleMapper;
+    /** 告警日志 Mapper（告警触发记录） */
     private final JobAlertLogMapper jobAlertLogMapper;
 
     @Override

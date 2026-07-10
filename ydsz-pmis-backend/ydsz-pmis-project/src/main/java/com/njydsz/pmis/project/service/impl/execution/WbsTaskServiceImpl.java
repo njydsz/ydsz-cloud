@@ -39,7 +39,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WbsTaskServiceImpl implements WbsTaskService {
 
+    /** WBS 任务 Mapper */
     private final WbsTaskMapper wbsTaskMapper;
+    /** 名称装配器（Feign 补齐负责人名称） */
     private final NameAssembler nameAssembler;
 
     @Override

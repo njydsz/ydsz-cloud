@@ -38,6 +38,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProjectClosureServiceImpl implements ProjectClosureService {
 
+    /** 项目结项 Mapper */
     private final ProjectClosureMapper closureMapper;
 
     @Override

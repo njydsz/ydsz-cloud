@@ -34,6 +34,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GlueCodeServiceImpl implements GlueCodeService {
 
+    /** GLUE 代码 Mapper（版本化源码 CRUD） */
     private final GlueCodeMapper glueCodeMapper;
 
     @Override

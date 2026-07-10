@@ -36,12 +36,23 @@ import java.time.format.DateTimeFormatter;
 @Service
 public class DefaultTokenQuotaService implements TokenQuotaService {
 
+    /** 月份格式化器（YYYYMM） */
     private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyyMM");
 
+    /** Token 配额 Mapper 提供者（延迟注入，无 DB 环境降级为空操作） */
     private final ObjectProvider<TokenQuotaMapper> quotaMapperProvider;
+    /** Token 使用明细 Mapper 提供者（延迟注入） */
     private final ObjectProvider<TokenUsageLogMapper> usageLogMapperProvider;
+    /** Token 配额配置属性 */
     private final TokenQuotaProperties properties;
 
+    /**
+     * 构造函数。
+     *
+     * @param quotaMapperProvider  Token 配额 Mapper 提供者
+     * @param usageLogMapperProvider Token 使用明细 Mapper 提供者
+     * @param properties           Token 配额配置属性
+     */
     public DefaultTokenQuotaService(
             ObjectProvider<TokenQuotaMapper> quotaMapperProvider,
             ObjectProvider<TokenUsageLogMapper> usageLogMapperProvider,

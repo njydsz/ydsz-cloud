@@ -29,6 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PreferenceServiceImpl implements PreferenceService {
 
+    /** 用户消息偏好 Mapper */
     private final MsgPreferenceMapper msgPreferenceMapper;
 
     @Override

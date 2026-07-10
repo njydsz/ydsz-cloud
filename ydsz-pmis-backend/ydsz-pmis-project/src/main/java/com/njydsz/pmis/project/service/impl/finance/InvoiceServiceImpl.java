@@ -37,6 +37,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class InvoiceServiceImpl implements InvoiceService {
 
+    /** 发票 Mapper */
     private final InvoiceMapper invoiceMapper;
 
     @Override

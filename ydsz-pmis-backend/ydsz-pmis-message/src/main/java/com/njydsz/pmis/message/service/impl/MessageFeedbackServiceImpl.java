@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageFeedbackServiceImpl implements MessageFeedbackService {
 
+    /** 消息反馈 Mapper */
     private final MsgFeedbackMapper msgFeedbackMapper;
 
     /** 降频判断窗口：最近多少条反馈 */

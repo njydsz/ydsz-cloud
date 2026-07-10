@@ -44,8 +44,11 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     /** 路由规则缓存 TTL */
     private static final Duration CACHE_TTL = Duration.ofMinutes(5);
 
+    /** 路由规则 Mapper */
     private final MsgRouteRuleMapper msgRouteRuleMapper;
+    /** SpEL 表达式解析器（条件求值） */
     private final ExpressionParser expressionParser;
+    /** Redis 模板（路由规则缓存） */
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override

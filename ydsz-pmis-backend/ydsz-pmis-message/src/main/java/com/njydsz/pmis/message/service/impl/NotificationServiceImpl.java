@@ -37,8 +37,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
+    /** 站内通知 Mapper */
     private final MsgNotificationMapper msgNotificationMapper;
+    /** 实时推送服务（WebSocket / 离线缓存） */
     private final RealtimePushService realtimePushService;
+    /** 消息撤回服务 */
     private final RecallService recallService;
 
     @Override

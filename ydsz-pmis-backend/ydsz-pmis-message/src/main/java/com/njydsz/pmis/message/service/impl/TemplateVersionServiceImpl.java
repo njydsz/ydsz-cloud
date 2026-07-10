@@ -42,9 +42,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TemplateVersionServiceImpl implements TemplateVersionService {
 
+    /** 模板版本历史 Mapper */
     private final MsgTemplateVersionMapper versionMapper;
+    /** 模板 Mapper（查询当前模板） */
     private final MsgTemplateMapper templateMapper;
+    /** 模板引擎（预览渲染） */
     private final TemplateEngine templateEngine;
+    /** 消息发送服务（试发） */
     private final MessageService messageService;
 
     @Override

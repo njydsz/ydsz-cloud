@@ -36,10 +36,15 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class RecallServiceImpl implements RecallService {
 
+    /** 站内通知 Mapper */
     private final MsgNotificationMapper msgNotificationMapper;
+    /** 消息日志 Mapper */
     private final MsgLogMapper msgLogMapper;
+    /** 实时推送服务（撤回通知推送） */
     private final RealtimePushService realtimePushService;
+    /** 消息日志服务（撤回状态更新） */
     private final MessageLogService messageLogService;
+    /** 消息全链路追踪服务 */
     private final MessageTraceService messageTraceService;
 
     @Override

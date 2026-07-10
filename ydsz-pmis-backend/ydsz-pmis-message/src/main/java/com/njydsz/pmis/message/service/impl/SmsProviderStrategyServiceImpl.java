@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyService {
 
+    /** Redis 模板（服务商日发送量 / 失败量统计） */
     private final StringRedisTemplate redisTemplate;
 
     /** 策略类型 */

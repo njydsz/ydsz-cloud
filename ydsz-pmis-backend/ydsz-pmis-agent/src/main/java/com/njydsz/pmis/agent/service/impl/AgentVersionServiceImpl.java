@@ -32,12 +32,20 @@ import java.util.*;
 @Service
 public class AgentVersionServiceImpl {
 
+    /** Agent 版本管理器（内存态版本注册/发布/回滚） */
     private final AgentVersionManager versionManager;
+    /** Agent 版本 Mapper 提供者（延迟注入，无 DB 环境降级为纯内存模式） */
     private final ObjectProvider<AgentVersionMapper> mapperProvider;
 
     /** 内存缓存：agentType → 是否已从 DB 加载 */
     private final Set<String> loadedAgentTypes = Collections.synchronizedSet(new HashSet<>());
 
+    /**
+     * 构造函数。
+     *
+     * @param versionManager Agent 版本管理器
+     * @param mapperProvider Agent 版本 Mapper 提供者（延迟注入）
+     */
     public AgentVersionServiceImpl(AgentVersionManager versionManager,
                                     ObjectProvider<AgentVersionMapper> mapperProvider) {
         this.versionManager = versionManager;

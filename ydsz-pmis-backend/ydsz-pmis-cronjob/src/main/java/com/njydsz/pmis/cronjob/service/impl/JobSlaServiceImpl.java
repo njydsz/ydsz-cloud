@@ -33,7 +33,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JobSlaServiceImpl implements JobSlaService {
 
+    /** SLA 规则 Mapper */
     private final JobSlaMapper jobSlaMapper;
+    /** 任务日志 Mapper（SLA 违约统计） */
     private final JobLogMapper jobLogMapper;
 
     /** 默认 SLA 检查时间窗口（分钟） */

@@ -36,6 +36,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RiskServiceImpl implements RiskService {
 
+    /** 项目风险 Mapper */
     private final RiskMapper riskMapper;
 
     @Override
