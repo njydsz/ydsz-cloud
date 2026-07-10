@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeCreateDTO;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.org.DepartmentDO;
+import com.njydsz.pmis.userinfo.entity.rate.JobLevelRateDO;
 import com.njydsz.pmis.userinfo.entity.user.EmployeeDO;
 import com.njydsz.pmis.userinfo.entity.rate.JobLevelDO;
 import com.njydsz.pmis.userinfo.entity.rate.OutsourceRateDO;
@@ -18,7 +19,8 @@ import com.njydsz.pmis.userinfo.mapper.rate.JobLevelRateMapper;
 import com.njydsz.pmis.userinfo.mapper.rate.OutsourceRateMapper;
 import com.njydsz.pmis.userinfo.mapper.rate.PartTimeRateMapper;
 import com.njydsz.pmis.userinfo.mapper.org.PositionMapper;
-import com.njydsz.pmis.userinfo.vo.user.EmployeeVO;
+import com.njydsz.pmis.userinfo.service.impl.user.EmployeeServiceImpl;
+import com.njydsz.pmis.userinfo.vo.EmployeeVO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -439,7 +441,7 @@ class EmployeeServiceImplTest {
         emp.setLevelCode("L5");
         when(employeeMapper.selectById("E1")).thenReturn(emp);
 
-        com.njydsz.pmis.userinfo.entity.JobLevelRateDO rate = new com.njydsz.pmis.userinfo.entity.JobLevelRateDO();
+        JobLevelRateDO rate = new JobLevelRateDO();
         rate.setTotalCost(new BigDecimal("10360"));
         when(jobLevelRateMapper.selectEffective(eq("L5"), any())).thenReturn(rate);
 

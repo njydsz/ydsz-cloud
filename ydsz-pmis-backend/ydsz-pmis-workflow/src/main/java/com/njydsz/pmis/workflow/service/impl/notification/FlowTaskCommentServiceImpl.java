@@ -35,6 +35,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
 
+    /** 任务评论 Mapper，负责 pmis_flow_task_comment 表的增删改查及按任务/实例维度查询评论列表 */
     private final FlowTaskCommentMapper taskCommentMapper;
 
     // ============================== 新增评论 ==============================

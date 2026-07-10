@@ -93,9 +93,13 @@ public class RuleLifecycleService {
     /** 置信度计算：满样本对应的置信度 */
     private static final double FULL_CONFIDENCE = 0.95;
 
+    /** 规则引擎实例，用于获取执行统计（评估次数/触发次数/错误次数）以驱动退役检测 */
     private final RuleEngine ruleEngine;
+    /** 规则配置提供者（SPI），用于加载全部规则定义及按编码查询规则详情 */
     private final RuleConfigProvider configProvider;
+    /** 规则管理服务，用于执行退役状态变更和回滚操作 */
     private final RuleAdminService ruleAdminService;
+    /** 规则版本仓库（SPI），用于查询历史版本列表以支撑回滚预览；为 null 时不支持回滚 */
     private final RuleVersionRepository versionRepository;
 
     /** 休眠规则最小评估次数 */

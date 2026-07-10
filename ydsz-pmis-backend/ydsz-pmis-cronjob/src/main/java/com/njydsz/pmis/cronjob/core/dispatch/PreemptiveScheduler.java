@@ -158,7 +158,7 @@ public class PreemptiveScheduler {
                     .map(JobLogDO::getJobId)
                     .distinct()
                     .collect(Collectors.toList());
-            List<JobDO> jobs = jobMapper.selectByIds(jobIds);
+            List<JobDO> jobs = jobMapper.selectBatchIds(jobIds);
             Map<String, JobDO> jobMap = jobs.stream()
                     .collect(Collectors.toMap(JobDO::getId, Function.identity()));
 

@@ -7,6 +7,7 @@ import com.njydsz.pmis.userinfo.dto.rate.OutsourceRateCreateDTO;
 import com.njydsz.pmis.userinfo.dto.rate.OutsourceRateUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.rate.OutsourceRateDO;
 import com.njydsz.pmis.userinfo.mapper.rate.OutsourceRateMapper;
+import com.njydsz.pmis.userinfo.service.impl.rate.OutsourceRateServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

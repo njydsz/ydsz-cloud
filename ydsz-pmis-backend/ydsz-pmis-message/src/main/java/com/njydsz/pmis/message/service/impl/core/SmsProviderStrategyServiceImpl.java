@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service.impl;
+package com.njydsz.pmis.message.service.impl.core;
 
 import com.njydsz.pmis.message.channel.sms.SmsProvider;
 import com.njydsz.pmis.message.service.core.SmsProviderStrategyService;

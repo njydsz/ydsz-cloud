@@ -11,6 +11,7 @@ import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.pmis.message.entity.config.MsgRouteRuleDO;
 import com.njydsz.pmis.message.mapper.config.MsgRouteRuleMapper;
+import com.njydsz.pmis.message.service.impl.config.RouteRuleServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

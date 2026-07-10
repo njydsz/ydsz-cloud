@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.service.impl;
+package com.njydsz.pmis.message.service.impl.core;
 
 import com.njydsz.pmis.message.dto.core.UserReachProfileDTO;
 import com.njydsz.pmis.message.service.core.ReachStrategyService;

@@ -10,6 +10,7 @@ import com.njydsz.pmis.message.dto.batch.BatchSendRequestDTO;
 import com.njydsz.pmis.message.entity.batch.MsgBatchDO;
 import com.njydsz.pmis.message.mapper.batch.MsgBatchMapper;
 import com.njydsz.pmis.message.service.core.MessageService;
+import com.njydsz.pmis.message.service.impl.batch.BatchServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

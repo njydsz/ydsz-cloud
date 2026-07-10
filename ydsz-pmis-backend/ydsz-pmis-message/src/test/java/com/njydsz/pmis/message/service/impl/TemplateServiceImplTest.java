@@ -12,6 +12,7 @@ import com.njydsz.pmis.message.dto.template.TemplateQueryDTO;
 import com.njydsz.pmis.message.entity.template.MsgTemplateDO;
 import com.njydsz.pmis.message.enums.template.TemplateAuditStatusEnum;
 import com.njydsz.pmis.message.mapper.template.MsgTemplateMapper;
+import com.njydsz.pmis.message.service.impl.template.TemplateServiceImpl;
 import com.njydsz.pmis.message.template.DefaultTemplateEngine;
 import com.njydsz.pmis.message.template.TemplateEngine;
 import org.junit.jupiter.api.AfterEach;

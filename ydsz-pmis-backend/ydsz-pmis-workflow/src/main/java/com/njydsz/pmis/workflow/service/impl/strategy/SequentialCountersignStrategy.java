@@ -26,8 +26,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SequentialCountersignStrategy implements CountersignStrategy {
 
+    /** 运行时任务 Mapper，用于乐观锁更新 approveFinished 计数及切换下一办理人 */
     private final FlowRunTaskMapper taskMapper;
+    /** 办理人 Mapper，查询同节点未处理用户列表以确定下一顺序办理人 */
     private final FlowUserMapper userMapper;
+    /** 任务归档服务，顺序会签全部通过后完成 + 归档到历史表 */
     private final FlowTaskArchiveService archiveService;
 
     @Override

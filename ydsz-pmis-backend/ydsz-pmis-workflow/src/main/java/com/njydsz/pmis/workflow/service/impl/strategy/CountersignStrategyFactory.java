@@ -32,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CountersignStrategyFactory {
 
+    /** Spring 容器注入的所有会签策略 Bean 列表，启动时遍历注册到 {@link #registry} */
     private final List<CountersignStrategy> strategies;
 
     /** 策略注册表：performType -> strategy */

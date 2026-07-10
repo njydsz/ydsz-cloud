@@ -11,6 +11,7 @@ import com.njydsz.pmis.message.entity.core.MsgNotificationDO;
 import com.njydsz.pmis.message.enums.receipt.RecallStatusEnum;
 import com.njydsz.pmis.message.mapper.core.MsgNotificationMapper;
 import com.njydsz.pmis.message.realtime.RealtimePushService;
+import com.njydsz.pmis.message.service.impl.core.NotificationServiceImpl;
 import com.njydsz.pmis.message.service.receipt.RecallService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.service.impl;
+package com.njydsz.pmis.agent.service.impl.tool;
 
 import com.njydsz.pmis.agent.config.TokenQuotaProperties;
 import com.njydsz.pmis.agent.dto.tool.QuotaSummary;

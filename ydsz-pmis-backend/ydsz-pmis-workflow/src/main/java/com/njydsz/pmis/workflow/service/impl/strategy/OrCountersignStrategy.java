@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class OrCountersignStrategy implements CountersignStrategy {
 
+    /** 任务归档服务，或签通过后完成 + 归档到历史表 */
     private final FlowTaskArchiveService archiveService;
 
     @Override

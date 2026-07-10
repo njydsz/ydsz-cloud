@@ -28,8 +28,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WeightedVoteCountersignStrategy implements CountersignStrategy {
 
+    /** 运行时任务 Mapper，用于乐观锁更新 approveFinished 计数及 skipByNode 跳过剩余 PENDING 任务 */
     private final FlowRunTaskMapper taskMapper;
+    /** 办理人 Mapper，查询含 weight 属性的办理人列表并标记已处理状态 */
     private final FlowUserMapper userMapper;
+    /** 任务归档服务，加权票签达到阈值后完成 + 归档到历史表 */
     private final FlowTaskArchiveService archiveService;
 
     @Override

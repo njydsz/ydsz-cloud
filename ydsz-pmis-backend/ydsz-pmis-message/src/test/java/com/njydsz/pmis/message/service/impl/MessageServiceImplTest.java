@@ -26,6 +26,7 @@ import com.njydsz.pmis.message.service.canary.CanaryService;
 import com.njydsz.pmis.message.service.core.DedupService;
 import com.njydsz.pmis.message.service.core.DeliveryTimeOptimizer;
 import com.njydsz.pmis.message.service.core.MessageTraceService;
+import com.njydsz.pmis.message.service.impl.core.MessageServiceImpl;
 import com.njydsz.pmis.message.service.config.PreferenceService;
 import com.njydsz.pmis.message.service.core.RateLimitService;
 import com.njydsz.pmis.message.service.config.RouteRuleService;

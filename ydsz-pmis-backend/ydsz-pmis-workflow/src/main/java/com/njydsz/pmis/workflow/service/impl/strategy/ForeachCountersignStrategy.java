@@ -22,7 +22,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ForeachCountersignStrategy implements CountersignStrategy {
 
+    /** 运行时任务 Mapper，用于查询同节点 PENDING 任务数以判断是否全部完成 */
     private final FlowRunTaskMapper taskMapper;
+    /** 任务归档服务，完成单条 task 后归档到历史表 */
     private final FlowTaskArchiveService archiveService;
 
     @Override

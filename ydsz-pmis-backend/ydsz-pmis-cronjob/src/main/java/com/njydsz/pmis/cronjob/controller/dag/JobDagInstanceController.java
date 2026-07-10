@@ -9,7 +9,7 @@ import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.entity.dag.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.entity.dag.JobDagNodeInstanceDO;
 import com.njydsz.pmis.cronjob.service.dag.JobDagInstanceService;
-import com.njydsz.pmis.cronjob.vo.dag.DagInstanceVisualizationVO;
+import com.njydsz.pmis.cronjob.vo.DagInstanceVisualizationVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

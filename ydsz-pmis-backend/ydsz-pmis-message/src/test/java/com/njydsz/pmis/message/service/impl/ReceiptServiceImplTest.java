@@ -7,6 +7,7 @@ import com.njydsz.pmis.message.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.pmis.message.entity.receipt.MsgReceiptDO;
 import com.njydsz.pmis.message.mapper.receipt.MsgReceiptMapper;
 import com.njydsz.pmis.message.service.core.MessageLogService;
+import com.njydsz.pmis.message.service.impl.receipt.ReceiptServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

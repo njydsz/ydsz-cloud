@@ -7,6 +7,7 @@ import com.njydsz.pmis.userinfo.dto.rate.PartTimeRateCreateDTO;
 import com.njydsz.pmis.userinfo.dto.rate.PartTimeRateUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.rate.PartTimeRateDO;
 import com.njydsz.pmis.userinfo.mapper.rate.PartTimeRateMapper;
+import com.njydsz.pmis.userinfo.service.impl.rate.PartTimeRateServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

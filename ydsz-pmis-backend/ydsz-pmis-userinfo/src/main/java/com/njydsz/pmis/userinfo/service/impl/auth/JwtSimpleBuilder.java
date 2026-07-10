@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.service.impl;
+package com.njydsz.pmis.userinfo.service.impl.auth;
 
 import com.alibaba.fastjson2.JSON;
 import org.slf4j.Logger;

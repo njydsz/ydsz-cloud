@@ -30,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
 
+    /** 常用语 Mapper，负责 pmis_flow_quick_comment 表的增删改查（含用户自定义 + 系统预设） */
     private final FlowQuickCommentMapper quickCommentMapper;
 
     @Override

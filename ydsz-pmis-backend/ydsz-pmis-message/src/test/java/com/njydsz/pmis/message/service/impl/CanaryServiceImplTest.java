@@ -9,6 +9,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.dto.canary.CanaryUpsertDTO;
 import com.njydsz.pmis.message.entity.canary.MsgCanaryDO;
 import com.njydsz.pmis.message.mapper.canary.MsgCanaryMapper;
+import com.njydsz.pmis.message.service.impl.canary.CanaryServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

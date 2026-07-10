@@ -23,7 +23,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ParallelCountersignStrategy implements CountersignStrategy {
 
+    /** 运行时任务 Mapper，用于乐观锁更新 approveFinished 计数 */
     private final FlowRunTaskMapper taskMapper;
+    /** 任务归档服务，会签全部通过后完成 + 归档到历史表 */
     private final FlowTaskArchiveService archiveService;
 
     @Override

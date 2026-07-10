@@ -14,6 +14,7 @@ import com.njydsz.pmis.message.enums.receipt.RecallStatusEnum;
 import com.njydsz.pmis.message.event.DeadLetterAlertEvent;
 import com.njydsz.pmis.message.mapper.core.MsgLogMapper;
 import com.njydsz.pmis.message.metric.MessageMetrics;
+import com.njydsz.pmis.message.service.impl.core.MessageLogServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
