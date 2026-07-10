@@ -62,17 +62,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     /** 单次扫描上限，避免大表全表扫描 */
     private static final int SCAN_BATCH_SIZE = 200;
 
-    /**
-     * 创建中间定时器（INTERMEDIATE）
-     *
-     * <p>用于流程中的等待节点，到点后推进到下一节点。
-     *
-     * @param instanceId 流程实例 ID
-     * @param nodeCode   节点编码
-     * @param delay      延迟时长
-     * @return 定时器 ID
-     * @throws BizException 实例或节点不存在时抛出
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String scheduleIntermediate(String instanceId, String nodeCode, Duration delay) {
@@ -104,18 +93,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         return timer.getId();
     }
 
-    /**
-     * 创建边界定时器（BOUNDARY）
-     *
-     * <p>附加在 userTask 上，到点后若任务未完成则触发超时处理。
-     *
-     * @param taskId     关联的用户任务 ID
-     * @param instanceId 流程实例 ID
-     * @param nodeCode   节点编码（可空）
-     * @param delay      延迟时长
-     * @return 定时器 ID
-     * @throws BizException taskId/instanceId 为空或实例不存在时抛出
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String scheduleBoundary(String taskId, String instanceId, String nodeCode, Duration delay) {
@@ -146,18 +123,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         return timer.getId();
     }
 
-    /**
-     * 触发定时器
-     *
-     * <p>使用 CAS（markFired）防止多节点并发重复触发。触发逻辑：
-     * <ul>
-     *   <li>INTERMEDIATE：推进流程到下一节点</li>
-     *   <li>BOUNDARY：取消超时 userTask 并推进到下游节点</li>
-     * </ul>
-     *
-     * @param timer 定时器实体
-     * @return true 表示触发成功；false 表示已被处理或触发失败
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean fire(FlowTimerDO timer) {
@@ -267,13 +232,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         }
     }
 
-    /**
-     * 扫描并触发到期的 PENDING 定时器
-     *
-     * <p>每次最多扫描 {@value #SCAN_BATCH_SIZE} 条，逐条触发（异常隔离）。
-     *
-     * @return 本轮成功触发的定时器数量
-     */
     @Override
     public int scanAndFire() {
         try {
@@ -303,12 +261,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         }
     }
 
-    /**
-     * 取消指定任务关联的定时器
-     *
-     * @param taskId 任务 ID
-     * @return 取消的定时器数量
-     */
     @Override
     public int cancelByTask(String taskId) {
         if (taskId == null) {
@@ -317,13 +269,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         return timerMapper.cancelByTask(taskId, "userTask 完成");
     }
 
-    /**
-     * 取消指定实例下所有 PENDING 定时器
-     *
-     * @param instanceId 流程实例 ID
-     * @param reason     取消原因
-     * @return 取消的定时器数量
-     */
     @Override
     public int cancelByInstance(String instanceId, String reason) {
         if (instanceId == null) {
@@ -333,12 +278,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
                 reason == null ? "实例结束" : reason);
     }
 
-    /**
-     * 查询指定实例下的定时器列表
-     *
-     * @param instanceId 流程实例 ID
-     * @return 定时器列表（按创建时间倒序）
-     */
     @Override
     @Transactional(readOnly = true)
     public List<FlowTimerDO> listByInstance(String instanceId) {
@@ -348,12 +287,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
                 .orderByDesc("created_at"));
     }
 
-    /**
-     * 统计指定实例下 PENDING 状态的定时器数量
-     *
-     * @param instanceId 流程实例 ID
-     * @return PENDING 定时器数量
-     */
     @Override
     @Transactional(readOnly = true)
     public long countPending(String instanceId) {

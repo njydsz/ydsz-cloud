@@ -13,30 +13,74 @@ import os
 SQL_FILE = r"d:\Code\ydsz\ydsz-pmis\deploy\sql\V1.0.0.sql"
 MODULE_DIR = r"d:\Code\ydsz\ydsz-pmis\deploy\sql\modules"
 
-# Module order and their table prefixes
+# Module order and their table prefixes.
+# 拆分依据(2026-07-10 重构):按后端服务的 **物理 Mapper/DO 实际所在模块** 归位,
+#   禁止按"表名看起来像哪个模块"主观分类(如 pmis_job_level 是 userinfo 的职级,
+#   不归 cronjob)。common 几乎没有自己的 DDL,仅承载 extensions / PL/pgSQL 函数 / 触发器。
+# 前缀匹配规则:按长度降序,最长前缀优先(`pmis_job_level` > `pmis_job`)。
 MODULE_PREFIXES = {
-    "common":   ["pmis_dict_", "pmis_audit_", "pmis_file_", "pmis_attachment_", "pmis_sys_"],
-    "system":   ["pmis_config", "pmis_tenant", "pmis_feature", "pmis_menu", "pmis_i18n"],
-    "userinfo": ["pmis_user_", "pmis_role", "pmis_permission", "pmis_dept", "pmis_employee",
-                 "pmis_part_time", "pmis_outsource", "pmis_position", "pmis_org_"],
-    "project":  ["pmis_project_", "pmis_opportunity", "pmis_contract", "pmis_delivery",
-                 "pmis_expense", "pmis_payment", "pmis_revenue", "pmis_reconcile",
-                 "pmis_risk", "pmis_rate", "pmis_resource_pool", "pmis_timesheet",
-                 "pmis_closure", "pmis_warranty", "pmis_eval_", "pmis_cockpit",
-                 "pmis_search_", "pmis_rule_admin"],
-    "cronjob":  ["pmis_job_", "pmis_schedule", "pmis_task_", "pmis_sla_", "pmis_alert",
-                 "pmis_webhook", "pmis_dag_"],
+    # common: extensions + PL/pgSQL 函数 + 触发器,无业务 DDL
+    "common":   [],
+    # system: 配置/租户/文件/操作日志/审计/字典版本/报表订阅/导出记录/元数据
+    "system":   [
+        "pmis_config", "pmis_tenant_", "pmis_file",
+        "pmis_operation_log",  # 短前缀优先,pmis_operation_log_default 是其 DEFAULT 分区表,同表归 system
+        "pmis_login_audit", "pmis_data_export_audit", "pmis_sensitive_operation",
+        "pmis_dict_version", "pmis_report_subscription", "pmis_export_record",
+        "pmis_meta_schema_version",
+    ],
+    # userinfo: RBAC + 用户/部门/岗位/字典/资源/考勤 + 职级系列
+    "userinfo": [
+        "pmis_user_", "pmis_role", "pmis_permission",
+        "pmis_department", "pmis_employee", "pmis_position", "pmis_org_",
+        "pmis_dict_type", "pmis_dict_item",
+        "pmis_part_time", "pmis_outsource",
+        "pmis_resource_assignment", "pmis_bench_record",
+        "pmis_attendance", "pmis_overtime", "pmis_leave",
+        "pmis_job_level", "pmis_job_level_rate",  # 职级/费率(JobLevelMapper 在 userinfo)
+    ],
+    # project: 项目 + 执行 + 成本 + 财务 + 资源 + 售后 + 8 张 literule 业务表
+    "project":  [
+        "pmis_project_", "pmis_opportunity", "pmis_contract", "pmis_delivery",
+        "pmis_expense", "pmis_payment", "pmis_revenue", "pmis_reconcile",
+        "pmis_risk", "pmis_rate", "pmis_resource_pool", "pmis_timesheet",
+        "pmis_closure", "pmis_warranty", "pmis_eval_", "pmis_cockpit",
+        "pmis_search_", "pmis_rule_admin",
+        "pmis_view_initiation", "pmis_view_cockpit",
+        "pmis_execution_", "pmis_cost_", "pmis_profit_", "pmis_finance_", "pmis_evm_",
+        "pmis_ops_ticket", "pmis_satisfaction", "pmis_billable_utilization_snapshot",
+        # literule 业务表(执行跟踪/决策表/AB 实验/评分卡),物理 Mapper 在 project 模块
+        "pmis_rule_execution_trace", "pmis_rule_decision_table",
+        "pmis_rule_canary_bucket", "pmis_rule_scorecard",
+        "pmis_rule_decision_tree", "pmis_rule_script",
+        "pmis_rule_ab_policy", "pmis_rule_ab_rollback",
+    ],
+    # cronjob: pmis_job 主表(任务定义) + 调度节点/日志/DAG/告警子表
+    "cronjob":  [
+        "pmis_job_node", "pmis_job_log", "pmis_job_log_content",
+        "pmis_job_task", "pmis_job_glue", "pmis_job_history",
+        "pmis_job_slow_log", "pmis_job_relation", "pmis_job_dag",
+        "pmis_job_dag_instance", "pmis_job_dag_node_instance",
+        "pmis_job_alert_rule", "pmis_job_alert_log",
+        "pmis_job_daily_stats", "pmis_job_sla", "pmis_job_version_history",
+        "pmis_job_artifact", "pmis_job_webhook",
+        "pmis_alert_dispatch",  # 通用预警派发表(供 cronjob + agent 共用)
+        "pmis_schedule", "pmis_sla_", "pmis_webhook", "pmis_dag_",
+        "pmis_job",  # 任务定义主表(无下划线后缀,需单独列出,长度 8 短于子表)
+    ],
     "message":  ["pmis_msg_", "pmis_notification", "pmis_message_"],
-    "workflow": ["pmis_flow_"],
+    "workflow": ["pmis_flow_", "pmis_view_flow"],
     "agent":    ["pmis_agent_", "pmis_knowledge_", "pmis_token_", "pmis_tool_",
                  "pmis_hitl_", "pmis_mcp_"],
-    "literule": ["pmis_rule_def", "pmis_rule_version", "pmis_rule_template",
-                 "pmis_rule_test", "pmis_rule_variable", "pmis_rule_chain",
-                 "pmis_rule_dependency", "pmis_rule_pack", "pmis_rule_node",
-                 "pmis_rule_event", "pmis_rule_log"],
+    "literule": [
+        "pmis_rule_def", "pmis_rule_version", "pmis_rule_template",
+        "pmis_rule_test", "pmis_rule_variable", "pmis_rule_chain",
+        "pmis_rule_dependency", "pmis_rule_pack", "pmis_rule_node",
+        "pmis_rule_event", "pmis_rule_log",
+    ],
 }
 
-# Extension prefix for each module
+# Extension prefix for each module. 放在 common 里,所有模块共享。
 EXTENSIONS = {
     "common": ["uuid-ossp", "pgcrypto", "pg_trgm"]
 }
@@ -185,7 +229,22 @@ def extract_table_name(stmt):
     m = re.search(r'CREATE\s+TRIGGER\s+\w+\s+(?:BEFORE|AFTER)\s+\w+\s+ON\s+(\w+)', stmt, re.IGNORECASE)
     if m:
         return m.group(1)
-    
+
+    # CREATE [OR REPLACE] VIEW table_name
+    m = re.search(r'CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+(\w+)', stmt, re.IGNORECASE)
+    if m:
+        return m.group(1)
+
+    # COMMENT ON VIEW view_name
+    m = re.search(r'COMMENT\s+ON\s+VIEW\s+(\w+)', stmt, re.IGNORECASE)
+    if m:
+        return m.group(1)
+
+    # ALTER VIEW view_name
+    m = re.search(r'ALTER\s+VIEW\s+(\w+)', stmt, re.IGNORECASE)
+    if m:
+        return m.group(1)
+
     return None
 
 def fix_id_defaults(sql_content):
@@ -300,7 +359,11 @@ def main():
                 # Comment blocks - skip
                 pass
             else:
-                no_module.append(stmt)
+                # 兜底:事务头(BEGIN/COMMIT)、SET 会话参数、孤儿 DDL 等
+                # 全部归 common,作为全局"前言"。这样保证 V1.0.0.sql
+                # 重新合并时事务包装和 search_path 不会丢失。
+                module_statements["common"].append(stmt)
+                no_module.append(stmt)  # 同时记录便于 WARN 复核
     
     # Report
     for mod, stmts in module_statements.items():
@@ -312,17 +375,30 @@ def main():
     
     # 5. Write module files
     print(f"\n[5] Writing module files...")
-    header = """-- ============================================================
+    headers = {
+        "common": """-- ============================================================
+-- PMIS common module SQL
+-- Auto-generated from V1.0.0.sql
+-- ============================================================
+-- 本脚本承载全局 PG 扩展 (uuid-ossp / pgcrypto / pg_trgm / vector) 与
+--  PL/pgSQL 函数 / 触发器,无业务 DDL。所有业务表按"物理 Mapper 所在后端模块"
+-- 归位到 system / userinfo / project / cronjob / message / workflow / agent / literule 各自脚本。
+-- 跨服务引用:Feign + NameAssembler,统一在 CommonAutoConfiguration 注册。
+""",
+    }
+    default_header = """-- ============================================================
 -- PMIS {module} module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
-
+-- 本脚本 DDL 对应后端 {module} 服务 (ydsz-pmis-{module}) 的 Mapper / DO,
+--   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
+--   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
 """
-    
+
     for mod, stmts in module_statements.items():
         filepath = os.path.join(MODULE_DIR, f"V1.0.0_{mod}.sql")
         with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(header.format(module=mod))
+            f.write(headers.get(mod, default_header).format(module=mod))
             for stmt in stmts:
                 f.write(stmt.strip() + '\n\n')
         print(f"    {filepath}: {len(stmts)} statements")

@@ -2,197 +2,205 @@
 -- PMIS cronjob module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
+-- 本脚本 DDL 对应后端 cronjob 服务 (ydsz-pmis-cronjob) 的 Mapper / DO,
+--   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
+--   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
+-- --------------------------------------------------------------------
 
--- 职级表 (L1-L18)
-CREATE TABLE IF NOT EXISTS pmis_job_level(
+-- ============================ [006] init pmis job schema ============================
+-- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
+--   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
+--   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
+--   3) tenant_id 改为 NOT NULL DEFAULT 1
+--   4) 内联 status/deleted CHECK 约束
+--   5) 内联复合部分索引 (tenant_id, created_at DESC) WHERE deleted = 0
+--   6) 计数器类字段 (fire_count/success_count/fail_count/login_fail_count 等) 添加非负 CHECK
+-- =====================================================
+-- PMIS 任务调度模块 DDL
+-- 版本: V1.0.0_006 (merged into V1.0.0.sql)
+-- 描述: 动态定时任务定义 + 执行日志(自研调度引擎)
+-- =====================================================
+
+-- 任务定义表 pmis_job
+CREATE TABLE IF NOT EXISTS pmis_job(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    level_code      VARCHAR(8)     NOT NULL,
-    level_name      VARCHAR(64)    NOT NULL,
-    level_segment   VARCHAR(16)    NOT NULL,
-    sort_order      INTEGER        NOT NULL,
-    description     TEXT,
-    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
+    job_name        VARCHAR(128)   NOT NULL,
+    job_group       VARCHAR(64)    NOT NULL DEFAULT 'DEFAULT',
+    job_key         VARCHAR(128)   NOT NULL,
+    handler         VARCHAR(256)   NOT NULL,
+    cron_expression VARCHAR(128),
+    -- [P0-3] 调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)
+    schedule_type   VARCHAR(32)    NOT NULL DEFAULT 'CRON',
+    -- [P0-3] 固定频率间隔(毫秒): schedule_type=FIXED_RATE 时生效
+    fixed_rate_ms   BIGINT,
+    -- [P0-3] 固定延迟间隔(毫秒): schedule_type=FIXED_DELAY 时生效
+    fixed_delay_ms  BIGINT,
+    params_json     TEXT,
+    status          VARCHAR(32)    NOT NULL DEFAULT 'NORMAL',
+    remark          VARCHAR(512),
+    next_fire_time  TIMESTAMPTZ,
+    last_fire_time  TIMESTAMPTZ,
+    fire_count      BIGINT         NOT NULL DEFAULT 0,
+    success_count   BIGINT         NOT NULL DEFAULT 0,
+    fail_count      BIGINT         NOT NULL DEFAULT 0,
+    -- [P0-4] 任务级锁 TTL（毫秒, NULL 使用全局默认值）和任务超时（毫秒, NULL 不限）
+    lock_ttl_ms     BIGINT,
+    timeout_ms      BIGINT,
+    -- [P6-3] 慢任务阈值（毫秒, NULL 不检测慢任务; 超过此值记入 pmis_job_slow_log）
+    slow_threshold_ms BIGINT,
+    -- [P2-1] Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行并标记 MISFIRED
+    misfire_policy  VARCHAR(32)    NOT NULL DEFAULT 'FIRE_NOW',
+    -- [P3-3] 分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行
+    shard_total     INTEGER        NOT NULL DEFAULT 1,
+    -- [P1-5] 任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码)
+    job_type        VARCHAR(32)    NOT NULL DEFAULT 'BEAN',
+    -- [P1-1] 失败重试: 最大重试次数(0=不重试) / 重试间隔(毫秒, NULL=立即) / 退避策略
+    max_retries     INTEGER        NOT NULL DEFAULT 0,
+    retry_interval_ms BIGINT,
+    retry_backoff   VARCHAR(32)    NOT NULL DEFAULT 'FIXED',
+    -- [P1-2] 阻塞策略: SERIAL(排队, 默认) / COVER(中断+执行新) / DISCARD(丢弃新) / CONCURRENT(并行)
+    block_strategy  VARCHAR(32)    NOT NULL DEFAULT 'SERIAL',
+    -- [P1-6] 任务级熔断: 连续失败次数 / 最大连续失败次数(达到后自动暂停) / 自动恢复时间(分钟)
+    consecutive_fail_count INTEGER NOT NULL DEFAULT 0,
+    max_consecutive_fails INTEGER,
+    auto_resume_after_minutes INTEGER,
+    -- [P4-7] 优先级: 1-10, 越小越高(默认 5)
+    priority        INTEGER        NOT NULL DEFAULT 5,
+    -- [P4-8] 版本号: 每次修改 +1, 用于乐观锁和版本追溯
+    version         INTEGER        NOT NULL DEFAULT 1,
+    -- [P2-8] 任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区
+    timezone        VARCHAR(64),
+    -- [P3-12] 目标集群名称: NULL=本地集群(默认), 非 NULL 时通过 CrossClusterDispatcher 派发到指定集群
+    cluster         VARCHAR(64),
     created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_job_level_code UNIQUE (level_code, deleted),
-    CONSTRAINT ck_pjl_segment     CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
-    CONSTRAINT ck_pjl_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pjl_deleted_enum CHECK (deleted IN (0, 1))
+    -- 数据完整性约束
+    CONSTRAINT uk_pmis_job_key UNIQUE (job_key, deleted),
+    -- [P1-6] status 增加 AUTO_PAUSED: 连续失败熔断后自动暂停
+    CONSTRAINT ck_pj_status_enum    CHECK (status IN ('NORMAL', 'PAUSED', 'ERROR', 'COMPLETE', 'AUTO_PAUSED')),
+    CONSTRAINT ck_pj_counts_nonneg  CHECK (fire_count >= 0 AND success_count >= 0 AND fail_count >= 0),
+    CONSTRAINT ck_pj_success_le     CHECK (success_count <= fire_count),
+    -- [P0-3] 调度类型与固定间隔校验
+    CONSTRAINT ck_pj_schedule_type_enum CHECK (schedule_type IN ('CRON', 'FIXED_RATE', 'FIXED_DELAY', 'API')),
+    CONSTRAINT ck_pj_fixed_rate_pos CHECK (fixed_rate_ms IS NULL OR fixed_rate_ms > 0),
+    CONSTRAINT ck_pj_fixed_delay_pos CHECK (fixed_delay_ms IS NULL OR fixed_delay_ms > 0),
+    CONSTRAINT ck_pj_lock_ttl_nonneg CHECK (lock_ttl_ms IS NULL OR lock_ttl_ms > 0),
+    CONSTRAINT ck_pj_timeout_nonneg  CHECK (timeout_ms IS NULL OR timeout_ms > 0),
+    CONSTRAINT ck_pj_slow_threshold_nonneg CHECK (slow_threshold_ms IS NULL OR slow_threshold_ms > 0),
+    CONSTRAINT ck_pj_misfire_enum   CHECK (misfire_policy IN ('FIRE_NOW', 'SKIP', 'COALESCE')),
+    CONSTRAINT ck_pj_shard_total_pos CHECK (shard_total >= 1),
+    CONSTRAINT ck_pj_job_type_enum  CHECK (job_type IN ('BEAN', 'HTTP', 'SHELL', 'GLUE', 'MAP', 'MAP_REDUCE')),
+    CONSTRAINT ck_pj_max_retries_nonneg CHECK (max_retries >= 0),
+    CONSTRAINT ck_pj_retry_backoff_enum CHECK (retry_backoff IN ('FIXED', 'EXPONENTIAL')),
+    CONSTRAINT ck_pj_block_strategy_enum CHECK (block_strategy IN ('SERIAL', 'COVER', 'DISCARD', 'CONCURRENT')),
+    CONSTRAINT ck_pj_consecutive_fail_nonneg CHECK (consecutive_fail_count >= 0),
+    CONSTRAINT ck_pj_max_consecutive_fails_pos CHECK (max_consecutive_fails IS NULL OR max_consecutive_fails > 0),
+    CONSTRAINT ck_pj_auto_resume_pos CHECK (auto_resume_after_minutes IS NULL OR auto_resume_after_minutes > 0),
+    CONSTRAINT ck_pj_priority_range CHECK (priority >= 1 AND priority <= 10),
+    CONSTRAINT ck_pj_version_pos    CHECK (version >= 1),
+    CONSTRAINT ck_pj_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_job_level IS '职级表: L1-L18 共 18 级,定义能力晋升阶梯';
+COMMENT ON TABLE pmis_job IS '动态定时任务定义表: 支持运行时增删改触发频率的定时任务(自研调度引擎)';
 
-COMMENT ON COLUMN pmis_job_level.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_job_level.level_code IS '职级编码(L1-L18)';
+COMMENT ON COLUMN pmis_job.job_name IS '任务名称(展示用)';
 
-COMMENT ON COLUMN pmis_job_level.level_name IS '职级名称(如助理工程师/开发工程师/架构师)';
+COMMENT ON COLUMN pmis_job.job_group IS '任务分组(如 DEFAULT/RECONCILE/ALERT)';
 
-COMMENT ON COLUMN pmis_job_level.level_segment IS '职级段: PRIMARY 初级(L1-L3) / MIDDLE 中级(L4-L6) / SENIOR 高级(L7-L9) / EXPERT 专家(L10-L12) / STRATEGIC 战略(L13-L18)';
+COMMENT ON COLUMN pmis_job.job_key IS '任务唯一 KEY(调度器使用)';
 
-COMMENT ON COLUMN pmis_job_level.sort_order IS '职级排序号(升序,L1=1)';
+COMMENT ON COLUMN pmis_job.handler IS '任务处理器 Bean 名称(Spring Bean)';
 
-COMMENT ON COLUMN pmis_job_level.description IS '职级能力要求说明';
+COMMENT ON COLUMN pmis_job.cron_expression IS 'Cron 表达式(如 0 0 2 * * ? = 每日 02:00)';
 
-COMMENT ON COLUMN pmis_job_level.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN pmis_job.schedule_type IS '调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)';
 
-COMMENT ON COLUMN pmis_job_level.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job.fixed_rate_ms IS '固定频率间隔(毫秒): schedule_type=FIXED_RATE 时生效';
 
-COMMENT ON COLUMN pmis_job_level.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job.fixed_delay_ms IS '固定延迟间隔(毫秒): schedule_type=FIXED_DELAY 时生效';
 
-COMMENT ON COLUMN pmis_job_level.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_job.params_json IS '任务参数 JSON';
 
-COMMENT ON COLUMN pmis_job_level.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_job.status IS '任务状态: NORMAL 正常 / PAUSED 暂停 / ERROR 异常 / COMPLETE 一次性任务完成';
 
-COMMENT ON COLUMN pmis_job_level.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_job.remark IS '任务说明';
 
-COMMENT ON COLUMN pmis_job_level.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_job.next_fire_time IS '下次触发时间';
 
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
+COMMENT ON COLUMN pmis_job.last_fire_time IS '上次触发时间';
 
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant_sort
-    ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
+COMMENT ON COLUMN pmis_job.fire_count IS '累计触发次数';
 
--- 职级费率表 (对外人天 / 对内人天)
-CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
-    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    level_code          VARCHAR(8)     NOT NULL,
-    external_daily      NUMERIC(10,2)  NOT NULL,
-    internal_daily      NUMERIC(10,2)  NOT NULL,
-    base_salary         NUMERIC(10,2)  NOT NULL,
-    social_company      NUMERIC(10,2)  NOT NULL,
-    social_personal     NUMERIC(10,2)  NOT NULL,
-    fund_company        NUMERIC(10,2)  NOT NULL,
-    fund_personal       NUMERIC(10,2)  NOT NULL,
-    take_home           NUMERIC(10,2)  NOT NULL,
-    travel_reimbursement NUMERIC(10,2) NOT NULL DEFAULT 0,
-    travel_allowance    NUMERIC(10,2)  NOT NULL DEFAULT 0,
-    total_cost          NUMERIC(10,2)  NOT NULL,
-    billable_target     NUMERIC(5,4)   NOT NULL,
-    effective_date      DATE           NOT NULL,
-    expire_date         DATE,
-    version             INTEGER        NOT NULL DEFAULT 1,
-    description         TEXT,
-    created_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_job_level_rate UNIQUE (level_code, version, deleted),
-    CONSTRAINT ck_pjlr_external_nonneg CHECK (external_daily >= 0 AND internal_daily >= 0),
-    CONSTRAINT ck_pjlr_billable_range  CHECK (billable_target >= 0 AND billable_target <= 1),
-    CONSTRAINT ck_pjlr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
-    CONSTRAINT ck_pjlr_deleted_enum    CHECK (deleted IN (0, 1)),
-    CONSTRAINT ck_pjlr_cost_valid      CHECK (total_cost = base_salary + social_company + fund_company + travel_reimbursement + travel_allowance)
-);
+COMMENT ON COLUMN pmis_job.success_count IS '成功执行次数';
 
-COMMENT ON TABLE pmis_job_level_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金+差旅成本拆解,支持版本化生效';
+COMMENT ON COLUMN pmis_job.fail_count IS '失败次数(超过阈值告警)';
 
-COMMENT ON COLUMN pmis_job_level_rate.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job.lock_ttl_ms IS '任务级分布式锁 TTL(毫秒, NULL 使用全局默认 pmis.cronjob.job-lock-ttl)';
 
-COMMENT ON COLUMN pmis_job_level_rate.level_code IS '职级编码(L1-L18,关联 pmis_job_level.level_code)';
+COMMENT ON COLUMN pmis_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示不限超时; 超时后 Leader 标记 FAILED 并重派)';
 
-COMMENT ON COLUMN pmis_job_level_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
+COMMENT ON COLUMN pmis_job.slow_threshold_ms IS '慢任务阈值(毫秒, NULL 不检测慢任务; 执行耗时超过此值记入 pmis_job_slow_log)';
 
-COMMENT ON COLUMN pmis_job_level_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
+COMMENT ON COLUMN pmis_job.misfire_policy IS 'Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过推进 next_fire_time / COALESCE 合并执行并日志标记 MISFIRED';
 
-COMMENT ON COLUMN pmis_job_level_rate.base_salary IS '月度基础工资(元)';
+COMMENT ON COLUMN pmis_job.shard_total IS '分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行';
 
-COMMENT ON COLUMN pmis_job_level_rate.social_company IS '公司社保部分(元/月)';
+COMMENT ON COLUMN pmis_job.job_type IS '任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码) / MAP(Map 动态子任务) / MAP_REDUCE(MapReduce 动态子任务+汇总)';
 
-COMMENT ON COLUMN pmis_job_level_rate.social_personal IS '个人社保部分(元/月,从工资扣除)';
+COMMENT ON COLUMN pmis_job.max_retries IS '最大重试次数: 0=不重试(默认), >0 时失败后自动重试';
 
-COMMENT ON COLUMN pmis_job_level_rate.fund_company IS '公司公积金部分(元/月)';
+COMMENT ON COLUMN pmis_job.retry_interval_ms IS '重试间隔(毫秒): NULL=立即重试, >0 时按 retry_backoff 策略计算间隔';
 
-COMMENT ON COLUMN pmis_job_level_rate.fund_personal IS '个人公积金部分(元/月,从工资扣除)';
+COMMENT ON COLUMN pmis_job.retry_backoff IS '重试退避策略: FIXED 固定间隔(默认) / EXPONENTIAL 指数退避(间隔*2^retryCount)';
 
-COMMENT ON COLUMN pmis_job_level_rate.take_home IS '税后到手工资(元/月)';
+COMMENT ON COLUMN pmis_job.block_strategy IS '阻塞策略: SERIAL 排队(默认) / COVER 中断+执行新 / DISCARD 丢弃新 / CONCURRENT 并行';
 
-COMMENT ON COLUMN pmis_job_level_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_job.consecutive_fail_count IS '连续失败次数: 成功时归零, 失败时+1, 达到 max_consecutive_fails 时自动暂停';
 
-COMMENT ON COLUMN pmis_job_level_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_job.max_consecutive_fails IS '最大连续失败次数: NULL=不熔断, >0 时达到阈值后 status 改为 AUTO_PAUSED';
 
-COMMENT ON COLUMN pmis_job_level_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company+travel_reimbursement+travel_allowance)';
+COMMENT ON COLUMN pmis_job.auto_resume_after_minutes IS '自动恢复时间(分钟): NULL=不自动恢复, >0 时 AUTO_PAUSED 后定时检查恢复';
 
-COMMENT ON COLUMN pmis_job_level_rate.billable_target IS '可计费利用率目标(0.0-1.0,如 0.78=78%)';
+COMMENT ON COLUMN pmis_job.priority IS '优先级: 1-10, 越小越高(默认 5), 扫描器按优先级排序派发';
 
-COMMENT ON COLUMN pmis_job_level_rate.effective_date IS '生效日期';
+COMMENT ON COLUMN pmis_job.version IS '版本号: 每次修改 +1, 用于乐观锁和版本追溯';
 
-COMMENT ON COLUMN pmis_job_level_rate.expire_date IS '失效日期(NULL 表示长期有效)';
+COMMENT ON COLUMN pmis_job.timezone IS '任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区';
 
-COMMENT ON COLUMN pmis_job_level_rate.version IS '版本号(同职级可有多版本,通过 effective_date 区分)';
+COMMENT ON COLUMN pmis_job.cluster IS '目标集群名称: NULL=本地集群(默认), 非 NULL 时通过 CrossClusterDispatcher 派发到指定集群';
 
-COMMENT ON COLUMN pmis_job_level_rate.description IS '费率版本说明';
+COMMENT ON COLUMN pmis_job.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN pmis_job_level_rate.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job.created_at IS '创建时间';
 
-COMMENT ON COLUMN pmis_job_level_rate.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN pmis_job_level_rate.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_job.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN pmis_job_level_rate.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_job.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_job_level_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_job.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-COMMENT ON COLUMN pmis_job_level_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
+-- [INLINE-OPT] status/group 走部分索引(逻辑删除过滤)
+CREATE INDEX IF NOT EXISTS idx_pmis_job_status
+    ON pmis_job (status) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_job_group
+    ON pmis_job (job_group) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
+-- [INLINE-OPT] 复合索引:按租户 + 创建时间倒序(任务中心列表)
+CREATE INDEX IF NOT EXISTS idx_pmis_job_tenant_created
+    ON pmis_job (tenant_id, created_at DESC) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
-
--- 初始化职级 (L1-L18)
-INSERT INTO pmis_job_level (level_code, level_name, level_segment, sort_order, description, created_by)
-VALUES
-    ('L1',  '助理工程师',   'PRIMARY',   1,  '0-1 年（应届大专/中专）', 0),
-    ('L2',  '初级开发工程师','PRIMARY',  2,  '0-1 年（应届本科）', 0),
-    ('L3',  '开发工程师',   'PRIMARY',   3,  '1-2 年', 0),
-    ('L4',  '中级工程师',   'MIDDLE',    4,  '2-3 年', 0),
-    ('L5',  '高级工程师',   'MIDDLE',    5,  '3-5 年', 0),
-    ('L6',  '资深工程师',   'MIDDLE',    6,  '4-6 年', 0),
-    ('L7',  '高级工程师/项目经理', 'SENIOR',  7,  '5-7 年', 0),
-    ('L8',  '资深工程师/高级项目经理','SENIOR',  8,  '6-8 年', 0),
-    ('L9',  '架构师/项目总监', 'SENIOR',  9,  '7-10 年', 0),
-    ('L10', '资深架构师',   'EXPERT',   10,  '8-12 年', 0),
-    ('L11', '技术专家/交付总监', 'EXPERT', 11, '10-13 年', 0),
-    ('L12', '资深技术专家', 'EXPERT',   12, '12-15 年', 0),
-    ('L13', '首席架构师',   'STRATEGIC', 13, '13-17 年', 0),
-    ('L14', '技术总监/事业部副总经理', 'STRATEGIC', 14, '15-20 年', 0),
-    ('L15', 'CTO/事业部总经理', 'STRATEGIC', 15, '20 年以上', 0),
-    ('L16', '技术副总裁/首席架构师', 'STRATEGIC', 16, '22 年以上', 0),
-    ('L17', '执行副总裁/CTO', 'STRATEGIC', 17, '25 年以上', 0),
-    ('L18', '董事会技术顾问/首席科学家', 'STRATEGIC', 18, '28 年以上', 0)
-ON CONFLICT DO NOTHING;
-
--- 初始化职级费率 (V3.2 双列直出)
-INSERT INTO pmis_job_level_rate
-(level_code, external_daily, internal_daily, base_salary, social_company, social_personal, fund_company, fund_personal, take_home, travel_reimbursement, travel_allowance, total_cost, billable_target, effective_date, version, created_by)
-VALUES
-    ('L1',  400,  200,  4000,  980,  430,  200,  200,  3370,  500,  300,  5980,  0.78, '2026-01-01', 1, 0),
-    ('L2',  500,  250,  5000,  1225, 535,  250,  250,  4215,  500,  300,  7275,  0.78, '2026-01-01', 1, 0),
-    ('L3',  600,  300,  6000,  1470, 640,  300,  300,  5060,  500,  300,  8570,  0.80, '2026-01-01', 1, 0),
-    ('L4',  700,  350,  7000,  1715, 745,  350,  350,  5905,  800,  500,  10365, 0.82, '2026-01-01', 1, 0),
-    ('L5',  800,  400,  8000,  1960, 850,  400,  400,  6750,  800,  500,  11660, 0.82, '2026-01-01', 1, 0),
-    ('L6',  900,  450,  9000,  2205, 955,  450,  450,  7595,  800,  500,  12955, 0.82, '2026-01-01', 1, 0),
-    ('L7',  1000, 500,  10000, 2450, 1060, 500,  500,  8440,  1200, 800,  14950, 0.80, '2026-01-01', 1, 0),
-    ('L8',  1100, 550,  11000, 2695, 1165, 550,  550,  9285,  1200, 800,  16245, 0.80, '2026-01-01', 1, 0),
-    ('L9',  1200, 600,  12000, 2940, 1270, 600,  600,  10130, 1200, 800,  17540, 0.75, '2026-01-01', 1, 0),
-    ('L10', 1300, 650,  13000, 3185, 1375, 650,  650,  10975, 1500, 1000, 19335, 0.70, '2026-01-01', 1, 0),
-    ('L11', 1400, 700,  14000, 3430, 1480, 700,  700,  11820, 1500, 1000, 20630, 0.70, '2026-01-01', 1, 0),
-    ('L12', 1500, 750,  15000, 3675, 1585, 750,  750,  12665, 1500, 1000, 21925, 0.65, '2026-01-01', 1, 0),
-    ('L13', 1600, 800,  16000, 3920, 1690, 800,  800,  13510, 2000, 1500, 24220, 0.60, '2026-01-01', 1, 0),
-    ('L14', 1700, 850,  17000, 4165, 1795, 850,  850,  14355, 2000, 1500, 25515, 0.55, '2026-01-01', 1, 0),
-    ('L15', 1800, 900,  18000, 4410, 1900, 900,  900,  15200, 2000, 1500, 26810, 0.50, '2026-01-01', 1, 0),
-    ('L16', 1900, 950,  19000, 4655, 2005, 950,  950,  16045, 2500, 2000, 29105, 0.45, '2026-01-01', 1, 0),
-    ('L17', 2000, 1000, 20000, 4900, 2110, 1000, 1000, 16890, 2500, 2000, 30400, 0.40, '2026-01-01', 1, 0),
-    ('L18', 2100, 1050, 21000, 5145, 2215, 1050, 1050, 17735, 2500, 2000, 31695, 0.40, '2026-01-01', 1, 0)
-ON CONFLICT DO NOTHING;
+-- [INLINE-OPT] 下次触发时间:调度器扫描待触发任务
+CREATE INDEX IF NOT EXISTS idx_pmis_job_next_fire
+    ON pmis_job (next_fire_time) WHERE deleted = 0 AND status = 'NORMAL' AND next_fire_time IS NOT NULL;
 
 -- ============================================================================
 -- [P1-3] 调度节点心跳表 pmis_job_node
@@ -766,36 +774,6 @@ COMMENT ON COLUMN pmis_job_dag.fail_count IS '失败次数';
 COMMENT ON COLUMN pmis_job_dag.version IS '版本号(乐观锁)';
 
 COMMENT ON COLUMN pmis_job_dag.tenant_id IS '租户 ID';
-
--- ----------------------------------------------------------------------------
--- [P2-1] DAG 节点类型扩展（CONDITION / LOOP / PARALLEL_GATEWAY）
--- ----------------------------------------------------------------------------
--- DAG 节点定义存储在 pmis_job_dag.dag_definition JSON 字段中（非独立表），
--- 节点类型扩展字段（nodeType / conditionExpression / loopCount / parallelBranches）
--- 直接在 JSON 中管理，无需 ALTER TABLE。
---
--- JSON 节点格式（P2-1 增强后）：
--- {
---   "jobKey": "nodeA",
---   "jobId": "1",
---   "label": "条件判断",
---   "x": 100, "y": 200,
---   "paramsJson": "{}",
---   "nodeType": "CONDITION",            -- TASK(默认) / CONDITION / LOOP / PARALLEL_GATEWAY
---   "conditionExpression": "${nodeA.result=='success'}",  -- CONDITION 节点
---   "loopCount": 3,                     -- LOOP 节点循环次数
---   "parallelBranches": 2               -- PARALLEL_GATEWAY 并行分支数
--- }
---
--- 以下 ALTER 语句用于兼容性（若未来引入独立的 pmis_job_dag_node 表），
--- 当前为 no-op（表不存在时跳过）。
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS node_type VARCHAR(32) NOT NULL DEFAULT 'TASK';
-
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS condition_expression VARCHAR(512);
-
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS loop_count INTEGER;
-
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS parallel_branches INTEGER;
 
 COMMENT ON COLUMN pmis_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';
 
@@ -1556,6 +1534,213 @@ CREATE INDEX IF NOT EXISTS idx_pad_tenant_target
     ON pmis_alert_dispatch(tenant_id, target_role)
     WHERE deleted = 0;
 
+-- --------------------------------------------------------------------
+
+-- ============================ [021] register pmis smart jobs ============================
+
+-- ============================================================
+-- V1.0.0_021  智能化升级 P5/P6/P7  定时任务注册
+-- ============================================================
+-- 说明：批次 16 智能化升级-系统内部数据管理（PRD 4.2）
+--   P5-2 预警重试补偿：每 5 分钟扫描 PENDING/FAILED 预警重发
+--   P6-1 每日自动对账：每日 02:00 跑成本/收入/回款/开票/工时/利润 对账
+--   P7-3 售后巡检    ：每日 03:00 扫质保期 + 运维工单 SLA
+-- 表 pmis_job 已在 V1.0.0_006 创建。
+-- ============================================================
+
+-- 清理旧记录（保证可重跑）
+
+
+-- ---------- P5-2 预警重试补偿 ----------
+INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
+VALUES (
+    '预警重试补偿任务',
+    'ALERT',
+    'alertDispatchRetryJob',
+    'alertDispatchRetryJobHandler',
+    '0 0/5 * * * ?',
+    'NORMAL',
+    '每 5 分钟扫描 PENDING/FAILED 预警并重发，超过 maxRetry 后保持 FAILED',
+    1
+) ON CONFLICT DO NOTHING;
+
+-- ---------- P6-1 每日自动对账 ----------
+INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
+VALUES (
+    '每日对账任务',
+    'RECONCILE',
+    'dailyReconcileJob',
+    'dailyReconcileJobHandler',
+    '0 0 2 * * ?',
+    'NORMAL',
+    '每日 02:00 校验成本/收入/开票/回款/工时/利润 6 维度双向一致性，落库 pmis_reconcile_daily',
+    1
+) ON CONFLICT DO NOTHING;
+
+-- ---------- P7-3 售后巡检 ----------
+INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
+VALUES (
+    '售后巡检任务',
+    'AFTERSALES',
+    'afterSalesScanJob',
+    'afterSalesScanJobHandler',
+    '0 0 3 * * ?',
+    'NORMAL',
+    '每日 03:00 扫描即将到期/已过期质保期 + 运维工单 SLA 违约',
+    1
+) ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------
+-- 2. FlowNodeDO 扩展字段（流程设计时存到 ext 即可，无需新加列）
+-- -------------------------------------------
+-- 节点定时器配置由前端设计器写入 FlowNodeDO.ext JSON，格式：
+--   {
+--     "timerCycle": "PT5M",     // ISO 8601 duration（5 分钟）
+--     "timerDate": "2026-07-02T10:00:00",  // 绝对时间
+--     "isBoundary": true,       // 是否边界定时器
+--     "attachedToUserTask": "node_xxx",  // 边界定时器挂接的 userTask
+--     "boundaryAction": "INTERRUPT|CONTINUE"  // 边界触发后行为
+--   }
+--
+-- 解析逻辑由 BpmnXmlParser.parseExtensionElements + FlowNodeDO.ext 处理，
+-- 本 SQL 不增加新列，复用 ext JSON。
+
+-- -------------------------------------------
+-- 3. 注册定时器扫描器调度任务（PMIS Cronjob）
+-- -------------------------------------------
+INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
+VALUES (
+    '工作流定时器扫描',
+    'FLOW',
+    'flowTimerScannerJob',
+    'flowTimerScannerHandler',
+    '0/30 * * * * ?',
+    'NORMAL',
+    'P1-2: 每 30s 扫描到点定时器，触发中间/边界定时器',
+    1
+) ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
+
+-- --------------------------------------------------------------------
+-- P0-3 合并：原 pmis_report_export_record 已并入 pmis_export_record，
+--           通过 source='SUBSCRIPTION' 区分订阅触发的导出记录。
+-- --------------------------------------------------------------------
+
+
+-- ============================ [032] register report jobs ============================
+
+-- ============================================================
+-- V1.0.0_032  P1-5 注册报表定时任务
+-- ============================================================
+-- 说明：定时报表生成与分发（P1-5）
+--   report-daily    日报：每天 08:00
+--   report-weekly   周报：每周一 08:00
+--   report-monthly  月报：每月 1 日 08:00
+-- 表 pmis_job 已在 V1.0.0_006 创建。
+-- ============================================================
+
+-- 清理旧记录（保证可重跑）
+
+
+-- ---------- 日报表生成与分发 ----------
+INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
+VALUES (
+    '日报表生成与分发任务',
+    'PMIS_REPORT',
+    'reportDailyJob',
+    'reportScheduleJobHandler',
+    '0 0 8 * * ?',
+    'DAILY',
+    'NORMAL',
+    '每日 08:00 生成驾驶舱/EVM/利润/利用率/Bench/风险日报并分发到订阅人',
+    1
+) ON CONFLICT DO NOTHING;
+
+-- ---------- 周报表生成与分发 ----------
+INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
+VALUES (
+    '周报表生成与分发任务',
+    'PMIS_REPORT',
+    'reportWeeklyJob',
+    'reportScheduleJobHandler',
+    '0 0 8 ? * MON',
+    'WEEKLY',
+    'NORMAL',
+    '每周一 08:00 生成周报表并分发到订阅人',
+    1
+) ON CONFLICT DO NOTHING;
+
+-- ---------- 月报表生成与分发 ----------
+INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
+VALUES (
+    '月报表生成与分发任务',
+    'PMIS_REPORT',
+    'reportMonthlyJob',
+    'reportScheduleJobHandler',
+    '0 0 8 1 * ?',
+    'MONTHLY',
+    'NORMAL',
+    '每月 1 日 08:00 生成月报表并分发到订阅人',
+    1
+) ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------
+-- 2. pmis_flow_node 已存在 slaConfig 字段（V1.0.0_026 引入），无需变更
+--    扩展约定：
+--    slaConfig = {
+--      "timeoutMinutes": 120,            // 超时阈值
+--      "action": "AUTO_PASS",            // 动作：REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT
+--      "reminderIntervalMinutes": 60,    // 重复提醒间隔（仅 action=REMIND 生效）
+--      "maxReminders": 3,                // 最大提醒次数（仅 action=REMIND 生效）
+--      "escalateUserId": 1001,           // 升级目标用户（仅 action=ESCALATE 生效；空=管理员=1）
+--      "escalateRoleCode": "manager",    // 升级目标角色（仅 action=ESCALATE 生效；可空）
+--      "autoComment": "已超时自动通过"  // 自动操作时写入的审批意见
+--    }
+-- -------------------------------------------
+
+-- --------------------------------------------------------------------
+
+-- ============================ [035] register consistency job ============================
+
+-- ============================================================
+-- V1.0.0_035  P2-6 注册数据一致性校验定时任务
+-- ============================================================
+-- 说明：每日 02:30 执行数据一致性校验
+--   1. 发票总额 vs 回款总额
+--   2. 预算 vs 实际成本（超支检测）
+--   3. WBS 进度 vs 工时完成率
+--   差异超阈值自动记录日志并触发告警。
+-- 表 pmis_job 已在 V1.0.0_006 创建。
+-- 注意：版本号 033/034 已被流程引擎占用，本任务使用 035。
+-- ============================================================
+
+-- 清理旧记录（保证可重跑，按 job_key 唯一键清理）
+
+
+-- ---------- 数据一致性校验任务 ----------
+INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
+VALUES (
+    'data-consistency-check',
+    'PMIS_CRONJOB',
+    'data-consistency-check',
+    'dataConsistencyJobHandler',
+    '0 30 2 * * ?',
+    '{}',
+    'NORMAL',
+    '数据一致性校验（发票vs回款、预算vs成本、WBSvs工时）',
+    1
+) ON CONFLICT DO NOTHING;
+
+-- 注册归档任务到 pmis_job（每日 03:00 触发，阈值 30 天）
+INSERT INTO pmis_job
+    (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id, created_at, updated_at, deleted)
+VALUES
+    ('流程历史归档任务', 'WORKFLOW', 'flowHistoryArchiveJob',
+     'flowHistoryArchiveJobHandler', '0 0 3 * * ?',
+     '{"days":30,"batchSize":100,"maxProcessMs":30000}',
+     'NORMAL', '每日 03:00 归档 30 天前的历史流程实例, 单批 100 条, 单次最长 30s',
+     1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
+ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
+
 -- =====================================================================
 --  4) 预警 / 对账（4.2.2/4.2.3）
 -- =====================================================================
@@ -1569,19 +1754,6 @@ CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
 
 ANALYZE pmis_alert_dispatch;
 
--- 10. 职级
-ALTER TABLE pmis_job_level ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
-
--- 11. 职级费率
-ALTER TABLE pmis_job_level_rate ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-
-CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
-
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant_created
-    ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
-
 -- ============================================================
 -- 七、补齐遗漏的 10 张业务表 tenant_id 字段
 --   首轮扫描漏掉，启用 TenantLineInnerInterceptor 前必须补齐
@@ -1591,10 +1763,6 @@ CREATE INDEX IF NOT EXISTS idx_job_level_tenant_created
 ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 
 CREATE INDEX IF NOT EXISTS idx_job_log_tenant ON pmis_job_log(tenant_id);
-
-ANALYZE pmis_job_level;
-
-ANALYZE pmis_job_level_rate;
 
 ANALYZE pmis_job_log;
 

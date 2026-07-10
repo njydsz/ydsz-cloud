@@ -34,6 +34,7 @@
 -- Reduce NOTICE/INFO noise; keep WARNING and ERROR visible.
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS vector;
 
 
 SET client_min_messages = WARNING;
@@ -74,8 +75,7 @@ BEGIN;
 -- 启用扩展
 DO $$
 BEGIN
-    CREATE EXTENSION IF NOT EXISTS vector;
-EXCEPTION WHEN OTHERS THEN
+    EXCEPTION WHEN OTHERS THEN
     RAISE NOTICE 'pgvector extension not available, skipping. Agent RAG features will not work.';
 END $$;
 
