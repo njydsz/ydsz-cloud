@@ -3,7 +3,6 @@
 -- Executes all module scripts in dependency order
 -- ============================================================
 
-\i V1.0.0_common.sql
 \i V1.0.0_system.sql
 \i V1.0.0_userinfo.sql
 \i V1.0.0_project.sql

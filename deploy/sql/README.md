@@ -56,8 +56,8 @@ deploy/sql/
 ├── README.md            # 本文件
 └── modules/             # 按后端子模块拆分的独立 SQL(便于单独初始化/审查)
     ├── V1.0.0_all.sql       # 模块引用脚本(\i 依次引用各子模块,等价于 V1.0.0.sql)
-    ├── V1.0.0_common.sql    # 公共基础 (字典/扩展/事务/触发器/字段统一)
-    ├── V1.0.0_system.sql    # 系统管理 (配置/文件/审计/导出/索引调优)
+    ├── V1.0.0_common.sql    # 已合并至 system(存根, ydsz-pmis-common 非独立服务)
+    ├── V1.0.0_system.sql    # 系统管理 (配置/文件/审计/导出/扩展/触发器/undo_log)
     ├── V1.0.0_userinfo.sql  # 用户信息 (认证/用户/组织/权限/资源/考勤)
     ├── V1.0.0_project.sql   # 项目管理 (商机/立项/合同/执行/财务/结项/售后/报表)
     ├── V1.0.0_cronjob.sql   # 定时任务 (作业/DAG/调度/告警/日志/配额)
@@ -73,15 +73,15 @@ deploy/sql/
 |---|---|---|
 | **新环境完整初始化** | `V1.0.0.sql` | 一把梭,所有 DDL + DML 都在里面 |
 | **新环境模块化初始化** | `modules/V1.0.0_all.sql` | 通过 `\i` 依次引用各子模块,等价于 V1.0.0.sql |
-| **单独初始化某模块** | `modules/V1.0.0_{module}.sql` | 仅初始化对应模块的表(需先跑 common 模块) |
+| **单独初始化某模块** | `modules/V1.0.0_{module}.sql` | 仅初始化对应模块的表(需先跑 system 模块,因含全局扩展/触发器) |
 | **Schema 变更** | 直接编辑 `V1.0.0.sql` | **唯一事实源**,模块文件由拆分生成 |
 
 ### 3.2 模块与表的数量分布(2026-07-10 重构后)
 
 | 模块 | 表数量 | 主要表归属说明 |
 |---|---|---|
-| common | 0 业务表 | 仅承载 PG 扩展 / PL/pgSQL 函数 / 触发器 / 视图注释;**不持有任何业务 DDL**。`ydsz-pmis-common` 是公共依赖库(lib),非独立后端服务,无 Mapper/Service |
-| system | 12 | `pmis_config` / `pmis_tenant_quota` / `pmis_file` / `pmis_operation_log`(+ DEFAULT 分区) / `pmis_login_audit` / `pmis_data_export_audit` / `pmis_sensitive_operation` / `pmis_dict_version` / `pmis_report_subscription` / `pmis_export_record` / `pmis_meta_schema_version` |
+| common | 0(存根) | **已合并至 system**。`ydsz-pmis-common` 是公共依赖库(lib),非独立后端服务,无 Mapper/Service,不持有独立 DDL |
+| system | 12 | `pmis_config` / `pmis_tenant_quota` / `pmis_file` / `pmis_operation_log`(+ DEFAULT 分区) / `pmis_login_audit` / `pmis_data_export_audit` / `pmis_sensitive_operation` / `pmis_dict_version` / `pmis_report_subscription` / `pmis_export_record` / `pmis_meta_schema_version` + 全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log |
 | userinfo | 22 | RBAC(`pmis_role` / `pmis_permission` / `pmis_user_*`)+ 用户/部门/岗位/字典主表(`pmis_dict_type` / `pmis_dict_item` / `pmis_department` / `pmis_employee` / `pmis_position`)+ 职级系列(**`pmis_job_level` / `pmis_job_level_rate`**,JobLevelMapper 在 userinfo)+ 资源/考勤(`pmis_resource_assignment` / `pmis_bench_record` / `pmis_attendance` / `pmis_overtime` / `pmis_leave`)+ 兼职/外包费率 |
 | project | 42 | 项目全生命周期:商机/立项/合同 + 执行(WBS/工时/风险/交付/结项)+ 成本/财务/利润 + 资源(资源池/计费利用快照)+ 售后(工单/满意度/质保)+ 8 张 literule 业务表(执行跟踪/决策表/AB 实验,物理 Mapper 在 project) |
 | cronjob | 20 | `pmis_job`(任务定义主表)+ 18 张 `pmis_job_*` 子表(节点/日志/DAG/告警/历史/慢日志/产物/WebHook)+ 通用预警派发 `pmis_alert_dispatch` |
@@ -100,7 +100,7 @@ deploy/sql/
 - `pmis_dict_type` / `pmis_dict_item` 主表 Mapper 在 userinfo → 归 userinfo;`pmis_dict_version` 字典版本 Mapper 在 system → 归 system
 - 8 张 literule 业务表(`pmis_rule_execution_trace` / `pmis_rule_decision_table` / `pmis_rule_canary_bucket` / `pmis_rule_scorecard` / `pmis_rule_decision_tree` / `pmis_rule_script` / `pmis_rule_ab_policy` / `pmis_rule_ab_rollback`)物理 Mapper 在 project → 归 `V1.0.0_project.sql`(业务域 literule,但物理模块 project)
 - 通用预警派发表 `pmis_alert_dispatch` 由 cronjob + agent 共用 → 归 `V1.0.0_cronjob.sql`
-- `common` 脚本**只承载**:PG 扩展 / PL/pgSQL 函数 / 触发器 / 视图注释(全部归属按 View 实际所在模块);**禁止任何业务 DDL**(`ydsz-pmis-common` 不是独立后端服务,无 Mapper)
+- `common` 脚本**已合并至 system**(2026-07-10 重构)。`ydsz-pmis-common` 不是独立后端服务,是公共依赖库(lib),无 Mapper/Service,不持有独立 DDL。全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log 统一由 `V1.0.0_system.sql` 承载
 
 前缀匹配规则详见 [`fix-and-regenerate.py`](./fix-and-regenerate.py) 的 `MODULE_PREFIXES` 字典,按长度降序匹配,最长前缀优先(`pmis_job_level` 13 字符 > `pmis_job` 8 字符)。
 
