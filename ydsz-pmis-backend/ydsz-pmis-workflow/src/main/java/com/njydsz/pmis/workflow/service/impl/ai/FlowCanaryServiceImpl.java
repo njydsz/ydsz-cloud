@@ -38,6 +38,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @RequiredArgsConstructor
 public class FlowCanaryServiceImpl implements FlowCanaryService {
 
+    /** 流程定义 Mapper，用于读取/更新灰度发布状态、灰度比例及切流日志 */
     private final FlowDefinitionMapper definitionMapper;
 
     @Override
@@ -220,6 +221,12 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         }
     }
 
+    /**
+     * 根据定义 ID 查询流程定义，不存在时抛出 NOT_FOUND 异常。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 非空的流程定义实体
+     */
     private FlowDefinitionDO mustGetDef(String definitionId) {
         if (definitionId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_375a4677");

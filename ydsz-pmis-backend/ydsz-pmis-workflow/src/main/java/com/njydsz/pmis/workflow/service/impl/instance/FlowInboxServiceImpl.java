@@ -30,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowInboxServiceImpl implements FlowInboxService {
 
+    /** 站内信 Mapper，负责 pmis_flow_inbox 表的增删改查 */
     private final FlowInboxMapper inboxMapper;
 
     @Override

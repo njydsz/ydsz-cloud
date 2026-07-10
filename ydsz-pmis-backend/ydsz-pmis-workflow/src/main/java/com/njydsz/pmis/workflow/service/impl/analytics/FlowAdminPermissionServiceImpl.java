@@ -41,10 +41,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionService {
 
+    /** 管理员角色 Mapper，查询 pmis_flow_admin_role 表的角色授权记录 */
     private final FlowAdminRoleMapper adminRoleMapper;
 
+    /** 超级管理员角色编码：拥有所有流程的管理和设计权限 */
     public static final String ROLE_ADMIN = "FLOW_ADMIN";
+    /** 流程设计者角色编码：可设计和管理自己创建的流程 */
     public static final String ROLE_DESIGNER = "FLOW_DESIGNER";
+    /** 审计员角色编码：可查看所有流程的审计数据 */
     public static final String ROLE_AUDITOR = "FLOW_AUDITOR";
 
     @Override

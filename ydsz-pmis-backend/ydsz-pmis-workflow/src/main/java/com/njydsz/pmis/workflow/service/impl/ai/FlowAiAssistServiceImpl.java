@@ -54,10 +54,15 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
     /** 默认租户 ID */
     private static final String DEFAULT_TENANT_ID = "1";
 
+    /** Agent 模块 Feign 客户端，用于调用 LLM 执行 AI 辅助能力（推荐审批人/预测风险/智能催办等） */
     private final AgentClient agentClient;
+    /** AI 推荐审批人反馈 Mapper，持久化用户对推荐结果的采纳/拒绝记录 */
     private final FlowAiFeedbackMapper feedbackMapper;
+    /** 风险预测结果本地缓存（TTL 5 分钟，仅缓存 Agent 成功返回的真实结果） */
     private final Cache<String, Map<String, Object>> riskCache;
+    /** 智能催办结果本地缓存（TTL 5 分钟，仅缓存 Agent 成功返回的真实结果） */
     private final Cache<String, Map<String, Object>> remindCache;
+    /** SLA 预测结果本地缓存（TTL 5 分钟，仅缓存 Agent 成功返回的真实结果） */
     private final Cache<String, Map<String, Object>> slaCache;
 
     /**

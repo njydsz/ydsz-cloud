@@ -35,7 +35,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
+    /** 委派授权 Mapper，负责 pmis_flow_delegate_auth 表的增删改查 */
     private final FlowDelegateAuthMapper authMapper;
+    /** 委派操作日志 Mapper，查询代理人审批操作记录 */
     private final FlowDelegateLogMapper logMapper;
     /** P2-5: 离线代理自动转发（@Lazy 避免循环依赖） */
     @Lazy

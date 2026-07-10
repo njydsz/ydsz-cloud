@@ -60,11 +60,17 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService {
 
+    /** 流程实例 Mapper，查询待归档的已完成实例 */
     private final FlowInstanceMapper instanceMapper;
+    /** 历史任务 Mapper，校验任务是否已归档到 his_task 表 */
     private final FlowHisTaskMapper hisTaskMapper;
+    /** 运行时任务 Mapper，查询实例关联的待办任务（校验是否全部终态） */
     private final FlowRunTaskMapper taskMapper;
+    /** 历史实例 Mapper，写入归档实例记录 */
     private final FlowHisInstanceMapper hisInstanceMapper;
+    /** 历史变量 Mapper，写入拆分后的流程变量行 */
     private final FlowHisVariableMapper hisVariableMapper;
+    /** 历史归档配置属性，控制保留天数/批大小/最大耗时等 */
     private final FlowHistoryProperties properties;
 
     @Override

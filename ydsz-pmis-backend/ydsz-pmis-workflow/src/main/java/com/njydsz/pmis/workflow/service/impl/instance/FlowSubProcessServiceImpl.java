@@ -64,10 +64,15 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     @Value("${workflow.subprocess.max-nesting-depth:3}")
     private int maxNestingDepth;
 
+    /** 流程实例 Mapper，查询/更新父实例和子流程实例 */
     private final FlowInstanceMapper instanceMapper;
+    /** 流程定义服务，解析子流程的流程定义 */
     private final FlowDefinitionService definitionService;
+    /** 流程实例服务，启动子流程实例 */
     private final FlowInstanceService instanceService;
+    /** 流程推进引擎，子流程完成后推进父流程 */
     private final FlowAdvancer advancer;
+    /** 工作流门面，启动子流程实例的统一入口 */
     private final WorkflowFacade workflowFacade;
     /** 事件监听器列表（可能为 null） */
     private final List<FlowEventListener> eventListeners;

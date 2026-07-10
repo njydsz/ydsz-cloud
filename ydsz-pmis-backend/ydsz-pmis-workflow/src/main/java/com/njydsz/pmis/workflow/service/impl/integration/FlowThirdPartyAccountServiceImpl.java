@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountService {
 
+    /** 三方账号 Mapper，管理 pmis_flow_third_party_account 表 */
     private final FlowThirdPartyAccountMapper thirdPartyAccountMapper;
 
     // ============================== 查询 ==============================

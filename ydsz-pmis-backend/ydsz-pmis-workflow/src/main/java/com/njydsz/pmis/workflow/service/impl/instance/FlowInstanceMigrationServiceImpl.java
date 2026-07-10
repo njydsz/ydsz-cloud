@@ -52,9 +52,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationService {
 
+    /** 流程实例 Mapper，查询/更新待迁移的运行中实例 */
     private final FlowInstanceMapper instanceMapper;
+    /** 流程节点 Mapper，查询新旧版本节点映射关系 */
     private final FlowNodeMapper nodeMapper;
+    /** 流程定义 Mapper，查询新版本定义信息 */
     private final FlowDefinitionMapper definitionMapper;
+    /** 运行时任务 Mapper，迁移后同步更新待办任务的 definitionId 和 nodeCode */
     private final FlowRunTaskMapper flowTaskMapper;
 
     @Override

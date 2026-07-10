@@ -28,6 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowAiGenerateServiceImpl implements FlowAiGenerateService {
 
+    /** Agent 模块 Feign 客户端，调用 FLOW_GENERATOR Agent 由 LLM 生成 BPMN XML；@Lazy 打破循环依赖 */
     private final @Lazy AgentClient agentClient;
 
     @Override

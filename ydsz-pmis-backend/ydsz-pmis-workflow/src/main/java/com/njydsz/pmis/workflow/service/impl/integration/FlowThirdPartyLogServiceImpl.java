@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class FlowThirdPartyLogServiceImpl implements FlowThirdPartyLogService {
 
+    /** 三方对接日志 Mapper，查询分页日志记录 */
     private final FlowThirdPartyLogMapper thirdPartyLogMapper;
 
     @Override

@@ -41,8 +41,11 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class FlowTaskSupport {
 
+    /** 运行时任务 Mapper，查询/更新任务状态 */
     private final FlowRunTaskMapper taskMapper;
+    /** 审计日志 Mapper，写入任务操作审计轨迹 */
     private final FlowAuditLogMapper auditLogMapper;
+    /** 事件监听器列表（Spring 自动注入所有实现），处理流程生命周期事件 */
     private final List<FlowEventListener> eventListeners;
     /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
     private final ApplicationEventPublisher eventPublisher;

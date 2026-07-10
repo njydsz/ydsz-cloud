@@ -26,6 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowNotifyChannelServiceImpl implements FlowNotifyChannelService {
 
+    /** 通知通道配置 Mapper，负责 pmis_flow_notify_channel 表的增删改查 */
     private final FlowNotifyChannelMapper notifyChannelMapper;
 
     @Override

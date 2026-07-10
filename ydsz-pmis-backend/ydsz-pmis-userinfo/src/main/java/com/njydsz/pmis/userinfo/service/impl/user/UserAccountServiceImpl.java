@@ -30,7 +30,7 @@ import com.njydsz.pmis.userinfo.entity.user.UserRoleDO;
 import com.njydsz.pmis.userinfo.mapper.user.User2FAMapper;
 import com.njydsz.pmis.userinfo.mapper.user.UserAccountMapper;
 import com.njydsz.pmis.userinfo.mapper.user.UserRoleMapper;
-import com.njydsz.pmis.userinfo.service.impl.JwtSimpleBuilder;
+import com.njydsz.pmis.userinfo.service.impl.auth.JwtSimpleBuilder;
 import com.njydsz.pmis.userinfo.service.org.DepartmentService;
 import com.njydsz.pmis.userinfo.service.permission.RoleService;
 import com.njydsz.pmis.userinfo.service.auth.SessionService;

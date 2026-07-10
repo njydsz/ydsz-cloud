@@ -43,7 +43,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTaskSignServiceImpl {
 
+    /** 运行时任务 Mapper，查询/更新加签减签的任务 */
     private final FlowRunTaskMapper taskMapper;
+    /** 用户 Mapper，查询加签/追加处理人的用户信息 */
     private final FlowUserMapper userMapper;
     /** 跨子 Service 共享的任务校验/审计/事件辅助 */
     private final FlowTaskSupport support;

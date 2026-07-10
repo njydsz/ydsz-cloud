@@ -19,10 +19,12 @@ import com.njydsz.pmis.message.constant.MessageConstants;
 import com.njydsz.pmis.message.dto.batch.BatchSendResult;
 import com.njydsz.pmis.message.dto.core.MessageLogQueryDTO;
 import com.njydsz.pmis.message.dto.core.MessageSendDTO;
+import com.njydsz.pmis.message.dto.core.RichMediaContent;
 import com.njydsz.pmis.message.entity.canary.MsgCanaryDO;
-import com.njydsz.pmis.message.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.entity.config.MsgPreferenceDO;
 import com.njydsz.pmis.message.entity.config.MsgRouteRuleDO;
+import com.njydsz.pmis.message.entity.config.MsgTraceDO;
+import com.njydsz.pmis.message.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.entity.template.MsgTemplateDO;
 import com.njydsz.pmis.message.enums.core.MessageStatusEnum;
 import com.njydsz.pmis.message.enums.receipt.RecallStatusEnum;
@@ -148,7 +150,7 @@ public class MessageServiceImpl implements MessageService {
         messageTraceService.recordTrace(
                 StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
                         : (StringUtils.hasText(request.getBizId()) ? request.getBizId() : "unknown"),
-                com.njydsz.pmis.message.entity.MsgTraceDO.Node.RECEIVED, "SUCCESS", channel,
+                MsgTraceDO.Node.RECEIVED, "SUCCESS", channel,
                 "消息已接收: channel=" + channel + " receiver=" + request.getReceiver());
 
         // ② 路由（命中则覆盖 channel）
@@ -283,7 +285,7 @@ public class MessageServiceImpl implements MessageService {
         }
 
         // P1-2: 富媒体消息渲染 —— 检查 params 中是否包含富媒体内容,按通道渲染
-        com.njydsz.pmis.message.dto.RichMediaContent richMedia = richMediaRenderer.extractFromParams(request.getParams());
+        RichMediaContent richMedia = richMediaRenderer.extractFromParams(request.getParams());
         if (richMedia != null) {
             String renderedContent = switch (channel == null ? "" : channel.toUpperCase()) {
                 case "EMAIL" -> richMediaRenderer.renderHtml(richMedia);
@@ -349,7 +351,7 @@ public class MessageServiceImpl implements MessageService {
                     logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
                     msgLogMapper.insert(logDO);
                     messageTraceService.recordTrace(logDO.getMsgId(),
-                            com.njydsz.pmis.message.entity.MsgTraceDO.Node.SCHEDULED,
+                            MsgTraceDO.Node.SCHEDULED,
                             "SUCCESS", channel, "智能定时: optimalAt=" + optimalTime);
                     log.info("[Message] 智能定时推送: msgId={} receiver={} optimalAt={}",
                             logDO.getMsgId(), receiver, optimalTime);
@@ -377,7 +379,7 @@ public class MessageServiceImpl implements MessageService {
 
         // P0-2: 记录落库轨迹
         messageTraceService.recordTrace(logDO.getMsgId(),
-                com.njydsz.pmis.message.entity.MsgTraceDO.Node.PERSISTED, "SUCCESS", channel,
+                MsgTraceDO.Node.PERSISTED, "SUCCESS", channel,
                 "消息已落库: status=" + logDO.getStatus());
 
         // ⑩ 通道分发
@@ -435,7 +437,7 @@ public class MessageServiceImpl implements MessageService {
             msgLogMapper.updateById(logDO);
             // P0-2: 记录分发开始轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
-                    com.njydsz.pmis.message.entity.MsgTraceDO.Node.DISPATCH_START,
+                    MsgTraceDO.Node.DISPATCH_START,
                     "SUCCESS", channel, "通道分发开始");
             String providerTraceId = channelRouter.dispatch(logDO);
             long cost = System.currentTimeMillis() - start;
@@ -450,7 +452,7 @@ public class MessageServiceImpl implements MessageService {
             messageMetrics.recordSend(channel, "SUCCESS", cost);
             // P0-2: 记录分发成功轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
-                    com.njydsz.pmis.message.entity.MsgTraceDO.Node.DISPATCH_SUCCESS,
+                    MsgTraceDO.Node.DISPATCH_SUCCESS,
                     "SUCCESS", channel, "发送成功: cost=" + cost + "ms");
             log.info("[Message] 发送成功: msgId={} channel={} receiver={} cost={}ms",
                     logDO.getMsgId(), channel, receiver, cost);

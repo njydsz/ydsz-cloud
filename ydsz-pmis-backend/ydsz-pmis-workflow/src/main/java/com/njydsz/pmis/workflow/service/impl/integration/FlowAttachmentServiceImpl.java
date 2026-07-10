@@ -31,6 +31,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
+    /** 审批附件 Mapper，管理 pmis_flow_attachment 表 */
     private final FlowAttachmentMapper attachmentMapper;
 
     /** P2-3: 外部预览服务地址（kkFileView/Office Online），如 http://preview.example.com/onlinePreview?url={url} */

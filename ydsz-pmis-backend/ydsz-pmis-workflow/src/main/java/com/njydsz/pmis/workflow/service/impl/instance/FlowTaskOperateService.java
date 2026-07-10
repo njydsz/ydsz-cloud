@@ -52,12 +52,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTaskOperateService {
 
+    /** 运行时任务 Mapper，查询/更新任务状态 */
     private final FlowRunTaskMapper taskMapper;
+    /** 历史任务 Mapper，查询已归档任务（撤回时使用） */
     private final FlowHisTaskMapper hisTaskMapper;
+    /** 流程实例 Mapper，查询实例状态 */
     private final FlowInstanceMapper instanceMapper;
+    /** 流程节点 Mapper，查询节点配置（跳转白名单校验） */
     private final FlowNodeMapper nodeMapper;
+    /** 跨子 Service 共享的任务校验/审计/事件辅助 */
     private final FlowTaskSupport support;
+    /** 任务归档服务，完成任务后写入历史任务表 */
     private final FlowTaskArchiveService archiveService;
+    /** 任务事件通知服务，推送转办/委派/撤回通知 */
     private final FlowTaskNotificationService notificationService;
     /** 任务创建服务（用于 jump 后在目标节点创建新任务） */
     private final FlowTaskCreateService taskCreateService;

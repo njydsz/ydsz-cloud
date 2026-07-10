@@ -34,7 +34,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowThirdPartySyncServiceImpl implements FlowThirdPartySyncService {
 
+    /** 三方对接日志 Mapper，记录同步操作轨迹 */
     private final FlowThirdPartyLogMapper logMapper;
+    /** 三方账号服务，查询已配置的三方审批系统账号 */
     private final FlowThirdPartyAccountService accountService;
 
     /** 轻量 RestTemplate（与 FlowNotificationServiceImpl 一致，直接 new 默认实例） */

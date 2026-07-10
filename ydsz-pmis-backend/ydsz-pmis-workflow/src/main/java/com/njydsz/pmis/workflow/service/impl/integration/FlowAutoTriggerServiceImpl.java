@@ -36,10 +36,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
+    /** 自动触发 Mapper，管理 pmis_flow_auto_trigger 表 */
     private final FlowAutoTriggerMapper autoTriggerMapper;
+    /** 智能路由服务，解析触发条件表达式 */
     private final FlowRoutingService routingService;
+    /** 工作流门面，自动发起后续流程实例 */
     private final WorkflowFacade workflowFacade;
+    /** 流程实例服务，查询前置流程实例状态 */
     private final FlowInstanceService instanceService;
+    /** 审计日志 Mapper，记录自动触发操作轨迹 */
     private final FlowAuditLogMapper auditLogMapper;
 
     // ============================== 核心：实例完成时触发 ==============================

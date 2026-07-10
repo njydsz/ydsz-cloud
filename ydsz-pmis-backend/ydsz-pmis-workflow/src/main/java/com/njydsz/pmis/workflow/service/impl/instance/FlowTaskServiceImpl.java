@@ -40,9 +40,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTaskServiceImpl implements FlowTaskService {
 
+    /** 查询子服务，处理待办/已办/详情/统计等只读查询 */
     private final FlowTaskQueryServiceImpl queryService;
+    /** 完成子服务门面，协调创建/签收/通过/驳回/转办/委派等写操作 */
     private final FlowTaskCompleteServiceImpl completeService;
+    /** 加签减签子服务，处理前/后加签、减签、追加处理人等 */
     private final FlowTaskSignServiceImpl signService;
+    /** 批量操作子服务，处理批量审批 */
     private final FlowTaskBatchServiceImpl batchService;
 
     // ============================== 创建任务 ==============================

@@ -39,7 +39,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FlowTemplateServiceImpl implements FlowTemplateService {
 
+    /** 流程模板 Mapper，负责 pmis_flow_template 表的增删改查 */
     private final FlowTemplateMapper templateMapper;
+    /** 流程定义服务，模板导入时调用 deploy 部署为草稿定义 */
     private final FlowDefinitionService definitionService;
 
     @Override

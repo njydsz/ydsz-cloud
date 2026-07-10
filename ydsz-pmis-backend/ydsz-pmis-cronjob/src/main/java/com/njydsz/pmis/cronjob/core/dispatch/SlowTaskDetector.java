@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  *       并在写入前二次检查 countByLogId 防止并发场景下的竞态</li>
  *   <li><b>时间窗口</b>：仅扫描最近 N 分钟（默认 60min）的日志，避免全表扫描；
  *       默认扫描窗口足以覆盖上次扫描失败的场景</li>
- *   <li><b>批量查询</b>：通过 selectBatchIds 一次性获取所有相关 JobDO，
+ *   <li><b>批量查询</b>：通过 selectByIds 一次性获取所有相关 JobDO，
  *       避免 N+1 查询</li>
  *   <li><b>独立失败</b>：每条 slow_log 写入独立 try-catch，单条失败不影响其他</li>
  *   <li><b>解耦</b>：不依赖 DefaultTaskDispatcher 内联调用，
@@ -149,7 +149,7 @@ public class SlowTaskDetector {
             return Collections.emptyMap();
         }
         try {
-            List<JobDO> jobs = jobMapper.selectBatchIds(jobIds);
+            List<JobDO> jobs = jobMapper.selectByIds(jobIds);
             return jobs.stream()
                     .collect(Collectors.toMap(JobDO::getId, Function.identity(), (a, b) -> a));
         } catch (Exception e) {

@@ -50,12 +50,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTaskCompleteServiceImpl {
 
+    /** 任务创建子服务，处理 SERVICE/FOREACH/LEVEL_APPROVAL 节点任务生成 */
     private final FlowTaskCreateService createService;
+    /** 任务签收子服务，处理候选任务认领 */
     private final FlowTaskClaimService claimService;
+    /** 任务通过子服务，策略模式处理 5 种会签模式 */
     private final FlowTaskPassService passService;
+    /** 任务驳回子服务，处理单节点/多节点/退回发起人 */
     private final FlowTaskRejectService rejectService;
+    /** 任务操作子服务，处理转办/委派/跳转/撤回 */
     private final FlowTaskOperateService operateService;
+    /** 任务催办子服务，处理实例级/节点级催办 */
     private final FlowTaskUrgeService urgeService;
+    /** 超时/挂起/激活/取消子服务 */
     private final FlowTaskTimeoutService timeoutService;
 
     // ============================== 创建任务 ==============================

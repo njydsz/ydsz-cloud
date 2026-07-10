@@ -46,9 +46,13 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class FlowCcServiceImpl implements FlowCcService {
 
+    /** 抄送记录 Mapper，负责 pmis_flow_cc 表的增删改查 */
     private final FlowCcMapper ccMapper;
+    /** 流程实例 Mapper，用于获取实例冗余字段（flowCode/flowName/businessKey 等） */
     private final FlowInstanceMapper instanceMapper;
+    /** 流程变量解析策略，解析 permissionFlag 中的动态变量（如 ${initiator}） */
     private final FlowVariableStrategy variableStrategy;
+    /** 审批人解析器，将 role:/dept:/position:/leader: 等标识展开为具体用户 ID 列表 */
     private final FlowAssigneeResolver assigneeResolver;
 
     // ============================== 抄送节点处理 ==============================

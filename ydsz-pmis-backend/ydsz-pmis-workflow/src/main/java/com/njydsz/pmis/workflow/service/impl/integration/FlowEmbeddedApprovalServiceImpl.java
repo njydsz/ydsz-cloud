@@ -41,8 +41,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalService {
 
+    /** 流程实例服务，启动/查询/终止嵌入式审批流程 */
     private final FlowInstanceService instanceService;
+    /** 流程任务服务，执行通过/驳回等审批操作 */
     private final FlowTaskService taskService;
+    /** AI 辅助服务，提供推荐审批人/智能评语等能力 */
     private final FlowAiAssistService aiAssistService;
     /** P2-2: 历史任务 mapper（嵌入式审批面板加载审批轨迹） */
     private final FlowHisTaskMapper hisTaskMapper;

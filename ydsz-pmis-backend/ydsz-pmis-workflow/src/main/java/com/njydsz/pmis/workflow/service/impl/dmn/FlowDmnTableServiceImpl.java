@@ -45,12 +45,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowDmnTableServiceImpl implements FlowDmnTableService {
 
+    /** Jackson 类型引用：DMN 输入列定义列表 */
     private static final TypeReference<List<DmnInput>> INPUT_TYPE = new TypeReference<>() {};
+    /** Jackson 类型引用：DMN 输出列定义列表 */
     private static final TypeReference<List<DmnOutput>> OUTPUT_TYPE = new TypeReference<>() {};
+    /** Jackson 类型引用：DMN 规则行列表 */
     private static final TypeReference<List<DmnRule>> RULE_TYPE = new TypeReference<>() {};
 
+    /** DMN 决策表 Mapper，负责 pmis_flow_dmn_table 表的增删改查 */
     private final FlowDmnTableMapper dmnTableMapper;
+    /** DMN 引擎，执行决策表规则匹配并返回输出结果 */
     private final DmnEngine dmnEngine;
+    /** Jackson ObjectMapper，反序列化决策表 JSON 字段（inputs/outputs/rules） */
     private final ObjectMapper objectMapper;
 
     // ============================== 查询 ==============================

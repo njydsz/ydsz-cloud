@@ -54,6 +54,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     /** 默认 TTL 秒数（Lua 脚本用） */
     private static final long TTL_SECONDS = TTL.getSeconds();
 
+    /** Redis 模板，操作 join 令牌计数 key（原子 Lua 脚本保证并发安全） */
     private final StringRedisTemplate redisTemplate;
 
     /**

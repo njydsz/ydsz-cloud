@@ -80,17 +80,28 @@ public class FlowTaskCreateService {
 
     /** AUTO_PASS 递归深度保护（防止流程定义环路导致栈溢出） */
     private static final ThreadLocal<Integer> AUTO_PASS_DEPTH = ThreadLocal.withInitial(() -> 0);
+    /** AUTO_PASS 最大递归深度，超过则抛异常 */
     private static final int MAX_AUTO_PASS_DEPTH = 20;
 
+    /** 运行时任务 Mapper，创建/更新待办任务 */
     private final FlowRunTaskMapper taskMapper;
+    /** 用户 Mapper，查询审批人/候选人用户信息 */
     private final FlowUserMapper userMapper;
+    /** 流程实例 Mapper，查询/更新实例状态和变量 */
     private final FlowInstanceMapper instanceMapper;
+    /** 流程节点 Mapper，查询节点配置（审批人/权限/SLA 等） */
     private final FlowNodeMapper nodeMapper;
+    /** 流程推进引擎，AUTO_PASS 递归推进到下一节点 */
     private final FlowAdvancer advancer;
+    /** 变量策略，解析节点 ext JSON 中的条件表达式 */
     private final FlowVariableStrategy variableStrategy;
+    /** 审批人解析器，从节点配置解析实际审批人/候选人列表 */
     private final FlowAssigneeResolver assigneeResolver;
+    /** 委派授权服务，查询长期授权委派改写审批人 */
     private final FlowDelegateAuthService delegateAuthService;
+    /** 跨子 Service 共享的任务校验/审计/事件辅助 */
     private final FlowTaskSupport support;
+    /** 任务归档服务，完成任务后写入历史任务表 */
     private final FlowTaskArchiveService archiveService;
     /** 使用 @Lazy 避免循环依赖：FlowTaskPassService → FlowTaskCreateService */
     @Lazy

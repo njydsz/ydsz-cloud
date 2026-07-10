@@ -53,12 +53,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTaskRejectService {
 
+    /** 运行时任务 Mapper，查询/更新任务状态 */
     private final FlowRunTaskMapper taskMapper;
+    /** 流程实例 Mapper，查询实例状态和流程变量 */
     private final FlowInstanceMapper instanceMapper;
+    /** 流程推进引擎，驳回后推进到目标节点 */
     private final FlowAdvancer advancer;
+    /** 流程实例服务，更新实例状态 */
     private final FlowInstanceService instanceService;
+    /** 跨子 Service 共享的任务校验/审计/事件辅助 */
     private final FlowTaskSupport support;
+    /** 任务归档服务，完成当前任务后写入历史任务表 */
     private final FlowTaskArchiveService archiveService;
+    /** 任务事件通知服务，推送任务驳回通知 */
     private final FlowTaskNotificationService notificationService;
     /** P1-6: 审批附件服务 */
     private final FlowAttachmentService attachmentService;

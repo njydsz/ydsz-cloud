@@ -47,7 +47,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowSlaServiceImpl implements FlowSlaService {
 
+    /** 运行时任务 Mapper，查询超期待办及更新提醒计数 */
     private final FlowRunTaskMapper taskMapper;
+    /** 流程节点 Mapper，读取节点 SLA 配置（slaConfig JSON） */
     private final FlowNodeMapper nodeMapper;
     /** P1-6: 用 @Lazy 打破 FlowSlaService ↔ FlowTaskService 循环依赖 */
     @Lazy

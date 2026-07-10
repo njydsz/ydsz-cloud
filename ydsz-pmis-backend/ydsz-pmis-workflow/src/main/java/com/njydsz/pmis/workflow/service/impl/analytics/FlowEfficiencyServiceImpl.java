@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
+    /** 历史任务 Mapper，查询审批效率统计的基础数据源 */
     private final FlowHisTaskMapper hisTaskMapper;
     /** P0-2: 委派代理日志 Mapper（用于统计真实代批率） */
     private final FlowDelegateLogMapper delegateLogMapper;

@@ -34,7 +34,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
 
+    /** 运行时任务 Mapper，统计用户当前待办数 */
     private final FlowRunTaskMapper taskMapper;
+    /** 通知中心 Feign 客户端，推送实时待办数到前端 WebSocket */
     private final NotificationClient notificationClient;
 
     /** 推送消息类型：待办数更新 */

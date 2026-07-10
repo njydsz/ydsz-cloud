@@ -60,10 +60,15 @@ import java.util.zip.ZipInputStream;
 @Service
 public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
+    /** 流程定义 Mapper，负责 pmis_flow_definition 表的增删改查 */
     private final FlowDefinitionMapper definitionMapper;
+    /** 流程节点 Mapper，负责 pmis_flow_node 表的增删改查 */
     private final FlowNodeMapper nodeMapper;
+    /** 流程跳转 Mapper，负责 pmis_flow_skip 表的增删改查 */
     private final FlowSkipMapper skipMapper;
+    /** BPMN 2.0 XML 解析器，将标准 BPMN XML 转换为内部节点/跳转模型 */
     private final BpmnXmlParser bpmnXmlParser;
+    /** 流程图结构校验器，校验连通性/死节点/环路等拓扑规则 */
     private final FlowGraphValidator graphValidator;
     /** P1: 流程定义元数据缓存，部署/更新时主动失效 */
     private final FlowDefinitionCacheService flowDefinitionCacheService;

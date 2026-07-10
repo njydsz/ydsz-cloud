@@ -24,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowDelegateMessageServiceImpl implements FlowDelegateMessageService {
 
+    /** 委派沟通记录 Mapper，负责 pmis_flow_delegate_message 表的增删改查 */
     private final FlowDelegateMessageMapper messageMapper;
 
     @Override

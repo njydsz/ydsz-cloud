@@ -47,7 +47,9 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class FlowTaskQueryServiceImpl {
 
+    /** 运行时任务 Mapper，查询待办/已办任务列表 */
     private final FlowRunTaskMapper taskMapper;
+    /** 历史任务 Mapper，查询已归档的已办任务 */
     private final FlowHisTaskMapper hisTaskMapper;
     /** listTodoByUser 需通过 pmis_flow_user 关联查询任务 */
     private final FlowUserMapper userMapper;

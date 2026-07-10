@@ -51,9 +51,13 @@ import java.util.stream.Collectors;
 @ConditionalOnBean({RuleEngine.class, ExpressionEvaluator.class})
 public class FlowRoutingServiceImpl implements FlowRoutingService {
 
+    /** 表达式求值器（Aviator 引擎），评估路由条件表达式 */
     private final ExpressionEvaluator expressionEvaluator;
+    /** 运行时任务 Mapper，查询卡单/超期任务 */
     private final FlowRunTaskMapper taskMapper;
+    /** 审计日志 Mapper，查询循环审批等异常模式 */
     private final FlowAuditLogMapper auditLogMapper;
+    /** 流程实例 Mapper，查询运行中实例状态 */
     private final FlowInstanceMapper instanceMapper;
 
     /** DMN 决策表评估服务（可选依赖，未注入时 DMN 路由不可用，回退到 Aviator 评估） */

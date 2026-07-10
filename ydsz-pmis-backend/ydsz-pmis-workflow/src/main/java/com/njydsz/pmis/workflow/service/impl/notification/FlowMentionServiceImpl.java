@@ -35,7 +35,9 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class FlowMentionServiceImpl implements FlowMentionService {
 
+    /** @提及记录 Mapper，负责 pmis_flow_mention 表的增删改查及未读统计 */
     private final FlowMentionMapper mentionMapper;
+    /** 通知辅助类，将 @提及事件通过站内信通道推送给被提及用户 */
     private final FlowNotificationHelper notificationHelper;
 
     /** @{userId} 格式的提及标记正则 */

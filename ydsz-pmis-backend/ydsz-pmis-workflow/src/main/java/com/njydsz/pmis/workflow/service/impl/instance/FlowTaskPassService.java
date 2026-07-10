@@ -60,16 +60,27 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTaskPassService {
 
+    /** 运行时任务 Mapper，查询/更新任务状态 */
     private final FlowRunTaskMapper taskMapper;
+    /** 用户 Mapper，查询审批人用户信息 */
     private final FlowUserMapper userMapper;
+    /** 流程实例 Mapper，查询实例状态和流程变量 */
     private final FlowInstanceMapper instanceMapper;
+    /** 流程节点 Mapper，查询节点配置 */
     private final FlowNodeMapper nodeMapper;
+    /** 流程推进引擎，会签完成后推进到下一节点 */
     private final FlowAdvancer advancer;
+    /** 流程实例服务，更新实例状态和变量 */
     private final FlowInstanceService instanceService;
+    /** 跨子 Service 共享的任务校验/审计/事件辅助 */
     private final FlowTaskSupport support;
+    /** 任务事件通知服务，推送任务通过通知 */
     private final FlowTaskNotificationService notificationService;
+    /** 委派代理审计服务，记录代理人审批操作 */
     private final FlowTaskAuditService auditService;
+    /** 会签策略工厂，根据 performType 选择会签策略 */
     private final CountersignStrategyFactory strategyFactory;
+    /** 表单字段权限服务，校验表单字段读写权限 */
     private final FlowFormFieldPermService formFieldPermService;
     /** P0-3: 表单引擎服务 */
     private final FlowFormEngineService formEngineService;

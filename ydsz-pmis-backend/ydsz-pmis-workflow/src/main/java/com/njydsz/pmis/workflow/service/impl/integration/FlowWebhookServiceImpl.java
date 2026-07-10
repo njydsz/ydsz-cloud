@@ -37,7 +37,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowWebhookServiceImpl implements FlowWebhookService {
 
+    /** Webhook 订阅 Mapper，管理 pmis_flow_webhook_subscription 表 */
     private final FlowWebhookSubscriptionMapper subscriptionMapper;
+    /** 通知发件箱 Mapper，Webhook 投递失败时写入 outbox 重试 */
     private final FlowNotifyOutboxMapper outboxMapper;
 
     @Override

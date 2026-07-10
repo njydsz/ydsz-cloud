@@ -29,8 +29,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlowCommentServiceImpl implements FlowCommentService {
 
+    /** 评论记录 Mapper，负责 pmis_flow_comment 表的增删改查及多级回复查询 */
     private final FlowCommentMapper commentMapper;
-    /** P0-1: 敏感字段脱敏器 */
+    /** P0-1: 敏感字段脱敏器，对评论内容中的手机号/身份证等敏感信息做实时脱敏 */
     private final FlowSensitiveMasker sensitiveMasker;
 
     @Override

@@ -44,10 +44,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTimerServiceImpl implements FlowTimerService {
 
+    /** 定时器 Mapper，管理 pmis_flow_timer 表 */
     private final FlowTimerMapper timerMapper;
+    /** 流程实例 Mapper，查询定时器关联的实例 */
     private final FlowInstanceMapper instanceMapper;
+    /** 运行时任务 Mapper，定时器触发后创建/更新任务 */
     private final FlowRunTaskMapper taskMapper;
+    /** 流程节点 Mapper，查询 boundaryEvent 节点配置 */
     private final FlowNodeMapper nodeMapper;
+    /** 流程推进引擎，定时器触发后推进流程 */
     private final FlowAdvancer advancer;
     private final FlowNotificationHelper notificationHelper;
     /** P0-2: 集群调度分布式锁辅助 */

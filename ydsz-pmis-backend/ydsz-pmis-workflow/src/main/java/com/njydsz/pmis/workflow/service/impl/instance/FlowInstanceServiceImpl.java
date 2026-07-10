@@ -73,12 +73,17 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class FlowInstanceServiceImpl implements FlowInstanceService {
 
+    /** 流程实例 Mapper，负责 pmis_flow_instance 表的增删改查 */
     private final FlowInstanceMapper instanceMapper;
+    /** 流程定义服务，启动实例时解析流程定义节点和跳转 */
     private final FlowDefinitionService definitionService;
     /** P3-1: 灰度发布服务（启动流程时按 canary 配置切流） */
     private final FlowCanaryService canaryService;
+    /** 流程推进引擎，负责节点推进/跳转/网关条件求值 */
     private final FlowAdvancer advancer;
+    /** 流程任务服务，创建/推进/终止任务 */
     private final FlowTaskService taskService;
+    /** 运行时任务 Mapper，查询/更新当前待办任务 */
     private final FlowRunTaskMapper taskMapper;
     /** GAP-V2-08: 流程节点 Mapper（模拟运行时查询节点） */
     private final FlowNodeMapper nodeMapper;
@@ -86,6 +91,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowSkipMapper skipMapper;
     /** GAP-V2-08: 条件求值策略（模拟运行时复用 SpEL 条件解析） */
     private final FlowVariableStrategy variableStrategy;
+    /** 事件监听器列表（Spring 自动注入所有实现），处理流程生命周期事件 */
     private final List<FlowEventListener> eventListeners;
     /** P2-3: Prometheus 指标收集（可能为 null：测试环境） */
     private final FlowMetrics flowMetrics;

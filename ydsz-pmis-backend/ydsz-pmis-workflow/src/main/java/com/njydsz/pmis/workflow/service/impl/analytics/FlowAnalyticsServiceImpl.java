@@ -28,7 +28,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
+    /** 历史任务 Mapper，查询已归档的审批任务统计数据 */
     private final FlowHisTaskMapper hisTaskMapper;
+    /** 运行时任务 Mapper，查询当前待办及超期任务数 */
     private final FlowRunTaskMapper runTaskMapper;
 
     @Override
@@ -115,12 +117,14 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
     // ============================== 工具方法 ==============================
 
+    /** 安全类型转换：Object → long，解析失败返回 0 */
     private long toLong(Object obj) {
         if (obj == null) return 0;
         if (obj instanceof Number n) return n.longValue();
         try { return Long.parseLong(String.valueOf(obj)); } catch (NumberFormatException e) { return 0; }
     }
 
+    /** 安全类型转换：Object → double，解析失败返回 0.0 */
     private double toDouble(Object obj) {
         if (obj == null) return 0.0;
         if (obj instanceof Number n) return n.doubleValue();

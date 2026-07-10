@@ -157,7 +157,7 @@ public class DependencyPatrolScanner {
                 allJobIds.add(rel.getParentJobId());
                 allJobIds.add(rel.getChildJobId());
             }
-            List<JobDO> jobs = jobMapper.selectBatchIds(allJobIds);
+            List<JobDO> jobs = jobMapper.selectByIds(allJobIds);
             Set<String> existingJobIds = jobs.stream()
                     .map(JobDO::getId)
                     .collect(Collectors.toSet());

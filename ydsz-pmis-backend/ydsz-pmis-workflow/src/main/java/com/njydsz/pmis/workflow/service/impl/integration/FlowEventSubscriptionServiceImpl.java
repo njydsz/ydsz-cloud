@@ -53,10 +53,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionService {
 
+    /** 事件订阅 Mapper，管理 BPMN 事件捕获节点订阅记录 */
     private final FlowEventSubscriptionMapper subscriptionMapper;
+    /** 流程实例 Mapper，查询事件关联的流程实例 */
     private final FlowInstanceMapper instanceMapper;
+    /** 流程节点 Mapper，查询事件捕获节点配置 */
     private final FlowNodeMapper nodeMapper;
+    /** 运行时任务 Mapper，事件触发后创建待办任务 */
     private final FlowRunTaskMapper taskMapper;
+    /** 流程推进引擎，事件触发后推进流程 */
     private final FlowAdvancer advancer;
 
     @Override
