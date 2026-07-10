@@ -22,7 +22,7 @@
  *   <li>ResourceAssignmentServiceImpl - 资源分配状态机推进、利用率统计。</li>
  *   <li>BenchServiceImpl - 闲置池业务动作、累计闲置成本聚合、仪表盘汇总。</li>
  *   <li>DictServiceImpl - 字典 CRUD、缓存预热与刷新。</li>
- *   <li>JobLevelServiceImpl - 职级与生效费率查询、版本历史。</li>
+ *   <li>RankServiceImpl - 职级与生效费率查询、版本历史。</li>
  *   <li>JwtSimpleBuilder - 简化版 JWT 构造器（仅供测试/演示，生产建议使用 JwtTokenProvider）。</li>
  * </ul>
  *

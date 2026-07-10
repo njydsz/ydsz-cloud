@@ -1,4 +1,4 @@
-﻿﻿/**
+﻿/**
  * @file 路由表定义
  * @description 定义前端静态路由（constantRoutes）与动态业务路由（asyncRoutes），
  *              静态路由包含登录/404/根布局默认页，动态路由按业务模块分组并通过权限码控制访问。
@@ -425,14 +425,14 @@ export const asyncRoutes: RouteRecordRaw[] = [
   {
     path: '/resource',
     component: () => import('@/layout/default/index.vue'),
-    redirect: '/resource/job-level',
+    redirect: '/resource/rank',
     meta: { title: 'route.resource', icon: 'UserFilled' },
     children: [
       {
-        path: 'job-level',
-        name: 'ResourceJobLevel',
-        component: () => import('@/views/resource/job-level/index.vue'),
-        meta: { title: 'route.resourceJobLevel', icon: 'DataLine', keepAlive: true, permCode: PC.EXECUTION_RATE_LIST },
+        path: 'rank',
+        name: 'ResourceRank',
+        component: () => import('@/views/resource/rank/index.vue'),
+        meta: { title: 'route.resourceRank', icon: 'DataLine', keepAlive: true, permCode: PC.EXECUTION_RATE_LIST },
       },
       {
         path: 'part-time-rate',

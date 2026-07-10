@@ -909,7 +909,7 @@ dashboardExitCustomize: 'Exit drag mode',
     closure: 'Project Closure',
     closureIndex: 'Closure Management',
     resource: 'Resources',
-resourceJobLevel: 'Job Levels',
+resourceRank: 'Job Levels',
 resourcePartTimeRate: 'Part-Time Rates',
   resourceOutsourceRate: 'Outsource Rates',
 resourceEmployee: 'Employees',
@@ -4767,7 +4767,7 @@ resourcePool: 'Resource Pool',
   },
   resource: {
     title: 'Resource Management',
-    jobLevel: {
+    rank: {
       title: 'Job Level Management',
       levelList: {
         title: 'Job Level System (L1 - L18)',

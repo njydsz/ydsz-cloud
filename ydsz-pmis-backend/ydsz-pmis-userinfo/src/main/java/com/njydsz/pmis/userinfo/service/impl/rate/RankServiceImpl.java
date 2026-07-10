@@ -2,11 +2,11 @@ package com.njydsz.pmis.userinfo.service.impl.rate;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelDO;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelRateDO;
-import com.njydsz.pmis.userinfo.mapper.rate.JobLevelMapper;
-import com.njydsz.pmis.userinfo.mapper.rate.JobLevelRateMapper;
-import com.njydsz.pmis.userinfo.service.rate.JobLevelService;
+import com.njydsz.pmis.userinfo.entity.rate.RankDO;
+import com.njydsz.pmis.userinfo.entity.rate.RankRateDO;
+import com.njydsz.pmis.userinfo.mapper.rate.RankMapper;
+import com.njydsz.pmis.userinfo.mapper.rate.RankRateMapper;
+import com.njydsz.pmis.userinfo.service.rate.RankService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,24 +22,24 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
-public class JobLevelServiceImpl implements JobLevelService {
+public class RankServiceImpl implements RankService {
 
-    private final JobLevelMapper jobLevelMapper;
-    private final JobLevelRateMapper jobLevelRateMapper;
+    private final RankMapper rankMapper;
+    private final RankRateMapper rankRateMapper;
 
     @Override
     @Transactional(readOnly = true)
-    public List<JobLevelDO> listAllLevels() {
-        return jobLevelMapper.selectAllEnabled();
+    public List<RankDO> listAllLevels() {
+        return rankMapper.selectAllEnabled();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public JobLevelRateDO getEffectiveRate(String levelCode, LocalDate date) {
+    public RankRateDO getEffectiveRate(String levelCode, LocalDate date) {
         if (date == null) {
             date = LocalDate.now();
         }
-        JobLevelRateDO rate = jobLevelRateMapper.selectEffective(levelCode, date);
+        RankRateDO rate = rankRateMapper.selectEffective(levelCode, date);
         if (rate == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c23b2b34", levelCode);
         }
@@ -48,7 +48,7 @@ public class JobLevelServiceImpl implements JobLevelService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<JobLevelRateDO> listAllVersions(String levelCode) {
-        return jobLevelRateMapper.selectAllVersions(levelCode);
+    public List<RankRateDO> listAllVersions(String levelCode) {
+        return rankRateMapper.selectAllVersions(levelCode);
     }
 }

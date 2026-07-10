@@ -12,7 +12,7 @@ import java.io.Serial;
 /**
  * 岗位实体
  *
- * <p>部门下的具体岗位定义（如开发工程师 / PM / HRBP），与职级（pmis_job_level）多对一关联。
+ * <p>部门下的具体岗位定义（如开发工程师 / PM / HRBP），与职级（pmis_rank）多对一关联。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -38,7 +38,7 @@ public class PositionDO extends BaseDO {
     /** 所属部门 ID（关联 pmis_department.id） */
     private String departmentId;
 
-    /** 岗位职级（关联 pmis_job_level.level_code） */
+    /** 岗位职级（关联 pmis_rank.level_code） */
     private String levelCode;
 
     /** 岗位职责说明 */

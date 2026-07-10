@@ -10,7 +10,7 @@
  *   <li>用户域：UserAccountMapper、UserRoleMapper、UserSessionMapper、User2FAMapper。</li>
  *   <li>权限域：RoleMapper、RolePermissionMapper、PermissionMapper。</li>
  *   <li>组织架构域：DepartmentMapper、EmployeeTagMapper。</li>
- *   <li>基础数据域：DictTypeMapper、DictItemMapper、JobLevelMapper、JobLevelRateMapper。</li>
+ *   <li>基础数据域：DictTypeMapper、DictItemMapper、RankMapper、RankRateMapper。</li>
  *   <li>资源调度域：ResourcePoolMapper、ResourceAssignmentMapper、BenchRecordMapper。</li>
  *   <li>考勤域：AttendanceMapper、LeaveMapper、OvertimeMapper。</li>
  * </ul>

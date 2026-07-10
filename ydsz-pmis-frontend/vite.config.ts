@@ -268,7 +268,7 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       exclude: ['node_modules', 'dist', 'e2e'],
-      // 覆盖率配置（CI 门禁: lines ≥ 40%, functions ≥ 30%, branches ≥ 30%）
+      // 覆盖率配置（CI 门禁: lines ≥ 60%, functions ≥ 50%, branches ≥ 50%）
       coverage: {
         provider: 'v8',
         reporter: ['text', 'text-summary', 'lcov', 'html'],
@@ -291,9 +291,9 @@ export default defineConfig(({ mode }) => {
         ],
         // 覆盖率门禁阈值（分阶段提升）
         thresholds: {
-          lines: 40,
-          functions: 30,
-          branches: 30,
+          lines: 60,
+          functions: 50,
+          branches: 50,
         },
       },
     },

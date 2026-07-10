@@ -16,3 +16,8 @@ data:
   SERVER_TOMCAT_URI_ENCODING: "UTF-8"
   LOGGING_LEVEL_ROOT: "INFO"
   LOGGING_LEVEL_COM_NJYDSZ_PMIS: "INFO"
+
+  # P1-4: 全链路追踪上报配置（K8s 环境默认开启，对接 SkyWalking OAP）
+  TRACING_EXPORT_ENABLED: "true"
+  TRACING_ENDPOINT: "http://skywalking-oap.monitoring:9411/api/v2/spans"
+  TRACING_SAMPLING_PROBABILITY: "0.1"

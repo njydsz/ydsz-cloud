@@ -103,11 +103,11 @@ jobs:
 
       - name: Run Vitest with Coverage
         # 覆盖率门禁（分阶段提升计划）:
-        #   阶段 1（当前）: lines >= 40%, functions >= 30%, branches >= 30%
-        #   阶段 2（2026-09）: lines >= 60%, functions >= 50%, branches >= 50%
+        #   阶段 1（已完成）: lines >= 40%, functions >= 30%, branches >= 30%
+        #   阶段 2（当前）: lines >= 60%, functions >= 50%, branches >= 50%
         #   阶段 3（2026-12）: lines >= 80%, functions >= 70%, branches >= 70%
         # 任一阈值不达标即 CI 失败
-        run: pnpm test:coverage -- --coverage.thresholds.lines=40 --coverage.thresholds.functions=30 --coverage.thresholds.branches=30
+        run: pnpm test:coverage -- --coverage.thresholds.lines=60 --coverage.thresholds.functions=50 --coverage.thresholds.branches=50
 
       - name: Upload Coverage Report
         if: always()

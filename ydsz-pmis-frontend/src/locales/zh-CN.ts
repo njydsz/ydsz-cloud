@@ -914,7 +914,7 @@ dashboardExitCustomize: '退出拖拽模式',
     closure: '项目结项',
     closureIndex: '结项管理',
     resource: '资源管理',
-resourceJobLevel: '职级费率',
+resourceRank: '职级费率',
 resourcePartTimeRate: '兼职费率',
   resourceOutsourceRate: '外包费率',
 resourceEmployee: '员工管理',
@@ -5205,7 +5205,7 @@ resourcePool: '资源池',
   },
   resource: {
     title: '资源管理',
-    jobLevel: {
+    rank: {
       title: '职级管理',
       levelList: {
         title: '职级体系 (L1 - L18)',

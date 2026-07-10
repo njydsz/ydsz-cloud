@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 内部价目表
   @description 对内职级成本费率(Rate Internal)管理页面：按(职级×部门)维护每日/每小时内部成本价，支持二级回退(level→department)匹配，对应路由 /resource/rate-internal
   @module views/resource/rate-internal
@@ -18,8 +18,8 @@ import {
   deleteRateInternal,
 } from '@/api/resource/rate-internal'
 import type { RateInternalVO, RateInternalCreateDTO } from '@/api/resource/rate-internal'
-import { listJobLevels } from '@/api/resource/job-level'
-import type { JobLevelVO } from '@/api/resource/job-level/types'
+import { listRanks } from '@/api/resource/rank'
+import type { RankVO } from '@/api/resource/rank/types'
 import { listDeptTree } from '@/api/system/dept'
 import type { DeptVO } from '@/api/system/dept/types'
 import { PC } from '@/constants/permissionCodes'
@@ -41,14 +41,14 @@ const query = reactive({
   status: '',
 })
 // 职级下拉数据
-const levels = ref<JobLevelVO[]>([])
+const levels = ref<RankVO[]>([])
 // 部门树下拉数据
 const depts = ref<DeptVO[]>([])
 
 /** 拉取职级下拉数据（用于表单与查询条件） */
 async function fetchLevels() {
   try {
-    const { data } = await listJobLevels()
+    const { data } = await listRanks()
     levels.value = data || []
   } catch {
     levels.value = []

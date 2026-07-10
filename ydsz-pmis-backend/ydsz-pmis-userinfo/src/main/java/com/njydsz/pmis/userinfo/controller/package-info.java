@@ -2,7 +2,7 @@
  * userinfo 模块 Web 控制器层。
  *
  * <p>对外暴露 RESTful 接口，统一遵循 {@code /模块资源} 风格路径（如 {@code /users}、{@code /roles}、
- * {@code /permissions}、{@code /departments}、{@code /dict}、{@code /job-levels} 等）。所有写
+ * {@code /permissions}、{@code /departments}、{@code /dict}、{@code /ranks} 等）。所有写
  * 接口均经 {@code @PrePermission} + {@code @RequireReAuth} + {@code @OperationLog} 三重防护，
  * 高频读接口经 {@code @RateLimit} 限流。
  *
@@ -13,7 +13,7 @@
  *   <li>PermissionController - 权限/菜单树 CRUD、当前用户权限码与菜单树查询。</li>
  *   <li>DepartmentController - 部门 CRUD、部门树查询。</li>
  *   <li>DictController - 字典类型与字典项查询、缓存刷新。</li>
- *   <li>JobLevelController - 职级（L1-L18）与生效费率查询。</li>
+ *   <li>RankController - 职级（L1-L18）与生效费率查询。</li>
  *   <li>EmployeeTagController - 人员标签的增删替查与按标签筛选候选人。</li>
  *   <li>AuthController - 登录、刷新 Token、登出、图形验证码。</li>
  *   <li>SessionController - 当前用户活跃会话、主动/强制下线、管理员分页查询。</li>

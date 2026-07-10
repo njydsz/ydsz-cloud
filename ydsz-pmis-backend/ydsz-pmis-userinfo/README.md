@@ -65,8 +65,8 @@
 | | `pmis_position` | 岗位 |
 | | `pmis_employee` | 员工档案 |
 | | `pmis_employee_tag` | 员工标签（多对多） |
-| | `pmis_job_level` | 职级（L1-L13） |
-| | `pmis_job_level_rate` | 职级-费率映射 |
+| | `pmis_rank` | 职级（L1-L18） |
+| | `pmis_rank_rate` | 职级-费率映射 |
 | **数据字典** | `pmis_dict_type` | 字典类型 |
 | | `pmis_dict_item` | 字典项 |
 | **考勤** | `pmis_attendance` | 考勤记录 |

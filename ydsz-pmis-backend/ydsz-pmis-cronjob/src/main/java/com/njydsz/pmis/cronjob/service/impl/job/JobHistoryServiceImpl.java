@@ -23,11 +23,12 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 任务配置历史版本服务实现（P1-6 任务版本管理）。
+ * 任务配置历史版本服务实现（P1-6 任务版本管理，合并原 JobVersionService）。
  *
  * <p>实现要点：
  * <ul>
  *   <li>{@code saveHistory}: 将 JobDO 序列化为 JSON 快照存入 pmis_job_history，版本号取自 job.version</li>
+ *   <li>{@code recordVersionChange}: 统一版本变更入口，支持 CREATE/UPDATE/DELETE 三种类型，同时保存 before/after 快照</li>
  *   <li>{@code listVersions}: 透传 mapper 按版本号降序查询</li>
  *   <li>{@code getVersion}: 透传 mapper 查询指定版本</li>
  *   <li>{@code rollback}: 从快照恢复配置字段，保留当前统计字段，version=max+1</li>
@@ -69,6 +70,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         history.setJobId(job.getId());
         history.setVersion(job.getVersion());
         history.setSnapshot(JSON.toJSONString(job));
+        history.setChangeType("UPDATE");
         history.setJobName(job.getJobName());
         history.setJobKey(job.getJobKey());
         history.setHandler(job.getHandler());
@@ -81,6 +83,43 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         jobHistoryMapper.insert(history);
         log.info("[History] 保存任务历史版本: jobId={} version={}", job.getId(), job.getVersion());
         return history;
+    }
+
+    @Override
+    public void recordVersionChange(JobDO beforeJob, JobDO afterJob,
+                                      String changeType, String changedBy, String changeRemark) {
+        try {
+            JobDO referenceJob = afterJob != null ? afterJob : beforeJob;
+            if (referenceJob == null) {
+                return;
+            }
+            JobHistoryDO history = new JobHistoryDO();
+            history.setJobId(referenceJob.getId());
+            history.setVersion(referenceJob.getVersion() != null ? referenceJob.getVersion() : 1);
+            history.setChangeType(changeType);
+            history.setSnapshot(afterJob != null ? JSON.toJSONString(afterJob) : null);
+            history.setBeforeSnapshot(beforeJob != null ? JSON.toJSONString(beforeJob) : null);
+            history.setChangeRemark(changeRemark);
+            // 冗余字段从 afterJob 取（DELETE 时从 beforeJob 取）
+            JobDO displayJob = afterJob != null ? afterJob : beforeJob;
+            history.setJobName(displayJob.getJobName());
+            history.setJobKey(displayJob.getJobKey());
+            history.setHandler(displayJob.getHandler());
+            history.setCronExpression(displayJob.getCronExpression());
+            history.setParamsJson(displayJob.getParamsJson());
+            history.setRemark(displayJob.getRemark());
+            history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
+            history.setChangedAt(LocalDateTime.now());
+            history.setDeleted(0);
+            jobHistoryMapper.insert(history);
+            log.info("[History] 版本记录: jobId={} key={} version={} type={}",
+                    referenceJob.getId(), referenceJob.getJobKey(),
+                    history.getVersion(), changeType);
+        } catch (Exception e) {
+            log.error("[History] 记录版本变更异常: jobId={} reason={}",
+                    afterJob != null ? afterJob.getId() : (beforeJob != null ? beforeJob.getId() : "null"),
+                    e.getMessage(), e);
+        }
     }
 
     @Override

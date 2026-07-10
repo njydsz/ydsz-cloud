@@ -13,8 +13,8 @@ import {
   deleteEmployee,
 } from '@/api/resource/employee'
 import type { EmployeeVO, EmployeeCreateDTO } from '@/api/resource/employee/types'
-import { listJobLevels } from '@/api/resource/job-level'
-import type { JobLevelVO } from '@/api/resource/job-level/types'
+import { listRanks } from '@/api/resource/rank'
+import type { RankVO } from '@/api/resource/rank/types'
 import { listEffectivePartTimeRates } from '@/api/resource/part-time-rate'
 import type { PartTimeRateVO } from '@/api/resource/part-time-rate/types'
 import { listEffectiveOutsourceRates } from '@/api/resource/outsource-rate'
@@ -35,7 +35,7 @@ const dialogMode = ref<'create' | 'edit'>('create')
 const dialogLoading = ref(false)
 const editingId = ref('')
 
-const jobLevels = ref<JobLevelVO[]>([])
+const ranks = ref<RankVO[]>([])
 const partTimeRates = ref<PartTimeRateVO[]>([])
 const outsourceRates = ref<OutsourceRateVO[]>([])
 
@@ -78,12 +78,12 @@ const isPartTime = computed(() => form.value.employeeType === 'PART_TIME')
 const isOutsource = computed(() => form.value.employeeType === 'OUTSOURCE')
 
 /** 根据雇佣类型筛选可选职级 */
-const filteredJobLevels = computed(() => {
+const filteredRanks = computed(() => {
   if (isPartTime.value) {
     // 兼职：展示 P1-P18（来自兼职费率列表）
     return []
   }
-  return jobLevels.value
+  return ranks.value
 })
 
 watch(() => form.value.employeeType, (newType) => {
@@ -95,12 +95,12 @@ form.value.outsourceRateId = undefined
 }
 })
 
-async function fetchJobLevels() {
+async function fetchRanks() {
   try {
-    const { data } = await listJobLevels()
-    jobLevels.value = data || []
+    const { data } = await listRanks()
+    ranks.value = data || []
   } catch {
-    jobLevels.value = []
+    ranks.value = []
   }
 }
 
@@ -235,7 +235,7 @@ function handleReset() {
 }
 
 onMounted(() => {
-fetchJobLevels()
+fetchRanks()
 fetchPartTimeRates()
 fetchOutsourceRates()
 fetchData()
@@ -376,7 +376,7 @@ fetchData()
         <el-form-item v-if="!isPartTime && !isOutsource" label="职级" required>
           <el-select v-model="form.levelCode" filterable style="width: 100%">
             <el-option
-              v-for="lv in filteredJobLevels"
+              v-for="lv in filteredRanks"
               :key="lv.levelCode"
               :label="`${lv.levelCode} - ${lv.levelName}（${segmentMap[lv.levelSegment || ''] || ''}）`"
               :value="lv.levelCode"

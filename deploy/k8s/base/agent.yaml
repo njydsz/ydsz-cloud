@@ -7,7 +7,7 @@ metadata:
     app: ydsz-pmis-agent
     tier: backend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: ydsz-pmis-agent
@@ -27,6 +27,19 @@ spec:
           envFrom:
             - configMapRef:
                 name: pmis-common-config
+          # P2-7: JVM 容器感知调优（Agent 服务内存需求较大，MaxRAMPercentage=75%）
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/app/logs/heapdump
+                -Dfile.encoding=UTF-8
+                -Duser.timezone=Asia/Shanghai
           resources:
             requests:
               cpu: 500m

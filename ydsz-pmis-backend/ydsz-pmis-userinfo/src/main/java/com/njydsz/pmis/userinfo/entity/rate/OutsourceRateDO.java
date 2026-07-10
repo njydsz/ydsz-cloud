@@ -14,7 +14,7 @@ import java.time.LocalDate;
 /**
  * 外包职级费率实体（V1-V18，人天核算月薪+差旅报销+差旅补贴）
  *
- * <p>与全职 {@link JobLevelRateDO}（L1-L18）和兼职 {@link PartTimeRateDO}（P1-P18）平行，
+ * <p>与全职 {@link RankRateDO}（L1-L18）和兼职 {@link PartTimeRateDO}（P1-P18）平行，
  * 用于外包员工的成本核算。外包核心计价单元为<strong>人天单价</strong>，
  * 月薪 = 人天单价(dailyRate) × 月工作天数(monthlyDays)。
  *

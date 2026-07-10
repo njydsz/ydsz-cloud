@@ -86,7 +86,7 @@ public interface EmployeeService {
      *   - employeeType: String (FULL_TIME/PART_TIME/OUTSOURCE)
      *   - levelCode: String
      *   - partTimeRateId: String
-     *   - monthlyTotalCost: BigDecimal（全职=JobLevelRate.totalCost；兼职=PartTimeRate.totalCost；外包=null）
+     *   - monthlyTotalCost: BigDecimal（全职=RankRate.totalCost；兼职=PartTimeRate.totalCost；外包=null）
      *   - hourlyRate: null（预留）
      *   - overtimeRate: null（预留）
      */

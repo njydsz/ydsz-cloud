@@ -19,8 +19,8 @@ import java.time.LocalDate;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("pmis_job_level_rate")
-public class JobLevelRateDO extends BaseDO {
+@TableName("pmis_rank_rate")
+public class RankRateDO extends BaseDO {
 
     @Serial
     private static final long serialVersionUID = 1L;

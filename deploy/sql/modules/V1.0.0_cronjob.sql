@@ -511,15 +511,23 @@ CREATE INDEX IF NOT EXISTS idx_pjg_job_id
     ON pmis_job_glue (job_id, version DESC) WHERE deleted = 0;
 
 -- ============================================================================
--- [P1-6] 任务配置历史版本表 pmis_job_history
+-- [P1-6] 任务配置历史版本表 pmis_job_history（合并原 pmis_job_version_history）
 -- ----------------------------------------------------------------------------
--- 每次任务配置更新时自动保存历史快照，支持版本对比和一键回滚。
+-- 每次任务配置变更时自动保存历史快照，支持版本对比和一键回滚。
+-- 合并了原 pmis_job_version_history 的 change_type / before_snapshot 能力，
+-- 统一版本管理入口，消除双写冗余。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_history(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     job_id          VARCHAR(20)         NOT NULL,
     version         INTEGER        NOT NULL,
     snapshot        TEXT           NOT NULL,
+    -- [P1-6-merge] 变更类型: CREATE / UPDATE / DELETE（原 pmis_job_version_history.change_type）
+    change_type     VARCHAR(32)    NOT NULL DEFAULT 'UPDATE',
+    -- [P1-6-merge] 变更前快照 JSON（原 pmis_job_version_history.before_snapshot; CREATE 时为 NULL）
+    before_snapshot TEXT,
+    -- [P1-6-merge] 变更说明（原 pmis_job_version_history.change_remark）
+    change_remark   VARCHAR(512),
     job_name        VARCHAR(128),
     job_key         VARCHAR(128)   NOT NULL,
     handler         VARCHAR(256),
@@ -530,6 +538,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_history(
     changed_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT ck_pjh_version_pos CHECK (version >= 1),
+    CONSTRAINT ck_pjh_change_type_enum CHECK (change_type IN ('CREATE', 'UPDATE', 'DELETE')),
     CONSTRAINT ck_pjh_deleted_enum CHECK (deleted IN (0, 1))
 );
 
@@ -541,7 +550,13 @@ COMMENT ON COLUMN pmis_job_history.job_id IS '任务 ID';
 
 COMMENT ON COLUMN pmis_job_history.version IS '版本号(对应更新前的 job.version)';
 
-COMMENT ON COLUMN pmis_job_history.snapshot IS '完整 JobDO JSON 快照';
+COMMENT ON COLUMN pmis_job_history.snapshot IS '完整 JobDO JSON 快照(变更后状态; DELETE 时为 NULL)';
+
+COMMENT ON COLUMN pmis_job_history.change_type IS '变更类型: CREATE 创建 / UPDATE 更新 / DELETE 删除';
+
+COMMENT ON COLUMN pmis_job_history.before_snapshot IS '变更前快照 JSON(CREATE 时为 NULL; UPDATE/DELETE 时记录变更前状态)';
+
+COMMENT ON COLUMN pmis_job_history.change_remark IS '变更说明(如"任务创建"、"任务更新"、"任务删除")';
 
 COMMENT ON COLUMN pmis_job_history.job_name IS '任务名称(冗余, 便于列表展示)';
 
@@ -780,6 +795,64 @@ CREATE INDEX IF NOT EXISTS idx_pjd_status
 
 CREATE INDEX IF NOT EXISTS idx_pjd_tenant
     ON pmis_job_dag (tenant_id) WHERE deleted = 0;
+
+-- ============================================================================
+-- [P1-8] DAG 工作流版本历史表 pmis_job_dag_version
+-- ----------------------------------------------------------------------------
+-- 存储 DAG 定义的每次变更快照，支持版本回溯与回滚。
+-- 创建 DAG 时保存 V1，每次更新 DAG 时保存新版本快照。
+-- 回滚到 V_N 时将 V_N 的 dagDefinition 复制到当前 DAG，并创建 V_{N+1} 快照。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_dag_version(
+    id                      VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    dag_id                  VARCHAR(20)   NOT NULL,
+    dag_key                 VARCHAR(128)  NOT NULL,
+    version                 INTEGER       NOT NULL,
+    dag_definition          TEXT          NOT NULL,
+    dag_name                VARCHAR(128),
+    trigger_type            VARCHAR(32),
+    cron_expression         VARCHAR(128),
+    fail_strategy           VARCHAR(32),
+    remark                  VARCHAR(512),
+    changed_by              VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_by              VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at              TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by              VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at              TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                 SMALLINT      NOT NULL DEFAULT 0,
+    tenant_id               VARCHAR(20)       NOT NULL DEFAULT '1',
+    CONSTRAINT ck_pjdv_version_pos  CHECK (version >= 1),
+    CONSTRAINT ck_pjdv_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_dag_version IS 'DAG 工作流版本历史表（P1-8）: 存储 DAG 定义的每次变更快照, 支持版本回溯与回滚';
+
+COMMENT ON COLUMN pmis_job_dag_version.id IS '主键 ID';
+
+COMMENT ON COLUMN pmis_job_dag_version.dag_id IS 'DAG ID（关联 pmis_job_dag.id）';
+
+COMMENT ON COLUMN pmis_job_dag_version.dag_key IS 'DAG KEY（冗余, 便于查询）';
+
+COMMENT ON COLUMN pmis_job_dag_version.version IS '版本号（从 1 递增）';
+
+COMMENT ON COLUMN pmis_job_dag_version.dag_definition IS 'DAG 定义 JSON 快照';
+
+COMMENT ON COLUMN pmis_job_dag_version.dag_name IS 'DAG 名称快照';
+
+COMMENT ON COLUMN pmis_job_dag_version.trigger_type IS '触发类型快照: MANUAL / CRON';
+
+COMMENT ON COLUMN pmis_job_dag_version.cron_expression IS 'Cron 表达式快照';
+
+COMMENT ON COLUMN pmis_job_dag_version.fail_strategy IS '失败策略快照';
+
+COMMENT ON COLUMN pmis_job_dag_version.remark IS '版本备注（如"新增节点A"、"修改条件分支"）';
+
+COMMENT ON COLUMN pmis_job_dag_version.changed_by IS '变更操作人';
+
+COMMENT ON COLUMN pmis_job_dag_version.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_pjdv_dag_id
+    ON pmis_job_dag_version (dag_id, version DESC) WHERE deleted = 0;
 
 -- ============================================================================
 -- [P2-2] DAG 工作流实例表 pmis_job_dag_instance

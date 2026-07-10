@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.mapper.rate;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelRateDO;
+import com.njydsz.pmis.userinfo.entity.rate.RankRateDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -16,7 +16,7 @@ import java.util.List;
  * @since 1.0.0
  */
 @Mapper
-public interface JobLevelRateMapper extends BaseMapper<JobLevelRateDO> {
+public interface RankRateMapper extends BaseMapper<RankRateDO> {
 
     /**
      * 查询某职级当前生效的费率
@@ -26,7 +26,7 @@ public interface JobLevelRateMapper extends BaseMapper<JobLevelRateDO> {
      * @return 生效费率记录，未找到返回 null
      */
     @Select("""
-            SELECT * FROM pmis_job_level_rate
+            SELECT * FROM pmis_rank_rate
             WHERE level_code = #{code}
               AND effective_date <= #{date}
               AND (expire_date IS NULL OR expire_date >= #{date})
@@ -34,7 +34,7 @@ public interface JobLevelRateMapper extends BaseMapper<JobLevelRateDO> {
             ORDER BY version DESC
             LIMIT 1
             """)
-    JobLevelRateDO selectEffective(@Param("code") String code, @Param("date") LocalDate date);
+    RankRateDO selectEffective(@Param("code") String code, @Param("date") LocalDate date);
 
     /**
      * 查询某职级的所有版本
@@ -42,6 +42,6 @@ public interface JobLevelRateMapper extends BaseMapper<JobLevelRateDO> {
      * @param code 职级编码
      * @return 费率版本列表（按版本号倒序）
      */
-    @Select("SELECT * FROM pmis_job_level_rate WHERE level_code = #{code} AND deleted = 0 ORDER BY version DESC")
-    List<JobLevelRateDO> selectAllVersions(@Param("code") String code);
+    @Select("SELECT * FROM pmis_rank_rate WHERE level_code = #{code} AND deleted = 0 ORDER BY version DESC")
+    List<RankRateDO> selectAllVersions(@Param("code") String code);
 }

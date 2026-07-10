@@ -24,6 +24,8 @@ resources:
   # Prometheus Operator ServiceMonitor - 让 Prometheus 自动抓取 PMIS 微服务指标
   # 解决告警规则因无抓取目标而全部失效的 P0 问题
   - servicemonitor.yaml
+  # P2-7: HPA 自动扩缩容 + PDB 中断预算
+  - hpa-pdb.yaml
 
 # 镜像 tag 由 overlay 覆盖(默认 latest,实际部署请改为具体版本)
 images:

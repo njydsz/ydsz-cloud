@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file Permission Store - 动态路由与菜单权限
  * @description 拉取后端菜单树、转换为前端路由、与本地兜底路由合并后注册到 vue-router
  * @module store/modules/permission
@@ -73,7 +73,7 @@ const viewModules: Record<string, () => Promise<unknown>> = {
   'aftersales/ops-ticket/index': () => import('@/views/aftersales/ops-ticket/index.vue'),
   'aftersales/satisfaction/index': () => import('@/views/aftersales/satisfaction/index.vue'),
   // 资源管理
-  'resource/job-level/index': () => import('@/views/resource/job-level/index.vue'),
+  'resource/rank/index': () => import('@/views/resource/rank/index.vue'),
   'resource/pool/index': () => import('@/views/resource/pool/index.vue'),
   'resource/employee-tag/index': () => import('@/views/resource/employee-tag/index.vue'),
   'resource/assignment/index': () => import('@/views/resource/assignment/index.vue'),

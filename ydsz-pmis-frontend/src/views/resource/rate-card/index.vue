@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 外部价目表
   @description 对外报价费率(Rate Card)管理页面：按(职级×项目类型×客户等级)维护每日/每小时报价，支持三级回退(level→project→customer)匹配，对应路由 /resource/rate-card
   @module views/resource/rate-card
@@ -20,8 +20,8 @@ import {
   deleteRateCard,
 } from '@/api/resource/rate-card'
 import type { RateCardVO, RateCardCreateDTO } from '@/api/resource/rate-card'
-import { listJobLevels } from '@/api/resource/job-level'
-import type { JobLevelVO } from '@/api/resource/job-level/types'
+import { listRanks } from '@/api/resource/rank'
+import type { RankVO } from '@/api/resource/rank/types'
 import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
@@ -41,12 +41,12 @@ const query = reactive({
   status: '',
 })
 // 职级下拉数据
-const levels = ref<JobLevelVO[]>([])
+const levels = ref<RankVO[]>([])
 
 /** 拉取职级下拉数据（用于表单与查询条件） */
 async function fetchLevels() {
   try {
-    const { data } = await listJobLevels()
+    const { data } = await listRanks()
     levels.value = data || []
   } catch (e) {
     levels.value = []

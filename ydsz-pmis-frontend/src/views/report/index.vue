@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @fileoverview 报表中心
   @description 项目利润 / 成本明细 / 回款台账 / 生命周期台账 / EVM 挣值 / 双费率对比 / 风险看板 / 利用率 / Bench 成本等核心报表的 ECharts 可视化；对接 @/api/report。
                顶部 Tab 切换 11 类报表视图，下方提供查询条件（项目 ID / 期间）与图表渲染容器。
@@ -320,7 +320,7 @@ function renderDualRateChart() {
     tooltip: { trigger: 'axis' },
     legend: { data: [t('report.dualRate.charts.seriesExternal'), t('report.dualRate.charts.seriesInternal')], top: 30 },
     grid: { top: 80, left: 60, right: 40, bottom: 40 },
-    xAxis: { type: 'category', data: rows.map((r) => r.jobLevel || r.level || '-') },
+    xAxis: { type: 'category', data: rows.map((r) => r.rank || r.level || '-') },
     yAxis: { type: 'value', name: t('report.dualRate.charts.yAxisName') },
     series: [
       {

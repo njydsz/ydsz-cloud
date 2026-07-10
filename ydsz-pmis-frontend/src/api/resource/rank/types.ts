@@ -1,9 +1,9 @@
 /**
  * @file 职级 类型定义
- * @description 定义职级（JobLevel）及其费率（JobLevelRate）相关的 VO 类型，供 job-level/index.ts 及上层业务使用。
- * @module api/resource/job-level
+ * @description 定义职级（Rank）及其费率（RankRate）相关的 VO 类型，供 rank/index.ts 及上层业务使用。
+ * @module api/resource/rank
  */
-export interface JobLevelVO {
+export interface RankVO {
   /** 职级 ID */
   id: number
   /** 职级编码（L1-L18） */
@@ -20,7 +20,7 @@ export interface JobLevelVO {
   status: string
 }
 
-export interface JobLevelRateVO {
+export interface RankRateVO {
   /** 费率 ID */
   id: number
   /** 职级编码 */

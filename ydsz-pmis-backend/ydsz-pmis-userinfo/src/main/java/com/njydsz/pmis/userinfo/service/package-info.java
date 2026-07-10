@@ -11,7 +11,7 @@
  *   <li>PermissionService - 权限/菜单 CRUD、用户权限码与菜单树查询。</li>
  *   <li>DepartmentService - 部门 CRUD、部门树构建。</li>
  *   <li>DictService - 字典类型与字典项查询、缓存刷新。</li>
- *   <li>JobLevelService - 职级与生效费率（按日期）查询、版本历史。</li>
+ *   <li>RankService - 职级与生效费率（按日期）查询、版本历史。</li>
  *   <li>EmployeeTagService - 人员标签增删、覆盖式设置、按员工查询、按标签筛选候选人。</li>
  *   <li>AuthService - 登录、刷新 Token、登出、Token 黑名单、图形验证码。</li>
  *   <li>SessionService - 活跃会话维护、主动/强制下线、踢出其他会话。</li>

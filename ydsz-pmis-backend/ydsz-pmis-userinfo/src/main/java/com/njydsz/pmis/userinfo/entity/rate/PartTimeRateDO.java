@@ -14,7 +14,7 @@ import java.time.LocalDate;
 /**
  * 兼职职级费率实体（P1-P18，时薪核算月薪+商业保险）
  *
- * <p>与全职 {@link JobLevelRateDO}（L1-L18，月薪+社保公积金）平行，
+ * <p>与全职 {@link RankRateDO}（L1-L18，月薪+社保公积金）平行，
  * 用于兼职员工的成本核算。兼职核心计价单元为<strong>时薪</strong>，
  * 月薪 = 时薪(hourlyRate) × 月工时数(monthlyHours)。
  *

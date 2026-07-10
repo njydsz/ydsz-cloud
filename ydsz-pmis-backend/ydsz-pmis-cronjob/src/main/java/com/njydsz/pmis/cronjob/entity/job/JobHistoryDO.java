@@ -10,6 +10,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+// 引入 fastjson2 仅用于 beforeSnapshot 字段的序列化说明, 实际序列化由 Service 层完成
+
 /**
  * 任务配置历史版本实体（P1-6 任务版本管理）。
  *
@@ -40,8 +42,17 @@ public class JobHistoryDO implements Serializable {
     /** 版本号（对应更新前的 job.version） */
     private Integer version;
 
-    /** 完整 JobDO JSON 快照 */
+    /** 完整 JobDO JSON 快照（变更后状态; DELETE 时为 NULL） */
     private String snapshot;
+
+    /** 变更类型: CREATE / UPDATE / DELETE（合并自原 pmis_job_version_history） */
+    private String changeType;
+
+    /** 变更前快照 JSON（CREATE 时为 NULL; UPDATE/DELETE 时记录变更前状态） */
+    private String beforeSnapshot;
+
+    /** 变更说明（如"任务创建"、"任务更新"、"任务删除"） */
+    private String changeRemark;
 
     /** 任务名称（冗余，便于列表展示） */
     private String jobName;

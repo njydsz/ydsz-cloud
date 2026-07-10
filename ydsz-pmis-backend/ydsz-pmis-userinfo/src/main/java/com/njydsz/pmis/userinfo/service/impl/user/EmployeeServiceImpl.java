@@ -9,16 +9,16 @@ import com.njydsz.pmis.userinfo.dto.user.EmployeeCreateDTO;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.org.DepartmentDO;
 import com.njydsz.pmis.userinfo.entity.user.EmployeeDO;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelDO;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelRateDO;
+import com.njydsz.pmis.userinfo.entity.rate.RankDO;
+import com.njydsz.pmis.userinfo.entity.rate.RankRateDO;
 import com.njydsz.pmis.userinfo.entity.rate.OutsourceRateDO;
 import com.njydsz.pmis.userinfo.entity.rate.PartTimeRateDO;
 import com.njydsz.pmis.userinfo.entity.org.PositionDO;
 import com.njydsz.pmis.userinfo.enums.user.EmployeeType;
 import com.njydsz.pmis.userinfo.mapper.org.DepartmentMapper;
 import com.njydsz.pmis.userinfo.mapper.user.EmployeeMapper;
-import com.njydsz.pmis.userinfo.mapper.rate.JobLevelMapper;
-import com.njydsz.pmis.userinfo.mapper.rate.JobLevelRateMapper;
+import com.njydsz.pmis.userinfo.mapper.rate.RankMapper;
+import com.njydsz.pmis.userinfo.mapper.rate.RankRateMapper;
 import com.njydsz.pmis.userinfo.mapper.rate.OutsourceRateMapper;
 import com.njydsz.pmis.userinfo.mapper.rate.PartTimeRateMapper;
 import com.njydsz.pmis.userinfo.mapper.org.PositionMapper;
@@ -55,8 +55,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeMapper employeeMapper;
     private final DepartmentMapper departmentMapper;
     private final PositionMapper positionMapper;
-    private final JobLevelMapper jobLevelMapper;
-    private final JobLevelRateMapper jobLevelRateMapper;
+    private final RankMapper rankMapper;
+    private final RankRateMapper rankRateMapper;
     private final PartTimeRateMapper partTimeRateMapper;
     private final OutsourceRateMapper outsourceRateMapper;
 
@@ -242,9 +242,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         profile.put("outsourceRateId", emp.getOutsourceRateId());
 
         if (EmployeeType.FULL_TIME.getCode().equals(employeeType)) {
-            // 全职：月薪 + 社保公积金 + 差旅报销 + 差旅补贴（公司承担），取 pmis_job_level_rate.total_cost
+            // 全职：月薪 + 社保公积金 + 差旅报销 + 差旅补贴（公司承担），取 pmis_rank_rate.total_cost
             LocalDate today = LocalDate.now();
-            JobLevelRateDO rate = jobLevelRateMapper.selectEffective(emp.getLevelCode(), today);
+            RankRateDO rate = rankRateMapper.selectEffective(emp.getLevelCode(), today);
             profile.put("monthlyTotalCost", rate != null ? rate.getTotalCost() : null);
             profile.put("hourlyRate", null);
             profile.put("overtimeRate", null);
@@ -380,7 +380,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             return null;
         }
         try {
-            JobLevelDO level = jobLevelMapper.selectByCode(levelCode);
+            RankDO level = rankMapper.selectByCode(levelCode);
             return level == null ? null : level.getLevelName();
         } catch (Exception e) {
             log.warn("[Employee] 装配职级名称失败: levelCode={}, msg={}", levelCode, e.getMessage());

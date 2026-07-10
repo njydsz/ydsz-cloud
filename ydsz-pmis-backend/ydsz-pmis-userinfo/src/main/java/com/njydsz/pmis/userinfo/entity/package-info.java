@@ -11,7 +11,7 @@
  *   <li>用户与认证：UserAccountDO、UserRoleDO、UserSessionDO、User2FADO。</li>
  *   <li>组织架构：DepartmentDO、EmployeeDO、PositionDO、EmployeeTagDO。</li>
  *   <li>权限模型：RoleDO、RolePermissionDO、PermissionDO。</li>
- *   <li>基础数据：DictTypeDO、DictItemDO、JobLevelDO、JobLevelRateDO。</li>
+ *   <li>基础数据：DictTypeDO、DictItemDO、RankDO、RankRateDO。</li>
  *   <li>资源调度：ResourcePoolDO、ResourceAssignmentDO、BenchRecordDO。</li>
  *   <li>考勤管理：AttendanceDO、LeaveDO、OvertimeDO。</li>
  * </ul>

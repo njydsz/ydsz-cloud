@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.service.rate;
 
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelDO;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelRateDO;
+import com.njydsz.pmis.userinfo.entity.rate.RankDO;
+import com.njydsz.pmis.userinfo.entity.rate.RankRateDO;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,14 +12,14 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-public interface JobLevelService {
+public interface RankService {
 
     /**
      * 所有职级
      *
      * @return 职级列表
      */
-    List<JobLevelDO> listAllLevels();
+    List<RankDO> listAllLevels();
 
     /**
      * 查询某职级当前生效的费率
@@ -28,7 +28,7 @@ public interface JobLevelService {
      * @param date      生效日期
      * @return 生效费率，不存在时返回 null
      */
-    JobLevelRateDO getEffectiveRate(String levelCode, LocalDate date);
+    RankRateDO getEffectiveRate(String levelCode, LocalDate date);
 
     /**
      * 查询某职级所有版本
@@ -36,5 +36,5 @@ public interface JobLevelService {
      * @param levelCode 职级编码
      * @return 费率版本列表
      */
-    List<JobLevelRateDO> listAllVersions(String levelCode);
+    List<RankRateDO> listAllVersions(String levelCode);
 }

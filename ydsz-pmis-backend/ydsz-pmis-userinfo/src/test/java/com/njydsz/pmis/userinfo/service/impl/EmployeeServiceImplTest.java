@@ -6,16 +6,16 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeCreateDTO;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.org.DepartmentDO;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelRateDO;
+import com.njydsz.pmis.userinfo.entity.rate.RankRateDO;
 import com.njydsz.pmis.userinfo.entity.user.EmployeeDO;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelDO;
+import com.njydsz.pmis.userinfo.entity.rate.RankDO;
 import com.njydsz.pmis.userinfo.entity.rate.OutsourceRateDO;
 import com.njydsz.pmis.userinfo.entity.rate.PartTimeRateDO;
 import com.njydsz.pmis.userinfo.entity.org.PositionDO;
 import com.njydsz.pmis.userinfo.mapper.org.DepartmentMapper;
 import com.njydsz.pmis.userinfo.mapper.user.EmployeeMapper;
-import com.njydsz.pmis.userinfo.mapper.rate.JobLevelMapper;
-import com.njydsz.pmis.userinfo.mapper.rate.JobLevelRateMapper;
+import com.njydsz.pmis.userinfo.mapper.rate.RankMapper;
+import com.njydsz.pmis.userinfo.mapper.rate.RankRateMapper;
 import com.njydsz.pmis.userinfo.mapper.rate.OutsourceRateMapper;
 import com.njydsz.pmis.userinfo.mapper.rate.PartTimeRateMapper;
 import com.njydsz.pmis.userinfo.mapper.org.PositionMapper;
@@ -65,9 +65,9 @@ class EmployeeServiceImplTest {
     @Mock
     private PositionMapper positionMapper;
     @Mock
-    private JobLevelMapper jobLevelMapper;
+    private RankMapper rankMapper;
     @Mock
-    private JobLevelRateMapper jobLevelRateMapper;
+    private RankRateMapper rankRateMapper;
     @Mock
     private PartTimeRateMapper partTimeRateMapper;
     @Mock
@@ -390,12 +390,12 @@ class EmployeeServiceImplTest {
         dept.setDeptName("研发部");
         PositionDO pos = new PositionDO();
         pos.setPositionName("Java 工程师");
-        JobLevelDO level = new JobLevelDO();
+        RankDO level = new RankDO();
         level.setLevelName("中级 L5");
 
         when(departmentMapper.selectById("D1")).thenReturn(dept);
         when(positionMapper.selectById("P1")).thenReturn(pos);
-        when(jobLevelMapper.selectByCode("L5")).thenReturn(level);
+        when(rankMapper.selectByCode("L5")).thenReturn(level);
 
         EmployeeVO vo = service.assemble(emp);
 
@@ -420,7 +420,7 @@ class EmployeeServiceImplTest {
         emp.setDepartmentId("D1");
         emp.setLevelCode("L5");
         when(departmentMapper.selectById("D1")).thenThrow(new RuntimeException("db error"));
-        when(jobLevelMapper.selectByCode("L5")).thenReturn(null);
+        when(rankMapper.selectByCode("L5")).thenReturn(null);
 
         EmployeeVO vo = service.assemble(emp);
 
@@ -432,7 +432,7 @@ class EmployeeServiceImplTest {
     // ==================== getCostProfile ====================
 
     @Test
-    @DisplayName("getCostProfile 全职: 返回 JobLevelRate.totalCost")
+    @DisplayName("getCostProfile 全职: 返回 RankRate.totalCost")
     void getCostProfile_fullTime() {
         EmployeeDO emp = new EmployeeDO();
         emp.setId("E1");
@@ -440,9 +440,9 @@ class EmployeeServiceImplTest {
         emp.setLevelCode("L5");
         when(employeeMapper.selectById("E1")).thenReturn(emp);
 
-        JobLevelRateDO rate = new JobLevelRateDO();
+        RankRateDO rate = new RankRateDO();
         rate.setTotalCost(new BigDecimal("10360"));
-        when(jobLevelRateMapper.selectEffective(eq("L5"), any())).thenReturn(rate);
+        when(rankRateMapper.selectEffective(eq("L5"), any())).thenReturn(rate);
 
         Map<String, Object> profile = service.getCostProfile("E1");
 

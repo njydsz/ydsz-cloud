@@ -1,9 +1,9 @@
 package com.njydsz.pmis.userinfo.controller.rate;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelDO;
-import com.njydsz.pmis.userinfo.entity.rate.JobLevelRateDO;
-import com.njydsz.pmis.userinfo.service.rate.JobLevelService;
+import com.njydsz.pmis.userinfo.entity.rate.RankDO;
+import com.njydsz.pmis.userinfo.entity.rate.RankRateDO;
+import com.njydsz.pmis.userinfo.service.rate.RankService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -22,13 +22,13 @@ import java.util.List;
  */
 @Tag(name = "基础数据-职级费率")
 @RestController
-@RequestMapping("/job-levels")
+@RequestMapping("/ranks")
 @RequiredArgsConstructor
 @Validated
-public class JobLevelController {
+public class RankController {
 
     /** 职级服务 */
-    private final JobLevelService jobLevelService;
+    private final RankService rankService;
 
     /**
      * 查询所有职级 (L1-L18)
@@ -37,8 +37,8 @@ public class JobLevelController {
      */
     @Operation(summary = "所有职级 (L1-L18)")
     @GetMapping
-    public Result<List<JobLevelDO>> list() {
-        return Result.ok(jobLevelService.listAllLevels());
+    public Result<List<RankDO>> list() {
+        return Result.ok(rankService.listAllLevels());
     }
 
     /**
@@ -50,10 +50,10 @@ public class JobLevelController {
      */
     @Operation(summary = "查询生效的职级费率")
     @GetMapping("/rate")
-    public Result<JobLevelRateDO> getRate(@RequestParam String levelCode,
-                                     @RequestParam(required = false)
-                                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return Result.ok(jobLevelService.getEffectiveRate(levelCode, date));
+    public Result<RankRateDO> getRate(@RequestParam String levelCode,
+                                 @RequestParam(required = false)
+                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return Result.ok(rankService.getEffectiveRate(levelCode, date));
     }
 
     /**
@@ -64,7 +64,7 @@ public class JobLevelController {
      */
     @Operation(summary = "查询某职级所有版本")
     @GetMapping("/rate/versions")
-    public Result<List<JobLevelRateDO>> listVersions(@RequestParam String levelCode) {
-        return Result.ok(jobLevelService.listAllVersions(levelCode));
+    public Result<List<RankRateDO>> listVersions(@RequestParam String levelCode) {
+        return Result.ok(rankService.listAllVersions(levelCode));
     }
 }

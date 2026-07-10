@@ -27,8 +27,9 @@ public interface JobHistoryMapper extends BaseMapper<JobHistoryDO> {
      * @param jobId 任务 ID
      * @return 历史版本列表（版本号降序）；无记录时返回空列表
      */
-    @Select("SELECT id, job_id, version, snapshot, job_name, job_key, handler, "
-            + "       cron_expression, params_json, remark, changed_by, changed_at, deleted "
+    @Select("SELECT id, job_id, version, snapshot, change_type, before_snapshot, change_remark, "
+            + "       job_name, job_key, handler, cron_expression, params_json, remark, "
+            + "       changed_by, changed_at, deleted "
             + "FROM pmis_job_history "
             + "WHERE job_id = #{jobId} AND deleted = 0 "
             + "ORDER BY version DESC")
@@ -41,8 +42,9 @@ public interface JobHistoryMapper extends BaseMapper<JobHistoryDO> {
      * @param version 版本号
      * @return 历史版本记录；不存在时返回 null
      */
-    @Select("SELECT id, job_id, version, snapshot, job_name, job_key, handler, "
-            + "       cron_expression, params_json, remark, changed_by, changed_at, deleted "
+    @Select("SELECT id, job_id, version, snapshot, change_type, before_snapshot, change_remark, "
+            + "       job_name, job_key, handler, cron_expression, params_json, remark, "
+            + "       changed_by, changed_at, deleted "
             + "FROM pmis_job_history "
             + "WHERE job_id = #{jobId} AND version = #{version} AND deleted = 0")
     JobHistoryDO selectByVersion(@Param("jobId") String jobId,

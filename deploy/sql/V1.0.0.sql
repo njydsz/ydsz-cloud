@@ -401,7 +401,7 @@ COMMENT ON COLUMN pmis_position.id IS '主键 ID';
 COMMENT ON COLUMN pmis_position.position_code IS '岗位编码(全局唯一)';
 COMMENT ON COLUMN pmis_position.position_name IS '岗位名称';
 COMMENT ON COLUMN pmis_position.department_id IS '所属部门 ID(关联 pmis_department.id)';
-COMMENT ON COLUMN pmis_position.level_code IS '岗位职级(关联 pmis_job_level.level_code)';
+COMMENT ON COLUMN pmis_position.level_code IS '岗位职级(关联 pmis_rank.level_code)';
 COMMENT ON COLUMN pmis_position.description IS '岗位职责说明';
 COMMENT ON COLUMN pmis_position.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_position.created_by IS '创建人 ID';
@@ -417,7 +417,7 @@ CREATE INDEX IF NOT EXISTS idx_position_tenant_created
     ON pmis_position(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 职级表 (L1-L18)
-CREATE TABLE IF NOT EXISTS pmis_job_level(
+CREATE TABLE IF NOT EXISTS pmis_rank(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     level_code      VARCHAR(8)     NOT NULL,
     level_name      VARCHAR(64)    NOT NULL,
@@ -431,32 +431,32 @@ CREATE TABLE IF NOT EXISTS pmis_job_level(
     updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_job_level_code UNIQUE (level_code, deleted),
-    CONSTRAINT ck_pjl_segment     CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
-    CONSTRAINT ck_pjl_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pjl_deleted_enum CHECK (deleted IN (0, 1))
+    CONSTRAINT uk_pmis_rank_code UNIQUE (level_code, deleted),
+    CONSTRAINT ck_pr_segment     CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
+    CONSTRAINT ck_pr_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pr_deleted_enum CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_job_level IS '职级表: L1-L18 共 18 级,定义能力晋升阶梯';
-COMMENT ON COLUMN pmis_job_level.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_level.level_code IS '职级编码(L1-L18)';
-COMMENT ON COLUMN pmis_job_level.level_name IS '职级名称(如助理工程师/开发工程师/架构师)';
-COMMENT ON COLUMN pmis_job_level.level_segment IS '职级段: PRIMARY 初级(L1-L3) / MIDDLE 中级(L4-L6) / SENIOR 高级(L7-L9) / EXPERT 专家(L10-L12) / STRATEGIC 战略(L13-L18)';
-COMMENT ON COLUMN pmis_job_level.sort_order IS '职级排序号(升序,L1=1)';
-COMMENT ON COLUMN pmis_job_level.description IS '职级能力要求说明';
-COMMENT ON COLUMN pmis_job_level.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_job_level.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job_level.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_level.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_job_level.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_job_level.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_job_level.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE pmis_rank IS '职级表: L1-L18 共 18 级,定义能力晋升阶梯';
+COMMENT ON COLUMN pmis_rank.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rank.level_code IS '职级编码(L1-L18)';
+COMMENT ON COLUMN pmis_rank.level_name IS '职级名称(如助理工程师/开发工程师/架构师)';
+COMMENT ON COLUMN pmis_rank.level_segment IS '职级段: PRIMARY 初级(L1-L3) / MIDDLE 中级(L4-L6) / SENIOR 高级(L7-L9) / EXPERT 专家(L10-L12) / STRATEGIC 战略(L13-L18)';
+COMMENT ON COLUMN pmis_rank.sort_order IS '职级排序号(升序,L1=1)';
+COMMENT ON COLUMN pmis_rank.description IS '职级能力要求说明';
+COMMENT ON COLUMN pmis_rank.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN pmis_rank.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_rank.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rank.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_rank.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_rank.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_rank.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant_sort
-    ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_rank_tenant ON pmis_rank(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rank_tenant_sort
+    ON pmis_rank(tenant_id, sort_order) WHERE deleted = 0;
 
 -- 职级费率表 (对外人天 / 对内人天)
-CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
+CREATE TABLE IF NOT EXISTS pmis_rank_rate(
     id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     level_code          VARCHAR(8)     NOT NULL,
     external_daily      NUMERIC(10,2)  NOT NULL,
@@ -481,42 +481,42 @@ CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
     tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_job_level_rate UNIQUE (level_code, version, deleted),
-    CONSTRAINT ck_pjlr_external_nonneg CHECK (external_daily >= 0 AND internal_daily >= 0),
-    CONSTRAINT ck_pjlr_billable_range  CHECK (billable_target >= 0 AND billable_target <= 1),
-    CONSTRAINT ck_pjlr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
-    CONSTRAINT ck_pjlr_deleted_enum    CHECK (deleted IN (0, 1)),
-    CONSTRAINT ck_pjlr_cost_valid      CHECK (total_cost = base_salary + social_company + fund_company + travel_reimbursement + travel_allowance)
+    CONSTRAINT uk_pmis_rank_rate UNIQUE (level_code, version, deleted),
+    CONSTRAINT ck_prr_external_nonneg CHECK (external_daily >= 0 AND internal_daily >= 0),
+    CONSTRAINT ck_prr_billable_range  CHECK (billable_target >= 0 AND billable_target <= 1),
+    CONSTRAINT ck_prr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
+    CONSTRAINT ck_prr_deleted_enum    CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_prr_cost_valid      CHECK (total_cost = base_salary + social_company + fund_company + travel_reimbursement + travel_allowance)
 );
-COMMENT ON TABLE pmis_job_level_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金+差旅成本拆解,支持版本化生效';
-COMMENT ON COLUMN pmis_job_level_rate.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job_level_rate.level_code IS '职级编码(L1-L18,关联 pmis_job_level.level_code)';
-COMMENT ON COLUMN pmis_job_level_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
-COMMENT ON COLUMN pmis_job_level_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
-COMMENT ON COLUMN pmis_job_level_rate.base_salary IS '月度基础工资(元)';
-COMMENT ON COLUMN pmis_job_level_rate.social_company IS '公司社保部分(元/月)';
-COMMENT ON COLUMN pmis_job_level_rate.social_personal IS '个人社保部分(元/月,从工资扣除)';
-COMMENT ON COLUMN pmis_job_level_rate.fund_company IS '公司公积金部分(元/月)';
-COMMENT ON COLUMN pmis_job_level_rate.fund_personal IS '个人公积金部分(元/月,从工资扣除)';
-COMMENT ON COLUMN pmis_job_level_rate.take_home IS '税后到手工资(元/月)';
-COMMENT ON COLUMN pmis_job_level_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_job_level_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
-COMMENT ON COLUMN pmis_job_level_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company+travel_reimbursement+travel_allowance)';
-COMMENT ON COLUMN pmis_job_level_rate.billable_target IS '可计费利用率目标(0.0-1.0,如 0.78=78%)';
-COMMENT ON COLUMN pmis_job_level_rate.effective_date IS '生效日期';
-COMMENT ON COLUMN pmis_job_level_rate.expire_date IS '失效日期(NULL 表示长期有效)';
-COMMENT ON COLUMN pmis_job_level_rate.version IS '版本号(同职级可有多版本,通过 effective_date 区分)';
-COMMENT ON COLUMN pmis_job_level_rate.description IS '费率版本说明';
-COMMENT ON COLUMN pmis_job_level_rate.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job_level_rate.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job_level_rate.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_job_level_rate.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_job_level_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_job_level_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON TABLE pmis_rank_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金+差旅成本拆解,支持版本化生效';
+COMMENT ON COLUMN pmis_rank_rate.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rank_rate.level_code IS '职级编码(L1-L18,关联 pmis_rank.level_code)';
+COMMENT ON COLUMN pmis_rank_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
+COMMENT ON COLUMN pmis_rank_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
+COMMENT ON COLUMN pmis_rank_rate.base_salary IS '月度基础工资(元)';
+COMMENT ON COLUMN pmis_rank_rate.social_company IS '公司社保部分(元/月)';
+COMMENT ON COLUMN pmis_rank_rate.social_personal IS '个人社保部分(元/月,从工资扣除)';
+COMMENT ON COLUMN pmis_rank_rate.fund_company IS '公司公积金部分(元/月)';
+COMMENT ON COLUMN pmis_rank_rate.fund_personal IS '个人公积金部分(元/月,从工资扣除)';
+COMMENT ON COLUMN pmis_rank_rate.take_home IS '税后到手工资(元/月)';
+COMMENT ON COLUMN pmis_rank_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_rank_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+COMMENT ON COLUMN pmis_rank_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company+travel_reimbursement+travel_allowance)';
+COMMENT ON COLUMN pmis_rank_rate.billable_target IS '可计费利用率目标(0.0-1.0,如 0.78=78%)';
+COMMENT ON COLUMN pmis_rank_rate.effective_date IS '生效日期';
+COMMENT ON COLUMN pmis_rank_rate.expire_date IS '失效日期(NULL 表示长期有效)';
+COMMENT ON COLUMN pmis_rank_rate.version IS '版本号(同职级可有多版本,通过 effective_date 区分)';
+COMMENT ON COLUMN pmis_rank_rate.description IS '费率版本说明';
+COMMENT ON COLUMN pmis_rank_rate.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_rank_rate.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rank_rate.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_rank_rate.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_rank_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_rank_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
-CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pmis_rank_rate_code ON pmis_rank_rate (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_rank_rate_effective ON pmis_rank_rate (effective_date, expire_date);
+CREATE INDEX IF NOT EXISTS idx_rank_rate_tenant ON pmis_rank_rate(tenant_id);
 
 -- 员工表
 CREATE TABLE IF NOT EXISTS pmis_employee(
@@ -575,7 +575,7 @@ COMMENT ON COLUMN pmis_employee.phone_enc IS '手机号 SM4 加密密文';
 COMMENT ON COLUMN pmis_employee.email IS '企业邮箱';
 COMMENT ON COLUMN pmis_employee.department_id IS '所属部门 ID(关联 pmis_department.id)';
 COMMENT ON COLUMN pmis_employee.position_id IS '岗位 ID(关联 pmis_position.id)';
-COMMENT ON COLUMN pmis_employee.level_code IS '职级编码(全职 L1-L18 / 兼职 P1-P18,关联 pmis_job_level 或 pmis_part_time_rate)';
+COMMENT ON COLUMN pmis_employee.level_code IS '职级编码(全职 L1-L18 / 兼职 P1-P18,关联 pmis_rank 或 pmis_part_time_rate)';
 COMMENT ON COLUMN pmis_employee.employee_type IS '雇佣类型: FULL_TIME 全职 / PART_TIME 兼职 / OUTSOURCE 外包';
 COMMENT ON COLUMN pmis_employee.part_time_rate_id IS '兼职费率 ID(仅 PART_TIME 类型填写,关联 pmis_part_time_rate.id)';
 COMMENT ON COLUMN pmis_employee.outsource_rate_id IS '外包费率 ID(仅 OUTSOURCE 类型填写,关联 pmis_outsource_rate.id)';
@@ -1162,7 +1162,7 @@ VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMy.Mrq8BpVLqMDvQXEvCJ5DEmCJWP1tCaa',
 ON CONFLICT (username, deleted) DO NOTHING;
 
 -- 初始化职级 (L1-L18)
-INSERT INTO pmis_job_level (level_code, level_name, level_segment, sort_order, description, created_by)
+INSERT INTO pmis_rank (level_code, level_name, level_segment, sort_order, description, created_by)
 VALUES
     ('L1',  '助理工程师',   'PRIMARY',   1,  '0-1 年（应届大专/中专）', 0),
     ('L2',  '初级开发工程师','PRIMARY',  2,  '0-1 年（应届本科）', 0),
@@ -1185,7 +1185,7 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 初始化职级费率 (V3.2 双列直出)
-INSERT INTO pmis_job_level_rate
+INSERT INTO pmis_rank_rate
 (level_code, external_daily, internal_daily, base_salary, social_company, social_personal, fund_company, fund_personal, take_home, travel_reimbursement, travel_allowance, total_cost, billable_target, effective_date, version, created_by)
 VALUES
     ('L1',  400,  200,  4000,  980,  430,  200,  200,  3370,  500,  300,  5980,  0.78, '2026-01-01', 1, 0),
@@ -6198,7 +6198,7 @@ VALUES
     ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:menu',     '菜单管理',     'MENU', '/system/menu',     'system/menu/index',     'menu',     3, 1, 'ENABLED', 0),
     ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:dept',     '部门管理',     'MENU', '/system/dept',     'system/dept/index',     'office-building', 4, 1, 'ENABLED', 0),
     ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:dict',     '数据字典',     'MENU', '/system/dict',     'system/dict/index',     'collection', 5, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:job-level','职级管理',     'MENU', '/system/job-level','system/job-level/index', 'medal',    6, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:rank','职级管理',     'MENU', '/system/rank','system/rank/index', 'medal',    6, 1, 'ENABLED', 0),
     ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:config',   '参数配置',     'MENU', '/system/config',   'system/config/index',   'tools',    7, 1, 'ENABLED', 0)
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
@@ -10574,12 +10574,12 @@ ALTER TABLE pmis_position ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NUL
 CREATE INDEX IF NOT EXISTS idx_position_tenant ON pmis_position(tenant_id);
 
 -- 10. 职级
-ALTER TABLE pmis_job_level ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
+ALTER TABLE pmis_rank ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_rank_tenant ON pmis_rank(tenant_id);
 
 -- 11. 职级费率
-ALTER TABLE pmis_job_level_rate ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
+ALTER TABLE pmis_rank_rate ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+CREATE INDEX IF NOT EXISTS idx_rank_rate_tenant ON pmis_rank_rate(tenant_id);
 
 -- 12. 员工
 ALTER TABLE pmis_employee ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
@@ -10619,8 +10619,8 @@ CREATE INDEX IF NOT EXISTS idx_department_tenant_created
     ON pmis_department(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_position_tenant_created
     ON pmis_position(tenant_id, created_at DESC) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant_created
-    ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_rank_tenant_created
+    ON pmis_rank(tenant_id, sort_order) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_employee_tenant_created
     ON pmis_employee(tenant_id, created_at DESC) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_user_account_tenant_created
@@ -10726,8 +10726,8 @@ ANALYZE pmis_user_role;
 ANALYZE pmis_role_permission;
 ANALYZE pmis_department;
 ANALYZE pmis_position;
-ANALYZE pmis_job_level;
-ANALYZE pmis_job_level_rate;
+ANALYZE pmis_rank;
+ANALYZE pmis_rank_rate;
 ANALYZE pmis_employee;
 ANALYZE pmis_employee_tag;
 ANALYZE pmis_user_account;

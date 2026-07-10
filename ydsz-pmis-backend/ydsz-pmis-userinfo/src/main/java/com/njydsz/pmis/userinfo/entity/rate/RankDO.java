@@ -17,8 +17,8 @@ import java.io.Serial;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("pmis_job_level")
-public class JobLevelDO extends BaseDO {
+@TableName("pmis_rank")
+public class RankDO extends BaseDO {
 
     @Serial
     private static final long serialVersionUID = 1L;

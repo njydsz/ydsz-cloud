@@ -16,7 +16,7 @@ import java.time.LocalDate;
  * 员工实体
  *
  * <p>员工的完整档案信息（区别于 pmis_user_account 登录账号）。
- * 一对一关联 pmis_user_account(user_id)；多对一关联 pmis_department / pmis_position / pmis_job_level。
+ * 一对一关联 pmis_user_account(user_id)；多对一关联 pmis_department / pmis_position / pmis_rank。
  * 敏感字段（身份证 / 手机）以 SM4 加密列存储明文（id_card_enc/phone_enc），同时保留明文列用于内部查询。
  *
  * @author ydsz-pmis-team
