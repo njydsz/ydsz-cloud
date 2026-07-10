@@ -39,7 +39,7 @@ class ProjectStatusToolTest {
 
     @BeforeEach
     void setUp() {
-        tool = new ProjectStatusTool();
+        tool = new ProjectStatusTool(projectServiceClient);
     }
 
     @Test
@@ -58,7 +58,6 @@ class ProjectStatusToolTest {
     @DisplayName("真实数据模式：EVM + 风险分页正常聚合")
     void testRealData_正常聚合() {
         ReflectionTestUtils.setField(tool, "mockEnabled", false);
-        ReflectionTestUtils.setField(tool, "projectServiceClient", projectServiceClient);
 
         // EVM 仪表盘返回 CPI/SPI
         Map<String, Object> dash = new HashMap<>();
@@ -89,7 +88,6 @@ class ProjectStatusToolTest {
     @DisplayName("真实数据模式：EVM 降级，CPI/SPI 归零，风险事件数正常")
     void testRealData_EVM降级() {
         ReflectionTestUtils.setField(tool, "mockEnabled", false);
-        ReflectionTestUtils.setField(tool, "projectServiceClient", projectServiceClient);
 
         // EVM 仪表盘降级
         when(projectServiceClient.evmDashboard("P001"))
@@ -114,7 +112,6 @@ class ProjectStatusToolTest {
     @DisplayName("真实数据模式：EVM 与风险分页均降级，全零值")
     void testRealData_全部降级() {
         ReflectionTestUtils.setField(tool, "mockEnabled", false);
-        ReflectionTestUtils.setField(tool, "projectServiceClient", projectServiceClient);
 
         when(projectServiceClient.evmDashboard("P001"))
                 .thenReturn(Result.failed(BizErrorCode.SERVICE_UNAVAILABLE));

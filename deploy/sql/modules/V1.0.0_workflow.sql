@@ -1,29 +1,7 @@
--- ====================================================================
--- Workflow Engine (Def/Instance/Delegate/Notify/DMN/Integ)
--- Module: workflow | Version: V1.0.0 | Target: PostgreSQL 18
--- Generated from deploy/sql/V1.0.0.sql
--- ====================================================================
-
--- ============================ [004] init pmis workflow schema ============================
-
--- =====================================================
--- PMIS 工作流基础模块清理 DDL（Flowable 表已下线）
--- 版本: V1.0.0_004
--- 描述: 完全移除 Flowable 引擎相关的业务关联表 / 表单定义表 / 节点配置表
---       业务流程关联信息已统一收敛到自研 pmis_flow_instance / pmis_flow_run_task
---       流程表单/节点配置已收敛到自研 pmis_flow_definition / pmis_flow_node / pmis_flow_skip
--- 历史: V1.0.0_004 旧版本曾创建 pmis_workflow_business / pmis_workflow_form / pmis_workflow_node_config
---       现已废弃，本次迁移仅 DROP（不重建），以保证幂等
--- =====================================================
-
--- 清理：业务流程实例关联表（功能已被 pmis_flow_instance 替代）
--- P1-6: DROP 改 CREATE IF NOT EXISTS 即可,无需 DROP(已废弃表)
-
--- 清理：流程表单定义表（功能已通过 pmis_flow_definition.form_path 替代）
--- P1-6: 已废弃,无需 DROP
-
--- 清理：流程节点配置表（功能已通过 pmis_flow_node.permission_flag / ext 替代）
--- P1-6: 已废弃,无需 DROP
+-- ============================================================
+-- PMIS workflow module SQL
+-- Auto-generated from V1.0.0.sql
+-- ============================================================
 
 -- --------------------------------------------------------------------
 
@@ -43,7 +21,7 @@
 -- 0. 流程分类表（P1-6: 对标钉钉/飞书审批的分类管理）
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_category (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     category_code       VARCHAR(64)       NOT NULL,
     category_name       VARCHAR(128)      NOT NULL,
@@ -59,12 +37,16 @@ CREATE TABLE IF NOT EXISTS pmis_flow_category (
 );
 
 COMMENT ON TABLE  pmis_flow_category IS 'P1-6: 流程分类表';
+
 COMMENT ON COLUMN pmis_flow_category.category_code IS '分类编码';
+
 COMMENT ON COLUMN pmis_flow_category.category_name IS '分类名称';
+
 COMMENT ON COLUMN pmis_flow_category.parent_id IS '父分类 ID';
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pfc_code
     ON pmis_flow_category (tenant_id, category_code) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfc_parent
     ON pmis_flow_category (parent_id) WHERE parent_id IS NOT NULL AND deleted = 0;
 
@@ -74,7 +56,7 @@ CREATE INDEX IF NOT EXISTS idx_pfc_parent
 -- -----------------------------------------------------
 -- P1-6: 已废弃,无需 DROP
 CREATE TABLE IF NOT EXISTS pmis_flow_definition(
-    id                 VARCHAR(20)    PRIMARY KEY,
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128) NOT NULL,
     category           VARCHAR(64),
@@ -111,37 +93,60 @@ CREATE TABLE IF NOT EXISTS pmis_flow_definition(
 );
 
 COMMENT ON TABLE  pmis_flow_definition IS '流程定义表: 记录流程的整体信息(编码/名称/版本/表单路径/模型 JSON)';
+
 COMMENT ON COLUMN pmis_flow_definition.flow_code IS '流程编码(业务语义: project_initiation/contract_change/...)';
+
 COMMENT ON COLUMN pmis_flow_definition.flow_name IS '流程名称';
+
 COMMENT ON COLUMN pmis_flow_definition.category IS '流程分类: project/contract/closure/admin';
+
 COMMENT ON COLUMN pmis_flow_definition.flow_version IS '流程版本(语义化版本,1.0/1.1/2.0)';
+
 COMMENT ON COLUMN pmis_flow_definition.version IS '乐观锁版本号';
+
 COMMENT ON COLUMN pmis_flow_definition.model_value IS '设计器模型: CLASSICS 经典 / MIMIC 仿钉钉';
+
 COMMENT ON COLUMN pmis_flow_definition.form_custom IS '审批表单是否自定义: Y 是 / N 否';
+
 COMMENT ON COLUMN pmis_flow_definition.form_path IS '审批表单路径(前端路由或外置表单 URL)';
+
 COMMENT ON COLUMN pmis_flow_definition.activity_status IS '激活状态: 0 挂起 / 1 激活';
+
 COMMENT ON COLUMN pmis_flow_definition.is_publish IS '发布状态: 0 未发布 / 1 已发布 / 9 失效';
+
 COMMENT ON COLUMN pmis_flow_definition.listener_type IS '监听器类型(START/TASK/END 等枚举字符串)';
+
 COMMENT ON COLUMN pmis_flow_definition.listener_path IS '监听器 Spring Bean 路径';
+
 COMMENT ON COLUMN pmis_flow_definition.ext IS '扩展字段(业务自定义 JSON 字符串)';
+
 COMMENT ON COLUMN pmis_flow_definition.description IS '流程描述';
+
 COMMENT ON COLUMN pmis_flow_definition.status IS '状态: ENABLED 启用 / DISABLED 停用';
+
 COMMENT ON COLUMN pmis_flow_definition.locked_by IS 'P2-4: 当前持锁人 ID（设计器协同编辑锁定，NULL=未锁定）';
+
 COMMENT ON COLUMN pmis_flow_definition.locked_at IS 'P2-4: 加锁时间（超过 lock-timeout-minutes 自动释放，默认 30 分钟）';
+
 COMMENT ON COLUMN pmis_flow_definition.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
 COMMENT ON COLUMN pmis_flow_definition.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
+
 COMMENT ON COLUMN pmis_flow_definition.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引)
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pfd_tenant_code_version
     ON pmis_flow_definition(tenant_id, flow_code, version)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfd_tenant_category
     ON pmis_flow_definition(tenant_id, category)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfd_tenant_publish
     ON pmis_flow_definition(tenant_id, is_publish)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfd_tenant_status
     ON pmis_flow_definition(tenant_id, status)
     WHERE deleted = 0;
@@ -152,7 +157,7 @@ CREATE INDEX IF NOT EXISTS idx_pfd_tenant_status
 -- -----------------------------------------------------
 -- P1-6: 已废弃,无需 DROP
 CREATE TABLE IF NOT EXISTS pmis_flow_node(
-    id                 VARCHAR(20)    PRIMARY KEY,
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     definition_id      VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     node_type          SMALLINT     NOT NULL,
@@ -178,27 +183,42 @@ CREATE TABLE IF NOT EXISTS pmis_flow_node(
 );
 
 COMMENT ON TABLE  pmis_flow_node IS '流程节点表: 流程中的各个节点(开始/审批/会签/网关/结束)';
+
 COMMENT ON COLUMN pmis_flow_node.definition_id IS '所属流程定义 ID';
+
 COMMENT ON COLUMN pmis_flow_node.flow_code IS '流程编码(冗余)';
+
 COMMENT ON COLUMN pmis_flow_node.node_type IS '节点类型: 0 开始 / 1 审批 / 2 抄送 / 3 条件 / 4 并行网关 / 5 互斥网关 / 6 结束 / 7 子流程';
+
 COMMENT ON COLUMN pmis_flow_node.node_code IS '节点编码(流程内唯一)';
+
 COMMENT ON COLUMN pmis_flow_node.node_name IS '节点名称';
+
 COMMENT ON COLUMN pmis_flow_node.permission_flag IS '办理人权限标识: role:hr / dept:10 / user:1001 / ${spel}';
+
 COMMENT ON COLUMN pmis_flow_node.skip_any_node IS '任意跳转目标节点编码';
+
 COMMENT ON COLUMN pmis_flow_node.coordinate IS '设计器坐标 JSON {x,y,width,height}';
+
 COMMENT ON COLUMN pmis_flow_node.skip_list IS '节点跳转路由集合 JSON';
+
 COMMENT ON COLUMN pmis_flow_node.ext IS '扩展字段 JSON';
+
 COMMENT ON COLUMN pmis_flow_node.status IS '状态: ENABLED 启用 / DISABLED 停用';
+
 COMMENT ON COLUMN pmis_flow_node.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
 COMMENT ON COLUMN pmis_flow_node.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引)
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pfn_tenant_def_code
     ON pmis_flow_node(tenant_id, definition_id, node_code)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfn_tenant_def_type
     ON pmis_flow_node(tenant_id, definition_id, node_type)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfn_tenant_code
     ON pmis_flow_node(tenant_id, flow_code)
     WHERE deleted = 0;
@@ -208,7 +228,7 @@ CREATE INDEX IF NOT EXISTS idx_pfn_tenant_code
 --    节点之间的有向边：顺序流 / 条件分支 / 退回
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_skip(
-    id                 VARCHAR(20)    PRIMARY KEY,
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     definition_id      VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     skip_name          VARCHAR(128),
@@ -235,24 +255,38 @@ CREATE TABLE IF NOT EXISTS pmis_flow_skip(
 );
 
 COMMENT ON TABLE  pmis_flow_skip IS '节点跳转关联表: 节点之间的有向边,顺序流 / 条件分支 / 退回';
+
 COMMENT ON COLUMN pmis_flow_skip.definition_id IS '所属流程定义 ID';
+
 COMMENT ON COLUMN pmis_flow_skip.flow_code IS '流程编码';
+
 COMMENT ON COLUMN pmis_flow_skip.skip_name IS '跳转名称';
+
 COMMENT ON COLUMN pmis_flow_skip.skip_type IS '跳转类型: PASS 通过 / REJECT 退回 / FORWARD 前加签 / BACK 后加签';
+
 COMMENT ON COLUMN pmis_flow_skip.coordinate IS '设计器坐标 JSON {x,y,width,height}';
+
 COMMENT ON COLUMN pmis_flow_skip.skip_condition IS '跳转条件表达式(SpEL 或 ${var == value})';
+
 COMMENT ON COLUMN pmis_flow_skip.next_node_code IS '下一节点编码';
+
 COMMENT ON COLUMN pmis_flow_skip.next_node_type IS '下一节点类型: 同 pmis_flow_node.node_type';
+
 COMMENT ON COLUMN pmis_flow_skip.coordinate_next IS '下一节点坐标 JSON';
+
 COMMENT ON COLUMN pmis_flow_skip.skip_list IS '跳转路由集合 JSON';
+
 COMMENT ON COLUMN pmis_flow_skip.status IS '状态: ENABLED 启用 / DISABLED 停用';
+
 COMMENT ON COLUMN pmis_flow_skip.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
 COMMENT ON COLUMN pmis_flow_skip.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引)
 CREATE INDEX IF NOT EXISTS idx_pfs_tenant_def_next
     ON pmis_flow_skip(tenant_id, definition_id, next_node_code)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfs_tenant_def_type
     ON pmis_flow_skip(tenant_id, definition_id, skip_type)
     WHERE deleted = 0;
@@ -262,7 +296,7 @@ CREATE INDEX IF NOT EXISTS idx_pfs_tenant_def_type
 --    每次启动流程生成一条实例记录
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_instance(
-    id                 VARCHAR(20)    PRIMARY KEY,
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128),
     definition_id      VARCHAR(20)       NOT NULL,
@@ -304,31 +338,57 @@ CREATE TABLE IF NOT EXISTS pmis_flow_instance(
 );
 
 COMMENT ON TABLE  pmis_flow_instance IS '流程实例表: 每次启动流程生成一条实例记录,记录审批全过程';
+
 COMMENT ON COLUMN pmis_flow_instance.flow_code IS '流程编码';
+
 COMMENT ON COLUMN pmis_flow_instance.flow_name IS '流程名称(冗余,便于查询)';
+
 COMMENT ON COLUMN pmis_flow_instance.definition_id IS '所属流程定义 ID';
+
 COMMENT ON COLUMN pmis_flow_instance.flow_version IS '流程版本号';
+
 COMMENT ON COLUMN pmis_flow_instance.business_type IS '业务类型: PROJECT_INITIATION / CONTRACT_CHANGE / CLOSURE / LEAVE';
+
 COMMENT ON COLUMN pmis_flow_instance.business_id IS '业务对象 ID';
+
 COMMENT ON COLUMN pmis_flow_instance.business_no IS '业务单号: 例如立项编号';
+
 COMMENT ON COLUMN pmis_flow_instance.title IS '流程实例标题';
+
 COMMENT ON COLUMN pmis_flow_instance.initiator_id IS '发起人 ID';
+
 COMMENT ON COLUMN pmis_flow_instance.initiator_name IS '发起人姓名(冗余)';
+
 COMMENT ON COLUMN pmis_flow_instance.current_node_code IS '当前节点编码';
+
 COMMENT ON COLUMN pmis_flow_instance.current_node_name IS '当前节点名称';
+
 COMMENT ON COLUMN pmis_flow_instance.variable IS '流程变量 JSON';
+
 COMMENT ON COLUMN pmis_flow_instance.flow_status IS '实例状态: RUNNING/SUSPENDED/COMPLETED/TERMINATED/REJECTED';
+
 COMMENT ON COLUMN pmis_flow_instance.activity_status IS '激活状态: 0 挂起 / 1 激活';
+
 COMMENT ON COLUMN pmis_flow_instance.start_at IS '开始时间';
+
 COMMENT ON COLUMN pmis_flow_instance.end_at IS '结束时间';
+
 COMMENT ON COLUMN pmis_flow_instance.duration_ms IS '总耗时(毫秒)';
+
 COMMENT ON COLUMN pmis_flow_instance.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+
 COMMENT ON COLUMN pmis_flow_instance.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
 COMMENT ON COLUMN pmis_flow_instance.tenant_id IS '租户 ID: 多租户隔离';
+
 COMMENT ON COLUMN pmis_flow_instance.parent_instance_id IS 'GAP-P1: 父流程实例 ID（子流程场景，可空）';
+
 COMMENT ON COLUMN pmis_flow_instance.parent_node_code IS 'GAP-P1: 父流程中触发子流程的节点编码（可空）';
+
 COMMENT ON COLUMN pmis_flow_instance.reject_reason IS '退回原因（最近一次 REJECT 操作的备注，重审时清空）';
+
 COMMENT ON COLUMN pmis_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
+
 COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
 
 -- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_finance_invoice) 的
@@ -338,18 +398,23 @@ COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
 CREATE UNIQUE INDEX IF NOT EXISTS uk_flow_instance_tenant_biz
     ON pmis_flow_instance(tenant_id, business_type, business_id)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_def
     ON pmis_flow_instance(tenant_id, definition_id)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_code_status
     ON pmis_flow_instance(tenant_id, flow_code, flow_status)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_status
     ON pmis_flow_instance(tenant_id, flow_status)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_initiator
     ON pmis_flow_instance(tenant_id, initiator_id, start_at DESC)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_start
     ON pmis_flow_instance(tenant_id, start_at DESC)
     WHERE deleted = 0;
@@ -379,7 +444,7 @@ CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_start
 --      - approve_finished <= approve_count(已通过不能多于要求)
 --      - approve_count / approve_finished 非负
 CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
-    id                 VARCHAR(20)    PRIMARY KEY,
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     instance_id        VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     definition_id      VARCHAR(20)       NOT NULL,
@@ -445,63 +510,106 @@ CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
 );
 
 COMMENT ON TABLE  pmis_flow_run_task IS '待办任务运行态表: 实例推进过程中产生的待办切片(运行态),办理人待办箱核心表,完成后归档到 pmis_flow_his_task';
+
 COMMENT ON COLUMN pmis_flow_run_task.instance_id IS '所属流程实例 ID';
+
 COMMENT ON COLUMN pmis_flow_run_task.flow_code IS '流程编码(冗余)';
+
 COMMENT ON COLUMN pmis_flow_run_task.definition_id IS '所属流程定义 ID';
+
 COMMENT ON COLUMN pmis_flow_run_task.node_code IS '当前节点编码';
+
 COMMENT ON COLUMN pmis_flow_run_task.node_name IS '当前节点名称';
+
 COMMENT ON COLUMN pmis_flow_run_task.node_type IS '节点类型(同 pmis_flow_node.node_type)';
+
 COMMENT ON COLUMN pmis_flow_run_task.business_type IS '业务类型';
+
 COMMENT ON COLUMN pmis_flow_run_task.business_id IS '业务对象 ID';
+
 COMMENT ON COLUMN pmis_flow_run_task.business_no IS '业务单号';
+
 COMMENT ON COLUMN pmis_flow_run_task.flow_name IS '流程名称';
+
 COMMENT ON COLUMN pmis_flow_run_task.title IS '任务标题';
+
 COMMENT ON COLUMN pmis_flow_run_task.assignor_id IS '转交人 ID: 上一步操作人';
+
 COMMENT ON COLUMN pmis_flow_run_task.assignor_name IS '转交人姓名(冗余)';
+
 COMMENT ON COLUMN pmis_flow_run_task.assignee_type IS '办理人类型: USER/ROLE/DEPT/SPEL/FOREACH_PARALLEL';
+
 COMMENT ON COLUMN pmis_flow_run_task.assignee_id IS '办理人 ID(按 type 解析)';
+
 COMMENT ON COLUMN pmis_flow_run_task.assignee_name IS '办理人姓名(冗余)';
+
 COMMENT ON COLUMN pmis_flow_run_task.permission_flag IS '权限标识: role:hr / dept:10 / user:1001 / ${spel}';
+
 COMMENT ON COLUMN pmis_flow_run_task.perform_type IS '会签类型: OR 或签 / SEQUENTIAL 顺序会签 / PARALLEL 并行会签 / VOTE 票签 / FOREACH_PARALLEL 多实例并行';
+
 COMMENT ON COLUMN pmis_flow_run_task.approve_count IS '会签所需通过人数(仅会签节点有效)';
+
 COMMENT ON COLUMN pmis_flow_run_task.approve_finished IS '会签当前已通过人数';
+
 COMMENT ON COLUMN pmis_flow_run_task.vote_pass_rate IS 'P1-5: VOTE 票签模式通过率阈值(0~1,默认 0.5 表示过半数),performType=VOTE 时生效';
+
 COMMENT ON COLUMN pmis_flow_run_task.task_status IS '任务状态: PENDING/CLAIMED/COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT/FROZEN';
+
 COMMENT ON COLUMN pmis_flow_run_task.comment IS '审批意见';
+
 COMMENT ON COLUMN pmis_flow_run_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+
 COMMENT ON COLUMN pmis_flow_run_task.claim_at IS '签收时间';
+
 COMMENT ON COLUMN pmis_flow_run_task.finish_at IS '完成时间';
+
 COMMENT ON COLUMN pmis_flow_run_task.duration_ms IS '处理耗时(毫秒)';
+
 COMMENT ON COLUMN pmis_flow_run_task.due_at IS '截止时间: SLA 预警依据';
+
 COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级(1-100,默认50),待办默认按 priority DESC, created_at ASC 排序';
+
 COMMENT ON COLUMN pmis_flow_run_task.reminder_count IS 'P1-6: 已发送的 SLA 催办次数';
+
 COMMENT ON COLUMN pmis_flow_run_task.last_reminded_at IS 'P1-6: 最近一次催办时间';
+
 COMMENT ON COLUMN pmis_flow_run_task.sla_action IS 'P1-6: 最终触发的 SLA 动作(REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT)';
+
 COMMENT ON COLUMN pmis_flow_run_task.sla_escalated IS 'P1-6: 是否已升级(0 否 / 1 是,避免重复升级)';
+
 COMMENT ON COLUMN pmis_flow_run_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
 COMMENT ON COLUMN pmis_flow_run_task.iter_var IS 'GAP-P2-10: FOREACH 当前迭代元素值(循环节点每条独立 task 对应的集合元素,非循环节点为 NULL),UK 约束 (instance_id, node_code, iter_var) 防止重复创建';
+
 COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 会签并发安全,MyBatis-Plus @Version 自动维护';
+
 COMMENT ON COLUMN pmis_flow_run_task.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_assignee_status
     ON pmis_flow_run_task(tenant_id, assignee_id, task_status)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_instance
     ON pmis_flow_run_task(tenant_id, instance_id)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_biz
     ON pmis_flow_run_task(tenant_id, business_type, business_id)
     WHERE deleted = 0 AND business_id IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_node
     ON pmis_flow_run_task(tenant_id, node_code)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_status
     ON pmis_flow_run_task(tenant_id, task_status)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_due
     ON pmis_flow_run_task(tenant_id, due_at)
     WHERE deleted = 0 AND task_status = 'PENDING';
+
 -- P1-1: 待办按优先级+时间排序(仅 PENDING/CLAIMED 走索引)
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
     ON pmis_flow_run_task (tenant_id, priority DESC, created_at ASC)
@@ -514,7 +622,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
 --    已完成任务的归档，避免主表膨胀
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
-    id                 VARCHAR(20)    PRIMARY KEY,
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     instance_id        VARCHAR(20)       NOT NULL,
     task_id            VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -563,45 +671,76 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
 );
 
 COMMENT ON TABLE  pmis_flow_his_task IS '历史任务表: 已完成任务的归档,避免主表膨胀,审批历史追溯';
+
 COMMENT ON COLUMN pmis_flow_his_task.instance_id IS '所属流程实例 ID';
+
 COMMENT ON COLUMN pmis_flow_his_task.task_id IS '原始任务 ID: 引用 pmis_flow_run_task.id';
+
 COMMENT ON COLUMN pmis_flow_his_task.flow_code IS '流程编码';
+
 COMMENT ON COLUMN pmis_flow_his_task.definition_id IS '所属流程定义 ID';
+
 COMMENT ON COLUMN pmis_flow_his_task.node_code IS '节点编码';
+
 COMMENT ON COLUMN pmis_flow_his_task.node_name IS '节点名称';
+
 COMMENT ON COLUMN pmis_flow_his_task.node_type IS '节点类型';
+
 COMMENT ON COLUMN pmis_flow_his_task.business_type IS '业务类型';
+
 COMMENT ON COLUMN pmis_flow_his_task.business_id IS '业务对象 ID';
+
 COMMENT ON COLUMN pmis_flow_his_task.business_no IS '业务单号';
+
 COMMENT ON COLUMN pmis_flow_his_task.flow_name IS '流程名称';
+
 COMMENT ON COLUMN pmis_flow_his_task.title IS '任务标题';
+
 COMMENT ON COLUMN pmis_flow_his_task.assignee_type IS '办理人类型';
+
 COMMENT ON COLUMN pmis_flow_his_task.assignee_id IS '办理人 ID';
+
 COMMENT ON COLUMN pmis_flow_his_task.assignee_name IS '办理人姓名';
+
 COMMENT ON COLUMN pmis_flow_his_task.perform_type IS '会签类型';
+
 COMMENT ON COLUMN pmis_flow_his_task.approve_count IS '会签所需通过人数';
+
 COMMENT ON COLUMN pmis_flow_his_task.approve_finished IS '会签已通过人数';
+
 COMMENT ON COLUMN pmis_flow_his_task.vote_pass_rate IS 'P1-5: VOTE 票签通过率阈值(0~1,从 pmis_flow_run_task 归档)';
+
 COMMENT ON COLUMN pmis_flow_his_task.task_status IS '任务终态: COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT';
+
 COMMENT ON COLUMN pmis_flow_his_task.comment IS '审批意见';
+
 COMMENT ON COLUMN pmis_flow_his_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+
 COMMENT ON COLUMN pmis_flow_his_task.claim_at IS '签收时间';
+
 COMMENT ON COLUMN pmis_flow_his_task.finish_at IS '完成时间';
+
 COMMENT ON COLUMN pmis_flow_his_task.duration_ms IS '处理耗时(毫秒)';
+
 COMMENT ON COLUMN pmis_flow_his_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
 COMMENT ON COLUMN pmis_flow_his_task.iter_var IS 'GAP-P2-10: FOREACH 归档时的迭代元素值(从 pmis_flow_run_task 复制,审批历史追溯)';
+
 COMMENT ON COLUMN pmis_flow_his_task.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
 CREATE INDEX IF NOT EXISTS idx_pfht_tenant_instance_finish
     ON pmis_flow_his_task(tenant_id, instance_id, finish_at DESC)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfht_tenant_assignee_finish
     ON pmis_flow_his_task(tenant_id, assignee_id, finish_at DESC)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfht_tenant_biz
     ON pmis_flow_his_task(tenant_id, business_type, business_id)
     WHERE deleted = 0 AND business_id IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_pfht_tenant_finish
     ON pmis_flow_his_task(tenant_id, finish_at DESC)
     WHERE deleted = 0;
@@ -611,7 +750,7 @@ CREATE INDEX IF NOT EXISTS idx_pfht_tenant_finish
 --    任务多办理人扩展（一个 task 可挂多个用户）
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_user(
-    id                 VARCHAR(20)    PRIMARY KEY,
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     task_id            VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
@@ -638,26 +777,40 @@ CREATE TABLE IF NOT EXISTS pmis_flow_user(
 );
 
 COMMENT ON TABLE  pmis_flow_user IS '流程用户表: 会签多办理人,一个 task 可挂多个用户';
+
 COMMENT ON COLUMN pmis_flow_user.task_id IS '所属任务 ID';
+
 COMMENT ON COLUMN pmis_flow_user.instance_id IS '所属流程实例 ID';
+
 COMMENT ON COLUMN pmis_flow_user.node_code IS '节点编码';
+
 COMMENT ON COLUMN pmis_flow_user.user_type IS '用户类型: USER/ROLE/DEPT';
+
 COMMENT ON COLUMN pmis_flow_user.user_id IS '用户 ID(按 type 解析)';
+
 COMMENT ON COLUMN pmis_flow_user.user_name IS '用户姓名(冗余)';
+
 COMMENT ON COLUMN pmis_flow_user.processed IS '是否已处理: 0 否 / 1 是';
+
 COMMENT ON COLUMN pmis_flow_user.process_at IS '处理时间';
+
 COMMENT ON COLUMN pmis_flow_user.comment IS '处理意见';
+
 COMMENT ON COLUMN pmis_flow_user.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+
 COMMENT ON COLUMN pmis_flow_user.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
 COMMENT ON COLUMN pmis_flow_user.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pfu_tenant_task_user
     ON pmis_flow_user(tenant_id, task_id, user_id, user_type)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfu_tenant_instance
     ON pmis_flow_user(tenant_id, instance_id)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfu_tenant_user_processed
     ON pmis_flow_user(tenant_id, user_id, processed)
     WHERE deleted = 0;
@@ -689,25 +842,6 @@ VALUES
      'PMIS 通用请假：申请人 → 直属上级 → 人事', 'ENABLED', 1, 'init_v1', 0, 0, 1)
 ON CONFLICT (flow_code, flow_version, tenant_id) WHERE deleted = 0 DO NOTHING;
 
--- --------------------------------------------------------------------
-
--- ============================ [025] add pmis flow audit log ============================
-
--- =====================================================
--- PMIS 工作流审计日志表 DDL（对标竞品审批轨迹能力）
--- 版本: V1.0.0_025
--- 描述: 新增 pmis_flow_audit_log 表，记录审批全操作轨迹
---       覆盖：START/PASS/REJECT/TRANSFER/DELEGATE/COUNTERSIGN/RECALL/URGE/TERMINATE/SUSPEND/ACTIVATE/CLAIM
--- 设计参考: 钉钉/飞书审批操作日志 + Warm-Flow audit_log
--- 适用场景: 审批轨迹查询、合规审计、操作回溯
--- =====================================================
-
--- -----------------------------------------------------
--- 8. 流程审计日志表（pmis_flow_audit_log）
---    记录流程全生命周期的操作轨迹：谁在何时对哪个实例/任务做了什么操作
---    P1-4 重构: 改为按月 RANGE 分区表
--- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_audit_log CASCADE;
 CREATE TABLE IF NOT EXISTS pmis_flow_audit_log(
     id                 VARCHAR(20)    NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
@@ -744,23 +878,41 @@ CREATE TABLE IF NOT EXISTS pmis_flow_audit_log(
 ) PARTITION BY RANGE (operated_at);
 
 COMMENT ON TABLE  pmis_flow_audit_log IS '流程审计日志表: 记录流程全生命周期的操作轨迹(谁在何时对哪个实例/任务做了什么操作)';
+
 COMMENT ON COLUMN pmis_flow_audit_log.instance_id IS '流程实例 ID';
+
 COMMENT ON COLUMN pmis_flow_audit_log.task_id IS '任务 ID(可为空,实例级操作如 START/RECALL 没有对应任务)';
+
 COMMENT ON COLUMN pmis_flow_audit_log.flow_code IS '流程编码(冗余,便于查询)';
+
 COMMENT ON COLUMN pmis_flow_audit_log.business_type IS '业务类型: PROJECT_INITIATION/CONTRACT_CHANGE/CLOSURE 等';
+
 COMMENT ON COLUMN pmis_flow_audit_log.business_id IS '业务对象 ID';
+
 COMMENT ON COLUMN pmis_flow_audit_log.node_code IS '节点编码(操作发生的节点)';
+
 COMMENT ON COLUMN pmis_flow_audit_log.node_name IS '节点名称';
+
 COMMENT ON COLUMN pmis_flow_audit_log.action IS '操作类型: START/PASS/REJECT/TRANSFER/DELEGATE/COUNTERSIGN_BEFORE/COUNTERSIGN_AFTER/RECALL/URGE/TERMINATE/SUSPEND/ACTIVATE/CLAIM/DELEGATE_RETURN/PARALLEL_PASS/SEQUENTIAL_PASS/VOTE_PASS';
+
 COMMENT ON COLUMN pmis_flow_audit_log.operator_id IS '操作人 ID';
+
 COMMENT ON COLUMN pmis_flow_audit_log.operator_name IS '操作人姓名(冗余)';
+
 COMMENT ON COLUMN pmis_flow_audit_log.target_id IS '目标人 ID(转办/委派/加签的目标人)';
+
 COMMENT ON COLUMN pmis_flow_audit_log.target_name IS '目标人姓名';
+
 COMMENT ON COLUMN pmis_flow_audit_log.comment IS '审批意见 / 操作备注';
+
 COMMENT ON COLUMN pmis_flow_audit_log.operated_at IS '操作时间';
+
 COMMENT ON COLUMN pmis_flow_audit_log.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+
 COMMENT ON COLUMN pmis_flow_audit_log.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
 COMMENT ON COLUMN pmis_flow_audit_log.tenant_id IS '租户 ID(默认 1)';
+
 COMMENT ON COLUMN pmis_flow_audit_log.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
@@ -768,22 +920,28 @@ COMMENT ON COLUMN pmis_flow_audit_log.provider_trace_id IS '链路追踪 ID(来�
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_instance_operated
     ON pmis_flow_audit_log(tenant_id, instance_id, operated_at DESC)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_task_operated
     ON pmis_flow_audit_log(tenant_id, task_id, operated_at DESC)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_operator_operated
     ON pmis_flow_audit_log(tenant_id, operator_id, operated_at DESC)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_biz
     ON pmis_flow_audit_log(tenant_id, business_type, business_id)
     WHERE deleted = 0 AND business_id IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_pfal_tenant_action_operated
     ON pmis_flow_audit_log(tenant_id, action, operated_at DESC)
     WHERE deleted = 0;
+
 -- P1-4: BRIN 索引(父表,自动传播) — 流程审计时间范围扫描
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_audit_log_brin
     ON pmis_flow_audit_log USING BRIN (operated_at)
     WITH (pages_per_range = 32);
+
 -- P1-4: provider_trace_id 索引(全链路追踪)
 CREATE INDEX IF NOT EXISTS idx_pfal_provider_trace
     ON pmis_flow_audit_log (provider_trace_id)
@@ -808,7 +966,7 @@ CREATE INDEX IF NOT EXISTS idx_pfal_provider_trace
 -- 1. 抄送主表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_cc(
-    id                 VARCHAR(20) PRIMARY KEY,
+    id                 VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id          VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
     task_id            VARCHAR(20),
@@ -838,35 +996,56 @@ CREATE TABLE IF NOT EXISTS pmis_flow_cc(
 );
 
 COMMENT ON TABLE pmis_flow_cc IS '流程抄送记录 - 抄送中心查询主体（对标钉钉/飞书）';
+
 COMMENT ON COLUMN pmis_flow_cc.tenant_id IS '租户 ID（多租户隔离）';
+
 COMMENT ON COLUMN pmis_flow_cc.instance_id IS '流程实例 ID';
+
 COMMENT ON COLUMN pmis_flow_cc.task_id IS '触发的任务 ID（CC 节点任务，可空）';
+
 COMMENT ON COLUMN pmis_flow_cc.node_code IS '触发抄送的节点编码';
+
 COMMENT ON COLUMN pmis_flow_cc.node_name IS '节点名称';
+
 COMMENT ON COLUMN pmis_flow_cc.flow_code IS '流程定义编码';
+
 COMMENT ON COLUMN pmis_flow_cc.flow_name IS '流程名称';
+
 COMMENT ON COLUMN pmis_flow_cc.business_key IS '业务单据 ID';
+
 COMMENT ON COLUMN pmis_flow_cc.cc_user_id IS '抄送接收人 ID';
+
 COMMENT ON COLUMN pmis_flow_cc.cc_user_name IS '抄送接收人姓名';
+
 COMMENT ON COLUMN pmis_flow_cc.cc_type IS '抄送类型：CC_NODE=抄送节点 / MANUAL_CC=人工抄送 / AUTO_CC=自动抄送（如发起人）';
+
 COMMENT ON COLUMN pmis_flow_cc.trigger_user_id IS '触发抄送的人（发起人/审批人）';
+
 COMMENT ON COLUMN pmis_flow_cc.title IS '抄送标题';
+
 COMMENT ON COLUMN pmis_flow_cc.content IS '抄送内容/意见';
+
 COMMENT ON COLUMN pmis_flow_cc.read_status IS '已读状态：UNREAD / READ';
+
 COMMENT ON COLUMN pmis_flow_cc.read_at IS '已读时间';
+
 COMMENT ON COLUMN pmis_flow_cc.provider_trace_id IS '链路追踪 ID';
+
 COMMENT ON COLUMN pmis_flow_cc.deleted IS '逻辑删除标记 0=未删 1=已删';
 
 -- 索引：抄送中心查询优化
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_tenant_user
     ON pmis_flow_cc (tenant_id, cc_user_id, read_status, deleted)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_instance
     ON pmis_flow_cc (tenant_id, instance_id, deleted)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_biz
     ON pmis_flow_cc (tenant_id, business_key, deleted)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_created
     ON pmis_flow_cc (tenant_id, created_at DESC)
     WHERE deleted = 0;
@@ -875,7 +1054,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_created
 -- 2. 抄送触发配置表（cc 配置由用户/系统预置，无需触发时由节点类型决定）
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_cc_rule(
-    id                 VARCHAR(20) PRIMARY KEY,
+    id                 VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id          VARCHAR(20)       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
     node_code          VARCHAR(64)  NOT NULL,
@@ -893,13 +1072,21 @@ CREATE TABLE IF NOT EXISTS pmis_flow_cc_rule(
 );
 
 COMMENT ON TABLE pmis_flow_cc_rule IS '流程抄送规则配置 - 自动抄送规则（如：变更金额>1万自动抄送 CEO）';
+
 COMMENT ON COLUMN pmis_flow_cc_rule.rule_type IS '规则类型：USER/ROLE/DEPT/SPEL';
+
 COMMENT ON COLUMN pmis_flow_cc_rule.rule_target IS '规则目标：用户/角色/部门/SpEL 表达式';
+
 COMMENT ON COLUMN pmis_flow_cc_rule.enabled IS '是否启用 0=停用 1=启用';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_tenant
     ON pmis_flow_cc_rule (tenant_id, flow_code, node_code, deleted)
     WHERE deleted = 0;
+
+-- ---------- 性能索引 ----------
+-- 建议添加以下索引（百万行级别可显著提升回滚扫描性能）
+-- CREATE INDEX IF NOT EXISTS idx_undo_log_xid ON undo_log (xid);
+-- CREATE INDEX IF NOT EXISTS idx_undo_log_status_modified ON undo_log (log_status, log_modified);
 
 -- --------------------------------------------------------------------
 
@@ -918,24 +1105,34 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_tenant
 -- 1. pmis_flow_node 新增字段
 -- -------------------------------------------
 ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS form_fields_config TEXT;
+
 ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS sla_config TEXT;
 
 COMMENT ON COLUMN pmis_flow_node.form_fields_config IS 'GAP-P0: 表单字段权限 JSON — {"fieldKey":"EDIT|READONLY|HIDDEN",...}';
+
 COMMENT ON COLUMN pmis_flow_node.sla_config IS 'GAP-P1: SLA 超时配置 JSON — {"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT","reminderCount":3,"adminUserId":1}';
 
 -- -------------------------------------------
 -- 2. pmis_flow_instance 新增子流程字段
 -- -------------------------------------------
 ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS parent_instance_id VARCHAR(20);
+
 ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS parent_node_code VARCHAR(64);
+
 ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS reject_reason      TEXT;
+
 ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS due_at             TIMESTAMPTZ;
+
 ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS version            INT NOT NULL DEFAULT 0;
 
 COMMENT ON COLUMN pmis_flow_instance.parent_instance_id IS 'GAP-P1: 父流程实例 ID（子流程场景，可空）';
+
 COMMENT ON COLUMN pmis_flow_instance.parent_node_code IS 'GAP-P1: 父流程中触发子流程的节点编码（可空）';
+
 COMMENT ON COLUMN pmis_flow_instance.reject_reason IS '退回原因（最近一次 REJECT 操作的备注，重审时清空）';
+
 COMMENT ON COLUMN pmis_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
+
 COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_instance_parent
@@ -976,7 +1173,7 @@ COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 
 -- 1. 定时器实例表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_timer(
-    id                 VARCHAR(20) PRIMARY KEY,
+    id                 VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id          VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
     definition_id      VARCHAR(20)       NOT NULL,
@@ -1009,8 +1206,11 @@ CREATE TABLE IF NOT EXISTS pmis_flow_timer(
 );
 
 COMMENT ON TABLE pmis_flow_timer IS '工作流定时器 - 中间定时器/边界定时器调度表';
+
 COMMENT ON COLUMN pmis_flow_timer.timer_type IS 'INTERMEDIATE 中间定时器 / BOUNDARY 边界定时器';
+
 COMMENT ON COLUMN pmis_flow_timer.timer_status IS 'PENDING 待执行 / FIRED 已触发 / CANCELLED 已取消';
+
 COMMENT ON COLUMN pmis_flow_timer.fire_at IS '到点时间，扫描器按此字段选取待执行记录';
 
 -- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
@@ -1018,44 +1218,16 @@ COMMENT ON COLUMN pmis_flow_timer.fire_at IS '到点时间，扫描器按此字�
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_scan
     ON pmis_flow_timer (tenant_id, timer_status, fire_at)
     WHERE deleted = 0;
+
 -- 索引：实例维度查询
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_instance
     ON pmis_flow_timer (tenant_id, instance_id)
     WHERE deleted = 0;
+
 -- 索引：边界定时器反向关联 userTask
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_boundary
     ON pmis_flow_timer (tenant_id, boundary_task_id)
     WHERE deleted = 0 AND boundary_task_id IS NOT NULL;
-
--- -------------------------------------------
--- 2. FlowNodeDO 扩展字段（流程设计时存到 ext 即可，无需新加列）
--- -------------------------------------------
--- 节点定时器配置由前端设计器写入 FlowNodeDO.ext JSON，格式：
---   {
---     "timerCycle": "PT5M",     // ISO 8601 duration（5 分钟）
---     "timerDate": "2026-07-02T10:00:00",  // 绝对时间
---     "isBoundary": true,       // 是否边界定时器
---     "attachedToUserTask": "node_xxx",  // 边界定时器挂接的 userTask
---     "boundaryAction": "INTERRUPT|CONTINUE"  // 边界触发后行为
---   }
---
--- 解析逻辑由 BpmnXmlParser.parseExtensionElements + FlowNodeDO.ext 处理，
--- 本 SQL 不增加新列，复用 ext JSON。
-
--- -------------------------------------------
--- 3. 注册定时器扫描器调度任务（PMIS Cronjob）
--- -------------------------------------------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
-VALUES (
-    '工作流定时器扫描',
-    'FLOW',
-    'flowTimerScannerJob',
-    'flowTimerScannerHandler',
-    '0/30 * * * * ?',
-    'NORMAL',
-    'P1-2: 每 30s 扫描到点定时器，触发中间/边界定时器',
-    1
-) ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- --------------------------------------------------------------------
 
@@ -1079,7 +1251,7 @@ VALUES (
 -- 1. 委派代理主表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_auth(
-    id                    VARCHAR(20)    PRIMARY KEY,
+    id                    VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
     owner_user_id         VARCHAR(20)       NOT NULL,
     owner_user_name       VARCHAR(64),
@@ -1119,20 +1291,35 @@ CREATE TABLE IF NOT EXISTS pmis_flow_delegate_auth(
 );
 
 COMMENT ON TABLE pmis_flow_delegate_auth IS '流程委派代理（长期授权）- 预置规则区间内任务自动转给被委派人';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.owner_user_id IS '授权人（原办理人）ID';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.owner_user_name IS '授权人姓名';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.delegate_user_id IS '被授权人（代理人）ID';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.delegate_user_name IS '被授权人姓名';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.scope_type IS '匹配模式：ALL=全部 / FLOW=指定流程 / FLOW_NODE=指定流程+节点 / ROLE=指定角色';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.flow_code IS '流程编码（FLOW/FLOW_NODE 模式必填）';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.node_code IS '节点编码（FLOW_NODE 模式必填）';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.role_code IS '角色编码（ROLE 模式必填）';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.start_time IS '生效开始时间';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.end_time IS '生效结束时间';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.auth_status IS '状态：ENABLED/DISABLED/EXPIRED/REVOKED';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.reason IS '授权原因（出差/休假/授权）';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.provider_trace_id IS '链路追踪 ID';
+
 COMMENT ON COLUMN pmis_flow_delegate_auth.deleted IS '逻辑删除标记';
 
 -- 索引：按 owner 查询我的授权记录
@@ -1159,7 +1346,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_flow
 -- 2. 委派代理使用日志（审计追溯：谁在什么时间被代理处理了什么任务）
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_log(
-    id                 VARCHAR(20)    PRIMARY KEY,
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id          VARCHAR(20)       NOT NULL DEFAULT '1',
     auth_id            VARCHAR(20)       NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
@@ -1182,18 +1369,25 @@ CREATE TABLE IF NOT EXISTS pmis_flow_delegate_log(
 );
 
 COMMENT ON TABLE pmis_flow_delegate_log IS '流程委派代理使用日志 - 审计代理操作';
+
 COMMENT ON COLUMN pmis_flow_delegate_log.auth_id IS '关联的授权 ID';
+
 COMMENT ON COLUMN pmis_flow_delegate_log.task_id IS '被代理的任务 ID';
+
 COMMENT ON COLUMN pmis_flow_delegate_log.op_type IS '操作类型：ACT=办理 / VIEW=查看';
+
 COMMENT ON COLUMN pmis_flow_delegate_log.action IS '办理动作：PASS/REJECT/CLAIM/TRANSFER';
+
 COMMENT ON COLUMN pmis_flow_delegate_log.comment IS '办理意见';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_auth
     ON pmis_flow_delegate_log (tenant_id, auth_id, deleted)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_task
     ON pmis_flow_delegate_log (tenant_id, task_id, deleted)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_delegate
     ON pmis_flow_delegate_log (tenant_id, delegate_user_id, created_at DESC)
     WHERE deleted = 0;
@@ -1267,23 +1461,12 @@ ALTER TABLE pmis_flow_run_task
     ADD COLUMN IF NOT EXISTS sla_escalated    SMALLINT      NOT NULL DEFAULT 0;
 
 COMMENT ON COLUMN pmis_flow_run_task.reminder_count   IS '已发送的 SLA 催办次数';
-COMMENT ON COLUMN pmis_flow_run_task.last_reminded_at IS '最近一次催办时间';
-COMMENT ON COLUMN pmis_flow_run_task.sla_action       IS '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）';
-COMMENT ON COLUMN pmis_flow_run_task.sla_escalated    IS '是否已升级（0 否 / 1 是，避免重复升级）';
 
--- -------------------------------------------
--- 2. pmis_flow_node 已存在 slaConfig 字段（V1.0.0_026 引入），无需变更
---    扩展约定：
---    slaConfig = {
---      "timeoutMinutes": 120,            // 超时阈值
---      "action": "AUTO_PASS",            // 动作：REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT
---      "reminderIntervalMinutes": 60,    // 重复提醒间隔（仅 action=REMIND 生效）
---      "maxReminders": 3,                // 最大提醒次数（仅 action=REMIND 生效）
---      "escalateUserId": 1001,           // 升级目标用户（仅 action=ESCALATE 生效；空=管理员=1）
---      "escalateRoleCode": "manager",    // 升级目标角色（仅 action=ESCALATE 生效；可空）
---      "autoComment": "已超时自动通过"  // 自动操作时写入的审批意见
---    }
--- -------------------------------------------
+COMMENT ON COLUMN pmis_flow_run_task.last_reminded_at IS '最近一次催办时间';
+
+COMMENT ON COLUMN pmis_flow_run_task.sla_action       IS '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）';
+
+COMMENT ON COLUMN pmis_flow_run_task.sla_escalated    IS '是否已升级（0 否 / 1 是，避免重复升级）';
 
 -- --------------------------------------------------------------------
 
@@ -1301,7 +1484,7 @@ COMMENT ON COLUMN pmis_flow_run_task.sla_escalated    IS '是否已升级（0 �
 
 -- 归档实例表（结构与 pmis_flow_instance 一致 + archived_at 字段）
 CREATE TABLE IF NOT EXISTS pmis_flow_his_instance(
-    id                 VARCHAR(20)    PRIMARY KEY,
+    id                 VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128),
     definition_id      VARCHAR(20),
@@ -1335,24 +1518,29 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_instance(
 );
 
 COMMENT ON TABLE  pmis_flow_his_instance IS '流程实例归档表: 已完成且超过 retention 天数的实例迁移至此';
+
 COMMENT ON COLUMN pmis_flow_his_instance.archived_at IS '归档时间';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_business
     ON pmis_flow_his_instance(tenant_id, business_type, business_id);
+
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_flow_code_status
     ON pmis_flow_his_instance(tenant_id, flow_code, flow_status);
+
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_initiator_archived
     ON pmis_flow_his_instance(tenant_id, initiator_id, archived_at DESC);
+
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_end_at
     ON pmis_flow_his_instance(tenant_id, end_at DESC)
     WHERE end_at IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_archived_at
     ON pmis_flow_his_instance(tenant_id, archived_at DESC);
 
 -- 归档变量表（用于归档 instance 时同步迁移 variable 字段中的大 JSON）
 CREATE TABLE IF NOT EXISTS pmis_flow_his_variable(
-    id            VARCHAR(20)    PRIMARY KEY,
+    id            VARCHAR(20)    PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id     VARCHAR(20)       NOT NULL DEFAULT '1',
     instance_id   VARCHAR(20)       NOT NULL,
     var_key       VARCHAR(128) NOT NULL,
@@ -1364,40 +1552,9 @@ COMMENT ON TABLE pmis_flow_his_variable IS '流程变量归档表: instance.vari
 
 CREATE INDEX IF NOT EXISTS idx_pfhv_tenant_instance
     ON pmis_flow_his_variable(tenant_id, instance_id);
+
 CREATE INDEX IF NOT EXISTS idx_pfhv_tenant_instance_key
     ON pmis_flow_his_variable(tenant_id, instance_id, var_key);
-
--- 归档统计视图（管理员可见：实例总数/已归档/未归档）
-CREATE OR REPLACE VIEW pmis_view_flow_archive_stats
-    WITH (security_invoker = true) AS
-SELECT
-    COALESCE(main.flow_code, his.flow_code)   AS flow_code,
-    COALESCE(main.tenant_id, his.tenant_id)   AS tenant_id,
-    COALESCE(main.cnt_main, 0)                AS active_count,
-    COALESCE(his.cnt_his, 0)                  AS archived_count
-FROM
-    (SELECT flow_code, tenant_id, COUNT(*) AS cnt_main
-     FROM pmis_flow_instance
-     WHERE deleted = 0
-     GROUP BY flow_code, tenant_id) main
-FULL OUTER JOIN
-    (SELECT flow_code, tenant_id, COUNT(*) AS cnt_his
-     FROM pmis_flow_his_instance
-     GROUP BY flow_code, tenant_id) his
-    ON main.flow_code = his.flow_code AND main.tenant_id = his.tenant_id;
-
-COMMENT ON VIEW pmis_view_flow_archive_stats IS '流程归档统计: active_count 主表实例数 / archived_count 已归档实例数';
-
--- 注册归档任务到 pmis_job（每日 03:00 触发，阈值 30 天）
-INSERT INTO pmis_job
-    (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id, created_at, updated_at, deleted)
-VALUES
-    ('流程历史归档任务', 'WORKFLOW', 'flowHistoryArchiveJob',
-     'flowHistoryArchiveJobHandler', '0 0 3 * * ?',
-     '{"days":30,"batchSize":100,"maxProcessMs":30000}',
-     'NORMAL', '每日 03:00 归档 30 天前的历史流程实例, 单批 100 条, 单次最长 30s',
-     1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
-ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- --------------------------------------------------------------------
 
@@ -1428,10 +1585,13 @@ ALTER TABLE pmis_flow_definition
 
 COMMENT ON COLUMN pmis_flow_definition.canary_percent IS
     '灰度比例 0-100（0=稳定版 / 100=全量灰度版）';
+
 COMMENT ON COLUMN pmis_flow_definition.canary_status IS
     '灰度状态: NONE 无 / CANARYING 灰度中 / PROMOTED 已全量 / ROLLED_BACK 已回滚';
+
 COMMENT ON COLUMN pmis_flow_definition.canary_strategy IS
     '灰度切流策略: USER_HASH 按发起人ID hash / RANDOM 随机 / WHITELIST 白名单';
+
 COMMENT ON COLUMN pmis_flow_definition.canary_rollout_log IS
     '灰度发布历史 JSON 数组[{operatorId,operatorName,fromPercent,toPercent,operateAt,note}]';
 
@@ -1460,7 +1620,7 @@ CREATE INDEX IF NOT EXISTS idx_pfd_canary_status
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS pmis_flow_event_subscription (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id         VARCHAR(20)          NOT NULL,
     definition_id       VARCHAR(20)          NOT NULL,
@@ -1497,22 +1657,30 @@ CREATE TABLE IF NOT EXISTS pmis_flow_event_subscription (
 );
 
 COMMENT ON TABLE pmis_flow_event_subscription IS '工作流事件订阅表 — BPMN 错误/消息事件运行时';
+
 COMMENT ON COLUMN pmis_flow_event_subscription.event_type IS '事件类型: MESSAGE 消息 / ERROR 错误 / SIGNAL 信号';
+
 COMMENT ON COLUMN pmis_flow_event_subscription.event_ref IS '事件引用标识（messageRef / errorRef / signalRef）';
+
 COMMENT ON COLUMN pmis_flow_event_subscription.correlation_key IS '消息关联键，用于业务级消息匹配';
+
 COMMENT ON COLUMN pmis_flow_event_subscription.boundary_task_id IS '边界事件关联的 userTask ID（中间事件为 NULL）';
+
 COMMENT ON COLUMN pmis_flow_event_subscription.subscription_status IS '订阅状态: WAITING 等待中 / COMPLETED 已触发 / CANCELLED 已取消';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pfes_tenant_instance
     ON pmis_flow_event_subscription(tenant_id, instance_id)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfes_tenant_event_match
     ON pmis_flow_event_subscription(tenant_id, event_type, event_ref, subscription_status)
     WHERE deleted = 0 AND subscription_status = 'WAITING';
+
 CREATE INDEX IF NOT EXISTS idx_pfes_tenant_boundary
     ON pmis_flow_event_subscription(tenant_id, boundary_task_id)
     WHERE boundary_task_id IS NOT NULL AND deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfes_tenant_correlation
     ON pmis_flow_event_subscription(tenant_id, correlation_key, subscription_status)
     WHERE deleted = 0 AND correlation_key IS NOT NULL;
@@ -1541,9 +1709,6 @@ ALTER TABLE pmis_flow_run_task
 
 COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级（1-100，默认 50），待办默认按 priority DESC, created_at ASC 排序';
 
--- 注: idx_pmis_flow_run_task_priority_todo 部分索引已上移到主索引块(pmis_flow_run_task 紧邻处),
---     此处不再重复创建,保证表结构集中。
-
 -- --------------------------------------------------------------------
 
 -- ============================ [050] add pmis flow notify outbox ============================
@@ -1567,7 +1732,7 @@ COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级（1-100�
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     -- 事件标识
     event_type          VARCHAR(64)     NOT NULL,               -- TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等
@@ -1608,37 +1773,61 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
 );
 
 COMMENT ON TABLE pmis_flow_notify_outbox IS '工作流通知外发箱 — 可靠消息投递（Outbox Pattern，P2-1 阶段一），由扫描任务异步投递到 NotificationClient / IM / 邮件 / 短信';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.event_type IS '事件类型: TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.biz_type IS '业务类型: WORKFLOW_TASK / WORKFLOW_INSTANCE / WORKFLOW_CC';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.payload IS 'JSON 载荷，由接收方解析';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.target_channels IS '投递通道: INAPP / IM / EMAIL / SMS（逗号分隔）';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.target_user_ids IS '接收用户 ID 列表（逗号分隔）';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.status IS '投递状态: PENDING 待投递 / SENT 已投递 / DEAD 死信';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.retry_count IS '已重试次数';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.max_retries IS '最大重试次数（默认 5）';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.next_retry_at IS '下次重试时间（指数退避：30s/60s/120s/300s/600s）';
+
 COMMENT ON COLUMN pmis_flow_notify_outbox.error_msg IS '最近一次失败原因';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pfno_tenant_pending_scan
     ON pmis_flow_notify_outbox(tenant_id, status, next_retry_at)
     WHERE deleted = 0 AND status = 'PENDING';
+
 CREATE INDEX IF NOT EXISTS idx_pfno_tenant_biz
     ON pmis_flow_notify_outbox(tenant_id, biz_type, biz_id)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfno_tenant_instance
     ON pmis_flow_notify_outbox(tenant_id, instance_id)
     WHERE deleted = 0 AND instance_id IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_pfno_tenant_trace
     ON pmis_flow_notify_outbox(tenant_id, provider_trace_id)
     WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
 
--- --------------------------------------------------------------------
-
+-- ============================================================
+-- 五、pmis_flow_notify_outbox 表 tenant_id 索引（H2.5）
+-- ============================================================
+CREATE INDEX IF NOT EXISTS idx_peo_tenant_status
+    ON pmis_flow_notify_outbox(tenant_id, status, next_retry_at) WHERE deleted = 0;
 
 -- 流程历史变量归档表
 ALTER TABLE pmis_flow_his_variable ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+
 CREATE INDEX IF NOT EXISTS idx_flow_his_var_tenant ON pmis_flow_his_variable(tenant_id);
+
+ANALYZE pmis_flow_notify_outbox;
+
+ANALYZE pmis_flow_his_variable;
+
+-- ====================================================================
+
 -- ============================ [058] init pmis flow third party ============================
 
 -- =============================================================
@@ -1659,7 +1848,7 @@ CREATE INDEX IF NOT EXISTS idx_flow_his_var_tenant ON pmis_flow_his_variable(ten
 -- 1. 三方审批账号映射表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_third_party_account (
-    id                 VARCHAR(20)       PRIMARY KEY,
+    id                 VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
     user_id            VARCHAR(20)          NOT NULL,
     platform           VARCHAR(20)     NOT NULL,
@@ -1684,25 +1873,38 @@ CREATE TABLE IF NOT EXISTS pmis_flow_third_party_account (
 );
 
 COMMENT ON TABLE pmis_flow_third_party_account IS 'P0-2: 三方审批账号映射表（钉钉/飞书/企微）';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.user_id IS '系统用户 ID';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.platform IS '平台: DINGTALK/FEISHU/WECOM';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.open_id IS '三方 openId';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.union_id IS '三方 unionId';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.corp_id IS '企业 ID';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.agent_id IS '应用 ID';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.access_token IS '访问令牌(加密存储)';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.refresh_token IS '刷新令牌(加密存储)';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.token_expire_at IS '令牌过期时间';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.status IS '状态: ACTIVE/INACTIVE/REVOKED';
+
 COMMENT ON COLUMN pmis_flow_third_party_account.deleted IS '逻辑删除标记 0=未删 1=已删';
 
 -- 复合/部分索引
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pftpa_tenant_user_platform
     ON pmis_flow_third_party_account(tenant_id, user_id, platform)
     WHERE deleted = 0;
+
 CREATE UNIQUE INDEX IF NOT EXISTS uk_pftpa_tenant_platform_openid
     ON pmis_flow_third_party_account(tenant_id, platform, open_id)
     WHERE deleted = 0 AND open_id IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_pftpa_tenant_platform_union
     ON pmis_flow_third_party_account(tenant_id, platform, union_id)
     WHERE union_id IS NOT NULL;
@@ -1711,7 +1913,7 @@ CREATE INDEX IF NOT EXISTS idx_pftpa_tenant_platform_union
 -- 2. 三方审批回调日志表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_third_party_log (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     platform            VARCHAR(20)     NOT NULL,
     event_type          VARCHAR(64)     NOT NULL,
@@ -1733,18 +1935,27 @@ CREATE TABLE IF NOT EXISTS pmis_flow_third_party_log (
 );
 
 COMMENT ON TABLE pmis_flow_third_party_log IS 'P0-2: 三方审批回调日志表';
+
 COMMENT ON COLUMN pmis_flow_third_party_log.platform IS '平台: DINGTALK/FEISHU/WECOM';
+
 COMMENT ON COLUMN pmis_flow_third_party_log.event_type IS '事件类型';
+
 COMMENT ON COLUMN pmis_flow_third_party_log.process_instance_id IS '三方流程实例 ID';
+
 COMMENT ON COLUMN pmis_flow_third_party_log.business_type IS '业务类型';
+
 COMMENT ON COLUMN pmis_flow_third_party_log.business_id IS '业务 ID';
+
 COMMENT ON COLUMN pmis_flow_third_party_log.callback_data IS '回调原始数据';
+
 COMMENT ON COLUMN pmis_flow_third_party_log.handle_status IS '处理状态: PENDING/SUCCESS/FAIL';
+
 COMMENT ON COLUMN pmis_flow_third_party_log.error_msg IS '处理失败原因';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_platform_created
     ON pmis_flow_third_party_log(tenant_id, platform, created_at DESC);
+
 CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
     ON pmis_flow_third_party_log(tenant_id, handle_status, created_at DESC)
     WHERE handle_status = 'PENDING';
@@ -1771,7 +1982,7 @@ CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
 -- DMN 决策表定义表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_dmn_table (
-    id                VARCHAR(20)       PRIMARY KEY,
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     table_key         VARCHAR(128)    NOT NULL,
     table_name        VARCHAR(128)    NOT NULL,
@@ -1800,23 +2011,36 @@ CREATE TABLE IF NOT EXISTS pmis_flow_dmn_table (
 );
 
 COMMENT ON TABLE pmis_flow_dmn_table IS 'P0-4: DMN 决策表定义; P2-10: 扩展命中策略至 7 种';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.table_key IS '决策表唯一标识';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.table_name IS '决策表名称';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.description IS '决策表描述';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.hit_policy IS '命中策略: UNIQUE/FIRST/PRIORITY/ANY/COLLECT/RULE_ORDER/OUTPUT_ORDER';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.collect_operator IS 'COLLECT 聚合运算符: LIST/SUM/MIN/MAX/COUNT';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.inputs_json IS '输入列定义(JSON)';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.outputs_json IS '输出列定义(JSON)';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.rules_json IS '规则行定义(JSON)';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.version IS '版本号';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.status IS '状态: DRAFT/PUBLISHED/DEPRECATED';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.tenant_id IS '租户 ID（多租户隔离）';
+
 COMMENT ON COLUMN pmis_flow_dmn_table.deleted IS '逻辑删除标记 0=未删 1=已删';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_status
     ON pmis_flow_dmn_table (tenant_id, status)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_name
     ON pmis_flow_dmn_table (tenant_id, table_name)
     WHERE deleted = 0;
@@ -1839,7 +2063,7 @@ CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_name
 --       inherit_type / is_latest 字段，支持模板继承与版本化
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_template (
-    id              VARCHAR(20)       PRIMARY KEY,
+    id              VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code   VARCHAR(128)    NOT NULL,
     template_name   VARCHAR(256)    NOT NULL,
@@ -1875,41 +2099,62 @@ CREATE TABLE IF NOT EXISTS pmis_flow_template (
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_category_sort
     ON pmis_flow_template (tenant_id, category, sort_order)
     WHERE deleted = 0 AND is_latest = 1;
+
 -- P2-9: 按 template_code 查最新版本的高效索引
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_code_latest
     ON pmis_flow_template (tenant_id, template_code, is_latest)
     WHERE deleted = 0;
+
 -- P2-9: 按父模板反查继承关系
 CREATE INDEX IF NOT EXISTS idx_pft_parent_template
     ON pmis_flow_template (tenant_id, parent_template_id)
     WHERE deleted = 0 AND parent_template_id IS NOT NULL;
 
 COMMENT ON TABLE  pmis_flow_template IS 'P3-1: 流程模板市场表, 预置常用流程模板供一键导入; P2-9: 支持模板继承与版本化';
+
 COMMENT ON COLUMN pmis_flow_template.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_flow_template.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_flow_template.template_code IS '模板编码 (租户内 + 版本内唯一)';
+
 COMMENT ON COLUMN pmis_flow_template.template_name IS '模板名称';
+
 COMMENT ON COLUMN pmis_flow_template.category IS '分类 (HR/FINANCE/ADMIN/PROJECT/GENERAL)';
+
 COMMENT ON COLUMN pmis_flow_template.description IS '模板描述';
+
 COMMENT ON COLUMN pmis_flow_template.icon IS '图标 URL';
+
 COMMENT ON COLUMN pmis_flow_template.bpmn_xml IS 'BPMN 2.0 XML 流程定义';
+
 COMMENT ON COLUMN pmis_flow_template.form_path IS '关联表单路径';
+
 COMMENT ON COLUMN pmis_flow_template.use_count IS '使用次数';
+
 COMMENT ON COLUMN pmis_flow_template.sort_order IS '排序值, 升序';
+
 COMMENT ON COLUMN pmis_flow_template.parent_template_id IS 'P2-9: 父模板 ID (跨模板继承关系, STANDALONE 时为空)';
+
 COMMENT ON COLUMN pmis_flow_template.version IS 'P2-9: 模板版本号 (从 1 开始单调递增)';
+
 COMMENT ON COLUMN pmis_flow_template.version_label IS 'P2-9: 版本标签 (如 v1.0 / v2.0-rc1)';
+
 COMMENT ON COLUMN pmis_flow_template.inherit_type IS 'P2-9: 继承类型 STANDALONE=独立 / CLONE=克隆 / INHERIT=继承';
+
 COMMENT ON COLUMN pmis_flow_template.is_latest IS 'P2-9: 是否当前 template_code 下最新版本 0=否 1=是';
+
 COMMENT ON COLUMN pmis_flow_template.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_flow_template.updated_at IS '更新时间';
+
 COMMENT ON COLUMN pmis_flow_template.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_flow_auto_trigger -- P3-2: process auto-trigger
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_auto_trigger (
-    id                   VARCHAR(20)       PRIMARY KEY,
+    id                   VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id            VARCHAR(20)          NOT NULL DEFAULT '1',
     source_flow_code     VARCHAR(64)     NOT NULL,
     target_flow_code     VARCHAR(64)     NOT NULL,
@@ -1933,25 +2178,38 @@ CREATE INDEX IF NOT EXISTS idx_pfat_tenant_src_enabled
     WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_flow_auto_trigger IS 'P3-2: 流程完成时自动触发下游流程的规则表';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.source_flow_code IS '源流程编码 (触发方)';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.target_flow_code IS '目标流程编码 (被触发方)';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.condition_expression IS 'Aviator 条件表达式;为空则无条件触发';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.description IS '触发规则说明';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.enabled IS '是否启用 1=启用 0=禁用';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.sort_order IS '触发顺序';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.created_by IS '创建人';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.updated_by IS '更新人';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.updated_at IS '更新时间';
+
 COMMENT ON COLUMN pmis_flow_auto_trigger.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_flow_notify_channel -- P3-3: notification channel config
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_channel (
-    id                VARCHAR(20)       PRIMARY KEY,
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     channel_type      VARCHAR(32)     NOT NULL,
     channel_name      VARCHAR(128)    NOT NULL,
@@ -1974,23 +2232,34 @@ CREATE INDEX IF NOT EXISTS idx_pfnc_tenant_type_enabled
     WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_flow_notify_channel IS 'P3-3: 工作流通知通道配置表 (INAPP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.channel_type IS '通道类型 (INAPP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT/FEISHU)';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.channel_name IS '通道名称';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.config IS '配置 JSON (Webhook URL, 短信模板编码等)';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.enabled IS '是否启用 1=启用 0=禁用';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.created_by IS '创建人';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.updated_by IS '更新人';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.updated_at IS '更新时间';
+
 COMMENT ON COLUMN pmis_flow_notify_channel.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_flow_task_comment -- P1-3: task comment thread
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_task_comment (
-    id              VARCHAR(20)       PRIMARY KEY,
+    id              VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id     VARCHAR(20)          NOT NULL,
     task_id         VARCHAR(20)          NOT NULL,
@@ -2014,66 +2283,76 @@ CREATE TABLE IF NOT EXISTS pmis_flow_task_comment (
 CREATE INDEX IF NOT EXISTS idx_pftc_tenant_task_created
     ON pmis_flow_task_comment (tenant_id, task_id, created_at)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pftc_tenant_parent
     ON pmis_flow_task_comment (tenant_id, parent_id)
     WHERE deleted = 0 AND parent_id IS NOT NULL;
 
 COMMENT ON TABLE  pmis_flow_task_comment IS 'P1-3: 工作流任务评论表 (楼中楼, 通过 parent_id 形成嵌套回复)';
+
 COMMENT ON COLUMN pmis_flow_task_comment.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_flow_task_comment.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_flow_task_comment.instance_id IS '流程实例 ID';
+
 COMMENT ON COLUMN pmis_flow_task_comment.task_id IS '任务 ID';
+
 COMMENT ON COLUMN pmis_flow_task_comment.node_code IS '节点编码';
+
 COMMENT ON COLUMN pmis_flow_task_comment.user_id IS '评论人 ID';
+
 COMMENT ON COLUMN pmis_flow_task_comment.user_name IS '评论人姓名 (冗余)';
+
 COMMENT ON COLUMN pmis_flow_task_comment.content IS '评论内容';
+
 COMMENT ON COLUMN pmis_flow_task_comment.type IS '评论类型: COMMENT/QUESTION/REPLY';
+
 COMMENT ON COLUMN pmis_flow_task_comment.parent_id IS '父评论 ID (楼中楼, 0=根评论)';
+
 COMMENT ON COLUMN pmis_flow_task_comment.created_by IS '创建人';
+
 COMMENT ON COLUMN pmis_flow_task_comment.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_flow_task_comment.updated_by IS '更新人';
+
 COMMENT ON COLUMN pmis_flow_task_comment.updated_at IS '更新时间';
+
 COMMENT ON COLUMN pmis_flow_task_comment.deleted IS '逻辑删除 0=未删 1=已删';
-
-CREATE INDEX IF NOT EXISTS idx_prcg_tenant_scenario_status
-    ON pmis_rule_chain_graph (tenant_id, scenario, status)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_prd_tenant_rule
-    ON pmis_rule_dependency (tenant_id, rule_code)
-    WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_prd_tenant_depends_cascade
-    ON pmis_rule_dependency (tenant_id, depends_on_rule_code, cascade_on_disable)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_prap_tenant_rule
-    ON pmis_rule_ab_policy (tenant_id, rule_code)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_prar_tenant_rule_created
-    ON pmis_rule_ab_rollback (tenant_id, rule_code, created_at DESC)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_prp_tenant_industry_enabled
-    ON pmis_rule_pack (tenant_id, industry, enabled)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_prpi_tenant_code_installed
-    ON pmis_rule_pack_install (tenant_id, pack_code, installed_at DESC)
-    WHERE deleted = 0;
-
--- ====================================================================
 
 -- ----------------------------------------------------------------------------
 -- 1) pmis_flow_run_task.assignor_id BIGINT -> VARCHAR(20),与 assignee_id 对齐
 --    pmis_flow_his_task 补齐 assignor_id 列
 -- ----------------------------------------------------------------------------
 ALTER TABLE pmis_flow_run_task ALTER COLUMN assignor_id TYPE VARCHAR(20) USING assignor_id::VARCHAR(20);
+
 ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignor_id VARCHAR(20);
+
 ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignor_name VARCHAR(64);
+
 COMMENT ON COLUMN pmis_flow_run_task.assignor_id IS '原审批人 ID(VARCHAR(20) 雪花 ID,与 assignee_id 对齐)';
+
 COMMENT ON COLUMN pmis_flow_his_task.assignor_id IS '原审批人 ID(VARCHAR(20) 雪花 ID,与 assignee_id 对齐)';
+
 COMMENT ON COLUMN pmis_flow_his_task.assignor_name IS '原审批人姓名';
+
+-- 同步主表与历史表 assignor_id 索引(若已存在则跳过)
+CREATE INDEX IF NOT EXISTS idx_pfrt_assignor
+    ON pmis_flow_run_task (assignor_id)
+    WHERE deleted = 0 AND assignor_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pfht_assignor
+    ON pmis_flow_his_task (assignor_id)
+    WHERE deleted = 0 AND assignor_id IS NOT NULL;
+
+-- FOREACH 节点 partial unique index(替代原 UNIQUE ... WHERE 约束,PG 不支持该约束语法)
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfrt_foreach_iter
+    ON pmis_flow_run_task (instance_id, node_code, iter_var)
+    WHERE iter_var IS NOT NULL AND deleted = 0;
+
+ANALYZE pmis_flow_run_task;
+
+ANALYZE pmis_flow_his_task;
 
 -- DEFAULT 兜底分区
 CREATE TABLE IF NOT EXISTS pmis_flow_audit_log_default
@@ -2083,6 +2362,117 @@ COMMENT ON TABLE pmis_flow_audit_log_default IS
     'pmis_flow_audit_log 的 DEFAULT 兜底分区:'
     '接收超出已建月份范围的流程审计数据,运维需监控并及时创建对应月份分区;'
     '建表语句不可独立 DROP,需先 ALTER TABLE ... DETACH PARTITION';
+
+ANALYZE pmis_flow_audit_log;
+
+-- 5) 工作流核心(11 张)
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_definition_trace
+    ON pmis_flow_definition (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_node_trace
+    ON pmis_flow_node (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_skip_trace
+    ON pmis_flow_skip (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_instance_trace
+    ON pmis_flow_instance (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_trace
+    ON pmis_flow_run_task (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_his_task_trace
+    ON pmis_flow_his_task (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_his_instance_trace
+    ON pmis_flow_his_instance (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_user_trace
+    ON pmis_flow_user (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_trace
+    ON pmis_flow_cc (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_trace
+    ON pmis_flow_cc_rule (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_trace
+    ON pmis_flow_timer (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_trace
+    ON pmis_flow_delegate_auth (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_trace
+    ON pmis_flow_delegate_log (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_event_subscription_trace
+    ON pmis_flow_event_subscription (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+-- 8) 工作流扩展(8 张: 第三方/模板/DMN/触发器等)
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_third_party_account_trace
+    ON pmis_flow_third_party_account (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_third_party_log_trace
+    ON pmis_flow_third_party_log (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_dmn_table_trace
+    ON pmis_flow_dmn_table (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_template_trace
+    ON pmis_flow_template (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_auto_trigger_trace
+    ON pmis_flow_auto_trigger (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_notify_channel_trace
+    ON pmis_flow_notify_channel (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_task_comment_trace
+    ON pmis_flow_task_comment (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+-- 3) 给出 P3 启用模板(注释,真正启用时去掉 -- 即可)
+-- ----------------------------------------------------------------------------
+-- [TEMPLATE] P3-14 启用:在 pmis_employee 加密敏感字段
+-- ALTER TABLE pmis_employee
+--     ADD COLUMN IF NOT EXISTS id_card_cipher VARCHAR(512) NOT NULL DEFAULT '',
+--     ADD COLUMN IF NOT EXISTS id_card_hash   VARCHAR(64)  NOT NULL DEFAULT '',
+--     ADD COLUMN IF NOT EXISTS phone_cipher   VARCHAR(512) NOT NULL DEFAULT '',
+--     ADD COLUMN IF NOT EXISTS phone_hash     VARCHAR(64)  NOT NULL DEFAULT '';
+-- CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_employee_id_card_hash
+--     ON pmis_employee (tenant_id, id_card_hash) WHERE deleted = 0 AND id_card_hash <> '';
+-- CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_employee_phone_hash
+--     ON pmis_employee (tenant_id, phone_hash) WHERE deleted = 0 AND phone_hash <> '';
+-- ----------------------------------------------------------------------------
+-- [TEMPLATE] P3-15 启用: pmis_data_export_audit 接入 OPLOG
+-- ALTER TABLE pmis_data_export_audit
+--     ADD COLUMN IF NOT EXISTS op_log_id   VARCHAR(20),
+--     ADD COLUMN IF NOT EXISTS op_log_type VARCHAR(32) NOT NULL DEFAULT '';
+-- CREATE INDEX IF NOT EXISTS idx_pmis_data_export_audit_oplog
+--     ON pmis_data_export_audit (op_log_id) WHERE op_log_id IS NOT NULL;
+-- ----------------------------------------------------------------------------
+
+-- ====================================================================
 -- ============================ [067] P1-2 工作流通知模板表 ============================
 -- ====================================================================
 -- GAP-38: 通知内容模板化管理，替代硬编码
@@ -2090,7 +2480,7 @@ COMMENT ON TABLE pmis_flow_audit_log_default IS
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code       VARCHAR(64)     NOT NULL,               -- 模板编码: TASK_CREATED / TASK_URGED / TASK_TIMEOUT 等
     template_name       VARCHAR(128)    NOT NULL,               -- 模板名称
@@ -2116,19 +2506,27 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
 );
 
 COMMENT ON TABLE  pmis_flow_notify_template IS 'P1-2: 工作流通知模板表 — 通知内容模板化管理，支持 ${var} 变量占位符。P1-5: locale 字段支持多语言';
+
 COMMENT ON COLUMN pmis_flow_notify_template.template_code IS '模板编码: TASK_CREATED / TASK_COMPLETED / TASK_REJECTED / TASK_URGED / TASK_TIMEOUT / INSTANCE_TERMINATED / CC_CREATED 等';
+
 COMMENT ON COLUMN pmis_flow_notify_template.channel IS '通知通道: INAPP / EMAIL / SMS / WEBHOOK / DINGTALK / FEISHU / WECOM';
+
 COMMENT ON COLUMN pmis_flow_notify_template.locale IS 'P1-5: 语言区域（zh_CN / en_US 等），同一 templateCode+channel 可配置多语言模板，默认 zh_CN';
+
 COMMENT ON COLUMN pmis_flow_notify_template.title IS '标题模板（支持 ${flowName} ${nodeName} ${assigneeName} ${instanceId} ${taskId} 等占位符）';
+
 COMMENT ON COLUMN pmis_flow_notify_template.content IS '内容模板（支持与 title 相同的占位符）';
+
 COMMENT ON COLUMN pmis_flow_notify_template.enabled IS '是否启用: 1=启用 0=禁用';
 
 CREATE INDEX IF NOT EXISTS idx_pfnt_tenant_code_locale
     ON pmis_flow_notify_template (tenant_id, template_code, channel, locale)
     WHERE deleted = 0 AND enabled = 1;
+
 CREATE INDEX IF NOT EXISTS idx_pfnt_tenant_enabled
     ON pmis_flow_notify_template (tenant_id, enabled)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfnt_trace
     ON pmis_flow_notify_template (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
@@ -2202,7 +2600,7 @@ ON CONFLICT DO NOTHING;
 -- 投递流程：事件触发 → 查匹配订阅 → HMAC-SHA256 签名 → 写入 outbox → 异步 HTTP POST
 
 CREATE TABLE IF NOT EXISTS pmis_flow_webhook_subscription (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     name                VARCHAR(128)    NOT NULL,               -- 订阅名称
     callback_url        VARCHAR(512)    NOT NULL,               -- 回调 URL（HTTPS 推荐）
@@ -2225,14 +2623,19 @@ CREATE TABLE IF NOT EXISTS pmis_flow_webhook_subscription (
 );
 
 COMMENT ON TABLE  pmis_flow_webhook_subscription IS 'P1-6: 工作流 Webhook 事件订阅表 — 外部系统注册回调 URL 订阅工作流事件';
+
 COMMENT ON COLUMN pmis_flow_webhook_subscription.callback_url IS '回调 URL（HTTPS 推荐），投递时 HTTP POST 该 URL';
+
 COMMENT ON COLUMN pmis_flow_webhook_subscription.secret IS 'HMAC-SHA256 签名密钥，投递时以 X-Webhook-Signature: sha256=<hex> 头部携带签名';
+
 COMMENT ON COLUMN pmis_flow_webhook_subscription.event_types IS '订阅事件类型（逗号分隔，如 TASK_CREATED,TASK_COMPLETED），空表示订阅全部事件';
+
 COMMENT ON COLUMN pmis_flow_webhook_subscription.enabled IS '是否启用: 1=启用 0=禁用';
 
 CREATE INDEX IF NOT EXISTS idx_pfws_tenant_enabled
     ON pmis_flow_webhook_subscription (tenant_id, enabled)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfws_trace
     ON pmis_flow_webhook_subscription (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
@@ -2245,7 +2648,7 @@ CREATE INDEX IF NOT EXISTS idx_pfws_trace
 -- 每个用户在租户内至多一条偏好记录（uk_pfnp_tenant_user）
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_preference (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     user_id             VARCHAR(20)       NOT NULL,               -- 用户 ID
     quiet_hours_start   VARCHAR(8),                               -- 免打扰开始时间 HH:mm（如 22:00），NULL=不启用
@@ -2266,8 +2669,11 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_preference (
 );
 
 COMMENT ON TABLE  pmis_flow_notify_preference IS 'P1-7: 工作流通知偏好表 — 用户免打扰时段与通知聚合配置';
+
 COMMENT ON COLUMN pmis_flow_notify_preference.quiet_hours_start IS '免打扰开始时间 HH:mm（如 22:00），NULL 表示不启用免打扰';
+
 COMMENT ON COLUMN pmis_flow_notify_preference.quiet_hours_end IS '免打扰结束时间 HH:mm（如 08:00），支持跨午夜（start > end 时跨次日）';
+
 COMMENT ON COLUMN pmis_flow_notify_preference.digest_mode IS '1=启用聚合（免打扰时段内延迟投递） 0=立即逐条投递（忽略免打扰）';
 
 CREATE INDEX IF NOT EXISTS idx_pfnp_tenant_user
@@ -2283,7 +2689,7 @@ CREATE INDEX IF NOT EXISTS idx_pfnp_tenant_user
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_attachment (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
     task_id             VARCHAR(20),                              -- 关联任务（可为空：实例级附件）
@@ -2312,16 +2718,23 @@ CREATE TABLE IF NOT EXISTS pmis_flow_attachment (
 );
 
 COMMENT ON TABLE  pmis_flow_attachment IS 'P1-6: 工作流审批附件表 — 审批时提交的图片/文档/视频等附件统一落库';
+
 COMMENT ON COLUMN pmis_flow_attachment.instance_id IS '关联流程实例 ID';
+
 COMMENT ON COLUMN pmis_flow_attachment.task_id IS '关联任务 ID（实例级附件可为空）';
+
 COMMENT ON COLUMN pmis_flow_attachment.biz_type IS '附件业务类型: TASK=任务附件 / INSTANCE=实例附件 / COMMENT=意见附件';
+
 COMMENT ON COLUMN pmis_flow_attachment.storage_key IS '存储对象的 key（OSS/COS/MinIO 对象 key 或本地相对路径）';
+
 COMMENT ON COLUMN pmis_flow_attachment.download_url IS '临时下载地址（前端可直接展示，可能过期）';
 
 CREATE INDEX IF NOT EXISTS idx_pffa_instance
     ON pmis_flow_attachment (instance_id, deleted) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pffa_task
     ON pmis_flow_attachment (task_id, deleted) WHERE task_id IS NOT NULL AND deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pffa_trace
     ON pmis_flow_attachment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
 
@@ -2333,7 +2746,7 @@ CREATE INDEX IF NOT EXISTS idx_pffa_trace
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_message (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     task_id             VARCHAR(20)       NOT NULL,               -- 关联被委托任务
     instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
@@ -2354,14 +2767,19 @@ CREATE TABLE IF NOT EXISTS pmis_flow_delegate_message (
 );
 
 COMMENT ON TABLE  pmis_flow_delegate_message IS 'P2-1: 委派沟通记录表 — 委托人与被委托人之间的留言沟通，持久化留存';
+
 COMMENT ON COLUMN pmis_flow_delegate_message.task_id IS '关联被委托任务 ID';
+
 COMMENT ON COLUMN pmis_flow_delegate_message.sender_role IS '发送人角色: OWNER=委托人 / DELEGATE=被委托人';
+
 COMMENT ON COLUMN pmis_flow_delegate_message.read_flag IS '是否已读: 0=未读 1=已读';
 
 CREATE INDEX IF NOT EXISTS idx_pfdm_task
     ON pmis_flow_delegate_message (task_id, deleted) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfdm_instance
     ON pmis_flow_delegate_message (instance_id, deleted) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfdm_trace
     ON pmis_flow_delegate_message (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
 
@@ -2378,7 +2796,7 @@ CREATE INDEX IF NOT EXISTS idx_pfdm_trace
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_comment (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)          NOT NULL DEFAULT '1',
     instance_id         VARCHAR(20)       NOT NULL,               -- 关联流程实例
     task_id             VARCHAR(20),                              -- 关联任务（可为空：实例级评论）
@@ -2402,19 +2820,28 @@ CREATE TABLE IF NOT EXISTS pmis_flow_comment (
 );
 
 COMMENT ON TABLE  pmis_flow_comment IS 'P2-2: 流程评论表 — 审批评论多级回复（对标钉钉/飞书审批评论区）';
+
 COMMENT ON COLUMN pmis_flow_comment.instance_id IS '关联流程实例 ID';
+
 COMMENT ON COLUMN pmis_flow_comment.task_id IS '关联任务 ID（实例级评论可为空）';
+
 COMMENT ON COLUMN pmis_flow_comment.content IS '评论内容（富文本/纯文本）';
+
 COMMENT ON COLUMN pmis_flow_comment.parent_comment_id IS '父评论 ID（一级评论为 NULL，二级及以下回复指向父评论 ID）';
+
 COMMENT ON COLUMN pmis_flow_comment.reply_to_user_id IS '被回复人 ID（回复某条评论时标记，一级评论为 NULL）';
+
 COMMENT ON COLUMN pmis_flow_comment.reply_to_user_name IS '被回复人姓名（冗余，便于前端展示）';
 
 CREATE INDEX IF NOT EXISTS idx_pfc_instance
     ON pmis_flow_comment (tenant_id, instance_id, created_at) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfc_parent
     ON pmis_flow_comment (parent_comment_id, created_at) WHERE parent_comment_id IS NOT NULL AND deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfc_task
     ON pmis_flow_comment (task_id, created_at) WHERE task_id IS NOT NULL AND deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfc_trace
     ON pmis_flow_comment (provider_trace_id) WHERE provider_trace_id IS NOT NULL;
 
@@ -2426,7 +2853,7 @@ CREATE INDEX IF NOT EXISTS idx_pfc_trace
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_quick_comment (
-    id                  VARCHAR(20)       PRIMARY KEY,
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
     user_id             VARCHAR(20)       NOT NULL,               -- 所属用户（系统预设时为 'SYSTEM'）
     content             VARCHAR(500)      NOT NULL,               -- 常用语内容
@@ -2442,15 +2869,22 @@ CREATE TABLE IF NOT EXISTS pmis_flow_quick_comment (
 );
 
 COMMENT ON TABLE  pmis_flow_quick_comment IS 'P1-2: 审批常用语表 — 用户预设常用审批意见，一键填入';
+
 COMMENT ON COLUMN pmis_flow_quick_comment.user_id IS '所属用户 ID（系统预设为 SYSTEM）';
+
 COMMENT ON COLUMN pmis_flow_quick_comment.content IS '常用语内容';
+
 COMMENT ON COLUMN pmis_flow_quick_comment.comment_type IS '意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE';
+
 COMMENT ON COLUMN pmis_flow_quick_comment.sort_num IS '排序号（越小越靠前）';
+
 COMMENT ON COLUMN pmis_flow_quick_comment.use_count IS '使用次数（统计用）';
+
 COMMENT ON COLUMN pmis_flow_quick_comment.is_system IS '是否系统预设（1=是，0=否）';
 
 CREATE INDEX IF NOT EXISTS idx_pfqc_user
     ON pmis_flow_quick_comment (tenant_id, user_id, deleted);
+
 CREATE INDEX IF NOT EXISTS idx_pfqc_system
     ON pmis_flow_quick_comment (tenant_id, is_system, deleted) WHERE is_system = 1;
 
@@ -2458,15 +2892,19 @@ CREATE INDEX IF NOT EXISTS idx_pfqc_system
 INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '1', '1', 'SYSTEM', '同意', 'AGREE', 1, 0, 1, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '1');
+
 INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '2', '1', 'SYSTEM', '已阅', NULL, 2, 0, 1, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '2');
+
 INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '3', '1', 'SYSTEM', '不同意，请补充材料后重新提交', 'DISAGREE', 3, 0, 1, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '3');
+
 INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '4', '1', 'SYSTEM', '请确认金额是否正确', 'INQUIRE', 4, 0, 1, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '4');
+
 INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '5', '1', 'SYSTEM', '建议优化方案后重新审批', 'SUGGEST', 5, 0, 1, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '5');
@@ -2483,7 +2921,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '5');
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_ai_feedback (
-    id                      VARCHAR(20)       PRIMARY KEY,
+    id                      VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id               VARCHAR(20)          NOT NULL DEFAULT '1',
     trace_id                VARCHAR(64)      NOT NULL,               -- 推荐调用追踪 ID（关联一次 recommendApprovers 调用）
     task_id                 VARCHAR(20),                             -- 任务 ID（可空，草稿态无任务）
@@ -2512,26 +2950,25 @@ CREATE TABLE IF NOT EXISTS pmis_flow_ai_feedback (
 );
 
 COMMENT ON TABLE  pmis_flow_ai_feedback IS 'P3-3: AI 推荐审批人反馈记录表 — 记录用户对 AI 推荐的反馈，形成推荐-反馈闭环';
+
 COMMENT ON COLUMN pmis_flow_ai_feedback.trace_id IS '推荐调用追踪 ID（关联一次 recommendApprovers 调用，所有推荐项共享）';
+
 COMMENT ON COLUMN pmis_flow_ai_feedback.recommended_score IS '推荐得分 0.0000~1.0000（来自 Agent 返回）';
+
 COMMENT ON COLUMN pmis_flow_ai_feedback.recommended_rank IS '推荐排名（1=第一推荐，来自 recommendApprovers 返回）';
+
 COMMENT ON COLUMN pmis_flow_ai_feedback.action IS '反馈动作: ACCEPTED=接受 / REJECTED=拒绝 / CHOSEN_OTHER=选择其他人';
+
 COMMENT ON COLUMN pmis_flow_ai_feedback.actual_user_id IS '实际选择的审批人 ID（action=CHOSEN_OTHER 时有值）';
+
 COMMENT ON COLUMN pmis_flow_ai_feedback.feedback_source IS '反馈来源: USER_EXPLICIT=用户显式反馈 / SYSTEM_INFERRED=系统推断';
 
 CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_trace
     ON pmis_flow_ai_feedback (tenant_id, trace_id) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_task_created
     ON pmis_flow_ai_feedback (tenant_id, task_id, created_at) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_user_action
     ON pmis_flow_ai_feedback (tenant_id, recommended_user_id, action) WHERE deleted = 0;
-
--- ====================================================================
--- All DDL has been applied. Commit the transaction. If any DDL above
--- failed, the implicit ROLLBACK from psql -v ON_ERROR_STOP=1 will
--- have already aborted the transaction and the COMMIT below will
--- error out harmlessly. Tool-driven inits should ignore the COMMIT
--- line and roll back manually on exception.
--- ====================================================================
-COMMIT;
 

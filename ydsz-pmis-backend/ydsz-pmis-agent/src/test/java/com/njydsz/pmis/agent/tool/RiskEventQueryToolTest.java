@@ -42,7 +42,7 @@ class RiskEventQueryToolTest {
 
     @BeforeEach
     void setUp() {
-        tool = new RiskEventQueryTool();
+        tool = new RiskEventQueryTool(projectServiceClient);
     }
 
     @Test
@@ -65,7 +65,6 @@ class RiskEventQueryToolTest {
     @DisplayName("真实数据模式：riskTitle→name, riskLevel→severity 字段映射")
     void testRealData_字段映射() {
         ReflectionTestUtils.setField(tool, "mockEnabled", false);
-        ReflectionTestUtils.setField(tool, "projectServiceClient", projectServiceClient);
 
         // 构造远端分页返回的单条风险记录
         Map<String, Object> record = new HashMap<>();
@@ -91,7 +90,6 @@ class RiskEventQueryToolTest {
     @DisplayName("真实数据模式：Feign 服务降级，返回空列表")
     void testRealData_服务降级() {
         ReflectionTestUtils.setField(tool, "mockEnabled", false);
-        ReflectionTestUtils.setField(tool, "projectServiceClient", projectServiceClient);
 
         when(projectServiceClient.riskPage(1, 100, "P001", "HIGH"))
                 .thenReturn(Result.failed(BizErrorCode.SERVICE_UNAVAILABLE));
@@ -105,7 +103,6 @@ class RiskEventQueryToolTest {
     @DisplayName("真实数据模式：severity=ALL 时 riskLevel 参数传 null")
     void testRealData_ALL不传riskLevel() {
         ReflectionTestUtils.setField(tool, "mockEnabled", false);
-        ReflectionTestUtils.setField(tool, "projectServiceClient", projectServiceClient);
 
         Map<String, Object> pageData = new HashMap<>();
         pageData.put("records", List.of());

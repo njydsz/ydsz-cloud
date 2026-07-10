@@ -4,7 +4,6 @@ import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.feign.ProjectServiceClient;
 import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -36,6 +35,18 @@ public class TimesheetStatTool implements AgentTool {
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
 
     /**
+     * 构造器注入 {@link ProjectServiceClient}，由 Spring 容器调用。
+     *
+     * <p>显式声明构造器（模块未引入 Lombok），
+     * 单元测试可直接 {@code new TimesheetStatTool(mock)} 注入。
+     *
+     * @param projectServiceClient 项目执行模块 Feign 客户端
+     */
+    public TimesheetStatTool(ProjectServiceClient projectServiceClient) {
+        this.projectServiceClient = projectServiceClient;
+    }
+
+    /**
      * 是否使用模拟数据（true=模拟，false=真实数据源）。
      *
      * <p>字段默认值为 {@code true}，保证在以下场景都安全降级到 mock 数据：
@@ -51,11 +62,9 @@ public class TimesheetStatTool implements AgentTool {
     /**
      * 项目执行模块 Feign 客户端（真实数据源模式使用）。
      *
-     * <p>使用 {@code @Autowired} 字段注入，保证单元测试直接 new 实例时该字段为 null，
-     * 而 fetchRealData 在 mockEnabled=true 时不会被调用，从而无需 mock Feign 客户端。
+     * <p>通过构造器注入，单元测试可直接 {@code new TimesheetStatTool(mock)}。
      */
-    @Autowired
-    protected ProjectServiceClient projectServiceClient;
+    private final ProjectServiceClient projectServiceClient;
 
     @Override
     public String name() {

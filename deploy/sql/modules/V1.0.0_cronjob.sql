@@ -1,13 +1,11 @@
--- ====================================================================
--- Cron Job (Job/DAG/Schedule/Alert/Log/Quota)
--- Module: cronjob | Version: V1.0.0 | Target: PostgreSQL 18
--- Generated from deploy/sql/V1.0.0.sql
--- ====================================================================
-
+-- ============================================================
+-- PMIS cronjob module SQL
+-- Auto-generated from V1.0.0.sql
+-- ============================================================
 
 -- 职级表 (L1-L18)
 CREATE TABLE IF NOT EXISTS pmis_job_level(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     level_code      VARCHAR(8)     NOT NULL,
     level_name      VARCHAR(64)    NOT NULL,
     level_segment   VARCHAR(16)    NOT NULL,
@@ -25,28 +23,43 @@ CREATE TABLE IF NOT EXISTS pmis_job_level(
     CONSTRAINT ck_pjl_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pjl_deleted_enum CHECK (deleted IN (0, 1))
 );
+
 COMMENT ON TABLE pmis_job_level IS '职级表: L1-L18 共 18 级,定义能力晋升阶梯';
+
 COMMENT ON COLUMN pmis_job_level.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_level.level_code IS '职级编码(L1-L18)';
+
 COMMENT ON COLUMN pmis_job_level.level_name IS '职级名称(如助理工程师/开发工程师/架构师)';
+
 COMMENT ON COLUMN pmis_job_level.level_segment IS '职级段: PRIMARY 初级(L1-L3) / MIDDLE 中级(L4-L6) / SENIOR 高级(L7-L9) / EXPERT 专家(L10-L12) / STRATEGIC 战略(L13-L18)';
+
 COMMENT ON COLUMN pmis_job_level.sort_order IS '职级排序号(升序,L1=1)';
+
 COMMENT ON COLUMN pmis_job_level.description IS '职级能力要求说明';
+
 COMMENT ON COLUMN pmis_job_level.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+
 COMMENT ON COLUMN pmis_job_level.created_by IS '创建人 ID';
+
 COMMENT ON COLUMN pmis_job_level.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_level.updated_by IS '最后修改人 ID';
+
 COMMENT ON COLUMN pmis_job_level.updated_at IS '最后修改时间';
+
 COMMENT ON COLUMN pmis_job_level.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
 COMMENT ON COLUMN pmis_job_level.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
+
 CREATE INDEX IF NOT EXISTS idx_job_level_tenant_sort
     ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
 
 -- 职级费率表 (对外人天 / 对内人天)
 CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
-    id                  VARCHAR(20)      PRIMARY KEY,
+    id                  VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     level_code          VARCHAR(8)     NOT NULL,
     external_daily      NUMERIC(10,2)  NOT NULL,
     internal_daily      NUMERIC(10,2)  NOT NULL,
@@ -77,34 +90,61 @@ CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
     CONSTRAINT ck_pjlr_deleted_enum    CHECK (deleted IN (0, 1)),
     CONSTRAINT ck_pjlr_cost_valid      CHECK (total_cost = base_salary + social_company + fund_company + travel_reimbursement + travel_allowance)
 );
+
 COMMENT ON TABLE pmis_job_level_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金+差旅成本拆解,支持版本化生效';
+
 COMMENT ON COLUMN pmis_job_level_rate.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_level_rate.level_code IS '职级编码(L1-L18,关联 pmis_job_level.level_code)';
+
 COMMENT ON COLUMN pmis_job_level_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
+
 COMMENT ON COLUMN pmis_job_level_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
+
 COMMENT ON COLUMN pmis_job_level_rate.base_salary IS '月度基础工资(元)';
+
 COMMENT ON COLUMN pmis_job_level_rate.social_company IS '公司社保部分(元/月)';
+
 COMMENT ON COLUMN pmis_job_level_rate.social_personal IS '个人社保部分(元/月,从工资扣除)';
+
 COMMENT ON COLUMN pmis_job_level_rate.fund_company IS '公司公积金部分(元/月)';
+
 COMMENT ON COLUMN pmis_job_level_rate.fund_personal IS '个人公积金部分(元/月,从工资扣除)';
+
 COMMENT ON COLUMN pmis_job_level_rate.take_home IS '税后到手工资(元/月)';
+
 COMMENT ON COLUMN pmis_job_level_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
+
 COMMENT ON COLUMN pmis_job_level_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
+
 COMMENT ON COLUMN pmis_job_level_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company+travel_reimbursement+travel_allowance)';
+
 COMMENT ON COLUMN pmis_job_level_rate.billable_target IS '可计费利用率目标(0.0-1.0,如 0.78=78%)';
+
 COMMENT ON COLUMN pmis_job_level_rate.effective_date IS '生效日期';
+
 COMMENT ON COLUMN pmis_job_level_rate.expire_date IS '失效日期(NULL 表示长期有效)';
+
 COMMENT ON COLUMN pmis_job_level_rate.version IS '版本号(同职级可有多版本,通过 effective_date 区分)';
+
 COMMENT ON COLUMN pmis_job_level_rate.description IS '费率版本说明';
+
 COMMENT ON COLUMN pmis_job_level_rate.created_by IS '创建人 ID';
+
 COMMENT ON COLUMN pmis_job_level_rate.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_level_rate.updated_by IS '最后修改人 ID';
+
 COMMENT ON COLUMN pmis_job_level_rate.updated_at IS '最后修改时间';
+
 COMMENT ON COLUMN pmis_job_level_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
 COMMENT ON COLUMN pmis_job_level_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
+
 CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
 
 -- 初始化职级 (L1-L18)
@@ -153,158 +193,6 @@ VALUES
     ('L17', 2000, 1000, 20000, 4900, 2110, 1000, 1000, 16890, 2500, 2000, 30400, 0.40, '2026-01-01', 1, 0),
     ('L18', 2100, 1050, 21000, 5145, 2215, 1050, 1050, 17735, 2500, 2000, 31695, 0.40, '2026-01-01', 1, 0)
 ON CONFLICT DO NOTHING;
--- ============================ [006] init pmis job schema ============================
--- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
---   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
---   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
---   3) tenant_id 改为 NOT NULL DEFAULT 1
---   4) 内联 status/deleted CHECK 约束
---   5) 内联复合部分索引 (tenant_id, created_at DESC) WHERE deleted = 0
---   6) 计数器类字段 (fire_count/success_count/fail_count/login_fail_count 等) 添加非负 CHECK
--- =====================================================
--- PMIS 任务调度模块 DDL
--- 版本: V1.0.0_006 (merged into V1.0.0.sql)
--- 描述: 动态定时任务定义 + 执行日志(自研调度引擎)
--- =====================================================
-
--- 任务定义表 pmis_job
-CREATE TABLE IF NOT EXISTS pmis_job(
-    id              VARCHAR(20)      PRIMARY KEY,
-    job_name        VARCHAR(128)   NOT NULL,
-    job_group       VARCHAR(64)    NOT NULL DEFAULT 'DEFAULT',
-    job_key         VARCHAR(128)   NOT NULL,
-    handler         VARCHAR(256)   NOT NULL,
-    cron_expression VARCHAR(128),
-    -- [P0-3] 调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)
-    schedule_type   VARCHAR(32)    NOT NULL DEFAULT 'CRON',
-    -- [P0-3] 固定频率间隔(毫秒): schedule_type=FIXED_RATE 时生效
-    fixed_rate_ms   BIGINT,
-    -- [P0-3] 固定延迟间隔(毫秒): schedule_type=FIXED_DELAY 时生效
-    fixed_delay_ms  BIGINT,
-    params_json     TEXT,
-    status          VARCHAR(32)    NOT NULL DEFAULT 'NORMAL',
-    remark          VARCHAR(512),
-    next_fire_time  TIMESTAMPTZ,
-    last_fire_time  TIMESTAMPTZ,
-    fire_count      BIGINT         NOT NULL DEFAULT 0,
-    success_count   BIGINT         NOT NULL DEFAULT 0,
-    fail_count      BIGINT         NOT NULL DEFAULT 0,
-    -- [P0-4] 任务级锁 TTL（毫秒, NULL 使用全局默认值）和任务超时（毫秒, NULL 不限）
-    lock_ttl_ms     BIGINT,
-    timeout_ms      BIGINT,
-    -- [P6-3] 慢任务阈值（毫秒, NULL 不检测慢任务; 超过此值记入 pmis_job_slow_log）
-    slow_threshold_ms BIGINT,
-    -- [P2-1] Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过 / COALESCE 合并执行并标记 MISFIRED
-    misfire_policy  VARCHAR(32)    NOT NULL DEFAULT 'FIRE_NOW',
-    -- [P3-3] 分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行
-    shard_total     INTEGER        NOT NULL DEFAULT 1,
-    -- [P1-5] 任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码)
-    job_type        VARCHAR(32)    NOT NULL DEFAULT 'BEAN',
-    -- [P1-1] 失败重试: 最大重试次数(0=不重试) / 重试间隔(毫秒, NULL=立即) / 退避策略
-    max_retries     INTEGER        NOT NULL DEFAULT 0,
-    retry_interval_ms BIGINT,
-    retry_backoff   VARCHAR(32)    NOT NULL DEFAULT 'FIXED',
-    -- [P1-2] 阻塞策略: SERIAL(排队, 默认) / COVER(中断+执行新) / DISCARD(丢弃新) / CONCURRENT(并行)
-    block_strategy  VARCHAR(32)    NOT NULL DEFAULT 'SERIAL',
-    -- [P1-6] 任务级熔断: 连续失败次数 / 最大连续失败次数(达到后自动暂停) / 自动恢复时间(分钟)
-    consecutive_fail_count INTEGER NOT NULL DEFAULT 0,
-    max_consecutive_fails INTEGER,
-    auto_resume_after_minutes INTEGER,
-    -- [P4-7] 优先级: 1-10, 越小越高(默认 5)
-    priority        INTEGER        NOT NULL DEFAULT 5,
-    -- [P4-8] 版本号: 每次修改 +1, 用于乐观锁和版本追溯
-    version         INTEGER        NOT NULL DEFAULT 1,
-    -- [P2-8] 任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区
-    timezone        VARCHAR(64),
-    -- [P3-12] 目标集群名称: NULL=本地集群(默认), 非 NULL 时通过 CrossClusterDispatcher 派发到指定集群
-    cluster         VARCHAR(64),
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    -- 数据完整性约束
-    CONSTRAINT uk_pmis_job_key UNIQUE (job_key, deleted),
-    -- [P1-6] status 增加 AUTO_PAUSED: 连续失败熔断后自动暂停
-    CONSTRAINT ck_pj_status_enum    CHECK (status IN ('NORMAL', 'PAUSED', 'ERROR', 'COMPLETE', 'AUTO_PAUSED')),
-    CONSTRAINT ck_pj_counts_nonneg  CHECK (fire_count >= 0 AND success_count >= 0 AND fail_count >= 0),
-    CONSTRAINT ck_pj_success_le     CHECK (success_count <= fire_count),
-    -- [P0-3] 调度类型与固定间隔校验
-    CONSTRAINT ck_pj_schedule_type_enum CHECK (schedule_type IN ('CRON', 'FIXED_RATE', 'FIXED_DELAY', 'API')),
-    CONSTRAINT ck_pj_fixed_rate_pos CHECK (fixed_rate_ms IS NULL OR fixed_rate_ms > 0),
-    CONSTRAINT ck_pj_fixed_delay_pos CHECK (fixed_delay_ms IS NULL OR fixed_delay_ms > 0),
-    CONSTRAINT ck_pj_lock_ttl_nonneg CHECK (lock_ttl_ms IS NULL OR lock_ttl_ms > 0),
-    CONSTRAINT ck_pj_timeout_nonneg  CHECK (timeout_ms IS NULL OR timeout_ms > 0),
-    CONSTRAINT ck_pj_slow_threshold_nonneg CHECK (slow_threshold_ms IS NULL OR slow_threshold_ms > 0),
-    CONSTRAINT ck_pj_misfire_enum   CHECK (misfire_policy IN ('FIRE_NOW', 'SKIP', 'COALESCE')),
-    CONSTRAINT ck_pj_shard_total_pos CHECK (shard_total >= 1),
-    CONSTRAINT ck_pj_job_type_enum  CHECK (job_type IN ('BEAN', 'HTTP', 'SHELL', 'GLUE', 'MAP', 'MAP_REDUCE')),
-    CONSTRAINT ck_pj_max_retries_nonneg CHECK (max_retries >= 0),
-    CONSTRAINT ck_pj_retry_backoff_enum CHECK (retry_backoff IN ('FIXED', 'EXPONENTIAL')),
-    CONSTRAINT ck_pj_block_strategy_enum CHECK (block_strategy IN ('SERIAL', 'COVER', 'DISCARD', 'CONCURRENT')),
-    CONSTRAINT ck_pj_consecutive_fail_nonneg CHECK (consecutive_fail_count >= 0),
-    CONSTRAINT ck_pj_max_consecutive_fails_pos CHECK (max_consecutive_fails IS NULL OR max_consecutive_fails > 0),
-    CONSTRAINT ck_pj_auto_resume_pos CHECK (auto_resume_after_minutes IS NULL OR auto_resume_after_minutes > 0),
-    CONSTRAINT ck_pj_priority_range CHECK (priority >= 1 AND priority <= 10),
-    CONSTRAINT ck_pj_version_pos    CHECK (version >= 1),
-    CONSTRAINT ck_pj_deleted_enum   CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE pmis_job IS '动态定时任务定义表: 支持运行时增删改触发频率的定时任务(自研调度引擎)';
-COMMENT ON COLUMN pmis_job.id IS '主键 ID';
-COMMENT ON COLUMN pmis_job.job_name IS '任务名称(展示用)';
-COMMENT ON COLUMN pmis_job.job_group IS '任务分组(如 DEFAULT/RECONCILE/ALERT)';
-COMMENT ON COLUMN pmis_job.job_key IS '任务唯一 KEY(调度器使用)';
-COMMENT ON COLUMN pmis_job.handler IS '任务处理器 Bean 名称(Spring Bean)';
-COMMENT ON COLUMN pmis_job.cron_expression IS 'Cron 表达式(如 0 0 2 * * ? = 每日 02:00)';
-COMMENT ON COLUMN pmis_job.schedule_type IS '调度类型: CRON(Cron表达式, 默认) / FIXED_RATE(固定频率) / FIXED_DELAY(固定延迟) / API(仅手动触发)';
-COMMENT ON COLUMN pmis_job.fixed_rate_ms IS '固定频率间隔(毫秒): schedule_type=FIXED_RATE 时生效';
-COMMENT ON COLUMN pmis_job.fixed_delay_ms IS '固定延迟间隔(毫秒): schedule_type=FIXED_DELAY 时生效';
-COMMENT ON COLUMN pmis_job.params_json IS '任务参数 JSON';
-COMMENT ON COLUMN pmis_job.status IS '任务状态: NORMAL 正常 / PAUSED 暂停 / ERROR 异常 / COMPLETE 一次性任务完成';
-COMMENT ON COLUMN pmis_job.remark IS '任务说明';
-COMMENT ON COLUMN pmis_job.next_fire_time IS '下次触发时间';
-COMMENT ON COLUMN pmis_job.last_fire_time IS '上次触发时间';
-COMMENT ON COLUMN pmis_job.fire_count IS '累计触发次数';
-COMMENT ON COLUMN pmis_job.success_count IS '成功执行次数';
-COMMENT ON COLUMN pmis_job.fail_count IS '失败次数(超过阈值告警)';
-COMMENT ON COLUMN pmis_job.lock_ttl_ms IS '任务级分布式锁 TTL(毫秒, NULL 使用全局默认 pmis.cronjob.job-lock-ttl)';
-COMMENT ON COLUMN pmis_job.timeout_ms IS '任务超时时间(毫秒, NULL 表示不限超时; 超时后 Leader 标记 FAILED 并重派)';
-COMMENT ON COLUMN pmis_job.slow_threshold_ms IS '慢任务阈值(毫秒, NULL 不检测慢任务; 执行耗时超过此值记入 pmis_job_slow_log)';
-COMMENT ON COLUMN pmis_job.misfire_policy IS 'Misfire 策略: FIRE_NOW 立即执行(默认) / SKIP 跳过推进 next_fire_time / COALESCE 合并执行并日志标记 MISFIRED';
-COMMENT ON COLUMN pmis_job.shard_total IS '分片总数: 1=非分片任务(默认), >1 时按 ShardingStrategy 分配到在线节点并行执行';
-COMMENT ON COLUMN pmis_job.job_type IS '任务类型: BEAN(Spring Bean, 默认) / HTTP(HTTP 调用) / SHELL(脚本) / GLUE(在线代码) / MAP(Map 动态子任务) / MAP_REDUCE(MapReduce 动态子任务+汇总)';
-COMMENT ON COLUMN pmis_job.max_retries IS '最大重试次数: 0=不重试(默认), >0 时失败后自动重试';
-COMMENT ON COLUMN pmis_job.retry_interval_ms IS '重试间隔(毫秒): NULL=立即重试, >0 时按 retry_backoff 策略计算间隔';
-COMMENT ON COLUMN pmis_job.retry_backoff IS '重试退避策略: FIXED 固定间隔(默认) / EXPONENTIAL 指数退避(间隔*2^retryCount)';
-COMMENT ON COLUMN pmis_job.block_strategy IS '阻塞策略: SERIAL 排队(默认) / COVER 中断+执行新 / DISCARD 丢弃新 / CONCURRENT 并行';
-COMMENT ON COLUMN pmis_job.consecutive_fail_count IS '连续失败次数: 成功时归零, 失败时+1, 达到 max_consecutive_fails 时自动暂停';
-COMMENT ON COLUMN pmis_job.max_consecutive_fails IS '最大连续失败次数: NULL=不熔断, >0 时达到阈值后 status 改为 AUTO_PAUSED';
-COMMENT ON COLUMN pmis_job.auto_resume_after_minutes IS '自动恢复时间(分钟): NULL=不自动恢复, >0 时 AUTO_PAUSED 后定时检查恢复';
-COMMENT ON COLUMN pmis_job.priority IS '优先级: 1-10, 越小越高(默认 5), 扫描器按优先级排序派发';
-COMMENT ON COLUMN pmis_job.version IS '版本号: 每次修改 +1, 用于乐观锁和版本追溯';
-COMMENT ON COLUMN pmis_job.timezone IS '任务级时区: 如 Asia/Shanghai / America/New_York / UTC, NULL 使用系统默认时区';
-COMMENT ON COLUMN pmis_job.cluster IS '目标集群名称: NULL=本地集群(默认), 非 NULL 时通过 CrossClusterDispatcher 派发到指定集群';
-COMMENT ON COLUMN pmis_job.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_job.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_job.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_job.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-COMMENT ON COLUMN pmis_job.tenant_id IS '租户 ID(单租户部署默认 1)';
-
--- [INLINE-OPT] status/group 走部分索引(逻辑删除过滤)
-CREATE INDEX IF NOT EXISTS idx_pmis_job_status
-    ON pmis_job (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmis_job_group
-    ON pmis_job (job_group) WHERE deleted = 0;
--- [INLINE-OPT] 复合索引:按租户 + 创建时间倒序(任务中心列表)
-CREATE INDEX IF NOT EXISTS idx_pmis_job_tenant_created
-    ON pmis_job (tenant_id, created_at DESC) WHERE deleted = 0;
--- [INLINE-OPT] 下次触发时间:调度器扫描待触发任务
-CREATE INDEX IF NOT EXISTS idx_pmis_job_next_fire
-    ON pmis_job (next_fire_time) WHERE deleted = 0 AND status = 'NORMAL' AND next_fire_time IS NOT NULL;
-
 
 -- ============================================================================
 -- [P1-3] 调度节点心跳表 pmis_job_node
@@ -313,7 +201,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_job_next_fire
 -- Leader 节点通过 last_heartbeat 判断节点是否在线，用于任务派发选择执行节点。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_node(
-    node_id         VARCHAR(128)  PRIMARY KEY,
+    node_id         VARCHAR(128)  PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     app_name        VARCHAR(128)  NOT NULL,
     host            VARCHAR(128)  NOT NULL,
     port            INTEGER,
@@ -328,27 +216,38 @@ CREATE TABLE IF NOT EXISTS pmis_job_node(
     CONSTRAINT ck_pjn_mem_range   CHECK (mem_usage_pct IS NULL OR (mem_usage_pct >= 0 AND mem_usage_pct <= 100)),
     CONSTRAINT ck_pjn_running_nonneg CHECK (running_count >= 0)
 );
+
 -- 心跳时间索引：Leader 扫描在线节点
 CREATE INDEX IF NOT EXISTS idx_pjn_last_hb ON pmis_job_node(last_heartbeat);
+
 -- 状态索引：筛选 ONLINE 节点
 CREATE INDEX IF NOT EXISTS idx_pjn_status ON pmis_job_node(status);
 
 COMMENT ON TABLE pmis_job_node IS '调度节点心跳表（P1-3）';
-COMMENT ON COLUMN pmis_job_node.node_id IS '节点 ID（hostname:port 或 hostname:pid）';
-COMMENT ON COLUMN pmis_job_node.app_name IS '应用名称';
-COMMENT ON COLUMN pmis_job_node.host IS '主机名';
-COMMENT ON COLUMN pmis_job_node.port IS '服务端口';
-COMMENT ON COLUMN pmis_job_node.last_heartbeat IS '最后心跳时间（Leader 据此判断节点是否在线）';
-COMMENT ON COLUMN pmis_job_node.status IS '节点状态: ONLINE 在线 / OFFLINE 离线 / DRAINING 排空退出中';
-COMMENT ON COLUMN pmis_job_node.cpu_usage IS 'CPU 使用率（百分比 0-100）';
-COMMENT ON COLUMN pmis_job_node.mem_usage_pct IS '内存使用率（百分比 0-100）';
-COMMENT ON COLUMN pmis_job_node.running_count IS '当前正在执行的任务数（用于负载均衡选择）';
-COMMENT ON COLUMN pmis_job_node.tags IS '节点标签（JSON，用于任务亲和性选择）';
 
+COMMENT ON COLUMN pmis_job_node.node_id IS '节点 ID（hostname:port 或 hostname:pid）';
+
+COMMENT ON COLUMN pmis_job_node.app_name IS '应用名称';
+
+COMMENT ON COLUMN pmis_job_node.host IS '主机名';
+
+COMMENT ON COLUMN pmis_job_node.port IS '服务端口';
+
+COMMENT ON COLUMN pmis_job_node.last_heartbeat IS '最后心跳时间（Leader 据此判断节点是否在线）';
+
+COMMENT ON COLUMN pmis_job_node.status IS '节点状态: ONLINE 在线 / OFFLINE 离线 / DRAINING 排空退出中';
+
+COMMENT ON COLUMN pmis_job_node.cpu_usage IS 'CPU 使用率（百分比 0-100）';
+
+COMMENT ON COLUMN pmis_job_node.mem_usage_pct IS '内存使用率（百分比 0-100）';
+
+COMMENT ON COLUMN pmis_job_node.running_count IS '当前正在执行的任务数（用于负载均衡选择）';
+
+COMMENT ON COLUMN pmis_job_node.tags IS '节点标签（JSON，用于任务亲和性选择）';
 
 -- 任务执行日志表 pmis_job_log
 CREATE TABLE IF NOT EXISTS pmis_job_log(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
     start_time      TIMESTAMPTZ    NOT NULL,
@@ -389,43 +288,70 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     CONSTRAINT ck_pjl_trigger_type_enum CHECK (trigger_type IN ('CRON', 'MANUAL', 'RETRY', 'MISFIRED', 'DEPENDENT', 'API', 'FAILOVER')),
     CONSTRAINT ck_pjl_deleted_enum  CHECK (deleted IN (0, 1))
 );
+
 -- [INLINE-OPT] 任务日志不需要 tenant_id 维度(系统全局资源)
 -- 注:此处不携带 tenant_id,以避免与任务中心分页逻辑耦合
 
 COMMENT ON TABLE pmis_job_log IS '任务执行日志: 每次任务执行的耗时/入参/出参/异常,用于排障与审计';
+
 COMMENT ON COLUMN pmis_job_log.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_log.job_id IS '任务 ID(关联 pmis_job.id)';
+
 COMMENT ON COLUMN pmis_job_log.job_key IS '任务 KEY(冗余,避免连表)';
+
 COMMENT ON COLUMN pmis_job_log.start_time IS '任务开始时间';
+
 COMMENT ON COLUMN pmis_job_log.end_time IS '任务结束时间';
+
 COMMENT ON COLUMN pmis_job_log.duration_ms IS '任务执行耗时(毫秒)';
+
 COMMENT ON COLUMN pmis_job_log.status IS '执行状态: RUNNING 进行中 / SUCCESS 成功 / FAILED 失败 / TIMEOUT 超时';
+
 COMMENT ON COLUMN pmis_job_log.error_message IS '异常堆栈(失败时填充)';
+
 COMMENT ON COLUMN pmis_job_log.params_json IS '执行参数 JSON';
+
 COMMENT ON COLUMN pmis_job_log.result_json IS '执行结果 JSON';
+
 COMMENT ON COLUMN pmis_job_log.trace_id IS '链路追踪 ID(SkyWalking/TLog)';
+
 COMMENT ON COLUMN pmis_job_log.trigger_type IS '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发 / API 接口触发 / FAILOVER 故障转移';
+
 COMMENT ON COLUMN pmis_job_log.lock_holder IS '持锁者标识(hostname:pid): 分布式锁的 value,超时后通过 Lua 脚本安全释放锁';
+
 COMMENT ON COLUMN pmis_job_log.exec_node_id IS '执行节点 ID(hostname:port): 用于故障转移时定位任务所在节点';
+
 COMMENT ON COLUMN pmis_job_log.exec_thread_id IS '执行线程 ID: 用于超时强制中断时定位执行线程';
+
 COMMENT ON COLUMN pmis_job_log.shard_index IS '分片索引: 非分片任务为 NULL; 分片任务为 0-based, 供故障转移重建分片锁 key';
+
 COMMENT ON COLUMN pmis_job_log.shard_total IS '分片总数: 非分片任务为 NULL; 分片任务为 shardTotal 值';
+
 COMMENT ON COLUMN pmis_job_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
+
 COMMENT ON COLUMN pmis_job_log.topic IS 'RocketMQ Topic(标识消息来源 Topic,DLQ 消息填充原 Topic)';
+
 COMMENT ON COLUMN pmis_job_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';
+
 COMMENT ON COLUMN pmis_job_log.created_at IS '日志写入时间';
+
 COMMENT ON COLUMN pmis_job_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- [INLINE-OPT] status 走部分索引(高频过滤)
 CREATE INDEX IF NOT EXISTS idx_pjl_job_id
     ON pmis_job_log (job_id) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pjl_job_key
     ON pmis_job_log (job_key) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pjl_status
     ON pmis_job_log (status) WHERE deleted = 0;
+
 -- [INLINE-OPT] 复合索引:按 job_id + 开始时间倒序(任务执行历史分页)
 CREATE INDEX IF NOT EXISTS idx_pjl_job_start
     ON pmis_job_log (job_id, start_time DESC) WHERE deleted = 0;
+
 -- [INLINE-OPT] 链路追踪 ID 索引(分布式排障)
 CREATE INDEX IF NOT EXISTS idx_pjl_trace_id
     ON pmis_job_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
@@ -438,7 +364,7 @@ CREATE INDEX IF NOT EXISTS idx_pjl_trace_id
 -- 与 pmis_job_log（执行级汇总）互补，本表为行级明细。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_log_content(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     log_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
     line_no         INTEGER        NOT NULL,
@@ -451,13 +377,21 @@ CREATE TABLE IF NOT EXISTS pmis_job_log_content(
 );
 
 COMMENT ON TABLE pmis_job_log_content IS '任务执行日志明细: 业务侧通过 JobLogger 写入的逐行日志, 供前端 SSE 实时滚动展示';
+
 COMMENT ON COLUMN pmis_job_log_content.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_log_content.log_id IS '执行日志 ID(关联 pmis_job_log.id)';
+
 COMMENT ON COLUMN pmis_job_log_content.job_key IS '任务 KEY(冗余, 避免连表)';
+
 COMMENT ON COLUMN pmis_job_log_content.line_no IS '行号(从 1 递增)';
+
 COMMENT ON COLUMN pmis_job_log_content.log_level IS '日志级别: DEBUG / INFO / WARN / ERROR';
+
 COMMENT ON COLUMN pmis_job_log_content.content IS '日志内容(单行, 最长 4000 字符)';
+
 COMMENT ON COLUMN pmis_job_log_content.created_at IS '写入时间';
+
 COMMENT ON COLUMN pmis_job_log_content.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjlc_log_id
@@ -470,7 +404,7 @@ CREATE INDEX IF NOT EXISTS idx_pjlc_log_id
 -- 由 MapTaskExecutor 管理：root task 调用 map() 产生子任务，框架执行后记录结果。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_task(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     job_id          VARCHAR(20)         NOT NULL,
     log_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
@@ -490,23 +424,38 @@ CREATE TABLE IF NOT EXISTS pmis_job_task(
 );
 
 COMMENT ON TABLE pmis_job_task IS 'MapReduce 子任务表: 动态产生的子任务及其执行结果';
+
 COMMENT ON COLUMN pmis_job_task.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_task.job_id IS '任务 ID';
+
 COMMENT ON COLUMN pmis_job_task.log_id IS '执行日志 ID(关联 pmis_job_log.id)';
+
 COMMENT ON COLUMN pmis_job_task.job_key IS '任务 KEY(冗余)';
+
 COMMENT ON COLUMN pmis_job_task.task_name IS '子任务名称';
+
 COMMENT ON COLUMN pmis_job_task.task_params IS '子任务参数 JSON';
+
 COMMENT ON COLUMN pmis_job_task.task_type IS '子任务类型: ROOT 根任务 / SUB_TASK 子任务';
+
 COMMENT ON COLUMN pmis_job_task.status IS '执行状态: PENDING / RUNNING / SUCCESS / FAILED';
+
 COMMENT ON COLUMN pmis_job_task.result IS '执行结果 JSON';
+
 COMMENT ON COLUMN pmis_job_task.error_message IS '错误信息';
+
 COMMENT ON COLUMN pmis_job_task.exec_node_id IS '执行节点 ID';
+
 COMMENT ON COLUMN pmis_job_task.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_task.updated_at IS '更新时间';
+
 COMMENT ON COLUMN pmis_job_task.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjt_log_id
     ON pmis_job_task (log_id) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pjt_status
     ON pmis_job_task (status) WHERE deleted = 0;
 
@@ -516,7 +465,7 @@ CREATE INDEX IF NOT EXISTS idx_pjt_status
 -- 存储 GLUE 类型任务的在线代码，支持版本管理和回滚。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_glue(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     job_id          VARCHAR(20)         NOT NULL,
     source_code     TEXT           NOT NULL,
     language        VARCHAR(16)    NOT NULL DEFAULT 'GROOVY',
@@ -531,14 +480,23 @@ CREATE TABLE IF NOT EXISTS pmis_job_glue(
 );
 
 COMMENT ON TABLE pmis_job_glue IS 'GLUE 在线编码表: 存储在线编辑的代码及版本历史';
+
 COMMENT ON COLUMN pmis_job_glue.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_glue.job_id IS '任务 ID';
+
 COMMENT ON COLUMN pmis_job_glue.source_code IS '源代码';
+
 COMMENT ON COLUMN pmis_job_glue.language IS '语言: GROOVY(默认) / JAVA';
+
 COMMENT ON COLUMN pmis_job_glue.version IS '版本号(从 1 递增)';
+
 COMMENT ON COLUMN pmis_job_glue.remark IS '版本备注';
+
 COMMENT ON COLUMN pmis_job_glue.created_by IS '创建人 ID';
+
 COMMENT ON COLUMN pmis_job_glue.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_glue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjg_job_id
@@ -550,7 +508,7 @@ CREATE INDEX IF NOT EXISTS idx_pjg_job_id
 -- 每次任务配置更新时自动保存历史快照，支持版本对比和一键回滚。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_history(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     job_id          VARCHAR(20)         NOT NULL,
     version         INTEGER        NOT NULL,
     snapshot        TEXT           NOT NULL,
@@ -568,18 +526,31 @@ CREATE TABLE IF NOT EXISTS pmis_job_history(
 );
 
 COMMENT ON TABLE pmis_job_history IS '任务配置历史版本表: 每次更新自动保存快照, 支持回滚';
+
 COMMENT ON COLUMN pmis_job_history.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_history.job_id IS '任务 ID';
+
 COMMENT ON COLUMN pmis_job_history.version IS '版本号(对应更新前的 job.version)';
+
 COMMENT ON COLUMN pmis_job_history.snapshot IS '完整 JobDO JSON 快照';
+
 COMMENT ON COLUMN pmis_job_history.job_name IS '任务名称(冗余, 便于列表展示)';
+
 COMMENT ON COLUMN pmis_job_history.job_key IS '任务 KEY(冗余)';
+
 COMMENT ON COLUMN pmis_job_history.handler IS '处理器(冗余)';
+
 COMMENT ON COLUMN pmis_job_history.cron_expression IS 'Cron 表达式(冗余)';
+
 COMMENT ON COLUMN pmis_job_history.params_json IS '参数 JSON(冗余)';
+
 COMMENT ON COLUMN pmis_job_history.remark IS '备注(冗余)';
+
 COMMENT ON COLUMN pmis_job_history.changed_by IS '修改人 ID';
+
 COMMENT ON COLUMN pmis_job_history.changed_at IS '修改时间';
+
 COMMENT ON COLUMN pmis_job_history.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjh_job_id
@@ -595,7 +566,7 @@ CREATE INDEX IF NOT EXISTS idx_pjh_job_id
 -- 由 SlowTaskDetector 定期扫描 job_log 并写入，不影响任务执行主流程。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_slow_log(
-    id                VARCHAR(20)      PRIMARY KEY,
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     job_id            VARCHAR(20)         NOT NULL,
     job_key           VARCHAR(128)   NOT NULL,
     log_id            VARCHAR(20)         NOT NULL,
@@ -617,25 +588,41 @@ CREATE TABLE IF NOT EXISTS pmis_job_slow_log(
 );
 
 COMMENT ON TABLE pmis_job_slow_log IS '慢任务诊断日志（P6-3）: 仅记录执行耗时超过 slow_threshold_ms 的任务，用于性能分析';
+
 COMMENT ON COLUMN pmis_job_slow_log.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_slow_log.job_id IS '任务 ID（关联 pmis_job.id）';
+
 COMMENT ON COLUMN pmis_job_slow_log.job_key IS '任务 KEY（冗余,避免连表）';
+
 COMMENT ON COLUMN pmis_job_slow_log.log_id IS '关联 pmis_job_log.id（原始终端执行日志）';
+
 COMMENT ON COLUMN pmis_job_slow_log.duration_ms IS '本次执行耗时（毫秒）';
+
 COMMENT ON COLUMN pmis_job_slow_log.slow_threshold_ms IS '慢任务阈值（毫秒，来自 pmis_job.slow_threshold_ms）';
+
 COMMENT ON COLUMN pmis_job_slow_log.params_json IS '执行参数 JSON（冗余自 job_log,便于独立分析）';
+
 COMMENT ON COLUMN pmis_job_slow_log.error_message IS '异常信息（如慢且有异常,冗余自 job_log）';
+
 COMMENT ON COLUMN pmis_job_slow_log.trace_id IS '链路追踪 ID（关联分布式链路）';
+
 COMMENT ON COLUMN pmis_job_slow_log.tenant_id IS '租户 ID（单租户部署默认 1）';
+
 COMMENT ON COLUMN pmis_job_slow_log.created_by IS '创建人 ID';
+
 COMMENT ON COLUMN pmis_job_slow_log.created_at IS '记录时间';
+
 COMMENT ON COLUMN pmis_job_slow_log.updated_by IS '最后修改人 ID';
+
 COMMENT ON COLUMN pmis_job_slow_log.updated_at IS '最后修改时间';
+
 COMMENT ON COLUMN pmis_job_slow_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- [INLINE-OPT] job_id 索引（按任务查慢日志）
 CREATE INDEX IF NOT EXISTS idx_pjsl_job_id
     ON pmis_job_slow_log (job_id) WHERE deleted = 0;
+
 -- [INLINE-OPT] 创建时间索引（按时间范围查慢日志趋势）
 CREATE INDEX IF NOT EXISTS idx_pjsl_created
     ON pmis_job_slow_log (created_at DESC) WHERE deleted = 0;
@@ -648,7 +635,7 @@ CREATE INDEX IF NOT EXISTS idx_pjsl_created
 -- 对标 XXL-Job 子任务依赖 / PowerJob 工作流实例。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_relation(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     parent_job_id   VARCHAR(20)      NOT NULL,
     child_job_id    VARCHAR(20)      NOT NULL,
     -- [P4-3] 失败传播策略: FAIL_FAST 前置失败不触发后继(默认) / CONTINUE_ON_FAIL 前置失败仍触发
@@ -666,19 +653,29 @@ CREATE TABLE IF NOT EXISTS pmis_job_relation(
 );
 
 COMMENT ON TABLE pmis_job_relation IS '任务依赖关系表（P4 DAG 工作流）';
+
 COMMENT ON COLUMN pmis_job_relation.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_relation.parent_job_id IS '前置任务 ID（执行成功后触发后继）';
+
 COMMENT ON COLUMN pmis_job_relation.child_job_id IS '后继任务 ID（被前置任务触发）';
+
 COMMENT ON COLUMN pmis_job_relation.fail_strategy IS '失败传播策略: FAIL_FAST 前置失败不触发后继(默认) / CONTINUE_ON_FAIL 前置失败仍触发后继';
+
 COMMENT ON COLUMN pmis_job_relation.created_by IS '创建人 ID';
+
 COMMENT ON COLUMN pmis_job_relation.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_relation.updated_by IS '最后修改人 ID';
+
 COMMENT ON COLUMN pmis_job_relation.updated_at IS '最后修改时间';
+
 COMMENT ON COLUMN pmis_job_relation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- 索引: 按前置任务查询后继列表（高频，任务成功后触发）
 CREATE INDEX IF NOT EXISTS idx_pjr_parent
     ON pmis_job_relation (parent_job_id) WHERE deleted = 0;
+
 -- 索引: 按后继任务查询前置列表（DAG 解析时使用）
 CREATE INDEX IF NOT EXISTS idx_pjr_child
     ON pmis_job_relation (child_job_id) WHERE deleted = 0;
@@ -696,7 +693,7 @@ CREATE INDEX IF NOT EXISTS idx_pjr_child
 -- 对标 PowerJob workflow / XXL-Job 子任务链。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_dag(
-    id                      VARCHAR(20)      PRIMARY KEY,
+    id                      VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     dag_key                 VARCHAR(128)  NOT NULL,
     dag_name                VARCHAR(128)  NOT NULL,
     dag_definition          TEXT          NOT NULL,
@@ -735,58 +732,52 @@ CREATE TABLE IF NOT EXISTS pmis_job_dag(
 );
 
 COMMENT ON TABLE pmis_job_dag IS 'DAG 工作流定义表（P2 DAG 增强）';
+
 COMMENT ON COLUMN pmis_job_dag.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_dag.dag_key IS 'DAG 唯一 KEY（调度与触发使用）';
+
 COMMENT ON COLUMN pmis_job_dag.dag_name IS 'DAG 名称（展示用）';
+
 COMMENT ON COLUMN pmis_job_dag.dag_definition IS 'DAG 定义 JSON（nodes + edges + 可视化坐标）';
+
 COMMENT ON COLUMN pmis_job_dag.status IS 'DAG 状态: DRAFT 草稿 / ENABLED 启用 / DISABLED 禁用';
+
 COMMENT ON COLUMN pmis_job_dag.trigger_type IS '触发类型: MANUAL 手动 / CRON 定时';
+
 COMMENT ON COLUMN pmis_job_dag.cron_expression IS 'Cron 表达式（trigger_type=CRON 时必填）';
+
 COMMENT ON COLUMN pmis_job_dag.max_concurrent_instances IS '最大并发实例数(0=不限制, 默认1)';
+
 COMMENT ON COLUMN pmis_job_dag.fail_strategy IS 'DAG 级失败策略: FAIL_FAST 中止 / CONTINUE_ON_FAIL 继续';
+
 COMMENT ON COLUMN pmis_job_dag.description IS 'DAG 描述';
+
 COMMENT ON COLUMN pmis_job_dag.next_fire_time IS '下次触发时间（CRON 模式）';
+
 COMMENT ON COLUMN pmis_job_dag.last_fire_time IS '上次触发时间';
+
 COMMENT ON COLUMN pmis_job_dag.fire_count IS '总触发次数';
+
 COMMENT ON COLUMN pmis_job_dag.success_count IS '成功次数';
+
 COMMENT ON COLUMN pmis_job_dag.fail_count IS '失败次数';
+
 COMMENT ON COLUMN pmis_job_dag.version IS '版本号(乐观锁)';
+
 COMMENT ON COLUMN pmis_job_dag.tenant_id IS '租户 ID';
 
--- ----------------------------------------------------------------------------
--- [P2-1] DAG 节点类型扩展（CONDITION / LOOP / PARALLEL_GATEWAY）
--- ----------------------------------------------------------------------------
--- DAG 节点定义存储在 pmis_job_dag.dag_definition JSON 字段中（非独立表），
--- 节点类型扩展字段（nodeType / conditionExpression / loopCount / parallelBranches）
--- 直接在 JSON 中管理，无需 ALTER TABLE。
---
--- JSON 节点格式（P2-1 增强后）：
--- {
---   "jobKey": "nodeA",
---   "jobId": "1",
---   "label": "条件判断",
---   "x": 100, "y": 200,
---   "paramsJson": "{}",
---   "nodeType": "CONDITION",            -- TASK(默认) / CONDITION / LOOP / PARALLEL_GATEWAY
---   "conditionExpression": "${nodeA.result=='success'}",  -- CONDITION 节点
---   "loopCount": 3,                     -- LOOP 节点循环次数
---   "parallelBranches": 2               -- PARALLEL_GATEWAY 并行分支数
--- }
---
--- 以下 ALTER 语句用于兼容性（若未来引入独立的 pmis_job_dag_node 表），
--- 当前为 no-op（表不存在时跳过）。
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS node_type VARCHAR(32) NOT NULL DEFAULT 'TASK';
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS condition_expression VARCHAR(512);
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS loop_count INTEGER;
-ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS parallel_branches INTEGER;
+COMMENT ON COLUMN pmis_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
 
-COMMENT ON COLUMN IF EXISTS pmis_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
-COMMENT ON COLUMN IF EXISTS pmis_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';
-COMMENT ON COLUMN IF EXISTS pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
-COMMENT ON COLUMN IF EXISTS pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
+COMMENT ON COLUMN pmis_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';
+
+COMMENT ON COLUMN pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
+
+COMMENT ON COLUMN pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
 
 CREATE INDEX IF NOT EXISTS idx_pjd_status
     ON pmis_job_dag (status) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pjd_tenant
     ON pmis_job_dag (tenant_id) WHERE deleted = 0;
 
@@ -798,7 +789,7 @@ CREATE INDEX IF NOT EXISTS idx_pjd_tenant
 -- context_json 存储 DAG 实例级上下文，支持跨节点传参。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_dag_instance(
-    id                      VARCHAR(20)      PRIMARY KEY,
+    id                      VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     dag_id                  VARCHAR(20)   NOT NULL,
     dag_key                 VARCHAR(128)  NOT NULL,
     -- 实例状态: PENDING 待执行 / RUNNING 执行中 / SUCCESS 成功 / FAILED 失败
@@ -834,28 +825,47 @@ CREATE TABLE IF NOT EXISTS pmis_job_dag_instance(
 );
 
 COMMENT ON TABLE pmis_job_dag_instance IS 'DAG 工作流实例表（P2 DAG 增强）';
+
 COMMENT ON COLUMN pmis_job_dag_instance.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_dag_instance.dag_id IS 'DAG 定义 ID';
+
 COMMENT ON COLUMN pmis_job_dag_instance.dag_key IS 'DAG KEY（冗余，便于查询）';
+
 COMMENT ON COLUMN pmis_job_dag_instance.status IS '实例状态: PENDING/RUNNING/SUCCESS/FAILED/PARTIAL_SUCCESS/PAUSED/CANCELED';
+
 COMMENT ON COLUMN pmis_job_dag_instance.trigger_type IS '触发类型: MANUAL/CRON/DEPENDENT';
+
 COMMENT ON COLUMN pmis_job_dag_instance.trigger_by IS '触发人（MANUAL 时为用户 ID）';
+
 COMMENT ON COLUMN pmis_job_dag_instance.trigger_trace_id IS '触发 traceId（用于链路追踪）';
+
 COMMENT ON COLUMN pmis_job_dag_instance.context_json IS 'DAG 实例级上下文 JSON（跨节点传参）';
+
 COMMENT ON COLUMN pmis_job_dag_instance.started_at IS '开始时间';
+
 COMMENT ON COLUMN pmis_job_dag_instance.finished_at IS '结束时间';
+
 COMMENT ON COLUMN pmis_job_dag_instance.duration_ms IS '执行耗时（毫秒）';
+
 COMMENT ON COLUMN pmis_job_dag_instance.error_message IS '错误信息（FAILED 时填充）';
+
 COMMENT ON COLUMN pmis_job_dag_instance.total_nodes IS '总节点数';
+
 COMMENT ON COLUMN pmis_job_dag_instance.success_nodes IS '成功节点数';
+
 COMMENT ON COLUMN pmis_job_dag_instance.failed_nodes IS '失败节点数';
+
 COMMENT ON COLUMN pmis_job_dag_instance.skipped_nodes IS '跳过节点数';
+
 COMMENT ON COLUMN pmis_job_dag_instance.tenant_id IS '租户 ID';
 
 CREATE INDEX IF NOT EXISTS idx_pjdi_dag_id
     ON pmis_job_dag_instance (dag_id) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pjdi_status
     ON pmis_job_dag_instance (status) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pjdi_created_at
     ON pmis_job_dag_instance (created_at DESC) WHERE deleted = 0;
 
@@ -866,7 +876,7 @@ CREATE INDEX IF NOT EXISTS idx_pjdi_created_at
 -- 一个 DAG 实例包含若干节点实例，每个节点实例关联一个任务执行日志（pmis_job_log）。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_dag_node_instance(
-    id                      VARCHAR(20)      PRIMARY KEY,
+    id                      VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     dag_instance_id         VARCHAR(20)   NOT NULL,
     dag_id                  VARCHAR(20)   NOT NULL,
     job_id                  VARCHAR(20)   NOT NULL,
@@ -897,26 +907,43 @@ CREATE TABLE IF NOT EXISTS pmis_job_dag_node_instance(
 );
 
 COMMENT ON TABLE pmis_job_dag_node_instance IS 'DAG 节点实例表（P2 DAG 增强）';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.dag_instance_id IS 'DAG 实例 ID';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.dag_id IS 'DAG 定义 ID';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.job_id IS '任务 ID';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.job_key IS '任务 KEY（冗余）';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.node_status IS '节点状态: PENDING/RUNNING/SUCCESS/FAILED/SKIPPED/RETRYING';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.log_id IS '关联的任务执行日志 ID（pmis_job_log.id）';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.retry_count IS '节点级重试次数';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.max_retries IS '节点级最大重试次数';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.started_at IS '节点开始时间';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.finished_at IS '节点结束时间';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.duration_ms IS '节点执行耗时（毫秒）';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.result_json IS '节点执行结果 JSON';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.error_message IS '节点错误信息';
+
 COMMENT ON COLUMN pmis_job_dag_node_instance.tenant_id IS '租户 ID';
 
 CREATE INDEX IF NOT EXISTS idx_pjdni_dag_instance
     ON pmis_job_dag_node_instance (dag_instance_id) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pjdni_job_id
     ON pmis_job_dag_node_instance (job_id) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pjdni_status
     ON pmis_job_dag_node_instance (node_status) WHERE deleted = 0;
 
@@ -928,7 +955,7 @@ CREATE INDEX IF NOT EXISTS idx_pjdni_status
 -- 对标 XXL-Job 告警中心 / PowerJob 告警配置。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_alert_rule(
-    id                    VARCHAR(20)      PRIMARY KEY,
+    id                    VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     rule_name             VARCHAR(128)  NOT NULL,
     job_id                VARCHAR(20),
     job_key               VARCHAR(128),
@@ -975,35 +1002,57 @@ CREATE TABLE IF NOT EXISTS pmis_job_alert_rule(
 );
 
 COMMENT ON TABLE pmis_job_alert_rule IS '任务告警规则表（P5 告警 + 监控）';
+
 COMMENT ON COLUMN pmis_job_alert_rule.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_alert_rule.rule_name IS '规则名称（展示用）';
+
 COMMENT ON COLUMN pmis_job_alert_rule.job_id IS '关联任务 ID（NULL 表示全局规则）';
+
 COMMENT ON COLUMN pmis_job_alert_rule.job_key IS '任务 KEY 冗余（NULL 表示全局规则）';
+
 COMMENT ON COLUMN pmis_job_alert_rule.alert_type IS '告警类型: FAIL 任务失败 / TIMEOUT 任务超时 / SLOW 任务慢 / FAIL_RATE 失败率 / DURATION_P95 P95耗时';
+
 COMMENT ON COLUMN pmis_job_alert_rule.alert_level IS '告警级别: INFO 提示 / WARN 警告 / ERROR 错误 / CRITICAL 严重';
+
 COMMENT ON COLUMN pmis_job_alert_rule.threshold IS '阈值（按 alert_type 解释: FAIL_RATE 百分比 0-100 / SLOW+DURATION_P95 毫秒数）';
+
 COMMENT ON COLUMN pmis_job_alert_rule.time_window_minutes IS '统计时间窗口（分钟），仅 FAIL_RATE / DURATION_P95 生效';
+
 COMMENT ON COLUMN pmis_job_alert_rule.channels IS '通知通道（JSON 数组: ["EMAIL","DINGTALK","WECOM","WEBHOOK"]）';
+
 COMMENT ON COLUMN pmis_job_alert_rule.receivers IS '接收人（JSON 数组: 邮箱/手机号/userId 列表）';
+
 COMMENT ON COLUMN pmis_job_alert_rule.cooldown_minutes IS '冷却时间（分钟），同一规则在冷却期内不重复告警';
+
 COMMENT ON COLUMN pmis_job_alert_rule.enabled IS '是否启用: 0 禁用 / 1 启用';
+
 COMMENT ON COLUMN pmis_job_alert_rule.last_alert_at IS '最后告警时间（用于冷却判断，CAS 更新）';
+
 COMMENT ON COLUMN pmis_job_alert_rule.created_by IS '创建人 ID';
+
 COMMENT ON COLUMN pmis_job_alert_rule.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_alert_rule.updated_by IS '最后修改人 ID';
+
 COMMENT ON COLUMN pmis_job_alert_rule.updated_at IS '最后修改时间';
+
 COMMENT ON COLUMN pmis_job_alert_rule.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
 COMMENT ON COLUMN pmis_job_alert_rule.tenant_id IS '租户 ID（单租户部署默认 1）';
 
 -- 索引: 按 job_id 查询任务专属规则（任务告警触发时使用）
 CREATE INDEX IF NOT EXISTS idx_pjar_job_id
     ON pmis_job_alert_rule (job_id) WHERE deleted = 0 AND enabled = 1;
+
 -- 索引: 按告警类型筛选（批量加载同类规则）
 CREATE INDEX IF NOT EXISTS idx_pjar_alert_type
     ON pmis_job_alert_rule (alert_type) WHERE deleted = 0 AND enabled = 1;
+
 -- 索引: 按启用状态加载全部启用规则（启动时缓存）
 CREATE INDEX IF NOT EXISTS idx_pjar_enabled
     ON pmis_job_alert_rule (enabled) WHERE deleted = 0;
+
 -- 索引: 按租户 + 创建时间倒序（告警中心列表）
 CREATE INDEX IF NOT EXISTS idx_pjar_tenant_created
     ON pmis_job_alert_rule (tenant_id, created_at DESC) WHERE deleted = 0;
@@ -1014,7 +1063,7 @@ CREATE INDEX IF NOT EXISTS idx_pjar_tenant_created
 -- 记录每次告警派发的实际情况，用于审计、去重判断和告警效果统计。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_alert_log(
-    id                    VARCHAR(20)      PRIMARY KEY,
+    id                    VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     rule_id               VARCHAR(20)   NOT NULL,
     rule_name             VARCHAR(128)  NOT NULL,
     job_id                VARCHAR(20),
@@ -1047,89 +1096,66 @@ CREATE TABLE IF NOT EXISTS pmis_job_alert_log(
 );
 
 COMMENT ON TABLE pmis_job_alert_log IS '任务告警日志表（P5 告警 + 监控）';
+
 COMMENT ON COLUMN pmis_job_alert_log.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_alert_log.rule_id IS '告警规则 ID（关联 pmis_job_alert_rule.id）';
+
 COMMENT ON COLUMN pmis_job_alert_log.rule_name IS '规则名称（冗余，避免连表）';
+
 COMMENT ON COLUMN pmis_job_alert_log.job_id IS '任务 ID（NULL 表示全局告警）';
+
 COMMENT ON COLUMN pmis_job_alert_log.job_key IS '任务 KEY（冗余）';
+
 COMMENT ON COLUMN pmis_job_alert_log.alert_type IS '告警类型: FAIL / TIMEOUT / SLOW / FAIL_RATE / DURATION_P95';
+
 COMMENT ON COLUMN pmis_job_alert_log.alert_level IS '告警级别: INFO / WARN / ERROR / CRITICAL';
+
 COMMENT ON COLUMN pmis_job_alert_log.trigger_value IS '触发时的实际值（如失败率 85.5、耗时 5000）';
+
 COMMENT ON COLUMN pmis_job_alert_log.threshold IS '规则阈值（冗余）';
+
 COMMENT ON COLUMN pmis_job_alert_log.channels IS '实际发送通道（JSON 数组）';
+
 COMMENT ON COLUMN pmis_job_alert_log.status IS '告警状态: PENDING 派发中 / SUCCESS 全部成功 / PARTIAL 部分成功 / FAILED 全部失败';
+
 COMMENT ON COLUMN pmis_job_alert_log.error_message IS '错误信息（部分通道失败时记录）';
+
 COMMENT ON COLUMN pmis_job_alert_log.trace_id IS '链路追踪 ID（分布式排障）';
+
 COMMENT ON COLUMN pmis_job_alert_log.trigger_log_id IS '触发该告警的任务日志 ID（关联 pmis_job_log.id）';
+
 COMMENT ON COLUMN pmis_job_alert_log.created_by IS '创建人 ID';
+
 COMMENT ON COLUMN pmis_job_alert_log.created_at IS '告警发送时间';
+
 COMMENT ON COLUMN pmis_job_alert_log.updated_by IS '最后修改人 ID';
+
 COMMENT ON COLUMN pmis_job_alert_log.updated_at IS '最后修改时间';
+
 COMMENT ON COLUMN pmis_job_alert_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
 COMMENT ON COLUMN pmis_job_alert_log.tenant_id IS '租户 ID';
 
 -- 索引: 按规则 ID 查询去重判断（冷却期内是否已告警）
 CREATE INDEX IF NOT EXISTS idx_pjal_rule_id
     ON pmis_job_alert_log (rule_id, created_at DESC) WHERE deleted = 0;
+
 -- 索引: 按任务 ID 查询告警历史（任务详情页）
 CREATE INDEX IF NOT EXISTS idx_pjal_job_id
     ON pmis_job_alert_log (job_id, created_at DESC) WHERE deleted = 0;
+
 -- 索引: 按告警级别筛选（告警中心）
 CREATE INDEX IF NOT EXISTS idx_pjal_alert_level
     ON pmis_job_alert_log (alert_level, created_at DESC) WHERE deleted = 0;
+
 -- 索引: 按租户 + 创建时间倒序（告警中心列表）
 CREATE INDEX IF NOT EXISTS idx_pjal_tenant_created
     ON pmis_job_alert_log (tenant_id, created_at DESC) WHERE deleted = 0;
+
 -- 索引: 链路追踪 ID（分布式排障）
 CREATE INDEX IF NOT EXISTS idx_pjal_trace_id
     ON pmis_job_alert_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
-
--- ============================ [006e] P7-2 租户级配额 ============================
-
--- [P7-2] 租户级配额表：控制单个租户可创建任务数、并发执行数、日执行总量
--- 未配置记录的租户视为 unlimited（由应用层 CronjobProperties.Quota.defaultMax* 兜底）
-CREATE TABLE IF NOT EXISTS pmis_tenant_quota(
-    id                    VARCHAR(20)      PRIMARY KEY,
-    tenant_id             VARCHAR(20)      NOT NULL UNIQUE,
-    -- 任务数上限（NULL=unlimited；超过此值拒绝创建新任务）
-    max_jobs              INTEGER,
-    -- 并发执行上限（NULL=unlimited；超过此值拒绝派发，P7-3 实现）
-    max_concurrent        INTEGER,
-    -- 日执行量上限（NULL=unlimited；超过此值拒绝派发，P7-3 实现）
-    max_daily_executions  INTEGER,
-    -- 是否启用配额检查（false=该租户不受配额限制，即使配置了上限）
-    enabled               SMALLINT       NOT NULL DEFAULT 1,
-    -- 审计字段
-    created_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at            TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at            TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT       NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT ck_ptq_max_jobs_pos        CHECK (max_jobs IS NULL OR max_jobs > 0),
-    CONSTRAINT ck_ptq_max_concurrent_pos CHECK (max_concurrent IS NULL OR max_concurrent > 0),
-    CONSTRAINT ck_ptq_max_daily_pos      CHECK (max_daily_executions IS NULL OR max_daily_executions > 0),
-    CONSTRAINT ck_ptq_enabled_enum       CHECK (enabled IN (0, 1)),
-    CONSTRAINT ck_ptq_deleted_enum      CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE pmis_tenant_quota IS '租户级配额表（P7-2）：控制单个租户的任务数/并发数/日执行量上限';
-COMMENT ON COLUMN pmis_tenant_quota.id IS '主键 ID';
-COMMENT ON COLUMN pmis_tenant_quota.tenant_id IS '租户 ID（唯一，一个租户一条配额记录）';
-COMMENT ON COLUMN pmis_tenant_quota.max_jobs IS '任务数上限（NULL=unlimited）';
-COMMENT ON COLUMN pmis_tenant_quota.max_concurrent IS '并发执行上限（NULL=unlimited，P7-3 实现）';
-COMMENT ON COLUMN pmis_tenant_quota.max_daily_executions IS '日执行量上限（NULL=unlimited，P7-3 实现）';
-COMMENT ON COLUMN pmis_tenant_quota.enabled IS '是否启用配额检查: 0 禁用 / 1 启用';
-COMMENT ON COLUMN pmis_tenant_quota.created_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_tenant_quota.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_tenant_quota.updated_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_tenant_quota.updated_at IS '最后修改时间';
-COMMENT ON COLUMN pmis_tenant_quota.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-
--- 默认租户（tenant_id='1'）的初始配额记录（unlimited，便于单租户部署直接使用）
-INSERT INTO pmis_tenant_quota (id, tenant_id, max_jobs, max_concurrent, max_daily_executions, enabled)
-VALUES ('1', '1', NULL, NULL, NULL, 1)
-ON CONFLICT (tenant_id) DO NOTHING;
 
 -- ============================================================================
 -- [P2-3] 任务执行每日统计表 pmis_job_daily_stats
@@ -1137,7 +1163,7 @@ ON CONFLICT (tenant_id) DO NOTHING;
 -- 每天凌晨聚合 pmis_job_log 的执行统计，供前端趋势图展示。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_daily_stats(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
     stats_date      DATE           NOT NULL,
@@ -1157,19 +1183,33 @@ CREATE TABLE IF NOT EXISTS pmis_job_daily_stats(
 );
 
 COMMENT ON TABLE pmis_job_daily_stats IS '任务执行每日统计: 聚合 pmis_job_log 按日统计, 供趋势图展示';
+
 COMMENT ON COLUMN pmis_job_daily_stats.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_daily_stats.job_id IS '任务 ID';
+
 COMMENT ON COLUMN pmis_job_daily_stats.job_key IS '任务 KEY(冗余)';
+
 COMMENT ON COLUMN pmis_job_daily_stats.stats_date IS '统计日期';
+
 COMMENT ON COLUMN pmis_job_daily_stats.fire_count IS '当日触发次数';
+
 COMMENT ON COLUMN pmis_job_daily_stats.success_count IS '当日成功次数';
+
 COMMENT ON COLUMN pmis_job_daily_stats.fail_count IS '当日失败次数';
+
 COMMENT ON COLUMN pmis_job_daily_stats.timeout_count IS '当日超时次数';
+
 COMMENT ON COLUMN pmis_job_daily_stats.avg_duration_ms IS '平均耗时(毫秒)';
+
 COMMENT ON COLUMN pmis_job_daily_stats.max_duration_ms IS '最大耗时(毫秒)';
+
 COMMENT ON COLUMN pmis_job_daily_stats.min_duration_ms IS '最小耗时(毫秒)';
+
 COMMENT ON COLUMN pmis_job_daily_stats.p95_duration_ms IS 'P95 耗时(毫秒)';
+
 COMMENT ON COLUMN pmis_job_daily_stats.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_daily_stats.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjds_job_date
@@ -1182,7 +1222,7 @@ CREATE INDEX IF NOT EXISTS idx_pjds_job_date
 -- 由 AlertScanner 定期检查，违约时触发告警。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_sla(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     job_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
     max_duration_ms BIGINT,
@@ -1205,18 +1245,31 @@ CREATE TABLE IF NOT EXISTS pmis_job_sla(
 );
 
 COMMENT ON TABLE pmis_job_sla IS '任务 SLA 管理表: 定义最大执行时长/失败率/成功率约束, 违约时告警';
+
 COMMENT ON COLUMN pmis_job_sla.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_sla.job_id IS '任务 ID';
+
 COMMENT ON COLUMN pmis_job_sla.job_key IS '任务 KEY(冗余)';
+
 COMMENT ON COLUMN pmis_job_sla.max_duration_ms IS '最大执行时长(毫秒), 超过则违约';
+
 COMMENT ON COLUMN pmis_job_sla.max_fail_rate IS '最大失败率(%), 超过则违约';
+
 COMMENT ON COLUMN pmis_job_sla.min_success_rate IS '最小成功率(%), 低于则违约';
+
 COMMENT ON COLUMN pmis_job_sla.alert_level IS '告警级别: INFO / WARNING / CRITICAL';
+
 COMMENT ON COLUMN pmis_job_sla.enabled IS '是否启用: 0 禁用 / 1 启用';
+
 COMMENT ON COLUMN pmis_job_sla.created_by IS '创建人 ID';
+
 COMMENT ON COLUMN pmis_job_sla.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_sla.updated_by IS '修改人 ID';
+
 COMMENT ON COLUMN pmis_job_sla.updated_at IS '修改时间';
+
 COMMENT ON COLUMN pmis_job_sla.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- ============================================================================
@@ -1227,7 +1280,7 @@ COMMENT ON COLUMN pmis_job_sla.deleted IS '逻辑删除标记: 0 未删除 / 1 �
 -- 每次任务定义变更时记录一条版本快照，支持版本回溯和差异对比。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_version_history(
-    id                VARCHAR(20)      PRIMARY KEY,
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     job_id            VARCHAR(20)         NOT NULL,
     job_key           VARCHAR(128)   NOT NULL,
     version           INTEGER        NOT NULL,
@@ -1242,15 +1295,25 @@ CREATE TABLE IF NOT EXISTS pmis_job_version_history(
 );
 
 COMMENT ON TABLE pmis_job_version_history IS '任务版本历史表: 每次任务定义变更时记录版本快照, 支持回溯和差异对比';
+
 COMMENT ON COLUMN pmis_job_version_history.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_version_history.job_id IS '任务 ID';
+
 COMMENT ON COLUMN pmis_job_version_history.job_key IS '任务 KEY(冗余)';
+
 COMMENT ON COLUMN pmis_job_version_history.version IS '版本号';
+
 COMMENT ON COLUMN pmis_job_version_history.change_type IS '变更类型: CREATE / UPDATE / DELETE';
+
 COMMENT ON COLUMN pmis_job_version_history.before_snapshot IS '变更前快照 JSON';
+
 COMMENT ON COLUMN pmis_job_version_history.after_snapshot IS '变更后快照 JSON';
+
 COMMENT ON COLUMN pmis_job_version_history.change_remark IS '变更说明';
+
 COMMENT ON COLUMN pmis_job_version_history.changed_by IS '变更人 ID';
+
 COMMENT ON COLUMN pmis_job_version_history.changed_at IS '变更时间';
 
 CREATE INDEX IF NOT EXISTS idx_pjvh_job_id
@@ -1262,7 +1325,7 @@ CREATE INDEX IF NOT EXISTS idx_pjvh_job_id
 -- 记录任务执行产生的文件/数据产物，支持产物查询、下载和过期清理。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_artifact(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     job_id          VARCHAR(20)         NOT NULL,
     log_id          VARCHAR(20)         NOT NULL,
     job_key         VARCHAR(128)   NOT NULL,
@@ -1280,24 +1343,39 @@ CREATE TABLE IF NOT EXISTS pmis_job_artifact(
 );
 
 COMMENT ON TABLE pmis_job_artifact IS '执行产物管理表: 记录任务执行产生的文件/数据产物, 支持查询/下载/清理';
+
 COMMENT ON COLUMN pmis_job_artifact.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_artifact.job_id IS '任务 ID';
+
 COMMENT ON COLUMN pmis_job_artifact.log_id IS '执行日志 ID';
+
 COMMENT ON COLUMN pmis_job_artifact.job_key IS '任务 KEY(冗余)';
+
 COMMENT ON COLUMN pmis_job_artifact.artifact_name IS '产物名称';
+
 COMMENT ON COLUMN pmis_job_artifact.artifact_type IS '产物类型: FILE / REPORT / DATA / LOG';
+
 COMMENT ON COLUMN pmis_job_artifact.storage_path IS '存储路径(文件系统路径或对象存储 URL)';
+
 COMMENT ON COLUMN pmis_job_artifact.size_bytes IS '产物大小(字节)';
+
 COMMENT ON COLUMN pmis_job_artifact.content_type IS '内容类型(MIME type)';
+
 COMMENT ON COLUMN pmis_job_artifact.metadata IS '产物元数据 JSON';
+
 COMMENT ON COLUMN pmis_job_artifact.expire_at IS '过期时间(NULL=不过期, 过期后由清理任务删除)';
+
 COMMENT ON COLUMN pmis_job_artifact.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_artifact.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pja_log_id
     ON pmis_job_artifact (log_id) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pja_job_key
     ON pmis_job_artifact (job_key, created_at DESC) WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_pja_expire_at
     ON pmis_job_artifact (expire_at) WHERE deleted = 0 AND expire_at IS NOT NULL;
 
@@ -1307,7 +1385,7 @@ CREATE INDEX IF NOT EXISTS idx_pja_expire_at
 -- 记录用户配置的 WebHook 订阅，在任务生命周期事件发生时推送通知。
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS pmis_job_webhook(
-    id              VARCHAR(20)      PRIMARY KEY,
+    id              VARCHAR(20)      PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     name            VARCHAR(128)   NOT NULL,
     event_type      VARCHAR(64)    NOT NULL,
     job_key         VARCHAR(128),
@@ -1328,171 +1406,157 @@ CREATE TABLE IF NOT EXISTS pmis_job_webhook(
 );
 
 COMMENT ON TABLE pmis_job_webhook IS 'WebHook 事件订阅表: 配置任务生命周期事件的通知推送';
+
 COMMENT ON COLUMN pmis_job_webhook.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_job_webhook.name IS 'WebHook 名称';
+
 COMMENT ON COLUMN pmis_job_webhook.event_type IS '订阅事件类型: TASK_STARTED / TASK_SUCCESS / TASK_FAILED / TASK_TIMEOUT / DAG_COMPLETED';
+
 COMMENT ON COLUMN pmis_job_webhook.job_key IS '订阅任务 KEY(NULL=所有任务)';
+
 COMMENT ON COLUMN pmis_job_webhook.job_group IS '订阅任务组(NULL=所有分组)';
+
 COMMENT ON COLUMN pmis_job_webhook.callback_url IS 'WebHook 回调 URL';
+
 COMMENT ON COLUMN pmis_job_webhook.http_method IS '请求方法: POST / PUT';
+
 COMMENT ON COLUMN pmis_job_webhook.headers IS '请求头 JSON';
+
 COMMENT ON COLUMN pmis_job_webhook.secret IS '密钥(用于 HMAC-SHA256 签名验证)';
+
 COMMENT ON COLUMN pmis_job_webhook.status IS '状态: ACTIVE / INACTIVE';
+
 COMMENT ON COLUMN pmis_job_webhook.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_job_webhook.updated_at IS '更新时间';
+
 COMMENT ON COLUMN pmis_job_webhook.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX IF NOT EXISTS idx_pjw_event_job
     ON pmis_job_webhook (event_type, job_key) WHERE deleted = 0 AND status = 'ACTIVE';
+
 CREATE INDEX IF NOT EXISTS idx_pjw_status
     ON pmis_job_webhook (status) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_pml_channel
-    ON pmis_msg_log (channel) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pml_status
-    ON pmis_msg_log (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pml_biz
-    ON pmis_msg_log (biz_type, biz_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pml_receiver
-    ON pmis_msg_log (receiver) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pml_tenant_created
-    ON pmis_msg_log (tenant_id, created_at DESC) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pml_msg_id
-    ON pmis_msg_log (msg_id) WHERE deleted = 0 AND msg_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pml_provider_trace
-    ON pmis_msg_log (provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pml_priority
-    ON pmis_msg_log (status, priority, next_retry_at) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pml_dedup
-    ON pmis_msg_log (dedup_key) WHERE deleted = 0 AND dedup_key IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pml_batch
-    ON pmis_msg_log (batch_id) WHERE deleted = 0 AND batch_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pml_recall
-    ON pmis_msg_log (recall_status) WHERE deleted = 0 AND recall_status = 'RECALLED';
-CREATE INDEX IF NOT EXISTS idx_pml_retry_due
-    ON pmis_msg_log (status, next_retry_at) WHERE deleted = 0 AND status = 'RETRY' AND next_retry_at IS NOT NULL;
--- P2-6: 级联发送父子关系查询索引(按 parent_msg_id 查询某条消息触发的全部级联消息)
-CREATE INDEX IF NOT EXISTS idx_pml_parent
-    ON pmis_msg_log (parent_msg_id) WHERE deleted = 0 AND parent_msg_id IS NOT NULL;
--- P1-6: 灰度 A/B 报表查询索引(按 canary_key 分组统计实验组数据)
-CREATE INDEX IF NOT EXISTS idx_pml_canary_key
-    ON pmis_msg_log (canary_key) WHERE deleted = 0 AND canary_key IS NOT NULL;
+-- ----------------------------
+-- 2) 预警分级推送表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
+    alert_code          VARCHAR(64)  NOT NULL UNIQUE,
+    alert_type          VARCHAR(32)  NOT NULL,
+    alert_level         VARCHAR(8)   NOT NULL,
+    source_type         VARCHAR(32)  NOT NULL,
+    source_id           VARCHAR(20),
+    title               VARCHAR(256) NOT NULL,
+    content             TEXT,
+    target_role         VARCHAR(64)  NOT NULL,
+    target_user_ids     VARCHAR(1024),
+    push_channels       VARCHAR(64)  NOT NULL DEFAULT 'INAPP',
+    dispatched_at       TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    dispatched_by       VARCHAR(64),
+    status              VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
+    sent_at             TIMESTAMPTZ,
+    fail_reason         VARCHAR(512),
+    retry_count         INT          NOT NULL DEFAULT 0,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
+    provider_trace_id   VARCHAR(64),
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    -- 枚举约束
+    CONSTRAINT ck_pad_alert_type       CHECK (alert_type  IN ('BUDGET','EVM','SLA','RISK','PROFIT','BENCH','UTILIZATION','OTHER')),
+    CONSTRAINT ck_pad_alert_level      CHECK (alert_level IN ('YELLOW','RED')),
+    CONSTRAINT ck_pad_source_type      CHECK (source_type IN ('PROJECT','EVM','TICKET','BENCH','CONFIG','OTHER')),
+    CONSTRAINT ck_pad_push_channels    CHECK (push_channels ~ '^(INAPP|EMAIL|SMS|WECHAT)(,(INAPP|EMAIL|SMS|WECHAT))*$'),
+    CONSTRAINT ck_pad_status_enum      CHECK (status IN ('PENDING','SENT','FAILED','RETRYING')),
+    CONSTRAINT ck_pad_retry_count      CHECK (retry_count >= 0 AND retry_count <= 10),
+    CONSTRAINT ck_pad_deleted          CHECK (deleted IN (0, 1))
+);
 
-CREATE INDEX IF NOT EXISTS idx_pmt_channel
-    ON pmis_msg_template (channel) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmt_status
-    ON pmis_msg_template (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmt_tenant_status
-    ON pmis_msg_template (tenant_id, status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pmt_scene
-    ON pmis_msg_template (scene_code, channel) WHERE deleted = 0 AND scene_code IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmt_audit
-    ON pmis_msg_template (audit_status) WHERE deleted = 0 AND audit_status IN ('DRAFT', 'AUDITING');
+COMMENT ON TABLE  pmis_alert_dispatch IS '预警分级推送表: 黄/红不同层级触达,失败自动重试（最大 3 次,硬上限 10 次）';
 
--- --------------------------------------------------------------------
+COMMENT ON COLUMN pmis_alert_dispatch.alert_code IS '预警编码: 业务唯一,如 ALERT-2026-001';
 
--- ====================================================================
--- V1.0.0_008 已优化内联至 V1.0.0_001 的 pmis_operation_log 定义中
--- (字段已统一为 http_method/method_signature/client_ip/params_json/response_json/trace_id,
---  并补齐 V1.0.0_040 审计差异字段 before_data/after_data)
--- ====================================================================
+COMMENT ON COLUMN pmis_alert_dispatch.alert_type IS '预警类型: BUDGET 预算 / EVM 挣值 / SLA 工单 / RISK 风险 / PROFIT 利润 / BENCH 闲置 / UTILIZATION 利用率 / OTHER 其他';
 
--- ============================ [032] register report jobs ============================
+COMMENT ON COLUMN pmis_alert_dispatch.alert_level IS '预警等级: YELLOW 黄色 / RED 红色';
 
--- ============================================================
--- V1.0.0_032  P1-5 注册报表定时任务
--- ============================================================
--- 说明：定时报表生成与分发（P1-5）
---   report-daily    日报：每天 08:00
---   report-weekly   周报：每周一 08:00
---   report-monthly  月报：每月 1 日 08:00
--- 表 pmis_job 已在 V1.0.0_006 创建。
--- ============================================================
+COMMENT ON COLUMN pmis_alert_dispatch.source_type IS '触发源类型: PROJECT/EVM/TICKET/BENCH/CONFIG/OTHER';
 
--- 清理旧记录（保证可重跑）
+COMMENT ON COLUMN pmis_alert_dispatch.source_id IS '触发源业务 ID';
 
+COMMENT ON COLUMN pmis_alert_dispatch.title IS '预警标题';
 
--- ---------- 日报表生成与分发 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
-VALUES (
-    '日报表生成与分发任务',
-    'PMIS_REPORT',
-    'reportDailyJob',
-    'reportScheduleJobHandler',
-    '0 0 8 * * ?',
-    'DAILY',
-    'NORMAL',
-    '每日 08:00 生成驾驶舱/EVM/利润/利用率/Bench/风险日报并分发到订阅人',
-    1
-) ON CONFLICT DO NOTHING;
--- ---------- 周报表生成与分发 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
-VALUES (
-    '周报表生成与分发任务',
-    'PMIS_REPORT',
-    'reportWeeklyJob',
-    'reportScheduleJobHandler',
-    '0 0 8 ? * MON',
-    'WEEKLY',
-    'NORMAL',
-    '每周一 08:00 生成周报表并分发到订阅人',
-    1
-) ON CONFLICT DO NOTHING;
--- ---------- 月报表生成与分发 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
-VALUES (
-    '月报表生成与分发任务',
-    'PMIS_REPORT',
-    'reportMonthlyJob',
-    'reportScheduleJobHandler',
-    '0 0 8 1 * ?',
-    'MONTHLY',
-    'NORMAL',
-    '每月 1 日 08:00 生成月报表并分发到订阅人',
-    1
-) ON CONFLICT DO NOTHING;
--- --------------------------------------------------------------------
+COMMENT ON COLUMN pmis_alert_dispatch.content IS '预警内容（已渲染的模板）';
 
--- ============================ [035] register consistency job ============================
+COMMENT ON COLUMN pmis_alert_dispatch.target_role IS '目标角色: PM/PMO/CFO 等';
 
--- ============================================================
--- V1.0.0_035  P2-6 注册数据一致性校验定时任务
--- ============================================================
--- 说明：每日 02:30 执行数据一致性校验
---   1. 发票总额 vs 回款总额
---   2. 预算 vs 实际成本（超支检测）
---   3. WBS 进度 vs 工时完成率
---   差异超阈值自动记录日志并触发告警。
--- 表 pmis_job 已在 V1.0.0_006 创建。
--- 注意：版本号 033/034 已被流程引擎占用，本任务使用 035。
--- ============================================================
+COMMENT ON COLUMN pmis_alert_dispatch.target_user_ids IS '目标用户 ID 列表: 逗号分隔,精确触达';
 
--- 清理旧记录（保证可重跑，按 job_key 唯一键清理）
+COMMENT ON COLUMN pmis_alert_dispatch.push_channels IS '推送渠道: INAPP 站内信 / EMAIL 邮件 / SMS 短信 / WECHAT 微信,逗号分隔';
 
+COMMENT ON COLUMN pmis_alert_dispatch.dispatched_at IS '派发时间';
 
--- ---------- 数据一致性校验任务 ----------
-INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
-VALUES (
-    'data-consistency-check',
-    'PMIS_CRONJOB',
-    'data-consistency-check',
-    'dataConsistencyJobHandler',
-    '0 30 2 * * ?',
-    '{}',
-    'NORMAL',
-    '数据一致性校验（发票vs回款、预算vs成本、WBSvs工时）',
-    1
-) ON CONFLICT DO NOTHING;
--- --------------------------------------------------------------------
+COMMENT ON COLUMN pmis_alert_dispatch.dispatched_by IS '派发人: 定时任务 / 系统 / 用户';
 
+COMMENT ON COLUMN pmis_alert_dispatch.status IS '发送状态: PENDING 待发送 / SENT 已发送 / FAILED 失败 / RETRYING 重试中';
+
+COMMENT ON COLUMN pmis_alert_dispatch.sent_at IS '发送成功时间';
+
+COMMENT ON COLUMN pmis_alert_dispatch.fail_reason IS '失败原因';
+
+COMMENT ON COLUMN pmis_alert_dispatch.retry_count IS '重试次数: 业务最大 3 次,硬上限 10 次';
+
+COMMENT ON COLUMN pmis_alert_dispatch.tenant_id IS '租户 ID';
+
+COMMENT ON COLUMN pmis_alert_dispatch.provider_trace_id IS '链路追踪 ID';
+
+COMMENT ON COLUMN pmis_alert_dispatch.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
+-- 复合/部分索引(替代零散的单列索引)
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_level_status
+    ON pmis_alert_dispatch(tenant_id, alert_level, status)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_type_dispatched
+    ON pmis_alert_dispatch(tenant_id, alert_type, dispatched_at DESC)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_source
+    ON pmis_alert_dispatch(tenant_id, source_type, source_id)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_target
+    ON pmis_alert_dispatch(tenant_id, target_role)
+    WHERE deleted = 0;
+
+-- =====================================================================
+--  4) 预警 / 对账（4.2.2/4.2.3）
+-- =====================================================================
+CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_recipient
+    ON pmis_alert_dispatch (target_role, sent_at DESC)
+    WHERE status IN ('PENDING', 'FAILED');
+
+CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
+    ON pmis_alert_dispatch (retry_count, sent_at DESC)
+    WHERE status = 'FAILED' AND retry_count < 3;
+
+ANALYZE pmis_alert_dispatch;
 
 -- 10. 职级
 ALTER TABLE pmis_job_level ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+
 CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
 
 -- 11. 职级费率
 ALTER TABLE pmis_job_level_rate ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+
 CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
+
+CREATE INDEX IF NOT EXISTS idx_job_level_tenant_created
+    ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
 
 -- ============================================================
 -- 七、补齐遗漏的 10 张业务表 tenant_id 字段
@@ -1501,4 +1565,16 @@ CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tena
 
 -- 任务执行日志表
 ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+
 CREATE INDEX IF NOT EXISTS idx_job_log_tenant ON pmis_job_log(tenant_id);
+
+ANALYZE pmis_job_level;
+
+ANALYZE pmis_job_level_rate;
+
+ANALYZE pmis_job_log;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_trace
+    ON pmis_alert_dispatch (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+

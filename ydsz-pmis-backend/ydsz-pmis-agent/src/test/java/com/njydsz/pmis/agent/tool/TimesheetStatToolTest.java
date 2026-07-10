@@ -39,7 +39,7 @@ class TimesheetStatToolTest {
 
     @BeforeEach
     void setUp() {
-        tool = new TimesheetStatTool();
+        tool = new TimesheetStatTool(projectServiceClient);
     }
 
     @Test
@@ -64,7 +64,6 @@ class TimesheetStatToolTest {
     @DisplayName("真实数据模式：Feign 调用成功，返回远端统计值")
     void testRealData_Feign调用成功() {
         ReflectionTestUtils.setField(tool, "mockEnabled", false);
-        ReflectionTestUtils.setField(tool, "projectServiceClient", projectServiceClient);
 
         // 构造远端返回的统计数据
         Map<String, Object> remote = new HashMap<>();
@@ -93,7 +92,6 @@ class TimesheetStatToolTest {
     @DisplayName("真实数据模式：Feign 服务降级，返回零值统计")
     void testRealData_Feign服务降级() {
         ReflectionTestUtils.setField(tool, "mockEnabled", false);
-        ReflectionTestUtils.setField(tool, "projectServiceClient", projectServiceClient);
 
         when(projectServiceClient.timeEntryAbnormalStat("P001", "2026-07"))
                 .thenReturn(Result.failed(BizErrorCode.SERVICE_UNAVAILABLE));
@@ -114,14 +112,15 @@ class TimesheetStatToolTest {
     @Test
     @DisplayName("真实数据模式：未注入 Client，返回零值且不抛异常")
     void testRealData_未注入Client() {
-        ReflectionTestUtils.setField(tool, "mockEnabled", false);
-        // projectServiceClient 保持为 null（未注入）
+        // 通过构造器显式传 null，模拟未注入场景
+        TimesheetStatTool nullTool = new TimesheetStatTool(null);
+        ReflectionTestUtils.setField(nullTool, "mockEnabled", false);
 
         Map<String, Object> params = new HashMap<>();
         params.put("projectId", "P001");
         params.put("month", "2026-07");
 
-        ToolResult result = tool.execute(params, null);
+        ToolResult result = nullTool.execute(params, null);
 
         Map<String, Object> data = result.getData();
         assertEquals(0, data.get("overtimeCount"));

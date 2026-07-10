@@ -1,7 +1,13 @@
+-- ============================================================
+-- PMIS literule module SQL
+-- Auto-generated from V1.0.0.sql
+-- ============================================================
+
+-- --------------------------------------------------------------------
+
 -- ====================================================================
--- Rule Engine (Rule/Decision/Scorecard/ABTest/Var)
--- Module: literule | Version: V1.0.0 | Target: PostgreSQL 18
--- Generated from deploy/sql/V1.0.0.sql
+-- V1.0.0_040 已优化内联至 V1.0.0_001 的 pmis_operation_log 定义中
+-- (before_data / after_data / biz_type / biz_id 已内联,并升级为 JSONB)
 -- ====================================================================
 
 -- ============================ [041] init pmis literule schema ============================
@@ -14,7 +20,7 @@
 -- 1. 规则定义主表
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_def (
-    id                    VARCHAR(20)       PRIMARY KEY,
+    id                    VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id             VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code             VARCHAR(128)    NOT NULL,
     rule_name             VARCHAR(256)    NOT NULL,
@@ -46,20 +52,28 @@ CREATE TABLE IF NOT EXISTS pmis_rule_def (
 );
 
 COMMENT ON TABLE  pmis_rule_def IS 'LiteRule 规则定义表';
+
 COMMENT ON COLUMN pmis_rule_def.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_rule_def.rule_code IS '规则编码（租户内唯一）';
+
 COMMENT ON COLUMN pmis_rule_def.condition_expression IS '条件表达式（Aviator 语法，返回 boolean）';
+
 COMMENT ON COLUMN pmis_rule_def.severity_expression IS '严重度表达式（可选，动态决定严重度）';
+
 COMMENT ON COLUMN pmis_rule_def.priority IS '优先级（数值越小越先执行，默认100）';
+
 COMMENT ON COLUMN pmis_rule_def.mutex_group IS '互斥组名称（同组内首个命中后跳过其余规则；NULL 表示无互斥组）';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_category_enabled
     ON pmis_rule_def (tenant_id, category, enabled)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_priority
     ON pmis_rule_def (tenant_id, priority)
     WHERE deleted = 0 AND enabled = TRUE;
+
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_mutex_group
     ON pmis_rule_def (tenant_id, mutex_group)
     WHERE deleted = 0 AND mutex_group IS NOT NULL;
@@ -68,7 +82,7 @@ CREATE INDEX IF NOT EXISTS idx_prd_tenant_mutex_group
 -- 2. 规则版本历史表（审计追踪 + 回滚）
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_version_history (
-    id              VARCHAR(20)       PRIMARY KEY,
+    id              VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code       VARCHAR(128)    NOT NULL,
     version         INTEGER         NOT NULL,
@@ -83,7 +97,9 @@ CREATE TABLE IF NOT EXISTS pmis_rule_version_history (
 );
 
 COMMENT ON TABLE  pmis_rule_version_history IS 'LiteRule 规则版本历史表';
+
 COMMENT ON COLUMN pmis_rule_version_history.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_rule_version_history.definition_json IS '规则定义 JSON 快照';
 
 CREATE INDEX IF NOT EXISTS idx_prvh_tenant_code
@@ -187,7 +203,7 @@ WHERE NOT EXISTS (
 -- 5. 规则模板表（P2: 规则模板市场）
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_template (
-    id                    VARCHAR(20)       PRIMARY KEY,
+    id                    VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id             VARCHAR(20)          NOT NULL DEFAULT '1',
     template_code         VARCHAR(128)    NOT NULL,
     template_name         VARCHAR(256)    NOT NULL,
@@ -216,12 +232,14 @@ CREATE TABLE IF NOT EXISTS pmis_rule_template (
 );
 
 COMMENT ON TABLE pmis_rule_template IS 'LiteRule 规则模板表（模板市场）';
+
 COMMENT ON COLUMN pmis_rule_template.tenant_id IS '租户 ID';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prt_tenant_category
     ON pmis_rule_template (tenant_id, category)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_prt_tenant_industry
     ON pmis_rule_template (tenant_id, industry)
     WHERE deleted = 0;
@@ -315,7 +333,7 @@ ON CONFLICT (tenant_id, template_code, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- 测试用例主表
 CREATE TABLE IF NOT EXISTS pmis_rule_test_case (
-    id                 VARCHAR(20)       PRIMARY KEY,
+    id                 VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
     name               VARCHAR(256)    NOT NULL,
     rule_code          VARCHAR(128),
@@ -333,34 +351,34 @@ CREATE TABLE IF NOT EXISTS pmis_rule_test_case (
 );
 
 COMMENT ON TABLE pmis_rule_test_case IS 'P1-9: 规则测试用例表,用于规则评估的回归测试';
+
 COMMENT ON COLUMN pmis_rule_test_case.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_rule_test_case.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_rule_test_case.name IS '测试用例名称';
+
 COMMENT ON COLUMN pmis_rule_test_case.rule_code IS '关联规则编码 (可选, null 表示通用测试用例)';
+
 COMMENT ON COLUMN pmis_rule_test_case.facts_data IS '事实数据 JSON (输入参数)';
+
 COMMENT ON COLUMN pmis_rule_test_case.expected_triggered IS '预期触发的规则编码列表 JSON';
+
 COMMENT ON COLUMN pmis_rule_test_case.description IS '用例描述';
+
 COMMENT ON COLUMN pmis_rule_test_case.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_rule_test_case.updated_at IS '更新时间';
 
 -- 复合/部分索引
 CREATE INDEX IF NOT EXISTS idx_prtc_tenant_code
     ON pmis_rule_test_case (tenant_id, rule_code)
     WHERE deleted = 0;
+
 CREATE INDEX IF NOT EXISTS idx_prtc_tenant_name
     ON pmis_rule_test_case (tenant_id, name)
     WHERE deleted = 0;
 
--- 更新触发器
-CREATE OR REPLACE FUNCTION update_rule_test_case_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trigger_rule_test_case_updated_at ON pmis_rule_test_case;
 CREATE TRIGGER trigger_rule_test_case_updated_at
     BEFORE UPDATE ON pmis_rule_test_case
     FOR EACH ROW EXECUTE FUNCTION update_rule_test_case_updated_at();
@@ -391,6 +409,7 @@ INSERT INTO pmis_rule_test_case (name, rule_code, facts_data, expected_triggered
  '{"avgBillableUtilization": 0.65, "activeProjects": 5}',
  '["UTILIZATION_LOW"]',
   '利用率65%且有活跃项目，应触发') ON CONFLICT DO NOTHING;
+
 -- --------------------------------------------------------------------
 
 -- ============================ [043] add rule lifecycle and trace ============================
@@ -423,135 +442,6 @@ CREATE INDEX IF NOT EXISTS idx_prd_tenant_status
     ON pmis_rule_def (tenant_id, status)
     WHERE deleted = 0;
 
--- 2. 执行链路追踪表
-CREATE TABLE IF NOT EXISTS pmis_rule_execution_trace (
-    id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
-    trace_id          VARCHAR(20)     NOT NULL,
-    rule_code         VARCHAR(128)    NOT NULL,
-    rule_name         VARCHAR(256),
-    scenario          VARCHAR(128),
-    triggered         BOOLEAN         NOT NULL DEFAULT FALSE,
-    severity          VARCHAR(16),
-    condition_result  VARCHAR(256),
-    elapsed_ms        BIGINT          NOT NULL DEFAULT 0,
-    facts_snapshot    JSONB,
-    result_snapshot   JSONB,
-    error_message     TEXT,
-    provider_trace_id VARCHAR(64),
-    created_by        VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
-    created_at        TIMESTAMPTZ     NOT NULL DEFAULT NOW()
-);
-
-COMMENT ON TABLE pmis_rule_execution_trace IS 'P1-11: 规则执行链路追踪表,一次评估一条记录';
-COMMENT ON COLUMN pmis_rule_execution_trace.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_execution_trace.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_execution_trace.trace_id IS '追踪 ID (同一批次评估共享)';
-COMMENT ON COLUMN pmis_rule_execution_trace.rule_code IS '规则编码';
-COMMENT ON COLUMN pmis_rule_execution_trace.rule_name IS '规则名称';
-COMMENT ON COLUMN pmis_rule_execution_trace.scenario IS '业务场景';
-COMMENT ON COLUMN pmis_rule_execution_trace.triggered IS '是否触发';
-COMMENT ON COLUMN pmis_rule_execution_trace.severity IS '严重度 (RED/YELLOW/GREEN/INFO)';
-COMMENT ON COLUMN pmis_rule_execution_trace.condition_result IS '条件表达式求值结果描述';
-COMMENT ON COLUMN pmis_rule_execution_trace.elapsed_ms IS '执行耗时 (毫秒)';
-COMMENT ON COLUMN pmis_rule_execution_trace.facts_snapshot IS '事实数据快照 JSON';
-COMMENT ON COLUMN pmis_rule_execution_trace.result_snapshot IS '结果快照 JSON';
-COMMENT ON COLUMN pmis_rule_execution_trace.error_message IS '错误信息';
-COMMENT ON COLUMN pmis_rule_execution_trace.created_at IS '创建时间';
-
--- 数据完整性约束（表内）
-ALTER TABLE pmis_rule_execution_trace
-    ADD CONSTRAINT ck_prelapsed_nonneg  CHECK (elapsed_ms >= 0);
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_pret_tenant_trace
-    ON pmis_rule_execution_trace (tenant_id, trace_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pret_tenant_rule_code
-    ON pmis_rule_execution_trace (tenant_id, rule_code, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pret_tenant_scenario
-    ON pmis_rule_execution_trace (tenant_id, scenario, created_at DESC);
--- --------------------------------------------------------------------
-
--- ============================ [044] add decision table ============================
-
--- ============================================
--- 决策表支持
--- ============================================
-
-CREATE TABLE IF NOT EXISTS pmis_rule_decision_table (
-    id                 VARCHAR(20)       PRIMARY KEY,
-    tenant_id          VARCHAR(20)          NOT NULL DEFAULT '1',
-    table_code         VARCHAR(128)    NOT NULL,
-    table_name         VARCHAR(256)    NOT NULL,
-    description        TEXT,
-    category           VARCHAR(64),
-    -- 条件列定义 JSON: [{"name":"字段名","label":"显示名","type":"number|string|boolean"}]
-    condition_columns  JSONB           NOT NULL,
-    -- 动作列定义 JSON: [{"name":"severity","label":"严重度","type":"string"}]
-    action_columns     JSONB           NOT NULL,
-    -- 决策行 JSON: [{"conditions":{"字段名":"值"},"actions":{"severity":"RED"}}]
-    rows               JSONB           NOT NULL DEFAULT '[]',
-    -- 默认动作（未匹配行时的动作）
-    default_actions    JSONB,
-    enabled            BOOLEAN         NOT NULL DEFAULT TRUE,
-    priority           INTEGER         NOT NULL DEFAULT 100,
-    version            INTEGER         NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64),
-    created_by         VARCHAR(64),
-    created_at         TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_by         VARCHAR(64),
-    updated_at         TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    deleted            SMALLINT        NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT uk_prdt_tenant_code        UNIQUE (tenant_id, table_code, deleted),
-    CONSTRAINT ck_prdt_priority           CHECK (priority > 0),
-    CONSTRAINT ck_prdt_version            CHECK (version > 0),
-    CONSTRAINT ck_prdt_deleted            CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE pmis_rule_decision_table IS 'P1-12: 决策表 (DMN 简化版),条件/动作/行均以 JSON 存储';
-COMMENT ON COLUMN pmis_rule_decision_table.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_decision_table.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_decision_table.table_code IS '决策表编码 (租户内唯一)';
-COMMENT ON COLUMN pmis_rule_decision_table.table_name IS '决策表名称';
-COMMENT ON COLUMN pmis_rule_decision_table.description IS '描述';
-COMMENT ON COLUMN pmis_rule_decision_table.category IS '类别';
-COMMENT ON COLUMN pmis_rule_decision_table.condition_columns IS '条件列定义 JSON: [{name,label,type}]';
-COMMENT ON COLUMN pmis_rule_decision_table.action_columns IS '动作列定义 JSON: [{name,label,type}]';
-COMMENT ON COLUMN pmis_rule_decision_table.rows IS '决策行 JSON: [{conditions,actions}]';
-COMMENT ON COLUMN pmis_rule_decision_table.default_actions IS '默认动作 (未匹配行时使用) JSON';
-COMMENT ON COLUMN pmis_rule_decision_table.enabled IS '是否启用';
-COMMENT ON COLUMN pmis_rule_decision_table.priority IS '优先级';
-COMMENT ON COLUMN pmis_rule_decision_table.version IS '版本号';
-COMMENT ON COLUMN pmis_rule_decision_table.created_by IS '创建人';
-COMMENT ON COLUMN pmis_rule_decision_table.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rule_decision_table.updated_by IS '更新人';
-COMMENT ON COLUMN pmis_rule_decision_table.updated_at IS '更新时间';
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_prdt_tenant_category_enabled
-    ON pmis_rule_decision_table (tenant_id, category, enabled)
-    WHERE deleted = 0;
--- --------------------------------------------------------------------
-
--- ============================ [045] add decision table hit policy ============================
-
--- ============================================
--- 决策表命中策略字段
---
--- 为 pmis_rule_decision_table 增加 hit_policy 列，支持 DMN 标准命中策略：
---   UNIQUE  - 唯一命中，匹配多行时报错
---   FIRST   - 首次命中（默认）
---   PRIORITY- 优先级命中，返回优先级最高的匹配行
---   COLLECT - 收集命中，返回所有匹配行
---   ANY     - 任意命中，返回任意一条匹配行
--- ============================================
-
-ALTER TABLE pmis_rule_decision_table
-    ADD COLUMN IF NOT EXISTS hit_policy VARCHAR(32) NOT NULL DEFAULT 'FIRST';
-
-COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略：UNIQUE/FIRST/PRIORITY/COLLECT/ANY';
-
 -- --------------------------------------------------------------------
 
 -- ============================ [047] add rule canary ============================
@@ -577,8 +467,11 @@ ALTER TABLE pmis_rule_def
     ADD COLUMN IF NOT EXISTS canary_severity_expression TEXT;
 
 COMMENT ON COLUMN pmis_rule_def.canary_ratio IS '灰度比例（0~1.0，0 不启用灰度；启用后按比例将流量路由到候选版本）';
+
 COMMENT ON COLUMN pmis_rule_def.canary_conditions IS '灰度条件表达式列表（Aviator 语法，AND 关系；JSON 数组，示例：["tenantId == ''T001''"]）';
+
 COMMENT ON COLUMN pmis_rule_def.canary_condition_expression IS '灰度候选版本条件表达式（覆盖主版本，进行 A/B 验证）';
+
 COMMENT ON COLUMN pmis_rule_def.canary_severity_expression IS '灰度候选版本严重度表达式（覆盖主版本）';
 
 -- 灰度规则索引（按租户过滤）
@@ -586,34 +479,8 @@ CREATE INDEX IF NOT EXISTS idx_prd_tenant_canary_ratio
     ON pmis_rule_def (tenant_id, canary_ratio)
     WHERE deleted = 0 AND canary_ratio > 0;
 
--- ------------------------------------------------------------
--- 灰度分桶统计表（运营监控：rule_code -> 主桶/灰桶计数）
--- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_canary_bucket (
-    id              VARCHAR(20)       PRIMARY KEY,
-    tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
-    rule_code       VARCHAR(128)    NOT NULL,
-    bucket_type     VARCHAR(16)     NOT NULL,  -- PRIMARY / CANARY
-    bucket_count    BIGINT          NOT NULL DEFAULT 0,
-    stat_date       DATE            NOT NULL DEFAULT CURRENT_DATE,
-    provider_trace_id VARCHAR(64),
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    -- 数据完整性约束
-    CONSTRAINT uk_prcb_tenant_code_date_type UNIQUE (tenant_id, rule_code, bucket_type, stat_date),
-    CONSTRAINT ck_prcb_bucket_type            CHECK (bucket_type IN ('PRIMARY','CANARY')),
-    CONSTRAINT ck_prcb_bucket_count           CHECK (bucket_count >= 0)
-);
-
-COMMENT ON TABLE  pmis_rule_canary_bucket IS '规则灰度分桶统计表（按日聚合，便于运营对比新旧版本流量）';
-COMMENT ON COLUMN pmis_rule_canary_bucket.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_canary_bucket.bucket_type IS '桶类型：PRIMARY=主版本，CANARY=候选版本';
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_prcb_tenant_rule_date
-    ON pmis_rule_canary_bucket (tenant_id, rule_code, stat_date DESC);
-CREATE INDEX IF NOT EXISTS idx_prcb_tenant_date
-    ON pmis_rule_canary_bucket (tenant_id, stat_date DESC);
+-- 注: idx_pmis_flow_run_task_priority_todo 部分索引已上移到主索引块(pmis_flow_run_task 紧邻处),
+--     此处不再重复创建,保证表结构集中。
 
 -- --------------------------------------------------------------------
 
@@ -626,144 +493,10 @@ CREATE INDEX IF NOT EXISTS idx_prcb_tenant_date
 -- pmis_rule_def.status 限定合法状态值
 ALTER TABLE pmis_rule_def
     DROP CONSTRAINT IF EXISTS ck_rule_def_status_valid;
+
 ALTER TABLE pmis_rule_def
     ADD CONSTRAINT ck_rule_def_status_valid
     CHECK (status IN ('DRAFT', 'REVIEW', 'PUBLISHED', 'DISABLED', 'ARCHIVED'));
-
-COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
-    '规则状态合法性约束，配合应用层 RuleStatus.canTransitionTo 状态机校验';
-
--- --------------------------------------------------------------------
-
--- ============================ [051] init rule scorecard tree script ============================
-
--- ============================================================
--- 评分卡 / 决策树 / 脚本规则持久化
--- （原 V1.0.0_048 与 add_pmis_flow_run_task_priority 版本号冲突，迁移到 051）
--- ============================================================
-
--- --------------------------------------------------------
--- 1. 评分卡规则定义表
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_scorecard (
-    id               VARCHAR(20)       PRIMARY KEY,
-    tenant_id        VARCHAR(20)          NOT NULL DEFAULT '1',
-    rule_code        VARCHAR(128)    NOT NULL,
-    rule_name        VARCHAR(256)    NOT NULL,
-    category         VARCHAR(64)     NOT NULL DEFAULT 'RISK',
-    description      TEXT,
-    base_score       NUMERIC(10,2)   NOT NULL DEFAULT 100,
-    red_threshold    NUMERIC(10,2)   NOT NULL,
-    yellow_threshold NUMERIC(10,2)   NOT NULL,
-    factors          JSONB           NOT NULL,   -- [{conditionExpression, score, description}]
-    priority         INTEGER         NOT NULL DEFAULT 100,
-    enabled          BOOLEAN         NOT NULL DEFAULT TRUE,
-    scope            VARCHAR(128)    DEFAULT 'ALL',
-    version          INTEGER         NOT NULL DEFAULT 1,
-    provider_trace_id VARCHAR(64),
-    created_by       VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
-    created_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_by       VARCHAR(64),
-    updated_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    deleted          SMALLINT        NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT uk_prs2_tenant_code        UNIQUE (tenant_id, rule_code, deleted),
-    CONSTRAINT ck_prs2_base_score         CHECK (base_score >= 0),
-    CONSTRAINT ck_prs2_threshold_order    CHECK (red_threshold <= yellow_threshold),
-    CONSTRAINT ck_prs2_priority           CHECK (priority > 0),
-    CONSTRAINT ck_prs2_version            CHECK (version > 0),
-    CONSTRAINT ck_prs2_deleted            CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_rule_scorecard IS '评分卡规则定义表';
-COMMENT ON COLUMN pmis_rule_scorecard.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_scorecard.base_score IS '基础分（命中因子前的基础值，默认 100）';
-COMMENT ON COLUMN pmis_rule_scorecard.red_threshold IS '红色阈值（总分低于此值为 RED）';
-COMMENT ON COLUMN pmis_rule_scorecard.yellow_threshold IS '黄色阈值（总分低于此值为 YELLOW）';
-COMMENT ON COLUMN pmis_rule_scorecard.factors IS '评分因子数组，JSON 格式：[{"conditionExpression":"...","score":-30,"description":"..."}]';
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_prs2_tenant_category_enabled
-    ON pmis_rule_scorecard (tenant_id, category, enabled)
-    WHERE deleted = 0;
-
--- --------------------------------------------------------
--- 2. 决策树规则定义表
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_decision_tree (
-    id              VARCHAR(20)       PRIMARY KEY,
-    tenant_id       VARCHAR(20)          NOT NULL DEFAULT '1',
-    rule_code       VARCHAR(128)    NOT NULL,
-    rule_name       VARCHAR(256)    NOT NULL,
-    category        VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
-    description     TEXT,
-    root_node       JSONB           NOT NULL,   -- 嵌套决策树节点
-    priority        INTEGER         NOT NULL DEFAULT 100,
-    enabled         BOOLEAN         NOT NULL DEFAULT TRUE,
-    scope           VARCHAR(128)    DEFAULT 'ALL',
-    version         INTEGER         NOT NULL DEFAULT 1,
-    provider_trace_id VARCHAR(64),
-    created_by      VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_by      VARCHAR(64),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    deleted         SMALLINT        NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT uk_prdt2_tenant_code    UNIQUE (tenant_id, rule_code, deleted),
-    CONSTRAINT ck_prdt2_priority       CHECK (priority > 0),
-    CONSTRAINT ck_prdt2_version        CHECK (version > 0),
-    CONSTRAINT ck_prdt2_deleted        CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_rule_decision_tree IS '决策树规则定义表';
-COMMENT ON COLUMN pmis_rule_decision_tree.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_decision_tree.root_node IS '决策树根节点 JSON：{conditionExpression, trueBranch, falseBranch, leaf, severity, title, description}';
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_prdt2_tenant_category_enabled
-    ON pmis_rule_decision_tree (tenant_id, category, enabled)
-    WHERE deleted = 0;
-
--- --------------------------------------------------------
--- 3. 脚本规则定义表
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_script (
-    id               VARCHAR(20)       PRIMARY KEY,
-    tenant_id        VARCHAR(20)          NOT NULL DEFAULT '1',
-    rule_code        VARCHAR(128)    NOT NULL,
-    rule_name        VARCHAR(256)    NOT NULL,
-    category         VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
-    description      TEXT,
-    script           TEXT            NOT NULL,   -- Groovy 脚本
-    default_severity VARCHAR(16)     NOT NULL DEFAULT 'INFO',
-    sandbox_enabled  BOOLEAN         NOT NULL DEFAULT TRUE,
-    priority         INTEGER         NOT NULL DEFAULT 100,
-    enabled          BOOLEAN         NOT NULL DEFAULT TRUE,
-    scope            VARCHAR(128)    DEFAULT 'ALL',
-    version          INTEGER         NOT NULL DEFAULT 1,
-    provider_trace_id VARCHAR(64),
-    created_by       VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
-    created_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_by       VARCHAR(64),
-    updated_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    deleted          SMALLINT        NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT uk_prsc_tenant_code     UNIQUE (tenant_id, rule_code, deleted),
-    CONSTRAINT ck_prsc_severity         CHECK (default_severity IN ('RED','YELLOW','BLUE','GREEN','GRAY','INFO')),
-    CONSTRAINT ck_prsc_priority         CHECK (priority > 0),
-    CONSTRAINT ck_prsc_version          CHECK (version > 0),
-    CONSTRAINT ck_prsc_deleted          CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_rule_script IS '脚本规则定义表（Groovy JSR-223）';
-COMMENT ON COLUMN pmis_rule_script.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_script.script IS 'Groovy 脚本内容（沙箱模式下禁止 System/反射/IO/网络访问）';
-COMMENT ON COLUMN pmis_rule_script.sandbox_enabled IS '是否启用沙箱（默认 TRUE）';
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_prsc_tenant_category_enabled
-    ON pmis_rule_script (tenant_id, category, enabled)
-    WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
 
@@ -786,43 +519,16 @@ CREATE INDEX IF NOT EXISTS idx_prsc_tenant_category_enabled
 -- 1. 规则定义表
 ALTER TABLE pmis_rule_def
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+
 CREATE INDEX IF NOT EXISTS idx_rule_def_tenant ON pmis_rule_def (tenant_id);
+
 COMMENT ON COLUMN pmis_rule_def.tenant_id IS '租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用）';
 
 -- 2. 规则版本历史表
 ALTER TABLE pmis_rule_version_history
     ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+
 CREATE INDEX IF NOT EXISTS idx_rule_version_tenant ON pmis_rule_version_history (tenant_id);
-
--- 3. 规则执行轨迹表
-ALTER TABLE pmis_rule_execution_trace
-    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_trace_tenant ON pmis_rule_execution_trace (tenant_id);
-
--- 4. 决策表定义表
-ALTER TABLE pmis_rule_decision_table
-    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_dt_tenant ON pmis_rule_decision_table (tenant_id);
-
--- 5. 评分卡定义表
-ALTER TABLE pmis_rule_scorecard
-    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_scorecard_tenant ON pmis_rule_scorecard (tenant_id);
-
--- 6. 决策树定义表
-ALTER TABLE pmis_rule_decision_tree
-    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_tree_tenant ON pmis_rule_decision_tree (tenant_id);
-
--- 7. 脚本规则定义表
-ALTER TABLE pmis_rule_script
-    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_script_tenant ON pmis_rule_script (tenant_id);
-
--- 8. 灰度分桶统计表
-ALTER TABLE pmis_rule_canary_bucket
-    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON pmis_rule_canary_bucket (tenant_id);
 
 -- --------------------------------------------------------------------
 
@@ -840,7 +546,7 @@ CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON pmis_rule_canary_buc
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS pmis_rule_variable_def (
-    id                VARCHAR(20)       PRIMARY KEY,
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     var_name          VARCHAR(128)    NOT NULL,
     var_type          VARCHAR(128)    NOT NULL,
@@ -866,13 +572,21 @@ CREATE INDEX IF NOT EXISTS idx_prvd_tenant_category
     WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_rule_variable_def IS '规则变量定义表：规则表达式中可引用的变量元数据';
+
 COMMENT ON COLUMN pmis_rule_variable_def.var_name     IS '变量名（如 cpi / budgetAmount / evmRedCount）';
+
 COMMENT ON COLUMN pmis_rule_variable_def.var_type     IS '变量类型（java.lang.Number / java.lang.String 等）';
+
 COMMENT ON COLUMN pmis_rule_variable_def.description   IS '变量描述（中文，供前端编辑器提示）';
+
 COMMENT ON COLUMN pmis_rule_variable_def.sample_value  IS '示例值（用于前端编辑器预览和 dryRun 默认 facts）';
+
 COMMENT ON COLUMN pmis_rule_variable_def.category      IS '变量来源类别（EVM / PROJECT / FINANCE / BENCH 等）';
+
 COMMENT ON COLUMN pmis_rule_variable_def.required       IS '是否必填（前端编辑器可标记必填变量）';
+
 COMMENT ON COLUMN pmis_rule_variable_def.enabled        IS '是否启用';
+
 COMMENT ON COLUMN pmis_rule_variable_def.tenant_id      IS '租户 ID（单租户部署默认 1）';
 
 -- 内置变量种子数据（EVM 类）
@@ -892,22 +606,25 @@ INSERT INTO pmis_rule_variable_def (var_name, var_type, description, sample_valu
     ('tenantId',           'java.lang.String',  '租户 ID',                                   'T001','PROJECT',FALSE)
 ON CONFLICT (tenant_id, var_name, deleted) WHERE deleted = 0 DO NOTHING;
 
--- --------------------------------------------------------------------
-
-
 -- 规则模板表（053 漏补）
 ALTER TABLE pmis_rule_template ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+
 CREATE INDEX IF NOT EXISTS idx_rule_template_tenant ON pmis_rule_template(tenant_id);
 
 -- 规则测试用例表（053 漏补）
 ALTER TABLE pmis_rule_test_case ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
+
 CREATE INDEX IF NOT EXISTS idx_rule_test_case_tenant ON pmis_rule_test_case(tenant_id);
+
+ANALYZE pmis_rule_template;
+
+ANALYZE pmis_rule_test_case;
 
 -- ----------------------------------------------------------------
 -- pmis_rule_chain_graph -- P0-1: rule chain visual canvas
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_chain_graph (
-    id                VARCHAR(20)       PRIMARY KEY,
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code         VARCHAR(128)    NOT NULL,
     name              VARCHAR(256),
@@ -929,27 +646,45 @@ CREATE TABLE IF NOT EXISTS pmis_rule_chain_graph (
     CONSTRAINT ck_prcg_deleted            CHECK (deleted IN (0, 1))
 );
 
+CREATE INDEX IF NOT EXISTS idx_prcg_tenant_scenario_status
+    ON pmis_rule_chain_graph (tenant_id, scenario, status)
+    WHERE deleted = 0;
+
 COMMENT ON TABLE  pmis_rule_chain_graph IS 'P0-1: 规则链可视化画布 JSON 存储表';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.rule_code IS '关联规则编码';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.name IS '画布名称';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.description IS '画布描述';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.scenario IS '业务场景';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.graph_version IS '画布版本号';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.status IS '画布状态: DRAFT/PUBLISHED/ARCHIVED';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.content_json IS '画布节点/连线 JSON';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.created_by IS '创建人';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.updated_by IS '更新人';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.updated_at IS '更新时间';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_rule_dependency -- P1-8: rule dependency
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_dependency (
-    id                       VARCHAR(20)       PRIMARY KEY,
+    id                       VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id                VARCHAR(20)          NOT NULL DEFAULT '1',
     rule_code                VARCHAR(128)    NOT NULL,
     depends_on_rule_code     VARCHAR(128)    NOT NULL,
@@ -968,112 +703,41 @@ CREATE TABLE IF NOT EXISTS pmis_rule_dependency (
     CONSTRAINT ck_prd_deleted               CHECK (deleted IN (0, 1))
 );
 
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_rule
+    ON pmis_rule_dependency (tenant_id, rule_code)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_depends_cascade
+    ON pmis_rule_dependency (tenant_id, depends_on_rule_code, cascade_on_disable)
+    WHERE deleted = 0;
+
 COMMENT ON TABLE  pmis_rule_dependency IS 'P1-8: 规则间依赖关系表 (EXECUTE/READ_RESULT/SOFT)';
+
 COMMENT ON COLUMN pmis_rule_dependency.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_rule_dependency.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_rule_dependency.rule_code IS '规则编码';
+
 COMMENT ON COLUMN pmis_rule_dependency.depends_on_rule_code IS '被依赖的规则编码';
+
 COMMENT ON COLUMN pmis_rule_dependency.dependency_type IS '依赖类型: EXECUTE/READ_RESULT/SOFT';
+
 COMMENT ON COLUMN pmis_rule_dependency.cascade_on_disable IS '上游禁用时是否级联禁用 1=是 0=否';
+
 COMMENT ON COLUMN pmis_rule_dependency.description IS '依赖说明';
+
 COMMENT ON COLUMN pmis_rule_dependency.created_by IS '创建人';
+
 COMMENT ON COLUMN pmis_rule_dependency.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_rule_dependency.deleted IS '逻辑删除 0=未删 1=已删';
-
--- ----------------------------------------------------------------
--- pmis_rule_ab_policy -- P1-10: AB test auto-rollback policy
--- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_ab_policy (
-    id                      VARCHAR(20)       PRIMARY KEY,
-    tenant_id               VARCHAR(20)          NOT NULL DEFAULT '1',
-    rule_code               VARCHAR(128)    NOT NULL,
-    auto_rollback_enabled   SMALLINT        NOT NULL DEFAULT 1,
-    rollback_action         VARCHAR(16)     NOT NULL DEFAULT 'AUTO',
-    error_rate_threshold    NUMERIC(5,4)    NOT NULL DEFAULT 0.0500,
-    min_sample_size         INTEGER         NOT NULL DEFAULT 100,
-    check_window_minutes    INTEGER         NOT NULL DEFAULT 5,
-    notify_channels         VARCHAR(128),
-    description             VARCHAR(512),
-    last_evaluated_at       TIMESTAMPTZ,
-    last_rollback_at        TIMESTAMPTZ,
-    provider_trace_id       VARCHAR(64),
-    created_by              VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
-    created_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by              VARCHAR(64),
-    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                 SMALLINT        NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT uk_prap_tenant_rule          UNIQUE (tenant_id, rule_code, deleted),
-    CONSTRAINT ck_prap_auto_rollback        CHECK (auto_rollback_enabled IN (0, 1)),
-    CONSTRAINT ck_prap_rollback_action      CHECK (rollback_action IN ('AUTO','NOTIFY')),
-    CONSTRAINT ck_prap_error_rate           CHECK (error_rate_threshold >= 0 AND error_rate_threshold <= 1),
-    CONSTRAINT ck_prap_min_sample           CHECK (min_sample_size > 0),
-    CONSTRAINT ck_prap_check_window         CHECK (check_window_minutes > 0),
-    CONSTRAINT ck_prap_deleted              CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_rule_ab_policy IS 'P1-10: AB Test 自动回滚策略表';
-COMMENT ON COLUMN pmis_rule_ab_policy.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_ab_policy.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_ab_policy.rule_code IS '规则编码';
-COMMENT ON COLUMN pmis_rule_ab_policy.auto_rollback_enabled IS '是否启用自动回滚 1=是 0=否';
-COMMENT ON COLUMN pmis_rule_ab_policy.rollback_action IS '回滚动作: AUTO 自动回滚/NOTIFY 仅通知负责人';
-COMMENT ON COLUMN pmis_rule_ab_policy.error_rate_threshold IS '触发回滚的错误率阈值 (0~1)';
-COMMENT ON COLUMN pmis_rule_ab_policy.min_sample_size IS '最小评估样本数';
-COMMENT ON COLUMN pmis_rule_ab_policy.check_window_minutes IS '评估窗口 (分钟)';
-COMMENT ON COLUMN pmis_rule_ab_policy.notify_channels IS '通知通道 (逗号分隔, 引用 pmis_flow_notify_channel.id)';
-COMMENT ON COLUMN pmis_rule_ab_policy.description IS '策略描述';
-COMMENT ON COLUMN pmis_rule_ab_policy.last_evaluated_at IS '最近一次评估时间';
-COMMENT ON COLUMN pmis_rule_ab_policy.last_rollback_at IS '最近一次回滚时间';
-COMMENT ON COLUMN pmis_rule_ab_policy.created_by IS '创建人';
-COMMENT ON COLUMN pmis_rule_ab_policy.created_at IS '创建时间';
-COMMENT ON COLUMN pmis_rule_ab_policy.updated_by IS '更新人';
-COMMENT ON COLUMN pmis_rule_ab_policy.updated_at IS '更新时间';
-COMMENT ON COLUMN pmis_rule_ab_policy.deleted IS '逻辑删除 0=未删 1=已删';
-
--- ----------------------------------------------------------------
--- pmis_rule_ab_rollback -- P1-10: AB test rollback history
--- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_rule_ab_rollback (
-    id                VARCHAR(20)       PRIMARY KEY,
-    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
-    rule_code         VARCHAR(128)    NOT NULL,
-    trigger_reason    VARCHAR(32)     NOT NULL,
-    error_rate        NUMERIC(5,4),
-    sample_size       BIGINT,
-    from_canary       SMALLINT        NOT NULL DEFAULT 0,
-    operator          VARCHAR(64),
-    notify_status     VARCHAR(32),
-    provider_trace_id VARCHAR(64),
-    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT        NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT ck_prar_trigger_reason       CHECK (trigger_reason IN ('ERROR_RATE','MANUAL','OWNER_REQUEST','SCHEDULED')),
-    CONSTRAINT ck_prar_error_rate           CHECK (error_rate IS NULL OR (error_rate >= 0 AND error_rate <= 1)),
-    CONSTRAINT ck_prar_sample_size          CHECK (sample_size IS NULL OR sample_size >= 0),
-    CONSTRAINT ck_prar_from_canary          CHECK (from_canary IN (0, 1)),
-    CONSTRAINT ck_prar_notify_status        CHECK (notify_status IS NULL OR notify_status IN ('PENDING','SUCCESS','FAILED')),
-    CONSTRAINT ck_prar_deleted              CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_rule_ab_rollback IS 'P1-10: AB Test 回滚历史表';
-COMMENT ON COLUMN pmis_rule_ab_rollback.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_ab_rollback.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_rule_ab_rollback.rule_code IS '规则编码';
-COMMENT ON COLUMN pmis_rule_ab_rollback.trigger_reason IS '触发原因: ERROR_RATE/MANUAL/OWNER_REQUEST';
-COMMENT ON COLUMN pmis_rule_ab_rollback.error_rate IS '回滚时的错误率';
-COMMENT ON COLUMN pmis_rule_ab_rollback.sample_size IS '评估样本数';
-COMMENT ON COLUMN pmis_rule_ab_rollback.from_canary IS '是否从灰度版本回滚 1=是 0=否';
-COMMENT ON COLUMN pmis_rule_ab_rollback.operator IS '操作人 (SYSTEM=自动)';
-COMMENT ON COLUMN pmis_rule_ab_rollback.notify_status IS '通知发送状态: PENDING/SUCCESS/FAILED';
-COMMENT ON COLUMN pmis_rule_ab_rollback.created_at IS '回滚时间';
-COMMENT ON COLUMN pmis_rule_ab_rollback.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_rule_pack -- P2-14: rule pack marketplace
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_pack (
-    id                VARCHAR(20)       PRIMARY KEY,
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     pack_code         VARCHAR(128)    NOT NULL,
     pack_version      VARCHAR(32)     NOT NULL,
@@ -1104,39 +768,64 @@ CREATE TABLE IF NOT EXISTS pmis_rule_pack (
     CONSTRAINT ck_prp_deleted               CHECK (deleted IN (0, 1))
 );
 
+CREATE INDEX IF NOT EXISTS idx_prp_tenant_industry_enabled
+    ON pmis_rule_pack (tenant_id, industry, enabled)
+    WHERE deleted = 0;
+
 COMMENT ON TABLE  pmis_rule_pack IS 'P2-14: 规则集市场表 (按行业/场景打包)';
+
 COMMENT ON COLUMN pmis_rule_pack.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_rule_pack.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_rule_pack.pack_code IS '规则集编码';
+
 COMMENT ON COLUMN pmis_rule_pack.pack_version IS '规则集版本号 (语义化)';
+
 COMMENT ON COLUMN pmis_rule_pack.pack_name IS '规则集名称';
+
 COMMENT ON COLUMN pmis_rule_pack.industry IS '适用行业';
+
 COMMENT ON COLUMN pmis_rule_pack.tags IS '标签, 逗号分隔';
+
 COMMENT ON COLUMN pmis_rule_pack.rule_codes IS '包含的规则编码列表 (逗号分隔)';
+
 COMMENT ON COLUMN pmis_rule_pack.rule_snapshots IS 'P2-8: 该版本固化的规则定义快照 (RuleDefinition JSON 数组)';
+
 COMMENT ON COLUMN pmis_rule_pack.previous_version IS 'P2-8: 升级来源版本号 (版本链路追踪)';
+
 COMMENT ON COLUMN pmis_rule_pack.description IS '描述';
+
 COMMENT ON COLUMN pmis_rule_pack.author IS '作者';
+
 COMMENT ON COLUMN pmis_rule_pack.download_count IS '下载次数';
+
 COMMENT ON COLUMN pmis_rule_pack.rating IS '评分 (0~5)';
+
 COMMENT ON COLUMN pmis_rule_pack.enabled IS '是否上架 1=是 0=否';
+
 COMMENT ON COLUMN pmis_rule_pack.official IS '是否官方 1=是 0=否';
+
 COMMENT ON COLUMN pmis_rule_pack.created_by IS '创建人';
+
 COMMENT ON COLUMN pmis_rule_pack.created_at IS '创建时间';
+
 COMMENT ON COLUMN pmis_rule_pack.updated_by IS '更新人';
+
 COMMENT ON COLUMN pmis_rule_pack.updated_at IS '更新时间';
+
 COMMENT ON COLUMN pmis_rule_pack.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- P2-8: 兼容已存在库，幂等补充知识包版本管理新列
 ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS rule_snapshots    TEXT;
-ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS previous_version  VARCHAR(32);
 
+ALTER TABLE pmis_rule_pack ADD COLUMN IF NOT EXISTS previous_version  VARCHAR(32);
 
 -- ----------------------------------------------------------------
 -- pmis_rule_pack_install -- P2-14: rule pack install history
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_pack_install (
-    id                VARCHAR(20)       PRIMARY KEY,
+    id                VARCHAR(20)       PRIMARY KEY DEFAULT replace(gen_random_uuid()::text,'-',''),
     tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
     pack_code         VARCHAR(128)    NOT NULL,
     pack_version      VARCHAR(32)     NOT NULL,
@@ -1152,17 +841,33 @@ CREATE TABLE IF NOT EXISTS pmis_rule_pack_install (
     CONSTRAINT ck_prpi_deleted              CHECK (deleted IN (0, 1))
 );
 
+CREATE INDEX IF NOT EXISTS idx_prpi_tenant_code_installed
+    ON pmis_rule_pack_install (tenant_id, pack_code, installed_at DESC)
+    WHERE deleted = 0;
+
 COMMENT ON TABLE  pmis_rule_pack_install IS 'P2-14: 规则集安装历史表 (按租户)';
+
 COMMENT ON COLUMN pmis_rule_pack_install.id IS '主键 ID';
+
 COMMENT ON COLUMN pmis_rule_pack_install.tenant_id IS '租户 ID';
+
 COMMENT ON COLUMN pmis_rule_pack_install.pack_code IS '规则集编码';
+
 COMMENT ON COLUMN pmis_rule_pack_install.pack_version IS '规则集版本号';
+
 COMMENT ON COLUMN pmis_rule_pack_install.installed_by IS '安装操作人';
+
 COMMENT ON COLUMN pmis_rule_pack_install.installed_at IS '安装时间';
+
 COMMENT ON COLUMN pmis_rule_pack_install.status IS '安装状态: SUCCESS/FAILED/ROLLBACK';
+
 COMMENT ON COLUMN pmis_rule_pack_install.error_message IS '失败时的错误信息';
+
 COMMENT ON COLUMN pmis_rule_pack_install.created_at IS '记录创建时间';
+
 COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已删';
+
+-- ====================================================================
 -- ============================ [060] field type unification ============================
 -- ====================================================================
 -- V1.0.0_060  H2.7 / P1-1 字段类型统一
@@ -1185,13 +890,51 @@ COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已
 --    仅刷新 COMMENT 文案,便于后续维护者理解
 -- ----------------------------------------------------------------------------
 COMMENT ON COLUMN pmis_rule_def.created_by           IS '创建人(VARCHAR(64) 支持工号/SSO用户名,DEFAULT ''SYSTEM'' 表示系统兜底)';
+
 COMMENT ON COLUMN pmis_rule_pack.created_by          IS '创建人(同 rule_def)';
+
 COMMENT ON COLUMN pmis_rule_template.created_by      IS '创建人(同 rule_def)';
+
 COMMENT ON COLUMN pmis_rule_test_case.created_by     IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_execution_trace.created_by IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_decision_table.created_by IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_scorecard.created_by     IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_decision_tree.created_by IS '创建人(同 rule_def)';
-COMMENT ON COLUMN pmis_rule_script.created_by        IS '创建人(同 rule_def)';
+
 COMMENT ON COLUMN pmis_rule_chain_graph.created_by   IS '创建人(同 rule_def)';
+
 COMMENT ON COLUMN pmis_rule_dependency.created_by    IS '创建人(同 rule_def)';
+
+-- 7) 规则引擎(13 张)
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_trace
+    ON pmis_rule_def (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_version_history_trace
+    ON pmis_rule_version_history (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_template_trace
+    ON pmis_rule_template (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_test_case_trace
+    ON pmis_rule_test_case (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_variable_def_trace
+    ON pmis_rule_variable_def (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_chain_graph_trace
+    ON pmis_rule_chain_graph (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_dependency_trace
+    ON pmis_rule_dependency (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_pack_trace
+    ON pmis_rule_pack (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_pack_install_trace
+    ON pmis_rule_pack_install (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
