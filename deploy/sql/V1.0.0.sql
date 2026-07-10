@@ -34,8 +34,6 @@
 -- Reduce NOTICE/INFO noise; keep WARNING and ERROR visible.
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE EXTENSION IF NOT EXISTS vector;
-
 
 SET client_min_messages = WARNING;
 -- Lock down search_path so unqualified table names resolve only
@@ -75,8 +73,9 @@ BEGIN;
 -- 启用扩展
 DO $$
 BEGIN
-    EXCEPTION WHEN OTHERS THEN
-    RAISE NOTICE 'pgvector extension not available, skipping. Agent RAG features will not work.';
+    CREATE EXTENSION IF NOT EXISTS vector;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'pgvector extension not available, skipping.';
 END $$;
 
 -- ====================================================================
@@ -1248,7 +1247,7 @@ VALUES
     ('V9',  '外包架构师/项目总监', 'SENIOR',   409.09, 22,  8999.98,  800,  500, 10299.98,  900,  450,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
     ('V10', '外包资深架构师',     'EXPERT',    454.55, 22, 10000.10, 1000,  600, 11600.10, 1000,  500,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
     ('V11', '外包技术专家/交付总监', 'EXPERT',  500.00, 22, 11000.00, 1000,  600, 12600.00, 1100,  550,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V12', '外包资深技术专家',   'EXPERT',    545.45, 22, 12000.00, 1000,  600, 13600.00, 1200,  600,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V12', '外包资深技术专家',   'EXPERT',    545.45, 22, 11999.90, 1000,  600, 13599.90, 1200,  600,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
     ('V13', '外包首席架构师',     'STRATEGIC', 590.91, 22, 12999.98, 1500,  800, 15299.98, 1300,  650,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
     ('V14', '外包技术总监',       'STRATEGIC', 636.36, 22, 13999.92, 1500,  800, 16299.92, 1400,  700,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
     ('V15', '外包CTO/事业部总经理', 'STRATEGIC',681.82, 22, 15000.04, 1500,  800, 17300.04, 1500,  750,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
@@ -2058,21 +2057,9 @@ ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS condition_expre
 ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS loop_count INTEGER;
 ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS parallel_branches INTEGER;
 
-DO $$ BEGIN
-  
-  
-  
-EXCEPTION WHEN undefined_table THEN
-  RAISE NOTICE 'pmis_job_dag_node table not found, skipping column comments';
-END $$;
-COMMENT ON COLUMN pmis_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';
-DO $$ BEGIN
-  
-  
-  
-EXCEPTION WHEN undefined_table THEN
-  RAISE NOTICE 'pmis_job_dag_node table not found, skipping column comments';
-END $$;
+
+
+
 CREATE INDEX IF NOT EXISTS idx_pjd_status
     ON pmis_job_dag (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pjd_tenant
@@ -5044,10 +5031,14 @@ COMMENT ON COLUMN pmis_agent_document_chunk.token_count IS '分块 token 数: �
 -- IVFFLAT 索引：pgvector 近似最近邻索引，加速余弦相似度检索
 -- lists = sqrt(rows) 经验值，probe = 10 平衡召回率与性能
 DO $$ BEGIN
+  DO $$ BEGIN
   CREATE INDEX IF NOT EXISTS idx_padc_embedding
     ON pmis_agent_document_chunk
     USING ivfflat (embedding vector_cosine_ops)
     WITH (lists = 100);
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'ivfflat not available, skipping';
+END $$;
 EXCEPTION WHEN feature_not_supported THEN
   RAISE NOTICE 'ivfflat index not available (pgvector not installed), skipping';
 END $$;
@@ -12891,9 +12882,8 @@ CREATE INDEX IF NOT EXISTS idx_pmtv_template_code ON pmis_msg_template_version(t
 -- ====================================================================
 COMMIT;
 
-
-
 DO $$ BEGIN
+  COMMENT ON COLUMN pmis_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';
   COMMENT ON COLUMN pmis_job_dag_node.node_type IS '节点类型: TASK(普通任务) / CONDITION(条件分支) / LOOP(循环) / PARALLEL_GATEWAY(并行网关)';
   COMMENT ON COLUMN pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
   COMMENT ON COLUMN pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
@@ -12901,5 +12891,5 @@ DO $$ BEGIN
   COMMENT ON COLUMN pmis_job_dag_node.loop_count IS '循环次数(LOOP节点)';
   COMMENT ON COLUMN pmis_job_dag_node.parallel_branches IS '并行分支数(PARALLEL_GATEWAY节点)';
 EXCEPTION WHEN undefined_table THEN
-  RAISE NOTICE 'pmis_job_dag_node table not found, skipping column comments';
+  RAISE NOTICE 'pmis_job_dag_node not found, skipping';
 END $$;

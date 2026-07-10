@@ -2,9 +2,7 @@
 -- PMIS literule module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
--- 本脚本 DDL 对应后端 literule 服务 (ydsz-pmis-literule) 的 Mapper / DO,
---   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
---   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
+
 -- --------------------------------------------------------------------
 
 -- ====================================================================
@@ -381,6 +379,17 @@ CREATE INDEX IF NOT EXISTS idx_prtc_tenant_name
     ON pmis_rule_test_case (tenant_id, name)
     WHERE deleted = 0;
 
+-- 更新触发器
+CREATE OR REPLACE FUNCTION update_rule_test_case_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_rule_test_case_updated_at ON pmis_rule_test_case;
+
 CREATE TRIGGER trigger_rule_test_case_updated_at
     BEFORE UPDATE ON pmis_rule_test_case
     FOR EACH ROW EXECUTE FUNCTION update_rule_test_case_updated_at();
@@ -499,6 +508,9 @@ ALTER TABLE pmis_rule_def
 ALTER TABLE pmis_rule_def
     ADD CONSTRAINT ck_rule_def_status_valid
     CHECK (status IN ('DRAFT', 'REVIEW', 'PUBLISHED', 'DISABLED', 'ARCHIVED'));
+
+COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
+    '规则状态合法性约束，配合应用层 RuleStatus.canTransitionTo 状态机校验';
 
 -- --------------------------------------------------------------------
 

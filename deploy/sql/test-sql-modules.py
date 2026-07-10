@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test SQL module scripts against PostgreSQL - V2 with full-file execution."""
+"""Test SQL module scripts against PostgreSQL - V3 with full-file execution."""
 import psycopg2
 import os
 import sys
@@ -26,6 +26,7 @@ def connect(dbname="postgres"):
 def drop_test_db(conn):
     conn.autocommit = True
     cur = conn.cursor()
+    cur.execute(f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{TEST_DB}' AND pid<>pg_backend_pid()")
     cur.execute(f"DROP DATABASE IF EXISTS {TEST_DB}")
     cur.close()
 
@@ -35,9 +36,10 @@ def create_test_db(conn):
     cur.execute(f"CREATE DATABASE {TEST_DB}")
     cur.close()
 
-def run_sql_file(conn, filepath):
+def run_sql_file_full(conn, filepath):
     """Execute a SQL file by sending entire content to server.
-    psycopg2 sends the full text to PostgreSQL which handles multiple statements."""
+    psycopg2 sends the full text to PostgreSQL which handles multiple statements,
+    DO blocks, dollar-quoting, etc. natively."""
     with open(filepath, 'r', encoding='utf-8') as f:
         sql_content = f.read()
     
@@ -47,132 +49,13 @@ def run_sql_file(conn, filepath):
         cur.execute(sql_content)
     except Exception as e:
         errors.append(str(e).strip())
-    conn.commit()
-    cur.close()
-    return errors
-
-def run_sql_file_safe(conn, filepath):
-    """Execute SQL file statement-by-statement for better error reporting.
-    Uses a proper SQL parser that handles comments, strings, and dollar-quoting."""
-    with open(filepath, 'r', encoding='utf-8') as f:
-        sql_content = f.read()
-    
-    statements = parse_sql_statements(sql_content)
-    errors = []
-    cur = conn.cursor()
-    
-    for i, stmt in enumerate(statements):
-        stmt = stmt.strip()
-        if not stmt:
-            continue
+    finally:
         try:
-            cur.execute(stmt)
-        except Exception as e:
-            first_line = stmt.split('\n')[0][:150]
-            errors.append(f"Line ~{i}: {str(e).strip()}\n  SQL: {first_line}")
-    
-    conn.commit()
+            conn.commit()
+        except:
+            conn.rollback()
     cur.close()
     return errors
-
-def parse_sql_statements(sql_text):
-    """Parse SQL into statements, properly handling:
-    - Line comments (-- ...)
-    - Block comments (/* ... */)
-    - Single-quoted strings ('...')
-    - Dollar-quoted strings ($tag$...$tag$)
-    """
-    statements = []
-    current = []
-    i = 0
-    length = len(sql_text)
-    
-    while i < length:
-        ch = sql_text[i]
-        
-        # Line comment: -- until end of line
-        if ch == '-' and i + 1 < length and sql_text[i + 1] == '-':
-            # Add the comment line to current statement (for context)
-            while i < length and sql_text[i] != '\n':
-                current.append(sql_text[i])
-                i += 1
-            if i < length:
-                current.append(sql_text[i])
-                i += 1
-            continue
-        
-        # Block comment: /* ... */
-        if ch == '/' and i + 1 < length and sql_text[i + 1] == '*':
-            current.append(sql_text[i])
-            current.append(sql_text[i + 1])
-            i += 2
-            while i < length:
-                if sql_text[i] == '*' and i + 1 < length and sql_text[i + 1] == '/':
-                    current.append(sql_text[i])
-                    current.append(sql_text[i + 1])
-                    i += 2
-                    break
-                current.append(sql_text[i])
-                i += 1
-            continue
-        
-        # Dollar-quoted string
-        if ch == '$':
-            # Try to find matching $tag$
-            j = i + 1
-            while j < length and (sql_text[j].isalnum() or sql_text[j] == '_'):
-                j += 1
-            if j < length and sql_text[j] == '$':
-                tag = sql_text[i:j + 1]  # $tag$
-                # Find closing tag
-                end = sql_text.find(tag, j + 1)
-                if end != -1:
-                    # Include the entire dollar-quoted string
-                    current.append(sql_text[i:end + len(tag)])
-                    i = end + len(tag)
-                    continue
-        
-        # Single-quoted string
-        if ch == "'":
-            current.append(ch)
-            i += 1
-            while i < length:
-                if sql_text[i] == '\\' and i + 1 < length:
-                    current.append(sql_text[i])
-                    current.append(sql_text[i + 1])
-                    i += 2
-                    continue
-                if sql_text[i] == "'":
-                    if i + 1 < length and sql_text[i + 1] == "'":
-                        # Escaped quote ''
-                        current.append(sql_text[i])
-                        current.append(sql_text[i + 1])
-                        i += 2
-                        continue
-                    else:
-                        current.append(sql_text[i])
-                        i += 1
-                        break
-                current.append(sql_text[i])
-                i += 1
-            continue
-        
-        # Semicolon - end of statement (but only if not in string/comment)
-        if ch == ';':
-            current.append(ch)
-            statements.append(''.join(current))
-            current = []
-            i += 1
-            continue
-        
-        current.append(ch)
-        i += 1
-    
-    rem = ''.join(current).strip()
-    if rem:
-        statements.append(rem)
-    
-    return statements
 
 def get_table_count(conn):
     cur = conn.cursor()
@@ -190,7 +73,7 @@ def get_table_list(conn):
 
 def main():
     print("=" * 60)
-    print("PMIS SQL Module Test Script V2")
+    print("PMIS SQL Module Test Script V3 (full-file execution)")
     print("=" * 60)
     
     # 1. Connect
@@ -223,14 +106,15 @@ def main():
             continue
         
         print(f"\n[{mod}] Testing {os.path.basename(sql_file)}...")
-        errors = run_sql_file_safe(test_conn, sql_file)
+        errors = run_sql_file_full(test_conn, sql_file)
         
         if errors:
             print(f"    [FAIL] {len(errors)} errors:")
             for e in errors[:5]:
+                # Truncate long error messages
+                if len(e) > 200:
+                    e = e[:200] + "..."
                 print(f"      - {e}")
-            if len(errors) > 5:
-                print(f"      ... and {len(errors) - 5} more")
             all_errors[mod] = errors
         else:
             print(f"    [OK] No errors")
@@ -243,16 +127,20 @@ def main():
     print(f"{'=' * 60}")
     print(f"  Database: {TEST_DB}")
     print(f"  Tables created: {table_count}")
-    if table_count <= 20:
+    if table_count <= 30:
         for t in table_list:
             print(f"    - {t}")
-    print(f"  Modules tested: {len(MODULES)}")
+    else:
+        print(f"    (first 10):")
+        for t in table_list[:10]:
+            print(f"    - {t}")
+        print(f"    ... and {table_count - 10} more")
     
     total_errors = sum(len(e) for e in all_errors.values())
     if total_errors == 0:
-        print(f"  Errors: 0 - ALL MODULES PASSED!")
+        print(f"\n  *** ALL MODULES PASSED! ***")
     else:
-        print(f"  Errors: {total_errors}")
+        print(f"\n  Errors: {total_errors}")
         for mod, errors in all_errors.items():
             print(f"    {mod}: {len(errors)} errors")
     

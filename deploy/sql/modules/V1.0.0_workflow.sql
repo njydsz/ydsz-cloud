@@ -2,9 +2,7 @@
 -- PMIS workflow module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
--- 本脚本 DDL 对应后端 workflow 服务 (ydsz-pmis-workflow) 的 Mapper / DO,
---   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
---   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
+
 -- --------------------------------------------------------------------
 
 -- ============================ [023] init pmis flow engine ============================
@@ -844,6 +842,26 @@ VALUES
      'PMIS 通用请假：申请人 → 直属上级 → 人事', 'ENABLED', 1, 'init_v1', 0, 0, 1)
 ON CONFLICT (flow_code, flow_version, tenant_id) WHERE deleted = 0 DO NOTHING;
 
+-- --------------------------------------------------------------------
+
+-- ============================ [025] add pmis flow audit log ============================
+
+-- =====================================================
+-- PMIS 工作流审计日志表 DDL（对标竞品审批轨迹能力）
+-- 版本: V1.0.0_025
+-- 描述: 新增 pmis_flow_audit_log 表，记录审批全操作轨迹
+--       覆盖：START/PASS/REJECT/TRANSFER/DELEGATE/COUNTERSIGN/RECALL/URGE/TERMINATE/SUSPEND/ACTIVATE/CLAIM
+-- 设计参考: 钉钉/飞书审批操作日志 + Warm-Flow audit_log
+-- 适用场景: 审批轨迹查询、合规审计、操作回溯
+-- =====================================================
+
+-- -----------------------------------------------------
+-- 8. 流程审计日志表（pmis_flow_audit_log）
+--    记录流程全生命周期的操作轨迹：谁在何时对哪个实例/任务做了什么操作
+--    P1-4 重构: 改为按月 RANGE 分区表
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS pmis_flow_audit_log CASCADE;
+
 CREATE TABLE IF NOT EXISTS pmis_flow_audit_log(
     id                 VARCHAR(20)    NOT NULL,
     instance_id        VARCHAR(20)       NOT NULL,
@@ -1084,6 +1102,29 @@ COMMENT ON COLUMN pmis_flow_cc_rule.enabled IS '是否启用 0=停用 1=启用';
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_tenant
     ON pmis_flow_cc_rule (tenant_id, flow_code, node_code, deleted)
     WHERE deleted = 0;
+
+-- ---------- 性能索引 ----------
+-- 建议添加以下索引（百万行级别可显著提升回滚扫描性能）
+-- CREATE INDEX IF NOT EXISTS idx_undo_log_xid ON undo_log (xid);
+-- CREATE INDEX IF NOT EXISTS idx_undo_log_status_modified ON undo_log (log_status, log_modified);
+
+-- --------------------------------------------------------------------
+
+-- ============================ [028] add flow gap columns ============================
+
+-- =============================================================
+-- 工作流引擎对标差距补全 — 新增字段
+--
+-- GAP-P0: 表单字段权限 (pmis_flow_node.form_fields_config)
+-- GAP-P1: SLA 超时配置 (pmis_flow_node.sla_config)
+-- GAP-P1: 子流程父子关系 (pmis_flow_instance.parent_instance_id / parent_node_code)
+-- GAP-P1: 会签并发版本号 (pmis_flow_run_task.version)
+-- =============================================================
+
+-- -------------------------------------------
+-- 1. pmis_flow_node 新增字段
+-- -------------------------------------------
+ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS form_fields_config TEXT;
 
 ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS sla_config TEXT;
 

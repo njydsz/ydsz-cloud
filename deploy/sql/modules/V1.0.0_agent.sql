@@ -2,9 +2,7 @@
 -- PMIS agent module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
--- 本脚本 DDL 对应后端 agent 服务 (ydsz-pmis-agent) 的 Mapper / DO,
---   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
---   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
+
 -- =====================================================
 -- 6. AI 智能体预测/推荐结果表 pmis_agent_prediction
 -- =====================================================
@@ -488,13 +486,11 @@ COMMENT ON COLUMN pmis_agent_document_chunk.token_count IS '分块 token 数: �
 -- IVFFLAT 索引：pgvector 近似最近邻索引，加速余弦相似度检索
 -- lists = sqrt(rows) 经验值，probe = 10 平衡召回率与性能
 DO $$ BEGIN
+  DO $$ BEGIN
   CREATE INDEX IF NOT EXISTS idx_padc_embedding
     ON pmis_agent_document_chunk
     USING ivfflat (embedding vector_cosine_ops)
     WITH (lists = 100);
-EXCEPTION WHEN feature_not_supported THEN
-  RAISE NOTICE 'ivfflat index not available (pgvector not installed), skipping';
-END $$;
 
 CREATE INDEX IF NOT EXISTS idx_padc_kb_deleted
     ON pmis_agent_document_chunk(knowledge_base_id, deleted)

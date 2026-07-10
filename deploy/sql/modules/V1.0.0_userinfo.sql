@@ -2,121 +2,6 @@
 -- PMIS userinfo module SQL
 -- Auto-generated from V1.0.0.sql
 -- ============================================================
--- 本脚本 DDL 对应后端 userinfo 服务 (ydsz-pmis-userinfo) 的 Mapper / DO,
---   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
---   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
--- ====================================================================
--- Schema 划分
--- ====================================================================
--- ====================================================================
--- 1. 字典/枚举值模块
--- ====================================================================
-
--- 字典类型表
-CREATE TABLE IF NOT EXISTS pmis_dict_type(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    type_code       VARCHAR(64)    NOT NULL,
-    type_name       VARCHAR(128)   NOT NULL,
-    description     TEXT,
-    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    -- 数据完整性约束
-    CONSTRAINT uk_pmis_dict_type_code UNIQUE (type_code, deleted),
-    CONSTRAINT ck_pdt_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pdt_deleted_enum   CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE pmis_dict_type IS '字典类型表: 业务字典分类定义(如项目类型、招采方式、计费方式)';
-
-COMMENT ON COLUMN pmis_dict_type.id IS '主键 ID';
-
-COMMENT ON COLUMN pmis_dict_type.type_code IS '字典类型编码(全局唯一,如 project_type/expense_category)';
-
-COMMENT ON COLUMN pmis_dict_type.type_name IS '字典类型名称(中文展示名)';
-
-COMMENT ON COLUMN pmis_dict_type.description IS '字典类型业务说明';
-
-COMMENT ON COLUMN pmis_dict_type.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-
-COMMENT ON COLUMN pmis_dict_type.created_by IS '创建人 ID(SYSTEM=系统初始化)';
-
-COMMENT ON COLUMN pmis_dict_type.created_at IS '创建时间';
-
-COMMENT ON COLUMN pmis_dict_type.updated_by IS '最后修改人 ID';
-
-COMMENT ON COLUMN pmis_dict_type.updated_at IS '最后修改时间';
-
-COMMENT ON COLUMN pmis_dict_type.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-
-COMMENT ON COLUMN pmis_dict_type.tenant_id IS '租户 ID(单租户部署默认 1)';
-
-CREATE INDEX IF NOT EXISTS idx_pmis_dict_type_status ON pmis_dict_type (status) WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pmis_dict_type_tenant_created
-    ON pmis_dict_type (tenant_id, created_at DESC) WHERE deleted = 0;
-
--- 字典项表
-CREATE TABLE IF NOT EXISTS pmis_dict_item(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    type_code       VARCHAR(64)    NOT NULL,
-    item_code       VARCHAR(64)    NOT NULL,
-    item_value      VARCHAR(255)   NOT NULL,
-    sort_order      INTEGER        NOT NULL DEFAULT 0,
-    parent_id       VARCHAR(20)         NOT NULL DEFAULT 0,
-    description     TEXT,
-    ext_json        JSONB,
-    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    -- 数据完整性约束
-    CONSTRAINT uk_pmis_dict_item UNIQUE (type_code, item_code, deleted),
-    CONSTRAINT ck_pdi_status_enum   CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pdi_deleted_enum  CHECK (deleted IN (0, 1)),
-    CONSTRAINT ck_pdi_sort_nonneg   CHECK (sort_order >= 0)
-);
-
-COMMENT ON TABLE pmis_dict_item IS '字典项表: 字典类型下的具体枚举值(如项目类型下的 SYSTEM_DEV/T_M 等)';
-
-COMMENT ON COLUMN pmis_dict_item.id IS '主键 ID';
-
-COMMENT ON COLUMN pmis_dict_item.type_code IS '所属字典类型编码(关联 pmis_dict_type.type_code)';
-
-COMMENT ON COLUMN pmis_dict_item.item_code IS '字典项编码(type_code 下唯一,如 SYSTEM_DEV/T_M)';
-
-COMMENT ON COLUMN pmis_dict_item.item_value IS '字典项展示值(中文)';
-
-COMMENT ON COLUMN pmis_dict_item.sort_order IS '字典项排序号(升序)';
-
-COMMENT ON COLUMN pmis_dict_item.parent_id IS '父级字典项 ID(0=根,支持树形字典)';
-
-COMMENT ON COLUMN pmis_dict_item.description IS '字典项业务说明';
-
-COMMENT ON COLUMN pmis_dict_item.ext_json IS '扩展属性 JSONB(如颜色/图标/跳转链接)';
-
-COMMENT ON COLUMN pmis_dict_item.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-
-COMMENT ON COLUMN pmis_dict_item.created_by IS '创建人 ID';
-
-COMMENT ON COLUMN pmis_dict_item.created_at IS '创建时间';
-
-COMMENT ON COLUMN pmis_dict_item.updated_by IS '最后修改人 ID';
-
-COMMENT ON COLUMN pmis_dict_item.updated_at IS '最后修改时间';
-
-COMMENT ON COLUMN pmis_dict_item.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-
-CREATE INDEX IF NOT EXISTS idx_pmis_dict_item_type ON pmis_dict_item (type_code) WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pmis_dict_item_status ON pmis_dict_item (status) WHERE deleted = 0;
 
 -- ====================================================================
 -- 2. RBAC 权限模块
@@ -312,82 +197,6 @@ CREATE INDEX IF NOT EXISTS idx_role_permission_tenant ON pmis_role_permission(te
 CREATE INDEX IF NOT EXISTS idx_role_permission_perm
     ON pmis_role_permission(permission_id) WHERE deleted = 0;
 
--- ====================================================================
--- 3. 组织/人员模块
--- ====================================================================
-
--- 部门表
-CREATE TABLE IF NOT EXISTS pmis_department(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    dept_code       VARCHAR(64)    NOT NULL,
-    dept_name       VARCHAR(128)   NOT NULL,
-    parent_id       VARCHAR(20)         NOT NULL DEFAULT 0,
-    dept_path       VARCHAR(512),
-    sort_order      INTEGER        NOT NULL DEFAULT 0,
-    leader_id       VARCHAR(20),
-    phone           VARCHAR(32),
-    email           VARCHAR(128),
-    description     TEXT,
-    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_department_code UNIQUE (dept_code, deleted),
-    CONSTRAINT ck_pd_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pd_deleted_enum CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE pmis_department IS '部门表: 树形组织架构,支持多级嵌套与路径检索';
-
-COMMENT ON COLUMN pmis_department.id IS '主键 ID';
-
-COMMENT ON COLUMN pmis_department.dept_code IS '部门编码(全局唯一,如 TECH/HR)';
-
-COMMENT ON COLUMN pmis_department.dept_name IS '部门名称';
-
-COMMENT ON COLUMN pmis_department.parent_id IS '父级部门 ID(0=根)';
-
-COMMENT ON COLUMN pmis_department.dept_path IS '部门路径(以斜杠分隔的祖先链路,如 /1/3/5,用于子树查询)';
-
-COMMENT ON COLUMN pmis_department.sort_order IS '部门排序号(同级升序)';
-
-COMMENT ON COLUMN pmis_department.leader_id IS '部门负责人 ID(关联 pmis_employee.id)';
-
-COMMENT ON COLUMN pmis_department.phone IS '部门电话';
-
-COMMENT ON COLUMN pmis_department.email IS '部门邮箱';
-
-COMMENT ON COLUMN pmis_department.description IS '部门职责说明';
-
-COMMENT ON COLUMN pmis_department.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-
-COMMENT ON COLUMN pmis_department.created_by IS '创建人 ID';
-
-COMMENT ON COLUMN pmis_department.created_at IS '创建时间';
-
-COMMENT ON COLUMN pmis_department.updated_by IS '最后修改人 ID';
-
-COMMENT ON COLUMN pmis_department.updated_at IS '最后修改时间';
-
-COMMENT ON COLUMN pmis_department.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-
-COMMENT ON COLUMN pmis_department.tenant_id IS '租户 ID(单租户部署默认 1)';
-
-CREATE INDEX IF NOT EXISTS idx_pmis_department_parent ON pmis_department (parent_id);
-
-CREATE INDEX IF NOT EXISTS idx_pmis_department_status ON pmis_department (status) WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_department_tenant ON pmis_department(tenant_id);
-
-CREATE INDEX IF NOT EXISTS idx_department_tenant_created
-    ON pmis_department(tenant_id, created_at DESC) WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pmis_dept_leader
-    ON pmis_department(leader_id) WHERE deleted = 0;
-
 -- 岗位表
 CREATE TABLE IF NOT EXISTS pmis_position(
     id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
@@ -442,150 +251,6 @@ CREATE INDEX IF NOT EXISTS idx_position_tenant ON pmis_position(tenant_id);
 
 CREATE INDEX IF NOT EXISTS idx_position_tenant_created
     ON pmis_position(tenant_id, created_at DESC) WHERE deleted = 0;
-
--- 职级表 (L1-L18)
-CREATE TABLE IF NOT EXISTS pmis_job_level(
-    id              VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    level_code      VARCHAR(8)     NOT NULL,
-    level_name      VARCHAR(64)    NOT NULL,
-    level_segment   VARCHAR(16)    NOT NULL,
-    sort_order      INTEGER        NOT NULL,
-    description     TEXT,
-    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_job_level_code UNIQUE (level_code, deleted),
-    CONSTRAINT ck_pjl_segment     CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
-    CONSTRAINT ck_pjl_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pjl_deleted_enum CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE pmis_job_level IS '职级表: L1-L18 共 18 级,定义能力晋升阶梯';
-
-COMMENT ON COLUMN pmis_job_level.id IS '主键 ID';
-
-COMMENT ON COLUMN pmis_job_level.level_code IS '职级编码(L1-L18)';
-
-COMMENT ON COLUMN pmis_job_level.level_name IS '职级名称(如助理工程师/开发工程师/架构师)';
-
-COMMENT ON COLUMN pmis_job_level.level_segment IS '职级段: PRIMARY 初级(L1-L3) / MIDDLE 中级(L4-L6) / SENIOR 高级(L7-L9) / EXPERT 专家(L10-L12) / STRATEGIC 战略(L13-L18)';
-
-COMMENT ON COLUMN pmis_job_level.sort_order IS '职级排序号(升序,L1=1)';
-
-COMMENT ON COLUMN pmis_job_level.description IS '职级能力要求说明';
-
-COMMENT ON COLUMN pmis_job_level.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-
-COMMENT ON COLUMN pmis_job_level.created_by IS '创建人 ID';
-
-COMMENT ON COLUMN pmis_job_level.created_at IS '创建时间';
-
-COMMENT ON COLUMN pmis_job_level.updated_by IS '最后修改人 ID';
-
-COMMENT ON COLUMN pmis_job_level.updated_at IS '最后修改时间';
-
-COMMENT ON COLUMN pmis_job_level.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-
-COMMENT ON COLUMN pmis_job_level.tenant_id IS '租户 ID(单租户部署默认 1)';
-
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
-
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant_sort
-    ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
-
--- 职级费率表 (对外人天 / 对内人天)
-CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
-    id                  VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    level_code          VARCHAR(8)     NOT NULL,
-    external_daily      NUMERIC(10,2)  NOT NULL,
-    internal_daily      NUMERIC(10,2)  NOT NULL,
-    base_salary         NUMERIC(10,2)  NOT NULL,
-    social_company      NUMERIC(10,2)  NOT NULL,
-    social_personal     NUMERIC(10,2)  NOT NULL,
-    fund_company        NUMERIC(10,2)  NOT NULL,
-    fund_personal       NUMERIC(10,2)  NOT NULL,
-    take_home           NUMERIC(10,2)  NOT NULL,
-    travel_reimbursement NUMERIC(10,2) NOT NULL DEFAULT 0,
-    travel_allowance    NUMERIC(10,2)  NOT NULL DEFAULT 0,
-    total_cost          NUMERIC(10,2)  NOT NULL,
-    billable_target     NUMERIC(5,4)   NOT NULL,
-    effective_date      DATE           NOT NULL,
-    expire_date         DATE,
-    version             INTEGER        NOT NULL DEFAULT 1,
-    description         TEXT,
-    created_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
-    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT       NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
-    CONSTRAINT uk_pmis_job_level_rate UNIQUE (level_code, version, deleted),
-    CONSTRAINT ck_pjlr_external_nonneg CHECK (external_daily >= 0 AND internal_daily >= 0),
-    CONSTRAINT ck_pjlr_billable_range  CHECK (billable_target >= 0 AND billable_target <= 1),
-    CONSTRAINT ck_pjlr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
-    CONSTRAINT ck_pjlr_deleted_enum    CHECK (deleted IN (0, 1)),
-    CONSTRAINT ck_pjlr_cost_valid      CHECK (total_cost = base_salary + social_company + fund_company + travel_reimbursement + travel_allowance)
-);
-
-COMMENT ON TABLE pmis_job_level_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金+差旅成本拆解,支持版本化生效';
-
-COMMENT ON COLUMN pmis_job_level_rate.id IS '主键 ID';
-
-COMMENT ON COLUMN pmis_job_level_rate.level_code IS '职级编码(L1-L18,关联 pmis_job_level.level_code)';
-
-COMMENT ON COLUMN pmis_job_level_rate.external_daily IS '对外人天单价(元/天,用于向客户报价)';
-
-COMMENT ON COLUMN pmis_job_level_rate.internal_daily IS '对内人天成本(元/天,用于内部利润核算)';
-
-COMMENT ON COLUMN pmis_job_level_rate.base_salary IS '月度基础工资(元)';
-
-COMMENT ON COLUMN pmis_job_level_rate.social_company IS '公司社保部分(元/月)';
-
-COMMENT ON COLUMN pmis_job_level_rate.social_personal IS '个人社保部分(元/月,从工资扣除)';
-
-COMMENT ON COLUMN pmis_job_level_rate.fund_company IS '公司公积金部分(元/月)';
-
-COMMENT ON COLUMN pmis_job_level_rate.fund_personal IS '个人公积金部分(元/月,从工资扣除)';
-
-COMMENT ON COLUMN pmis_job_level_rate.take_home IS '税后到手工资(元/月)';
-
-COMMENT ON COLUMN pmis_job_level_rate.travel_reimbursement IS '差旅报销-公司承担部分(元/月)';
-
-COMMENT ON COLUMN pmis_job_level_rate.travel_allowance IS '差旅补贴-公司承担部分(元/月)';
-
-COMMENT ON COLUMN pmis_job_level_rate.total_cost IS '公司总人力成本(元/月,=base_salary+social_company+fund_company+travel_reimbursement+travel_allowance)';
-
-COMMENT ON COLUMN pmis_job_level_rate.billable_target IS '可计费利用率目标(0.0-1.0,如 0.78=78%)';
-
-COMMENT ON COLUMN pmis_job_level_rate.effective_date IS '生效日期';
-
-COMMENT ON COLUMN pmis_job_level_rate.expire_date IS '失效日期(NULL 表示长期有效)';
-
-COMMENT ON COLUMN pmis_job_level_rate.version IS '版本号(同职级可有多版本,通过 effective_date 区分)';
-
-COMMENT ON COLUMN pmis_job_level_rate.description IS '费率版本说明';
-
-COMMENT ON COLUMN pmis_job_level_rate.created_by IS '创建人 ID';
-
-COMMENT ON COLUMN pmis_job_level_rate.created_at IS '创建时间';
-
-COMMENT ON COLUMN pmis_job_level_rate.updated_by IS '最后修改人 ID';
-
-COMMENT ON COLUMN pmis_job_level_rate.updated_at IS '最后修改时间';
-
-COMMENT ON COLUMN pmis_job_level_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-
-COMMENT ON COLUMN pmis_job_level_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
-
-CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
-
-CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
 
 -- 员工表
 CREATE TABLE IF NOT EXISTS pmis_employee(
@@ -1076,53 +741,6 @@ INSERT INTO pmis_user_account (username, password, salt, status, created_by)
 VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMy.Mrq8BpVLqMDvQXEvCJ5DEmCJWP1tCaa', '', 'ENABLED', 0)
 ON CONFLICT (username, deleted) DO NOTHING;
 
--- 初始化职级 (L1-L18)
-INSERT INTO pmis_job_level (level_code, level_name, level_segment, sort_order, description, created_by)
-VALUES
-    ('L1',  '助理工程师',   'PRIMARY',   1,  '0-1 年（应届大专/中专）', 0),
-    ('L2',  '初级开发工程师','PRIMARY',  2,  '0-1 年（应届本科）', 0),
-    ('L3',  '开发工程师',   'PRIMARY',   3,  '1-2 年', 0),
-    ('L4',  '中级工程师',   'MIDDLE',    4,  '2-3 年', 0),
-    ('L5',  '高级工程师',   'MIDDLE',    5,  '3-5 年', 0),
-    ('L6',  '资深工程师',   'MIDDLE',    6,  '4-6 年', 0),
-    ('L7',  '高级工程师/项目经理', 'SENIOR',  7,  '5-7 年', 0),
-    ('L8',  '资深工程师/高级项目经理','SENIOR',  8,  '6-8 年', 0),
-    ('L9',  '架构师/项目总监', 'SENIOR',  9,  '7-10 年', 0),
-    ('L10', '资深架构师',   'EXPERT',   10,  '8-12 年', 0),
-    ('L11', '技术专家/交付总监', 'EXPERT', 11, '10-13 年', 0),
-    ('L12', '资深技术专家', 'EXPERT',   12, '12-15 年', 0),
-    ('L13', '首席架构师',   'STRATEGIC', 13, '13-17 年', 0),
-    ('L14', '技术总监/事业部副总经理', 'STRATEGIC', 14, '15-20 年', 0),
-    ('L15', 'CTO/事业部总经理', 'STRATEGIC', 15, '20 年以上', 0),
-    ('L16', '技术副总裁/首席架构师', 'STRATEGIC', 16, '22 年以上', 0),
-    ('L17', '执行副总裁/CTO', 'STRATEGIC', 17, '25 年以上', 0),
-    ('L18', '董事会技术顾问/首席科学家', 'STRATEGIC', 18, '28 年以上', 0)
-ON CONFLICT DO NOTHING;
-
--- 初始化职级费率 (V3.2 双列直出)
-INSERT INTO pmis_job_level_rate
-(level_code, external_daily, internal_daily, base_salary, social_company, social_personal, fund_company, fund_personal, take_home, travel_reimbursement, travel_allowance, total_cost, billable_target, effective_date, version, created_by)
-VALUES
-    ('L1',  400,  200,  4000,  980,  430,  200,  200,  3370,  500,  300,  5980,  0.78, '2026-01-01', 1, 0),
-    ('L2',  500,  250,  5000,  1225, 535,  250,  250,  4215,  500,  300,  7275,  0.78, '2026-01-01', 1, 0),
-    ('L3',  600,  300,  6000,  1470, 640,  300,  300,  5060,  500,  300,  8570,  0.80, '2026-01-01', 1, 0),
-    ('L4',  700,  350,  7000,  1715, 745,  350,  350,  5905,  800,  500,  10365, 0.82, '2026-01-01', 1, 0),
-    ('L5',  800,  400,  8000,  1960, 850,  400,  400,  6750,  800,  500,  11660, 0.82, '2026-01-01', 1, 0),
-    ('L6',  900,  450,  9000,  2205, 955,  450,  450,  7595,  800,  500,  12955, 0.82, '2026-01-01', 1, 0),
-    ('L7',  1000, 500,  10000, 2450, 1060, 500,  500,  8440,  1200, 800,  14950, 0.80, '2026-01-01', 1, 0),
-    ('L8',  1100, 550,  11000, 2695, 1165, 550,  550,  9285,  1200, 800,  16245, 0.80, '2026-01-01', 1, 0),
-    ('L9',  1200, 600,  12000, 2940, 1270, 600,  600,  10130, 1200, 800,  17540, 0.75, '2026-01-01', 1, 0),
-    ('L10', 1300, 650,  13000, 3185, 1375, 650,  650,  10975, 1500, 1000, 19335, 0.70, '2026-01-01', 1, 0),
-    ('L11', 1400, 700,  14000, 3430, 1480, 700,  700,  11820, 1500, 1000, 20630, 0.70, '2026-01-01', 1, 0),
-    ('L12', 1500, 750,  15000, 3675, 1585, 750,  750,  12665, 1500, 1000, 21925, 0.65, '2026-01-01', 1, 0),
-    ('L13', 1600, 800,  16000, 3920, 1690, 800,  800,  13510, 2000, 1500, 24220, 0.60, '2026-01-01', 1, 0),
-    ('L14', 1700, 850,  17000, 4165, 1795, 850,  850,  14355, 2000, 1500, 25515, 0.55, '2026-01-01', 1, 0),
-    ('L15', 1800, 900,  18000, 4410, 1900, 900,  900,  15200, 2000, 1500, 26810, 0.50, '2026-01-01', 1, 0),
-    ('L16', 1900, 950,  19000, 4655, 2005, 950,  950,  16045, 2500, 2000, 29105, 0.45, '2026-01-01', 1, 0),
-    ('L17', 2000, 1000, 20000, 4900, 2110, 1000, 1000, 16890, 2500, 2000, 30400, 0.40, '2026-01-01', 1, 0),
-    ('L18', 2100, 1050, 21000, 5145, 2215, 1050, 1050, 17735, 2500, 2000, 31695, 0.40, '2026-01-01', 1, 0)
-ON CONFLICT DO NOTHING;
-
 -- 初始化兼职职级费率 (P1-P18, 时薪核算月薪+商业保险+差旅)
 INSERT INTO pmis_part_time_rate
 (rate_code, rate_name, level_segment, hourly_rate, monthly_hours, monthly_salary, commercial_insurance, travel_reimbursement, travel_allowance, total_cost, external_daily, internal_daily, billable_target, sort_order, effective_date, version, status, created_by)
@@ -1162,7 +780,7 @@ VALUES
     ('V9',  '外包架构师/项目总监', 'SENIOR',   409.09, 22,  8999.98,  800,  500, 10299.98,  900,  450,  0.75,  9, '2026-01-01', 1, 'ACTIVE', 0),
     ('V10', '外包资深架构师',     'EXPERT',    454.55, 22, 10000.10, 1000,  600, 11600.10, 1000,  500,  0.70, 10, '2026-01-01', 1, 'ACTIVE', 0),
     ('V11', '外包技术专家/交付总监', 'EXPERT',  500.00, 22, 11000.00, 1000,  600, 12600.00, 1100,  550,  0.70, 11, '2026-01-01', 1, 'ACTIVE', 0),
-    ('V12', '外包资深技术专家',   'EXPERT',    545.45, 22, 12000.00, 1000,  600, 13600.00, 1200,  600,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
+    ('V12', '外包资深技术专家',   'EXPERT',    545.45, 22, 11999.90, 1000,  600, 13599.90, 1200,  600,  0.65, 12, '2026-01-01', 1, 'ACTIVE', 0),
     ('V13', '外包首席架构师',     'STRATEGIC', 590.91, 22, 12999.98, 1500,  800, 15299.98, 1300,  650,  0.60, 13, '2026-01-01', 1, 'ACTIVE', 0),
     ('V14', '外包技术总监',       'STRATEGIC', 636.36, 22, 13999.92, 1500,  800, 16299.92, 1400,  700,  0.55, 14, '2026-01-01', 1, 'ACTIVE', 0),
     ('V15', '外包CTO/事业部总经理', 'STRATEGIC',681.82, 22, 15000.04, 1500,  800, 17300.04, 1500,  750,  0.50, 15, '2026-01-01', 1, 'ACTIVE', 0),
@@ -1171,50 +789,9 @@ VALUES
     ('V18', '外包首席科学家',     'STRATEGIC', 818.18, 22, 17999.96, 2000, 1000, 20999.96, 1800,  900,  0.40, 18, '2026-01-01', 1, 'ACTIVE', 0)
 ON CONFLICT DO NOTHING;
 
--- 初始化根部门
-INSERT INTO pmis_department (dept_code, dept_name, parent_id, dept_path, sort_order, status, created_by)
-VALUES ('ROOT', '南京云顶数字科技有限公司', 0, '/1', 0, 'ENABLED', 0)
-ON CONFLICT DO NOTHING;
-
 -- 初始化超级管理员角色
 INSERT INTO pmis_role (role_code, role_name, data_scope, sort_order, status, created_by)
 VALUES ('SUPER_ADMIN', '超级管理员', 'ALL', 0, 'ENABLED', 0)
-ON CONFLICT DO NOTHING;
-
--- 初始化字典类型（PRD 2.3 节要求）
-INSERT INTO pmis_dict_type (type_code, type_name, description, created_by) VALUES
-    ('procurement_method', '招采方式', '招采方式枚举', 0),
-    ('project_type', '项目类型', '8 类项目类型', 0),
-    ('product_type', '产品类型', '产品线', 0),
-    ('delivery_mode', '开发交付方式', '驻场/远程/混合', 0),
-    ('pricing_mode', '定价方式', '固定总价/单价/框架等', 0),
-    ('settlement_mode', '结算方式', '里程碑/月度/季度等', 0),
-    ('expense_category', '费用类别', '差旅/团建等', 0),
-    ('procurement_category', '采购类别', '硬件/软件/服务等', 0),
-    ('project_phase', '项目阶段', '调研/开发/测试等', 0),
-    ('project_level', '项目级别', 'A/B/C 级', 0)
-ON CONFLICT DO NOTHING;
-
--- 初始化项目类型字典项
-INSERT INTO pmis_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
-    ('project_type', 'SYSTEM_DEV',     '系统开发',   1, 0),
-    ('project_type', 'SYSTEM_INTEG',   '系统集成',   2, 0),
-    ('project_type', 'SYSTEM_MAINT',   '系统维护',   3, 0),
-    ('project_type', 'SOFTWARE_PROD',  '软件产品',   4, 0),
-    ('project_type', 'HARDWARE_PROD',  '硬件产品',   5, 0),
-    ('project_type', 'TECH_CONSULT',   '技术咨询',   6, 0),
-    ('project_type', 'HARDWARE_MAINT', '硬件运维',   7, 0),
-    ('project_type', 'STAFF_OUTSRC',   '人力外包服务', 8, 0)
-ON CONFLICT DO NOTHING;
-
--- 初始化项目阶段字典项
-INSERT INTO pmis_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
-    ('project_phase', 'REQUIREMENT', '需求调研', 1, 0),
-    ('project_phase', 'DEVELOPMENT', '功能开发', 2, 0),
-    ('project_phase', 'TESTING',     '测试阶段', 3, 0),
-    ('project_phase', 'DEPLOYMENT',  '实施上线', 4, 0),
-    ('project_phase', 'ACCEPTANCE',  '项目验收', 5, 0),
-    ('project_phase', 'WARRANTY',    '质保运维', 6, 0)
 ON CONFLICT DO NOTHING;
 
 -- --------------------------------------------------------------------
@@ -1246,6 +823,15 @@ ALTER TABLE pmis_employee_tag
 ALTER TABLE pmis_employee_tag
     ADD CONSTRAINT ck_pet_tag_type CHECK (tag_type IN ('SKILL', 'INDUSTRY', 'DOMAIN', 'CERT', 'TECH_STACK', 'CERTIFICATE'));
 
+-- =====================================================
+-- 2. 人员标签表 pmis_employee_tag (已在 [001] 章节创建, [014_1] 已 ALTER 扩展新字段)
+-- =====================================================
+-- 注意:历史 [SKIPPED-CLEANUP-REBUILD] 标记下的旧版 DDL 已废弃,字段定义以 [001]+[014_1] 为准
+-- 本节保留 COMMENT ON COLUMN 用于覆盖 [001] 的简短注释,提供更详细的字段说明
+-- (以下 CREATE TABLE IF NOT EXISTS 因表已存在会被跳过,不会重建)
+-- =====================================================
+COMMENT ON TABLE  pmis_employee_tag IS '人员标签表: 员工的技能/行业/领域/资质标签,支撑资源推荐智能体匹配';
+
 COMMENT ON COLUMN pmis_employee_tag.employee_id IS '员工 ID';
 
 COMMENT ON COLUMN pmis_employee_tag.tag_type IS '标签类型: SKILL 技能 / INDUSTRY 行业 / DOMAIN 领域 / CERT 资质';
@@ -1275,187 +861,35 @@ CREATE INDEX IF NOT EXISTS idx_pet_tenant_type_code
     ON pmis_employee_tag(tenant_id, tag_type, tag_code)
     WHERE deleted = 0;
 
--- =====================================================
--- 3. 资源分配主表 pmis_resource_assignment
--- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_resource_assignment(
-    id                    VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    assignment_code       VARCHAR(64)  NOT NULL,
-    employee_id           VARCHAR(20)       NOT NULL,
-    employee_name         VARCHAR(64),
-    level_code            VARCHAR(16),
-    pool_id               VARCHAR(20),
-    pool_type             VARCHAR(32),                         -- 冗余池类型
-    initiation_id         VARCHAR(20),                              -- 关联项目
-    initiation_name       VARCHAR(256),
-    opportunity_id        VARCHAR(20),                              -- 关联商机
-    status                VARCHAR(32)  NOT NULL DEFAULT 'RESERVED',
-    allocation            NUMERIC(5,4) NOT NULL DEFAULT 1.0,   -- 0-1
-    planned_start_date    DATE,
-    planned_end_date      DATE,
-    actual_start_date     DATE,
-    actual_end_date       DATE,
-    billable              SMALLINT     NOT NULL DEFAULT 1,
-    daily_hours           NUMERIC(5,2) NOT NULL DEFAULT 8.0,
-    tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
-    provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by            VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pra_code              UNIQUE (assignment_code, deleted),
-    CONSTRAINT ck_pra_status_enum       CHECK (status IN ('RESERVED','IN_PROGRESS','TRANSFERRED','RELEASED','CANCELLED')),
-    CONSTRAINT ck_pra_pool_type         CHECK (pool_type IS NULL OR pool_type IN ('HQ','DIVISION','RESERVE')),
-    CONSTRAINT ck_pra_allocation_range  CHECK (allocation > 0 AND allocation <= 1),
-    CONSTRAINT ck_pra_billable          CHECK (billable IN (0, 1)),
-    CONSTRAINT ck_pra_daily_hours       CHECK (daily_hours > 0 AND daily_hours <= 24),
-    CONSTRAINT ck_pra_dates_order       CHECK (planned_end_date IS NULL OR planned_start_date IS NULL OR planned_end_date >= planned_start_date),
-    CONSTRAINT ck_pra_deleted_enum      CHECK (deleted IN (0, 1))
-);
+-- 注释说明: 上方 CREATE TABLE 已包含 tag_name / proficiency / years_exp / remark / tenant_id / provider_trace_id
+-- 字段及其 COMMENT,此处不再重复定义,避免与上方 COMMENT 重复执行。
 
-COMMENT ON TABLE  pmis_resource_assignment IS '资源分配表: 资源预占/入场/调岗/离场的全过程,act() 入口按 action 参数映射 AssignmentStatus';
+-- --------------------------------------------------------------------
 
-COMMENT ON COLUMN pmis_resource_assignment.assignment_code IS '分配单号: 业务唯一,如 RA-2026-001';
+-- ============================ [014] init pmis admin full perm ============================
 
-COMMENT ON COLUMN pmis_resource_assignment.employee_id IS '员工 ID';
+-- ====================================================================
+-- 9. 初始化菜单权限 + 角色授权 (admin 拥有全部权限)
+-- ====================================================================
 
-COMMENT ON COLUMN pmis_resource_assignment.employee_name IS '员工姓名（冗余）';
+-- 一. 初始化菜单权限
+-- 拆成多步插入：先插入顶层节点（parent_id=0），再插入二级子菜单，
+-- 最后插入三级按钮权限。每一步都通过 perm_code 关联父节点。
+-- 关键：PostgreSQL 在单条 INSERT VALUES 中，所有子查询都在语句开始时求值，
+--       看不到同语句中正在插入的行；因此必须分多语句执行。
 
-COMMENT ON COLUMN pmis_resource_assignment.level_code IS '职级: L1-L18';
-
-COMMENT ON COLUMN pmis_resource_assignment.pool_id IS '所属资源池 ID';
-
-COMMENT ON COLUMN pmis_resource_assignment.pool_type IS '资源池类型: HQ/DIVISION/RESERVE（冗余,便于查询）';
-
-COMMENT ON COLUMN pmis_resource_assignment.initiation_id IS '所属立项 ID: 分配到的项目';
-
-COMMENT ON COLUMN pmis_resource_assignment.initiation_name IS '立项名称（冗余）';
-
-COMMENT ON COLUMN pmis_resource_assignment.opportunity_id IS '所属商机 ID: 商机阶段预占时填写';
-
-COMMENT ON COLUMN pmis_resource_assignment.status IS '分配状态: RESERVED 已预占 / IN_PROGRESS 进行中 / TRANSFERRED 已调岗 / RELEASED 已释放 / CANCELLED 已取消';
-
-COMMENT ON COLUMN pmis_resource_assignment.allocation IS '占用比例: 0-1,例如 0.5=50% 投入';
-
-COMMENT ON COLUMN pmis_resource_assignment.planned_start_date IS '计划开始日期';
-
-COMMENT ON COLUMN pmis_resource_assignment.planned_end_date IS '计划结束日期';
-
-COMMENT ON COLUMN pmis_resource_assignment.actual_start_date IS '实际开始日期';
-
-COMMENT ON COLUMN pmis_resource_assignment.actual_end_date IS '实际结束日期';
-
-COMMENT ON COLUMN pmis_resource_assignment.billable IS '是否计费: 0=非计费,1=计费';
-
-COMMENT ON COLUMN pmis_resource_assignment.daily_hours IS '日均工时(小时): 默认 8';
-
-COMMENT ON COLUMN pmis_resource_assignment.tenant_id IS '租户 ID';
-
-COMMENT ON COLUMN pmis_resource_assignment.provider_trace_id IS '链路追踪 ID';
-
-COMMENT ON COLUMN pmis_resource_assignment.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
--- 复合/部分索引(替代零散的 idx_pra_emp / idx_pra_initiation / idx_pra_status / idx_pra_pool)
-CREATE INDEX IF NOT EXISTS idx_pra_tenant_emp_status
-    ON pmis_resource_assignment(tenant_id, employee_id, status)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pra_tenant_initiation_status
-    ON pmis_resource_assignment(tenant_id, initiation_id, status)
-    WHERE deleted = 0 AND initiation_id IS NOT NULL;
-
-CREATE INDEX IF NOT EXISTS idx_pra_tenant_pool_status
-    ON pmis_resource_assignment(tenant_id, pool_id, status)
-    WHERE deleted = 0;
-
--- =====================================================
--- 4. Bench 闲置记录表 pmis_bench_record
--- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_bench_record(
-    id                    VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    bench_code            VARCHAR(64)  NOT NULL,
-    employee_id           VARCHAR(20)       NOT NULL,
-    employee_name         VARCHAR(64),
-    level_code            VARCHAR(16),
-    pool_id               VARCHAR(20),
-    bench_reason          VARCHAR(32)  NOT NULL DEFAULT 'ENTER', -- ENTER/EXIT
-    reason_type            VARCHAR(32),                          -- PROJECT_END/RESERVE/TRAINING/LEAVE
-    source_assignment     BIGINT,                               -- 触发本次 Bench 的分配记录
-    bench_date            DATE         NOT NULL,
-    exit_date             DATE,
-    idle_days             INTEGER      NOT NULL DEFAULT 0,
-    status                VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE', -- BenchStatus
-    daily_cost            NUMERIC(15,2) NOT NULL DEFAULT 0,
-    total_idle_cost       NUMERIC(15,2) NOT NULL DEFAULT 0,
-    remark                TEXT,
-    tenant_id             VARCHAR(20)       NOT NULL DEFAULT '1',
-    provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by            VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pbr_code              UNIQUE (bench_code, deleted),
-    CONSTRAINT ck_pbr_bench_reason      CHECK (bench_reason IN ('ENTER','EXIT')),
-    CONSTRAINT ck_pbr_reason_type       CHECK (reason_type IS NULL OR reason_type IN ('PROJECT_END','RESERVE','TRAINING','LEAVE','OTHER')),
-    CONSTRAINT ck_pbr_status_enum       CHECK (status IN ('ACTIVE','CLOSED')),
-    CONSTRAINT ck_pbr_cost_nonneg       CHECK (daily_cost >= 0 AND total_idle_cost >= 0),
-    CONSTRAINT ck_pbr_idle_days_nonneg  CHECK (idle_days >= 0),
-    CONSTRAINT ck_pbr_exit_after_bench  CHECK (exit_date IS NULL OR exit_date >= bench_date),
-    CONSTRAINT ck_pbr_deleted_enum      CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_bench_record IS 'Bench 闲置记录表: 资源闲置期间自动入池/出池,BenchCostCalculator 计算 idleDays + totalIdleCost';
-
-COMMENT ON COLUMN pmis_bench_record.bench_code IS 'Bench 单号: 业务唯一,如 BENCH-2026-001';
-
-COMMENT ON COLUMN pmis_bench_record.employee_id IS '员工 ID';
-
-COMMENT ON COLUMN pmis_bench_record.employee_name IS '员工姓名（冗余）';
-
-COMMENT ON COLUMN pmis_bench_record.level_code IS '职级: L1-L18';
-
-COMMENT ON COLUMN pmis_bench_record.pool_id IS '所属资源池 ID';
-
-COMMENT ON COLUMN pmis_bench_record.bench_reason IS 'Bench 类型: ENTER 入池 / EXIT 出池';
-
-COMMENT ON COLUMN pmis_bench_record.reason_type IS '原因类型: PROJECT_END 项目结束 / RESERVE 储备 / TRAINING 培训 / LEAVE 请假';
-
-COMMENT ON COLUMN pmis_bench_record.source_assignment IS '触发本次 Bench 的分配记录 ID: 引用 pmis_resource_assignment.id(Long)';
-
-COMMENT ON COLUMN pmis_bench_record.bench_date IS '入池日期';
-
-COMMENT ON COLUMN pmis_bench_record.exit_date IS '出池日期: NULL 表示仍在 Bench';
-
-COMMENT ON COLUMN pmis_bench_record.idle_days IS '闲置天数: ChronoUnit.DAYS.between(benchDate, exitDate or now)';
-
-COMMENT ON COLUMN pmis_bench_record.status IS '状态: ACTIVE 闲置中 / CLOSED 已关闭';
-
-COMMENT ON COLUMN pmis_bench_record.daily_cost IS '日均闲置成本(元): 按职级内部费率计算';
-
-COMMENT ON COLUMN pmis_bench_record.total_idle_cost IS '累计闲置成本(元) = daily_cost * idle_days';
-
-COMMENT ON COLUMN pmis_bench_record.remark IS '备注';
-
-COMMENT ON COLUMN pmis_bench_record.tenant_id IS '租户 ID';
-
-COMMENT ON COLUMN pmis_bench_record.provider_trace_id IS '链路追踪 ID';
-
-COMMENT ON COLUMN pmis_bench_record.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
--- 复合/部分索引(替代零散的 idx_pbr_emp / idx_pbr_status / idx_pbr_pool / idx_pbr_date)
-CREATE INDEX IF NOT EXISTS idx_pbr_tenant_emp_status
-    ON pmis_bench_record(tenant_id, employee_id, status)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pbr_tenant_pool_status
-    ON pmis_bench_record(tenant_id, pool_id, status)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pbr_tenant_active_dates
-    ON pmis_bench_record(tenant_id, bench_date DESC)
-    WHERE deleted = 0 AND status = 'ACTIVE';
+-- 步骤 1：插入顶层节点
+INSERT INTO pmis_permission
+    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
+VALUES
+    (0, 'dashboard',  '仪表盘',   'MENU', '/dashboard',  'dashboard/index', 'odometer',  1, 1, 'ENABLED', 0),
+    (0, 'system',     '系统管理', 'MENU', '/system',     'Layout',          'setting',   2, 1, 'ENABLED', 0),
+    (0, 'business',   '业务管理', 'MENU', '/business',   'Layout',          'briefcase', 3, 1, 'ENABLED', 0),
+    (0, 'execution',  '项目执行', 'MENU', '/execution',  'Layout',          'cpu',       4, 1, 'ENABLED', 0),
+    (0, 'finance',    '财务收支', 'MENU', '/finance',    'Layout',          'credit-card', 5, 1, 'ENABLED', 0),
+    (0, 'report',     '经营报表', 'MENU', '/report',     'Layout',          'data-analysis', 6, 1, 'ENABLED', 0),
+    (0, 'ai',         '智能助手', 'MENU', '/ai',         'Layout',          'magic-stick',  7, 1, 'ENABLED', 0)
+ON CONFLICT (perm_code, deleted) DO NOTHING;
 
 -- 步骤 2a：插入系统管理子菜单
 INSERT INTO pmis_permission
@@ -1668,307 +1102,6 @@ CREATE INDEX IF NOT EXISTS idx_user_session_tenant_expire
     ON pmis_user_session(tenant_id, expire_at)
     WHERE deleted = 0 AND status = 'ACTIVE';
 
--- --------------------------------------------------------------------
-
--- ============================ [039] init pmis attendance schema ============================
-
--- =====================================================
--- PMIS 批次12 DDL：考勤管理(出勤/加班/请假)
--- 版本: V1.0.0_015
--- 描述: 出勤(pmis_attendance) + 加班(pmis_overtime) + 请假(pmis_leave)
--- =====================================================
-
--- =====================================================
--- 1. 出勤记录表 pmis_attendance
--- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_attendance (
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    employee_id         VARCHAR(20)       NOT NULL,
-    employee_name       VARCHAR(64),
-    attendance_date     DATE         NOT NULL,
-    check_in_time       TIMESTAMPTZ,
-    check_out_time      TIMESTAMPTZ,
-    work_hours          NUMERIC(5,2) NOT NULL DEFAULT 0.0,
-    overtime_hours      NUMERIC(5,2) NOT NULL DEFAULT 0.0,
-    status              VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',  -- NORMAL/LATE/EARLY/ABSENT/LEAVE/OVERTIME
-    work_type           VARCHAR(16)  NOT NULL DEFAULT 'WORKDAY',  -- WORKDAY/WEEKEND/HOLIDAY
-    remark              TEXT,
-    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT uk_pa_emp_date         UNIQUE (employee_id, attendance_date, deleted),
-    CONSTRAINT ck_pa_status           CHECK (status IN ('NORMAL','LATE','EARLY','ABSENT','LEAVE','OVERTIME')),
-    CONSTRAINT ck_pa_work_type        CHECK (work_type IN ('WORKDAY','WEEKEND','HOLIDAY')),
-    CONSTRAINT ck_pa_work_hours       CHECK (work_hours >= 0),
-    CONSTRAINT ck_pa_overtime_hours   CHECK (overtime_hours >= 0),
-    CONSTRAINT ck_pa_check_range      CHECK (check_in_time IS NULL OR check_out_time IS NULL OR check_out_time >= check_in_time),
-    CONSTRAINT ck_pa_deleted          CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_attendance IS '员工出勤记录表: 每日打卡 + 工作时长统计,支撑项目工时分配';
-
-COMMENT ON COLUMN pmis_attendance.employee_id IS '员工 ID';
-
-COMMENT ON COLUMN pmis_attendance.employee_name IS '员工姓名（冗余）';
-
-COMMENT ON COLUMN pmis_attendance.attendance_date IS '出勤日期';
-
-COMMENT ON COLUMN pmis_attendance.check_in_time IS '上班打卡时间';
-
-COMMENT ON COLUMN pmis_attendance.check_out_time IS '下班打卡时间';
-
-COMMENT ON COLUMN pmis_attendance.work_hours IS '工作时长(小时)';
-
-COMMENT ON COLUMN pmis_attendance.overtime_hours IS '加班时长(小时)';
-
-COMMENT ON COLUMN pmis_attendance.status IS '出勤状态: NORMAL 正常 / LATE 迟到 / EARLY 早退 / ABSENT 缺勤 / LEAVE 请假 / OVERTIME 加班';
-
-COMMENT ON COLUMN pmis_attendance.work_type IS '日期类型: WORKDAY 工作日 / WEEKEND 周末 / HOLIDAY 节假日';
-
-COMMENT ON COLUMN pmis_attendance.remark IS '备注';
-
-COMMENT ON COLUMN pmis_attendance.tenant_id IS '租户 ID';
-
-COMMENT ON COLUMN pmis_attendance.provider_trace_id IS '链路追踪 ID';
-
-COMMENT ON COLUMN pmis_attendance.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_pa_tenant_emp_date
-    ON pmis_attendance(tenant_id, employee_id, attendance_date DESC)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pa_tenant_date
-    ON pmis_attendance(tenant_id, attendance_date DESC);
-
-CREATE INDEX IF NOT EXISTS idx_pa_tenant_status
-    ON pmis_attendance(tenant_id, status)
-    WHERE deleted = 0;
-
--- =====================================================
--- 2. 加班申请表 pmis_overtime
--- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_overtime (
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    overtime_code       VARCHAR(64)  NOT NULL,
-    employee_id         VARCHAR(20)       NOT NULL,
-    employee_name       VARCHAR(64),
-    overtime_date       DATE         NOT NULL,
-    start_time          TIMESTAMPTZ  NOT NULL,
-    end_time            TIMESTAMPTZ  NOT NULL,
-    overtime_hours      NUMERIC(5,2) NOT NULL,
-    overtime_type       VARCHAR(32)  NOT NULL,                   -- WORKDAY/WEEKEND/HOLIDAY
-    pay_rate            NUMERIC(5,2) NOT NULL DEFAULT 1.5,       -- 1.5/2.0/3.0 倍
-    reason              TEXT,
-    approval_id         VARCHAR(20),
-    approval_status     VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- DRAFT/SUBMITTED/APPROVED/REJECTED/CANCELLED
-    approver_id         VARCHAR(20),
-    approver_name       VARCHAR(64),
-    approval_time       TIMESTAMPTZ,
-    approval_remark     TEXT,
-    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT uk_pot_code                UNIQUE (overtime_code, deleted),
-    CONSTRAINT ck_pot_overtime_type       CHECK (overtime_type IN ('WORKDAY','WEEKEND','HOLIDAY')),
-    CONSTRAINT ck_pot_approval_status     CHECK (approval_status IN ('DRAFT','SUBMITTED','APPROVED','REJECTED','CANCELLED')),
-    CONSTRAINT ck_pot_hours_positive      CHECK (overtime_hours > 0),
-    CONSTRAINT ck_pot_pay_rate            CHECK (pay_rate IN (1.5, 2.0, 3.0)),
-    CONSTRAINT ck_pot_time_range          CHECK (end_time > start_time),
-    CONSTRAINT ck_pot_deleted             CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_overtime IS '加班申请表: WORKDAY 1.5x / WEEKEND 2.0x / HOLIDAY 3.0x 法定倍数';
-
-COMMENT ON COLUMN pmis_overtime.overtime_code IS '加班单号: 业务唯一,如 OT-2026-001';
-
-COMMENT ON COLUMN pmis_overtime.employee_id IS '员工 ID';
-
-COMMENT ON COLUMN pmis_overtime.employee_name IS '员工姓名（冗余）';
-
-COMMENT ON COLUMN pmis_overtime.overtime_date IS '加班日期';
-
-COMMENT ON COLUMN pmis_overtime.start_time IS '加班开始时间';
-
-COMMENT ON COLUMN pmis_overtime.end_time IS '加班结束时间';
-
-COMMENT ON COLUMN pmis_overtime.overtime_hours IS '加班时长(小时)';
-
-COMMENT ON COLUMN pmis_overtime.overtime_type IS '加班类型: WORKDAY 工作日 / WEEKEND 周末 / HOLIDAY 节假日';
-
-COMMENT ON COLUMN pmis_overtime.pay_rate IS '加班倍数: 1.5/2.0/3.0 倍,用于薪资计算';
-
-COMMENT ON COLUMN pmis_overtime.reason IS '加班原因';
-
-COMMENT ON COLUMN pmis_overtime.approval_id IS '审批流实例 ID: 关联工作流引擎';
-
-COMMENT ON COLUMN pmis_overtime.approval_status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / CANCELLED 已取消';
-
-COMMENT ON COLUMN pmis_overtime.approver_id IS '审批人 ID';
-
-COMMENT ON COLUMN pmis_overtime.approver_name IS '审批人姓名（冗余）';
-
-COMMENT ON COLUMN pmis_overtime.approval_time IS '审批时间';
-
-COMMENT ON COLUMN pmis_overtime.approval_remark IS '审批意见';
-
-COMMENT ON COLUMN pmis_overtime.tenant_id IS '租户 ID';
-
-COMMENT ON COLUMN pmis_overtime.provider_trace_id IS '链路追踪 ID';
-
-COMMENT ON COLUMN pmis_overtime.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_pot_tenant_emp_date
-    ON pmis_overtime(tenant_id, employee_id, overtime_date DESC)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pot_tenant_date
-    ON pmis_overtime(tenant_id, overtime_date DESC);
-
-CREATE INDEX IF NOT EXISTS idx_pot_tenant_status
-    ON pmis_overtime(tenant_id, approval_status)
-    WHERE deleted = 0;
-
--- =====================================================
--- 3. 请假申请表 pmis_leave
--- =====================================================
-CREATE TABLE IF NOT EXISTS pmis_leave (
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    leave_code          VARCHAR(64)  NOT NULL,
-    employee_id         VARCHAR(20)       NOT NULL,
-    employee_name       VARCHAR(64),
-    leave_type          VARCHAR(32)  NOT NULL,                   -- ANNUAL/SICK/PERSONAL/MARRIAGE/MATERNITY/BEREAVEMENT/OTHER
-    start_date          DATE         NOT NULL,
-    end_date            DATE         NOT NULL,
-    leave_days          NUMERIC(5,2) NOT NULL,
-    reason              TEXT,
-    attachment_url      VARCHAR(512),
-    approval_id         VARCHAR(20),
-    approval_status     VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- DRAFT/SUBMITTED/APPROVED/REJECTED/CANCELLED
-    approver_id         VARCHAR(20),
-    approver_name       VARCHAR(64),
-    approval_time       TIMESTAMPTZ,
-    approval_remark     TEXT,
-    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT uk_pl_code                UNIQUE (leave_code, deleted),
-    CONSTRAINT ck_pl_leave_type          CHECK (leave_type IN ('ANNUAL','SICK','PERSONAL','MARRIAGE','MATERNITY','BEREAVEMENT','OTHER')),
-    CONSTRAINT ck_pl_approval_status     CHECK (approval_status IN ('DRAFT','SUBMITTED','APPROVED','REJECTED','CANCELLED')),
-    CONSTRAINT ck_pl_days_positive       CHECK (leave_days > 0),
-    CONSTRAINT ck_pl_date_range          CHECK (end_date >= start_date),
-    CONSTRAINT ck_pl_deleted             CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_leave IS '请假申请表: 7 种假期类型,自动算 leave_days';
-
-COMMENT ON COLUMN pmis_leave.leave_code IS '请假单号: 业务唯一,如 LV-2026-001';
-
-COMMENT ON COLUMN pmis_leave.employee_id IS '员工 ID';
-
-COMMENT ON COLUMN pmis_leave.employee_name IS '员工姓名（冗余）';
-
-COMMENT ON COLUMN pmis_leave.leave_type IS '假期类型: ANNUAL 年假 / SICK 病假 / PERSONAL 事假 / MARRIAGE 婚假 / MATERNITY 产假 / BEREAVEMENT 丧假 / OTHER 其他';
-
-COMMENT ON COLUMN pmis_leave.start_date IS '请假开始日期';
-
-COMMENT ON COLUMN pmis_leave.end_date IS '请假结束日期';
-
-COMMENT ON COLUMN pmis_leave.leave_days IS '请假天数(天)';
-
-COMMENT ON COLUMN pmis_leave.reason IS '请假原因';
-
-COMMENT ON COLUMN pmis_leave.attachment_url IS '证明附件 URL: 病假条/结婚证等';
-
-COMMENT ON COLUMN pmis_leave.approval_id IS '审批流实例 ID';
-
-COMMENT ON COLUMN pmis_leave.approval_status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / CANCELLED 已取消';
-
-COMMENT ON COLUMN pmis_leave.approver_id IS '审批人 ID';
-
-COMMENT ON COLUMN pmis_leave.approver_name IS '审批人姓名（冗余）';
-
-COMMENT ON COLUMN pmis_leave.approval_time IS '审批时间';
-
-COMMENT ON COLUMN pmis_leave.approval_remark IS '审批意见';
-
-COMMENT ON COLUMN pmis_leave.tenant_id IS '租户 ID';
-
-COMMENT ON COLUMN pmis_leave.provider_trace_id IS '链路追踪 ID';
-
-COMMENT ON COLUMN pmis_leave.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_pl_tenant_emp
-    ON pmis_leave(tenant_id, employee_id)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pl_tenant_date_range
-    ON pmis_leave(tenant_id, start_date, end_date)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pl_tenant_type
-    ON pmis_leave(tenant_id, leave_type)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pl_tenant_status
-    ON pmis_leave(tenant_id, approval_status)
-    WHERE deleted = 0;
-
--- --------------------------------------------------------------------
-
--- ============================ [056] add tenant id to base tables ============================
-
--- ============================================================
--- 基础表多租户字段预留 + 关键查询路径复合索引
---
--- H2.1 修复：
---   README 声明"每一张业务表都带 tenant_id"，但 V1.0.0_001 中的
---   17 张核心基础表全部缺失 tenant_id 字段。本次补齐。
---
--- H2.4 修复：
---   实际业务查询几乎都是
---     WHERE tenant_id = ? AND deleted = 0 ORDER BY created_at DESC LIMIT 20
---   单列 tenant_id 索引选择率约等于全表（单租户 90%+ 数据）。
---   对未建复合索引的核心业务表统一补 (tenant_id, created_at DESC) WHERE deleted = 0。
---
--- H2.3 修复：
---   外键关联列的反向查询无索引，补 permission_id / position_id / employee_id
---   / leader_id / sender_id 索引。
---
--- H3.2 修复：
---   逻辑删除字段索引覆盖不全，对 V1.0.0_001 中缺 deleted 索引的表补建。
---
--- 兼容性：
---   - tenant_id 默认值 1，单租户部署不影响数据
---   - 多租户部署后由 TenantLineInnerInterceptor 强制 WHERE tenant_id = ?
---   - 全部使用 IF NOT EXISTS，可重复执行
--- ============================================================
-
--- ============================================================
--- 一、基础表 tenant_id 字段补齐（H2.1）
--- ============================================================
-
--- 1. 字典类型
-ALTER TABLE pmis_dict_type ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-
-CREATE INDEX IF NOT EXISTS idx_dict_type_tenant ON pmis_dict_type(tenant_id);
-
--- 2. 字典项
-ALTER TABLE pmis_dict_item ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-
-CREATE INDEX IF NOT EXISTS idx_dict_item_tenant ON pmis_dict_item(tenant_id);
-
 -- 4. 角色
 ALTER TABLE pmis_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 
@@ -1989,25 +1122,10 @@ ALTER TABLE pmis_role_permission ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) 
 
 CREATE INDEX IF NOT EXISTS idx_role_permission_tenant ON pmis_role_permission(tenant_id);
 
--- 8. 部门
-ALTER TABLE pmis_department ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-
-CREATE INDEX IF NOT EXISTS idx_department_tenant ON pmis_department(tenant_id);
-
 -- 9. 岗位
 ALTER TABLE pmis_position ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
 
 CREATE INDEX IF NOT EXISTS idx_position_tenant ON pmis_position(tenant_id);
-
--- 10. 职级
-ALTER TABLE pmis_job_level ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
-
--- 11. 职级费率
-ALTER TABLE pmis_job_level_rate ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
-
-CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
 
 -- 12. 员工
 ALTER TABLE pmis_employee ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';
@@ -2024,28 +1142,11 @@ ALTER TABLE pmis_user_account ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT
 
 CREATE INDEX IF NOT EXISTS idx_user_account_tenant ON pmis_user_account(tenant_id);
 
--- ============================================================
--- 二、关键查询路径复合索引（H2.4）
---   覆盖分页查询 WHERE tenant_id = ? AND deleted = 0 ORDER BY created_at DESC
--- ============================================================
-
-CREATE INDEX IF NOT EXISTS idx_dict_type_tenant_created
-    ON pmis_dict_type(tenant_id, created_at DESC) WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_dict_item_tenant_created
-    ON pmis_dict_item(tenant_id, created_at DESC) WHERE deleted = 0;
-
 CREATE INDEX IF NOT EXISTS idx_role_tenant_created
     ON pmis_role(tenant_id, created_at DESC) WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_department_tenant_created
-    ON pmis_department(tenant_id, created_at DESC) WHERE deleted = 0;
-
 CREATE INDEX IF NOT EXISTS idx_position_tenant_created
     ON pmis_position(tenant_id, created_at DESC) WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_job_level_tenant_created
-    ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_employee_tenant_created
     ON pmis_employee(tenant_id, created_at DESC) WHERE deleted = 0;
@@ -2069,17 +1170,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_emp_position
 CREATE INDEX IF NOT EXISTS idx_pmis_user_employee
     ON pmis_user_account(employee_id) WHERE deleted = 0;
 
--- 部门-负责人：按 leader_id 反向查询
-CREATE INDEX IF NOT EXISTS idx_pmis_dept_leader
-    ON pmis_department(leader_id) WHERE deleted = 0;
-
 CREATE INDEX IF NOT EXISTS idx_pmis_role_permission_deleted ON pmis_role_permission(deleted);
 
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_deleted ON pmis_employee_tag(deleted);
-
-ANALYZE pmis_dict_type;
-
-ANALYZE pmis_dict_item;
 
 ANALYZE pmis_role;
 
@@ -2089,13 +1182,7 @@ ANALYZE pmis_user_role;
 
 ANALYZE pmis_role_permission;
 
-ANALYZE pmis_department;
-
 ANALYZE pmis_position;
-
-ANALYZE pmis_job_level;
-
-ANALYZE pmis_job_level_rate;
 
 ANALYZE pmis_employee;
 
@@ -2103,27 +1190,7 @@ ANALYZE pmis_employee_tag;
 
 ANALYZE pmis_user_account;
 
-CREATE INDEX IF NOT EXISTS idx_pmis_attendance_trace
-    ON pmis_attendance (provider_trace_id)
-    WHERE provider_trace_id <> '';
-
-CREATE INDEX IF NOT EXISTS idx_pmis_overtime_trace
-    ON pmis_overtime (provider_trace_id)
-    WHERE provider_trace_id <> '';
-
-CREATE INDEX IF NOT EXISTS idx_pmis_leave_trace
-    ON pmis_leave (provider_trace_id)
-    WHERE provider_trace_id <> '';
-
 CREATE INDEX IF NOT EXISTS idx_pmis_employee_tag_trace
     ON pmis_employee_tag (provider_trace_id)
-    WHERE provider_trace_id <> '';
-
-CREATE INDEX IF NOT EXISTS idx_pmis_resource_assignment_trace
-    ON pmis_resource_assignment (provider_trace_id)
-    WHERE provider_trace_id <> '';
-
-CREATE INDEX IF NOT EXISTS idx_pmis_bench_record_trace
-    ON pmis_bench_record (provider_trace_id)
     WHERE provider_trace_id <> '';
 
