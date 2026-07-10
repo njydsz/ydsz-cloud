@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
+import com.njydsz.pmis.workflow.dto.definition.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.entity.definition.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.definition.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowSkipDO;

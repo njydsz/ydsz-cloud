@@ -15,7 +15,7 @@ import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.instance.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.instance.FlowJoinTokenService;
-import com.njydsz.pmis.workflow.service.impl.FlowInstanceServiceImpl;
+import com.njydsz.pmis.workflow.service.impl.instance.FlowInstanceServiceImpl;
 import com.njydsz.pmis.workflow.service.instance.FlowRoutingService;
 import com.njydsz.pmis.workflow.service.instance.FlowTaskService;
 import lombok.extern.slf4j.Slf4j;

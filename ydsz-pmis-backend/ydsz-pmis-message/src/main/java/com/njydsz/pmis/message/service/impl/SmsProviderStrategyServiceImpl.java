@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.service.impl;
 
 import com.njydsz.pmis.message.channel.sms.SmsProvider;
-import com.njydsz.pmis.message.service.SmsProviderStrategyService;
+import com.njydsz.pmis.message.service.core.SmsProviderStrategyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

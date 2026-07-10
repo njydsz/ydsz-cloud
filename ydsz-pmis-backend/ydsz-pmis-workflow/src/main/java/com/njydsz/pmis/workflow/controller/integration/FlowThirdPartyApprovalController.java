@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.controller.integration;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.workflow.dto.EmbeddedApprovalActionDTO;
+import com.njydsz.pmis.workflow.dto.integration.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.entity.integration.FlowThirdPartyAccountDO;
 import com.njydsz.pmis.workflow.entity.integration.FlowThirdPartyLogDO;
 import com.njydsz.pmis.workflow.enums.definition.ThirdPartyPlatform;

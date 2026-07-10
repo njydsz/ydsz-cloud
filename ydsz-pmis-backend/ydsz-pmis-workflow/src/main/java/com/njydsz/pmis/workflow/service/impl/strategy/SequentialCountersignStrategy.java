@@ -8,7 +8,7 @@ import com.njydsz.pmis.workflow.enums.definition.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.definition.FlowPerformType;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.mapper.integration.FlowUserMapper;
-import com.njydsz.pmis.workflow.service.impl.FlowTaskArchiveService;
+import com.njydsz.pmis.workflow.service.impl.instance.FlowTaskArchiveService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

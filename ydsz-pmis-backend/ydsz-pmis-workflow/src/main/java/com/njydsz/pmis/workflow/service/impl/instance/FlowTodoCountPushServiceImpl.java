@@ -1,10 +1,10 @@
-package com.njydsz.pmis.workflow.service.impl;
+package com.njydsz.pmis.workflow.service.impl.instance;
 
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
+import com.njydsz.pmis.workflow.service.instance.FlowTodoCountPushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.service.impl.strategy;
 
-import com.njydsz.pmis.workflow.enums.FlowPerformType;
+import com.njydsz.pmis.workflow.enums.definition.FlowPerformType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

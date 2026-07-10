@@ -40,6 +40,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProfitSimulationServiceImpl implements ProfitSimulationService {
 
+    /** 利润测算 Mapper */
     private final ProfitSimulationMapper mapper;
 
     @Override

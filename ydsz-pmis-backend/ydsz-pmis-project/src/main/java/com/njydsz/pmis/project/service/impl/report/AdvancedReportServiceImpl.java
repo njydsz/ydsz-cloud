@@ -55,13 +55,21 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class AdvancedReportServiceImpl implements AdvancedReportService {
 
+    /** EVM 挣值度量 Mapper */
     private final EvmMeasureMapper evmMapper;
+    /** 对外费率卡 Mapper */
     private final RateCardMapper rateCardMapper;
+    /** 内部费率 Mapper */
     private final RateInternalMapper rateInternalMapper;
+    /** 项目风险 Mapper */
     private final RiskMapper riskMapper;
+    /** 工时 Mapper */
     private final TimeEntryMapper timeEntryMapper;
+    /** 阈值配置提供者 */
     private final ThresholdProvider thresholdProvider;
+    /** Bench 资源 Feign 客户端 */
     private final BenchResourceClient benchResourceClient;
+    /** 利润快照 Mapper */
     private final ProfitSnapshotMapper profitSnapshotMapper;
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;

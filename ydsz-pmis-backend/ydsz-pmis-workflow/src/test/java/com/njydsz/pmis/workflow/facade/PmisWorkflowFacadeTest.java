@@ -1,12 +1,12 @@
 package com.njydsz.pmis.workflow.facade;
 
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.service.FlowDefinitionService;
-import com.njydsz.pmis.workflow.service.FlowInstanceService;
-import com.njydsz.pmis.workflow.service.FlowTaskService;
+import com.njydsz.pmis.workflow.entity.instance.FlowInstanceDO;
+import com.njydsz.pmis.workflow.mapper.analytics.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.mapper.instance.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.service.definition.FlowDefinitionService;
+import com.njydsz.pmis.workflow.service.instance.FlowInstanceService;
+import com.njydsz.pmis.workflow.service.instance.FlowTaskService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

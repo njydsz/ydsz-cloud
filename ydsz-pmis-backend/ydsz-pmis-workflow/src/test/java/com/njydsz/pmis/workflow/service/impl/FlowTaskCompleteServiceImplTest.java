@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.service.impl;
 
-import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.entity.definition.FlowNodeDO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.service.impl.strategy;
 import com.njydsz.pmis.workflow.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.definition.FlowPerformType;
-import com.njydsz.pmis.workflow.service.impl.FlowTaskArchiveService;
+import com.njydsz.pmis.workflow.service.impl.instance.FlowTaskArchiveService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

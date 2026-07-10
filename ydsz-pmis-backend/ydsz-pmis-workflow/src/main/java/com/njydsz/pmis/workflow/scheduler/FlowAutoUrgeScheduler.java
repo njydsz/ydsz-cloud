@@ -8,7 +8,7 @@ import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.instance.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.service.impl.FlowTaskUrgeService;
+import com.njydsz.pmis.workflow.service.impl.instance.FlowTaskUrgeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.service.impl.integration;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.workflow.dto.EmbeddedApprovalActionDTO;
-import com.njydsz.pmis.workflow.dto.EmbeddedApprovalViewDTO;
+import com.njydsz.pmis.workflow.dto.integration.EmbeddedApprovalActionDTO;
+import com.njydsz.pmis.workflow.dto.integration.EmbeddedApprovalViewDTO;
 import com.njydsz.pmis.workflow.dto.instance.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.instance.FlowHisTaskDO;

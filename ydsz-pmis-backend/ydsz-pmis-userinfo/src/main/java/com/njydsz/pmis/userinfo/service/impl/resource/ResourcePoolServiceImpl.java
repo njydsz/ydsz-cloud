@@ -7,7 +7,7 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.resource.ResourcePoolCreateDTO;
 import com.njydsz.pmis.userinfo.entity.resource.ResourcePoolDO;
-import com.njydsz.pmis.userinfo.enums.PoolType;
+import com.njydsz.pmis.userinfo.enums.resource.PoolType;
 import com.njydsz.pmis.userinfo.mapper.resource.ResourcePoolMapper;
 import com.njydsz.pmis.userinfo.service.resource.ResourcePoolService;
 import lombok.RequiredArgsConstructor;

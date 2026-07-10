@@ -41,7 +41,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class RuleEngineDashboardServiceImpl implements RuleEngineDashboardService {
 
+    /** 规则执行轨迹 Mapper */
     private final RuleExecutionTraceMapper ruleExecutionTraceMapper;
+    /** 规则定义 Mapper */
     private final RuleDefinitionMapper ruleDefinitionMapper;
     private final RuleEngine ruleEngine;
 

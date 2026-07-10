@@ -10,7 +10,7 @@ import com.njydsz.pmis.workflow.entity.delegate.FlowDelegateLogDO;
 import com.njydsz.pmis.workflow.mapper.delegate.FlowDelegateAuthMapper;
 import com.njydsz.pmis.workflow.mapper.delegate.FlowDelegateLogMapper;
 import com.njydsz.pmis.workflow.service.delegate.FlowDelegateAuthService;
-import com.njydsz.pmis.workflow.service.FlowOfflineAutoForwardService;
+import com.njydsz.pmis.workflow.service.delegate.FlowOfflineAutoForwardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;

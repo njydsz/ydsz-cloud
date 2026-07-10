@@ -34,6 +34,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RateCardServiceImpl implements RateCardService {
 
+    /** 对外报价费率卡 Mapper */
     private final RateCardMapper rateCardMapper;
 
     @Override

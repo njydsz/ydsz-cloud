@@ -7,7 +7,7 @@ import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.instance.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.delegate.FlowDelegateAuthMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.service.FlowOfflineAutoForwardService;
+import com.njydsz.pmis.workflow.service.delegate.FlowOfflineAutoForwardService;
 import com.njydsz.pmis.workflow.service.instance.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

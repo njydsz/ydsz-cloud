@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.dto.definition.FlowDefinitionSimulateDTO;
-import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
+import com.njydsz.pmis.workflow.dto.definition.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.entity.definition.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.service.definition.FlowDefinitionService;
 import com.njydsz.pmis.workflow.service.instance.FlowInstanceService;

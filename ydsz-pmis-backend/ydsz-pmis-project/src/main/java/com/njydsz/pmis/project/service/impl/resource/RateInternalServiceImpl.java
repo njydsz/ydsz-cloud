@@ -34,6 +34,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RateInternalServiceImpl implements RateInternalService {
 
+    /** 内部结算费率 Mapper */
     private final RateInternalMapper rateMapper;
 
     @Override

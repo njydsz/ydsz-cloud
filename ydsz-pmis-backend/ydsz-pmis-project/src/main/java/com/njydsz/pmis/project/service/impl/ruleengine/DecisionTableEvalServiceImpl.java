@@ -29,7 +29,9 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class DecisionTableEvalServiceImpl implements DecisionTableEvalService {
 
+    /** 决策表 Mapper */
     private final DecisionTableMapper decisionTableMapper;
+    /** 决策表评估器（条件匹配 + 结论输出） */
     private final DecisionTableEvaluator decisionTableEvaluator;
 
     @Override

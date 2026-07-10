@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.service.impl;
 
 import com.njydsz.pmis.message.dto.core.UserReachProfileDTO;
-import com.njydsz.pmis.message.service.ReachStrategyService;
+import com.njydsz.pmis.message.service.core.ReachStrategyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;

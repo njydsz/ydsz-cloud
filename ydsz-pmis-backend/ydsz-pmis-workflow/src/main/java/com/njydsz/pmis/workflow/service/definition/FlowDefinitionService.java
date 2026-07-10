@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.service.definition;
 
-import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
+import com.njydsz.pmis.workflow.dto.definition.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.entity.definition.FlowDefinitionDO;
 
 import java.util.List;

@@ -8,7 +8,7 @@ import com.njydsz.pmis.agent.entity.orchestration.DagNodeInstanceDO;
 import com.njydsz.pmis.agent.orchestration.dag.DagDefinition;
 import com.njydsz.pmis.agent.orchestration.dag.DagExecutionResult;
 import com.njydsz.pmis.agent.service.orchestration.DagService;
-import com.njydsz.pmis.agent.service.ValidationResult;
+import com.njydsz.pmis.agent.service.agent.ValidationResult;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;

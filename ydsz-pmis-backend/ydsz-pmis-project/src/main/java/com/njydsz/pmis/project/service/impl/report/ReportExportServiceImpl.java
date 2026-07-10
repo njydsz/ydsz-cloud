@@ -47,7 +47,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReportExportServiceImpl implements ReportExportService {
 
+    /** 基础报表服务（数据查询） */
     private final ReportService reportService;
+    /** 高级报表服务（数据查询） */
     private final AdvancedReportService advancedReportService;
 
     private static final DateTimeFormatter YMD = DateTimeFormatter.ofPattern("yyyyMMdd");

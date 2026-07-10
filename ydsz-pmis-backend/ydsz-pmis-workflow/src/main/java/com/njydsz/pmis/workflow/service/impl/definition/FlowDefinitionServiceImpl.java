@@ -9,7 +9,7 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
-import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
+import com.njydsz.pmis.workflow.dto.definition.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.engine.BpmnModel;
 import com.njydsz.pmis.workflow.engine.BpmnXmlParser;
 import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;

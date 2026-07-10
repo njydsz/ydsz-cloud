@@ -34,12 +34,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DailyReconcileServiceImpl implements DailyReconcileService {
 
+    /** 每日对账 Mapper */
     private final DailyReconcileMapper reconcileMapper;
+    /** 成本分摊 Mapper */
     private final CostAllocationMapper costMapper;
+    /** 收入确认 Mapper */
     private final RevenueMapper revenueMapper;
+    /** 发票 Mapper */
     private final InvoiceMapper invoiceMapper;
+    /** 回款 Mapper */
     private final PaymentMapper paymentMapper;
+    /** 工时 Mapper */
     private final TimeEntryMapper timeEntryMapper;
+    /** 利润快照 Mapper */
     private final ProfitSnapshotMapper profitSnapshotMapper;
 
     /** 黄色阈值（差异率） */
