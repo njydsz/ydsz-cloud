@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.feign;
+package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 用户服务降级工厂
+ * 用户服务统一降级工厂（P1 架构优化：合并 project + system 两个版本）。
  *
- * <p>userinfo 服务不可用时返回 503 / 零费率 / 空映射，避免 NameAssembler / 成本计算等场景级联失败。
+ * <p>userinfo 服务不可用时返回 503 / 零费率 / 空映射，避免 NameAssembler / 通知模块级联失败。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -22,12 +22,6 @@ import java.util.Map;
 @Component
 public class UserServiceClientFallback implements FallbackFactory<UserServiceClient> {
 
-    /**
-     * 创建降级客户端实例
-     *
-     * @param cause 触发降级的异常
-     * @return 降级后的 UserServiceClient 实例
-     */
     @Override
     public UserServiceClient create(Throwable cause) {
         log.warn("[Feign] user 服务降级: {}", cause == null ? "?" : cause.getMessage());

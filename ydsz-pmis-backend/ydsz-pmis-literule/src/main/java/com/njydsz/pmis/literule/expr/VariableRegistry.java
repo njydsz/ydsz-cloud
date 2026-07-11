@@ -86,6 +86,27 @@ public interface VariableRegistry {
     }
 
     /**
+     * 注销变量定义
+     *
+     * <p>用于编程式动态注销。数据库实现从 DB 删除并刷新缓存；
+     * 内存实现从缓存移除。
+     *
+     * @param name 变量名
+     */
+    default void unregister(String name) {
+        throw new UnsupportedOperationException("当前 VariableRegistry 实现不支持动态注销");
+    }
+
+    /**
+     * 刷新缓存
+     *
+     * <p>强制重新加载变量定义。内存实现为空操作；数据库实现清空缓存并重新加载。
+     */
+    default void refresh() {
+        // 默认空操作：内存注册表无需刷新
+    }
+
+    /**
      * 是否为空注册表（无任何变量定义）
      *
      * @return true=空注册表

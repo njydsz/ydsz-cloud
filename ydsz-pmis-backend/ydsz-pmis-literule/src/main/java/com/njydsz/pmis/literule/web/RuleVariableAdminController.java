@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.controller.ruleengine;
+package com.njydsz.pmis.literule.web;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
@@ -6,7 +6,7 @@ import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.literule.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.expr.VariableDefinition;
-import com.njydsz.pmis.project.literule.DatabaseVariableRegistry;
+import com.njydsz.pmis.literule.expr.VariableRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -31,8 +31,8 @@ import java.util.stream.Collectors;
 @Validated
 public class RuleVariableAdminController {
 
-    /** 数据库变量注册表 */
-    private final DatabaseVariableRegistry variableRegistry;
+    /** 变量注册表（由消费方提供数据库实现） */
+    private final VariableRegistry variableRegistry;
     /** 表达式校验服务 */
     private final ExpressionValidationService expressionValidationService;
 
@@ -115,7 +115,7 @@ public class RuleVariableAdminController {
      *
      * <p>等价于 {@link ExpressionValidationService#listAvailableVariables()}，
      * 与 {@code GET /} 的区别：本端点反映 {@link ExpressionValidationService}
-     * 实际注入的 {@link com.njydsz.pmis.literule.expr.VariableRegistry} 视角，
+     * 实际注入的 {@link VariableRegistry} 视角，
      * 便于排查 Bean 装配问题。
      *
      * @return 可用变量定义列表

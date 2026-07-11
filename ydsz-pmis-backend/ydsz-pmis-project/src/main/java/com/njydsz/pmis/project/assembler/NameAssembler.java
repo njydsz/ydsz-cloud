@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.assembler;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.project.feign.UserServiceClient;
+import com.njydsz.pmis.common.feign.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

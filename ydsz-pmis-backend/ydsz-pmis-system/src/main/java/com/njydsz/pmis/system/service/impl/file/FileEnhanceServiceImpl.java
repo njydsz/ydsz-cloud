@@ -2,7 +2,7 @@ package com.njydsz.pmis.system.service.impl.file;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.system.config.MinioConfig;
+import com.njydsz.pmis.common.config.MinioConfig;
 import com.njydsz.pmis.system.service.file.FileEnhanceService;
 import io.minio.GetObjectArgs;
 import io.minio.GetPresignedObjectUrlArgs;

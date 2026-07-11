@@ -175,6 +175,11 @@
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
         </dependency>
+        <!-- MinIO 对象存储（P2 架构优化：统一配置到 common） -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
         <!-- Jasypt 配置加密（P0-4：敏感配置加密） -->
         <dependency>
             <groupId>com.github.ulisesbocchio</groupId>

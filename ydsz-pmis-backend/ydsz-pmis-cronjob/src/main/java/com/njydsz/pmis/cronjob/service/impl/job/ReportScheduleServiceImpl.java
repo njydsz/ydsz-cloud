@@ -2,10 +2,10 @@ package com.njydsz.pmis.cronjob.service.impl.job;
 
 import com.alibaba.excel.EasyExcel;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.config.MinioConfig;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.MessageServiceClient;
-import com.njydsz.pmis.cronjob.config.MinioConfig;
 import com.njydsz.pmis.cronjob.service.job.ReportScheduleService;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;

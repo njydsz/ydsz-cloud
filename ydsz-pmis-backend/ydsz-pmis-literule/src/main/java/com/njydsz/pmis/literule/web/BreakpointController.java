@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.controller.ruleengine;
+package com.njydsz.pmis.literule.web;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
