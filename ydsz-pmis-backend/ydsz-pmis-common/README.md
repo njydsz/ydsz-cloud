@@ -42,8 +42,8 @@
 
 | 客户端 | 目标服务 | Fallback |
 |---|---|---|
-| `MessageFeignClient` | ydsz-pmis-message | `MessageFeignClientFallbackFactory` |
-| `NotificationPushClient` | ydsz-pmis-message | `NotificationPushClientFallbackFactory` |
+| `MessageServiceClient` | ydsz-pmis-message | `MessageServiceClientFallback` |
+| `NotificationClient` | ydsz-pmis-message | `NotificationClientFallback` |
 | `InitiationFeignClient` | ydsz-pmis-project | `InitiationFeignClientFallbackFactory` |
 | `ExecutionClient` | ydsz-pmis-project | `ExecutionClientFallback` |
 | `ConfigClient` | ydsz-pmis-system | `ConfigClientFallback` |

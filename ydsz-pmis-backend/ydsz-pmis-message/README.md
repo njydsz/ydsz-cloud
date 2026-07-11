@@ -184,8 +184,8 @@ mvn -pl ydsz-pmis-message -am test
 
 ### 被调用（其他服务发消息）
 
-- `MessageFeignClient`（位于 common）→ `/message/send`
-- `NotificationPushClient`（位于 common）→ `/notification/push`
+- `MessageServiceClient`（位于 common）→ `/message/send`
+- `NotificationClient`(`位于 common`)` /notifications/send` /notifications/push /notifications/broadcast`
 
 ## 常见问题
 

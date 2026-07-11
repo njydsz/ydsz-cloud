@@ -174,7 +174,7 @@ mvn -pl ydsz-pmis-cronjob -am test
 
 ## Feign 接口
 
-被 `MessageFeignClient` / `ExecutionClient` 调用（推 / 拉任务数据）。
+被 `MessageServiceClient` / `ExecutionClient` 调用（推 / 拉任务数据）。
 
 ## 常见问题
 

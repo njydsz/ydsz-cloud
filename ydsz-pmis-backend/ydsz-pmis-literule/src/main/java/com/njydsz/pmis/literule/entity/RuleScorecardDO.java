@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.entity.ruleengine;
+package com.njydsz.pmis.literule.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -8,20 +8,21 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.math.BigDecimal;
 
 /**
- * 规则脚本实体
+ * 规则评分卡实体
  *
- * <p>脚本规则：script 字段为 Groovy 脚本源码，运行在沙箱中。
- * 通过 sandbox_enabled 控制是否启用沙箱安全限制。
+ * <p>评分卡规则：基于 factors 列表（条件表达式 + 扣分）逐项评估。
+ * 基础分 base_score，低于 red_threshold 为红灯、低于 yellow_threshold 为黄灯。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName(value = "pmis_rule_script", autoResultMap = true)
-public class RuleScriptDO extends BaseDO {
+@TableName(value = "pmis_rule_scorecard", autoResultMap = true)
+public class RuleScorecardDO extends BaseDO {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -39,28 +40,31 @@ public class RuleScriptDO extends BaseDO {
     /** 规则名称 */
     private String ruleName;
 
-    /** 规则分类 */
+    /** 规则分类（RISK / QUALITY / PROFIT 等） */
     private String category;
 
     /** 规则描述 */
     private String description;
 
-    /** Groovy 脚本源码 */
-    private String script;
+    /** 基础分（满分，默认 100） */
+    private BigDecimal baseScore;
 
-    /** 默认严重级别：INFO/WARN/ERROR/CRITICAL */
-    private String defaultSeverity;
+    /** 红灯阈值（≤ 触发红灯） */
+    private BigDecimal redThreshold;
 
-    /** 是否启用沙箱 */
-    private Boolean sandboxEnabled;
+    /** 黄灯阈值（≤ 触发黄灯） */
+    private BigDecimal yellowThreshold;
 
-    /** 优先级 */
+    /** 评分因子 JSON：[{conditionExpression, score, description}] */
+    private String factors;
+
+    /** 优先级（数字越小越优先） */
     private Integer priority;
 
     /** 是否启用 */
     private Boolean enabled;
 
-    /** 适用范围 */
+    /** 适用范围（如 ALL / PROJECT_TYPE:CONSTRUCTION 表示限定项目类型） */
     private String scope;
 
     /** 版本号 */

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.entity.ruleengine;
+package com.njydsz.pmis.literule.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

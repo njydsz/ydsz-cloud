@@ -216,7 +216,7 @@ mvn -pl ydsz-pmis-project -am test
 
 - `InitiationFeignClient` → ydsz-pmis-project（自身）
 - `ExecutionClient` → ydsz-pmis-project
-- `MessageFeignClient` → ydsz-pmis-message（发送通知）
+- `MessageServiceClient` → ydsz-pmis-message（发送通知）
 
 ### 被调用
 
