@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-message-web</artifactId>
     <name>ydsz-pmis-message-web</name>
-    <description>B绔叆鍙ｅ眰锛欳ontroller/Config/Application</description>
+    <description>DDD Module</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-server</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-api</artifactId></dependency>

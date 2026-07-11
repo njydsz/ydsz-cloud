@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-userinfo-web</artifactId>
     <name>ydsz-pmis-userinfo-web</name>
-    <description>B绔叆鍙ｅ眰锛欳ontroller/Config/Application</description>
+    <description>DDD Module</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-server</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-api</artifactId></dependency>

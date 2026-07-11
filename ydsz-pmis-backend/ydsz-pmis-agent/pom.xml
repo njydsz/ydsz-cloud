@@ -10,7 +10,7 @@
     <artifactId>ydsz-pmis-agent</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-agent</name>
-    <description>AI Agent: Orchestration/Tool/KnowledgeBase/RAG/MCP/HITL (DDD 5-Layer)</description>
+    <description>DDD Module</description>
     <modules>
         <module>ydsz-pmis-agent-api</module>
         <module>ydsz-pmis-agent-domain</module>

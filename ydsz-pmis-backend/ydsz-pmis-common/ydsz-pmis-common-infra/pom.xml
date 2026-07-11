@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-common-infra</artifactId>
     <name>ydsz-pmis-common-infra</name>
-    <description>基础设施：AI、告警、金丝雀、混沌、DAG、事件、特性开关、Job、KMS、Sentry、链路追踪、事务、Webhook</description>
+    <description>DDD Module</description>
 
     <dependencies>
         <dependency>

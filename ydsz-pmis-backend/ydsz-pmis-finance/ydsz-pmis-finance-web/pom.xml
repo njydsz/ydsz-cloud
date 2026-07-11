@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-finance-web</artifactId>
     <name>ydsz-pmis-finance-web</name>
-    <description>B绔叆鍙ｅ眰锛欳ontroller/Config/Application</description>
+    <description>DDD Module</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-server</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-api</artifactId></dependency>

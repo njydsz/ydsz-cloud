@@ -12,9 +12,14 @@
 
     <artifactId>ydsz-pmis-common-core</artifactId>
     <name>ydsz-pmis-common-core</name>
-    <description>核心基础：常量、枚举、统一响应、异常码、异常基类</description>
+    <description>DDD Module</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

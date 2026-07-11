@@ -10,7 +10,7 @@
     <artifactId>ydsz-pmis-sales</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-sales</name>
-    <description>Sales Service: Opportunity/Contract/Change/Template (DDD 5-Layer)</description>
+    <description>DDD Module</description>
     <modules>
         <module>ydsz-pmis-sales-api</module>
         <module>ydsz-pmis-sales-domain</module>

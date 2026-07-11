@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-common-all</artifactId>
     <name>ydsz-pmis-common-all</name>
-    <description>公共组件聚合starter：依赖所有子模块，向后兼容旧 ydsz-pmis-common 依赖</description>
+    <description>DDD Module</description>
 
     <dependencies>
         <dependency>

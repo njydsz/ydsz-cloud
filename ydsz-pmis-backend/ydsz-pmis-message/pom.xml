@@ -10,7 +10,7 @@
     <artifactId>ydsz-pmis-message</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-message</name>
-    <description>Message Center: Notification/SMS/Email/Webhook/Template/Route (DDD 5-Layer)</description>
+    <description>DDD Module</description>
     <modules>
         <module>ydsz-pmis-message-api</module>
         <module>ydsz-pmis-message-domain</module>

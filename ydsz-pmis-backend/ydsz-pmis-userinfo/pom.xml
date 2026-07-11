@@ -10,7 +10,7 @@
     <artifactId>ydsz-pmis-userinfo</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-userinfo</name>
-    <description>User Center: User/Role/Permission/Org/Attendance/Bench (DDD 5-Layer)</description>
+    <description>DDD Module</description>
     <modules>
         <module>ydsz-pmis-userinfo-api</module>
         <module>ydsz-pmis-userinfo-domain</module>

@@ -10,10 +10,10 @@
     </parent>
     <artifactId>ydsz-pmis-project-server</artifactId>
     <name>ydsz-pmis-project-server</name>
-    <description>涓氬姟鏈嶅姟灞傦細Service/Engine/Listener/Job</description>
+    <description>DDD Module</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-infra</artifactId></dependency>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common</artifactId></dependency>
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-all</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-server</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-api</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-api</artifactId><version>${project.version}</version></dependency>

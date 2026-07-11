@@ -10,10 +10,10 @@
     </parent>
     <artifactId>ydsz-pmis-agent-server</artifactId>
     <name>ydsz-pmis-agent-server</name>
-    <description>涓氬姟鏈嶅姟灞傦細Service/Engine/Listener/Job</description>
+    <description>DDD Module</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-infra</artifactId></dependency>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common</artifactId></dependency>
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-all</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-api</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.alibaba.fastjson2</groupId><artifactId>fastjson2</artifactId></dependency>
         <dependency><groupId>cn.hutool</groupId><artifactId>hutool-all</artifactId></dependency>

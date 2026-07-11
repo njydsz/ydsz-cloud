@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-common-security</artifactId>
     <name>ydsz-pmis-common-security</name>
-    <description>安全治理：权限控制、脱敏、JWT、XSS/CSRF防护、验证码、限流、安全事件</description>
+    <description>DDD Module</description>
 
     <dependencies>
         <dependency>

@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-common-data</artifactId>
     <name>ydsz-pmis-common-data</name>
-    <description>数据层：Redis深度封装、JDBC拦截器、分布式锁、缓存防护、布隆过滤器</description>
+    <description>DDD Module</description>
 
     <dependencies>
         <dependency>

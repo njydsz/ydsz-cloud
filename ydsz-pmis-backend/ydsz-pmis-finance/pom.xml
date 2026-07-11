@@ -10,7 +10,7 @@
     <artifactId>ydsz-pmis-finance</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-finance</name>
-    <description>Finance Service: Invoice/Payment/Expense/Revenue/Profit (DDD 5-Layer)</description>
+    <description>DDD Module</description>
     <modules>
         <module>ydsz-pmis-finance-api</module>
         <module>ydsz-pmis-finance-domain</module>

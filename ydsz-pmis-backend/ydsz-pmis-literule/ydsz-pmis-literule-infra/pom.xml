@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-literule-infra</artifactId>
     <name>ydsz-pmis-literule-infra</name>
-    <description>鍩虹璁炬柦灞傦細鎸佷箙鍖?Mapper</description>
+    <description>DDD Module</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-domain</artifactId></dependency>
         <dependency><groupId>com.baomidou</groupId><artifactId>mybatis-plus-spring-boot4-starter</artifactId></dependency>

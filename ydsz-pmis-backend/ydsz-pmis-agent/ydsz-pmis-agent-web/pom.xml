@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-agent-web</artifactId>
     <name>ydsz-pmis-agent-web</name>
-    <description>B绔叆鍙ｅ眰锛欳ontroller/Config/Application</description>
+    <description>DDD Module</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-server</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-api</artifactId></dependency>

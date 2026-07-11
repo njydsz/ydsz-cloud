@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-cronjob-web</artifactId>
     <name>ydsz-pmis-cronjob-web</name>
-    <description>B绔叆鍙ｅ眰锛欳ontroller/Config/Application</description>
+    <description>DDD Module</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-server</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-api</artifactId></dependency>

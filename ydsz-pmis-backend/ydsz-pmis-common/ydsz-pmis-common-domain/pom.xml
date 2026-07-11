@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-common-domain</artifactId>
     <name>ydsz-pmis-common-domain</name>
-    <description>领域模型：实体基类、DDD继承体系、规约模式、树形构建、值对象、领域事件</description>
+    <description>DDD Module</description>
 
     <dependencies>
         <dependency>

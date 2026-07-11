@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-common-web</artifactId>
     <name>ydsz-pmis-common-web</name>
-    <description>Web层：全局异常处理、MVC配置、过滤器、健康检查、Excel、OpenAPI</description>
+    <description>DDD Module</description>
 
     <dependencies>
         <dependency>

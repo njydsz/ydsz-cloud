@@ -10,7 +10,7 @@
     <artifactId>ydsz-pmis-project</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-project</name>
-    <description>Project Execution: Initiation/WBS/EVM/Risk/Purchase/Report (DDD 5-Layer)</description>
+    <description>DDD Module</description>
     <modules>
         <module>ydsz-pmis-project-api</module>
         <module>ydsz-pmis-project-domain</module>

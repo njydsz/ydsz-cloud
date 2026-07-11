@@ -10,7 +10,7 @@
     <artifactId>ydsz-pmis-system</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-system</name>
-    <description>System Service: Config/File/Audit/OperationLog/FeatureFlag (DDD 5-Layer)</description>
+    <description>DDD Module</description>
     <modules>
         <module>ydsz-pmis-system-api</module>
         <module>ydsz-pmis-system-domain</module>

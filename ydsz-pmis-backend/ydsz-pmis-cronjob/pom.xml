@@ -10,7 +10,7 @@
     <artifactId>ydsz-pmis-cronjob</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-cronjob</name>
-    <description>CronJob Service: DAG/Alert/Stats/GlueCode (DDD 5-Layer)</description>
+    <description>DDD Module</description>
     <modules>
         <module>ydsz-pmis-cronjob-api</module>
         <module>ydsz-pmis-cronjob-domain</module>

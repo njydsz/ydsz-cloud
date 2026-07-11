@@ -10,10 +10,10 @@
     </parent>
     <artifactId>ydsz-pmis-literule-server</artifactId>
     <name>ydsz-pmis-literule-server</name>
-    <description>涓氬姟鏈嶅姟灞傦細Service/Engine/Listener/Job</description>
+    <description>DDD Module</description>
     <dependencies>
                 <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-infra</artifactId></dependency>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common</artifactId></dependency>
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-all</artifactId></dependency>
         <dependency><groupId>org.springframework</groupId><artifactId>spring-context</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-autoconfigure</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-configuration-processor</artifactId><optional>true</optional></dependency>

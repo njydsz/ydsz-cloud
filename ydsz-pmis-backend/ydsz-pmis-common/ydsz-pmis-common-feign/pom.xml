@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-common-feign</artifactId>
     <name>ydsz-pmis-common-feign</name>
-    <description>服务通信：Feign客户端、拦截器、降级工厂、熔断</description>
+    <description>DDD Module</description>
 
     <dependencies>
         <dependency>

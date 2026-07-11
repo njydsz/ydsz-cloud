@@ -10,7 +10,7 @@
     <artifactId>ydsz-pmis-workflow</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-workflow</name>
-    <description>Workflow Engine: Definition/Instance/Approval/DMN/Delegate (DDD 5-Layer)</description>
+    <description>DDD Module</description>
     <modules>
         <module>ydsz-pmis-workflow-api</module>
         <module>ydsz-pmis-workflow-domain</module>

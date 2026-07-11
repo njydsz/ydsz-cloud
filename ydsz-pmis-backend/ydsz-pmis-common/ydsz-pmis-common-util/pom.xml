@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-pmis-common-util</artifactId>
     <name>ydsz-pmis-common-util</name>
-    <description>工具集：加密、JSON、IP、雪花ID、PDF、路径守护等</description>
+    <description>DDD Module</description>
 
     <dependencies>
         <dependency>

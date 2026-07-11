@@ -13,7 +13,7 @@
     <artifactId>ydsz-pmis-common</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-common</name>
-    <description>公共组件库父模块（多模块聚合）</description>
+    <description>DDD Module</description>
 
     <modules>
         <module>ydsz-pmis-common-core</module>

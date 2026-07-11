@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-sales-web</artifactId>
     <name>ydsz-pmis-sales-web</name>
-    <description>B绔叆鍙ｅ眰锛欳ontroller/Config/Application</description>
+    <description>DDD Module</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-server</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-api</artifactId></dependency>
