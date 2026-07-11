@@ -1,15 +1,11 @@
 package com.njydsz.pmis.message.service.webhook;
 
-import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.webhook.WebhookDispatcher;
+import com.njydsz.pmis.common.webhook.WebhookSubscription;
 import com.njydsz.pmis.message.entity.core.MsgLogDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestClient;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +17,10 @@ import java.util.Map;
  * <p>允许外部系统订阅消息事件（发送成功/失败/回执/撤回）,
  * 当事件发生时回调注册的 Webhook URL。
  *
+ * <p><b>P1-3 架构优化</b>：将 HTTP 投递、HMAC 签名、重试逻辑委托到
+ * {@link WebhookDispatcher}（common 模块统一实现），消除重复代码。
+ * 本类仅负责消息事件的业务逻辑（构造 payload、管理订阅）。
+ *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
@@ -29,17 +29,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OutboundWebhookService {
 
-    /** Webhook 订阅配置（从数据库或配置加载,此处简化为内存缓存） */
-    private final List<WebhookSubscription> subscriptions = new java.util.concurrent.CopyOnWriteArrayList<>();
-
-    private final RestClient restClient;
-
-    public OutboundWebhookService() {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);
-        factory.setReadTimeout(10000);
-        this.restClient = RestClient.builder().requestFactory(factory).build();
-    }
+    private final WebhookDispatcher webhookDispatcher;
 
     /**
      * 注册 Webhook 订阅。
@@ -49,10 +39,19 @@ public class OutboundWebhookService {
      * @param secret   签名密钥（回调时附带 HMAC-SHA256 签名）
      */
     public void subscribe(String url, List<String> events, String secret) {
-        if (!StringUtils.hasText(url)) {
+        if (url == null || url.isBlank()) {
             return;
         }
-        subscriptions.add(new WebhookSubscription(url, events, secret));
+        String eventId = "msg-webhook-" + Integer.toHexString(url.hashCode());
+        WebhookSubscription sub = WebhookSubscription.builder()
+                .id(eventId)
+                .callbackUrl(url)
+                .eventTypes(events != null ? String.join(",", events) : null)
+                .secret(secret)
+                .enabled(true)
+                .sourceModule("message")
+                .build();
+        webhookDispatcher.register(sub);
         log.info("[Webhook] 注册订阅: url={} events={}", url, events);
     }
 
@@ -62,19 +61,17 @@ public class OutboundWebhookService {
      * @param url 回调 URL
      */
     public void unsubscribe(String url) {
-        subscriptions.removeIf(s -> s.url.equals(url));
+        String eventId = "msg-webhook-" + Integer.toHexString(url.hashCode());
+        webhookDispatcher.unregister(eventId);
     }
 
     /**
-     * 触发事件通知（异步回调所有匹配的 Webhook）。
+     * 触发事件通知（委托 WebhookDispatcher 投递到所有匹配的订阅）。
      *
      * @param event 事件类型
      * @param logDO 消息日志
      */
     public void fireEvent(String event, MsgLogDO logDO) {
-        if (subscriptions.isEmpty()) {
-            return;
-        }
         Map<String, Object> payload = new HashMap<>();
         payload.put("event", event);
         payload.put("timestamp", System.currentTimeMillis());
@@ -85,28 +82,7 @@ public class OutboundWebhookService {
         payload.put("bizId", logDO.getBizId());
         payload.put("receiver", logDO.getReceiver());
 
-        for (WebhookSubscription sub : subscriptions) {
-            if (sub.events == null || sub.events.contains(event)) {
-                sendWebhook(sub, payload);
-            }
-        }
+        // 委托到 WebhookDispatcher 统一投递（含 HMAC 签名 + 重试）
+        webhookDispatcher.dispatch(event, payload);
     }
-
-    private void sendWebhook(WebhookSubscription sub, Map<String, Object> payload) {
-        try {
-            ResponseEntity<String> response = restClient.post()
-                    .uri(sub.url)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header("X-Webhook-Event", (String) payload.get("event"))
-                    .body(JSON.toJSONString(payload))
-                    .retrieve()
-                    .toEntity(String.class);
-            log.debug("[Webhook] 回调成功: url={} status={}", sub.url, response.getStatusCode());
-        } catch (Exception e) {
-            log.warn("[Webhook] 回调失败: url={} err={}", sub.url, e.getMessage());
-        }
-    }
-
-    /** Webhook 订阅配置 */
-    private record WebhookSubscription(String url, List<String> events, String secret) {}
 }

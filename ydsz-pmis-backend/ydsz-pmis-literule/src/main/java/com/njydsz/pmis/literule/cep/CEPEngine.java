@@ -1,7 +1,7 @@
 package com.njydsz.pmis.literule.cep;
 
-import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.expr.liteexpr.LiteExprEvaluator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serial;
@@ -58,7 +58,7 @@ public class CEPEngine implements Serializable {
     private final Map<String, Map<String, ConcurrentLinkedDeque<CEPEvent>>> eventQueues = new ConcurrentHashMap<>();
 
     /** 表达式求值器（用于 filter 条件） */
-    private final ExpressionEvaluator expressionEvaluator = new AviatorExpressionEvaluator(true);
+    private final ExpressionEvaluator expressionEvaluator = new LiteExprEvaluator(true);
 
     /** 序列状态：patternId → partitionKey → 序列已匹配步骤 */
     private final Map<String, Map<String, SequenceState>> sequenceStates = new ConcurrentHashMap<>();

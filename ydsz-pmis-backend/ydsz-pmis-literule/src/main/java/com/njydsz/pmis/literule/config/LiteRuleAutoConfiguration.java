@@ -37,6 +37,7 @@ import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.VariableRegistry;
+import com.njydsz.pmis.literule.expr.liteexpr.LiteExprEvaluator;
 import com.njydsz.pmis.literule.model.ModelInputProvider;
 import com.njydsz.pmis.literule.model.ModelInputRegistry;
 import com.njydsz.pmis.literule.model.MockModelInputProvider;
@@ -97,8 +98,12 @@ public class LiteRuleAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ExpressionEvaluator expressionEvaluator(LiteRuleProperties properties) {
-        String type = properties.getEvaluator() == null ? "aviator" : properties.getEvaluator().trim().toLowerCase();
+        String type = properties.getEvaluator() == null ? "liteexpr" : properties.getEvaluator().trim().toLowerCase();
         switch (type) {
+            case "liteexpr" -> {
+                log.info("[LiteRule] LiteExpr 自研表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
+                return new LiteExprEvaluator(properties.isSandboxEnabled());
+            }
             case "qlexpress" -> {
                 log.info("[LiteRule] QLExpress 表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
                 return new QLExpressExpressionEvaluator();
@@ -108,8 +113,8 @@ public class LiteRuleAutoConfiguration {
                 return new AviatorExpressionEvaluator(properties.isSandboxEnabled());
             }
             default -> {
-                log.warn("[LiteRule] 未知表达式引擎类型: {}，回退到 Aviator", properties.getEvaluator());
-                return new AviatorExpressionEvaluator(properties.isSandboxEnabled());
+                log.warn("[LiteRule] 未知表达式引擎类型: {}，回退到 LiteExpr", properties.getEvaluator());
+                return new LiteExprEvaluator(properties.isSandboxEnabled());
             }
         }
     }

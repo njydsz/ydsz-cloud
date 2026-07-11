@@ -16,11 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -203,6 +200,8 @@ public class DingTalkChannel implements MessageChannel {
      * <p>签名算法：HMAC-SHA256(timestamp + "\n" + secret, secret) → Base64 → URLEncode。
      * timestamp 为毫秒。
      *
+     * <p>P1-1: 委托到 CryptoSignUtil 统一实现。
+     *
      * @param url    原始 Webhook URL
      * @param secret 加签密钥
      * @return 附加 timestamp & sign 后的 URL
@@ -211,11 +210,9 @@ public class DingTalkChannel implements MessageChannel {
         try {
             long timestamp = System.currentTimeMillis();
             String stringToSign = timestamp + "\n" + secret;
-            Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-            byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
             String sign = URLEncoder.encode(
-                    Base64.getEncoder().encodeToString(signData), StandardCharsets.UTF_8);
+                    com.njydsz.pmis.common.util.CryptoSignUtil.hmacSha256Base64(stringToSign, secret),
+                    StandardCharsets.UTF_8);
             return url + "&timestamp=" + timestamp + "&sign=" + sign;
         } catch (Exception e) {
             log.warn("[DINGTALK] 加签失败，使用原始 URL: {}", e.getMessage());

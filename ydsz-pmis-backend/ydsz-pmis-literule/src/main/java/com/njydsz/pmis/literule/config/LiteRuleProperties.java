@@ -32,22 +32,18 @@ public class LiteRuleProperties {
     private boolean sandboxEnabled = true;
 
     /**
-     * 表达式引擎类型（1.5.0 起）
+     * 表达式引擎类型（2.0.0 起）
      *
      * <p>可选值：
      * <ul>
-     *   <li>{@code aviator}（默认）- Aviator 5.x，高性能、AST 缓存、函数丰富</li>
-     *   <li>{@code qlexpress} - 阿里 QLExpress 3.x，语法更接近 Java，支持流程控制</li>
+     *   <li>{@code liteexpr}（默认，2.0.0 起）- 自研表达式引擎，零外部依赖、AST 原生追踪/沙箱/变量提取</li>
+     *   <li>{@code aviator} - Aviator 5.x，高性能、AST 缓存、函数丰富（向后兼容）</li>
+     *   <li>{@code qlexpress} - 阿里 QLExpress 3.x，语法更接近 Java，支持流程控制（向后兼容）</li>
      * </ul>
      *
      * <p>切换引擎后，已有规则的条件表达式需保证在目标引擎语法下合法。
-     * 两者的语法差异：
-     * <ul>
-     *   <li>Aviator：{@code seq.map("a", 1, "b", 2)}、{@code string.contains(a, b)}</li>
-     *   <li>QLExpress：{@code {"a":1, "b":2}}、{@code a.contains(b)}（更像 Java）</li>
-     * </ul>
      */
-    private String evaluator = "aviator";
+    private String evaluator = "liteexpr";
 
     /** 是否启用执行轨迹记录（1.4.0） */
     private boolean traceEnabled = true;

@@ -3,13 +3,12 @@ package com.njydsz.pmis.project.literule;
 import com.njydsz.pmis.literule.entity.RuleDefinitionDO;
 import com.njydsz.pmis.literule.mapper.RuleDefinitionMapper;
 import com.njydsz.pmis.literule.spi.RuleConflictDetectorProvider;
+import com.njydsz.pmis.literule.util.RuleConflictAnalyzer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -21,6 +20,9 @@ import java.util.stream.Collectors;
  *
  * <p>实现 {@link RuleConflictDetectorProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
  *
+ * <p><b>P1-4 架构优化</b>：变量提取和重叠分析逻辑委托到
+ * {@link RuleConflictAnalyzer}（literule 模块统一工具），消除重复代码。
+ *
  * @author ydsz-pmis
  * @since 2026-07-02
  */
@@ -30,21 +32,6 @@ import java.util.stream.Collectors;
 public class RuleConflictDetector implements RuleConflictDetectorProvider {
 
     private final RuleDefinitionMapper ruleDefinitionMapper;
-
-    /** 提取变量名的正则 */
-    private static final Pattern VAR_PATTERN = Pattern.compile("\\b([a-zA-Z_]\\w*)\\b");
-
-    /** 关键字/函数名，非变量 */
-    private static final Set<String> KEYWORDS = Set.of(
-        "true", "false", "nil", "null",
-        "RED", "YELLOW", "INFO", "GREEN",
-        "if", "else", "return", "seq", "lambda",
-        "println", "print", "p", "string", "long", "double",
-        "boolean", "int", "math", "Math", "max", "min", "abs",
-        "round", "floor", "ceil", "sqrt", "pow", "log",
-        "contains", "startsWith", "endsWith", "length",
-        "count", "sum", "avg", "rand", "now", "date"
-    );
 
     /**
      * 检测所有启用规则之间的冲突
@@ -70,30 +57,20 @@ public class RuleConflictDetector implements RuleConflictDetectorProvider {
                 RuleDefinitionDO ruleA = enabledRules.get(i);
                 RuleDefinitionDO ruleB = enabledRules.get(j);
 
-                // 提取变量
-                Set<String> varsA = extractVariables(ruleA.getConditionExpression());
-                Set<String> varsB = extractVariables(ruleB.getConditionExpression());
+                // 提取变量（P1-4: 委托到 RuleConflictAnalyzer）
+                Set<String> varsA = RuleConflictAnalyzer.extractVariables(ruleA.getConditionExpression());
+                Set<String> varsB = RuleConflictAnalyzer.extractVariables(ruleB.getConditionExpression());
 
                 // 计算重叠字段
-                Set<String> overlap = new HashSet<>(varsA);
-                overlap.retainAll(varsB);
+                Set<String> overlap = RuleConflictAnalyzer.intersection(varsA, varsB);
 
                 if (overlap.isEmpty()) {
                     continue;
                 }
 
-                // 根据重叠度判断严重程度
-                int totalVars = varsA.size() + varsB.size();
-                double overlapRatio = totalVars > 0 ? (double) (2 * overlap.size()) / totalVars : 0;
-
-                String severity;
-                if (overlapRatio >= 0.8) {
-                    severity = "high";
-                } else if (overlapRatio >= 0.4) {
-                    severity = "medium";
-                } else {
-                    severity = "low";
-                }
+                // 根据重叠度判断严重程度（P1-4: 委托到 RuleConflictAnalyzer）
+                double overlapRatio = RuleConflictAnalyzer.calculateOverlapRatio(varsA, varsB);
+                String severity = RuleConflictAnalyzer.determineSeverity(overlapRatio);
 
                 conflicts.add(RuleConflictInfo.builder()
                     .ruleA(ruleA.getRuleCode())
@@ -109,29 +86,5 @@ public class RuleConflictDetector implements RuleConflictDetectorProvider {
         log.info("Conflict detection completed: {} enabled rules, {} conflicts found",
             enabledRules.size(), conflicts.size());
         return conflicts;
-    }
-
-    /**
-     * 从表达式文本中提取变量名
-     */
-    private Set<String> extractVariables(String expression) {
-        if (expression == null || expression.isBlank()) {
-            return Collections.emptySet();
-        }
-
-        Set<String> vars = new HashSet<>();
-        Matcher matcher = VAR_PATTERN.matcher(expression);
-        while (matcher.find()) {
-            String word = matcher.group(1);
-            // 过滤关键字、数字、单字符
-            if (KEYWORDS.contains(word)) continue;
-            if (word.matches("\\d+")) continue;
-            if (word.length() <= 1) continue;
-            // 保留首字母小写的标识符（驼峰变量名）
-            if (Character.isLowerCase(word.charAt(0)) || word.contains("_")) {
-                vars.add(word);
-            }
-        }
-        return vars;
     }
 }

@@ -1,9 +1,8 @@
 package com.njydsz.pmis.message.metric;
 
 
+import com.njydsz.pmis.common.metrics.AbstractModuleMetrics;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
@@ -14,19 +13,20 @@ import org.springframework.stereotype.Component;
  * <p>基于 Micrometer {@link MeterRegistry} 采集发送计数、耗时、重试、死信、回执等指标，
  * 供 Prometheus / Grafana 监控。所有记录方法均 try-catch 降级，监控失败不影响业务。
  *
+ * <p><b>P1-2 架构优化</b>：继承 {@link AbstractModuleMetrics}，消除重复的
+ * Counter/Timer 缓存和降级模式代码。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @ConditionalOnClass(MeterRegistry.class)
-public class MessageMetrics {
+public class MessageMetrics extends AbstractModuleMetrics {
 
-    /** 指标前缀 */
-    private static final String METER_PREFIX = "pmis.message.";
-
-    private final MeterRegistry meterRegistry;
+    public MessageMetrics(MeterRegistry meterRegistry) {
+        super(meterRegistry, "pmis.message.");
+    }
 
     /**
      * 记录一次发送结果与耗时。
@@ -36,17 +36,8 @@ public class MessageMetrics {
      * @param costMs  耗时毫秒
      */
     public void recordSend(String channel, String status, long costMs) {
-        try {
-            meterRegistry.counter(METER_PREFIX + "send.total",
-                    "channel", channel == null ? "unknown" : channel,
-                    "status", status == null ? "unknown" : status).increment();
-            Timer.builder(METER_PREFIX + "send.duration")
-                    .tag("channel", channel == null ? "unknown" : channel)
-                    .register(meterRegistry)
-                    .record(java.time.Duration.ofMillis(costMs));
-        } catch (Exception e) {
-            log.debug("[MessageMetrics] recordSend 降级忽略: {}", e.getMessage());
-        }
+        incrementCounter("send.total", "channel", safe(channel), "status", safe(status));
+        recordTimer("send.duration", costMs, "channel", safe(channel));
     }
 
     /**
@@ -55,12 +46,7 @@ public class MessageMetrics {
      * @param channel 通道
      */
     public void recordRetry(String channel) {
-        try {
-            meterRegistry.counter(METER_PREFIX + "retry.total",
-                    "channel", channel == null ? "unknown" : channel).increment();
-        } catch (Exception e) {
-            log.debug("[MessageMetrics] recordRetry 降级忽略: {}", e.getMessage());
-        }
+        incrementCounter("retry.total", "channel", safe(channel));
     }
 
     /**
@@ -69,12 +55,7 @@ public class MessageMetrics {
      * @param channel 通道
      */
     public void recordDead(String channel) {
-        try {
-            meterRegistry.counter(METER_PREFIX + "dead.total",
-                    "channel", channel == null ? "unknown" : channel).increment();
-        } catch (Exception e) {
-            log.debug("[MessageMetrics] recordDead 降级忽略: {}", e.getMessage());
-        }
+        incrementCounter("dead.total", "channel", safe(channel));
     }
 
     /**
@@ -84,12 +65,6 @@ public class MessageMetrics {
      * @param receiptType 回执类型
      */
     public void recordReceipt(String channel, String receiptType) {
-        try {
-            meterRegistry.counter(METER_PREFIX + "receipt.total",
-                    "channel", channel == null ? "unknown" : channel,
-                    "receiptType", receiptType == null ? "unknown" : receiptType).increment();
-        } catch (Exception e) {
-            log.debug("[MessageMetrics] recordReceipt 降级忽略: {}", e.getMessage());
-        }
+        incrementCounter("receipt.total", "channel", safe(channel), "receiptType", safe(receiptType));
     }
 }

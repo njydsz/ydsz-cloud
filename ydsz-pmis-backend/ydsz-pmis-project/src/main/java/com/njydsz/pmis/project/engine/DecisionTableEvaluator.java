@@ -2,8 +2,8 @@ package com.njydsz.pmis.project.engine;
 
 import com.njydsz.pmis.literule.entity.DecisionTableDO;
 import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.expr.liteexpr.LiteExprEvaluator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
@@ -43,7 +43,7 @@ import java.util.Map;
  *   {"conditions": {"字段名": "条件值"}, "actions": {"动作名": "动作值"}, "priority": 10}
  * }</pre>
  *
- * <p>表达式求值器通过 {@link AviatorExpressionEvaluator} 提供；若 Spring 容器中未注册该 Bean，
+ * <p>表达式求值器通过 {@link LiteExprEvaluator} 提供；若 Spring 容器中未注册该 Bean，
  * 则兜底创建默认沙箱实例，确保引擎在脱离 Spring 配置时仍可用。
  *
  * @author ydsz-pmis-team
@@ -362,8 +362,8 @@ public class DecisionTableEvaluator {
         if (fallbackEvaluator == null) {
             synchronized (this) {
                 if (fallbackEvaluator == null) {
-                    log.warn("[DMN] ExpressionEvaluator Bean 未注入，使用默认沙箱 Aviator 实例兜底");
-                    fallbackEvaluator = new AviatorExpressionEvaluator(true);
+                    log.warn("[DMN] ExpressionEvaluator Bean 未注入，使用默认沙箱 LiteExpr 实例兜底");
+                    fallbackEvaluator = new LiteExprEvaluator(true);
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.webhook;
 
+import com.njydsz.pmis.common.util.CryptoSignUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -9,10 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -117,9 +114,9 @@ public class WebhookDispatcher {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-Webhook-Event", eventType);
 
-        // HMAC-SHA256 签名
+        // HMAC-SHA256 签名（P1-1: 委托到 CryptoSignUtil 统一实现）
         if (sub.getSecret() != null && !sub.getSecret().isBlank()) {
-            String signature = hmacSha256(payload.toString(), sub.getSecret());
+            String signature = CryptoSignUtil.hmacSha256Hex(payload.toString(), sub.getSecret());
             headers.set("X-Webhook-Signature", "sha256=" + signature);
         }
 
@@ -157,19 +154,4 @@ public class WebhookDispatcher {
                 .anyMatch(eventType::equalsIgnoreCase);
     }
 
-    /**
-     * HMAC-SHA256 签名。
-     */
-    private String hmacSha256(String data, String secret) {
-        try {
-            Mac mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-            mac.init(keySpec);
-            byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (Exception e) {
-            log.warn("[WebhookDispatcher] HMAC 签名失败: {}", e.getMessage());
-            return "";
-        }
-    }
 }

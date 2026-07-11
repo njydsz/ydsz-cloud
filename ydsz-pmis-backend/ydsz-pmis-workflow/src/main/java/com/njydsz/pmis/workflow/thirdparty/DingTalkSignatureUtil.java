@@ -1,12 +1,6 @@
 package com.njydsz.pmis.workflow.thirdparty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import com.njydsz.pmis.common.util.CryptoSignUtil;
 
 /**
  * 钉钉回调签名验证工具
@@ -15,14 +9,13 @@ import java.util.Base64;
  * <p>算法：HmacSHA256，密钥为 appSecret，签名内容为 timestamp + nonce + encrypt，
  * 计算结果经 Base64 编码后与回调签名比对。
  *
+ * <p><b>P1-1 架构优化</b>：签名计算和常量时间比较委托到 {@link CryptoSignUtil}，
+ * 消除重复的 HmacSHA256 实现。
+ *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
 public final class DingTalkSignatureUtil {
-
-    private static final Logger log = LoggerFactory.getLogger(DingTalkSignatureUtil.class);
-
-    private static final String HMAC_SHA256 = "HmacSHA256";
 
     private DingTalkSignatureUtil() {
     }
@@ -42,37 +35,12 @@ public final class DingTalkSignatureUtil {
         if (signature == null || signature.isEmpty() || appSecret == null || appSecret.isEmpty()) {
             return false;
         }
-        try {
-            String data = str(timestamp) + str(nonce) + str(encrypt);
-            Mac mac = Mac.getInstance(HMAC_SHA256);
-            mac.init(new SecretKeySpec(appSecret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256));
-            byte[] signData = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            String computed = Base64.getEncoder().encodeToString(signData);
-            return constantTimeEquals(computed, signature);
-        } catch (Exception e) {
-            log.warn("[DingTalkSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
-            return false;
-        }
+        String data = str(timestamp) + str(nonce) + str(encrypt);
+        return CryptoSignUtil.verifySignature(data, appSecret, signature,
+                CryptoSignUtil.SignatureEncoding.BASE64);
     }
 
     private static String str(String s) {
         return s == null ? "" : s;
-    }
-
-    /**
-     * 常量时间字符串比较，避免时序攻击
-     */
-    private static boolean constantTimeEquals(String a, String b) {
-        if (a == null || b == null) {
-            return false;
-        }
-        if (a.length() != b.length()) {
-            return false;
-        }
-        int r = 0;
-        for (int i = 0; i < a.length(); i++) {
-            r |= a.charAt(i) ^ b.charAt(i);
-        }
-        return r == 0;
     }
 }
