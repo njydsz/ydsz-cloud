@@ -40,6 +40,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/ruleEngine/audit")
 @RequiredArgsConstructor
+@ConditionalOnBean(RuleAuditLogService.class)
 @Tag(name = "规则审计日志", description = "P3-5 规则操作审计日志查询 API")
 public class RuleAuditLogController {
 

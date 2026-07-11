@@ -17,6 +17,8 @@ resources:
   - userinfo.yaml
   - system.yaml
   - project.yaml
+  - sales.yaml
+  - finance.yaml
   - message.yaml
   - cronjob.yaml
   - workflow.yaml
@@ -36,6 +38,10 @@ images:
   - name: ydsz-pmis/system
     newTag: IMAGE_TAG
   - name: ydsz-pmis/project
+    newTag: IMAGE_TAG
+  - name: ydsz-pmis/sales
+    newTag: IMAGE_TAG
+  - name: ydsz-pmis/finance
     newTag: IMAGE_TAG
   - name: ydsz-pmis/message
     newTag: IMAGE_TAG

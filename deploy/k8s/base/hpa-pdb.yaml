@@ -226,6 +226,114 @@ spec:
       app: ydsz-pmis-project
 
 ---
+# Sales HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ydsz-pmis-sales-hpa
+  namespace: pmis
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ydsz-pmis-sales
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+
+---
+# Sales PDB
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-sales-pdb
+  namespace: pmis
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-sales
+
+---
+# Finance HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ydsz-pmis-finance-hpa
+  namespace: pmis
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ydsz-pmis-finance
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+
+---
+# Finance PDB
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-finance-pdb
+  namespace: pmis
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-finance
+
+---
 # System HPA
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

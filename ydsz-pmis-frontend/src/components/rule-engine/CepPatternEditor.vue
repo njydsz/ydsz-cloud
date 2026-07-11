@@ -20,8 +20,7 @@
  *  - update:modelValue
  */
 import { ref, computed, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Plus, Delete, VideoPause } from '@element-plus/icons-vue'
+import { Plus, Delete } from '@element-plus/icons-vue'
 
 interface CepEvent {
   name: string

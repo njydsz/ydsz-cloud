@@ -16,8 +16,8 @@
  * Props:
  *  - status: 审批状态过滤（PENDING/APPROVED/REJECTED/ALL）
  */
-import { ref, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { Check, Close, Share, Refresh, Clock } from '@element-plus/icons-vue'
 import * as ruleApi from '@/api/rule-engine'
 import type { ApprovalRecord } from '@/api/rule-engine'
@@ -37,20 +37,10 @@ const records = ref<ApprovalRecord[]>([])
 const activeTab = ref('pending')
 
 // 审批对话框
-const approvalDialog = reactive({
-  visible: false,
-  type: '' as 'approve' | 'reject' | 'delegate',
-  record: null as ApprovalRecord | null,
-  comment: '',
-  delegateTo: ''
-})
-
-import { reactive } from 'vue'
-
 // ===== 计算属性 =====
 const filteredRecords = computed(() => {
   if (activeTab.value === 'all') return records.value
-  return records.value.filter(r => r.status === activeTab.value.toUpperCase())
+  return records.value.filter((r: ApprovalRecord) => r.status === activeTab.value.toUpperCase())
 })
 
 // ===== 方法 =====
@@ -104,7 +94,9 @@ async function submitApproval() {
   }
 }
 
-function getStatusTag(status: string): { type: string; label: string } {
+type TagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
+
+function getStatusTag(status: string): { type: TagType; label: string } {
   switch (status) {
     case 'PENDING': return { type: 'warning', label: '待审批' }
     case 'APPROVED': return { type: 'success', label: '已通过' }
@@ -125,7 +117,7 @@ onMounted(() => {
     <el-tabs v-model="activeTab" @tab-change="loadRecords">
       <el-tab-pane label="待审批" name="pending">
         <template #label>
-          <el-badge :value="records.filter(r => r.status === 'PENDING').length" :max="99" type="warning">
+          <el-badge :value="records.filter((r: ApprovalRecord) => r.status === 'PENDING').length" :max="99" type="warning">
             待审批
           </el-badge>
         </template>
