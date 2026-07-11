@@ -28,5 +28,9 @@
         <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
         <dependency><groupId>org.junit.platform</groupId><artifactId>junit-platform-launcher</artifactId><scope>test</scope></dependency>
         <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
+        <!-- P1-2: 规则与定时任务联动（可选，classpath 存在时自动装配 CronjobTriggerActionHandler） -->
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-api</artifactId><optional>true</optional></dependency>
+        <!-- P2-1: 规则与工作流深度联动（可选，classpath 存在时自动装配 WorkflowTriggerActionHandler） -->
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-api</artifactId><optional>true</optional></dependency>
     </dependencies>
 </project>

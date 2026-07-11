@@ -111,11 +111,14 @@ public class TreeBuilder<T extends TreeNode<ID>, ID extends Serializable> {
         return path;
     }
 
-    private void sortTree(List<T> nodes, Comparator<T> cmp) {
-        nodes.sort(cmp);
-        for (T node : nodes) {
-            if (node.getChildren() != null && !node.getChildren().isEmpty()) {
-                sortTree(node.getChildren(), cmp);
+    @SuppressWarnings("unchecked")
+    private void sortTree(List<? extends TreeNode<ID>> nodes, Comparator<T> cmp) {
+        List<T> sortable = (List<T>) nodes;
+        sortable.sort(cmp);
+        for (T node : sortable) {
+            List<? extends TreeNode<ID>> children = node.getChildren();
+            if (children != null && !children.isEmpty()) {
+                sortTree(children, cmp);
             }
         }
     }
