@@ -1,8 +1,13 @@
 /**
  * @file 规则引擎 API
  * @description 提供规则 CRUD、版本管理、Dry-run、测试用例、审批、监控、
- *              决策表/树/评分卡/CEP/规则链管理等接口；
- *              对应后端 RuleAdminController（/ruleEngine/rules）。
+ *              决策表/树/评分卡/CEP/规则链管理、DSL 管理、审计日志、
+ *              执行回放、影响分析、归因分析、健康度评分、自适应阈值、
+ *              AI Agent 执行等接口；
+ *              对应后端 RuleAdminController（/ruleEngine/rules）、
+ *              RuleDslController（/ruleEngine/dsl）、
+ *              RuleAuditLogController（/ruleEngine/audit）、
+ *              RuleDashboardController（/ruleEngine/dashboard）。
  * @module api/rule-engine
  */
 
@@ -106,10 +111,142 @@ export interface ExecutionTrace {
 
 export interface ReplayResult {
   traceId: string
-  originalResult: RuleResult
-  replayedResult: RuleResult
-  consistent: boolean
-  diff?: string
+  factsSnapshot?: Record<string, any>
+  historicalTraces?: ExecutionTrace[]
+  currentResults?: RuleResult[]
+  diff?: {
+    added: string[]
+    removed: string[]
+    unchanged: string[]
+    summary: string
+  }
+  errorMessage?: string
+  replayedAt?: string
+}
+
+export interface BatchReplayResult {
+  totalReplayed: number
+  consistentCount: number
+  diffCount: number
+  skippedCount?: number
+  diffs: Array<{
+    traceId: string
+    ruleCode: string
+    ruleName?: string
+    historicalTriggered: boolean
+    currentTriggered: boolean
+    historicalSeverity?: string
+    currentSeverity?: string
+    diffType: string
+  }>
+  summary: string
+  replayedAt?: string
+}
+
+export interface ImpactPreviewResult {
+  ruleCode: string
+  conditionExpression: string
+  totalTraces: number
+  historicalTriggeredCount: number
+  newTriggeredCount: number
+  addedTriggeredCount: number
+  removedTriggeredCount: number
+  affectedTraces: Array<{
+    traceId: string
+    historicalTriggered: boolean
+    newTriggered: boolean
+    historicalSeverity?: string
+    newSeverity?: string
+    impactType: string
+    createdAt?: string
+  }>
+  summary: string
+}
+
+export interface AuditLogEntry {
+  id?: string
+  ruleCode?: string
+  ruleName?: string
+  action: string
+  operator?: string
+  source?: string
+  changeDesc?: string
+  beforeSnapshot?: Record<string, any>
+  afterSnapshot?: Record<string, any>
+  fieldDiffs?: Record<string, { field: string; oldValue?: string; newValue?: string }>
+  result?: string
+  errorMessage?: string
+  createdAt?: string
+}
+
+export interface DslValidateResult {
+  valid: boolean
+  errors: string[]
+  ruleCount: number
+  chainCount?: number
+}
+
+export interface DslExportResult {
+  format: string
+  ruleCount?: number
+  ruleCode?: string
+  content: string
+}
+
+export interface DslImportResult {
+  totalRules: number
+  successCount: number
+  failCount: number
+  importedCodes: string[]
+  errors: string[]
+  summary: string
+}
+
+export interface DslPreviewResult {
+  ruleCode: string
+  triggered: boolean
+  severity?: string
+  title?: string
+  description?: string
+  error?: string
+}
+
+export interface AttributionReport {
+  ruleCode: string
+  ruleName?: string
+  triggered?: boolean
+  severity?: string
+  summary?: string
+  factors?: Array<{ name: string; value: any; contribution: string }>
+  llmAnalysis?: string
+  recommendation?: string
+}
+
+export interface RuleHealthScore {
+  ruleCode: string
+  ruleName?: string
+  totalScore: number
+  level: string
+  dimensions?: Array<{ name: string; score: number; weight: number; desc: string }>
+  suggestions?: string[]
+}
+
+export interface ThresholdAnalysis {
+  ruleCode: string
+  currentThreshold?: number
+  suggestedThreshold?: number
+  strategy?: string
+  reason?: string
+  confidence?: number
+  improvement?: string
+}
+
+export interface AgentExecutionResult {
+  output: string
+  iterations: number
+  thoughts: string[]
+  elapsedMs: number
+  degraded: boolean
 }
 
 export interface RegressionReport {
@@ -286,6 +423,19 @@ export const getTraces = (params: { ruleCode?: string; page?: number; size?: num
 export const replayTrace = (traceId: string) =>
   request<ReplayResult>({ url: `/ruleEngine/rules/traces/${traceId}/replay`, method: 'POST' })
 
+export const batchReplayTraces = (data: { startTime: string; endTime: string; ruleCode?: string; limit?: number }) =>
+  request<BatchReplayResult>({ url: '/ruleEngine/rules/traces/batchReplay', method: 'POST', data })
+
+// ===== 影响分析 =====
+
+export const impactPreview = (ruleCode: string, data: {
+  conditionExpression: string
+  severityExpression?: string
+  defaultSeverity?: string
+  limit?: number
+}) =>
+  request<ImpactPreviewResult>({ url: `/ruleEngine/rules/${ruleCode}/impactPreview`, method: 'POST', data })
+
 // ===== 审批 =====
 
 export const submitForReview = (ruleCode: string, data: { changeDesc: string; reviewer?: string }) =>
@@ -367,3 +517,172 @@ export const saveVariable = (data: VariableDefinition) =>
 
 export const deleteVariable = (name: string) =>
   request<void>({ url: `/ruleEngine/variables/${name}`, method: 'DELETE' })
+
+// ===== DSL 管理（P3-6） =====
+
+export const validateDsl = (data: { content: string; format?: string }) =>
+  request<DslValidateResult>({ url: '/ruleEngine/dsl/validate', method: 'POST', data })
+
+export const parseDsl = (data: { content: string; format?: string }) =>
+  request<any>({ url: '/ruleEngine/dsl/parse', method: 'POST', data })
+
+export const importDsl = (data: { content: string; format?: string; operator?: string }) =>
+  request<DslImportResult>({ url: '/ruleEngine/dsl/import', method: 'POST', data })
+
+export const exportAllDsl = (category?: string) =>
+  request<DslExportResult>({ url: '/ruleEngine/dsl/export', method: 'GET', params: { category } })
+
+export const exportSingleDsl = (ruleCode: string) =>
+  request<DslExportResult>({ url: `/ruleEngine/dsl/export/${ruleCode}`, method: 'GET' })
+
+export const previewDsl = (data: { content: string; format?: string; facts?: Record<string, any> }) =>
+  request<DslPreviewResult[]>({ url: '/ruleEngine/dsl/preview', method: 'POST', data })
+
+// ===== 审计日志（P3-5） =====
+
+export const getRecentAuditLogs = (limit?: number) =>
+  request<AuditLogEntry[]>({ url: '/ruleEngine/audit/recent', method: 'GET', params: { limit } })
+
+export const getAuditLogsByRule = (ruleCode: string, limit?: number) =>
+  request<AuditLogEntry[]>({ url: `/ruleEngine/audit/byRule/${ruleCode}`, method: 'GET', params: { limit } })
+
+export const getAuditLogsByOperator = (operator: string, limit?: number) =>
+  request<AuditLogEntry[]>({ url: '/ruleEngine/audit/byOperator', method: 'GET', params: { operator, limit } })
+
+export const getAuditLogsByAction = (action: string, limit?: number) =>
+  request<AuditLogEntry[]>({ url: '/ruleEngine/audit/byAction', method: 'GET', params: { action, limit } })
+
+export const getAuditLogsByTimeRange = (startTime: string, endTime: string, limit?: number) =>
+  request<AuditLogEntry[]>({ url: '/ruleEngine/audit/byTimeRange', method: 'GET', params: { startTime, endTime, limit } })
+
+// ===== 归因分析（P3-3） =====
+
+export const attribution = (ruleCode: string, facts: Record<string, any>) =>
+  request<AttributionReport>({ url: `/ruleEngine/rules/${ruleCode}/attribution`, method: 'POST', data: facts })
+
+export const batchAttribution = (traceIds: string[]) =>
+  request<AttributionReport[]>({ url: '/ruleEngine/rules/attribution/batch', method: 'POST', data: traceIds })
+
+export const traceAttribution = (traceId: string) =>
+  request<AttributionReport[]>({ url: `/ruleEngine/rules/traces/${traceId}/attribution`, method: 'GET' })
+
+// ===== 健康度评分（P2-15） =====
+
+export const getHealthScore = (ruleCode: string) =>
+  request<RuleHealthScore>({ url: `/ruleEngine/rules/${ruleCode}/ai/health`, method: 'GET' })
+
+export const getHealthScoreBatch = () =>
+  request<RuleHealthScore[]>({ url: '/ruleEngine/rules/ai/healthBatch', method: 'GET' })
+
+export const getRecommendations = (ruleCode: string) =>
+  request<any[]>({ url: `/ruleEngine/rules/${ruleCode}/ai/recommend`, method: 'GET' })
+
+export const describeRule = (ruleCode: string) =>
+  request<string>({ url: `/ruleEngine/rules/${ruleCode}/ai/describe`, method: 'GET' })
+
+export const optimizeExpression = (ruleCode: string) =>
+  request<string>({ url: `/ruleEngine/rules/${ruleCode}/ai/optimize`, method: 'GET' })
+
+// ===== 自适应阈值（P3-4） =====
+
+export const analyzeThreshold = (ruleCode: string, days?: number) =>
+  request<ThresholdAnalysis[]>({ url: `/ruleEngine/rules/${ruleCode}/thresholdAnalysis`, method: 'POST', params: { days } })
+
+export const analyzeAllThresholds = (days?: number) =>
+  request<ThresholdAnalysis[]>({ url: '/ruleEngine/rules/thresholdAnalysis/all', method: 'POST', params: { days } })
+
+export const applyThreshold = (ruleCode: string, analysis: ThresholdAnalysis) =>
+  request<boolean>({ url: `/ruleEngine/rules/${ruleCode}/applyThreshold`, method: 'POST', data: analysis })
+
+export const getThresholdSuggestions = (ruleCode: string) =>
+  request<ThresholdAnalysis[]>({ url: `/ruleEngine/rules/${ruleCode}/thresholdSuggestions`, method: 'GET' })
+
+// ===== AI Agent 执行（P3-5） =====
+
+export const executeAgent = (data: {
+  systemPrompt?: string
+  userPrompt: string
+  maxIterations?: number
+  tools?: string[]
+  facts?: Record<string, any>
+  timeoutMs?: number
+}) =>
+  request<AgentExecutionResult>({ url: '/ruleEngine/rules/agent/execute', method: 'POST', data })
+
+// ===== 规则依赖 =====
+
+export const listDependencies = (ruleCode: string) =>
+  request<any[]>({ url: `/ruleEngine/rules/${ruleCode}/dependencies`, method: 'GET' })
+
+export const listDependents = (ruleCode: string) =>
+  request<any[]>({ url: `/ruleEngine/rules/${ruleCode}/dependents`, method: 'GET' })
+
+export const cascadingDisable = (ruleCode: string) =>
+  request<string[]>({ url: `/ruleEngine/rules/${ruleCode}/cascadingDisable`, method: 'GET' })
+
+// ===== 规则目录树 =====
+
+export const getCategoryTree = () =>
+  request<any>({ url: '/ruleEngine/rules/categoryTree', method: 'GET' })
+
+export const listByCategoryPath = (path?: string) =>
+  request<RuleDefinition[]>({ url: '/ruleEngine/rules/byCategoryPath', method: 'GET', params: { path } })
+
+export const listByOwner = (owner: string) =>
+  request<RuleDefinition[]>({ url: '/ruleEngine/rules/byOwner', method: 'GET', params: { owner } })
+
+// ===== 规则链画布 =====
+
+export const getChainGraph = (ruleCode: string) =>
+  request<any>({ url: `/ruleEngine/rules/${ruleCode}/graph`, method: 'GET' })
+
+export const saveChainGraph = (ruleCode: string, graph: any) =>
+  request<any>({ url: `/ruleEngine/rules/${ruleCode}/graph`, method: 'POST', data: graph })
+
+export const deleteChainGraph = (ruleCode: string) =>
+  request<void>({ url: `/ruleEngine/rules/${ruleCode}/graph`, method: 'DELETE' })
+
+export const validateChainGraph = (graph: any) =>
+  request<any[]>({ url: '/ruleEngine/rules/graph/validate', method: 'POST', data: graph })
+
+export const dryRunGraph = (ruleCode: string, facts: Record<string, any>) =>
+  request<RuleResult[]>({ url: `/ruleEngine/rules/${ruleCode}/graph/dryRun`, method: 'POST', data: facts })
+
+// ===== 表达式函数市场 =====
+
+export const getExpressionFunctions = (engine?: string) =>
+  request<any[]>({ url: '/ruleEngine/rules/expressionFunctions', method: 'GET', params: { engine } })
+
+// ===== 导入导出 =====
+
+export const exportRules = () =>
+  request<any>({ url: '/ruleEngine/rules/export', method: 'GET' })
+
+export const exportRulesAsYaml = () =>
+  request<string>({ url: '/ruleEngine/rules/export.yaml', method: 'GET' })
+
+export const importRules = (data: { rules: any[] }) =>
+  request<any>({ url: '/ruleEngine/rules/import', method: 'POST', data })
+
+// ===== 规则包管理（完整） =====
+
+export const searchPacks = (keyword?: string) =>
+  request<any[]>({ url: '/ruleEngine/rules/packs/search', method: 'GET', params: { keyword } })
+
+export const getLatestPack = (packCode: string) =>
+  request<any>({ url: `/ruleEngine/rules/packs/${packCode}/latest`, method: 'GET' })
+
+export const listPackVersions = (packCode: string) =>
+  request<any[]>({ url: `/ruleEngine/rules/packs/${packCode}/versions`, method: 'GET' })
+
+export const rollbackPack = (packCode: string, version: string) =>
+  request<any>({ url: `/ruleEngine/rules/packs/${packCode}/rollback`, method: 'POST', params: { version } })
+
+export const diffPack = (packCode: string, fromVersion: string, toVersion: string) =>
+  request<any>({ url: `/ruleEngine/rules/packs/${packCode}/diff`, method: 'GET', params: { from: fromVersion, to: toVersion } })
+
+export const checkPackUpdates = () =>
+  request<any[]>({ url: '/ruleEngine/rules/packs/updateCheck', method: 'GET' })
+
+export const batchUpdatePacks = (packCodes: string[]) =>
+  request<any[]>({ url: '/ruleEngine/rules/packs/batchUpdate', method: 'POST', data: packCodes })

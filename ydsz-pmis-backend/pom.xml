@@ -25,6 +25,8 @@
         <module>ydsz-pmis-userinfo</module>
         <module>ydsz-pmis-system</module>
         <module>ydsz-pmis-project</module>
+        <module>ydsz-pmis-sales</module>
+        <module>ydsz-pmis-finance</module>
         <module>ydsz-pmis-message</module>
         <module>ydsz-pmis-cronjob</module>
         <module>ydsz-pmis-workflow</module>
@@ -130,6 +132,16 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-literule</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-sales</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-finance</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

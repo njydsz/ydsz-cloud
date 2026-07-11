@@ -30,8 +30,14 @@ public final class FeignClientConstants {
     /** 工作流引擎服务名 */
     public static final String WORKFLOW = "ydsz-pmis-workflow";
 
-    /** 项目管理服务名 */
+    /** 项目管理服务名（项目执行域：立项/WBS/EVM/风险/报表） */
     public static final String PROJECT = "ydsz-pmis-project";
+
+    /** 商务销售服务名（商机/合同/变更/模板） */
+    public static final String SALES = "ydsz-pmis-sales";
+
+    /** 财务会计服务名（发票/回款/费用/收入/利润/对账） */
+    public static final String FINANCE = "ydsz-pmis-finance";
 
     /** AI Agent 服务名 */
     public static final String AGENT = "ydsz-pmis-agent";
