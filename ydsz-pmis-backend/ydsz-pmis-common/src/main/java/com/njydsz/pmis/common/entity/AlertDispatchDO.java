@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.entity;
+package com.njydsz.pmis.common.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;

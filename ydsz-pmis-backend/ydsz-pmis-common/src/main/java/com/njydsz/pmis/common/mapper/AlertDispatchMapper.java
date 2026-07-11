@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.mapper;
+package com.njydsz.pmis.common.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.common.entity.common.AlertDispatchDO;

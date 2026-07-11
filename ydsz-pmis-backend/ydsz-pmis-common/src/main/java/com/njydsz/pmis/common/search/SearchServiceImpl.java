@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.search;
+package com.njydsz.pmis.common.search;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;

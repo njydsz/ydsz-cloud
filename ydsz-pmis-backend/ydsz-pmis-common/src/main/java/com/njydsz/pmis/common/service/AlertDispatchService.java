@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.service;
+package com.njydsz.pmis.common.service;
 
 import com.njydsz.pmis.common.dto.common.AlertDispatchDTO;
 import com.njydsz.pmis.common.entity.common.AlertDispatchDO;

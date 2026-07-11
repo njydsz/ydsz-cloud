@@ -282,6 +282,20 @@ pmis:
       # token: ${VAULT_TOKEN:}
       # backend: secret
 
+  # ---------- Sentry 错误监控（P0-5：生产环境启用） ----------
+  # 生产环境通过 K8s ConfigMap/Secret 或环境变量注入 DSN，此处提供默认结构
+  # 开发环境默认关闭（enabled=false），生产环境设为 true 并注入 DSN
+  # 环境变量映射：PMIS_SENTRY_ENABLED → pmis.sentry.enabled（Spring Boot relaxed binding）
+  sentry:
+    enabled: ${PMIS_SENTRY_ENABLED:false}
+    dsn: ${PMIS_SENTRY_DSN:}
+    environment: ${PMIS_SENTRY_ENVIRONMENT:dev}
+    release: ${PMIS_SENTRY_RELEASE:pmis-1.0.0}
+    # 后端性能采样率：生产环境 10%（避免高吞吐下 Sentry 压力过大），dev 环境 100%
+    traces-sample-rate: ${PMIS_SENTRY_TRACES_SAMPLE_RATE:0.1}
+    # 错误采样率：100%（所有异常均上报）
+    sample-rate: ${PMIS_SENTRY_SAMPLE_RATE:1.0}
+
 # ---------- Jasypt 配置加密（P0-4：敏感配置加密） ----------
 # starter 自动配置：启动时解密 ENC(xxx) 格式的配置，无需额外配置类
 # 主密码通过环境变量 JASYPT_ENCRYPTOR_PASSWORD 注入，不写入配置文件

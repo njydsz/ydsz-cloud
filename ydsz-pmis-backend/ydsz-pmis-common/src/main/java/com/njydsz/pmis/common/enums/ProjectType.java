@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.enums;
+package com.njydsz.pmis.common.enums;
 
 /**
  * 项目类型
