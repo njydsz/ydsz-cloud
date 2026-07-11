@@ -3,8 +3,7 @@ package com.njydsz.pmis.workflow.entity.instance;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.njydsz.pmis.common.entity.BaseDO;
+import com.njydsz.pmis.common.entity.VersionableDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -27,7 +26,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("pmis_flow_run_task")
-public class FlowRunTaskDO extends BaseDO {
+public class FlowRunTaskDO extends VersionableDO {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -131,9 +130,7 @@ public class FlowRunTaskDO extends BaseDO {
     /** P1-6: 是否已升级（0 否 / 1 是，避免重复升级） */
     private Integer slaEscalated;
 
-    /** GAP-P1: 乐观锁版本号 — 会签并发安全 */
-    @Version
-    private Integer version;
+    /** 乐观锁版本号由 VersionableDO 继承，无需在此声明 */
 
     /**
      * GAP-P2-10: FOREACH 当前迭代元素值

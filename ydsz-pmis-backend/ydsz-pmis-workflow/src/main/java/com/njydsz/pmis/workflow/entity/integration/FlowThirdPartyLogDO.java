@@ -3,12 +3,9 @@ package com.njydsz.pmis.workflow.entity.integration;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.LogBaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * 三方审批回调日志 DO
@@ -26,10 +23,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("pmis_flow_third_party_log")
-public class FlowThirdPartyLogDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class FlowThirdPartyLogDO extends LogBaseDO {
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -67,7 +61,4 @@ public class FlowThirdPartyLogDO implements Serializable {
 
     /** 租户 ID */
     private String tenantId;
-
-    /** 创建时间 */
-    private LocalDateTime createdAt;
 }

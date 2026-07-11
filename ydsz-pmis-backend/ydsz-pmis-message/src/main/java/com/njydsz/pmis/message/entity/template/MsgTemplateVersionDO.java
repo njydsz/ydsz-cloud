@@ -51,9 +51,6 @@ public class MsgTemplateVersionDO extends BaseDO {
     /** 审核意见 */
     private String auditRemark;
 
-    /** 创建人（提交人） */
-    private String createdBy;
-
     /** 租户 ID */
     private String tenantId;
 }

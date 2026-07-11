@@ -4,8 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.njydsz.pmis.common.entity.BaseDO;
+import com.njydsz.pmis.common.entity.VersionableDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -24,7 +23,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("pmis_flow_definition")
-public class FlowDefinitionDO extends BaseDO {
+public class FlowDefinitionDO extends VersionableDO {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -120,9 +119,7 @@ public class FlowDefinitionDO extends BaseDO {
      */
     private String canaryRolloutLog;
 
-    /** 乐观锁版本号（P1-2） */
-    @Version
-    private Integer version;
+    /** 乐观锁版本号由 VersionableDO 继承，无需在此声明 */
 
     // ============================== P2-4: 设计器协同编辑锁定 ==============================
 

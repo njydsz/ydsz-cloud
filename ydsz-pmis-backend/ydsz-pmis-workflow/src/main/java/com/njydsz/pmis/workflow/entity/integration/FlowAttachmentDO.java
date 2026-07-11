@@ -2,26 +2,28 @@ package com.njydsz.pmis.workflow.entity.integration;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
+import com.njydsz.pmis.common.entity.VersionableDO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * 自建工作流引擎 - 审批附件实体
  *
  * <p>P1-6 (GAP-51): 审批时提交的附件（图片/文档/视频等）统一落库，支持查询与下载。
  *
+ * <p>P1-7 重构：继承 {@link VersionableDO}，统一审计字段（createdBy/createdAt/updatedBy/
+ * updatedAt/deleted）与乐观锁（version）由父类管理，消除字段重复声明。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("pmis_flow_attachment")
-public class FlowAttachmentDO implements Serializable {
+public class FlowAttachmentDO extends VersionableDO {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -75,26 +77,6 @@ public class FlowAttachmentDO implements Serializable {
     /** 文件 MD5（去重/校验） */
     private String md5;
 
-    /** 逻辑删除: 0=未删 1=已删 */
-    @TableLogic
-    private Integer deleted;
-
-    /** 创建人 */
-    private String createdBy;
-
-    /** 创建时间 */
-    private LocalDateTime createdAt;
-
-    /** 修改人 */
-    private String updatedBy;
-
-    /** 修改时间 */
-    private LocalDateTime updatedAt;
-
     /** 链路追踪 ID */
     private String providerTraceId;
-
-    /** 乐观锁版本号 */
-    @Version
-    private Integer version;
 }

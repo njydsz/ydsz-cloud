@@ -1,14 +1,11 @@
 package com.njydsz.pmis.system.entity.audit;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.LogBaseDO;
 import lombok.Data;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -19,10 +16,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("pmis_data_export_audit")
-public class DataExportAuditDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class DataExportAuditDO extends LogBaseDO {
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -56,8 +50,4 @@ public class DataExportAuditDO implements Serializable {
     private String tenantId;
     /** 导出时间 */
     private LocalDateTime exportedAt;
-
-    /** 创建时间 */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
 }

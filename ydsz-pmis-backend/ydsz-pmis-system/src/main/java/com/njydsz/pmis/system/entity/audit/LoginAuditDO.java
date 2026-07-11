@@ -1,14 +1,11 @@
 package com.njydsz.pmis.system.entity.audit;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.LogBaseDO;
 import lombok.Data;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -19,10 +16,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("pmis_login_audit")
-public class LoginAuditDO implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class LoginAuditDO extends LogBaseDO {
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
@@ -49,8 +43,4 @@ public class LoginAuditDO implements Serializable {
     private String traceId;
     /** 租户 ID */
     private String tenantId;
-
-    /** 创建时间 */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
 }
