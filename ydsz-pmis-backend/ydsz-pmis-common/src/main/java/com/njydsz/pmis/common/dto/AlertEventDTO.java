@@ -1,6 +1,6 @@
-package com.njydsz.pmis.project.dto.common;
+﻿package com.njydsz.pmis.common.dto;
 
-import com.njydsz.pmis.project.enums.common.AlertSeverity;
+import com.njydsz.pmis.common.enums.common.AlertSeverity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

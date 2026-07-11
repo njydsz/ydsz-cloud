@@ -1,13 +1,13 @@
-package com.njydsz.pmis.project.controller.common;
+﻿package com.njydsz.pmis.common.search;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.util.SortBy;
-import com.njydsz.pmis.project.search.ProjectSearchVO;
-import com.njydsz.pmis.project.search.UniversalSearchVO;
-import com.njydsz.pmis.project.service.common.SearchService;
+import com.njydsz.pmis.common.search.ProjectSearchVO;
+import com.njydsz.pmis.common.search.UniversalSearchVO;
+import com.njydsz.pmis.common.service.common.SearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;

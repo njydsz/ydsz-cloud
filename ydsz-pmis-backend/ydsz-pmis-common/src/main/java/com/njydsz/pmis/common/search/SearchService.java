@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.service.common;
+﻿package com.njydsz.pmis.common.search;
 
-import com.njydsz.pmis.project.search.ProjectSearchVO;
-import com.njydsz.pmis.project.search.UniversalSearchVO;
+import com.njydsz.pmis.common.search.ProjectSearchVO;
+import com.njydsz.pmis.common.search.UniversalSearchVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

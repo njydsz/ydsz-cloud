@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.service.common;
+﻿package com.njydsz.pmis.common.service;
 
-import com.njydsz.pmis.project.dto.common.AlertDispatchDTO;
-import com.njydsz.pmis.project.entity.common.AlertDispatchDO;
+import com.njydsz.pmis.common.dto.common.AlertDispatchDTO;
+import com.njydsz.pmis.common.entity.common.AlertDispatchDO;
 
 import java.util.List;
 import java.util.Map;

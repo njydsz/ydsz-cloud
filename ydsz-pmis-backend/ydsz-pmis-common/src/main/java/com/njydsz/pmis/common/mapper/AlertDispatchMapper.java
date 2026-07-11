@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.mapper.common;
+﻿package com.njydsz.pmis.common.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.entity.common.AlertDispatchDO;
+import com.njydsz.pmis.common.entity.common.AlertDispatchDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

@@ -1,11 +1,11 @@
-package com.njydsz.pmis.project.controller.common;
+﻿package com.njydsz.pmis.common.controller;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.project.dto.common.AlertDispatchDTO;
-import com.njydsz.pmis.project.entity.common.AlertDispatchDO;
-import com.njydsz.pmis.project.service.common.AlertDispatchService;
+import com.njydsz.pmis.common.dto.common.AlertDispatchDTO;
+import com.njydsz.pmis.common.entity.common.AlertDispatchDO;
+import com.njydsz.pmis.common.service.common.AlertDispatchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.search;
+﻿package com.njydsz.pmis.common.search;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;

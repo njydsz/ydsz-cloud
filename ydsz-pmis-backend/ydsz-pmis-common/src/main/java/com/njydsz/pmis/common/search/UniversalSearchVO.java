@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.search;
+﻿package com.njydsz.pmis.common.search;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
