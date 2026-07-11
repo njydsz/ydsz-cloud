@@ -88,6 +88,14 @@ class PasswordPolicyTest {
         }
 
         @Test
+        @DisplayName("密码包含用户名时校验失败")
+        void shouldFailWhenPasswordContainsUsername() {
+            var result = PasswordPolicy.check("Str0ng!adminPass", "admin");
+            assertFalse(result.pass());
+            assertTrue(result.failures().stream().anyMatch(f -> f.contains("包含用户名")));
+        }
+
+        @Test
         @DisplayName("密码与用户名相同校验失败")
         void shouldFailWhenPasswordEqualsUsername() {
             var result = PasswordPolicy.check("Admin123!", "Admin123!");
@@ -104,7 +112,31 @@ class PasswordPolicyTest {
         }
 
         @Test
-        @DisplayName("null 用户名时不检查用户名相同规则")
+        @DisplayName("包含连续递增字母校验失败")
+        void shouldFailWithSequentialAscending() {
+            var result = PasswordPolicy.check("Abc123!Xy", "user");
+            assertFalse(result.pass());
+            assertTrue(result.failures().stream().anyMatch(f -> f.contains("递增")));
+        }
+
+        @Test
+        @DisplayName("包含连续递减字母校验失败")
+        void shouldFailWithSequentialDescending() {
+            var result = PasswordPolicy.check("Cba987!Yx", "user");
+            assertFalse(result.pass());
+            assertTrue(result.failures().stream().anyMatch(f -> f.contains("递减")));
+        }
+
+        @Test
+        @DisplayName("包含连续重复字符校验失败")
+        void shouldFailWithRepeatingChars() {
+            var result = PasswordPolicy.check("AAA8xyz!", "user");
+            assertFalse(result.pass());
+            assertTrue(result.failures().stream().anyMatch(f -> f.contains("重复")));
+        }
+
+        @Test
+        @DisplayName("null 用户名时不检查用户名相关规则")
         void shouldNotCheckUsernameWhenNull() {
             var result = PasswordPolicy.check("Str0ng!Pass", null);
             assertTrue(result.pass());
@@ -177,6 +209,32 @@ class PasswordPolicyTest {
         void shouldReturnTrueAtBoundary() {
             LocalDateTime boundary = LocalDateTime.now().minusDays(91);
             assertTrue(PasswordPolicy.isExpired(boundary, 90));
+        }
+    }
+
+    @Nested
+    @DisplayName("daysUntilExpiry() 密码过期预警")
+    class DaysUntilExpiryTest {
+
+        @Test
+        @DisplayName("lastChange 为 null 返回 0")
+        void shouldReturn0ForNullLastChange() {
+            assertEquals(0, PasswordPolicy.daysUntilExpiry(null, 90));
+        }
+
+        @Test
+        @DisplayName("未过期返回剩余天数")
+        void shouldReturnRemainingDays() {
+            LocalDateTime recent = LocalDateTime.now().minusDays(10);
+            long remaining = PasswordPolicy.daysUntilExpiry(recent, 90);
+            assertTrue(remaining > 70 && remaining <= 80);
+        }
+
+        @Test
+        @DisplayName("已过期返回 0")
+        void shouldReturn0ForExpired() {
+            LocalDateTime old = LocalDateTime.now().minusDays(100);
+            assertEquals(0, PasswordPolicy.daysUntilExpiry(old, 90));
         }
     }
 

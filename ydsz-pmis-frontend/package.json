@@ -84,6 +84,7 @@
     "vue-i18n": "^10.0.8",
     "vue-router": "^4.4.5",
     "vxe-table": "^4.12.1",
+    "web-vitals": "^4.2.4",
     "xe-utils": "^3.7.7"
   },
   "devDependencies": {

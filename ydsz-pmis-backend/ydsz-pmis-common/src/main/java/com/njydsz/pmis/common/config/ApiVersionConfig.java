@@ -37,7 +37,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Slf4j
 @Configuration
-@ConditionalOnProperty(prefix = "pmis.api", name = "version-enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "pmis.api", name = "version-enabled", havingValue = "true", matchIfMissing = true)
 public class ApiVersionConfig implements WebMvcConfigurer {
 
     /** API 版本前缀（默认 /api/v1） */

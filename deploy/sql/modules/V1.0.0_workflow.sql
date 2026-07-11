@@ -2961,3 +2961,85 @@ DROP TABLE IF EXISTS pmis_flow_delegate_message CASCADE;
 -- 6. 移除 pmis_flow_his_variable（归档变量以 JSON blob 存储在 his_instance.variable 中）
 DROP TABLE IF EXISTS pmis_flow_his_variable CASCADE;
 
+-- ====================================================================
+-- ================== P0-1: DMN 决策表引擎 ==========================
+-- ====================================================================
+
+-- P0-1: DMN 决策表定义
+CREATE TABLE IF NOT EXISTS pmis_flow_dmn_decision (
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
+    decision_code       VARCHAR(64)       NOT NULL,
+    decision_name       VARCHAR(128)      NOT NULL,
+    flow_code           VARCHAR(64),
+    node_code           VARCHAR(64),
+    hit_policy          VARCHAR(16)       NOT NULL DEFAULT 'FIRST',
+    input_definitions   TEXT,
+    output_definitions  TEXT,
+    status              VARCHAR(16)       NOT NULL DEFAULT 'DRAFT',
+    decision_version    INTEGER           NOT NULL DEFAULT 1,
+    remark              VARCHAR(512),
+    created_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT          NOT NULL DEFAULT 0,
+    provider_trace_id   VARCHAR(64),
+    version             INTEGER           NOT NULL DEFAULT 0,
+    CONSTRAINT uk_pfd_tenant_code UNIQUE (tenant_id, decision_code, deleted),
+    CONSTRAINT ck_pfd_hit_policy CHECK (hit_policy IN ('UNIQUE','FIRST','ANY','COLLECT')),
+    CONSTRAINT ck_pfd_status CHECK (status IN ('DRAFT','PUBLISHED','DEPRECATED')),
+    CONSTRAINT ck_pfd_deleted CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_flow_dmn_decision IS 'P0-1: DMN 决策表定义 — 对标 BPMN 2.0 DMN 规范的决策表';
+COMMENT ON COLUMN pmis_flow_dmn_decision.hit_policy IS '击中策略: UNIQUE(仅一条命中) / FIRST(取首条命中) / ANY(多条需一致) / COLLECT(收集全部)';
+COMMENT ON COLUMN pmis_flow_dmn_decision.input_definitions IS '输入列定义 JSON: [{"name":"amount","label":"金额","type":"number","expression":"amount"}]';
+COMMENT ON COLUMN pmis_flow_dmn_decision.output_definitions IS '输出列定义 JSON: [{"name":"level","label":"审批层级","type":"string"}]';
+COMMENT ON COLUMN pmis_flow_dmn_decision.status IS '状态: DRAFT / PUBLISHED / DEPRECATED';
+
+CREATE INDEX IF NOT EXISTS idx_pfd_tenant_status
+    ON pmis_flow_dmn_decision (tenant_id, status)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pfd_tenant_flow_node
+    ON pmis_flow_dmn_decision (tenant_id, flow_code, node_code)
+    WHERE deleted = 0 AND status = 'PUBLISHED';
+
+CREATE INDEX IF NOT EXISTS idx_pfd_trace
+    ON pmis_flow_dmn_decision (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+-- P0-1: DMN 决策规则行
+CREATE TABLE IF NOT EXISTS pmis_flow_dmn_rule (
+    id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
+    decision_id         VARCHAR(20)       NOT NULL,
+    rule_order          INTEGER           NOT NULL DEFAULT 1,
+    input_entries       TEXT,
+    output_entries      TEXT,
+    remark              VARCHAR(512),
+    enabled             SMALLINT          NOT NULL DEFAULT 1,
+    created_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT          NOT NULL DEFAULT 0,
+    provider_trace_id   VARCHAR(64),
+    CONSTRAINT ck_pfdr_enabled CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_pfdr_deleted CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_flow_dmn_rule IS 'P0-1: DMN 决策规则行 — 决策表中的每一行规则';
+COMMENT ON COLUMN pmis_flow_dmn_rule.rule_order IS '规则序号(从1开始,决定匹配顺序)';
+COMMENT ON COLUMN pmis_flow_dmn_rule.input_entries IS '输入条件 JSON: [">=10000","<50000"]，"-"表示通配';
+COMMENT ON COLUMN pmis_flow_dmn_rule.output_entries IS '输出值 JSON: ["LEVEL_3","user:1001"]';
+
+CREATE INDEX IF NOT EXISTS idx_pfdr_decision
+    ON pmis_flow_dmn_rule (decision_id, rule_order)
+    WHERE deleted = 0 AND enabled = 1;
+
+CREATE INDEX IF NOT EXISTS idx_pfdr_trace
+    ON pmis_flow_dmn_rule (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+

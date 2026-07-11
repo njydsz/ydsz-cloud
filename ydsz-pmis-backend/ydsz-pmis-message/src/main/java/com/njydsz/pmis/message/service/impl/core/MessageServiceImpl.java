@@ -168,6 +168,17 @@ public class MessageServiceImpl implements MessageService {
         String bizType = request.getBizType();
         String templateCode = request.getTemplateCode();
 
+        // ①-2 P0-1: 用户通道绑定解析（receiver 是 userId 时自动解析为通道联系方式）
+        if (StringUtils.hasText(receiver) && StringUtils.hasText(channel)) {
+            String resolved = userChannelBindingService.resolveChannelUserId(receiver, channel);
+            if (resolved != null) {
+                log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUserId={}",
+                        receiver, channel, resolved);
+                request.setReceiver(resolved);
+                receiver = resolved;
+            }
+        }
+
         // ③ 灰度命中差异化处理（P0-7）：命中后切换实验模板/通道
         int canaryFlag = 0;
         // P1-6: 命中时记录原始 canaryKey(=切换前 templateCode),用于 A/B 报表分组;未命中为 null

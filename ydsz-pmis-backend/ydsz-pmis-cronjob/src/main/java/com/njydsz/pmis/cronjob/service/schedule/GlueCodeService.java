@@ -3,6 +3,7 @@ package com.njydsz.pmis.cronjob.service.schedule;
 import com.njydsz.pmis.cronjob.entity.schedule.GlueCodeDO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * GLUE 在线编码服务（P1-2 GLUE 在线编码）。
@@ -56,4 +57,39 @@ public interface GlueCodeService {
      * @return 新创建的回滚版本
      */
     GlueCodeDO rollback(String jobId, Integer version);
+
+    /**
+     * P1-1: 在线测试 GLUE 代码（不保存版本，直接执行）。
+     *
+     * <p>在内存中编译执行代码并返回结果，不持久化任何数据。
+     * 支持超时控制（默认 10s）和异常捕获。
+     *
+     * @param sourceCode 源代码
+     * @param language   语言（GROOVY / PYTHON / SHELL / JAVASCRIPT）
+     * @param paramsJson 测试参数（JSON 字符串，可空）
+     * @return 执行结果，包含 success / result / error / durationMs
+     */
+    Map<String, Object> testCode(String sourceCode, String language, String paramsJson);
+
+    /**
+     * P1-1: 获取代码模板。
+     *
+     * <p>返回指定语言的代码模板，包含基本结构和示例代码。
+     *
+     * @param language 语言（GROOVY / PYTHON / SHELL / JAVASCRIPT）
+     * @return 模板映射，包含 template / description / language
+     */
+    Map<String, String> getCodeTemplate(String language);
+
+    /**
+     * P1-1: 对比两个版本的差异。
+     *
+     * <p>返回版本间的差异信息，包含各版本的源代码和行级差异。
+     *
+     * @param jobId    任务 ID
+     * @param versionA 版本 A
+     * @param versionB 版本 B
+     * @return 差异信息映射
+     */
+    Map<String, Object> diffVersions(String jobId, Integer versionA, Integer versionB);
 }

@@ -13,6 +13,7 @@ import com.njydsz.pmis.workflow.entity.instance.FlowSkipDO;
 import com.njydsz.pmis.workflow.enums.definition.FlowNodeType;
 import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.service.dmn.FlowDmnDecisionService;
 import com.njydsz.pmis.workflow.service.instance.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.instance.FlowJoinTokenService;
 import com.njydsz.pmis.workflow.service.impl.instance.FlowInstanceServiceImpl;
@@ -57,6 +58,9 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      */
     private final FlowRoutingService routingService;
 
+    /** P0-1: DMN 决策表服务（可选注入，未启用时为 null） */
+    private final FlowDmnDecisionService dmnDecisionService;
+
     public DefaultFlowAdvancer(FlowDefinitionCacheService flowDefinitionCacheService,
                                 FlowInstanceMapper instanceMapper,
                                 FlowTaskService taskService,
@@ -64,7 +68,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                                 FlowVariableStrategy variableStrategy,
                                 FlowRunTaskMapper taskMapper,
                                 FlowJoinTokenService joinTokenService,
-                                @Autowired(required = false) FlowRoutingService routingService) {
+                                @Autowired(required = false) FlowRoutingService routingService,
+                                @Autowired(required = false) FlowDmnDecisionService dmnDecisionService) {
         this.flowDefinitionCacheService = flowDefinitionCacheService;
         this.instanceMapper = instanceMapper;
         this.taskService = taskService;
@@ -73,6 +78,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         this.taskMapper = taskMapper;
         this.joinTokenService = joinTokenService;
         this.routingService = routingService;
+        this.dmnDecisionService = dmnDecisionService;
     }
 
     @Override
@@ -300,8 +306,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     /**
      * 评估跳转条件表达式
      *
-     * <p>优先使用 FlowRoutingService（literule Aviator 引擎），
-     * 如果 routingService 不可用或评估失败，回退到 DefaultFlowVariableStrategy（SpEL）。
+     * <p>评估优先级：
+     * <ol>
+     *   <li>P0-1: DMN 决策表（condition 以 {@code dmn:} 前缀时，如 {@code dmn:risk_level_decision}）</li>
+     *   <li>FlowRoutingService（literule Aviator 引擎）</li>
+     *   <li>DefaultFlowVariableStrategy（SpEL）兜底</li>
+     * </ol>
      *
      * @param condition 跳转条件表达式
      * @param variables 流程变量
@@ -311,6 +321,26 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     public boolean evaluateSkipCondition(String condition, Map<String, Object> variables) {
         if (condition == null || condition.isBlank()) {
             return true;
+        }
+
+        // P0-1: DMN 决策表评估（condition 以 "dmn:" 前缀标识）
+        if (condition.startsWith("dmn:") && dmnDecisionService != null) {
+            String decisionCode = condition.substring(4).trim();
+            try {
+                // 从变量中提取租户 ID
+                String tenantId = "1";
+                if (variables != null && variables.get("_tenantId") != null) {
+                    tenantId = String.valueOf(variables.get("_tenantId"));
+                }
+                Map<String, Object> output = dmnDecisionService.evaluate(decisionCode, variables, tenantId);
+                boolean result = output != null && !output.isEmpty();
+                log.debug("[Flow] 使用 DMN 决策表评估条件: decision={} -> {} output={}",
+                        decisionCode, result, output);
+                return result;
+            } catch (Exception e) {
+                log.warn("[Flow] DMN 决策表评估失败，回退到 routingService: decision={} err={}",
+                        decisionCode, e.getMessage());
+            }
         }
 
         // 优先使用 literule FlowRoutingService 评估

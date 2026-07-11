@@ -22,8 +22,12 @@ public enum MessageChannelEnum {
     WEBHOOK,
     /** 钉钉群机器人 */
     DINGTALK,
+    /** 钉钉工作通知(企业内部应用) */
+    DINGTALK_WORK,
     /** 企业微信群机器人 */
     WECOM,
+    /** 企业微信应用消息(企业内部应用) */
+    WECOM_APP,
     /** 飞书群机器人 */
     FEISHU,
     /** 微信小程序订阅消息 */
