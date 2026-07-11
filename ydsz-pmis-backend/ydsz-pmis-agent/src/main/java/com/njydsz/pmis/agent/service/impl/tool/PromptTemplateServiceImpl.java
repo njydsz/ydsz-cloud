@@ -8,6 +8,7 @@ import com.njydsz.pmis.agent.engine.prompt.PromptTemplateRegistry;
 import com.njydsz.pmis.agent.entity.agent.AgentPromptTemplateDO;
 import com.njydsz.pmis.agent.mapper.agent.AgentPromptTemplateMapper;
 import com.njydsz.pmis.agent.service.tool.PromptTemplateService;
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.exception.BizException;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +78,7 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
     public AgentPromptTemplateDO activate(String id) {
         AgentPromptTemplateDO template = mapper.selectById(id);
         if (template == null) {
-            throw new BizException("模板不存在: " + id);
+            throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + id);
         }
         // 排他：同 code 的其他版本置为非生效
         mapper.deactivateOthers(template.getTemplateCode(), id);

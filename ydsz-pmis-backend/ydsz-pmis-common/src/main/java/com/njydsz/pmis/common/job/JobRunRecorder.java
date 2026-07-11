@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.job;
 
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.TraceIdUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
@@ -115,17 +115,15 @@ public final class JobRunRecorder {
 
     /**
      * 生成或复用 traceId
-     * <p>优先从 MDC 复用 (调度器已注入), 否则生成新的</p>
+     *
+     * <p>P2-13 统一链路追踪：原生成 {@code "JOB-{ts}-{snowflake8}"} 格式与 Brave 16/32 位 hex
+     * 格式不一致，无法与 Zipkin/SkyWalking 链路关联。现统一委托 {@link TraceIdUtil#getOrCreate()}，
+     * 优先复用 MDC 中 Brave 写入的 traceId，降级时生成 hex 格式雪花 ID。
      *
      * @return 当前线程有效的 traceId
      */
     public static String ensureTraceId() {
-        String existing = MDC.get(MDC_TRACE_ID);
-        if (existing != null && !existing.isEmpty()) {
-            return existing;
-        }
-        return "JOB-" + System.currentTimeMillis() + "-" +
-                SnowflakeIdGenerator.nextIdStr().substring(0, 8).toUpperCase();
+        return TraceIdUtil.getOrCreate();
     }
 
     private static boolean tryPutMdc(String key, String val) {

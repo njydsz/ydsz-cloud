@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.sales.mapper.closure.ProjectClosureMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.ProjectClosureDO">
+        <id column="id" property="id"/>
+        <result column="closure_code" property="closureCode"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="closure_type" property="closureType"/>
+        <result column="closure_reason" property="closureReason"/>
+        <result column="contract_amount" property="contractAmount"/>
+        <result column="received_amount" property="receivedAmount"/>
+        <result column="received_ratio" property="receivedRatio"/>
+        <result column="cpi" property="cpi"/>
+        <result column="spi" property="spi"/>
+        <result column="gross_margin" property="grossMargin"/>
+        <result column="progress_pct" property="progressPct"/>
+        <result column="total_cost" property="totalCost"/>
+        <result column="warranty_months" property="warrantyMonths"/>
+        <result column="warranty_start_date" property="warrantyStartDate"/>
+        <result column="warranty_end_date" property="warrantyEndDate"/>
+        <result column="planned_archive_date" property="plannedArchiveDate"/>
+        <result column="actual_archive_date" property="actualArchiveDate"/>
+        <result column="archive_file_ids" property="archiveFileIds"/>
+        <result column="locked" property="locked"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="applicant_id" property="applicantId"/>
+        <result column="applicant_name" property="applicantName"/>
+        <result column="approver_id" property="approverId"/>
+        <result column="approver_name" property="approverName"/>
+        <result column="submitted_at" property="submittedAt"/>
+        <result column="approved_at" property="approvedAt"/>
+        <result column="archived_at" property="archivedAt"/>
+        <result column="approval_comment" property="approvalComment"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT id, closure_code, initiation_id, closure_type, closure_reason, contract_amount, received_amount, received_ratio, cpi, spi, gross_margin, progress_pct, total_cost, warranty_months, warranty_start_date, warranty_end_date, planned_archive_date, actual_archive_date, archive_file_ids, locked, status, remark, applicant_id, applicant_name, approver_id, approver_name, submitted_at, approved_at, archived_at, approval_comment, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_closure
+        WHERE closure_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <select id="selectByInitiation" resultMap="BaseResultMap">
+        SELECT id, closure_code, initiation_id, closure_type, closure_reason, contract_amount, received_amount, received_ratio, cpi, spi, gross_margin, progress_pct, total_cost, warranty_months, warranty_start_date, warranty_end_date, planned_archive_date, actual_archive_date, archive_file_ids, locked, status, remark, applicant_id, applicant_name, approver_id, approver_name, submitted_at, approved_at, archived_at, approval_comment, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_closure
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY created_at DESC LIMIT 1
+    </select>
+
+    <update id="updateStatus">
+        UPDATE pmis_execution_closure
+        SET status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <update id="updateLocked">
+        UPDATE pmis_execution_closure
+        SET locked = #{locked}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="selectByType" resultMap="BaseResultMap">
+        SELECT id, closure_code, initiation_id, closure_type, closure_reason, contract_amount, received_amount, received_ratio, cpi, spi, gross_margin, progress_pct, total_cost, warranty_months, warranty_start_date, warranty_end_date, planned_archive_date, actual_archive_date, archive_file_ids, locked, status, remark, applicant_id, applicant_name, approver_id, approver_name, submitted_at, approved_at, archived_at, approval_comment, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_closure
+        <where>
+            deleted = 0
+            <if test="closureType != null and closureType != ''">
+                AND closure_type = #{closureType}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="aggregateByType" resultType="java.util.Map">
+        SELECT closure_type, COUNT(1) AS cnt
+        FROM pmis_execution_closure
+        WHERE tenant_id = #{tenantId} AND deleted = 0
+        GROUP BY closure_type
+    </select>
+
+    <select id="countByStatus" resultType="java.lang.Long">
+        SELECT COUNT(1) FROM pmis_execution_closure
+        WHERE status = #{status} AND tenant_id = #{tenantId} AND deleted = 0
+    </select>
+
+</mapper>

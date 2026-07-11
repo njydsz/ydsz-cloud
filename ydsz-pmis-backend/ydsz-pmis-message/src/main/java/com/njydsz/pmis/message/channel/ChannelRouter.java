@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.channel;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -89,11 +90,11 @@ public class ChannelRouter {
      */
     public MessageChannel route(String channel) {
         if (channel == null || channel.isBlank()) {
-            throw new BizException("消息通道不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "消息通道不能为空");
         }
         MessageChannel target = channelCache.get(channel.trim().toUpperCase());
         if (target == null) {
-            throw new BizException("不支持的消息通道: " + channel);
+            throw new BizException(BizErrorCode.BAD_REQUEST, "不支持的消息通道: " + channel);
         }
         return target;
     }
@@ -155,7 +156,7 @@ public class ChannelRouter {
      */
     public String dispatch(MsgLogDO logDO) {
         if (logDO == null) {
-            throw new BizException("消息日志为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "消息日志为空");
         }
         MessageRequest request = new MessageRequest();
         request.setChannel(logDO.getChannel());

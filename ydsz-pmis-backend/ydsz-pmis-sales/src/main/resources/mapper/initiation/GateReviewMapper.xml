@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.sales.mapper.initiation.GateReviewMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.GateReviewDO">
+        <id column="id" property="id"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="gate_code" property="gateCode"/>
+        <result column="gate_name" property="gateName"/>
+        <result column="review_result" property="reviewResult"/>
+        <result column="reviewer_id" property="reviewerId"/>
+        <result column="reviewer_name" property="reviewerName"/>
+        <result column="review_at" property="reviewAt"/>
+        <result column="decision_basis" property="decisionBasis"/>
+        <result column="conditions" property="conditions"/>
+        <result column="next_gate" property="nextGate"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByInitiationId" resultMap="BaseResultMap">
+        SELECT id, initiation_id, gate_code, gate_name, review_result, reviewer_id, reviewer_name, review_at, decision_basis, conditions, next_gate, created_at, updated_at, deleted
+        FROM pmis_project_gate_review
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY created_at
+    </select>
+
+    <select id="selectByInitiationAndGate" resultMap="BaseResultMap">
+        SELECT id, initiation_id, gate_code, gate_name, review_result, reviewer_id, reviewer_name, review_at, decision_basis, conditions, next_gate, created_at, updated_at, deleted
+        FROM pmis_project_gate_review
+        WHERE initiation_id = #{initiationId} AND gate_code = #{gateCode} AND deleted = 0
+        LIMIT 1
+    </select>
+
+</mapper>

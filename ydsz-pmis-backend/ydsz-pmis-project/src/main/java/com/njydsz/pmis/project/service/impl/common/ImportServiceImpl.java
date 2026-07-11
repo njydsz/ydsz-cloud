@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl.common;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.excel.ExcelTemplate;
 import com.njydsz.pmis.common.excel.ExcelUtil;
 import com.njydsz.pmis.common.exception.BizException;
@@ -70,7 +71,7 @@ public class ImportServiceImpl implements ImportService {
                     .build();
             return new ImportExportController.TemplateBundle(RateCardImportDTO.class, bytes, "费率卡_导入模板.xlsx");
         }
-        throw new BizException(400, "error.execution.msg_715cbb1f" + bizType);
+        throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
     }
 
     @Override
@@ -78,7 +79,7 @@ public class ImportServiceImpl implements ImportService {
         if ("rate-card".equals(bizType)) {
             return importRateCard(file);
         }
-        throw new BizException(400, "error.execution.msg_715cbb1f" + bizType);
+        throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
     }
 
     /**
@@ -119,10 +120,10 @@ public class ImportServiceImpl implements ImportService {
      */
     private RateCardCreateDTO toCreateDTO(RateCardImportDTO src) {
         if (src.getLevel() == null || src.getLevel().isBlank()) {
-            throw new BizException(400, "error.execution.msg_11653d4c");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_11653d4c");
         }
         if (src.getUnitPrice() == null) {
-            throw new BizException(400, "error.execution.msg_d1b0b464");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d1b0b464");
         }
         RateCardCreateDTO dto = new RateCardCreateDTO();
         dto.setRateCode("RC-IMPORT-" + System.currentTimeMillis() + "-" + Math.abs(System.nanoTime() % 1000));
@@ -152,6 +153,6 @@ public class ImportServiceImpl implements ImportService {
                 log.debug("[ImportServiceImpl] 日期格式尝试失败 value={} format={}: {}", value, f, ignore.getMessage());
             }
         }
-        throw new BizException(400, field + " 日期格式错误: " + value + "，应为 yyyy-MM-dd 或 yyyy/MM/dd");
+        throw new BizException(BizErrorCode.BAD_REQUEST, field + " 日期格式错误: " + value + "，应为 yyyy-MM-dd 或 yyyy/MM/dd");
     }
 }
