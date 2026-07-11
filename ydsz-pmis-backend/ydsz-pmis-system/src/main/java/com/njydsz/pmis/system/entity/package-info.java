@@ -18,7 +18,15 @@
  *   <li>{@code SensitiveOperationDO} ({@code pmis_sensitive_operation}) - 敏感操作审批</li>
  *   <li>{@code ExportRecordDO} ({@code pmis_export_record}) - 导出任务记录</li>
  *   <li>{@code ReportSubscriptionDO} ({@code pmis_report_subscription}) - 报表订阅</li>
- *   <li>{@code DictVersionDO} ({@code pmis_dict_version}) - 字典版本号（乐观锁）</li>
+ *   <li>{@code DictVersionDO} ({@code pmis_dict_version}) - 字典版本号（乐观锁，P2-15 迁至 {@code dict} 子包）</li>
+ * </ul>
+ *
+ * <h3>子包划分</h3>
+ * <ul>
+ *   <li>{@code audit} - 审计日志类实体（OperationLogDO/LoginAuditDO/DataExportAuditDO/SensitiveOperationDO/ExportRecordDO）</li>
+ *   <li>{@code config} - 配置类实体（ConfigDO/ReportSubscriptionDO）</li>
+ *   <li>{@code dict} - 字典领域实体（DictVersionDO，P2-15 从 audit 子包迁入）</li>
+ *   <li>{@code file} - 文件元信息实体（FileDO）</li>
  * </ul>
  *
  * <h3>设计原则</h3>

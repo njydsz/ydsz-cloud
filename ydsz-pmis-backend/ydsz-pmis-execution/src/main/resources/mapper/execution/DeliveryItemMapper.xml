@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.execution.mapper.execution.DeliveryItemMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.execution.entity.DeliveryItemDO">
+        <id column="id" property="id"/>
+        <result column="item_code" property="itemCode"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="standard_id" property="standardId"/>
+        <result column="project_type" property="projectType"/>
+        <result column="project_level" property="projectLevel"/>
+        <result column="delivery_name" property="deliveryName"/>
+        <result column="delivery_category" property="deliveryCategory"/>
+        <result column="stage" property="stage"/>
+        <result column="required" property="required"/>
+        <result column="planned_submit_date" property="plannedSubmitDate"/>
+        <result column="actual_submit_date" property="actualSubmitDate"/>
+        <result column="accepted_date" property="acceptedDate"/>
+        <result column="submitter_id" property="submitterId"/>
+        <result column="submitter_name" property="submitterName"/>
+        <result column="reviewer_id" property="reviewerId"/>
+        <result column="reviewer_name" property="reviewerName"/>
+        <result column="review_comment" property="reviewComment"/>
+        <result column="status" property="status"/>
+        <result column="tr_required" property="trRequired"/>
+        <result column="tr_completed" property="trCompleted"/>
+        <result column="file_ids" property="fileIds"/>
+        <result column="remark" property="remark"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT id, item_code, initiation_id, standard_id, project_type, project_level, delivery_name, delivery_category, stage, required, planned_submit_date, actual_submit_date, accepted_date, submitter_id, submitter_name, reviewer_id, reviewer_name, review_comment, status, tr_required, tr_completed, file_ids, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_delivery_item
+        WHERE item_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <update id="updateStatus">
+        UPDATE pmis_execution_delivery_item
+        SET status = #{status}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <update id="updateTrCompleted">
+        UPDATE pmis_execution_delivery_item
+        SET tr_completed = #{completed}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="selectByInitiation" resultMap="BaseResultMap">
+        SELECT id, item_code, initiation_id, standard_id, project_type, project_level, delivery_name, delivery_category, stage, required, planned_submit_date, actual_submit_date, accepted_date, submitter_id, submitter_name, reviewer_id, reviewer_name, review_comment, status, tr_required, tr_completed, file_ids, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_delivery_item
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY stage, id
+    </select>
+
+    <select id="selectByStage" resultMap="BaseResultMap">
+        SELECT id, item_code, initiation_id, standard_id, project_type, project_level, delivery_name, delivery_category, stage, required, planned_submit_date, actual_submit_date, accepted_date, submitter_id, submitter_name, reviewer_id, reviewer_name, review_comment, status, tr_required, tr_completed, file_ids, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_delivery_item
+        WHERE initiation_id = #{initiationId}
+          <if test="stage != null and stage != ''">
+              AND stage = #{stage}
+          </if>
+          AND deleted = 0
+        ORDER BY id
+    </select>
+
+    <select id="aggregateByStatus" resultType="java.util.Map">
+        SELECT status, COUNT(1) AS cnt
+        FROM pmis_execution_delivery_item
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        GROUP BY status
+    </select>
+
+    <select id="countAcceptedByStage" resultType="java.lang.Long">
+        SELECT COUNT(1) FROM pmis_execution_delivery_item
+        WHERE initiation_id = #{initiationId} AND stage = #{stage}
+          AND status IN ('ACCEPTED','WAIVED') AND deleted = 0
+    </select>
+
+    <select id="countRequiredByStage" resultType="java.lang.Long">
+        SELECT COUNT(1) FROM pmis_execution_delivery_item
+        WHERE initiation_id = #{initiationId} AND stage = #{stage}
+          AND required = 1 AND deleted = 0
+    </select>
+
+</mapper>

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.entity.audit;
+package com.njydsz.pmis.system.entity.dict;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -14,6 +14,10 @@ import java.time.LocalDateTime;
  * 字典版本实体
  *
  * <p>字典变更历史快照，支持回滚与变更审计。每次字典发布会产生一条新版本记录。
+ *
+ * <p>P2-15 包归属修正：从 {@code system.entity.audit} 迁移到 {@code system.entity.dict}。
+ * 原归属错误（audit 包应只放审计日志类实体如 OperationLogDO/LoginAuditDO），
+ * 字典版本属于字典领域实体，归入 dict 子包更符合领域驱动划分。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.mapper.initiation;
+package com.njydsz.pmis.sales.mapper.initiation;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.sales.entity.initiation.ProjectChangeDO;

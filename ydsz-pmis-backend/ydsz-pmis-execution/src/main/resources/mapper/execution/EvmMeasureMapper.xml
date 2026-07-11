@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.execution.mapper.execution.EvmMeasureMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.execution.entity.EvmMeasureDO">
+        <id column="id" property="id"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="wbs_task_id" property="wbsTaskId"/>
+        <result column="period" property="period"/>
+        <result column="pv" property="pv"/>
+        <result column="ev" property="ev"/>
+        <result column="ac" property="ac"/>
+        <result column="bac" property="bac"/>
+        <result column="cpi" property="cpi"/>
+        <result column="spi" property="spi"/>
+        <result column="cv" property="cv"/>
+        <result column="sv" property="sv"/>
+        <result column="eac" property="eac"/>
+        <result column="vac" property="vac"/>
+        <result column="etc" property="etc"/>
+        <result column="tcpi" property="tcpi"/>
+        <result column="alert_level" property="alertLevel"/>
+        <result column="alert_reason" property="alertReason"/>
+        <result column="measure_date" property="measureDate"/>
+        <result column="remark" property="remark"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByInitiationAndPeriod" resultMap="BaseResultMap">
+        SELECT id, initiation_id, wbs_task_id, period, pv, ev, ac, bac, cpi, spi, cv, sv, eac, vac, etc, tcpi, alert_level, alert_reason, measure_date, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_evm_measure
+        WHERE initiation_id = #{initiationId}
+          <choose>
+              <when test="wbsTaskId != null">AND wbs_task_id = #{wbsTaskId}</when>
+              <otherwise>AND wbs_task_id IS NULL</otherwise>
+          </choose>
+          AND period = #{period}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="selectByInitiation" resultMap="BaseResultMap">
+        SELECT id, initiation_id, wbs_task_id, period, pv, ev, ac, bac, cpi, spi, cv, sv, eac, vac, etc, tcpi, alert_level, alert_reason, measure_date, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_evm_measure
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY period DESC, wbs_task_id ASC
+    </select>
+
+    <select id="selectByWbs" resultMap="BaseResultMap">
+        SELECT id, initiation_id, wbs_task_id, period, pv, ev, ac, bac, cpi, spi, cv, sv, eac, vac, etc, tcpi, alert_level, alert_reason, measure_date, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_evm_measure
+        WHERE wbs_task_id = #{wbsTaskId} AND deleted = 0
+        ORDER BY period DESC
+    </select>
+
+    <select id="trendByPeriod" resultType="java.util.Map">
+        SELECT period, AVG(cpi) AS avg_cpi, AVG(spi) AS avg_spi,
+               SUM(CV)  AS sum_cv, SUM(SV)  AS sum_sv,
+               SUM(vac) AS sum_vac, SUM(eac) AS sum_eac,
+               MAX(alert_level) AS top_alert
+        FROM pmis_evm_measure
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        GROUP BY period
+        ORDER BY period ASC
+    </select>
+
+    <select id="aggregateHealthByInitiation" resultType="java.util.Map">
+        SELECT initiation_id,
+               CASE
+                   WHEN MAX(CASE alert_level WHEN 'RED'    THEN 3
+                                              WHEN 'YELLOW' THEN 2
+                                              WHEN 'NORMAL' THEN 1
+                                              ELSE 0 END) = 3 THEN 'RED'
+                   WHEN MAX(CASE alert_level WHEN 'RED'    THEN 3
+                                              WHEN 'YELLOW' THEN 2
+                                              WHEN 'NORMAL' THEN 1
+                                              ELSE 0 END) = 2 THEN 'YELLOW'
+                   ELSE 'NORMAL'
+               END AS top_alert
+        FROM pmis_evm_measure
+        WHERE deleted = 0
+        GROUP BY initiation_id
+    </select>
+</mapper>

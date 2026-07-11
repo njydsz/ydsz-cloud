@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.enums.aftersales;
+package com.njydsz.pmis.sales.enums.aftersales;
 
 /**
  * 质保期状态

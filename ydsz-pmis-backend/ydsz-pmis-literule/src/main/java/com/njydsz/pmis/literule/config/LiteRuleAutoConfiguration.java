@@ -122,7 +122,7 @@ public class LiteRuleAutoConfiguration {
      *   <li>当 traceEnabled=true 时自动装配 {@link AsyncTraceRecorder}，
      *       若消费方提供了自定义 {@link TraceRecorder} Bean 则作为持久化委托</li>
      *   <li>当 ruleTimeoutMs > 0 时启用 {@link RuleTimeoutExecutor}</li>
-     *   <li>当 circuitBreakerMinEvaluations > 0 时启用 {@link RuleCircuitBreaker}</li>
+     *   <li>当 circuitBreakerMinEvaluations > 0 时启用 {@link RuleCircuitBreaker}（P2-14: openStateMs 由 {@code pmis.literule.circuit-breaker-open-state-ms} 配置）</li>
      *   <li>当 MeterRegistry 可用时启用 {@link MicrometerRuleMetrics}</li>
      *   <li>当 canaryEnabled=true 时启用 {@link RuleCanaryRouter}</li>
      * </ul>
@@ -180,13 +180,15 @@ public class LiteRuleAutoConfiguration {
         }
 
         if (properties.getCircuitBreakerMinEvaluations() > 0) {
+            // P2-14: openStateMs 从 properties 读取，消除硬编码 30_000L
             RuleCircuitBreaker breaker = new RuleCircuitBreaker(
                     properties.getCircuitBreakerErrorRate(),
                     properties.getCircuitBreakerMinEvaluations(),
-                    30_000L);
+                    properties.getCircuitBreakerOpenStateMs());
             engine.setCircuitBreaker(breaker);
-            log.info("[LiteRule] 规则熔断器已启用 (errorRateThreshold={}, minEvaluations={})",
-                    properties.getCircuitBreakerErrorRate(), properties.getCircuitBreakerMinEvaluations());
+            log.info("[LiteRule] 规则熔断器已启用 (errorRateThreshold={}, minEvaluations={}, openStateMs={})",
+                    properties.getCircuitBreakerErrorRate(), properties.getCircuitBreakerMinEvaluations(),
+                    properties.getCircuitBreakerOpenStateMs());
         }
 
         if (properties.isCanaryEnabled()) {

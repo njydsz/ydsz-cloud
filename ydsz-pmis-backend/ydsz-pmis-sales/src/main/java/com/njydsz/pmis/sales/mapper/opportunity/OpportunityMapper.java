@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.mapper.opportunity;
+package com.njydsz.pmis.sales.mapper.opportunity;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.sales.entity.opportunity.OpportunityDO;

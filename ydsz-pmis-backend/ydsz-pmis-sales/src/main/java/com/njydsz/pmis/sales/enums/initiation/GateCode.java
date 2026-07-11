@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.enums.initiation;
+package com.njydsz.pmis.sales.enums.initiation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

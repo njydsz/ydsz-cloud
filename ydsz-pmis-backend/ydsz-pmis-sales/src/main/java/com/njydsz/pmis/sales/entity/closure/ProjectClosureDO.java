@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.entity.closure;
+package com.njydsz.pmis.sales.entity.closure;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;

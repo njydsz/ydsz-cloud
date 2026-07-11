@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.execution.mapper.resource.RateCardMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.execution.entity.RateCardDO">
+        <id column="id" property="id"/>
+        <result column="rate_code" property="rateCode"/>
+        <result column="level_code" property="levelCode"/>
+        <result column="project_type" property="projectType"/>
+        <result column="customer_level" property="customerLevel"/>
+        <result column="billing_unit" property="billingUnit"/>
+        <result column="rate_amount" property="rateAmount"/>
+        <result column="currency" property="currency"/>
+        <result column="effective_date" property="effectiveDate"/>
+        <result column="expiry_date" property="expiryDate"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT id, rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_card
+        WHERE rate_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <!-- 命中规则：先匹配 (职级+项目类型+客户等级) 三元组；退化匹配 (职级+项目类型)；再退化匹配 (职级) -->
+    <select id="matchEffective" resultMap="BaseResultMap">
+        SELECT id, rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_card
+        WHERE level_code = #{levelCode}
+          AND status = 'ACTIVE'
+          AND effective_date &lt;= #{date}
+          AND (expiry_date IS NULL OR expiry_date &gt;= #{date})
+          AND deleted = 0
+          AND (
+              (COALESCE(project_type,'') = COALESCE(#{projectType},'') AND COALESCE(customer_level,'') = COALESCE(#{customerLevel},''))
+              OR (COALESCE(project_type,'') = COALESCE(#{projectType},'') AND customer_level IS NULL)
+              OR (project_type IS NULL AND customer_level IS NULL)
+          )
+        ORDER BY (CASE WHEN project_type IS NOT NULL THEN 0 ELSE 1 END),
+                 (CASE WHEN customer_level IS NOT NULL THEN 0 ELSE 1 END)
+        LIMIT 1
+    </select>
+
+    <select id="selectByLevel" resultMap="BaseResultMap">
+        SELECT id, rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_card
+        WHERE level_code = #{levelCode} AND deleted = 0
+        ORDER BY effective_date DESC
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT id, rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_card
+        WHERE deleted = 0
+        ORDER BY level_code ASC
+    </select>
+</mapper>

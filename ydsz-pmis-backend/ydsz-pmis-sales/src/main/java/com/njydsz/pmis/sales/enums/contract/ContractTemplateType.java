@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.enums.contract;
+package com.njydsz.pmis.sales.enums.contract;
 
 /**
  * 合同模板类型

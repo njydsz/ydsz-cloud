@@ -71,6 +71,14 @@ public class LiteRuleProperties {
     private int circuitBreakerMinEvaluations = 100;
 
     /**
+     * 规则熔断 OPEN 状态持续时间（毫秒，P2-14）
+     *
+     * <p>熔断器进入 OPEN 状态后，持续该时长后转为 HALF_OPEN，允许试探性评估。
+     * 默认 30000ms（30 秒），与 Resilience4j 默认 waitDurationInOpenState 对齐。
+     */
+    private long circuitBreakerOpenStateMs = 30_000L;
+
+    /**
      * 是否启用规则灰度路由（1.4.0）
      *
      * <p>启用后，对带 canaryRatio > 0 且配置了候选表达式的规则，

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.dto.opportunity;
+package com.njydsz.pmis.sales.dto.opportunity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;

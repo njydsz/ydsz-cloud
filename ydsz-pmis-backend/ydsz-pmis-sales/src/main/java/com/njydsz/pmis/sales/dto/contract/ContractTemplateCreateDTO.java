@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.dto.contract;
+package com.njydsz.pmis.sales.dto.contract;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

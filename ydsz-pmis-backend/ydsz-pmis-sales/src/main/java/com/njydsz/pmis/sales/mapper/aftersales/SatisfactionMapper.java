@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.mapper.aftersales;
+package com.njydsz.pmis.sales.mapper.aftersales;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.sales.entity.aftersales.SatisfactionDO;

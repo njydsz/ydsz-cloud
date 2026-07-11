@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.enums.initiation;
+package com.njydsz.pmis.sales.enums.initiation;
 
 /**
  * 项目变更状态
