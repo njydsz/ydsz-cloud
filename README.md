@@ -172,9 +172,9 @@ literule  → common
 
 ### 5.2 本地启动
 
-**5 分钟快速启动**：参考 [docs/QUICKSTART.md](docs/QUICKSTART.md)
-**详细部署手册**：参考 [docs/DEPLOY.md](docs/DEPLOY.md)
-**7 大中间件部署**（PG/Redis/Nacos/MinIO/Seata/RocketMQ/XXL-Job）：参考 [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)
+**5 分钟快速启动**：参考 [deploy/README.md](deploy/README.md)
+**详细部署手册**：参考 [deploy/k8s/README.md](deploy/k8s/README.md)
+**7 大中间件部署**（PG/Redis/Nacos/MinIO/Seata/RocketMQ/XXL-Job）：参考 [deploy/README.md](deploy/README.md)
 （全文检索已统一改用 PostgreSQL tsvector，无需 ES）
 
 ```bash
@@ -414,8 +414,8 @@ ydsz-pmis/
 
 | 文档 | 链接 |
 |---|---|
-| 5 分钟快速启动 | [docs/QUICKSTART.md](docs/QUICKSTART.md) |
-| 详细部署手册 | [docs/DEPLOY.md](docs/DEPLOY.md) |
+| 5 分钟快速启动 | [deploy/README.md](deploy/README.md) |
+| 详细部署手册 | [deploy/k8s/README.md](deploy/k8s/README.md) |
 | 数据库初始化脚本 | [docs/V1.0.0.sql](docs/V1.0.0.sql) |
 
 > **说明**: 项目规范、运维手册、安全合规、API 文档等将在后续批次补齐。当前所有规范与决策记录请参考代码注释与项目记忆（`.trae-cn/memory/projects/`）。

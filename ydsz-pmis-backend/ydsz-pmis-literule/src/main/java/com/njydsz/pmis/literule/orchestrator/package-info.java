@@ -11,10 +11,10 @@
  *
  * <h3>核心组件</h3>
  * <ul>
- *   <li>{@code RuleOrchestrator}     - 规则编排器</li>
- *   <li>{@code OrchestrationPlan}     - 编排计划（DAG 描述）</li>
- *   <li>{@code OrchestrationResult}   - 编排结果</li>
- *   <li>{@code RoutingStrategy}       - 路由策略（按上下文路由到不同规则集）</li>
+ *   <li>{@link com.njydsz.pmis.literule.orchestrator.RuleChain}       - 运行时规则链执行模型（THEN/WHEN/IF/SWITCH）</li>
+ *   <li>{@link com.njydsz.pmis.literule.orchestrator.RuleChainGraph}  - 可视化画布元数据 DTO</li>
+ *   <li>{@link com.njydsz.pmis.literule.orchestrator.ChainGraphConverter} - 画布 ↔ 规则链双向转换器</li>
+ *   <li>{@link com.njydsz.pmis.literule.orchestrator.RuleGraphValidator}   - 画布结构校验器</li>
  * </ul>
  *
  * <h3>使用规范</h3>

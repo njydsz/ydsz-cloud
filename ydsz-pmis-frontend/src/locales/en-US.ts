@@ -26,6 +26,7 @@
  */
 export default {
   common: {
+    skipToMain: 'Skip to main content',
     confirm: 'Confirm',
     cancel: 'Cancel',
     save: 'Save',

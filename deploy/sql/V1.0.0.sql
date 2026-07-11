@@ -10890,78 +10890,6 @@ CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
 
 -- --------------------------------------------------------------------
 
--- ============================ [059] init pmis flow dmn ============================
-
--- =============================================================
--- DMN 决策表定义表
---
--- P0-4: DMN 决策表引擎（对标 Camunda/Flowable DMN）
---   1. pmis_flow_dmn_table — 决策表定义主表，存储输入/输出列与规则行的 JSON。
---   2. 命中策略支持 UNIQUE/FIRST/PRIORITY/ANY/COLLECT 五种模式。
---   3. 规则行/列定义以 JSON 存储，便于前端动态编辑，无需 DDL 变更。
---
--- 兼容性：
---   - 全部使用 IF NOT EXISTS，可重复执行
---   - 审计字段与 BaseDO 对齐（created_by/created_at/updated_by/updated_at/deleted）
---   - tenant_id 默认值 1，单租户部署不影响数据
--- =============================================================
-
--- -------------------------------------------
--- DMN 决策表定义表
--- -------------------------------------------
-CREATE TABLE IF NOT EXISTS pmis_flow_dmn_table (
-    id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    tenant_id         VARCHAR(20)          NOT NULL DEFAULT '1',
-    table_key         VARCHAR(128)    NOT NULL,
-    table_name        VARCHAR(128)    NOT NULL,
-    description       VARCHAR(512),
-    hit_policy        VARCHAR(20)     NOT NULL DEFAULT 'UNIQUE',
-    collect_operator  VARCHAR(20)     DEFAULT 'LIST',
-    inputs_json       TEXT,
-    outputs_json      TEXT,
-    rules_json        TEXT,
-    version           INT             NOT NULL DEFAULT 1,
-    status            VARCHAR(20)     NOT NULL DEFAULT 'DRAFT',
-    provider_trace_id VARCHAR(64),
-    created_by        VARCHAR(20)          NOT NULL DEFAULT 'SYSTEM',
-    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        VARCHAR(20)          NOT NULL DEFAULT 'SYSTEM',
-    updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT        NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT uk_pfdt_tenant_key         UNIQUE (tenant_id, table_key, deleted),
-    -- P2-10: 新增 RULE_ORDER / OUTPUT_ORDER 命中策略
-    CONSTRAINT ck_pfdt_hit_policy         CHECK (hit_policy IN ('UNIQUE','FIRST','PRIORITY','ANY','COLLECT','RULE_ORDER','OUTPUT_ORDER')),
-    CONSTRAINT ck_pfdt_collect_operator   CHECK (collect_operator IS NULL OR collect_operator IN ('LIST','SUM','MIN','MAX','COUNT')),
-    CONSTRAINT ck_pfdt_status             CHECK (status IN ('DRAFT','PUBLISHED','DEPRECATED')),
-    CONSTRAINT ck_pfdt_version            CHECK (version > 0),
-    CONSTRAINT ck_pfdt_deleted            CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE pmis_flow_dmn_table IS 'P0-4: DMN 决策表定义; P2-10: 扩展命中策略至 7 种';
-COMMENT ON COLUMN pmis_flow_dmn_table.table_key IS '决策表唯一标识';
-COMMENT ON COLUMN pmis_flow_dmn_table.table_name IS '决策表名称';
-COMMENT ON COLUMN pmis_flow_dmn_table.description IS '决策表描述';
-COMMENT ON COLUMN pmis_flow_dmn_table.hit_policy IS '命中策略: UNIQUE/FIRST/PRIORITY/ANY/COLLECT/RULE_ORDER/OUTPUT_ORDER';
-COMMENT ON COLUMN pmis_flow_dmn_table.collect_operator IS 'COLLECT 聚合运算符: LIST/SUM/MIN/MAX/COUNT';
-COMMENT ON COLUMN pmis_flow_dmn_table.inputs_json IS '输入列定义(JSON)';
-COMMENT ON COLUMN pmis_flow_dmn_table.outputs_json IS '输出列定义(JSON)';
-COMMENT ON COLUMN pmis_flow_dmn_table.rules_json IS '规则行定义(JSON)';
-COMMENT ON COLUMN pmis_flow_dmn_table.version IS '版本号';
-COMMENT ON COLUMN pmis_flow_dmn_table.status IS '状态: DRAFT/PUBLISHED/DEPRECATED';
-COMMENT ON COLUMN pmis_flow_dmn_table.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN pmis_flow_dmn_table.deleted IS '逻辑删除标记 0=未删 1=已删';
-
--- 复合/部分索引
-CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_status
-    ON pmis_flow_dmn_table (tenant_id, status)
-    WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_name
-    ON pmis_flow_dmn_table (tenant_id, table_name)
-    WHERE deleted = 0;
-
--- --------------------------------------------------------------------
-
 -- ====================================================================
 -- >>>>>>>>>> SUPPLEMENT: code-discovered tables (no migration script yet)
 --   The following tables are referenced by MyBatis-Plus entities /
@@ -12136,9 +12064,6 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_third_party_account_trace
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_third_party_log_trace
     ON pmis_flow_third_party_log (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_dmn_table_trace
-    ON pmis_flow_dmn_table (provider_trace_id)
-    WHERE provider_trace_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_template_trace
     ON pmis_flow_template (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
@@ -12210,7 +12135,6 @@ COMMENT ON INDEX idx_pmis_rule_pack_trace IS 'P1-7: provider_trace_id 反查';
 COMMENT ON INDEX idx_pmis_rule_pack_install_trace IS 'P1-7: provider_trace_id 反查';
 COMMENT ON INDEX idx_pmis_flow_third_party_account_trace IS 'P1-7: provider_trace_id 反查';
 COMMENT ON INDEX idx_pmis_flow_third_party_log_trace IS 'P1-7: provider_trace_id 反查';
-COMMENT ON INDEX idx_pmis_flow_dmn_table_trace IS 'P1-7: provider_trace_id 反查';
 COMMENT ON INDEX idx_pmis_flow_template_trace IS 'P1-7: provider_trace_id 反查';
 COMMENT ON INDEX idx_pmis_flow_auto_trigger_trace IS 'P1-7: provider_trace_id 反查';
 COMMENT ON INDEX idx_pmis_flow_notify_channel_trace IS 'P1-7: provider_trace_id 反查';

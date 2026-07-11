@@ -94,7 +94,7 @@ spec:
         # 服务下线（P0）
         - alert: PmisServiceDown
           expr: |
-            up{job=~"pmis-.*",namespace="pmis-production"} == 0
+            up{job=~"pmis-.*",namespace=~"pmis.*"} == 0
           for: 1m
           labels:
             severity: P0

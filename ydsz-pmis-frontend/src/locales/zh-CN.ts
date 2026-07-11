@@ -27,6 +27,7 @@
  */
 export default {
   common: {
+    skipToMain: '跳到主内容',
     confirm: '确认',
     cancel: '取消',
     save: '保存',

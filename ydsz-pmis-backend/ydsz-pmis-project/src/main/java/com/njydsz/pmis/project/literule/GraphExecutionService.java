@@ -10,7 +10,6 @@ import com.njydsz.pmis.literule.orchestrator.ChainGraphConverter;
 import com.njydsz.pmis.literule.orchestrator.RuleChain;
 import com.njydsz.pmis.literule.orchestrator.RuleChainGraph;
 import com.njydsz.pmis.literule.orchestrator.RuleGraphValidator;
-import com.njydsz.pmis.literule.orchestrator.RuleOrchestrator;
 import com.njydsz.pmis.literule.spi.GraphExecutionProvider;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,7 @@ import java.util.Map;
  * 画布执行服务（P0-1 执行闭环）
  *
  * <p>将可视化画布 {@link RuleChainGraph} 通过 {@link ChainGraphConverter#toChain}
- * 转换为可执行的 {@link RuleChain}，并接入 {@link RuleOrchestrator} 执行路径，
+ * 转换为可执行的 {@link RuleChain}，直接调用 {@link RuleChain#evaluate} 执行评估，
  * 补齐"画布可保存但不可执行"的闭环缺口。
  *
  * <p>核心能力：
@@ -77,7 +76,7 @@ public class GraphExecutionService implements GraphExecutionProvider {
     /**
      * 对指定规则的画布执行真实评估（记录统计到引擎）
      *
-     * <p>与 Dry-run 的区别：评估结果会通过 {@link RuleOrchestrator} 的 statsRecorder
+     * <p>与 Dry-run 的区别：评估结果会通过传入的 statsRecorder
      * 记录到引擎统计中，用于监控大盘。
      *
      * @param ruleCode    规则编码

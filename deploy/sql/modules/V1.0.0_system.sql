@@ -1658,8 +1658,6 @@ COMMENT ON INDEX idx_pmis_flow_third_party_account_trace IS 'P1-7: provider_trac
 
 COMMENT ON INDEX idx_pmis_flow_third_party_log_trace IS 'P1-7: provider_trace_id 反查';
 
-COMMENT ON INDEX idx_pmis_flow_dmn_table_trace IS 'P1-7: provider_trace_id 反查';
-
 COMMENT ON INDEX idx_pmis_flow_template_trace IS 'P1-7: provider_trace_id 反查';
 
 COMMENT ON INDEX idx_pmis_flow_auto_trigger_trace IS 'P1-7: provider_trace_id 反查';

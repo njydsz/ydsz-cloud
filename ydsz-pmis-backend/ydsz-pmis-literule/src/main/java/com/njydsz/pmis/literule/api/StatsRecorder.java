@@ -3,7 +3,7 @@ package com.njydsz.pmis.literule.api;
 /**
  * 统计记录器
  *
- * <p>将规则执行统计从引擎内部解耦，使编排层（{@code RuleOrchestrator}/{@code RuleChain}）
+ * <p>将规则执行统计从引擎内部解耦，使编排层（{@code RuleChain}）
  * 也能将执行结果统一记录到引擎统计中，消除编排层与引擎层统计割裂问题。
  *
  * @author ydsz-pmis-team

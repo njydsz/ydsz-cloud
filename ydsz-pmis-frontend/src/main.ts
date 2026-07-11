@@ -61,7 +61,12 @@ app.config.errorHandler = (err, _instance, info) => {
   }
 }
 
-// 全量注册 Element Plus 图标，模板中可直接使用 <el-icon><Edit /></el-icon>
+// 保留全量注册 Element Plus 图标的原因：
+// 项目模板中大量直接使用图标组件名（如 <el-icon><Plus /></el-icon>、<Edit /> 等），
+// Element Plus 图标无法通过 unplugin-vue-components 自动导入（自动导入仅适用于
+// element-plus 主组件库，不覆盖 @element-plus/icons-vue 包），改为按需导入需逐个
+// 在每个使用处显式 import 并注册，改造成本高且易遗漏。因此保留全量注册，仅在
+// 构建时通过 vite 依赖优化进行按需 tree-shaking，运行时开销可忽略。
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component as never)
 }

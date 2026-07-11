@@ -15,7 +15,6 @@
  *       {@link com.njydsz.pmis.workflow.entity.FlowTemplateDO}</li>
  *   <li>历史归档 - {@link com.njydsz.pmis.workflow.entity.FlowHisInstanceDO}、
  *       {@link com.njydsz.pmis.workflow.entity.FlowHisTaskDO}</li>
- *   <li>DMN - {@link com.njydsz.pmis.workflow.entity.FlowDmnTableDO}</li>
  *   <li>抄送 / 委派 - {@link com.njydsz.pmis.workflow.entity.FlowCcDO}、
  *       {@link com.njydsz.pmis.workflow.entity.FlowCcRuleDO}、
  *       {@link com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO}</li>

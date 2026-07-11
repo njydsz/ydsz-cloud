@@ -52,6 +52,7 @@ function onError(err: unknown, info: string) {
 
 <template>
   <div class="default-layout" :class="{ collapsed: appStore.sidebarCollapsed }">
+    <a href="#main-content" class="skip-link">{{ $t('common.skipToMain') }}</a>
     <aside class="layout-sidebar" aria-label="侧边栏导航">
       <Sidebar />
     </aside>
@@ -60,7 +61,7 @@ function onError(err: unknown, info: string) {
       <div class="layout-tags">
         <TagsView />
       </div>
-      <MainContent>
+      <MainContent id="main-content">
         <ErrorBoundary @error="onError">
           <RouterView v-slot="{ Component, route }">
             <Transition name="route" mode="out-in">
