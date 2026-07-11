@@ -1,6 +1,6 @@
 package com.njydsz.pmis.agent.server.rag;
 
-import com.njydsz.pmis.agent.web.config.RAGProperties;
+import com.njydsz.pmis.agent.server.config.RAGProperties;
 import com.njydsz.pmis.agent.server.engine.embedding.EmbeddingProvider;
 
 import java.util.List;

@@ -893,6 +893,34 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     /**
+     * 设置事实数据提供者注册表（P0-2 动态事实采集管道）
+     *
+     * <p>注入后，引擎在 {@link #evaluate} 前会调用注册表动态采集事实数据，
+     * 合并到 {@link RuleContext} 的 facts 中。null 表示禁用事实采集（向后兼容）。
+     *
+     * @param factProviderRegistry 事实数据提供者注册表；null 表示禁用
+     * @since 2.1.0
+     */
+    public void setFactProviderRegistry(FactProviderRegistry factProviderRegistry) {
+        this.factProviderRegistry = factProviderRegistry;
+        if (factProviderRegistry != null) {
+            log.info("[LiteRule-Fact] 事实数据提供者注册表已注入 (providers={}, timeoutMs={}, fallbackOnError={})",
+                    factProviderRegistry.size(), factProviderRegistry.getTimeoutMs(),
+                    factProviderRegistry.isFallbackOnError());
+        }
+    }
+
+    /**
+     * 获取事实数据提供者注册表（P0-2）
+     *
+     * @return 事实数据提供者注册表；未配置返回 null
+     * @since 2.1.0
+     */
+    public FactProviderRegistry getFactProviderRegistry() {
+        return factProviderRegistry;
+    }
+
+    /**
      * 构建执行轨迹记录
      *
      * @param context   规则上下文

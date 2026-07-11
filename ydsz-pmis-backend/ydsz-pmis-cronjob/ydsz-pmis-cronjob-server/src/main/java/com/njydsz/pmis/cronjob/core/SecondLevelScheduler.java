@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.core.scheduler;
 
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
 import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;

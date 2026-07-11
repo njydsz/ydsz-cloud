@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.core.stats;
 
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobDailyStatsDO;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobDailyStatsMapper;

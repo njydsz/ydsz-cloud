@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
 import com.njydsz.pmis.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.pmis.cronjob.server.core.scheduler.ScheduleType;

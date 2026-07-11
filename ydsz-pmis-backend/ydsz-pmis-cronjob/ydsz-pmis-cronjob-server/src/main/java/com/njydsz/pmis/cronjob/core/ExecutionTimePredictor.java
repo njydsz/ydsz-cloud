@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.core.ai;
 
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

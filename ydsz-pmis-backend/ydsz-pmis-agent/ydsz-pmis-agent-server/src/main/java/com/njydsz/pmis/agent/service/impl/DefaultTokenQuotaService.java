@@ -1,6 +1,6 @@
 package com.njydsz.pmis.agent.server.service.impl.tool;
 
-import com.njydsz.pmis.agent.web.config.TokenQuotaProperties;
+import com.njydsz.pmis.agent.server.config.TokenQuotaProperties;
 import com.njydsz.pmis.agent.domain.dto.tool.QuotaSummary;
 import com.njydsz.pmis.agent.domain.dto.tool.TokenUsage;
 import com.njydsz.pmis.agent.domain.entity.tool.TokenQuotaDO;

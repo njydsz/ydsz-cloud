@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.server.core.leader.PartitionLeaderManager;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;

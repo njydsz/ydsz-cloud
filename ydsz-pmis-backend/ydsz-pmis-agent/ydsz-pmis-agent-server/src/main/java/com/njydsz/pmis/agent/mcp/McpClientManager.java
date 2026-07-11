@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.server.mcp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.agent.web.config.McpProperties;
+import com.njydsz.pmis.agent.server.config.McpProperties;
 import com.njydsz.pmis.agent.server.mcp.model.McpToolDefinition;
 import com.njydsz.pmis.agent.server.mcp.transport.HttpMcpTransport;
 import com.njydsz.pmis.agent.server.mcp.transport.McpTransport;

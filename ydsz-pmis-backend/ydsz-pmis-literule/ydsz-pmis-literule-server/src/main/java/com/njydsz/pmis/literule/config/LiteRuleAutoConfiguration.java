@@ -43,6 +43,8 @@ import com.njydsz.pmis.literule.domain.model.ModelInputRegistry;
 import com.njydsz.pmis.literule.domain.model.MockModelInputProvider;
 import com.njydsz.pmis.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.pmis.literule.server.spi.DecisionTreeConfigProvider;
+import com.njydsz.pmis.literule.server.spi.FactProvider;
+import com.njydsz.pmis.literule.server.spi.FactProviderRegistry;
 import com.njydsz.pmis.literule.server.spi.FileRuleSource;
 import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
@@ -122,6 +124,7 @@ public class LiteRuleAutoConfiguration {
                                   ObjectProvider<ExpressionEvaluator> evaluatorProvider,
                                   ObjectProvider<BreakpointHook> breakpointHookProvider,
                                   ObjectProvider<ModelInputRegistry> modelRegistryProvider,
+                                  ObjectProvider<FactProviderRegistry> factRegistryProvider,
                                   ApplicationContext applicationContext) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
@@ -130,6 +133,12 @@ public class LiteRuleAutoConfiguration {
         BreakpointHook bpHook = breakpointHookProvider.getIfAvailable();
         if (bpHook != null) {
             engine.setBreakpointHook(bpHook);
+        }
+
+        // P0-2 动态事实采集：可选注入事实提供者注册表
+        FactProviderRegistry factRegistry = factRegistryProvider.getIfAvailable();
+        if (factRegistry != null) {
+            engine.setFactProviderRegistry(factRegistry);
         }
 
         // P3-1 规则+模型融合：可选注入模型注册表

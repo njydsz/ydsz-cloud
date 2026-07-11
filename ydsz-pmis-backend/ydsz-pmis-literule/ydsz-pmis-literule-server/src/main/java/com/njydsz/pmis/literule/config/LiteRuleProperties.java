@@ -212,6 +212,30 @@ public class LiteRuleProperties {
     private ModelConfig model = new ModelConfig();
 
     /**
+     * 动态事实采集配置（P0-2）
+     *
+     * <p>启用后，规则引擎在评估前会调用所有已注册的
+     * {@link com.njydsz.pmis.literule.server.spi.FactProvider}
+     * 从外部数据源（DB、Redis、HTTP API 等）动态采集事实数据，
+     * 合并到 {@link com.njydsz.pmis.literule.api.RuleContext} 的 facts 中。
+     *
+     * <p>事实采集在模型注入之前执行，采集的事实可供模型 provider 使用。
+     *
+     * <p>配置示例：
+     * <pre>
+     * pmis:
+     *   literule:
+     *     fact:
+     *       enabled: true
+     *       timeout-ms: 200
+     *       fallback-on-error: true
+     * </pre>
+     *
+     * @since 2.1.0
+     */
+    private FactConfig fact = new FactConfig();
+
+    /**
      * 高性能优化配置（P2-3）
      *
      * <p>控制评估结果缓存与规则分组并行评估。
@@ -502,6 +526,47 @@ public class LiteRuleProperties {
          * 未配置时使用 MockModelInputProvider 默认值（riskScore=0.75, fraudProbability=0.05）。
          */
         private Map<String, Object> mockOutputs = new LinkedHashMap<>();
+    }
+
+    /**
+     * 动态事实采集配置（P0-2）
+     *
+     * <p>控制 {@link com.njydsz.pmis.literule.server.spi.FactProviderRegistry} 的行为。
+     * 默认关闭（{@code enabled=false}），需显式启用以保证向后兼容。
+     *
+     * @since 2.1.0
+     */
+    @Data
+    public static class FactConfig {
+
+        /**
+         * 是否启用动态事实采集
+         *
+         * <p>true：规则引擎评估前调用已注册的 FactProvider 从外部数据源采集事实；
+         * false（默认）：不调用，规则仅使用调用方传入的 facts。
+         * 向后兼容：默认关闭，不影响现有规则评估。
+         */
+        private boolean enabled = false;
+
+        /**
+         * 单个 provider 调用超时（毫秒）
+         *
+         * <p>每个 {@link com.njydsz.pmis.literule.server.spi.FactProvider} 调用最多等待该时长，
+         * 超时则取消并返回空 Map（或抛异常，取决于 {@link #fallbackOnError}）。
+         * 默认 200ms，适用于大多数 DB/Redis 查询场景。
+         */
+        private long timeoutMs = 200;
+
+        /**
+         * provider 异常时是否降级
+         *
+         * <p>true（默认）：provider 调用失败时记录 WARN 日志，跳过该 provider，
+         * 规则评估继续使用已采集的事实；
+         * false：provider 调用失败时抛出
+         * {@link com.njydsz.pmis.literule.server.spi.FactCollectionException}，
+         * 中断规则评估流程。适用于"事实必须可用"的强一致场景。
+         */
+        private boolean fallbackOnError = true;
     }
 
     /**

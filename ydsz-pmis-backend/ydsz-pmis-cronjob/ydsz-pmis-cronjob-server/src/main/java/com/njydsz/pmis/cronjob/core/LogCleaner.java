@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.core.cleaner;
 
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobAlertLogMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobHistoryMapper;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.analytics;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.workflow.web.config.FlowHistoryProperties;
+import com.njydsz.pmis.workflow.server.config.FlowHistoryProperties;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;

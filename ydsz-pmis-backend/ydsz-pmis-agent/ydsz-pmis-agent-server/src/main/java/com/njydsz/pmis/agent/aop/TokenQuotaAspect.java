@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.server.aop;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.agent.web.config.TokenQuotaProperties;
+import com.njydsz.pmis.agent.server.config.TokenQuotaProperties;
 import com.njydsz.pmis.agent.domain.dto.tool.TokenUsage;
 import com.njydsz.pmis.agent.server.engine.AgentContext;
 import com.njydsz.pmis.agent.server.engine.llm.LlmProvider;

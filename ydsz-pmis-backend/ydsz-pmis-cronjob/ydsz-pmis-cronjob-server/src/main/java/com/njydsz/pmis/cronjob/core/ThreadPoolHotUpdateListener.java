@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.core.config;
 
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.pmis.cronjob.server.core.executor.TenantAwareExecutorPool;
 import com.alibaba.nacos.api.config.annotation.NacosConfigListener;

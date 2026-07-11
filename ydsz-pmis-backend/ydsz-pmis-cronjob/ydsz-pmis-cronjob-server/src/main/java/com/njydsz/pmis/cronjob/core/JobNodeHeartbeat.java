@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.core.executor;
 
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobNodeMapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;

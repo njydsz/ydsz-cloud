@@ -6,7 +6,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.common.job.JobLogger;
 import com.njydsz.pmis.common.job.JobLoggerHolder;
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import lombok.extern.slf4j.Slf4j;

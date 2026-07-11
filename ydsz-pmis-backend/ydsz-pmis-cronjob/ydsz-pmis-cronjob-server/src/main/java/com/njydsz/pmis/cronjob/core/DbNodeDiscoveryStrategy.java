@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.core.discovery;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobNodeMapper;
 import lombok.extern.slf4j.Slf4j;

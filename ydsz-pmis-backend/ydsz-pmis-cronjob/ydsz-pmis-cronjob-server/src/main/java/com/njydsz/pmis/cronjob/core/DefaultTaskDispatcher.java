@@ -10,7 +10,7 @@ import com.njydsz.pmis.common.job.JobLoggerHolder;
 import com.njydsz.pmis.common.job.ProcessResult;
 import com.njydsz.pmis.common.job.ShardingContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertType;

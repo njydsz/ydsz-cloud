@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.core.healing;
 
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertType;

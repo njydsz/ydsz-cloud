@@ -1,6 +1,6 @@
 package com.njydsz.pmis.agent.server.tool;
 
-import com.njydsz.pmis.agent.web.config.RAGProperties;
+import com.njydsz.pmis.agent.server.config.RAGProperties;
 import com.njydsz.pmis.agent.server.engine.AgentContext;
 import com.njydsz.pmis.agent.server.rag.RetrievedChunk;
 import com.njydsz.pmis.agent.server.rag.Retriever;

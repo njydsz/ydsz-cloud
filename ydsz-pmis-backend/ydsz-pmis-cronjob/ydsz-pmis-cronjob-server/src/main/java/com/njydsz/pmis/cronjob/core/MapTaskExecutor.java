@@ -9,7 +9,7 @@ import com.njydsz.pmis.common.job.MapReduceProcessor;
 import com.njydsz.pmis.common.job.MapTask;
 import com.njydsz.pmis.common.job.ProcessResult;
 import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.cronjob.web.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
 import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteTaskClient;
 import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
