@@ -1,0 +1,124 @@
+# =====================================================================
+#  PMIS 公共模块（ydsz-pmis-common）配置
+#  --------------------------------------------------------------------
+#  说明：common 模块作为公共依赖被其他微服务引用，本身不独立部署，
+#        因此不需要 HTTP 端口、服务发现等配置。
+#  包含内容：
+#    - 统一响应包装 Result<T> + R<T>（含业务码、消息、数据）
+#    - 全局异常处理 GlobalExceptionHandler
+#    - 通用工具类（时间、加密、TraceId、IdWorker、Jackson）
+#    - MyBatis-Plus 自动填充（创建人/创建时间/更新人/更新时间）
+#    - 跨服务常量、错误码枚举
+#  共享配置：通过 Nacos 共享配置 pmis-common-shared.yaml 注入
+#            （数据源、Redis、MyBatis-Plus、日志等）
+# =====================================================================
+
+# 关闭 Web 容器（common 不启动 Tomcat）
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off  # 关闭启动 banner
+  # P1-3: 请求体大小限制（防止大请求攻击）
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  codec:
+    max-in-memory-size: 10MB
+
+# 服务端请求限制
+server:
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-http-form-post-size: 10MB
+
+# =====================================================================
+# Actuator 健康检查
+# =====================================================================
+# 启用 readiness/liveness 探针分组，配合 K8s 部署使用：
+#   - liveness:  仅检测进程存活（JVM/磁盘），失败触发重启
+#   - readiness: 检测依赖（DB/Redis/MQ），失败时摘除流量但不重启
+# K8s 部署模板中已配置:
+#   livenessProbe:  /actuator/health/liveness
+#   readinessProbe: /actuator/health/readiness
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name:ydsz-pmis-common}
+    export:
+      prometheus:
+        enabled: true
+    # P2-12: SLO 指标配置
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        http.client.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+        http.client.requests: 0.5,0.95,0.99
+      slo:
+        http.server.requests: 50ms,100ms,200ms,500ms,1s,2s,5s
+        http.client.requests: 50ms,100ms,200ms,500ms,1s,2s,5s
+  endpoint:
+    health:
+      show-details: when-authorized
+  # 启用 probes 并自定义分组，避免 liveness 因依赖短暂抖动而误重启
+  health:
+    probes:
+      enabled: true
+    group:
+      liveness:
+        include: livenessState
+      readiness:
+        include: readinessState,db,redis,discoveryClient
+  # =====================================================================
+  # P1-6: Micrometer Tracing + Brave（对接 SkyWalking / Zipkin / Jaeger）
+  # --------------------------------------------------------------------
+  # 采样率：开发环境 100%，生产通过 ENV TRACING_SAMPLING_PROBABILITY=0.1 调整
+  # 上报地址：通过 TRACING_ENDPOINT 环境变量配置
+  #   - SkyWalking OAP: http://skywalking-oap.observability.svc.cluster.local:12800/api/v2/spans
+  #   - Zipkin:         http://zipkin.observability.svc.cluster.local:9411/api/v2/spans
+  # 传播格式：W3C Trace Context（traceparent）+ B3 多头兼容旧客户端
+  # dev 环境默认关闭 tracing 上报（export.enabled=false），避免无收集器时堆积
+  # 生产环境设置 TRACING_EXPORT_ENABLED=true 开启
+  # =====================================================================
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+    propagation:
+      type: w3c
+    brave:
+      # 支持 W3C + B3 双传播（向后兼容老服务网关）
+      baggage:
+        enabled: true
+  zipkin:
+    tracing:
+      endpoint: ${TRACING_ENDPOINT:http://skywalking-oap.observability.svc.cluster.local:12800/api/v2/spans}
+      connect-timeout: 1s
+      read-timeout: 5s
+      export:
+        # dev 环境默认关闭 tracing 上报，生产环境通过 ENV TRACING_EXPORT_ENABLED=true 开启
+        enabled: ${TRACING_EXPORT_ENABLED:false}
+  # P2-12: 慢链路检测配置
+  # 超过阈值的请求会强制采样上报（不受 sampling.probability 限制）
+  # 配合 SkyWalking OAP 的 slowTraceThreshold 使用
+  observations:
+    key-values:
+      # 标记慢请求的阈值 (ms)
+      slow.request.threshold: ${TRACING_SLOW_TRACE_THRESHOLD_MS:500}
+
+# =====================================================================
+# SpringDoc OpenAPI 3.0 配置
+# =====================================================================
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  default-produces-media-type: application/json
