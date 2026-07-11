@@ -1,9 +1,9 @@
-package com.njydsz.pmis.project.service.finance;
+﻿package com.njydsz.pmis.finance.service.finance;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.project.dto.common.ApprovalDTO;
-import com.njydsz.pmis.project.dto.finance.ExpenseCreateDTO;
-import com.njydsz.pmis.project.entity.finance.ExpenseDO;
+import com.njydsz.pmis.finance.dto.common.ApprovalDTO;
+import com.njydsz.pmis.finance.dto.finance.ExpenseCreateDTO;
+import com.njydsz.pmis.finance.entity.finance.ExpenseDO;
 
 /**
  * 费用报销服务

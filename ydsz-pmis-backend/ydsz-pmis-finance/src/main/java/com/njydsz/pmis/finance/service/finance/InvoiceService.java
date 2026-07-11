@@ -1,9 +1,9 @@
-package com.njydsz.pmis.project.service.finance;
+﻿package com.njydsz.pmis.finance.service.finance;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.project.dto.finance.InvoiceApprovalDTO;
-import com.njydsz.pmis.project.dto.finance.InvoiceCreateDTO;
-import com.njydsz.pmis.project.entity.finance.InvoiceDO;
+import com.njydsz.pmis.finance.dto.finance.InvoiceApprovalDTO;
+import com.njydsz.pmis.finance.dto.finance.InvoiceCreateDTO;
+import com.njydsz.pmis.finance.entity.finance.InvoiceDO;
 
 import java.math.BigDecimal;
 import java.util.List;

@@ -1,8 +1,8 @@
-package com.njydsz.pmis.project.service.finance;
+﻿package com.njydsz.pmis.finance.service.finance;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.project.dto.finance.RevenueCreateDTO;
-import com.njydsz.pmis.project.entity.finance.RevenueDO;
+import com.njydsz.pmis.finance.dto.finance.RevenueCreateDTO;
+import com.njydsz.pmis.finance.entity.finance.RevenueDO;
 
 import java.util.List;
 import java.util.Map;

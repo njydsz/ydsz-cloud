@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.mapper.finance;
+﻿package com.njydsz.pmis.finance.mapper.finance;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.entity.finance.InvoiceDO;
+import com.njydsz.pmis.finance.entity.finance.InvoiceDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

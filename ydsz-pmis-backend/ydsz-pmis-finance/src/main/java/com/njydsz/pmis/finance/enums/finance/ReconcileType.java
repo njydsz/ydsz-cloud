@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.enums.finance;
+﻿package com.njydsz.pmis.finance.enums.finance;
 
 /**
  * 对账(Reconcile)校验类型

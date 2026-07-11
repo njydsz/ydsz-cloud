@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.dto.finance;
+﻿package com.njydsz.pmis.finance.dto.finance;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

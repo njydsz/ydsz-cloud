@@ -1,15 +1,15 @@
-package com.njydsz.pmis.project.service.impl.finance;
+﻿package com.njydsz.pmis.finance.service.impl.finance;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.project.dto.finance.RevenueCreateDTO;
-import com.njydsz.pmis.project.entity.finance.RevenueDO;
-import com.njydsz.pmis.project.enums.finance.RevenueRecognitionMethod;
-import com.njydsz.pmis.project.mapper.finance.RevenueMapper;
-import com.njydsz.pmis.project.service.finance.RevenueService;
+import com.njydsz.pmis.finance.dto.finance.RevenueCreateDTO;
+import com.njydsz.pmis.finance.entity.finance.RevenueDO;
+import com.njydsz.pmis.finance.enums.finance.RevenueRecognitionMethod;
+import com.njydsz.pmis.finance.mapper.finance.RevenueMapper;
+import com.njydsz.pmis.finance.service.finance.RevenueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;

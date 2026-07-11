@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.mapper.finance;
+﻿package com.njydsz.pmis.finance.mapper.finance;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.entity.finance.DailyReconcileDO;
+import com.njydsz.pmis.finance.entity.finance.DailyReconcileDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

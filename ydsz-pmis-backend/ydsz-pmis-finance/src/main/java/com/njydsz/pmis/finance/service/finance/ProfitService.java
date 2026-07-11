@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.service.finance;
+﻿package com.njydsz.pmis.finance.service.finance;
 
-import com.njydsz.pmis.project.dto.finance.ProfitSnapshotDTO;
-import com.njydsz.pmis.project.entity.finance.ProfitSnapshotDO;
+import com.njydsz.pmis.finance.dto.finance.ProfitSnapshotDTO;
+import com.njydsz.pmis.finance.entity.finance.ProfitSnapshotDO;
 
 import java.util.List;
 import java.util.Map;

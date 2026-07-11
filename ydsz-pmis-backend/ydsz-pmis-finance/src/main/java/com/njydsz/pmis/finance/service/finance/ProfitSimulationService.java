@@ -1,9 +1,9 @@
-package com.njydsz.pmis.project.service.finance;
+﻿package com.njydsz.pmis.finance.service.finance;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.project.dto.finance.ProfitSimulationCreateDTO;
-import com.njydsz.pmis.project.dto.finance.SimulationStatusDTO;
-import com.njydsz.pmis.project.entity.finance.ProfitSimulationDO;
+import com.njydsz.pmis.finance.dto.finance.ProfitSimulationCreateDTO;
+import com.njydsz.pmis.finance.dto.finance.SimulationStatusDTO;
+import com.njydsz.pmis.finance.entity.finance.ProfitSimulationDO;
 
 import java.util.List;
 import java.util.Map;

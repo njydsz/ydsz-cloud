@@ -1,13 +1,13 @@
-package com.njydsz.pmis.project.controller.finance;
+﻿package com.njydsz.pmis.finance.controller.finance;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.project.dto.finance.ProfitSimulationCreateDTO;
-import com.njydsz.pmis.project.dto.finance.SimulationStatusDTO;
-import com.njydsz.pmis.project.entity.finance.ProfitSimulationDO;
-import com.njydsz.pmis.project.service.finance.ProfitSimulationService;
+import com.njydsz.pmis.finance.dto.finance.ProfitSimulationCreateDTO;
+import com.njydsz.pmis.finance.dto.finance.SimulationStatusDTO;
+import com.njydsz.pmis.finance.entity.finance.ProfitSimulationDO;
+import com.njydsz.pmis.finance.service.finance.ProfitSimulationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
