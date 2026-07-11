@@ -1,12 +1,12 @@
-﻿package com.njydsz.pmis.project.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.literule.entity.RuleTemplateDO;
-import com.njydsz.pmis.literule.mapper.RuleTemplateMapper;
+import com.njydsz.pmis.literule.domain.entity.RuleTemplateDO;
+import com.njydsz.pmis.literule.infra.mapper.RuleTemplateMapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.literule.config.RuleAdminService;
-import com.njydsz.pmis.literule.spi.RuleTemplateProvider;
+import com.njydsz.pmis.literule.server.config.RuleAdminService;
+import com.njydsz.pmis.literule.server.spi.RuleTemplateProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

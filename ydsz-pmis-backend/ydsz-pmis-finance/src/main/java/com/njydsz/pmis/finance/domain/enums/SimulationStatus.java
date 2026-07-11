@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.finance.domain.enums;
+package com.njydsz.pmis.finance.domain.enums;
 
 /**
  * 利润测算版本状态

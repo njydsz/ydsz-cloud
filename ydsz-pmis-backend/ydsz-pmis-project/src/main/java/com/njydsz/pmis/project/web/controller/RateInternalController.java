@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.web.controller.resource;
+package com.njydsz.pmis.project.web.controller.resource;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;

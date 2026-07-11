@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.domain.enums;
+package com.njydsz.pmis.project.domain.enums;
 
 /**
  * EVM 挣值告警等级

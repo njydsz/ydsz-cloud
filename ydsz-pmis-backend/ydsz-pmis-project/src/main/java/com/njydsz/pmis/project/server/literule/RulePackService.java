@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -7,12 +7,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RulePack;
-import com.njydsz.pmis.literule.spi.RuleConfigProvider;
-import com.njydsz.pmis.literule.spi.RulePackProvider;
-import com.njydsz.pmis.literule.entity.RulePackDO;
-import com.njydsz.pmis.literule.entity.RulePackInstallDO;
-import com.njydsz.pmis.literule.mapper.RulePackInstallMapper;
-import com.njydsz.pmis.literule.mapper.RulePackMapper;
+import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
+import com.njydsz.pmis.literule.server.spi.RulePackProvider;
+import com.njydsz.pmis.literule.domain.entity.RulePackDO;
+import com.njydsz.pmis.literule.domain.entity.RulePackInstallDO;
+import com.njydsz.pmis.literule.infra.mapper.RulePackInstallMapper;
+import com.njydsz.pmis.literule.infra.mapper.RulePackMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

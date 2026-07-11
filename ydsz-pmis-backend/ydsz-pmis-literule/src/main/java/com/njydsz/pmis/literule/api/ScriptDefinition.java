@@ -24,7 +24,7 @@ import java.io.Serializable;
  *
  * <p>持久化于 {@code pmis_rule_script}（见 V048，script 字段为 TEXT），
  * 由 {@code ScriptConfigProvider} SPI 加载，
- * 通过 {@link com.njydsz.pmis.literule.impl.ScriptRule#from(ScriptDefinition)}
+ * 通过 {@link com.njydsz.pmis.literule.server.impl.ScriptRule#from(ScriptDefinition)}
  * 转换为可执行规则。
  *
  * @author ydsz-pmis-team

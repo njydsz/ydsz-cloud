@@ -6,7 +6,7 @@ import com.njydsz.pmis.literule.api.dto.RuleDashboardOverviewVO;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardRealtimeVO;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardTopRuleVO;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardTrendVO;
-import com.njydsz.pmis.literule.spi.DashboardDataProvider;
+import com.njydsz.pmis.literule.server.spi.DashboardDataProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;

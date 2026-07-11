@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.message.mapper.MsgTemplateMapper">
+<mapper namespace="com.njydsz.pmis.message.infra.mapper.MsgTemplateMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.message.entity.MsgTemplateDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.message.domain.entity.MsgTemplateDO">
         <id column="id" property="id"/>
         <result column="template_code" property="templateCode"/>
         <result column="channel" property="channel"/>

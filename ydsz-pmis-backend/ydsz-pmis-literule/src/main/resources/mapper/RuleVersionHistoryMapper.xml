@@ -1,8 +1,8 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.literule.mapper.RuleVersionHistoryMapper">
+<mapper namespace="com.njydsz.pmis.literule.infra.mapper.RuleVersionHistoryMapper">
 
-    <select id="listByCode" resultType="com.njydsz.pmis.literule.entity.RuleVersionHistoryDO">
+    <select id="listByCode" resultType="com.njydsz.pmis.literule.domain.entity.RuleVersionHistoryDO">
         SELECT id, rule_code, version, definition_json, change_desc, operator, created_at
         FROM pmis_rule_version_history WHERE rule_code = #{ruleCode} ORDER BY version DESC
     </select>

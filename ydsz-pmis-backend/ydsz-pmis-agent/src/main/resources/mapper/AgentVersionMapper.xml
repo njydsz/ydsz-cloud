@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.agent.mapper.AgentVersionMapper">
+<mapper namespace="com.njydsz.pmis.agent.infra.mapper.AgentVersionMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.agent.entity.AgentVersionDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.agent.domain.entity.AgentVersionDO">
         <id column="id" property="id"/>
         <result column="agent_type" property="agentType"/>
         <result column="version_id" property="versionId"/>

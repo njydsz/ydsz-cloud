@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 轻量规则引擎（LiteRule）业务适配层。
  *
  * <p>本包是项目模块对 {@code com.njydsz.pmis.literule}（通用规则引擎）的"业务侧适配层"，

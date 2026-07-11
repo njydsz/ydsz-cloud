@@ -156,9 +156,9 @@ class ArchitectureGuardTest {
         ArchRule rule = noClasses()
                 .that().resideInAPackage("com.njydsz.pmis.gateway..")
                 .should().dependOnClassesThat().resideInAnyPackage(
-                        "com.njydsz.pmis.userinfo.service..",
+                        "com.njydsz.pmis.userinfo.server.service..",
                         "com.njydsz.pmis.project.service..",
-                        "com.njydsz.pmis.workflow.service.."
+                        "com.njydsz.pmis.workflow.server.service.."
                 )
                 .because("Gateway 应通过 Feign 或请求头透传与业务模块通信，不应直接依赖 Service 实现");
 

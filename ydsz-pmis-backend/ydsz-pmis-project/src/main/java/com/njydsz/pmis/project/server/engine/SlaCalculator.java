@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.engine;
+package com.njydsz.pmis.project.server.engine;
 
 import com.njydsz.pmis.project.domain.entity.OpsTicketDO;
 import com.njydsz.pmis.project.domain.enums.OpsTicketPriority;

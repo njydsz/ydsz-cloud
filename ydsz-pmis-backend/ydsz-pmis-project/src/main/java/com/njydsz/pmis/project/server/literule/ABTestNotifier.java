@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
 /**
  * AB Test 通知器接口（P1-10）

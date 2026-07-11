@@ -1,9 +1,9 @@
 package com.njydsz.pmis.literule.web;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.literule.audit.RuleAuditLogService;
-import com.njydsz.pmis.literule.audit.RuleAuditLogService.AuditAction;
-import com.njydsz.pmis.literule.audit.RuleAuditLogService.AuditLogEntry;
+import com.njydsz.pmis.literule.server.audit.RuleAuditLogService;
+import com.njydsz.pmis.literule.server.audit.RuleAuditLogService.AuditAction;
+import com.njydsz.pmis.literule.server.audit.RuleAuditLogService.AuditLogEntry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

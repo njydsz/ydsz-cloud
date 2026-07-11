@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 全文检索层（Full-Text Search）。
  *
  * <p>本包负责项目模块的全文检索能力。技术选型使用 PostgreSQL 原生 {@code tsvector}，

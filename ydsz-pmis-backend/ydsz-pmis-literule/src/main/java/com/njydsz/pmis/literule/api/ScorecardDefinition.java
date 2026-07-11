@@ -29,7 +29,7 @@ import java.util.List;
  * 若配置则覆盖 redThreshold/yellowThreshold 的三级映射。
  *
  * <p>持久化于 {@code pmis_rule_scorecard}（见 V048），由 {@code ScorecardConfigProvider} SPI 加载，
- * 通过 {@link com.njydsz.pmis.literule.impl.ScorecardRule#from(ScorecardDefinition, com.njydsz.pmis.literule.expr.ExpressionEvaluator)}
+ * 通过 {@link com.njydsz.pmis.literule.server.impl.ScorecardRule#from(ScorecardDefinition, com.njydsz.pmis.literule.server.expr.ExpressionEvaluator)}
  * 转换为可执行规则。
  *
  * <p>JSON 示例（复杂评分卡）：

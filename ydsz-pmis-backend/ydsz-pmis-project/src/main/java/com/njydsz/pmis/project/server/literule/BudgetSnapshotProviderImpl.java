@@ -1,10 +1,10 @@
-﻿package com.njydsz.pmis.project.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
 import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
 import com.njydsz.pmis.common.feign.FinanceDataClient;
 import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
 import com.njydsz.pmis.project.server.service.InitiationService;
-import com.njydsz.pmis.literule.spi.BudgetSnapshotProvider;
+import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

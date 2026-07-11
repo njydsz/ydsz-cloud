@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.finance.server.service.finance;
+package com.njydsz.pmis.finance.server.service.finance;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.finance.domain.dto.ProfitSimulationCreateDTO;

@@ -1,6 +1,6 @@
-﻿package com.njydsz.pmis.project.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
-import com.njydsz.pmis.literule.spi.ThresholdProvider;
+import com.njydsz.pmis.literule.server.spi.ThresholdProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;

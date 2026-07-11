@@ -29,4 +29,4 @@
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-package com.njydsz.pmis.cronjob;
+package com.njydsz.pmis.cronjob.web;

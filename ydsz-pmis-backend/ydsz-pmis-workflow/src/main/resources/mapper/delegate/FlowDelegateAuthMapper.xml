@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.workflow.mapper.delegate.FlowDelegateAuthMapper">
+<mapper namespace="com.njydsz.pmis.workflow.infra.mapper.delegate.FlowDelegateAuthMapper">
 
     <!-- 基础列 -->
     <sql id="Base_Column">
@@ -11,7 +11,7 @@
     </sql>
 
     <!-- 按授权人查询 -->
-    <select id="selectByOwner" resultType="com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO">
+    <select id="selectByOwner" resultType="com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO">
         SELECT <include refid="Base_Column"/>
         FROM pmis_flow_delegate_auth
         WHERE tenant_id = #{tenantId}
@@ -24,7 +24,7 @@
     </select>
 
     <!-- 按被授权人查询 -->
-    <select id="selectByDelegate" resultType="com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO">
+    <select id="selectByDelegate" resultType="com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO">
         SELECT <include refid="Base_Column"/>
         FROM pmis_flow_delegate_auth
         WHERE tenant_id = #{tenantId}
@@ -37,7 +37,7 @@
     </select>
 
     <!-- 匹配代理规则：按优先级（FLOW_NODE > FLOW > ALL），取最新生效 -->
-    <select id="matchAuth" resultType="com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO">
+    <select id="matchAuth" resultType="com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO">
         SELECT <include refid="Base_Column"/>
         FROM pmis_flow_delegate_auth
         WHERE tenant_id = #{tenantId}
@@ -63,7 +63,7 @@
     </select>
 
     <!-- 扫描过期记录 -->
-    <select id="selectExpired" resultType="com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO">
+    <select id="selectExpired" resultType="com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO">
         SELECT <include refid="Base_Column"/>
         FROM pmis_flow_delegate_auth
         WHERE deleted = 0

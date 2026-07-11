@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.domain.enums;
+package com.njydsz.pmis.project.domain.enums;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

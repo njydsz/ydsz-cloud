@@ -27,7 +27,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.sales", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = {"com.njydsz.pmis.sales.api", "com.njydsz.pmis.common.feign"})
-@MapperScan({"com.njydsz.pmis.sales.infra.mapper", "com.njydsz.pmis.literule.mapper"})
+@MapperScan({"com.njydsz.pmis.sales.infra.mapper", "com.njydsz.pmis.literule.infra.mapper"})
 @EnableScheduling
 public class SalesApplication {
 

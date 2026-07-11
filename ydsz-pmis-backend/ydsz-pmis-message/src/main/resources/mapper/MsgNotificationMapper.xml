@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.message.mapper.MsgNotificationMapper">
+<mapper namespace="com.njydsz.pmis.message.infra.mapper.MsgNotificationMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.message.entity.MsgNotificationDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.message.domain.entity.MsgNotificationDO">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
         <result column="content" property="content"/>

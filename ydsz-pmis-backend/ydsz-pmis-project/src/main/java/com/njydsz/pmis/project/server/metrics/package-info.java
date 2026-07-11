@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Micrometer 业务指标采集层（Metrics）。
  *
  * <p>本包负责将项目模块的核心业务 KPI 注册为 Prometheus Gauge / Counter，对接

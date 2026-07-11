@@ -3,7 +3,7 @@ package com.njydsz.pmis.literule.web;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.literule.core.DefaultBreakpointHook;
+import com.njydsz.pmis.literule.server.core.DefaultBreakpointHook;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

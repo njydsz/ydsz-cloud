@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.job;
+package com.njydsz.pmis.project.server.job;
 
 import com.njydsz.pmis.project.server.service.AlertDispatchService;
 import com.njydsz.pmis.common.job.JobHandler;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.finance.server.service.finance;
+package com.njydsz.pmis.finance.server.service.finance;
 
 import com.njydsz.pmis.finance.domain.dto.ProfitSnapshotDTO;
 import com.njydsz.pmis.finance.domain.entity.ProfitSnapshotDO;

@@ -1,9 +1,9 @@
-﻿package com.njydsz.pmis.project.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
-import com.njydsz.pmis.literule.entity.RuleDefinitionDO;
-import com.njydsz.pmis.literule.mapper.RuleDefinitionMapper;
-import com.njydsz.pmis.literule.spi.RuleConflictDetectorProvider;
-import com.njydsz.pmis.literule.util.RuleConflictAnalyzer;
+import com.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
+import com.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
+import com.njydsz.pmis.literule.server.spi.RuleConflictDetectorProvider;
+import com.njydsz.pmis.literule.server.util.RuleConflictAnalyzer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

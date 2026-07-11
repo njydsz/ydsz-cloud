@@ -1,10 +1,10 @@
-﻿package com.njydsz.pmis.project.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.literule.expr.VariableDefinition;
-import com.njydsz.pmis.literule.expr.VariableRegistry;
-import com.njydsz.pmis.literule.entity.RuleVariableDefDO;
-import com.njydsz.pmis.literule.mapper.RuleVariableDefMapper;
+import com.njydsz.pmis.literule.server.expr.VariableDefinition;
+import com.njydsz.pmis.literule.server.expr.VariableRegistry;
+import com.njydsz.pmis.literule.domain.entity.RuleVariableDefDO;
+import com.njydsz.pmis.literule.infra.mapper.RuleVariableDefMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 数据库变量注册表
  *
  * <p>从 {@code pmis_rule_variable_def} 表加载变量定义，实现 {@link VariableRegistry}。
- * 作为 {@link com.njydsz.pmis.literule.expr.ExpressionValidationService} 的变量空间数据源，
+ * 作为 {@link com.njydsz.pmis.literule.server.expr.ExpressionValidationService} 的变量空间数据源，
  * 启用 UNDEFINED_VARIABLE 校验和前端编辑器自动补全。
  *
  * <p>缓存策略：使用 {@link ConcurrentHashMap} + {@code volatile long lastLoadTime} 实现

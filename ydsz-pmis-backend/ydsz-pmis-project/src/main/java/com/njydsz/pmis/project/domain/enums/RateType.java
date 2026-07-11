@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.domain.enums;
+package com.njydsz.pmis.project.domain.enums;
 
 /**
  * 费率类型

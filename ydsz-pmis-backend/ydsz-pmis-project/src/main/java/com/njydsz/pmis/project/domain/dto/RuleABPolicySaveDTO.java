@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 /**
  * 规则 AB 测试策略保存 DTO
  *
- * <p>隔离 {@link com.njydsz.pmis.literule.entity.RuleABPolicyDO} 的
+ * <p>隔离 {@link com.njydsz.pmis.literule.domain.entity.RuleABPolicyDO} 的
  * id/ruleCode/lastEvaluatedAt/lastRollbackAt/createdBy/createdAt/updatedBy/updatedAt
  * 审计字段，避免越权写入。ruleCode 由 URL 路径变量注入。
  *

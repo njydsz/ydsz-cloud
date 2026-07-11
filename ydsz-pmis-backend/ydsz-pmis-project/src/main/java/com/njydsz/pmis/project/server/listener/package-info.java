@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Spring 事件监听器层（Event Listener）。
  *
  * <p>本包处理项目模块内部及跨模块事件（Spring {@code ApplicationEvent}）的监听与响应，

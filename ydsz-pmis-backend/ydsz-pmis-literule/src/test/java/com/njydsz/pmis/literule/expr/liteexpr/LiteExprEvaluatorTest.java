@@ -1,8 +1,8 @@
-package com.njydsz.pmis.literule.expr.liteexpr;
+package com.njydsz.pmis.literule.server.expr.liteexpr;
 
 import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
-import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
+import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.server.expr.ExpressionValidationResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

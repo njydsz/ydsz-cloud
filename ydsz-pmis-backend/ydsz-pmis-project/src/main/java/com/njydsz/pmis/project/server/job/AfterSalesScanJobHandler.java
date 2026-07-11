@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.job;
+package com.njydsz.pmis.project.server.job;
 
 import com.njydsz.pmis.project.server.service.OpsTicketService;
 import com.njydsz.pmis.project.server.service.WarrantyService;

@@ -1,7 +1,7 @@
-﻿package com.njydsz.pmis.project.domain.vo;
+package com.njydsz.pmis.project.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.njydsz.pmis.literule.spi.BudgetSnapshotProvider.BudgetSnapshot;
+import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider.BudgetSnapshot;
 import lombok.Data;
 
 import java.io.Serial;

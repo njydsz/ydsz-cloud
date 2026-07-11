@@ -11,9 +11,9 @@ import java.util.Map;
  * 项目执行模块 Feign 客户端（供 Agent 工具调用真实数据源）
  *
  * <p>聚合工时异常统计、风险分页查询、EVM 仪表盘三个接口，供
- * {@code com.njydsz.pmis.agent.tool.TimesheetStatTool}、
- * {@code com.njydsz.pmis.agent.tool.RiskEventQueryTool}、
- * {@code com.njydsz.pmis.agent.tool.ProjectStatusTool}
+ * {@code com.njydsz.pmis.agent.server.tool.TimesheetStatTool}、
+ * {@code com.njydsz.pmis.agent.server.tool.RiskEventQueryTool}、
+ * {@code com.njydsz.pmis.agent.server.tool.ProjectStatusTool}
  * 在 {@code pmis.agent.tool.mock-enabled=false} 时调用。
  *
  * <p>project 服务不可用时由 {@link ProjectServiceClientFallback} 返回降级空数据，

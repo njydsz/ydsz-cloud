@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.finance.domain.enums;
+package com.njydsz.pmis.finance.domain.enums;
 
 /**
  * 收入确认方法

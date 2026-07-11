@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
 import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
 import lombok.AllArgsConstructor;

@@ -18,7 +18,7 @@ import java.io.Serializable;
  *
  * <p>持久化于 {@code pmis_rule_decision_tree}（见 V048，root_node 字段存储 JSON），
  * 由 {@code DecisionTreeConfigProvider} SPI 加载，
- * 通过 {@link com.njydsz.pmis.literule.impl.DecisionTreeRule#from(DecisionTreeDefinition, com.njydsz.pmis.literule.expr.ExpressionEvaluator)}
+ * 通过 {@link com.njydsz.pmis.literule.server.impl.DecisionTreeRule#from(DecisionTreeDefinition, com.njydsz.pmis.literule.server.expr.ExpressionEvaluator)}
  * 转换为可执行规则。
  *
  * <p>JSON 示例：

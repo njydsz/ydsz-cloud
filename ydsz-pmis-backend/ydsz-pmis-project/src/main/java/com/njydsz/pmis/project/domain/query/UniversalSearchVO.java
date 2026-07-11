@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.domain.query;
+package com.njydsz.pmis.project.domain.query;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.web;
+package com.njydsz.pmis.project.web;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -19,7 +19,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.project", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = {"com.njydsz.pmis.project.api", "com.njydsz.pmis.common.feign"})
-@MapperScan({"com.njydsz.pmis.project.infra.mapper", "com.njydsz.pmis.literule.mapper"})
+@MapperScan({"com.njydsz.pmis.project.infra.mapper", "com.njydsz.pmis.literule.infra.mapper"})
 @EnableScheduling
 public class ProjectApplication {
 

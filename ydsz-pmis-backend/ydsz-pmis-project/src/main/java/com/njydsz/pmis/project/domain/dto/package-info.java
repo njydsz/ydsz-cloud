@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 数据传输对象（Data Transfer Object）层。
  *
  * <p>本包定义项目模块所有 Controller 接收的入参对象，统一来自前端 JSON 反序列化。

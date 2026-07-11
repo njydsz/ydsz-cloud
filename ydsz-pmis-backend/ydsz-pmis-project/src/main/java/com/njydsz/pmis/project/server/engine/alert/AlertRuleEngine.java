@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.engine.alert;
+package com.njydsz.pmis.project.server.engine.alert;
 
 import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
 import com.njydsz.pmis.project.domain.enums.AlertSeverity;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.domain.vo;
+package com.njydsz.pmis.project.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * <p>从 {@link com.njydsz.pmis.project.domain.entity.RiskDO} 转换而来，
  * 剥离了敏感字段：{@code tenantId}、{@code providerTraceId}、{@code deleted}、{@code version}（乐观锁版本号）。
  *
- * <p>设计参考：{@code com.njydsz.pmis.userinfo.vo.UserVO} 的 DO/VO 分离模式。
+ * <p>设计参考：{@code com.njydsz.pmis.userinfo.domain.vo.UserVO} 的 DO/VO 分离模式。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

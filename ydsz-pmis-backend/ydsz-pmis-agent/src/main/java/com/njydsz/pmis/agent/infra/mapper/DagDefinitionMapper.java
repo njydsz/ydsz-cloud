@@ -1,0 +1,15 @@
+package com.njydsz.pmis.agent.infra.mapper.orchestration;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.agent.domain.entity.orchestration.DagDefinitionDO;
+import org.apache.ibatis.annotations.Mapper;
+
+/**
+ * DAG 定义 Mapper（P3-2 落地）。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0 (P3-2)
+ */
+@Mapper
+public interface DagDefinitionMapper extends BaseMapper<DagDefinitionDO> {
+}

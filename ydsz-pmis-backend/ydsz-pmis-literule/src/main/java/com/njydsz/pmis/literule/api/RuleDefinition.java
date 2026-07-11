@@ -112,7 +112,7 @@ public class RuleDefinition implements Serializable {
      * 租户 ID
      *
      * <p>多租户隔离标识，单租户部署下默认为 1。
-     * 1.5.0 起启用运行时租户过滤：{@link com.njydsz.pmis.literule.core.DefaultRuleEngine}
+     * 1.5.0 起启用运行时租户过滤：{@link com.njydsz.pmis.literule.server.core.DefaultRuleEngine}
      * 在评估前会比较 {@code rule.getTenantId()} 与 {@link RuleContext#getTenantId()}，
      * 仅当两者匹配时才评估该规则。
      *

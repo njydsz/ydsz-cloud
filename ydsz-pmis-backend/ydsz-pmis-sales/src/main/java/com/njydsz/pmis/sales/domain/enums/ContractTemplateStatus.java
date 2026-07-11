@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.domain.enums;
+package com.njydsz.pmis.sales.domain.enums;
 
 /**
  * 合同模板状态

@@ -21,7 +21,7 @@ import java.util.Map;
  * <ul>
  *   <li>{@code com.njydsz.pmis.common.ai.impl.OpenAICompatibleLlmClient} — OpenAI 兼容协议（生产用）</li>
  *   <li>{@code com.njydsz.pmis.common.ai.impl.MockLlmClient} — 离线 Mock（开发/测试用）</li>
- *   <li>{@code com.njydsz.pmis.agent.engine.llm.LlmProviderAdapter} — agent 模块适配器（桥接到 LlmProvider）</li>
+ *   <li>{@code com.njydsz.pmis.agent.server.engine.llm.LlmProviderAdapter} — agent 模块适配器（桥接到 LlmProvider）</li>
  * </ul>
  *
  * <p>切换方式：配置 {@code pmis.common.ai.llm-client=OPENAI_COMPATIBLE|MOCK}

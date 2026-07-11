@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.service;
+package com.njydsz.pmis.project.server.service;
 
 import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;

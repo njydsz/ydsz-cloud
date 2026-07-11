@@ -1,15 +1,15 @@
-package com.njydsz.pmis.userinfo.service.impl.auth;
+package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
-import com.njydsz.pmis.userinfo.dto.auth.LoginDTO;
-import com.njydsz.pmis.userinfo.dto.auth.LoginResultVO;
-import com.njydsz.pmis.userinfo.entity.user.UserAccountDO;
-import com.njydsz.pmis.userinfo.service.org.DepartmentService;
-import com.njydsz.pmis.userinfo.service.permission.PermissionService;
-import com.njydsz.pmis.userinfo.service.permission.RoleService;
-import com.njydsz.pmis.userinfo.service.user.UserAccountService;
+import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
+import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
+import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
+import com.njydsz.pmis.userinfo.server.service.org.DepartmentService;
+import com.njydsz.pmis.userinfo.server.service.permission.PermissionService;
+import com.njydsz.pmis.userinfo.server.service.permission.RoleService;
+import com.njydsz.pmis.userinfo.server.service.user.UserAccountService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

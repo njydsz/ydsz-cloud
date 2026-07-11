@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.userinfo.mapper.ResourceAssignmentMapper">
+<mapper namespace="com.njydsz.pmis.userinfo.infra.mapper.ResourceAssignmentMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.userinfo.entity.ResourceAssignmentDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.userinfo.domain.entity.ResourceAssignmentDO">
         <id column="id" property="id"/>
         <result column="assignment_code" property="assignmentCode"/>
         <result column="employee_id" property="employeeId"/>

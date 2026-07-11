@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 表达式引擎通过变量名从上下文中取值。不可变（防御性拷贝）。
  *
  * <p>1.5.0 起新增 {@code tenantId} 字段，用于运行时租户隔离：
- * {@link com.njydsz.pmis.literule.core.DefaultRuleEngine} 在评估前会比较
+ * {@link com.njydsz.pmis.literule.server.core.DefaultRuleEngine} 在评估前会比较
  * {@code rule.getTenantId()} 与 {@code context.getTenantId()}，仅当两者匹配时才评估该规则。
  * 默认 "1"（单租户部署），向后兼容。
  *

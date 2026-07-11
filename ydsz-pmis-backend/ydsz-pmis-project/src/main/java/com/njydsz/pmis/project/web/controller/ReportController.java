@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.web.controller.report;
+package com.njydsz.pmis.project.web.controller.report;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.annotation.RateLimit;

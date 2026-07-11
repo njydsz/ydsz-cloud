@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 数据访问层（MyBatis-Plus Mapper）。
  *
  * <p>本包定义项目模块所有表的 MyBatis-Plus Mapper 接口，统一继承 {@code BaseMapper<DO>}，

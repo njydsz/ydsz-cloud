@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.metrics;
+package com.njydsz.pmis.project.server.metrics;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;

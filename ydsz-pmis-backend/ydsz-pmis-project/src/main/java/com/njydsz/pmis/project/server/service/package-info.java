@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 业务服务接口层（Service Interface）。
  *
  * <p>本包定义项目模块全部业务能力的"接口契约"，实现类统一放在 {@code project.service.impl} 子包。

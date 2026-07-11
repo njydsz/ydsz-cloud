@@ -19,8 +19,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Check, Close, Share, Refresh, Clock } from '@element-plus/icons-vue'
-import * as ruleApi from '@/api/rule-engine/index'
-import type { ApprovalRecord } from '@/api/rule-engine/index'
+import * as ruleApi from '@/api/rule-engine'
+import type { ApprovalRecord } from '@/api/rule-engine'
 import { logger } from '@/utils/logger'
 
 interface Props {
@@ -64,8 +64,8 @@ async function loadRecords() {
   }
 }
 
-function openApproval(record: ApprovalRecord, type: 'approve' | 'reject' | 'delegate') {
-  approvalDialog.record = record
+function openApproval(record: ApprovalRecord | Record<string, any>, type: 'approve' | 'reject' | 'delegate') {
+  approvalDialog.record = record as ApprovalRecord
   approvalDialog.type = type
   approvalDialog.comment = ''
   approvalDialog.delegateTo = ''

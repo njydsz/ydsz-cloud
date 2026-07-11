@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.domain.query;
+package com.njydsz.pmis.project.domain.query;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;

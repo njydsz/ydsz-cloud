@@ -90,12 +90,12 @@ public interface Rule {
     /**
      * 租户 ID（多租户运行时隔离）
      *
-     * <p>1.5.0 起启用运行时租户过滤：{@link com.njydsz.pmis.literule.core.DefaultRuleEngine}
+     * <p>1.5.0 起启用运行时租户过滤：{@link com.njydsz.pmis.literule.server.core.DefaultRuleEngine}
      * 在评估前会比较 {@code rule.getTenantId()} 与 {@link RuleContext#getTenantId()}，
      * 仅当两者匹配时才评估该规则。
      *
      * <p>默认返回 {@code "1"}（单租户部署），向后兼容。
-     * {@link com.njydsz.pmis.literule.impl.ExpressionRule} 等基于 {@link RuleDefinition}
+     * {@link com.njydsz.pmis.literule.server.impl.ExpressionRule} 等基于 {@link RuleDefinition}
      * 的规则会覆写此方法返回定义中的 tenantId。
      *
      * @return 租户 ID；默认 "1"
@@ -108,7 +108,7 @@ public interface Rule {
     /**
      * 环境标识（多环境运行时隔离，P1-5）
      *
-     * <p>1.6.0 起启用运行时环境过滤：{@link com.njydsz.pmis.literule.core.DefaultRuleEngine}
+     * <p>1.6.0 起启用运行时环境过滤：{@link com.njydsz.pmis.literule.server.core.DefaultRuleEngine}
      * 在评估前会比较 {@code rule.getEnvironment()} 与 {@link RuleContext#getEnvironment()}：
      * <ul>
      *   <li>规则 environment 为 {@link RuleEnvironment#DEFAULT "default"} 时，匹配任何上下文环境（向后兼容）</li>
@@ -116,7 +116,7 @@ public interface Rule {
      * </ul>
      *
      * <p>默认返回 {@link RuleEnvironment#DEFAULT "default"}（全环境生效），向后兼容。
-     * {@link com.njydsz.pmis.literule.impl.ExpressionRule} 等基于 {@link RuleDefinition}
+     * {@link com.njydsz.pmis.literule.server.impl.ExpressionRule} 等基于 {@link RuleDefinition}
      * 的规则会覆写此方法返回定义中的 environment。
      *
      * @return 环境标识；默认 "default"

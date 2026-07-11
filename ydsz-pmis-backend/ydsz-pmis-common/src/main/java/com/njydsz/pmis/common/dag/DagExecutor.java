@@ -10,8 +10,8 @@ import java.util.Map;
  *
  * <h3>实现方</h3>
  * <ul>
- *   <li>{@code com.njydsz.pmis.cronjob.core.dag.DagExecutor} — 任务调度 DAG 执行器</li>
- *   <li>{@code com.njydsz.pmis.agent.orchestration.dag.DagExecutor} — AI 编排 DAG 执行器</li>
+ *   <li>{@code com.njydsz.pmis.cronjob.server.core.dag.DagExecutor} — 任务调度 DAG 执行器</li>
+ *   <li>{@code com.njydsz.pmis.agent.server.orchestration.dag.DagExecutor} — AI 编排 DAG 执行器</li>
  * </ul>
  *
  * @param <D> DAG 定义类型（模块特有）

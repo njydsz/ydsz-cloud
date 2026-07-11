@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.system.mapper.DataExportAuditMapper">
+<mapper namespace="com.njydsz.pmis.system.infra.mapper.DataExportAuditMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.system.entity.DataExportAuditDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.system.domain.entity.DataExportAuditDO">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="username" property="username"/>
@@ -21,7 +21,7 @@
         <result column="created_at" property="createdAt"/>
     </resultMap>
 
-    <insert id="insertExport" parameterType="com.njydsz.pmis.system.entity.DataExportAuditDO"
+    <insert id="insertExport" parameterType="com.njydsz.pmis.system.domain.entity.DataExportAuditDO"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO pmis_data_export_audit (
             user_id, username, export_module, export_action, biz_type, row_count,

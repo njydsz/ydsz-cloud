@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.finance.domain.dto;
+package com.njydsz.pmis.finance.domain.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

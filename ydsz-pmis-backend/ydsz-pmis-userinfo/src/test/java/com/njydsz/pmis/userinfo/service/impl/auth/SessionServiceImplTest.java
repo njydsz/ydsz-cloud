@@ -1,7 +1,7 @@
-package com.njydsz.pmis.userinfo.service.impl.auth;
+package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
-import com.njydsz.pmis.userinfo.entity.user.UserSessionDO;
-import com.njydsz.pmis.userinfo.mapper.user.UserSessionMapper;
+import com.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
+import com.njydsz.pmis.userinfo.infra.mapper.user.UserSessionMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

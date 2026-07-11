@@ -1,7 +1,7 @@
-package com.njydsz.pmis.literule.testing;
+package com.njydsz.pmis.literule.server.testing;
 
 import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.literule.sdk.LiteRuleClient;
+import com.njydsz.pmis.literule.server.sdk.LiteRuleClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

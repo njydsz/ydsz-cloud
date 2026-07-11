@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.finance.domain.dto;
+package com.njydsz.pmis.finance.domain.dto;
 
 import lombok.Data;
 import java.math.BigDecimal;

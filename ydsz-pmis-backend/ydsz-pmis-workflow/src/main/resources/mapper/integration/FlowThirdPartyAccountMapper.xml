@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.workflow.mapper.integration.FlowThirdPartyAccountMapper">
+<mapper namespace="com.njydsz.pmis.workflow.infra.mapper.integration.FlowThirdPartyAccountMapper">
 
     <!-- 基础列 -->
     <sql id="Base_Column">
@@ -12,7 +12,7 @@
 
     <!-- 按系统用户 ID + 平台查询 -->
     <select id="selectByUserIdAndPlatform"
-            resultType="com.njydsz.pmis.workflow.entity.FlowThirdPartyAccountDO">
+            resultType="com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO">
         SELECT
             <include refid="Base_Column"/>
         FROM pmis_flow_third_party_account
@@ -24,7 +24,7 @@
 
     <!-- 按平台 + openId 查询（回调反查系统用户） -->
     <select id="selectByOpenId"
-            resultType="com.njydsz.pmis.workflow.entity.FlowThirdPartyAccountDO">
+            resultType="com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO">
         SELECT
             <include refid="Base_Column"/>
         FROM pmis_flow_third_party_account

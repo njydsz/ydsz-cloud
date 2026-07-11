@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 名称装配器（Name Assembler）。
  *
  * <p>本包集中处理跨服务（userinfo / execution 等）的"ID -> 名称"反查能力，

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.infra.mapper;
+package com.njydsz.pmis.project.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.project.domain.entity.InitiationDO;

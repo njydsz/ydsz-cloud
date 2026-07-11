@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.web.controller.common;
+package com.njydsz.pmis.project.web.controller.common;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 

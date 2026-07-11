@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -7,10 +7,10 @@ import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.api.RuleStatus;
-import com.njydsz.pmis.literule.config.RuleAdminService;
-import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
-import com.njydsz.pmis.literule.expr.ExpressionValidationService;
-import com.njydsz.pmis.literule.spi.RuleGenerationProvider;
+import com.njydsz.pmis.literule.server.config.RuleAdminService;
+import com.njydsz.pmis.literule.server.expr.ExpressionValidationResult;
+import com.njydsz.pmis.literule.server.expr.ExpressionValidationService;
+import com.njydsz.pmis.literule.server.spi.RuleGenerationProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

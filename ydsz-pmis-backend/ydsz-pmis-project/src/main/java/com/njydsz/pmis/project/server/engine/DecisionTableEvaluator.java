@@ -1,9 +1,9 @@
-﻿package com.njydsz.pmis.project.server.engine;
+package com.njydsz.pmis.project.server.engine;
 
-import com.njydsz.pmis.literule.entity.DecisionTableDO;
+import com.njydsz.pmis.literule.domain.entity.DecisionTableDO;
 import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
-import com.njydsz.pmis.literule.expr.liteexpr.LiteExprEvaluator;
+import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;

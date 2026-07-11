@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.server.engine;
+package com.njydsz.pmis.sales.server.engine;
 
 import com.njydsz.pmis.sales.domain.entity.OpportunityDO;
 import com.njydsz.pmis.sales.domain.enums.OpportunityLevel;

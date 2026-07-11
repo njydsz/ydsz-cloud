@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.sdk;
+package com.njydsz.pmis.literule.server.sdk;
 
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;

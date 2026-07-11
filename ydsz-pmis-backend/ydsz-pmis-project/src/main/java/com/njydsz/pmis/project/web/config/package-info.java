@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 项目业务模块配置层（Configuration）。
  *
  * <p>本包负责项目模块（ydsz-pmis-project）特有的 Spring 配置，包括 MinIO 对象存储、缓存策略、

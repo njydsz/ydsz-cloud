@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.version;
+package com.njydsz.pmis.literule.server.version;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleSeverity;

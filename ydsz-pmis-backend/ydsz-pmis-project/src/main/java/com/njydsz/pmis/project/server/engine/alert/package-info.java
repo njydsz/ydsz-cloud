@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 驾驶舱预警规则引擎子包（Alert Rule Engine）。
  *
  * <p>本子包实现驾驶舱 KPI 快照 → 预警事件的规则计算框架，由 {@code AlertRuleEngine} 负责
