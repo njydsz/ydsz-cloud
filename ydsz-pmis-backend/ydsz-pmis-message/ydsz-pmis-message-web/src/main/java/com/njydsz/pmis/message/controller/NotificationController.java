@@ -10,7 +10,7 @@ import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
 import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
-import com.njydsz.pmis.message.api.dto.RealtimePushDTO;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import com.njydsz.pmis.message.server.realtime.RealtimePushService;
 import com.njydsz.pmis.message.server.service.core.NotificationService;
 import com.njydsz.pmis.message.server.service.receipt.RecallService;

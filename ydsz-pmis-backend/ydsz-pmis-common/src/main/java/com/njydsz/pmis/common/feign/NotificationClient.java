@@ -1,10 +1,8 @@
-package com.njydsz.pmis.message.api.client;
-import com.njydsz.pmis.common.feign.FeignClientConstants;
-import com.njydsz.pmis.message.api.fallback.NotificationClientFallback;
+package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.message.api.dto.NotificationFeignDTO;
-import com.njydsz.pmis.message.api.dto.RealtimePushDTO;
+import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

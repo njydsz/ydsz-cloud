@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.server.service.template;
 import com.njydsz.pmis.message.domain.dto.template.TemplatePreviewDTO;
 import com.njydsz.pmis.message.domain.dto.template.TemplateTestSendDTO;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateVersionDO;
-import com.njydsz.pmis.message.api.dto.MessageResult;
+import com.njydsz.pmis.common.feign.MessageResult;
 
 import java.util.List;
 

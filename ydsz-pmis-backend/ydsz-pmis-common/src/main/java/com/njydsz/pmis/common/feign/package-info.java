@@ -8,11 +8,11 @@
  * <table border="1">
  * <caption>Feign 客户端注册表</caption>
  * <tr><th>客户端</th><th>目标服务</th><th>功能</th><th>降级</th></tr>
- * <tr><td>{@link com.njydsz.pmis.message.api.client.MessageServiceClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.common.feign.MessageServiceClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#MESSAGE}</td>
  *     <td>消息发送（多通道路由）</td>
  *     <td>MessageServiceClientFallback</td></tr>
- * <tr><td>{@link com.njydsz.pmis.message.api.client.NotificationClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.common.feign.NotificationClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#MESSAGE}</td>
  *     <td>通知发送 + 实时推送 + 广播</td>
  *     <td>NotificationClientFallback</td></tr>
@@ -28,7 +28,7 @@
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#PROJECT}</td>
  *     <td>执行项查询</td>
  *     <td>—</td></tr>
- * <tr><td>{@link com.njydsz.pmis.system.api.client.ConfigClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.common.feign.ConfigClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#CONFIG_CENTER}</td>
  *     <td>配置中心查询</td>
  *     <td>—</td></tr>

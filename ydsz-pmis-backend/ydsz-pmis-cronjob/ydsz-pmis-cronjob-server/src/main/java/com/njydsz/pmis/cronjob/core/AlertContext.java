@@ -7,7 +7,7 @@ import java.io.Serializable;
  *
  * <p>封装一次告警触发时的完整上下文信息，由触发点（如 Dispatcher、TimeoutMonitor）
  * 构造并传递给 {@link AlertDispatcher}。Dispatcher 根据 context 匹配告警规则、
- * 执行去重判断并调用 {@link com.njydsz.pmis.message.api.client.MessageServiceClient} 派发通知。
+ * 执行去重判断并调用 {@link com.njydsz.pmis.common.feign.MessageServiceClient} 派发通知。
  *
  * <p>使用 record 保证不可变性，避免多线程（@Async 监听器）下的可见性问题。
  *

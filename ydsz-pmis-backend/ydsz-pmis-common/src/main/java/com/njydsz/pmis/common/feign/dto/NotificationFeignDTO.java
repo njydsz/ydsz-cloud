@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.api.dto;
+package com.njydsz.pmis.common.feign.dto;
 
 import lombok.Data;
 import java.io.Serial;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.channel.impl;
 
-import com.njydsz.pmis.message.api.dto.MessageRequest;
-import com.njydsz.pmis.message.api.dto.MessageResult;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.channel.sms.SmsProvider;

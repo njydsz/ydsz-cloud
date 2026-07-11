@@ -11,6 +11,8 @@ import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.StatsRecorder;
 import com.njydsz.pmis.literule.domain.model.ModelInputRegistry;
 import com.njydsz.pmis.literule.domain.model.ModelInvocationException;
+import com.njydsz.pmis.literule.server.spi.FactCollectionException;
+import com.njydsz.pmis.literule.server.spi.FactProviderRegistry;
 import com.njydsz.pmis.literule.server.spi.TraceRecorder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,6 +91,17 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 默认 null（向后兼容，不影响现有评估）。
      */
     private volatile ModelInputRegistry modelInputRegistry;
+
+    /**
+     * 事实数据提供者注册表（可选，2.1.0 起 P0-2 动态事实采集管道）
+     *
+     * <p>非 null 且已注册 provider 时，引擎在评估前调用
+     * {@link FactProviderRegistry#collectAllFacts} 动态采集事实数据，
+     * 合并到 {@link RuleContext} 的 facts 中，使规则表达式可直接引用。
+     * 事实采集在模型注入之前执行，采集的事实可供模型 provider 使用。
+     * 默认 null（向后兼容，不影响现有评估）。
+     */
+    private volatile FactProviderRegistry factProviderRegistry;
 
     /** 统计计数器 */
     private final AtomicLong totalEvaluations = new AtomicLong(0);
@@ -209,6 +222,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     @Override
     public List<RuleResult> evaluate(RuleContext context) {
+        // P0-2 动态事实采集：评估前注入外部数据源事实
+        context = injectFactsIfNeeded(context);
         // P3-1 规则+模型融合：评估前注入模型输出
         context = injectModelOutputsIfNeeded(context);
 
@@ -440,6 +455,60 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     /**
+     * P0-2 动态事实采集：评估前注入外部数据源事实
+     *
+     * <p>当 {@link #factProviderRegistry} 非 null 且已注册 provider 时：
+     * <ol>
+     *   <li>调用 {@link FactProviderRegistry#collectAllFacts} 获取外部数据源事实</li>
+     *   <li>合并到 facts 中，构建新的 {@link RuleContext}（保留原 scenario/source/traceId/tenantId/environment）</li>
+     * </ol>
+     *
+     * <p>降级策略：
+     * <ul>
+     *   <li>注册表为空：返回原 context，不影响评估</li>
+     *   <li>事实数据为空：返回原 context</li>
+     *   <li>抛出 {@link FactCollectionException}（fallbackOnError=false）：异常向上传播中断评估</li>
+     * </ul>
+     *
+     * @param context 原始上下文
+     * @return 包含外部事实的新上下文；无需注入时返回原 context
+     * @since 2.1.0
+     */
+    private RuleContext injectFactsIfNeeded(RuleContext context) {
+        FactProviderRegistry registry = this.factProviderRegistry;
+        if (registry == null || !registry.hasProviders()) {
+            return context;
+        }
+        Map<String, Object> externalFacts;
+        try {
+            externalFacts = registry.collectAllFacts(context);
+        } catch (FactCollectionException e) {
+            log.warn("[LiteRule-Fact] 事实采集失败（fallbackOnError=false），中断评估: {}", e.getMessage());
+            throw e;
+        }
+        if (externalFacts == null || externalFacts.isEmpty()) {
+            if (log.isDebugEnabled()) {
+                log.debug("[LiteRule-Fact] 外部事实数据为空，使用原 context 评估");
+            }
+            return context;
+        }
+        // 合并到新 facts（原 facts + 外部事实，后者覆盖前者）
+        Map<String, Object> mergedFacts = new LinkedHashMap<>(context.getFacts());
+        mergedFacts.putAll(externalFacts);
+        RuleContext enriched = RuleContext.of(mergedFacts,
+                context.getScenario(),
+                context.getSource(),
+                context.getTraceId(),
+                context.getTenantId(),
+                context.getEnvironment());
+        if (log.isDebugEnabled()) {
+            log.debug("[LiteRule-Fact] 外部事实已注入: {} 条，合并后 facts 共 {} 条",
+                    externalFacts.size(), mergedFacts.size());
+        }
+        return enriched;
+    }
+
+    /**
      * P3-1 规则+模型融合：评估前注入模型输出
      *
      * <p>当 {@link #modelInputRegistry} 非 null 且已注册 provider 时：
@@ -540,6 +609,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     @Override
     public List<RuleResult> dryRun(RuleContext context) {
+        // P0-2 动态事实采集：dry-run 同样注入外部数据源事实
+        context = injectFactsIfNeeded(context);
         // P3-1 规则+模型融合：dry-run 同样注入模型输出
         context = injectModelOutputsIfNeeded(context);
         List<RuleResult> all = new ArrayList<>();
@@ -878,6 +949,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         }
         if (modelInputRegistry != null) {
             modelInputRegistry.destroy();
+        }
+        if (factProviderRegistry != null) {
+            factProviderRegistry.destroy();
         }
     }
 

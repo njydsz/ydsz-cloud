@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.njydsz.pmis.message.api.client.NotificationClient;
-import com.njydsz.pmis.message.api.dto.RealtimePushDTO;
+import com.njydsz.pmis.common.feign.NotificationClient;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.service.instance.FlowTodoCountPushService;

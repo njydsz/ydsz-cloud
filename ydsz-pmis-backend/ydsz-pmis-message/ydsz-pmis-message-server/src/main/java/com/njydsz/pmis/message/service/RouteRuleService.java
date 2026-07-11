@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.config;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.message.api.dto.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgRouteRuleDO;
 

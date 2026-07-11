@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.server.core;
+package com.njydsz.pmis.literule.server.core;
 
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleDefinition;

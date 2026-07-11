@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.server.listener;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.api.client.InitiationFeignClient;
-import com.njydsz.pmis.message.api.client.NotificationClient;
-import com.njydsz.pmis.message.api.dto.RealtimePushDTO;
+import com.njydsz.pmis.common.feign.NotificationClient;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.server.engine.FlowNotificationHelper;
 import com.njydsz.pmis.workflow.server.engine.FlowWorkflowEvent;

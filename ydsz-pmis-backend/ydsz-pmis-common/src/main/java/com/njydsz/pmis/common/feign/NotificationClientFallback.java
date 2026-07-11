@@ -1,9 +1,8 @@
-package com.njydsz.pmis.message.api.fallback;
-import com.njydsz.pmis.message.api.client.NotificationClient;
+package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.message.api.dto.NotificationFeignDTO;
-import com.njydsz.pmis.message.api.dto.RealtimePushDTO;
+import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;

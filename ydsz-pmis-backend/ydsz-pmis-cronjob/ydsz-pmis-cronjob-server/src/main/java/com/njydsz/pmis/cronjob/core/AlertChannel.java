@@ -4,7 +4,7 @@ package com.njydsz.pmis.cronjob.server.core.alert;
  * 告警通知通道枚举（P5 告警 + 监控）。
  *
  * <p>定义告警派发的实际通道，对应 {@code pmis_job_alert_rule.channels} JSON 数组元素。
- * 每个通道由消息中心（{@link com.njydsz.pmis.message.api.client.MessageServiceClient}）路由到具体通道实现。
+ * 每个通道由消息中心（{@link com.njydsz.pmis.common.feign.MessageServiceClient}）路由到具体通道实现。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

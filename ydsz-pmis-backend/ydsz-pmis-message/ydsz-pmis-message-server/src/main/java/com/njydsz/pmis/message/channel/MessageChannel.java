@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.channel;
 
-import com.njydsz.pmis.message.api.dto.MessageRequest;
-import com.njydsz.pmis.message.api.dto.MessageResult;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.domain.dto.receipt.ReceiptResult;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 

@@ -6,7 +6,7 @@ import com.njydsz.pmis.common.annotation.IdempotentExempt;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.message.api.dto.MessageResult;
+import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.template.TemplatePreviewDTO;
 import com.njydsz.pmis.message.domain.dto.template.TemplateTestSendDTO;

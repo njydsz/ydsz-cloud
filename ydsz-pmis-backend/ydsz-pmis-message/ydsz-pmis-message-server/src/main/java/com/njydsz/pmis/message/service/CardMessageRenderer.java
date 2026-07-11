@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.service.core;
 
-import com.njydsz.pmis.message.api.dto.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.message.domain.dto.core.CardMessageDTO;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

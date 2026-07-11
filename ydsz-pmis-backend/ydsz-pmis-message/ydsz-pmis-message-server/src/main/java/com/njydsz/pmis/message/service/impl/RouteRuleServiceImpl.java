@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.message.api.dto.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;

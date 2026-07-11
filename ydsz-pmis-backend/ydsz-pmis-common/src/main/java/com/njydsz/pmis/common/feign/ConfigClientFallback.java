@@ -1,5 +1,4 @@
-package com.njydsz.pmis.system.api.fallback;
-import com.njydsz.pmis.system.api.client.ConfigClient;
+package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
