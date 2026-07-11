@@ -1,20 +1,25 @@
 package com.njydsz.pmis.common.security;
 
+import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.context.RequestContext;
 import com.njydsz.pmis.common.exception.BizException;
 
 /**
- * 登录用户上下文（ThreadLocal）
+ * 登录用户上下文（TransmittableThreadLocal）
  *
  * <p>在网关 / 拦截器中解析 Token 后 setCurrent()，业务层通过 getCurrent() 获取。
- * 必须在 finally 中 clear()，避免线程复用导致内存泄漏。
+ * 使用 {@link TransmittableThreadLocal} 替代普通 ThreadLocal，
+ * 支持 {@code @Async}、线程池、CompletableFuture 等异步场景的上下文传递。
+ *
+ * <p>同时同步关键信息到 {@link RequestContext}，便于跨模块统一访问。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public final class SecurityContext {
 
-    private static final ThreadLocal<LoginUser> CONTEXT = new ThreadLocal<>();
+    private static final TransmittableThreadLocal<LoginUser> CONTEXT = new TransmittableThreadLocal<>();
 
     private SecurityContext() {
     }
@@ -26,6 +31,17 @@ public final class SecurityContext {
      */
     public static void setCurrent(LoginUser user) {
         CONTEXT.set(user);
+        // 同步关键信息到 RequestContext
+        if (user != null) {
+            RequestContext.ContextData ctx = RequestContext.getOrDefault();
+            ctx.setUserId(user.getUserId());
+            ctx.setUsername(user.getUsername());
+            ctx.setRealName(user.getRealName());
+            ctx.setDeptId(user.getDeptId());
+            if (user.getTenantId() != null) {
+                ctx.setTenantId(user.getTenantId());
+            }
+        }
     }
 
     /**

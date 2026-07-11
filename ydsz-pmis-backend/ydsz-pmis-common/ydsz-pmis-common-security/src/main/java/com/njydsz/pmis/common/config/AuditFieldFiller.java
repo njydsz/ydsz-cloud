@@ -45,7 +45,7 @@ public class AuditFieldFiller implements MetaObjectHandler {
      */
     private String getCurrentUser() {
         try {
-            String userId = SecurityContext.getCurrentUserId();
+            String userId = SecurityContext.getUserId();
             return userId != null ? userId : "system";
         } catch (Exception e) {
             return "system";

@@ -76,6 +76,7 @@
         <sentry.version>7.13.0</sentry.version>
         <spring-ai.version>1.0.0-M6</spring-ai.version>
         <jtokkit.version>1.1.0</jtokkit.version>
+        <ttl.version>2.14.5</ttl.version>
 
         <!-- 测试 -->
         <springdoc.version>2.8.13</springdoc.version>
@@ -492,6 +493,13 @@
                 <groupId>com.github.whvcse</groupId>
                 <artifactId>easy-captcha</artifactId>
                 <version>${easycaptcha.version}</version>
+            </dependency>
+
+            <!-- TransmittableThreadLocal (异步线程上下文传递) -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>transmittable-thread-local</artifactId>
+                <version>${ttl.version}</version>
             </dependency>
 
             <!-- Jasypt 配置加密（P0-4） -->

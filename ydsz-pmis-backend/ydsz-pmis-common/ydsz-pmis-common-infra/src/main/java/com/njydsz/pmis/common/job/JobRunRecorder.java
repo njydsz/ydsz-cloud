@@ -117,13 +117,13 @@ public final class JobRunRecorder {
      * 生成或复用 traceId
      *
      * <p>P2-13 统一链路追踪：原生成 {@code "JOB-{ts}-{snowflake8}"} 格式与 Brave 16/32 位 hex
-     * 格式不一致，无法与 Zipkin/SkyWalking 链路关联。现统一委托 {@link TraceIdUtil#getOrCreate()}，
+     * 格式不一致，无法与 Zipkin/SkyWalking 链路关联。现统一委托 {@link TraceIdUtil#ensureTraceId()}，
      * 优先复用 MDC 中 Brave 写入的 traceId，降级时生成 hex 格式雪花 ID。
      *
      * @return 当前线程有效的 traceId
      */
     public static String ensureTraceId() {
-        return TraceIdUtil.getOrCreate();
+        return TraceIdUtil.ensureTraceId();
     }
 
     private static boolean tryPutMdc(String key, String val) {

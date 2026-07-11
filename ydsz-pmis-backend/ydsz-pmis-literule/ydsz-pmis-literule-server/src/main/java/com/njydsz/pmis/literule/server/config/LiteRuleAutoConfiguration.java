@@ -17,6 +17,7 @@ import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.server.approval.ApprovalPermissionChecker;
 import com.njydsz.pmis.literule.server.approval.ApprovalRecordRepository;
 import com.njydsz.pmis.literule.server.approval.RuleApprovalService;
+import com.njydsz.pmis.literule.server.approval.RuleApprovalWorkflowBridge;
 import com.njydsz.pmis.literule.server.cache.CachingRuleConfigProvider;
 import com.njydsz.pmis.literule.server.cep.CEPEngine;
 import com.njydsz.pmis.literule.server.core.AsyncTraceRecorder;
@@ -46,9 +47,11 @@ import com.njydsz.pmis.literule.server.spi.DecisionTreeConfigProvider;
 import com.njydsz.pmis.literule.server.spi.FactProvider;
 import com.njydsz.pmis.literule.server.spi.FactProviderRegistry;
 import com.njydsz.pmis.literule.server.spi.FileRuleSource;
+import com.njydsz.pmis.literule.server.spi.CronjobTriggerActionHandler;
 import com.njydsz.pmis.literule.server.spi.DefaultAlertActionHandler;
 import com.njydsz.pmis.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.pmis.literule.server.spi.RuleActionHandler;
+import com.njydsz.pmis.literule.server.spi.WorkflowTriggerActionHandler;
 import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.server.spi.RuleVersionRepository;
@@ -437,7 +440,8 @@ public class LiteRuleAutoConfiguration {
     public RuleApprovalService ruleApprovalService(
             RuleConfigProvider configProvider,
             ObjectProvider<ApprovalRecordRepository> recordRepoProvider,
-            ObjectProvider<ApprovalPermissionChecker> permissionCheckerProvider) {
+            ObjectProvider<ApprovalPermissionChecker> permissionCheckerProvider,
+            ObjectProvider<RuleApprovalWorkflowBridge> workflowBridgeProvider) {
         RuleApprovalService service = new RuleApprovalService(configProvider);
         ApprovalRecordRepository recordRepo = recordRepoProvider.getIfAvailable();
         if (recordRepo != null) {
@@ -447,8 +451,13 @@ public class LiteRuleAutoConfiguration {
         if (checker != null) {
             service.setPermissionChecker(checker);
         }
-        log.info("[LiteRule-Approval] 规则审批流服务已初始化（recordRepository={}, permissionChecker={}）",
-                recordRepo != null, checker != null);
+        // P2-1: 注入工作流桥接（可选，由消费方提供实现）
+        RuleApprovalWorkflowBridge workflowBridge = workflowBridgeProvider.getIfAvailable();
+        if (workflowBridge != null) {
+            service.setWorkflowBridge(workflowBridge);
+        }
+        log.info("[LiteRule-Approval] 规则审批流服务已初始化（recordRepository={}, permissionChecker={}, workflowBridge={}）",
+                recordRepo != null, checker != null, workflowBridge != null);
         return service;
     }
 
@@ -977,6 +986,50 @@ public class LiteRuleAutoConfiguration {
             ApplicationEventPublisher eventPublisher) {
         log.info("[LiteRule-Action] 默认告警动作处理器已初始化");
         return new DefaultAlertActionHandler(eventPublisher);
+    }
+
+    /**
+     * 定时任务触发动作处理器 Bean（P1-2 规则与定时任务联动）
+     *
+     * <p>当 classpath 中存在 {@code CronjobServiceClient}（由 ydsz-pmis-cronjob-api 提供）且
+     * {@code pmis.literule.action.cronjob-trigger-enabled=true}（默认 true）时自动装配。
+     * 规则触发后自动触发关联的 cronjob 定时任务。
+     *
+     * @param cronjobClient cronjob Feign 客户端
+     * @return CronjobTriggerActionHandler 实例
+     * @since 2.1.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(name = "cronjobServiceClient")
+    @ConditionalOnProperty(prefix = "pmis.literule.action", name = "cronjob-trigger-enabled",
+            havingValue = "true", matchIfMissing = true)
+    public CronjobTriggerActionHandler cronjobTriggerActionHandler(
+            com.njydsz.pmis.cronjob.api.client.CronjobServiceClient cronjobClient) {
+        log.info("[LiteRule-Action] 定时任务触发处理器已初始化");
+        return new CronjobTriggerActionHandler(cronjobClient);
+    }
+
+    /**
+     * 工作流触发动作处理器 Bean（P2-1 规则与工作流深度联动）
+     *
+     * <p>当 classpath 中存在 {@code WorkflowServiceClient}（由 ydsz-pmis-workflow-api 提供）且
+     * {@code pmis.literule.action.workflow-trigger-enabled=true}（默认 true）时自动装配。
+     * 规则触发后自动启动关联的工作流流程实例。
+     *
+     * @param workflowClient workflow Feign 客户端
+     * @return WorkflowTriggerActionHandler 实例
+     * @since 2.1.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(name = "workflowServiceClient")
+    @ConditionalOnProperty(prefix = "pmis.literule.action", name = "workflow-trigger-enabled",
+            havingValue = "true", matchIfMissing = true)
+    public WorkflowTriggerActionHandler workflowTriggerActionHandler(
+            com.njydsz.pmis.workflow.api.client.WorkflowServiceClient workflowClient) {
+        log.info("[LiteRule-Action] 工作流触发处理器已初始化");
+        return new WorkflowTriggerActionHandler(workflowClient);
     }
 
     // ------------------------------------------------------------------
