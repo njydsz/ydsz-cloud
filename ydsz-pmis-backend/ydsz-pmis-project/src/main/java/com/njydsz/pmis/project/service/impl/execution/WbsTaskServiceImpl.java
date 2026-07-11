@@ -25,6 +25,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -219,6 +221,63 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     public List<Map<String, Object>> aggregateByStatus(String initiationId) {
         if (initiationId == null) return List.of();
         return wbsTaskMapper.aggregateByStatus(initiationId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getGanttData(String initiationId) {
+        List<WbsTaskDO> allTasks = wbsTaskMapper.selectByInitiation(initiationId);
+        if (allTasks == null || allTasks.isEmpty()) {
+            return List.of();
+        }
+
+        // 构建 id → taskNode 映射
+        Map<String, Map<String, Object>> nodeMap = new LinkedHashMap<>();
+        for (WbsTaskDO task : allTasks) {
+            Map<String, Object> node = new LinkedHashMap<>();
+            node.put("id", task.getId());
+            node.put("taskCode", task.getTaskCode());
+            node.put("taskName", task.getTaskName());
+            node.put("parentId", task.getParentId());
+            node.put("taskLevel", task.getTaskLevel());
+            node.put("wbsPath", task.getWbsPath());
+            node.put("sortOrder", task.getSortOrder());
+            node.put("taskType", task.getTaskType());
+            node.put("plannedStartDate", task.getPlannedStartDate());
+            node.put("plannedEndDate", task.getPlannedEndDate());
+            node.put("actualStartDate", task.getActualStartDate());
+            node.put("actualEndDate", task.getActualEndDate());
+            node.put("durationDays", task.getDurationDays());
+            node.put("plannedEffort", task.getPlannedEffort());
+            node.put("actualEffort", task.getActualEffort());
+            node.put("progressPct", task.getProgressPct());
+            node.put("ownerId", task.getOwnerId());
+            node.put("ownerName", task.getOwnerName());
+            node.put("priority", task.getPriority());
+            node.put("status", task.getStatus());
+            node.put("dependsOn", task.getDependsOn());
+            node.put("milestone", task.getMilestone());
+            node.put("riskLevel", task.getRiskLevel());
+            node.put("children", new ArrayList<Map<String, Object>>());
+            nodeMap.put(task.getId(), node);
+        }
+
+        // 构建树形结构
+        List<Map<String, Object>> roots = new ArrayList<>();
+        for (WbsTaskDO task : allTasks) {
+            Map<String, Object> node = nodeMap.get(task.getId());
+            String parentId = task.getParentId();
+            if (parentId == null || parentId.isBlank() || "0".equals(parentId)
+                    || !nodeMap.containsKey(parentId)) {
+                roots.add(node);
+            } else {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> children = (List<Map<String, Object>>) nodeMap.get(parentId).get("children");
+                children.add(node);
+            }
+        }
+
+        return roots;
     }
 
     private void validate(WbsTaskCreateDTO dto) {

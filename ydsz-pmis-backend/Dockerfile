@@ -120,5 +120,21 @@ EXPOSE ${APP_PORT}
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
     CMD curl -sf http://127.0.0.1:${APP_PORT}/actuator/health || exit 1
 
+# P0-3: SkyWalking Java Agent 支持（可选）
+# K8s 环境：通过 init-container + emptyDir 注入 agent（见 patch-skywalking.yaml）
+# Docker Compose 环境：通过 volume 挂载 agent 目录
+#   docker run -v /path/to/skywalking-agent:/skywalking/agent:ro ...
+# 或通过 SW_AGENT_ENABLED=true 环境变量激活（需 agent 已挂载到 /skywalking/agent）
+ENV SW_AGENT_ENABLED=${SW_AGENT_ENABLED:-false}
+
 # tini 作为 PID 1，正确转发 SIGTERM 给 JVM
-ENTRYPOINT ["/sbin/tini", "--", "sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
+# P0-3: 条件注入 SkyWalking agent — 若 /skywalking/agent/skywalking-agent.jar 存在则加载
+ENTRYPOINT ["/sbin/tini", "--", "sh", "-c", "\
+  if [ -f /skywalking/agent/skywalking-agent.jar ] && [ \"$SW_AGENT_ENABLED\" = \"true\" ]; then \
+    AGENT_OPT=\"-javaagent:/skywalking/agent/skywalking-agent.jar\"; \
+    echo '[SkyWalking] Agent enabled: ' $AGENT_OPT; \
+  else \
+    AGENT_OPT=''; \
+  fi; \
+  exec java $JAVA_OPTS $AGENT_OPT -jar /app/app.jar \
+"]

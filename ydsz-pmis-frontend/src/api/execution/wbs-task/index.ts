@@ -64,3 +64,41 @@ export const changeWbsTaskStatus = (data: WbsTaskStatusDTO) =>
  */
 export const deleteWbsTask = (id: number) =>
   request<void>({ url: `/execution/wbs-task/${id}`, method: 'DELETE' })
+
+/**
+ * 获取甘特图数据（P0-1：项目甘特图可视化）
+ * @param initiationId 项目立项 ID
+ * @returns 树形结构的甘特图数据
+ */
+export const getGanttData = (initiationId: number | string) =>
+  request<GanttNode[]>({ url: `/execution/wbs-task/gantt/${initiationId}`, method: 'GET' })
+
+/**
+ * 甘特图节点数据结构
+ */
+export interface GanttNode {
+  id: string
+  taskCode: string
+  taskName: string
+  parentId?: string
+  taskLevel?: number
+  wbsPath?: string
+  sortOrder?: number
+  taskType?: string
+  plannedStartDate?: string
+  plannedEndDate?: string
+  actualStartDate?: string
+  actualEndDate?: string
+  durationDays?: number
+  plannedEffort?: number
+  actualEffort?: number
+  progressPct?: number
+  ownerId?: string
+  ownerName?: string
+  priority?: string
+  status?: string
+  dependsOn?: string
+  milestone?: number
+  riskLevel?: string
+  children?: GanttNode[]
+}

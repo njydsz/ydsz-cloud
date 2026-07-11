@@ -202,4 +202,27 @@ public class WbsTaskController {
     public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam String initiationId) {
         return Result.ok(service.aggregateByStatus(initiationId));
     }
+
+    /**
+     * 获取甘特图数据（P0-1：项目甘特图可视化）
+     *
+     * <p>返回项目下所有 WBS 任务的甘特图数据，包含：
+     * <ul>
+     *   <li>树形结构（parent → children 层级关系）</li>
+     *   <li>计划/实际日期范围</li>
+     *   <li>进度百分比</li>
+     *   <li>前置依赖关系（dependsOn → taskId 映射）</li>
+     *   <li>里程碑标记</li>
+     *   <li>关键路径标记</li>
+     * </ul>
+     *
+     * @param initiationId 项目立项 ID
+     * @return 甘特图数据结构
+     */
+    @Operation(summary = "甘特图数据（P0-1）")
+    @PrePermission("execution:wbs:list")
+    @GetMapping("/gantt/{initiationId}")
+    public Result<List<Map<String, Object>>> ganttData(@PathVariable String initiationId) {
+        return Result.ok(service.getGanttData(initiationId));
+    }
 }

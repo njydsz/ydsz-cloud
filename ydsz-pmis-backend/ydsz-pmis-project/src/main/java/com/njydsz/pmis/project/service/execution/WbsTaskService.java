@@ -104,4 +104,14 @@ public interface WbsTaskService {
      * @return 各状态任务数量列表
      */
     List<Map<String, Object>> aggregateByStatus(String initiationId);
+
+    /**
+     * 获取甘特图数据（P0-1：项目甘特图可视化）
+     *
+     * <p>返回树形结构的甘特图数据，包含任务层级、计划/实际日期、进度、依赖关系。
+     *
+     * @param initiationId 项目立项ID
+     * @return 甘特图数据列表（树形结构）
+     */
+    List<Map<String, Object>> getGanttData(String initiationId);
 }

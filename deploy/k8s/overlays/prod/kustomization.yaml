@@ -14,6 +14,8 @@ resources:
   - ../../base
   # P1-3: 生产环境 Sentry 错误监控配置（独立 ConfigMap + Secret 资源）
   - patch-sentry.yaml
+  # P0-3: 生产环境 SkyWalking 全链路追踪配置（ConfigMap 资源）
+  - patch-tracing.yaml
 
 images:
   - name: ydsz-pmis/gateway

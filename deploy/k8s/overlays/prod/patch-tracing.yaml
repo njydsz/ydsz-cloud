@@ -1,0 +1,34 @@
+# =============================================================================
+# 生产环境 SkyWalking 全链路追踪配置（P0-3）
+# -----------------------------------------------------------------------------
+# 为所有 PMIS 微服务注入追踪相关环境变量
+# 数据流：
+#   PMIS 微服务(Micrometer Tracing + Brave)
+#     → Zipkin exporter(TRACING_ENDPOINT)
+#     → SkyWalking OAP(12800/api/v2/spans)
+#     → SkyWalking UI(8080 可视化)
+#
+# 采样策略（TracingSamplingConfig 智能采样）：
+#   1. 基础采样率：10%（TRACING_SAMPLING_PROBABILITY=0.1）
+#   2. 错误请求：100% 强制采样（HTTP 5xx / 异常）
+#   3. 慢请求：100% 强制采样（> 500ms）
+#   4. 限流保护：200 samples/sec（防止流量突增压垮 OAP）
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pmis-tracing-config
+  namespace: pmis
+  labels:
+    app.kubernetes.io/part-of: ydsz-pmis
+data:
+  # 启用 tracing 上报（dev 环境默认关闭，prod 环境强制开启）
+  TRACING_EXPORT_ENABLED: "true"
+  # 基础采样率（生产环境 10%，配合智能采样策略：错误/慢请求 100% 采样）
+  TRACING_SAMPLING_PROBABILITY: "0.1"
+  # SkyWalking OAP Zipkin 兼容 API 地址
+  TRACING_ENDPOINT: "http://skywalking-oap.observability.svc.cluster.local:12800/api/v2/spans"
+  # 慢链路阈值（ms），超过此值的请求强制采样
+  TRACING_SLOW_TRACE_THRESHOLD_MS: "500"
+  # 每秒采样上限（防止流量突增导致 OAP 过载）
+  TRACING_SAMPLE_RATE_LIMIT_PER_SEC: "200"

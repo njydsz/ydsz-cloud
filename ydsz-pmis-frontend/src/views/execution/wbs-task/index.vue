@@ -9,7 +9,7 @@
  *
  * 状态: PLANNED -> IN_PROGRESS -> BLOCKED -> IN_REVIEW -> COMPLETED/CANCELLED
  */
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, defineAsyncComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
@@ -25,6 +25,11 @@ import type { WbsTaskVO, WbsTaskCreateDTO } from '@/api/execution/wbs-task/types
 import { PC } from '@/constants/permissionCodes'
 
 const { t } = useI18n()
+
+// P0-1: 视图切换 — 列表视图 / 甘特图视图
+const viewMode = ref<'list' | 'gantt'>('list')
+// 懒加载甘特图组件，减少首屏 bundle 体积
+const GanttChartView = defineAsyncComponent(() => import('./gantt.vue'))
 
 // 列表查询状态
 const loading = ref(false)
@@ -209,12 +214,25 @@ onMounted(fetchList)
     </template>
 
     <template #toolbar>
+      <!-- P0-1: 视图切换 — 列表 / 甘特图 -->
+      <el-radio-group v-model="viewMode" size="small" style="margin-right: 12px">
+        <el-radio-button value="list">{{ $t('execution.wbsTask.gantt.viewList') }}</el-radio-button>
+        <el-radio-button value="gantt">{{ $t('execution.wbsTask.gantt.viewGantt') }}</el-radio-button>
+      </el-radio-group>
       <el-button v-permission="[PC.EXECUTION_WBS_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
         {{ $t('execution.wbsTask.buttons.create') }}
       </el-button>
     </template>
 
-    <template #table="scope">
+    <!-- P0-1: 甘特图视图 -->
+    <template v-if="viewMode === 'gantt'" #table="scope">
+      <div :style="{ height: scope.tableProps.height || '600px' }">
+        <GanttChartView :initiation-id="query.initiationId || ''" />
+      </div>
+    </template>
+
+    <!-- 默认列表视图 -->
+    <template v-else #table="scope">
       <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="taskCode" :title="$t('execution.wbsTask.columns.taskCode')" width="140" />

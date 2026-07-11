@@ -1,4 +1,4 @@
-﻿<!--
+﻿﻿<!--
   @file 规则引擎监控大盘（P1-6）
   @description 规则引擎监控大盘页面：聚合规则数量、触发率、P99 耗时、错误率趋势等核心指标，
                支持时间范围切换（24h/7d/30d）、30 秒自动刷新，对应路由 /execution/rule-engine/dashboard。
@@ -17,6 +17,7 @@
  *  6. 实时指标条：注册规则数 / 最近评估规则数 / 活跃规则数 / Trace 队列积压
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, Refresh, DataLine, Monitor, TrendCharts, Warning, Timer, Odometer } from '@element-plus/icons-vue'
@@ -42,6 +43,7 @@ import { logger } from '@/utils/logger'
 defineOptions({ name: 'RuleEngineDashboard' })
 
 const router = useRouter()
+const { t } = useI18n()
 
 // ==================== 状态 ====================
 
@@ -381,9 +383,9 @@ function severityType(severity?: string): 'danger' | 'warning' | 'info' {
 
 /** 严重度中文标签 */
 function severityLabel(severity?: string): string {
-  if (severity === 'RED') return '红色'
-  if (severity === 'YELLOW') return '黄色'
-  if (severity === 'NORMAL') return '通知'
+  if (severity === 'RED') return t('execution.ruleEngine.dashboard.severityRed')
+  if (severity === 'YELLOW') return t('execution.ruleEngine.dashboard.severityYellow')
+  if (severity === 'NORMAL') return t('execution.ruleEngine.dashboard.severityNormal')
   return severity || '-'
 }
 
@@ -438,10 +440,10 @@ onBeforeUnmount(() => {
     <!-- 顶部工具栏 -->
     <div class="dashboard-header">
       <div class="header-left">
-        <el-button :icon="ArrowLeft" plain @click="goBack">返回</el-button>
+        <el-button :icon="ArrowLeft" plain @click="goBack">{{ t('execution.ruleEngine.dashboard.back') }}</el-button>
         <h2 class="dashboard-title">
           <el-icon><DataLine /></el-icon>
-          规则引擎监控大盘
+          {{ t('execution.ruleEngine.dashboard.title') }}
         </h2>
       </div>
       <div class="header-right">
@@ -457,13 +459,13 @@ onBeforeUnmount(() => {
         </el-radio-group>
         <el-switch
           v-model="autoRefresh"
-          active-text="自动刷新"
+          :active-text="t('execution.ruleEngine.dashboard.autoRefresh')"
           inactive-text=""
           inline-prompt
           @change="toggleAutoRefresh"
         />
         <el-button :icon="Refresh" :loading="loading" type="primary" plain aria-label="手动刷新" @click="handleRefresh">
-          刷新
+          {{ t('execution.ruleEngine.dashboard.refresh') }}
         </el-button>
       </div>
     </div>
@@ -474,7 +476,7 @@ onBeforeUnmount(() => {
         <el-card shadow="hover" class="metric-card metric-card--blue">
           <div class="metric-icon"><el-icon><Odometer /></el-icon></div>
           <div class="metric-body">
-            <div class="metric-label">规则总数 / 启用</div>
+            <div class="metric-label">{{ t('execution.ruleEngine.dashboard.totalRules') }}</div>
             <div class="metric-value">
               {{ overview?.totalRules ?? 0 }}
               <span class="metric-sub">/ {{ overview?.enabledRules ?? 0 }}</span>
@@ -486,9 +488,9 @@ onBeforeUnmount(() => {
         <el-card shadow="hover" class="metric-card metric-card--green">
           <div class="metric-icon"><el-icon><TrendCharts /></el-icon></div>
           <div class="metric-body">
-            <div class="metric-label">今日触发率</div>
+            <div class="metric-label">{{ t('execution.ruleEngine.dashboard.triggerRate') }}</div>
             <div class="metric-value">{{ triggerRatePct }}</div>
-            <div class="metric-foot">触发 {{ overview?.todayTriggered ?? 0 }} / 评估 {{ overview?.todayEvaluations ?? 0 }}</div>
+            <div class="metric-foot">{{ t('execution.ruleEngine.dashboard.triggered') }} {{ overview?.todayTriggered ?? 0 }} / {{ t('execution.ruleEngine.dashboard.evaluated') }} {{ overview?.todayEvaluations ?? 0 }}</div>
           </div>
         </el-card>
       </el-col>
@@ -496,9 +498,9 @@ onBeforeUnmount(() => {
         <el-card shadow="hover" class="metric-card metric-card--red">
           <div class="metric-icon"><el-icon><Warning /></el-icon></div>
           <div class="metric-body">
-            <div class="metric-label">今日错误率</div>
+            <div class="metric-label">{{ t('execution.ruleEngine.dashboard.errorRate') }}</div>
             <div class="metric-value">{{ errorRatePct }}</div>
-            <div class="metric-foot">错误 {{ overview?.todayErrors ?? 0 }} 次</div>
+            <div class="metric-foot">{{ t('execution.ruleEngine.dashboard.errors') }} {{ overview?.todayErrors ?? 0 }} {{ t('execution.ruleEngine.dashboard.times') }}</div>
           </div>
         </el-card>
       </el-col>
@@ -506,7 +508,7 @@ onBeforeUnmount(() => {
         <el-card shadow="hover" class="metric-card metric-card--orange">
           <div class="metric-icon"><el-icon><Timer /></el-icon></div>
           <div class="metric-body">
-            <div class="metric-label">P99 耗时</div>
+            <div class="metric-label">{{ t('execution.ruleEngine.dashboard.p99Latency') }}</div>
             <div class="metric-value">{{ p99Ms }}<span class="metric-unit"> ms</span></div>
             <div class="metric-foot">P50 {{ Math.round(overview?.p50ElapsedMs ?? 0) }} / 平均 {{ Math.round(overview?.avgElapsedMs ?? 0) }} ms</div>
           </div>
@@ -516,9 +518,9 @@ onBeforeUnmount(() => {
         <el-card shadow="hover" class="metric-card metric-card--purple">
           <div class="metric-icon"><el-icon><Monitor /></el-icon></div>
           <div class="metric-body">
-            <div class="metric-label">当前 QPS</div>
+            <div class="metric-label">{{ t('execution.ruleEngine.dashboard.currentQps') }}</div>
             <div class="metric-value">{{ currentQps }}</div>
-            <div class="metric-foot">活跃规则 {{ realtime?.activeRules ?? 0 }} / 注册 {{ realtime?.registeredRules ?? 0 }}</div>
+            <div class="metric-foot">{{ t('execution.ruleEngine.dashboard.activeRules') }} {{ realtime?.activeRules ?? 0 }} / {{ t('execution.ruleEngine.dashboard.registeredRules') }} {{ realtime?.registeredRules ?? 0 }}</div>
           </div>
         </el-card>
       </el-col>
@@ -558,31 +560,31 @@ onBeforeUnmount(() => {
         <el-card shadow="hover">
           <template #header>
             <div class="card-header">
-              <span>最活跃规则 Top 10（按触发次数）</span>
+              <span>{{ t('execution.ruleEngine.dashboard.topTriggered') }}</span>
             </div>
           </template>
           <el-table :data="topTriggered" size="small" stripe border style="width: 100%">
             <el-table-column type="index" label="#" width="48" align="center" />
-            <el-table-column prop="ruleName" label="规则名称" min-width="160" show-overflow-tooltip>
+            <el-table-column prop="ruleName" :label="t('execution.ruleEngine.dashboard.ruleName')" min-width="160" show-overflow-tooltip>
               <template #default="{ row }">
                 <span>{{ row.ruleName }}</span>
                 <div class="rule-code">{{ row.ruleCode }}</div>
               </template>
             </el-table-column>
-            <el-table-column prop="category" label="类别" width="100" align="center" />
-            <el-table-column prop="evaluations" label="评估次数" width="90" align="right" />
-            <el-table-column prop="triggered" label="触发次数" width="90" align="right" />
-            <el-table-column label="触发率" width="90" align="right">
+            <el-table-column prop="category" :label="t('execution.ruleEngine.dashboard.category')" width="100" align="center" />
+            <el-table-column prop="evaluations" :label="t('execution.ruleEngine.dashboard.evaluations')" width="90" align="right" />
+            <el-table-column prop="triggered" :label="t('execution.ruleEngine.dashboard.triggerCount')" width="90" align="right" />
+            <el-table-column :label="t('execution.ruleEngine.dashboard.triggerRateCol')" width="90" align="right">
               <template #default="{ row }">{{ pct(row.triggerRate) }}</template>
             </el-table-column>
-            <el-table-column label="错误率" width="90" align="right">
+            <el-table-column :label="t('execution.ruleEngine.dashboard.errorRateCol')" width="90" align="right">
               <template #default="{ row }">
                 <el-tag :type="row.errorRate > 0.05 ? 'danger' : 'success'" size="small">
                   {{ pct(row.errorRate) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="严重度" width="80" align="center">
+            <el-table-column :label="t('execution.ruleEngine.dashboard.severity')" width="80" align="center">
               <template #default="{ row }">
                 <el-tag :type="severityType(row.defaultSeverity)" size="small">
                   {{ severityLabel(row.defaultSeverity) }}
@@ -596,7 +598,7 @@ onBeforeUnmount(() => {
         <el-card shadow="hover">
           <template #header>
             <div class="card-header">
-              <span>最慢规则 Top 10（按平均耗时）</span>
+              <span>{{ t('execution.ruleEngine.dashboard.topSlowest') }}</span>
             </div>
           </template>
           <el-table :data="topSlowest" size="small" stripe border style="width: 100%">
@@ -607,20 +609,20 @@ onBeforeUnmount(() => {
                 <div class="rule-code">{{ row.ruleCode }}</div>
               </template>
             </el-table-column>
-            <el-table-column prop="category" label="类别" width="100" align="center" />
-            <el-table-column label="平均耗时" width="100" align="right">
+            <el-table-column prop="category" :label="t('execution.ruleEngine.dashboard.category')" width="100" align="center" />
+            <el-table-column :label="t('execution.ruleEngine.dashboard.avgLatency')" width="100" align="right">
               <template #default="{ row }">
                 <el-tag :type="row.avgElapsedMs > 1000 ? 'danger' : row.avgElapsedMs > 300 ? 'warning' : 'success'" size="small">
                   {{ ms(row.avgElapsedMs) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="P99 耗时" width="100" align="right">
+            <el-table-column :label="t('execution.ruleEngine.dashboard.p99LatencyCol')" width="100" align="right">
               <template #default="{ row }">{{ ms(row.p99ElapsedMs) }}</template>
             </el-table-column>
-            <el-table-column prop="evaluations" label="评估次数" width="90" align="right" />
-            <el-table-column prop="errors" label="错误次数" width="90" align="right" />
-            <el-table-column prop="owner" label="责任人" width="100" align="center" show-overflow-tooltip />
+            <el-table-column prop="evaluations" :label="t('execution.ruleEngine.dashboard.evaluations')" width="90" align="right" />
+            <el-table-column prop="errors" :label="t('execution.ruleEngine.dashboard.errorCount')" width="90" align="right" />
+            <el-table-column prop="owner" :label="t('execution.ruleEngine.dashboard.owner')" width="100" align="center" show-overflow-tooltip />
           </el-table>
         </el-card>
       </el-col>
@@ -630,7 +632,7 @@ onBeforeUnmount(() => {
     <el-card shadow="hover" class="realtime-card">
       <div class="realtime-bar">
         <div class="realtime-item">
-          <span class="realtime-label">注册规则数</span>
+          <span class="realtime-label">{{ t('execution.ruleEngine.dashboard.registeredRules') }}</span>
           <span class="realtime-value">{{ realtime?.registeredRules ?? 0 }}</span>
         </div>
         <div class="realtime-item">
@@ -638,7 +640,7 @@ onBeforeUnmount(() => {
           <span class="realtime-value">{{ realtime?.lastEvaluatedRules ?? 0 }}</span>
         </div>
         <div class="realtime-item">
-          <span class="realtime-label">活跃规则数</span>
+          <span class="realtime-label">{{ t('execution.ruleEngine.dashboard.activeRules') }}</span>
           <span class="realtime-value">{{ realtime?.activeRules ?? 0 }}</span>
         </div>
         <div class="realtime-item">

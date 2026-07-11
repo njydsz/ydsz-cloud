@@ -62,10 +62,10 @@ jobs:
       - name: Lint
         run: pnpm run lint:check
 
-      - name: i18n Coverage Check (P3-11)
+      - name: i18n Coverage Check (P0-2)
         # 检测 .vue 文件中未使用 t() 包裹的硬编码中文
-        # 阈值 30%：当前阶段允许一定比例硬编码，后续逐步降低
-        run: node scripts/check-i18n-coverage.mjs --threshold=30
+        # P0-2: 阈值从 30% 降至 20%，逐步提升 i18n 覆盖率
+        run: node scripts/check-i18n-coverage.mjs --threshold=20
 
       - name: Type Check & Build
         run: pnpm run build
