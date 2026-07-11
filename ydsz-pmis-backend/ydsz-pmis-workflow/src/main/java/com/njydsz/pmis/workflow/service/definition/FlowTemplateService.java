@@ -154,4 +154,22 @@ public interface FlowTemplateService {
      * @return 子模板列表，每行含 templateCode / templateName / category / inheritType 等摘要字段
      */
     List<Map<String, Object>> listInheritedTemplates(String parentTemplateCode);
+
+    /**
+     * P2-9: 将子模板的内容同步为父模板最新版本。
+     *
+     * <p>用于 INHERIT 类型子模板拉取父模板的最新更新：
+     * <ul>
+     *   <li>读取父模板（最新版本）的 BPMN XML、表单路径等核心内容</li>
+     *   <li>在子模板的 template_code 下创建新版本（旧版本降级为 is_latest=0）</li>
+     *   <li>保留子模板的 templateCode / templateName / category / sortOrder 不变</li>
+     *   <li>同步后的新版本 inherit_type 仍为 INHERIT，parent_template_id 仍指向父模板</li>
+     * </ul>
+     *
+     * <p>注意：仅 INHERIT 类型子模板可同步；CLONE 类型因语义为独立演进，不支持同步。
+     *
+     * @param childTemplateCode 子模板编码（必须为 INHERIT 类型）
+     * @return 同步后的新版本号
+     */
+    Integer syncFromParent(String childTemplateCode);
 }

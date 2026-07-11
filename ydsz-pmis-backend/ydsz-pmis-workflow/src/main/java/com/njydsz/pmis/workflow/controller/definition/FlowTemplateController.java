@@ -216,6 +216,22 @@ public class FlowTemplateController {
         return Result.ok(templateService.listInheritedTemplates(parentTemplateCode));
     }
 
+    /**
+     * P2-9: 将子模板的内容同步为父模板最新版本。
+     *
+     * <p>仅 INHERIT 类型子模板可同步；CLONE 类型因语义为独立演进，不支持同步。
+     * 同步后将在子模板 template_code 下创建新版本，旧版本自动降级。
+     *
+     * @param childTemplateCode 子模板编码（必须为 INHERIT 类型）
+     * @return 同步后的新版本号
+     */
+    @Operation(summary = "P2-9: 子模板同步父模板最新版本")
+    @Idempotent(key = "flowTemplate:syncFromParent", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{childTemplateCode}/sync")
+    public Result<Integer> syncFromParent(@PathVariable String childTemplateCode) {
+        return Result.ok(templateService.syncFromParent(childTemplateCode));
+    }
+
     // ============================== P2-2: 模板智能推荐 ==============================
 
     /**

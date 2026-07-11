@@ -56,6 +56,9 @@ public class RuleApprovalService {
     /** 审批权限检查器（可选 SPI） */
     private ApprovalPermissionChecker permissionChecker;
 
+    /** P1-5: 工作流引擎桥接（可选 SPI，用于将审批事件转发到 workflow 模块） */
+    private RuleApprovalWorkflowBridge workflowBridge;
+
     /**
      * 构造审批流服务
      *
@@ -117,6 +120,18 @@ public class RuleApprovalService {
      */
     public void setPermissionChecker(ApprovalPermissionChecker permissionChecker) {
         this.permissionChecker = permissionChecker;
+    }
+
+    /**
+     * P1-5: 设置工作流引擎桥接
+     *
+     * <p>设置后，审批事件（提交/通过/驳回/委托）会同步通知 workflow 模块，
+     * 实现两套审批系统的数据打通。
+     *
+     * @param workflowBridge 工作流桥接
+     */
+    public void setWorkflowBridge(RuleApprovalWorkflowBridge workflowBridge) {
+        this.workflowBridge = workflowBridge;
     }
 
     /**
@@ -209,6 +224,8 @@ public class RuleApprovalService {
         saveRecord(record);
         log.info("[Approval] 规则已提交审核: ruleCode={}, flow={}, operator={}",
                 ruleCode, flow.getFlowCode(), operator);
+        // P1-5: 通知工作流引擎
+        notifyWorkflowBridge(b -> b.onApprovalSubmitted(ruleCode, flow.getFlowCode(), operator));
         return record;
     }
 
@@ -299,6 +316,8 @@ public class RuleApprovalService {
             record.setCurrentStatus(ApprovalRecord.STATUS_APPROVED);
             log.info("[Approval] 规则全部审批通过已发布: ruleCode={}, flow={}, operator={}",
                     ruleCode, flow.getFlowCode(), operator);
+            // P1-5: 通知工作流引擎（全部通过）
+            notifyWorkflowBridge(b -> b.onApprovalPassed(ruleCode, record.getCurrentLevel(), operator, comment, true));
         } else {
             // 进入下一级
             RuleStatus nextStatus = levelToStatus(nextLevel, flow.maxLevel());
@@ -313,6 +332,8 @@ public class RuleApprovalService {
             record.setCurrentStatus(ApprovalRecord.STATUS_PENDING);
             log.info("[Approval] 规则进入下一级审批: ruleCode={}, level={}, operator={}",
                     ruleCode, nextLevel, operator);
+            // P1-5: 通知工作流引擎（当前级别通过）
+            notifyWorkflowBridge(b -> b.onApprovalPassed(ruleCode, record.getCurrentLevel() - 1, operator, comment, false));
         }
 
         record.setUpdatedAt(LocalDateTime.now());
@@ -391,6 +412,9 @@ public class RuleApprovalService {
 
         record.setUpdatedAt(LocalDateTime.now());
         saveRecord(record);
+        // P1-5: 通知工作流引擎（驳回）
+        int toLevel = currentLevel <= 1 ? 0 : currentLevel - 1;
+        notifyWorkflowBridge(b -> b.onApprovalRejected(ruleCode, currentLevel, toLevel, operator, reason));
         return record;
     }
 
@@ -441,6 +465,8 @@ public class RuleApprovalService {
         saveRecord(record);
         log.info("[Approval] 审批已委托: ruleCode={}, level={}, from={}, to={}",
                 ruleCode, record.getCurrentLevel(), operator, delegatedTo);
+        // P1-5: 通知工作流引擎（委托）
+        notifyWorkflowBridge(b -> b.onApprovalDelegated(ruleCode, record.getCurrentLevel(), operator, delegatedTo));
         return record;
     }
 
@@ -798,6 +824,22 @@ public class RuleApprovalService {
     private void requireNonBlank(String value, String name) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(name + " 不能为空");
+        }
+    }
+
+    /**
+     * P1-5: 安全通知工作流引擎桥接（bridge=null 或通知失败均不影响主流程）
+     *
+     * @param action 通知动作
+     */
+    private void notifyWorkflowBridge(java.util.function.Consumer<RuleApprovalWorkflowBridge> action) {
+        if (workflowBridge == null) {
+            return;
+        }
+        try {
+            action.accept(workflowBridge);
+        } catch (Exception e) {
+            log.warn("[Approval] 工作流桥接通知失败(不影响审批主流程): err={}", e.getMessage());
         }
     }
 

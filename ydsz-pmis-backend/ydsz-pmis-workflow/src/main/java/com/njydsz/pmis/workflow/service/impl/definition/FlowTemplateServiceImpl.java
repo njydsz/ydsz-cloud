@@ -415,6 +415,75 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Integer syncFromParent(String childTemplateCode) {
+        try {
+            if (!StringUtils.hasText(childTemplateCode)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+            }
+            // 读取子模板最新版本
+            FlowTemplateDO child = templateMapper.selectByTemplateCode(childTemplateCode);
+            if (child == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047", childTemplateCode);
+            }
+            // 仅 INHERIT 类型可同步
+            if (!"INHERIT".equals(child.getInheritType())) {
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "error.workflow.msg_d5e6f7a9", childTemplateCode,
+                        child.getInheritType() != null ? child.getInheritType() : "null");
+            }
+            // 读取父模板
+            String parentId = child.getParentTemplateId();
+            if (!StringUtils.hasText(parentId)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "error.workflow.msg_e6f7a8b0", childTemplateCode);
+            }
+            FlowTemplateDO parent = templateMapper.selectById(parentId);
+            if (parent == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND,
+                        "error.workflow.msg_f7a8b9c1", parentId);
+            }
+            if (!StringUtils.hasText(parent.getBpmnXml())) {
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "error.workflow.msg_f407e561", parent.getTemplateCode());
+            }
+            // 旧版本降级
+            templateMapper.markAsNotLatest(childTemplateCode);
+            Integer maxVersion = templateMapper.selectMaxVersion(childTemplateCode);
+            int newVersion = (maxVersion == null ? 0 : maxVersion) + 1;
+
+            // 以父模板内容创建子模板新版本，保留子模板自身编码/名称/分类/排序
+            FlowTemplateDO newVer = new FlowTemplateDO();
+            newVer.setTemplateCode(child.getTemplateCode());
+            newVer.setTemplateName(child.getTemplateName());
+            newVer.setCategory(child.getCategory());
+            newVer.setDescription(parent.getDescription());
+            newVer.setIcon(parent.getIcon());
+            newVer.setBpmnXml(parent.getBpmnXml());
+            newVer.setFormPath(parent.getFormPath());
+            newVer.setUseCount(0);
+            newVer.setSortOrder(child.getSortOrder());
+            // 保持继承关系
+            newVer.setParentTemplateId(parentId);
+            newVer.setVersion(newVersion);
+            newVer.setVersionLabel("v" + newVersion + ".0-synced");
+            newVer.setInheritType("INHERIT");
+            newVer.setIsLatest(1);
+            templateMapper.insert(newVer);
+
+            log.info("[FlowTemplate] 子模板同步父模板成功: childCode={} parentCode={} newVersion={} parentId={}",
+                    childTemplateCode, parent.getTemplateCode(), newVersion, parentId);
+            return newVersion;
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("[FlowTemplate] 同步父模板异常: childCode={} err={}",
+                    childTemplateCode, e.getMessage(), e);
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
+        }
+    }
+
     // ============================== 私有方法 ==============================
 
     /**
