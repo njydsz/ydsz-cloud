@@ -288,7 +288,19 @@ A:项目未上线,**没有生产数据** → 直接 `dropdb` + 重新 `psql -f V
 - **P2-x** — 中优先级、可后续迭代
 - **P3-x** — 低优先级、长期演进
 
-### 9.2 任务清单(2026-07-06 批次,本 README 更新版)
+### 9.2 任务清单(2026-07-12 DDD 拆分批次,本 README v3.0 更新版)
+
+| 任务 ID | 类别 | 章节 | 内容概述 | 状态 |
+|---|---|---|---|---|
+| P1-1 | 拆分 | DDD 拆分 | 原 `V1.0.0_project.sql` (42 张表) 拆分为 `V1.0.0_sales.sql` (6 表) / `V1.0.0_finance.sql` (8 表) / `V1.0.0_project.sql` (20 表) + 8 张 literule 业务表追加到 `V1.0.0_literule.sql` | DONE |
+| P1-2 | 拆分 | DDD 拆分 | 表归属基于物理 Mapper 位置:`sales/infra/mapper/` → `V1.0.0_sales.sql`, `finance/infra/mapper/` → `V1.0.0_finance.sql`, `project/infra/mapper/` → `V1.0.0_project.sql`, `literule/infra/mapper/` → `V1.0.0_literule.sql` | DONE |
+| P1-3 | 文档 | 模块 README | 创建 `ydsz-pmis-sales/README.md` (商机/合同管理,6 表,Feign Client 对外 7 方法) | DONE |
+| P1-4 | 文档 | 模块 README | 创建 `ydsz-pmis-finance/README.md` (财务会计,8 表,Feign Client 对外 13 方法) | DONE |
+| P1-5 | 文档 | 模块 README | 更新 `ydsz-pmis-project/README.md` (项目执行,20 表,DDD 五层架构) | DONE |
+| P1-6 | 文档 | SQL README | 更新 `deploy/sql/README.md` 至 v3.0,反映 sales/finance/project 拆分,更新目录结构/表分布/拆分规则 | DONE |
+| P1-7 | 引用 | V1.0.0_all.sql | 更新 `modules/V1.0.0_all.sql` 引用顺序:system → userinfo → **sales → finance → project** → cronjob → message → workflow → agent → literule | DONE |
+
+### 9.3 历史任务清单(2026-07-06 批次)
 
 | 任务 ID | 类别 | 章节 | 内容概述 | 状态 |
 |---|---|---|---|---|
