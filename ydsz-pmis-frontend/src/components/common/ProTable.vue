@@ -63,6 +63,8 @@ export interface ProTableColumn<R = Record<string, unknown>> {
   defaultHidden?: boolean
   /** 列是否禁用显隐切换（如选择列、操作列） */
   disableHidden?: boolean
+  /** P0-3: 响应式断点下自动隐藏（传入断点名称数组，如 ['xs', 'sm'] 表示在这些断点下隐藏） */
+  responsiveHidden?: Array<'xs' | 'sm' | 'md' | 'lg' | 'xl'>
 }
 
 /** 表格密度 */
@@ -265,18 +267,53 @@ function resetColumnSetting() {
   syncColumnSetting()
 }
 
+/** P0-3: 当前视口宽度 */
+const viewportWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1920)
+
+/** P0-3: 监听窗口尺寸变化 */
+if (typeof window !== 'undefined') {
+  let resizeTimer: ReturnType<typeof setTimeout> | null = null
+  window.addEventListener('resize', () => {
+    if (resizeTimer) clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(() => {
+      viewportWidth.value = window.innerWidth
+    }, 150)
+  })
+}
+
+/** P0-3: 判断当前视口是否在指定断点范围内 */
+function isInBreakpoint(bp: 'xs' | 'sm' | 'md' | 'lg' | 'xl'): boolean {
+  const breakpoints: Record<string, [number, number]> = {
+    xs: [0, 479],
+    sm: [480, 767],
+    md: [768, 991],
+    lg: [992, 1199],
+    xl: [1200, 99999],
+  }
+  const range = breakpoints[bp]
+  if (!range) return false
+  return viewportWidth.value >= range[0] && viewportWidth.value <= range[1]
+}
+
 /** 实际渲染的列（过滤掉隐藏的列，按列设置顺序排序） */
 const visibleColumns = computed<ProTableColumn<T>[]>(() => {
-  if (!props.columnSetting) return props.columns
-  const visibleProps = new Set(
-    columnSettingList.value.filter((c) => c.visible).map((c) => c.prop),
-  )
-  // 按列设置顺序排序
-  const orderMap = new Map<string, number>()
-  columnSettingList.value.forEach((item, idx) => orderMap.set(item.prop, idx))
-  return props.columns
-    .filter((col) => visibleProps.has(col.prop))
-    .sort((a, b) => (orderMap.get(a.prop) ?? 999) - (orderMap.get(b.prop) ?? 999))
+  let cols = props.columns
+  if (props.columnSetting) {
+    const visibleProps = new Set(
+      columnSettingList.value.filter((c) => c.visible).map((c) => c.prop),
+    )
+    // 按列设置顺序排序
+    const orderMap = new Map<string, number>()
+    columnSettingList.value.forEach((item, idx) => orderMap.set(item.prop, idx))
+    cols = cols
+      .filter((col) => visibleProps.has(col.prop))
+      .sort((a, b) => (orderMap.get(a.prop) ?? 999) - (orderMap.get(b.prop) ?? 999))
+  }
+  // P0-3: 响应式列隐藏
+  return cols.filter((col) => {
+    if (!col.responsiveHidden || col.responsiveHidden.length === 0) return true
+    return !col.responsiveHidden.some((bp) => isInBreakpoint(bp))
+  })
 })
 
 // 列配置变化时重新初始化列设置

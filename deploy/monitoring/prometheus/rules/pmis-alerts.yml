@@ -85,6 +85,30 @@ spec:
             summary: "业务指标采集停滞超过 5 分钟"
             description: "PmisBusinessMetricsJob 已超过 5 分钟未更新指标，可能因数据库异常或定时任务挂起，请检查 pmis-project 服务日志。"
 
+        # 回款率过低（P2，现金流风险）
+        - alert: PmisCollectionRateLow
+          expr: pmis_collection_rate < 50
+          for: 10m
+          labels:
+            severity: P2
+            category: business
+            team: pmis-finance
+          annotations:
+            summary: "整体回款率过低 ({{ $value }}%)"
+            description: "当前回款率 {{ $value }}% 低于 50% 阈值，存在现金流风险，建议催收团队介入。"
+
+        # 待审批积压（P2，审批效率）
+        - alert: PmisPendingApprovalHigh
+          expr: pmis_pending_approval_count > 100
+          for: 10m
+          labels:
+            severity: P2
+            category: business
+            team: pmis-workflow
+          annotations:
+            summary: "待审批工单积压 ({{ $value }})"
+            description: "当前待审批工单数 {{ $value }} 超过 100 阈值，审批流转可能阻塞，建议检查审批人在线状态。"
+
     # =========================================================================
     #  2. 服务可用性告警
     # =========================================================================

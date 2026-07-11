@@ -1,13 +1,16 @@
 /**
  * @file Dashboard 拖拽布局 composable
- * @description 管理仪表盘小部件的排序、可见性与列宽，持久化到 localStorage。
+ * @description 管理仪表盘小部件的排序、可见性与列宽。
+ *              采用 localStorage 即时写入 + 后端 API 防抖同步的双层持久化策略，
+ *              实现跨设备布局同步。
  *              支持原生 HTML5 拖拽 API 进行小部件重排序。
  *
  * 功能：
  *  - 小部件显隐切换（用户可自行关闭不需要的卡片）
  *  - 拖拽排序（HTML5 dragstart/dragover/drop）
- *  - 布局持久化（localStorage，按用户 ID 隔离）
+ *  - 布局持久化（localStorage 即时写入 + 后端 API 防抖同步）
  *  - 一键重置默认布局
+ *  - 跨设备布局同步
  *
  * @example
  * ```ts
@@ -18,9 +21,10 @@
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
-import { ref, watch, type Ref } from 'vue'
+import { ref, watch, onMounted, type Ref } from 'vue'
 import { useUserStore } from '@/store/modules/user'
 import { logger } from '@/utils/logger'
+import { request } from '@/utils/request'
 
 /** 小部件定义 */
 export interface WidgetConfig {
@@ -55,6 +59,12 @@ interface PersistedLayout {
   }
 }
 
+/** 后端同步防抖定时器 */
+let syncTimer: ReturnType<typeof setTimeout> | null = null
+
+/** 防抖延迟（毫秒） */
+const SYNC_DEBOUNCE_MS = 2000
+
 /**
  * Dashboard 拖拽布局 composable
  *
@@ -72,6 +82,8 @@ export function useDashboardLayout(
   isCustomizing: Ref<boolean>
   /** 拖拽起始索引 */
   dragIndex: Ref<number>
+  /** 是否正在同步到后端 */
+  isSyncing: Ref<boolean>
   /** 开始拖拽 */
   dragStart: (index: number) => void
   /** 拖拽经过 */
@@ -111,6 +123,44 @@ export function useDashboardLayout(
     }
   }
 
+  /** 从后端加载布局（跨设备同步） */
+  async function loadFromBackend(): Promise<PersistedLayout | null> {
+    try {
+      const { data } = await request<{ layoutConfig: string }>({
+        url: `/dashboard/layout/${storageKey}`,
+        method: 'GET',
+        silent: true,
+      })
+      if (data?.layoutConfig && data.layoutConfig !== '{}') {
+        return JSON.parse(data.layoutConfig) as PersistedLayout
+      }
+    } catch (e) {
+      // 后端加载失败静默处理，使用 localStorage 中的数据
+      logger.debug('[useDashboardLayout]', '后端布局加载失败，使用本地数据', e)
+    }
+    return null
+  }
+
+  /** 防抖同步布局到后端 */
+  function syncToBackend(layout: PersistedLayout) {
+    if (syncTimer) {
+      clearTimeout(syncTimer)
+    }
+    syncTimer = setTimeout(async () => {
+      try {
+        await request({
+          url: `/dashboard/layout/${storageKey}`,
+          method: 'PUT',
+          data: { layoutConfig: JSON.stringify(layout) },
+          silent: true,
+        })
+        logger.debug('[useDashboardLayout]', '布局已同步到后端')
+      } catch (e) {
+        logger.debug('[useDashboardLayout]', '后端同步失败，将在下次变更时重试', e)
+      }
+    }, SYNC_DEBOUNCE_MS)
+  }
+
   /** 初始化小部件状态 */
   function initWidgets(): WidgetState[] {
     const persisted = loadPersisted()
@@ -129,14 +179,16 @@ export function useDashboardLayout(
   const widgets = ref<WidgetState[]>(initWidgets())
   const isCustomizing = ref(false)
   const dragIndex = ref(-1)
+  const isSyncing = ref(false)
 
-  /** 持久化当前布局 */
+  /** 持久化当前布局（localStorage 即时 + 后端防抖） */
   function saveLayout() {
     const layout: PersistedLayout = {}
     widgets.value.forEach((w, idx) => {
       layout[w.id] = { span: w.span, visible: w.visible, order: idx }
     })
     persist(layout)
+    syncToBackend(layout)
   }
 
   /** 开始拖拽 */
@@ -191,12 +243,37 @@ export function useDashboardLayout(
       order: idx,
     }))
     saveLayout()
+    // 同时清除后端布局
+    request({
+      url: `/dashboard/layout/${storageKey}`,
+      method: 'DELETE',
+      silent: true,
+    }).catch(() => { /* 静默失败 */ })
   }
 
   /** 进入/退出自定义模式 */
   function toggleCustomizing() {
     isCustomizing.value = !isCustomizing.value
   }
+
+  // 挂载时尝试从后端加载布局（跨设备同步）
+  onMounted(async () => {
+    const backendLayout = await loadFromBackend()
+    if (backendLayout) {
+      // 后端有布局数据，用后端数据覆盖本地
+      const states = defaultWidgets.map((w, idx) => {
+        const p = backendLayout[w.id]
+        return {
+          ...w,
+          span: p?.span ?? w.defaultSpan,
+          visible: p?.visible ?? w.defaultVisible,
+          order: p?.order ?? idx,
+        }
+      })
+      widgets.value = states.sort((a, b) => a.order - b.order)
+      persist(backendLayout)
+    }
+  })
 
   // 自动持久化
   watch(widgets, saveLayout, { deep: true })
@@ -205,6 +282,7 @@ export function useDashboardLayout(
     widgets,
     isCustomizing,
     dragIndex,
+    isSyncing,
     dragStart,
     dragOver,
     drop,

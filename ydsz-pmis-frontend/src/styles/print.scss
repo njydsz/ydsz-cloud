@@ -1,0 +1,358 @@
+/**
+ * @file 打印样式（发票/合同/报表）
+ * @description 统一管理打印时的样式覆盖：
+ *   1. 隐藏导航栏、侧边栏、工具栏、分页器等非打印元素
+ *   2. 表格自动展开全部列（忽略响应式隐藏）
+ *   3. 调整字号与间距以适应 A4 纸张
+ *   4. 页眉页脚（打印标题、日期、页码）
+ * 使用方式：在需要打印的页面添加 <div class="printable"> 包裹打印内容，
+ *           调用 window.print() 即可触发浏览器打印对话框。
+ * @module styles/print
+ */
+
+/* ===================== 全局打印基础 ===================== */
+
+@media print {
+  /* 重置页面边距 */
+  @page {
+    size: A4;
+    margin: 15mm 12mm;
+  }
+
+  /* 隐藏非打印元素 */
+  .app-sidebar,
+  .el-aside,
+  .el-header,
+  .app-header,
+  .el-footer,
+  .toolbar,
+  .search-form,
+  .el-pagination,
+  .el-button-group,
+  .batch-toolbar,
+  .pro-table__toolbar,
+  .pro-table__column-setting,
+  .pro-table__density,
+  .no-print {
+    display: none !important;
+  }
+
+  /* 主内容区域占满宽度 */
+  .app-main,
+  .el-main,
+  .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* 表格样式优化 */
+  .el-table {
+    width: 100% !important;
+    font-size: 12px !important;
+
+    /* 展开所有列（取消响应式隐藏） */
+    .el-table__column {
+      display: table-cell !important;
+    }
+
+    /* 表头重复（跨页打印） */
+    thead {
+      display: table-header-group;
+    }
+
+    /* 行不跨页截断 */
+    tr {
+      page-break-inside: avoid;
+    }
+  }
+
+  /* 字号调整 */
+  body {
+    font-size: 12px !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* 链接不显示下划线 */
+  a {
+    text-decoration: none !important;
+    color: #000 !important;
+  }
+
+  /* 卡片去掉阴影和边框 */
+  .el-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* 弹窗内容打印（用于发票/合同弹窗打印） */
+  .el-dialog {
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .el-overlay {
+    position: static !important;
+    background: none !important;
+  }
+
+  .el-dialog__header,
+  .el-dialog__footer {
+    display: none !important;
+  }
+
+  .el-dialog__body {
+    padding: 0 !important;
+  }
+}
+
+/* ===================== 打印区域标记 ===================== */
+
+/** 打印区域：只有 .printable 内的内容会被打印 */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .printable,
+  .printable * {
+    visibility: visible;
+  }
+
+  .printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+
+/* ===================== 打印页眉页脚 ===================== */
+
+/** 打印页眉（显示在 .printable 顶部） */
+.print-header {
+  display: none;
+
+  @media print {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 600;
+
+    &__title {
+      font-size: 18px;
+    }
+
+    &__meta {
+      font-size: 11px;
+      color: #666;
+      font-weight: 400;
+    }
+  }
+}
+
+/** 打印页脚（显示在 .printable 底部） */
+.print-footer {
+  display: none;
+
+  @media print {
+    display: block;
+    border-top: 1px solid #ddd;
+    padding-top: 8px;
+    margin-top: 24px;
+    font-size: 11px;
+    color: #999;
+    text-align: center;
+  }
+}
+
+/* ===================== 发票打印专用 ===================== */
+
+.invoice-print {
+  @media print {
+    .invoice-header {
+      text-align: center;
+      margin-bottom: 20px;
+
+      h2 {
+        font-size: 20px;
+        margin: 0 0 8px;
+      }
+
+      .invoice-meta {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+
+      th,
+      td {
+        border: 1px solid #333;
+        padding: 6px 8px;
+        font-size: 12px;
+        text-align: left;
+      }
+
+      th {
+        background: #f5f5f5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+
+    .invoice-amount {
+      text-align: right;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 12px 0;
+
+      .amount-label {
+        margin-right: 12px;
+      }
+
+      .amount-value {
+        font-size: 16px;
+      }
+    }
+
+    .invoice-signature {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 40px;
+      font-size: 12px;
+
+      &__item {
+        text-align: center;
+
+        .line {
+          border-top: 1px solid #000;
+          width: 200px;
+          margin-top: 40px;
+          padding-top: 4px;
+        }
+      }
+    }
+  }
+}
+
+/* ===================== 合同打印专用 ===================== */
+
+.contract-print {
+  @media print {
+    .contract-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 24px 0 16px;
+    }
+
+    .contract-section {
+      margin-bottom: 16px;
+
+      h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 12px 0 6px;
+      }
+
+      p {
+        font-size: 12px;
+        line-height: 1.8;
+        text-indent: 2em;
+        margin: 4px 0;
+      }
+    }
+
+    .contract-signature {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+
+      &__party {
+        font-size: 12px;
+
+        .line {
+          border-top: 1px solid #000;
+          width: 240px;
+          margin-top: 40px;
+          padding-top: 4px;
+        }
+      }
+    }
+  }
+}
+
+/* ===================== 报表打印专用 ===================== */
+
+.report-print {
+  @media print {
+    .report-header {
+      text-align: center;
+      margin-bottom: 20px;
+
+      h2 {
+        font-size: 18px;
+        margin: 0 0 4px;
+      }
+
+      .report-period {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+
+    .report-summary {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 16px;
+
+      &__item {
+        text-align: center;
+
+        .label {
+          font-size: 11px;
+          color: #999;
+        }
+
+        .value {
+          font-size: 16px;
+          font-weight: 600;
+          margin-top: 2px;
+        }
+      }
+    }
+
+    /* 图表区域打印时显示占位提示 */
+    .chart-container {
+      min-height: 200px;
+
+      &::after {
+        content: '[图表区域请参考电子版]';
+        display: block;
+        text-align: center;
+        font-size: 11px;
+        color: #999;
+        padding: 40px 0;
+      }
+
+      canvas,
+      svg {
+        display: none;
+      }
+    }
+  }
+}

@@ -64,8 +64,8 @@ jobs:
 
       - name: i18n Coverage Check (P0-2)
         # 检测 .vue 文件中未使用 t() 包裹的硬编码中文
-        # P0-2: 阈值从 30% 降至 20%，逐步提升 i18n 覆盖率
-        run: node scripts/check-i18n-coverage.mjs --threshold=20
+        # P1-4: 阈值从 20% 降至 15%，逐步提升 i18n 覆盖率
+        run: node scripts/check-i18n-coverage.mjs --threshold=15
 
       - name: Type Check & Build
         run: pnpm run build

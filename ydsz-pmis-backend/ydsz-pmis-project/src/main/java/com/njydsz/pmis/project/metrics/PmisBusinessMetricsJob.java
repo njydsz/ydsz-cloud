@@ -45,6 +45,16 @@ public class PmisBusinessMetricsJob {
     private final AtomicLong benchTotalCost = new AtomicLong(0);
     /** 可计费利用率均值（百分比） */
     private final AtomicLong billableUtilizationAvg = new AtomicLong(0);
+    /** 当月新增合同金额（元） */
+    private final AtomicLong contractMonthlyAmount = new AtomicLong(0);
+    /** 当月开票金额（元） */
+    private final AtomicLong invoiceMonthlyAmount = new AtomicLong(0);
+    /** 当月回款金额（元） */
+    private final AtomicLong paymentMonthlyAmount = new AtomicLong(0);
+    /** 回款率（百分比，回款/合同总额） */
+    private final AtomicLong collectionRate = new AtomicLong(0);
+    /** 待审批工单数 */
+    private final AtomicLong pendingApprovalCount = new AtomicLong(0);
 
     @PostConstruct
     public void init() {
@@ -57,7 +67,22 @@ public class PmisBusinessMetricsJob {
         Gauge.builder("pmis_billable_utilization_avg", billableUtilizationAvg, AtomicLong::doubleValue)
                 .description("可计费利用率均值（百分比）")
                 .register(meterRegistry);
-        log.info("[PmisBusinessMetrics] 已注册 3 个业务指标 Gauge");
+        Gauge.builder("pmis_contract_monthly_amount", contractMonthlyAmount, AtomicLong::doubleValue)
+                .description("当月新增合同金额（元）")
+                .register(meterRegistry);
+        Gauge.builder("pmis_invoice_monthly_amount", invoiceMonthlyAmount, AtomicLong::doubleValue)
+                .description("当月开票金额（元）")
+                .register(meterRegistry);
+        Gauge.builder("pmis_payment_monthly_amount", paymentMonthlyAmount, AtomicLong::doubleValue)
+                .description("当月回款金额（元）")
+                .register(meterRegistry);
+        Gauge.builder("pmis_collection_rate", collectionRate, AtomicLong::doubleValue)
+                .description("回款率（百分比）")
+                .register(meterRegistry);
+        Gauge.builder("pmis_pending_approval_count", pendingApprovalCount, AtomicLong::doubleValue)
+                .description("待审批工单数")
+                .register(meterRegistry);
+        log.info("[PmisBusinessMetrics] 已注册 8 个业务指标 Gauge");
     }
 
     /**
@@ -69,6 +94,11 @@ public class PmisBusinessMetricsJob {
             refreshEvmRedCount();
             refreshBenchCost();
             refreshUtilization();
+            refreshContractAmount();
+            refreshInvoiceAmount();
+            refreshPaymentAmount();
+            refreshCollectionRate();
+            refreshPendingApproval();
         } catch (Exception e) {
             log.warn("[PmisBusinessMetrics] 刷新指标失败: {}", e.getMessage());
         }
@@ -127,6 +157,87 @@ public class PmisBusinessMetricsJob {
             billableUtilizationAvg.set(avg != null ? avg : 0);
         } catch (Exception e) {
             log.debug("[PmisBusinessMetrics] 可计费利用率查询失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 当月新增合同金额
+     */
+    private void refreshContractAmount() {
+        try {
+            Long amount = jdbcTemplate.queryForObject(
+                    "SELECT COALESCE(SUM(contract_amount), 0)::BIGINT FROM pmis_contract " +
+                            "WHERE deleted = 0 AND sign_date >= date_trunc('month', CURRENT_DATE)",
+                    Long.class);
+            contractMonthlyAmount.set(amount != null ? amount : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 当月合同金额查询失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 当月开票金额
+     */
+    private void refreshInvoiceAmount() {
+        try {
+            Long amount = jdbcTemplate.queryForObject(
+                    "SELECT COALESCE(SUM(amount), 0)::BIGINT FROM pmis_invoice " +
+                            "WHERE deleted = 0 AND invoice_date >= date_trunc('month', CURRENT_DATE) " +
+                            "AND invoice_type = 'NORMAL' AND status IN ('APPROVED', 'ISSUED')",
+                    Long.class);
+            invoiceMonthlyAmount.set(amount != null ? amount : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 当月开票金额查询失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 当月回款金额
+     */
+    private void refreshPaymentAmount() {
+        try {
+            Long amount = jdbcTemplate.queryForObject(
+                    "SELECT COALESCE(SUM(amount), 0)::BIGINT FROM pmis_payment " +
+                            "WHERE deleted = 0 AND payment_date >= date_trunc('month', CURRENT_DATE) " +
+                            "AND status = 'RECEIVED'",
+                    Long.class);
+            paymentMonthlyAmount.set(amount != null ? amount : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 当月回款金额查询失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 回款率 = 已回款总额 / 合同总额 * 100
+     */
+    private void refreshCollectionRate() {
+        try {
+            Long rate = jdbcTemplate.queryForObject(
+                    "SELECT CASE WHEN SUM(contract_amount) = 0 THEN 0 " +
+                            "ELSE (SUM(p.paid_amount)::NUMERIC / SUM(c.contract_amount) * 100)::BIGINT END " +
+                            "FROM pmis_contract c LEFT JOIN LATERAL " +
+                            "(SELECT COALESCE(SUM(amount), 0) AS paid_amount FROM pmis_payment " +
+                            "WHERE deleted = 0 AND contract_id = c.id AND status = 'RECEIVED') p ON true " +
+                            "WHERE c.deleted = 0 AND c.status IN ('ACTIVE', 'COMPLETED')",
+                    Long.class);
+            collectionRate.set(rate != null ? rate : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 回款率查询失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 待审批工单数
+     */
+    private void refreshPendingApproval() {
+        try {
+            Long count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM pmis_flow_instance_task " +
+                            "WHERE deleted = 0 AND status = 'PENDING'",
+                    Long.class);
+            pendingApprovalCount.set(count != null ? count : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 待审批工单数查询失败: {}", e.getMessage());
         }
     }
 }

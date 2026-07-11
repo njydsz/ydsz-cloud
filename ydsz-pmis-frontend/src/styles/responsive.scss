@@ -52,3 +52,36 @@ $breakpoints: (
     @content;
   }
 }
+
+// ============================================================
+// P0-3: 平板适配（768-1280px）
+// 针对平板设备的布局调整：侧边栏折叠、表格横向滚动、搜索表单栅格调整
+// ============================================================
+
+// 平板横屏（1024-1280px）
+@mixin tablet-landscape {
+  @media (min-width: 1024px) and (max-width: 1280px) {
+    @content;
+  }
+}
+
+// 平板竖屏（768-1023px）
+@mixin tablet-portrait {
+  @media (min-width: 768px) and (max-width: 1023px) {
+    @content;
+  }
+}
+
+// 平板通用样式（768-1280px）
+@mixin tablet-all {
+  @media (min-width: 768px) and (max-width: 1280px) {
+    @content;
+  }
+}
+
+// 小屏移动端（< 768px）
+@mixin mobile-sm {
+  @media (max-width: 480px) {
+    @content;
+  }
+}

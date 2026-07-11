@@ -1,0 +1,122 @@
+# =============================================================================
+# PMIS SLO 定义与 Error Budget 告警规则（PrometheusRule CRD）
+# -----------------------------------------------------------------------------
+# 定义 PMIS 平台的 SLO 目标与 Error Budget 燃烧率告警，对齐 Google SRE 标准。
+#
+# SLO 定义:
+#   1. 可用性 SLO: 99.9% (每月停机 ≤ 43.8 分钟)
+#   2. 延迟 SLO:   P99 < 1s (90% 的请求在 1s 内完成)
+#   3. 正确性 SLO: 5xx 错误率 < 0.1%
+#
+# Error Budget 燃烧率告警:
+#   - 快速燃烧: 2% budget/hour → 14 天 burn → P1 告警 (14.4x burn rate)
+#   - 慢速燃烧: 0.1% budget/hour → 3 天 burn → P2 告警 (6x burn rate)
+#
+# 部署:
+#   kubectl apply -f deploy/monitoring/prometheus/rules/pmis-slo.yml -n monitoring
+# =============================================================================
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: pmis-slo
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    app.kubernetes.io/name: pmis
+spec:
+  groups:
+    # =========================================================================
+    #  1. 可用性 SLO (99.9%)
+    # =========================================================================
+    - name: pmis-slo-availability
+      interval: 30s
+      rules:
+        # SLO: 30 天窗口可用性 < 99.9%
+        - record: pmis:slo_availability:ratio_30d
+          expr: |
+            1 - (
+              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*",status=~"5.."}[30d]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*"}[30d]))
+            )
+
+        # Error Budget 燃烧率 - 快速 (1h 窗口, 14.4x burn)
+        - alert: PmisSloErrorBudgetFastBurn
+          expr: |
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*",status=~"5.."}[1h]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*"}[1h]))
+            ) > 14.4 * 0.001
+          for: 2m
+          labels:
+            severity: P1
+            category: slo
+            slo: availability
+          annotations:
+            summary: "可用性 SLO Error Budget 快速燃烧"
+            description: "1 小时窗口内 5xx 错误率超过 SLO 阈值的 14.4 倍，如持续 2 分钟将触发告警。当前 Error Budget 正在快速消耗。"
+
+        # Error Budget 燃烧率 - 慢速 (6h 窗口, 6x burn)
+        - alert: PmisSloErrorBudgetSlowBurn
+          expr: |
+            (
+              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*",status=~"5.."}[6h]))
+              /
+              sum(rate(http_server_requests_seconds_count{job=~"pmis-.*"}[6h]))
+            ) > 6 * 0.001
+          for: 15m
+          labels:
+            severity: P2
+            category: slo
+            slo: availability
+          annotations:
+            summary: "可用性 SLO Error Budget 慢速燃烧"
+            description: "6 小时窗口内 5xx 错误率超过 SLO 阈值的 6 倍，如持续 15 分钟将触发告警。Error Budget 消耗过快。"
+
+    # =========================================================================
+    #  2. 延迟 SLO (P99 < 1s, 90% 的请求)
+    # =========================================================================
+    - name: pmis-slo-latency
+      interval: 30s
+      rules:
+        # SLO: P99 延迟记录 (5m 窗口)
+        - record: pmis:slo_latency_p99:seconds_5m
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(http_server_requests_seconds_bucket{job=~"pmis-.*"}[5m])) by (le, job)
+            )
+
+        # SLO 违规: P99 > 1s 持续 5 分钟
+        - alert: PmisSloLatencyViolation
+          expr: pmis:slo_latency_p99:seconds_5m > 1
+          for: 5m
+          labels:
+            severity: P2
+            category: slo
+            slo: latency
+          annotations:
+            summary: "{{ $labels.job }} 延迟 SLO 违规 (P99 > 1s)"
+            description: "服务 {{ $labels.job }} P99 延迟 {{ $value }}s 持续 5 分钟超过 1s SLO 目标，请排查慢 SQL / GC / 资源瓶颈。"
+
+    # =========================================================================
+    #  3. 30 天可用性 SLO 达成率
+    # =========================================================================
+    - name: pmis-slo-monthly
+      interval: 5m
+      rules:
+        # 30 天 SLO 达成状态
+        - record: pmis:slo_availability:status
+          expr: |
+            (pmis:slo_availability:ratio_30d >= 0.999)
+
+        # 月度 SLO 即将突破 (可用性 < 99.95%, 剩余 budget < 50%)
+        - alert: PmisSloBudgetExhausted
+          expr: pmis:slo_availability:ratio_30d < 0.9995
+          for: 30m
+          labels:
+            severity: P2
+            category: slo
+          annotations:
+            summary: "30 天可用性 SLO 预警 (剩余 Error Budget < 50%)"
+            description: "过去 30 天可用性为 {{ $value | humanizePercentage }}，Error Budget 已消耗过半，如不控制将无法达成月度 SLO 目标 (99.9%)。"
