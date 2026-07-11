@@ -11,6 +11,7 @@ import com.njydsz.pmis.literule.orchestrator.RuleChain;
 import com.njydsz.pmis.literule.orchestrator.RuleChainGraph;
 import com.njydsz.pmis.literule.orchestrator.RuleGraphValidator;
 import com.njydsz.pmis.literule.orchestrator.RuleOrchestrator;
+import com.njydsz.pmis.literule.spi.GraphExecutionProvider;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,13 +40,15 @@ import java.util.Map;
  * 构造 {@link ExpressionRule} 作为 {@link ChainGraphConverter.RuleResolver} 的返回值。
  * 画布中引用的规则若不存在或已禁用，对应节点将被跳过（不阻断整链执行）。
  *
+ * <p>实现 {@link GraphExecutionProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.5.1
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GraphExecutionService {
+public class GraphExecutionService implements GraphExecutionProvider {
 
     private final RuleChainGraphService ruleChainGraphService;
     private final RuleConfigProvider ruleConfigProvider;

@@ -52,6 +52,17 @@ management:
     export:
       prometheus:
         enabled: true
+    # P2-12: SLO 指标配置
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        http.client.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+        http.client.requests: 0.5,0.95,0.99
+      slo:
+        http.server.requests: 50ms,100ms,200ms,500ms,1s,2s,5s
+        http.client.requests: 50ms,100ms,200ms,500ms,1s,2s,5s
   endpoint:
     health:
       show-details: when-authorized
@@ -92,14 +103,13 @@ management:
       export:
         # dev 环境默认关闭 tracing 上报，生产环境通过 ENV TRACING_EXPORT_ENABLED=true 开启
         enabled: ${TRACING_EXPORT_ENABLED:false}
-  metrics:
-    distribution:
-      percentiles-histogram:
-        http.server.requests: true
-        http.client.requests: true
-      percentiles:
-        http.server.requests: 0.5,0.95,0.99
-        http.client.requests: 0.5,0.95,0.99
+  # P2-12: 慢链路检测配置
+  # 超过阈值的请求会强制采样上报（不受 sampling.probability 限制）
+  # 配合 SkyWalking OAP 的 slowTraceThreshold 使用
+  observations:
+    key-values:
+      # 标记慢请求的阈值 (ms)
+      slow.request.threshold: ${TRACING_SLOW_TRACE_THRESHOLD_MS:500}
 
 # =====================================================================
 # SpringDoc OpenAPI 3.0 配置

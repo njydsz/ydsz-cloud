@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.literule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.spi.ABTestAutoRollbackProvider;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.entity.RuleABPolicyDO;
 import com.njydsz.pmis.literule.entity.RuleABRollbackDO;
@@ -40,13 +41,15 @@ import java.util.List;
  *
  * <p>Owner 通知采用项目内 NotificationService（P0 阶段已落地）。如未配置，会降级为日志输出。
  *
+ * <p>实现 {@link ABTestAutoRollbackProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ABTestAutoRollbackService {
+public class ABTestAutoRollbackService implements ABTestAutoRollbackProvider {
 
     private final RuleABPolicyMapper policyMapper;
     private final RuleABRollbackMapper rollbackMapper;

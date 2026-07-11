@@ -13,6 +13,8 @@ export { default as SkeletonDetail } from './SkeletonDetail.vue'
 export { default as BatchToolbar } from './BatchToolbar.vue'
 export type { BatchAction } from './BatchToolbar.vue'
 export { default as VirtualTable } from './VirtualTable.vue'
+// P2-11: 通用虚拟滚动列表组件（非表格场景的大数据量列表）
+export { default as VirtualList } from './VirtualList.vue'
 export { default as PageLayout } from './PageLayout.vue'
 // P2-1: 全局错误边界（基于 onErrorCaptured 捕获子组件树渲染异常）
 export { default as ErrorBoundary } from './ErrorBoundary.vue'

@@ -136,6 +136,8 @@ const props = withDefaults(
     batchActions?: boolean
     /** 批量操作工具栏位置（top / bottom） */
     batchActionsPosition?: 'top' | 'bottom'
+    /** P2-11: 大数据量阈值（当 data 长度超过此值且未开启分页时，显示警告并启用优化） */
+    largeDataThreshold?: number
   }>(),
   {
     loading: false,
@@ -159,6 +161,7 @@ const props = withDefaults(
     fullscreen: false,
     batchActions: false,
     batchActionsPosition: 'top',
+    largeDataThreshold: 500,
   },
 )
 
@@ -352,6 +355,21 @@ defineExpose({
   resetColumnSetting,
 })
 
+/** P2-11: 大数据量警告 */
+const showLargeDataWarning = computed(
+  () =>
+    !props.showPagination &&
+    props.data.length > props.largeDataThreshold,
+)
+
+/** P2-11: 是否启用大数据优化（lazy 渲染） */
+const isLargeData = computed(
+  () => props.data.length > props.largeDataThreshold,
+)
+
+/** P2-11: 表格 lazy 属性（大数据量时启用懒渲染） */
+const tableLazy = computed(() => isLargeData.value)
+
 /** 是否显示批量操作栏 */
 const showBatchBar = computed(
   () => props.batchActions && props.selection && selectedRows.value.length > 0,
@@ -447,6 +465,18 @@ const showBatchBar = computed(
       </div>
     </Transition>
 
+    <!-- P2-11: 大数据量警告 -->
+    <el-alert
+      v-if="showLargeDataWarning"
+      type="warning"
+      show-icon
+      :closable="false"
+      class="pro-table__large-data-warning"
+    >
+      当前数据量 {{ data.length }} 条已超过 {{ largeDataThreshold }} 条，已启用懒渲染优化。
+      建议开启分页以获得更佳体验。
+    </el-alert>
+
     <!-- 表格主体 -->
     <div class="pro-table__body">
       <el-table
@@ -459,6 +489,7 @@ const showBatchBar = computed(
         :border="border"
         :stripe="stripe"
         :size="densitySize"
+        :lazy="tableLazy"
         :show-summary="showSummary"
         :summary-method="summaryMethod"
         style="width: 100%"

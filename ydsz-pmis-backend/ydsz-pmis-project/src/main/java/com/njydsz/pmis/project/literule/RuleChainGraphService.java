@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.literule.orchestrator.RuleChainGraph;
 import com.njydsz.pmis.literule.entity.RuleChainGraphDO;
 import com.njydsz.pmis.literule.mapper.RuleChainGraphMapper;
+import com.njydsz.pmis.literule.spi.RuleChainGraphProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,13 +17,15 @@ import java.time.LocalDateTime;
  *
  * <p>提供画布的 CRUD 与持久化能力，画布内容以 JSON 形式存储到 pmis_rule_chain_graph 表。
  *
+ * <p>实现 {@link RuleChainGraphProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RuleChainGraphService {
+public class RuleChainGraphService implements RuleChainGraphProvider {
 
     private final RuleChainGraphMapper ruleChainGraphMapper;
 

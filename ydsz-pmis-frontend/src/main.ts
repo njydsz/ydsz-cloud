@@ -98,6 +98,10 @@ app.use(formCreate)
 // 路由（守卫内部会使用 userStore / permissionStore）
 app.use(router)
 
+// P2-10: 注册无障碍访问自定义指令（v-a11y-click）
+import { vA11yClick } from '@/composables/useKeyboardA11y'
+app.directive('a11y-click', vA11yClick)
+
 // P2-7: 初始化 rem 自适应（设置 html font-size 并监听 resize，需在挂载前完成以保证首屏缩放正确）
 initResponsive()
 

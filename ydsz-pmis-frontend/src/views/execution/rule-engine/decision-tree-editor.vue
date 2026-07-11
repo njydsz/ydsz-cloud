@@ -1,4 +1,4 @@
-﻿<!--
+﻿﻿<!--
   @file 决策树可视化编辑器（P1-4）
   @description 树形编辑器：条件节点（菱形/圆角矩形）与决策节点（按严重度着色）的增删改查、
                拖拽调整、表达式校验、dry-run 预览与 JSON 导出。
@@ -155,25 +155,66 @@
     <div
       v-if="contextMenu.visible"
       class="context-menu"
+      role="menu"
       :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
       @click.stop
     >
-      <div class="ctx-item" @click="onCtxEdit">
+      <div
+        class="ctx-item"
+        role="menuitem"
+        tabindex="0"
+        @click="onCtxEdit"
+        @keydown="onKeyActivate(onCtxEdit)"
+      >
         <el-icon><Edit /></el-icon>编辑节点
       </div>
-      <div v-if="contextMenu.node?.nodeType === 'decision'" class="ctx-item" @click="onCtxConvertToCondition">
+      <div
+        v-if="contextMenu.node?.nodeType === 'decision'"
+        class="ctx-item"
+        role="menuitem"
+        tabindex="0"
+        @click="onCtxConvertToCondition"
+        @keydown="onKeyActivate(onCtxConvertToCondition)"
+      >
         <el-icon><Operation /></el-icon>转为条件节点
       </div>
-      <div v-if="contextMenu.node?.nodeType === 'condition'" class="ctx-item" @click="onCtxConvertToDecision">
+      <div
+        v-if="contextMenu.node?.nodeType === 'condition'"
+        class="ctx-item"
+        role="menuitem"
+        tabindex="0"
+        @click="onCtxConvertToDecision"
+        @keydown="onKeyActivate(onCtxConvertToDecision)"
+      >
         <el-icon><DocumentChecked /></el-icon>转为决策节点
       </div>
-      <div v-if="contextMenu.node?.nodeType === 'condition'" class="ctx-item" @click="onCtxSetBranch('是')">
+      <div
+        v-if="contextMenu.node?.nodeType === 'condition'"
+        class="ctx-item"
+        role="menuitem"
+        tabindex="0"
+        @click="onCtxSetBranch('是')"
+        @keydown="onKeyActivate(() => onCtxSetBranch('是'))"
+      >
         <el-icon><CircleCheck /></el-icon>设置「是」分支为决策
       </div>
-      <div v-if="contextMenu.node?.nodeType === 'condition'" class="ctx-item" @click="onCtxSetBranch('否')">
+      <div
+        v-if="contextMenu.node?.nodeType === 'condition'"
+        class="ctx-item"
+        role="menuitem"
+        tabindex="0"
+        @click="onCtxSetBranch('否')"
+        @keydown="onKeyActivate(() => onCtxSetBranch('否'))"
+      >
         <el-icon><CircleClose /></el-icon>设置「否」分支为决策
       </div>
-      <div class="ctx-item danger" @click="onCtxDelete">
+      <div
+        class="ctx-item danger"
+        role="menuitem"
+        tabindex="0"
+        @click="onCtxDelete"
+        @keydown="onKeyActivate(onCtxDelete)"
+      >
         <el-icon><Delete /></el-icon>删除节点（含子树）
       </div>
     </div>
@@ -242,6 +283,7 @@ import {
   Edit, Operation, DocumentChecked, Expand, Fold, InfoFilled,
 } from '@element-plus/icons-vue'
 import * as ruleApi from '@/api/rule-engine'
+import { onKeyActivate } from '@/composables/useKeyboardA11y'
 import type {
   DecisionTreeDefinition, DecisionNode, DecisionTreeValidateResult,
   RuleResult,

@@ -30,6 +30,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useResponsive } from '@/composables/useResponsive'
+import { onKeyActivate } from '@/composables/useKeyboardA11y'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { pageTodoTasks, pageDefinitions } from '@/api/workflow'
 import type {
@@ -838,7 +839,15 @@ onMounted(() => {
     <div v-if="groupByFlow" v-loading="todoLoading" class="group-view">
       <el-empty v-if="todoGroupedByFlow.length === 0" :description="t('workflow.approval.todo.empty')" :image-size="60" />
       <div v-for="group in todoGroupedByFlow" :key="group.flowCode" class="group-card">
-        <div class="group-card__header" @click="group._expanded = !group._expanded">
+        <div
+          class="group-card__header"
+          role="button"
+          tabindex="0"
+          :aria-expanded="group._expanded"
+          :aria-label="`${group.flowName}，${group.tasks.length} 条待办，点击展开或收起`"
+          @click="group._expanded = !group._expanded"
+          @keydown="onKeyActivate(() => (group._expanded = !group._expanded))"
+        >
           <el-icon class="group-card__arrow">
             <ArrowDown v-if="group._expanded" />
             <ArrowRight v-else />

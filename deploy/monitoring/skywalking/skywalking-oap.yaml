@@ -65,6 +65,13 @@ data:
         httpHost: ${SW_HTTP_HOST:0.0.0.0}
         # 拓扑图计算间隔
         topologyComputeInterval: ${SW_TOPOLOGY_COMPUTE_INTERVAL:5}
+        # P2-12: 链路数据保留天数 (生产环境建议 7-14 天)
+        #   开发: 1 天, SIT: 3 天, UAT: 5 天, PROD: 7 天
+        recordDataTTL: ${SW_RECORD_DATA_TTL:7}
+        # P2-12: 指标数据保留天数 (聚合后的分钟/小时/天级指标)
+        metricsDataTTL: ${SW_METRICS_DATA_TTL:14}
+        # P2-12: 慢链路阈值 (ms), 超过此值的链路标记为慢调用
+        slowTraceThreshold: ${SW_SLOW_TRACE_THRESHOLD:500}
 
     storage:
       # 开发环境用 H2(内存),生产环境改 elasticsearch

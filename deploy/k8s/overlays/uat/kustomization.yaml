@@ -27,5 +27,14 @@ images:
   - name: ydsz-pmis/agent
     newTag: v1.3.0-rc.2
 
+# P2-12: UAT 环境 30% 采样
+configMapGenerator:
+  - name: pmis-common-config
+    behavior: merge
+    literals:
+      - TRACING_SAMPLING_PROBABILITY=0.3
+      - TRACING_EXPORT_ENABLED=true
+      - TRACING_SLOW_TRACE_THRESHOLD_MS=500
+
 patches:
   - path: patch-replicas.yaml

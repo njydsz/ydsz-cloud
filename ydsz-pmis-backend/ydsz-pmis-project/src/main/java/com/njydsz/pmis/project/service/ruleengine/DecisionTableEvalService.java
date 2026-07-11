@@ -1,5 +1,7 @@
 package com.njydsz.pmis.project.service.ruleengine;
 
+import com.njydsz.pmis.literule.spi.DecisionTableEvalProvider;
+
 import java.util.List;
 import java.util.Map;
 
@@ -9,10 +11,12 @@ import java.util.Map;
  * <p>按决策表编码加载并评估决策表，返回命中行的动作值列表。
  * 供规则引擎、工作流路由等场景调用。
  *
+ * <p>继承 {@link DecisionTableEvalProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
-public interface DecisionTableEvalService {
+public interface DecisionTableEvalService extends DecisionTableEvalProvider {
 
     /**
      * 评估决策表

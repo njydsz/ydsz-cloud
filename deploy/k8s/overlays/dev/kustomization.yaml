@@ -35,6 +35,10 @@ configMapGenerator:
     literals:
       - LOGGING_LEVEL_COM_NJYDSZ_PMIS=DEBUG
       - LOGGING_LEVEL_ROOT=INFO
+      # P2-12: DEV 环境全量采样 + 导出开启
+      - TRACING_SAMPLING_PROBABILITY=1.0
+      - TRACING_EXPORT_ENABLED=true
+      - TRACING_SLOW_TRACE_THRESHOLD_MS=200
 
 # 单实例 + 去掉资源限制
 patches:

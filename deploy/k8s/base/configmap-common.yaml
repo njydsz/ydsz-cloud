@@ -20,4 +20,13 @@ data:
   # P1-4: 全链路追踪上报配置（K8s 环境默认开启，对接 SkyWalking OAP）
   TRACING_EXPORT_ENABLED: "true"
   TRACING_ENDPOINT: "http://skywalking-oap.monitoring:9411/api/v2/spans"
+  # P2-12: 环境差异化采样率
+  #   dev:  1.0 (100% 全量采样，便于调试)
+  #   sit:  0.5 (50% 采样)
+  #   uat:  0.3 (30% 采样)
+  #   prod: 0.1 (10% 采样，配合错误全量上报策略)
   TRACING_SAMPLING_PROBABILITY: "0.1"
+  # P2-12: 慢链路阈值（ms），超过此值的链路必定采样上报
+  TRACING_SLOW_TRACE_THRESHOLD_MS: "500"
+  # P2-12: 链路数据保留天数（OAP 侧配置）
+  TRACING_TTL_DAYS: "7"

@@ -3,6 +3,7 @@ package com.njydsz.pmis.project.literule;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.literule.entity.RuleDependencyDO;
 import com.njydsz.pmis.literule.mapper.RuleDependencyMapper;
+import com.njydsz.pmis.literule.spi.RuleDependencyProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,13 +27,15 @@ import java.util.LinkedList;
  *
  * <p>提供规则依赖的 CRUD、循环依赖检测、级联禁用影响范围计算等能力。
  *
+ * <p>实现 {@link RuleDependencyProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RuleDependencyService {
+public class RuleDependencyService implements RuleDependencyProvider {
 
     private final RuleDependencyMapper ruleDependencyMapper;
 

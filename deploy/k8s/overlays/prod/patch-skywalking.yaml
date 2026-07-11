@@ -6,9 +6,32 @@
 #   2. 共享 volume 挂载 agent 目录
 #   3. JAVA_TOOL_OPTIONS 环境变量注入 -javaagent
 #   4. SW_AGENT_NAME 标识服务名
+# P2-12: 生产环境采样优化:
+#   - SW_AGENT_SAMPLE: 5000 (每 3 秒最多 5000 条 trace)
+#   - SW_AGENT_SAMPLE_N_PER_3_SECS: 500 (限流防止 OAP 过载)
+#   - 慢 SQL 阈值: 2000ms
+#   - 错误请求全量采样 (通过 SW_AGENT_STATUS_CODES_INTERNAL_ERROR)
 # 使用 kustomize strategic merge patch 覆盖各 Deployment
 # =============================================================================
 
+# P2-12: 生产环境采样配置 (覆盖 base ConfigMap 中的全量采样)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skywalking-agent-config
+  namespace: pmis
+  labels:
+    app: skywalking-agent
+data:
+  # 生产环境: 限制每 3 秒采样 500 条 trace (约 167 TPS)
+  SW_AGENT_SAMPLE: "5000"
+  SW_AGENT_SAMPLE_N_PER_3_SECS: "500"
+  # 生产环境: 慢 SQL 阈值 2000ms
+  SW_AGENT_PLUGIN_MYSQL_TRACE_SLOW_SQL_THRESHOLD: "2000"
+  # 生产环境: 链路数据上报超时
+  SW_AGENT_COLLECTOR_GRPC_UPSTREAM_DATA_TIMEOUT: "30"
+
+---
 # Gateway
 apiVersion: apps/v1
 kind: Deployment
