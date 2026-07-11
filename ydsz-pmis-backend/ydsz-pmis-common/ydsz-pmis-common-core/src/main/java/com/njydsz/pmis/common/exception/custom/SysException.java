@@ -18,7 +18,7 @@ public class SysException extends AbstractPmisException {
     private static final long serialVersionUID = 1L;
 
     public SysException(String message) {
-        super(UnifiedExceptionCode.SYSTEM_ERROR, message);
+        super(UnifiedExceptionCode.INTERNAL_ERROR, message);
     }
 
     public SysException(ExceptionCode code, String message) {

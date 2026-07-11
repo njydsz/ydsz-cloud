@@ -63,6 +63,8 @@ public enum UnifiedExceptionCode implements ExceptionCode {
     DATA_NOT_FOUND("A01063", "data.not.found", 404),
     /** 资源已存在 */
     DATA_ALREADY_EXISTS("A01064", "data.already.exists", 409),
+    /** 重复资源 */
+    DUPLICATE_RESOURCE("A01065", "duplicate.resource", 409),
 
     // ==================== A02 认证异常 ====================
 
@@ -111,6 +113,10 @@ public enum UnifiedExceptionCode implements ExceptionCode {
 
     /** 系统内部错误 */
     INTERNAL_ERROR("B01051", "internal.error", 500),
+    /** 系统错误 */
+    SYSTEM_ERROR("B01055", "system.error", 500),
+    /** 基础设施错误 */
+    INFRA_ERROR("B01056", "infra.error", 503),
     /** 服务暂不可用 */
     SERVICE_UNAVAILABLE("B01052", "service.unavailable", 503),
     /** 请求超时 */
@@ -176,8 +182,8 @@ public enum UnifiedExceptionCode implements ExceptionCode {
         return switch (this) {
             case SUCCESS -> ExceptionLevel.INFO;
             case RATE_LIMIT, QUOTA_EXCEEDED, DB_QUERY_TIMEOUT, REQUEST_TIMEOUT -> ExceptionLevel.WARN;
-            case EXTERNAL_SERVICE_ERROR, EXTERNAL_SERVICE_TIMEOUT, SERVICE_UNAVAILABLE,
-                 DB_CONNECTION_FAILED -> ExceptionLevel.FATAL;
+        case EXTERNAL_SERVICE_ERROR, EXTERNAL_SERVICE_TIMEOUT, SERVICE_UNAVAILABLE,
+             DB_CONNECTION_FAILED, INFRA_ERROR -> ExceptionLevel.FATAL;
             default -> ExceptionLevel.ERROR;
         };
     }

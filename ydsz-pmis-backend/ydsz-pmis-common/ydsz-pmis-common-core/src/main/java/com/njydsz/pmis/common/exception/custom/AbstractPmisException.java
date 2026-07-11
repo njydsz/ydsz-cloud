@@ -68,6 +68,36 @@ public abstract class AbstractPmisException extends RuntimeException {
     }
 
     /**
+     * 使用异常码和消息构造
+     *
+     * @param code    异常码
+     * @param message 消息
+     */
+    protected AbstractPmisException(ExceptionCode code, String message) {
+        super(message);
+        this.message = message;
+        this.code = code.getCode();
+        this.key = code.getKey();
+        this.httpStatus = code.getHttpStatus();
+    }
+
+    /**
+     * 使用异常码、消息和参数构造
+     *
+     * @param code    异常码
+     * @param message 消息
+     * @param args    消息参数
+     */
+    protected AbstractPmisException(ExceptionCode code, String message, Object... args) {
+        super(message);
+        this.message = message;
+        this.code = code.getCode();
+        this.key = code.getKey();
+        this.httpStatus = code.getHttpStatus();
+        this.params = args;
+    }
+
+    /**
      * 初始化核心字段
      *
      * @param code   异常码

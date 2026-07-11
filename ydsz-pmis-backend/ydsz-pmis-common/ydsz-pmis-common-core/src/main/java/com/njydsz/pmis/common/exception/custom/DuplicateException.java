@@ -17,7 +17,7 @@ public class DuplicateException extends AbstractPmisException {
     private static final long serialVersionUID = 1L;
 
     public DuplicateException(String message) {
-        super(UnifiedExceptionCode.DUPLICATE_RESOURCE, message);
+        super(UnifiedExceptionCode.DATA_ALREADY_EXISTS, message);
     }
 
     public DuplicateException(ExceptionCode code, String message) {
@@ -30,7 +30,7 @@ public class DuplicateException extends AbstractPmisException {
 
     public static DuplicateException of(String resource, String identifier) {
         return new DuplicateException(
-                UnifiedExceptionCode.DUPLICATE_RESOURCE,
+                UnifiedExceptionCode.DATA_ALREADY_EXISTS,
                 "Duplicate resource: " + resource + " with identifier '" + identifier + "' already exists."
         );
     }

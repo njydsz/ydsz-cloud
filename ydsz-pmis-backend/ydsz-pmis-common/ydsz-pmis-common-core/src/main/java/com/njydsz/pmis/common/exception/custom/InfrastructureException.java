@@ -17,7 +17,7 @@ public class InfrastructureException extends AbstractPmisException {
     private static final long serialVersionUID = 1L;
 
     public InfrastructureException(String message) {
-        super(UnifiedExceptionCode.INFRA_ERROR, message);
+        super(UnifiedExceptionCode.SERVICE_UNAVAILABLE, message);
     }
 
     public InfrastructureException(ExceptionCode code, String message) {
@@ -30,7 +30,7 @@ public class InfrastructureException extends AbstractPmisException {
 
     public static InfrastructureException of(String component, String reason) {
         return new InfrastructureException(
-                UnifiedExceptionCode.INFRA_ERROR,
+                UnifiedExceptionCode.SERVICE_UNAVAILABLE,
                 "Infrastructure component '" + component + "' is unavailable: " + reason
         );
     }
