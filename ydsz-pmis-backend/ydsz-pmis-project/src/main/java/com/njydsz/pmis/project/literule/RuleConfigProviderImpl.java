@@ -1,8 +1,8 @@
 package com.njydsz.pmis.project.literule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.project.entity.ruleengine.RuleDefinitionDO;
-import com.njydsz.pmis.project.mapper.ruleengine.RuleDefinitionMapper;
+import com.njydsz.pmis.literule.entity.RuleDefinitionDO;
+import com.njydsz.pmis.literule.mapper.RuleDefinitionMapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;

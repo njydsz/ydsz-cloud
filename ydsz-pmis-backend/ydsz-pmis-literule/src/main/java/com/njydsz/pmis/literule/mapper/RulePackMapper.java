@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.mapper.ruleengine;
+package com.njydsz.pmis.literule.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.entity.ruleengine.RulePackDO;
+import com.njydsz.pmis.literule.entity.RulePackDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
