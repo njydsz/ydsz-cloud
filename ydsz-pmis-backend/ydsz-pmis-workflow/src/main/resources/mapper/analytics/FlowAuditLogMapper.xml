@@ -55,4 +55,24 @@
           AND deleted = 0
         ORDER BY operated_at ASC, id ASC
     </select>
+
+    <!-- 查某操作人的审计日志（P1-8: 加签历史查询） -->
+    <select id="selectByOperatorId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_audit_log
+        WHERE operator_id = #{operatorId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY operated_at DESC, id DESC
+    </select>
+
+    <!-- 查某目标人（转办/委派/加签目标）的审计日志（P1-8: 加签历史查询） -->
+    <select id="selectByTargetId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_audit_log
+        WHERE target_id = #{targetId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY operated_at DESC, id DESC
+    </select>
 </mapper>

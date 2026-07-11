@@ -95,4 +95,46 @@ public class FlowConditionExprController {
     public Result<List<Map<String, String>>> valueTypes() {
         return Result.ok(conditionExprService.getValueTypes());
     }
+
+    // ==================== P1-4: 可视化编辑增强 API ====================
+
+    /**
+     * 获取指定流程定义的可用变量列表。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 变量列表
+     */
+    @GetMapping("/variables/{definitionId}")
+    @Operation(summary = "获取流程定义的可用变量列表")
+    public Result<List<Map<String, String>>> variables(@PathVariable String definitionId) {
+        return Result.ok(conditionExprService.getVariablesByDefinition(definitionId));
+    }
+
+    /**
+     * 预览表达式执行结果。
+     *
+     * @param body 请求体，需包含 expression、variables、可选的 engine
+     * @return 执行结果
+     */
+    @PostMapping("/preview")
+    @Operation(summary = "预览表达式执行结果")
+    public Result<Map<String, Object>> preview(@RequestBody Map<String, Object> body) {
+        String expression = body.get("expression") instanceof String s ? s : null;
+        String engine = body.get("engine") instanceof String s ? s : "AVIATOR";
+        @SuppressWarnings("unchecked")
+        Map<String, Object> variables = body.get("variables") instanceof Map<?, ?> m
+                ? (Map<String, Object>) m : Map.of();
+        return Result.ok(conditionExprService.previewExpression(expression, variables, engine));
+    }
+
+    /**
+     * 获取条件模板列表。
+     *
+     * @return 模板列表
+     */
+    @GetMapping("/templates")
+    @Operation(summary = "获取条件模板列表")
+    public Result<List<Map<String, String>>> templates() {
+        return Result.ok(conditionExprService.getConditionTemplates());
+    }
 }

@@ -3,10 +3,11 @@ package com.njydsz.pmis.cronjob.core.alert;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.alert.UnifiedAlertEvent;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.MessageServiceClient;
+import com.njydsz.pmis.common.feign.NotificationClient;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import com.njydsz.pmis.cronjob.entity.job.JobAlertLogDO;
 import com.njydsz.pmis.cronjob.entity.job.JobAlertRuleDO;
 import com.njydsz.pmis.cronjob.mapper.job.JobAlertLogMapper;
@@ -15,7 +16,6 @@ import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -39,7 +39,15 @@ import java.util.Map;
  *   <li><b>统一派发</b>：通过 MessageServiceClient Feign 委托到 message 模块，
  *       由 message 模块路由到具体通道实现，单个通道失败不影响其他通道（status=PARTIAL）</li>
  *   <li><b>日志持久化</b>：将告警派发结果记录到 {@code pmis_job_alert_log}，便于审计与效果统计</li>
+ *   <li><b>实时广播</b>：通过 NotificationClient Feign 广播告警到前端 WebSocket</li>
  * </ol>
+ *
+ * <p><b>P0-1-fix</b>：移除了原来发布 {@code UnifiedAlertEvent} 的逻辑。
+ * 原实现既直接调用 {@code MessageServiceClient.send()} 发送告警消息，
+ * 又发布 {@code UnifiedAlertEvent} 事件，而 {@code UnifiedAlertDispatcher} 消费该事件后
+ * 会再次调用 {@code MessageServiceClient.send()}，导致同一告警被发送两次。
+ * 现在改为直接调用 {@code NotificationClient.broadcast()} 实现实时广播，
+ * 消息发送仅由本类执行一次。
  *
  * <p>使用 {@code @Async} 异步执行，避免阻塞任务执行主流程。
  *
@@ -62,8 +70,8 @@ public class AlertDispatcher {
     private final MessageServiceClient messageServiceClient;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
-    /** P0-2: Spring 事件发布器（统一告警事件总线） */
-    private final ApplicationEventPublisher eventPublisher;
+    /** 实时推送客户端（WebSocket 广播告警到前端） */
+    private final NotificationClient notificationClient;
 
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -149,26 +157,37 @@ public class AlertDispatcher {
         log.info("[AlertDispatcher] 告警派发完成: ruleId={} ruleName={} channels={} failed={} status={} recovery={}",
                 rule.getId(), rule.getRuleName(), channels.size(), failedChannels.size(), status, recovery);
 
-        // P0-2: 发布统一告警事件到事件总线（由 UnifiedAlertDispatcher 消费，实现实时广播等统一后处理）
+        // P0-1-fix: 直接广播告警到前端（替代原来发布 UnifiedAlertEvent 导致的重复发送）
+        // 原来既直接调用 MessageServiceClient.send() 又发布 UnifiedAlertEvent，
+        // 而 UnifiedAlertDispatcher 消费事件后再次调用 MessageServiceClient.send()，导致同一告警被发送两次。
+        // 现在移除事件发布，改为直接调用 NotificationClient.broadcast() 实现实时广播。
+        broadcastAlert(context, rule, recovery);
+    }
+
+    /**
+     * 广播告警到前端 WebSocket（实时推送）。
+     *
+     * <p>推送失败时静默降级，不影响告警主流程。
+     *
+     * @param context  告警上下文
+     * @param rule     告警规则
+     * @param recovery 是否为恢复通知
+     */
+    private void broadcastAlert(AlertContext context, JobAlertRuleDO rule, boolean recovery) {
         try {
-            UnifiedAlertEvent alertEvent = UnifiedAlertEvent.builder()
-                    .alertCode("CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId())
-                    .alertType(rule.getAlertType())
-                    .alertLevel(rule.getAlertLevel())
-                    .sourceModule("cronjob")
-                    .sourceId(context.jobId())
-                    .sourceRef(context.jobKey())
-                    .title(buildTitle(context, rule))
-                    .content(buildContent(context, rule))
-                    .pushChannels(convertChannelsToCsv(rule.getChannels()))
-                    .triggeredAt(java.time.LocalDateTime.now())
-                    .tenantId(context.tenantId())
-                    .traceId(context.traceId())
-                    .recovery(recovery)
-                    .build();
-            eventPublisher.publishEvent(alertEvent);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("alertCode", "CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
+            payload.put("alertType", rule.getAlertType());
+            payload.put("alertLevel", rule.getAlertLevel());
+            payload.put("title", buildTitle(context, rule));
+            payload.put("content", buildContent(context, rule));
+            payload.put("sourceModule", "cronjob");
+            payload.put("sourceId", context.jobId());
+            payload.put("recovery", recovery);
+            payload.put("traceId", context.traceId());
+            notificationClient.broadcast("ALERT", new RealtimePushDTO(payload));
         } catch (Exception e) {
-            log.debug("[AlertDispatcher] 统一告警事件发布失败(不影响主流程): ruleId={} err={}",
+            log.debug("[AlertDispatcher] 实时广播降级忽略: ruleId={} err={}",
                     rule.getId(), e.getMessage());
         }
     }

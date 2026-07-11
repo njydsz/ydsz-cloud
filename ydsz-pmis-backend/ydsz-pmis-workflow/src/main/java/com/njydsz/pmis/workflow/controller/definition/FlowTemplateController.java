@@ -4,6 +4,8 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.workflow.service.definition.FlowTemplateRecommendService;
 import com.njydsz.pmis.workflow.service.definition.FlowTemplateService;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,6 +47,8 @@ public class FlowTemplateController {
 
     /** 流程模板服务，负责模板查询、导入、导出与版本管理 */
     private final FlowTemplateService templateService;
+    /** P2-2: 模板智能推荐服务 */
+    private final FlowTemplateRecommendService recommendService;
 
     /**
      * 模板列表
@@ -210,5 +214,42 @@ public class FlowTemplateController {
     public Result<List<Map<String, Object>>> listInheritedTemplates(
             @PathVariable String parentTemplateCode) {
         return Result.ok(templateService.listInheritedTemplates(parentTemplateCode));
+    }
+
+    // ============================== P2-2: 模板智能推荐 ==============================
+
+    /**
+     * P2-2: 智能推荐模板列表。
+     *
+     * <p>基于用户历史发起记录 + 模板热度 + 业务类型匹配，
+     * 为当前用户推荐最可能需要的审批模板。
+     *
+     * @param topN 推荐数量（默认 5，上限 10）
+     * @return 推荐模板列表
+     */
+    @Operation(summary = "P2-2: 智能推荐模板")
+    @GetMapping("/recommend")
+    public Result<List<Map<String, Object>>> recommend(
+            @RequestParam(defaultValue = "5") int topN) {
+        String userId = SecurityContext.getUserId();
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        return Result.ok(recommendService.recommendTemplates(userId, tenantId, topN));
+    }
+
+    /**
+     * P2-2: 基于业务类型推荐模板。
+     *
+     * @param businessType 业务类型
+     * @param topN         推荐数量（默认 5）
+     * @return 推荐模板列表
+     */
+    @Operation(summary = "P2-2: 按业务类型推荐模板")
+    @GetMapping("/recommend/byBusinessType")
+    public Result<List<Map<String, Object>>> recommendByBusinessType(
+            @RequestParam String businessType,
+            @RequestParam(defaultValue = "5") int topN) {
+        String userId = SecurityContext.getUserId();
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        return Result.ok(recommendService.recommendByBusinessType(userId, tenantId, businessType, topN));
     }
 }

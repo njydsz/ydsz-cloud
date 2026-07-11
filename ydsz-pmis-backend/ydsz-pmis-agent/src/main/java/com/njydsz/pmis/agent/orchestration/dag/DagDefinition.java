@@ -52,6 +52,14 @@ public class DagDefinition implements Serializable {
     /** 节点列表 */
     private List<DagNode> nodes;
 
+    /**
+     * 条件边列表（P1-4 落地）。
+     *
+     * <p>为 null 或空时，使用节点的 {@link DagNode#getDependsOn()} 构建拓扑。
+     * 非空时，优先使用条件边构建拓扑，支持动态路由。
+     */
+    private List<DagEdge> edges;
+
     /** DAG 级输入参数模板 */
     private Map<String, Object> inputs;
 

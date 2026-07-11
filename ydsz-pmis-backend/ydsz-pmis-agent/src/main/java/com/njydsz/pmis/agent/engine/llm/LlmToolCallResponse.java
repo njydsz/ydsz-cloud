@@ -33,6 +33,9 @@ public class LlmToolCallResponse implements Serializable {
     /** LLM 请求调用的工具列表（可能并行多个） */
     private List<ToolCall> toolCalls;
 
+    /** Token 用量统计（P0-3 落地） */
+    private TokenUsage usage;
+
     /** 是否请求调用工具 */
     public boolean hasToolCalls() {
         return toolCalls != null && !toolCalls.isEmpty();

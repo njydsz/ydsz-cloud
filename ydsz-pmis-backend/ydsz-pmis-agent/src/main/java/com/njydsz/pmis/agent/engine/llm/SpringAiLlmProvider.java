@@ -204,7 +204,18 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
         if (systemPrompt != null && !systemPrompt.isEmpty()) {
             messages.add(msg("system", systemPrompt));
         }
-        messages.add(msg("user", userPrompt == null ? "" : userPrompt));
+
+        // P1-5: 多模态输入支持
+        if (context != null && context.getMultimodalInput() != null
+                && context.getMultimodalInput().hasMultimodalContent()) {
+            JSONObject userMsg = new JSONObject();
+            userMsg.put("role", "user");
+            userMsg.put("content", JSON.parse(
+                    context.getMultimodalInput().toOpenAiContentJson()));
+            messages.add(userMsg);
+        } else {
+            messages.add(msg("user", userPrompt == null ? "" : userPrompt));
+        }
         body.put("messages", messages);
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -462,6 +473,20 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
 
         LlmToolCallResponse result = new LlmToolCallResponse();
         result.setContent(message.getString("content") == null ? "" : message.getString("content"));
+
+        // P0-3: 解析 usage 字段
+        JSONObject usage = resp.getJSONObject("usage");
+        if (usage != null) {
+            TokenUsage tokenUsage = new TokenUsage(
+                    usage.getIntValue("prompt_tokens", 0),
+                    usage.getIntValue("completion_tokens", 0),
+                    usage.getIntValue("total_tokens", 0),
+                    this.model,
+                    this.name()
+            );
+            result.setUsage(tokenUsage);
+            log.debug("[SpringAiLlm] Token usage: {}", tokenUsage);
+        }
 
         // 解析 tool_calls
         JSONArray toolCallsArr = message.getJSONArray("tool_calls");

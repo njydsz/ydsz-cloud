@@ -340,4 +340,187 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         if (value.startsWith("'") || value.startsWith("\"")) return "STRING";
         return "STRING";
     }
+
+    // ==================== P1-4: 可视化编辑增强实现 ====================
+
+    @Override
+    public List<Map<String, String>> getVariablesByDefinition(String definitionId) {
+        if (definitionId == null || definitionId.isBlank()) {
+            return List.of();
+        }
+        List<Map<String, String>> result = new ArrayList<>();
+
+        // 1. 添加系统内置变量
+        result.add(Map.of("fieldKey", "initiatorId", "label", "发起人ID", "fieldType", "STRING", "description", "流程发起人用户ID"));
+        result.add(Map.of("fieldKey", "initiatorName", "label", "发起人姓名", "fieldType", "STRING", "description", "流程发起人姓名"));
+        result.add(Map.of("fieldKey", "currentTime", "label", "当前时间", "fieldType", "DATETIME", "description", "系统当前时间"));
+        result.add(Map.of("fieldKey", "currentUserId", "label", "当前审批人ID", "fieldType", "STRING", "description", "当前节点审批人用户ID"));
+        result.add(Map.of("fieldKey", "currentUserName", "label", "当前审批人姓名", "fieldType", "STRING", "description", "当前节点审批人姓名"));
+
+        // 2. 从流程定义的所有节点表单中提取变量
+        try {
+            List<FlowNodeDO> nodes = nodeMapper.selectByDefinitionId(definitionId);
+            if (nodes != null && !nodes.isEmpty()) {
+                for (FlowNodeDO node : nodes) {
+                    extractVariablesFromNode(node, result);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[CondExpr] 提取流程变量失败: definitionId={} err={}", definitionId, e.getMessage());
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> previewExpression(String expression, Map<String, Object> variables, String engine) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        if (expression == null || expression.isBlank()) {
+            result.put("result", false);
+            result.put("error", "表达式不能为空");
+            return result;
+        }
+        String eng = engine == null || engine.isBlank() ? "AVIATOR" : engine.toUpperCase();
+
+        try {
+            if ("AVIATOR".equals(eng)) {
+                Object exprResult = AviatorEvaluator.execute(expression, variables != null ? variables : Map.of());
+                result.put("result", Boolean.TRUE.equals(exprResult));
+                result.put("error", null);
+            } else if ("SPEL".equals(eng)) {
+                result.put("result", null);
+                result.put("error", "SpEL 预览功能暂未实现，请使用 Aviator 引擎");
+            } else {
+                result.put("result", null);
+                result.put("error", "不支持的表达式引擎: " + eng);
+            }
+        } catch (Exception e) {
+            log.warn("[CondExpr] 表达式预览失败: expr={} err={}", expression, e.getMessage());
+            result.put("result", null);
+            result.put("error", "执行异常: " + e.getMessage());
+        }
+        return result;
+    }
+
+    @Override
+    public List<Map<String, String>> getConditionTemplates() {
+        List<Map<String, String>> templates = new ArrayList<>();
+
+        templates.add(buildTemplate("AMOUNT_GT", "金额大于指定值",
+                "当申请金额超过设定值时条件成立",
+                "{\"logic\":\"AND\",\"groups\":[{\"field\":\"amount\",\"operator\":\"GT\",\"value\":10000,\"valueType\":\"NUMBER\"}]}"));
+
+        templates.add(buildTemplate("AMOUNT_RANGE", "金额区间判断",
+                "当申请金额在指定区间内时条件成立",
+                "{\"logic\":\"AND\",\"groups\":[{\"field\":\"amount\",\"operator\":\"GTE\",\"value\":1000,\"valueType\":\"NUMBER\"},{\"field\":\"amount\",\"operator\":\"LTE\",\"value\":50000,\"valueType\":\"NUMBER\"}]}"));
+
+        templates.add(buildTemplate("DEPT_EQ", "部门匹配",
+                "当申请人部门等于指定部门时条件成立",
+                "{\"logic\":\"AND\",\"groups\":[{\"field\":\"deptCode\",\"operator\":\"EQ\",\"value\":\"SALES\",\"valueType\":\"STRING\"}]}"));
+
+        templates.add(buildTemplate("DEPT_IN", "部门在列表中",
+                "当申请人部门属于指定部门列表时条件成立",
+                "{\"logic\":\"AND\",\"groups\":[{\"field\":\"deptCode\",\"operator\":\"IN\",\"value\":[\"SALES\",\"MARKETING\"],\"valueType\":\"LIST\"}]}"));
+
+        templates.add(buildTemplate("LEVEL_GTE", "职级大于等于",
+                "当申请人职级大于等于指定职级时条件成立",
+                "{\"logic\":\"AND\",\"groups\":[{\"field\":\"level\",\"operator\":\"GTE\",\"value\":5,\"valueType\":\"NUMBER\"}]}"));
+
+        templates.add(buildTemplate("DATE_GT", "日期大于指定日期",
+                "当日期字段大于指定日期时条件成立",
+                "{\"logic\":\"AND\",\"groups\":[{\"field\":\"applyDate\",\"operator\":\"GT\",\"value\":\"2024-01-01\",\"valueType\":\"DATE\"}]}"));
+
+        templates.add(buildTemplate("INITIATOR_EQ", "申请人等于指定人",
+                "当流程发起人等于指定人时条件成立",
+                "{\"logic\":\"AND\",\"groups\":[{\"field\":\"initiatorId\",\"operator\":\"EQ\",\"value\":\"u001\",\"valueType\":\"STRING\"}]}"));
+
+        templates.add(buildTemplate("COMBINE_AND", "多条件组合（AND）",
+                "多个条件同时成立时条件匹配",
+                "{\"logic\":\"AND\",\"groups\":[{\"field\":\"amount\",\"operator\":\"GT\",\"value\":10000,\"valueType\":\"NUMBER\"},{\"field\":\"level\",\"operator\":\"GTE\",\"value\":5,\"valueType\":\"NUMBER\"}]}"));
+
+        templates.add(buildTemplate("COMBINE_OR", "多条件组合（OR）",
+                "任一条件成立时条件匹配",
+                "{\"logic\":\"OR\",\"groups\":[{\"field\":\"deptCode\",\"operator\":\"EQ\",\"value\":\"SALES\",\"valueType\":\"STRING\"},{\"field\":\"deptCode\",\"operator\":\"EQ\",\"value\":\"MARKETING\",\"valueType\":\"STRING\"}]}"));
+
+        templates.add(buildTemplate("CONTAINS", "字段包含指定文本",
+                "当文本字段包含指定文本时条件成立",
+                "{\"logic\":\"AND\",\"groups\":[{\"field\":\"title\",\"operator\":\"CONTAINS\",\"value\":\"紧急\",\"valueType\":\"STRING\"}]}"));
+
+        return templates;
+    }
+
+    // ==================== 内部辅助方法 ====================
+
+    private void extractVariablesFromNode(FlowNodeDO node, List<Map<String, String>> result) {
+        if (node == null) {
+            return;
+        }
+        try {
+            String ext = node.getExt();
+            if (ext == null || ext.isBlank()) {
+                return;
+            }
+            Map<String, Object> extMap = JsonUtils.parseMap(ext);
+            if (extMap == null) {
+                return;
+            }
+            Object formSchemaObj = extMap.get("formSchema");
+            if (formSchemaObj == null) {
+                return;
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> schemaMap = (Map<String, Object>) formSchemaObj;
+            List<Map<String, Object>> fieldsMap = (List<Map<String, Object>>) schemaMap.get("fields");
+            if (fieldsMap == null || fieldsMap.isEmpty()) {
+                return;
+            }
+            for (Map<String, Object> fieldMap : fieldsMap) {
+                String fieldKey = (String) fieldMap.get("fieldKey");
+                String label = (String) fieldMap.get("label");
+                String fieldType = (String) fieldMap.get("fieldType");
+                String placeholder = (String) fieldMap.get("placeholder");
+
+                if (fieldKey != null && !fieldKey.isBlank()) {
+                    Map<String, String> varInfo = new LinkedHashMap<>();
+                    varInfo.put("fieldKey", fieldKey);
+                    varInfo.put("label", label != null ? label : fieldKey);
+                    varInfo.put("fieldType", fieldType != null ? fieldType : "STRING");
+                    varInfo.put("description", placeholder != null ? placeholder : "");
+                    varInfo.put("nodeCode", node.getNodeCode() != null ? node.getNodeCode() : "");
+                    varInfo.put("nodeName", node.getNodeName() != null ? node.getNodeName() : "");
+                    result.add(varInfo);
+                }
+                // 处理子表单字段
+                List<Map<String, Object>> subFieldsMap = (List<Map<String, Object>>) fieldMap.get("subFields");
+                if (subFieldsMap != null && !subFieldsMap.isEmpty()) {
+                    for (Map<String, Object> subFieldMap : subFieldsMap) {
+                        String subFieldKey = (String) subFieldMap.get("fieldKey");
+                        String subLabel = (String) subFieldMap.get("label");
+                        String subFieldType = (String) subFieldMap.get("fieldType");
+                        if (subFieldKey != null && !subFieldKey.isBlank()) {
+                            Map<String, String> varInfo = new LinkedHashMap<>();
+                            varInfo.put("fieldKey", fieldKey + "." + subFieldKey);
+                            varInfo.put("label", (label != null ? label : fieldKey) + " - " + (subLabel != null ? subLabel : subFieldKey));
+                            varInfo.put("fieldType", subFieldType != null ? subFieldType : "STRING");
+                            varInfo.put("description", "");
+                            varInfo.put("nodeCode", node.getNodeCode() != null ? node.getNodeCode() : "");
+                            varInfo.put("nodeName", node.getNodeName() != null ? node.getNodeName() : "");
+                            result.add(varInfo);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[CondExpr] 提取节点变量失败: nodeCode={} err={}", node.getNodeCode(), e.getMessage());
+        }
+    }
+
+    private Map<String, String> buildTemplate(String id, String name, String description, String templateJson) {
+        Map<String, String> template = new LinkedHashMap<>();
+        template.put("id", id);
+        template.put("name", name);
+        template.put("description", description);
+        template.put("templateJson", templateJson);
+        return template;
+    }
 }

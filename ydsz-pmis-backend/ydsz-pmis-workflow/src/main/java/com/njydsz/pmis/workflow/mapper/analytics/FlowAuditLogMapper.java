@@ -27,4 +27,14 @@ public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {
      * 查某任务的操作记录
      */
     List<FlowAuditLogDO> selectByTaskId(@Param("taskId") String taskId);
+
+    /**
+     * 查某操作人的审计日志（P1-8: 加签历史查询）
+     */
+    List<FlowAuditLogDO> selectByOperatorId(@Param("operatorId") String operatorId);
+
+    /**
+     * 查某目标人（转办/委派/加签目标）的审计日志（P1-8: 加签历史查询）
+     */
+    List<FlowAuditLogDO> selectByTargetId(@Param("targetId") String targetId);
 }

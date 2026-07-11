@@ -123,6 +123,18 @@ public class ReActLoop {
      * 对话记忆（可选依赖，P1-1）。
      */
     private final ObjectProvider<ChatMemory> chatMemoryProvider;
+    /**
+     * 原生 Function Calling 循环（P0-1 落地）。
+     * 当 LLM Provider 支持原生 Function Calling 时，自动使用此循环替代文本 JSON 模式。
+     */
+    private final ObjectProvider<FunctionCallingLoop> functionCallingLoopProvider;
+
+    /**
+     * 是否启用原生 Function Calling 模式（P0-1）。
+     * true 时优先使用 FunctionCallingLoop，false 时始终使用文本 JSON 模式。
+     */
+    @Value("${pmis.agent.react.function-calling-enabled:true}")
+    private boolean functionCallingEnabled;
 
     /**
      * 共享工具并行执行线程池（P3-1：避免每次多工具调用创建/销毁线程池）。
@@ -194,6 +206,23 @@ public class ReActLoop {
             maxSteps = configuredMaxSteps > 0 ? configuredMaxSteps : DEFAULT_MAX_STEPS;
         }
 
+        // P0-1: 当启用 Function Calling 且 LLM 支持时，自动使用原生 FC 循环
+        if (functionCallingEnabled) {
+            try {
+                LlmProvider llm = llmProviderRouter.active();
+                if (llm.supportsFunctionCalling() && !toolRegistry.listToolNames().isEmpty()) {
+                    FunctionCallingLoop fcLoop = functionCallingLoopProvider.getIfAvailable();
+                    if (fcLoop != null) {
+                        log.debug("[ReActLoop] 使用原生 Function Calling 模式");
+                        return fcLoop.run(baseSystemPrompt, userPrompt, ctx, maxSteps, finalListener);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[ReActLoop] Function Calling 模式启动失败, 降级为文本 JSON 模式: {}", e.getMessage());
+            }
+        }
+
+        // 降级：文本 JSON 模式
         String effectiveUserPrompt = buildPromptWithHistory(userPrompt, ctx);
         StringBuilder currentUserPrompt = new StringBuilder(effectiveUserPrompt);
         List<ReActStep> steps = new ArrayList<>();
@@ -536,8 +565,16 @@ public class ReActLoop {
             return msg;
         }
         try {
+            // P1-1: 单工具超时控制
             AgentTool tool = toolOpt.get();
-            ToolResult result = tool.execute(parameters, ctx);
+            java.util.concurrent.Future<ToolResult> future = toolExecutor.submit(() -> tool.execute(parameters, ctx));
+            ToolResult result;
+            try {
+                result = future.get(30, TimeUnit.SECONDS);
+            } catch (java.util.concurrent.TimeoutException te) {
+                future.cancel(true);
+                return "工具 [" + toolName + "] 执行超时 (30s)";
+            }
             if (result.isSuccess()) {
                 return result.getOutput();
             } else {

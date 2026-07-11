@@ -1,5 +1,6 @@
 package com.njydsz.pmis.agent.engine;
 
+import com.njydsz.pmis.agent.engine.llm.TokenUsage;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -46,6 +47,14 @@ public class AgentContext {
      * 为 null 时表示纯文本输入。
      */
     private MultimodalInput multimodalInput;
+
+    /**
+     * Token 用量统计（P0-3 落地）。
+     *
+     * <p>累加整个 Agent 执行过程中所有 LLM 调用的 Token 消耗，
+     * 用于成本管控、配额限制和性能分析。
+     */
+    private TokenUsage tokenUsage;
 
     /** 7 参构造器（兼容历史调用方） */
     public AgentContext(String bizType, String bizId, String bizRef,

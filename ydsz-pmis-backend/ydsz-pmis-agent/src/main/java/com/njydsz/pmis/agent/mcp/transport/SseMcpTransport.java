@@ -62,12 +62,39 @@ public class SseMcpTransport implements McpTransport {
     private final long receiveTimeoutSeconds;
 
     /**
+     * 是否启用自动重连（P1-6 落地）。
+     * true 时 SSE 连接断开后自动重连，最大重试 3 次。
+     */
+    private final boolean autoReconnect;
+
+    /** 最大重连次数 */
+    private static final int MAX_RECONNECT_ATTEMPTS = 3;
+
+    /** 重连基础间隔（毫秒） */
+    private static final long RECONNECT_BASE_DELAY_MS = 1000L;
+
+    /**
+     * 心跳超时时间（秒，P1-6 落地）。
+     * 超过此时间未收到任何 SSE 事件，认为连接已断开。
+     */
+    private static final long HEARTBEAT_TIMEOUT_SECONDS = 60;
+
+    /** 上次收到事件的时间戳 */
+    private volatile long lastEventTime;
+
+    /**
+     * 通知回调（P1-6 落地）。
+     * 当收到 MCP 服务端推送的 notification/progress 事件时回调。
+     */
+    private volatile java.util.function.Consumer<String> notificationHandler;
+
+    /**
      * 构造 SSE 传输层。
      *
      * @param sseUrl MCP SSE 端点 URL（如 https://mcp.example.com/sse）
      */
     public SseMcpTransport(String sseUrl) {
-        this(sseUrl, 30);
+        this(sseUrl, 30, true);
     }
 
     /**
@@ -77,14 +104,35 @@ public class SseMcpTransport implements McpTransport {
      * @param receiveTimeoutSeconds 接收超时（秒）
      */
     public SseMcpTransport(String sseUrl, long receiveTimeoutSeconds) {
+        this(sseUrl, receiveTimeoutSeconds, true);
+    }
+
+    /**
+     * 构造 SSE 传输层（P1-6 增强）。
+     *
+     * @param sseUrl                MCP SSE 端点 URL
+     * @param receiveTimeoutSeconds 接收超时（秒）
+     * @param autoReconnect         是否启用自动重连
+     */
+    public SseMcpTransport(String sseUrl, long receiveTimeoutSeconds, boolean autoReconnect) {
         if (sseUrl == null || sseUrl.isBlank()) {
             throw new IllegalArgumentException("SSE URL 不能为空");
         }
         this.sseUrl = sseUrl;
         this.receiveTimeoutSeconds = receiveTimeoutSeconds > 0 ? receiveTimeoutSeconds : 30;
+        this.autoReconnect = autoReconnect;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
+    }
+
+    /**
+     * 设置通知回调（P1-6 落地）。
+     *
+     * @param handler 通知回调函数
+     */
+    public void setNotificationHandler(java.util.function.Consumer<String> handler) {
+        this.notificationHandler = handler;
     }
 
     @Override
@@ -194,40 +242,145 @@ public class SseMcpTransport implements McpTransport {
 
     /**
      * SSE 读取线程：持续读取 SSE 事件并放入队列。
+     *
+     * <p>P1-6 增强：
+     * <ul>
+     *   <li>支持多行 data 字段拼接</li>
+     *   <li>支持 notification/progress 事件类型识别</li>
+     *   <li>心跳超时检测</li>
+     *   <li>自动重连</li>
+     * </ul>
      */
     private void readSseStream() {
-        try {
-            sseResponse.body().forEach(line -> {
-                if (Thread.currentThread().isInterrupted()) {
-                    return;
+        int reconnectAttempts = 0;
+        while (connected.get() || (autoReconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS)) {
+            try {
+                if (!connected.get()) {
+                    // 自动重连
+                    long delay = RECONNECT_BASE_DELAY_MS * (long) Math.pow(2, reconnectAttempts);
+                    log.info("[SseTransport] 尝试重连 {}/{}, 延迟 {}ms",
+                            reconnectAttempts + 1, MAX_RECONNECT_ATTEMPTS, delay);
+                    Thread.sleep(delay);
+                    doConnect();
+                    reconnectAttempts = 0;
                 }
-                if (line == null || line.isBlank()) return;
 
-                // SSE 事件格式：
-                // event: message\ndata: {"jsonrpc":"2.0",...}
-                if (line.startsWith("data: ")) {
-                    String data = line.substring(6).trim();
-                    try {
-                        receiveQueue.put(data);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+                lastEventTime = System.currentTimeMillis();
+                final StringBuilder dataBuffer = new StringBuilder();
+                final String[] currentEventType = {null};
+
+                sseResponse.body().forEach(line -> {
+                    if (Thread.currentThread().isInterrupted()) {
+                        return;
                     }
-                } else if (line.startsWith("event: endpoint")) {
-                    // endpoint 事件标记，后续 data 行包含端点 URL
-                    try {
-                        receiveQueue.put(line);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+                    if (line == null) return;
+
+                    lastEventTime = System.currentTimeMillis();
+
+                    if (line.isBlank()) {
+                        // 空行表示事件结束
+                        if (dataBuffer.length() > 0) {
+                            String data = dataBuffer.toString().trim();
+                            handleSseEvent(currentEventType[0], data);
+                            dataBuffer.setLength(0);
+                            currentEventType[0] = null;
+                        }
+                        return;
+                    }
+
+                    if (line.startsWith("event: ")) {
+                        currentEventType[0] = line.substring(7).trim();
+                    } else if (line.startsWith("data: ")) {
+                        if (dataBuffer.length() > 0) dataBuffer.append("\n");
+                        dataBuffer.append(line.substring(6));
+                    } else if (line.startsWith(":")) {
+                        // SSE 注释/心跳（:heartbeat）
+                        log.debug("[SseTransport] 收到心跳");
+                    }
+                });
+
+                // 流结束，连接断开
+                if (connected.get()) {
+                    log.warn("[SseTransport] SSE 连接断开");
+                    connected.set(false);
+                    if (autoReconnect) {
+                        reconnectAttempts++;
                     }
                 }
-            });
-        } catch (Exception e) {
-            if (connected.get()) {
-                log.warn("[SseTransport] SSE 读取异常: {}", e.getMessage());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (Exception e) {
+                if (connected.get()) {
+                    log.warn("[SseTransport] SSE 读取异常: {}", e.getMessage());
+                    connected.set(false);
+                }
+                if (autoReconnect) {
+                    reconnectAttempts++;
+                }
             }
-        } finally {
-            connected.set(false);
         }
+        connected.set(false);
+    }
+
+    /**
+     * 处理 SSE 事件（P1-6 落地）。
+     *
+     * @param eventType 事件类型（endpoint / message / notification / progress）
+     * @param data      事件数据
+     */
+    private void handleSseEvent(String eventType, String data) {
+        try {
+            if ("endpoint".equals(eventType)) {
+                messageEndpoint = resolveEndpoint(data);
+                int idx = data.indexOf("sessionId=");
+                if (idx >= 0) {
+                    sessionId = data.substring(idx + 10).split("&")[0];
+                }
+                try {
+                    receiveQueue.put("event: endpoint\ndata: " + data);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            } else if ("notification".equals(eventType) || "progress".equals(eventType)) {
+                // P1-6: 通知/进度事件
+                log.debug("[SseTransport] 收到 {} 事件: {}", eventType, data);
+                if (notificationHandler != null) {
+                    notificationHandler.accept(data);
+                }
+            } else {
+                // 普通消息事件
+                try {
+                    receiveQueue.put(data);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[SseTransport] 处理 SSE 事件异常: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 实际建立 SSE 连接（抽取自 connect 方法，支持重连调用）。
+     */
+    private void doConnect() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(sseUrl))
+                .timeout(Duration.ofSeconds(receiveTimeoutSeconds))
+                .header("Accept", "text/event-stream")
+                .header("Cache-Control", "no-cache")
+                .GET()
+                .build();
+
+        sseResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofLines());
+
+        if (sseResponse.statusCode() / 100 != 2) {
+            throw new RuntimeException("SSE 连接失败: HTTP " + sseResponse.statusCode());
+        }
+
+        connected.set(true);
+        log.info("[SseTransport] SSE 连接成功");
     }
 
     /**

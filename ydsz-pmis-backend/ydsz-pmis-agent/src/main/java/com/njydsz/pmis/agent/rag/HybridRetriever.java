@@ -57,6 +57,19 @@ public class HybridRetriever {
     private final boolean enableRerank;
 
     /**
+     * BM25 关键词检索器（P1-2 落地）。
+     * 替代原有简化关键词匹配，使用经典 BM25 算法进行精确关键词检索。
+     */
+    private BM25Retriever bm25Retriever;
+
+    /**
+     * 是否使用独立 BM25 索引（P1-2）。
+     * true 时使用 {@link BM25Retriever} 进行真正的 BM25 检索；
+     * false 时降级为向量检索结果重排序的简化方案。
+     */
+    private final boolean useStandaloneBM25;
+
+    /**
      * 构造混合检索器。
      *
      * @param embeddingProvider Embedding 提供者
@@ -66,11 +79,30 @@ public class HybridRetriever {
     public HybridRetriever(EmbeddingProvider embeddingProvider,
                            VectorStore vectorStore,
                            Reranker reranker) {
+        this(embeddingProvider, vectorStore, reranker, true);
+    }
+
+    /**
+     * 构造混合检索器（P1-2 落地）。
+     *
+     * @param embeddingProvider Embedding 提供者
+     * @param vectorStore       向量存储
+     * @param reranker          重排序器
+     * @param useStandaloneBM25 是否使用独立 BM25 索引
+     */
+    public HybridRetriever(EmbeddingProvider embeddingProvider,
+                           VectorStore vectorStore,
+                           Reranker reranker,
+                           boolean useStandaloneBM25) {
         this.embeddingProvider = embeddingProvider;
         this.vectorStore = vectorStore;
         this.reranker = reranker;
         this.enableRerank = reranker != null;
-        log.info("[HybridRetriever] 初始化, rerank={}", enableRerank);
+        this.useStandaloneBM25 = useStandaloneBM25;
+        if (useStandaloneBM25) {
+            this.bm25Retriever = new BM25Retriever();
+        }
+        log.info("[HybridRetriever] 初始化, rerank={}, standaloneBM25={}", enableRerank, useStandaloneBM25);
     }
 
     /**
@@ -119,31 +151,43 @@ public class HybridRetriever {
     }
 
     /**
-     * 关键词检索（简化版 BM25）。
+     * 关键词检索（P1-2 升级为真正的 BM25）。
      *
-     * <p>当前实现基于向量检索结果重排序，后续可替换为全文检索引擎（如 Elasticsearch）。
+     * <p>当 {@link #useStandaloneBM25} 为 true 时，使用 {@link BM25Retriever}
+     * 进行独立的 BM25 关键词检索，不再依赖向量检索结果重排序。
+     * 需要先通过 {@link #indexForBM25} 建立索引。
+     *
+     * <p>当为 false 时，降级为向量检索结果的关键词匹配重排序。
      */
     private List<RetrievedChunk> keywordSearch(String knowledgeBaseId, String query, int topK) {
-        // 简化实现：从向量检索结果中按关键词匹配重排序
-        // 完整实现应使用 PostgreSQL ts_vector 或 Elasticsearch
+        if (useStandaloneBM25 && bm25Retriever != null && bm25Retriever.size() > 0) {
+            // P1-2: 使用真正的 BM25 检索
+            List<RetrievedChunk> bm25Results = bm25Retriever.search(query, topK);
+            // 设置 knowledgeBaseId
+            for (RetrievedChunk chunk : bm25Results) {
+                chunk.setKnowledgeBaseId(knowledgeBaseId);
+            }
+            return bm25Results;
+        }
+
+        // 降级：从向量检索结果中按关键词匹配重排序
         List<RetrievedChunk> all = vectorStore.search(knowledgeBaseId,
                 embeddingProvider.embed(query), topK * 2);
         if (all.isEmpty()) return Collections.emptyList();
 
-        // 提取查询关键词（简单分词）
-        Set<String> queryTerms = tokenize(query);
+        // 使用 BM25 分词逻辑进行匹配
+        List<String> queryTerms = BM25Retriever.tokenize(query);
         if (queryTerms.isEmpty()) return all.stream().limit(topK).collect(Collectors.toList());
 
-        // 计算每个 chunk 的关键词匹配分数
+        Set<String> queryTermSet = new HashSet<>(queryTerms);
         return all.stream()
                 .map(chunk -> {
                     if (chunk.getContent() == null) return chunk;
-                    Set<String> chunkTerms = tokenize(chunk.getContent());
-                    long matchCount = queryTerms.stream()
-                            .filter(chunkTerms::contains)
+                    List<String> chunkTerms = BM25Retriever.tokenize(chunk.getContent());
+                    long matchCount = chunkTerms.stream()
+                            .filter(queryTermSet::contains)
                             .count();
                     double matchScore = (double) matchCount / queryTerms.size();
-                    // 保留原始 score，设置 keyword 匹配分数
                     RetrievedChunk copy = new RetrievedChunk();
                     copy.setId(chunk.getId());
                     copy.setDocumentId(chunk.getDocumentId());
@@ -159,6 +203,30 @@ public class HybridRetriever {
                         .reversed())
                 .limit(topK)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 为 BM25 索引添加文档分块（P1-2 落地）。
+     *
+     * @param chunks 知识库分块列表
+     */
+    public void indexForBM25(List<RetrievedChunk> chunks) {
+        if (bm25Retriever != null) {
+            bm25Retriever.indexAll(chunks);
+        }
+    }
+
+    /**
+     * 清空 BM25 索引并重建（P1-2 落地）。
+     *
+     * @param chunks 新的分块列表
+     */
+    public void rebuildBM25Index(List<RetrievedChunk> chunks) {
+        if (bm25Retriever != null) {
+            bm25Retriever.clear();
+            bm25Retriever.indexAll(chunks);
+            log.info("[HybridRetriever] BM25 索引重建完成: {} 个文档", bm25Retriever.size());
+        }
     }
 
     /**

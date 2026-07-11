@@ -49,6 +49,12 @@ public class DagExecutor {
     /** SpEL 表达式解析器（线程安全，可复用） */
     private final ExpressionParser spelParser = new SpelExpressionParser();
 
+    /**
+     * 条件边路由器（P1-4 落地）。
+     * 当 DAG 定义包含 edges 时，使用此路由器进行动态路由。
+     */
+    private final ConditionalRouter conditionalRouter = new ConditionalRouter();
+
     /** 共享线程池（并行层执行） */
     private final ExecutorService executor;
 
@@ -154,8 +160,18 @@ public class DagExecutor {
 
     /**
      * 从 DagDefinition 构建邻接表（适配 common.DagGraph）。
+     *
+     * <p>P1-4：当 DAG 定义包含 edges 时，优先使用条件边构建拓扑；
+     * 否则降级为 dependsOn 模式。
      */
     private Map<String, List<String>> buildAdjacencyFromDag(DagDefinition dag) {
+        // P1-4: 优先使用条件边
+        if (dag.getEdges() != null && !dag.getEdges().isEmpty()) {
+            conditionalRouter.validateEdges(dag);
+            return conditionalRouter.buildAdjacencyFromEdges(dag);
+        }
+
+        // 降级：dependsOn 模式
         Map<String, List<String>> adj = new HashMap<>();
         for (DagNode node : dag.getNodes()) {
             adj.computeIfAbsent(node.getName(), k -> new java.util.ArrayList<>());

@@ -7,13 +7,20 @@ import com.njydsz.pmis.workflow.engine.FlowSensitiveMasker;
 import com.njydsz.pmis.workflow.entity.notification.FlowCommentDO;
 import com.njydsz.pmis.workflow.mapper.notification.FlowCommentMapper;
 import com.njydsz.pmis.workflow.service.notification.FlowCommentService;
+import com.njydsz.pmis.workflow.service.notification.FlowNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * P2-2: 流程评论 Service 实现
@@ -33,6 +40,12 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     private final FlowCommentMapper commentMapper;
     /** P0-1: 敏感字段脱敏器，对评论内容中的手机号/身份证等敏感信息做实时脱敏 */
     private final FlowSensitiveMasker sensitiveMasker;
+    /** P2-1: 通知服务（@Lazy 避免循环依赖） */
+    @Lazy
+    private final FlowNotificationService notificationService;
+
+    /** P2-1: @提及正则，匹配 @{userId} 或 @userId 格式 */
+    private static final Pattern MENTION_PATTERN = Pattern.compile("@\\{([a-zA-Z0-9_-]+)\\}|@([a-zA-Z0-9_-]+)");
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -70,6 +83,48 @@ public class FlowCommentServiceImpl implements FlowCommentService {
         log.info("[FlowComment] 新增评论: commentId={} instanceId={} userId={} isReply={}",
                 comment.getId(), dto.getInstanceId(), userId,
                 StringUtils.hasText(dto.getParentCommentId()));
+
+        // P2-1: 解析 @提及并发送通知
+        try {
+            List<String> mentionedUserIds = parseMentions(comment.getContent());
+            if (!mentionedUserIds.isEmpty()) {
+                String title = "审批评论提及通知";
+                String content = userName + " 在流程评论中提及了您: " + comment.getContent();
+                for (String mentionedUserId : mentionedUserIds) {
+                    // 不通知自己
+                    if (!mentionedUserId.equals(userId)) {
+                        notificationService.send("WORKFLOW", mentionedUserId, title, content,
+                                java.util.Map.of("instanceId", dto.getInstanceId(),
+                                        "commentId", comment.getId(),
+                                        "type", "MENTION"));
+                    }
+                }
+                log.info("[FlowComment] P2-1 @提及通知: commentId={} mentioned={}",
+                        comment.getId(), mentionedUserIds);
+            }
+        } catch (Exception e) {
+            // 通知失败不影响评论发布
+            log.warn("[FlowComment] P2-1 @提及通知失败: commentId={} err={}",
+                    comment.getId(), e.getMessage());
+        }
+
+        // P2-1: 回复通知（回复某条评论时通知被回复人）
+        if (StringUtils.hasText(dto.getReplyToUserId())
+                && !dto.getReplyToUserId().equals(userId)) {
+            try {
+                String replyTitle = "审批评论回复通知";
+                String replyContent = userName + " 回复了您的评论: " + comment.getContent();
+                notificationService.send("WORKFLOW", dto.getReplyToUserId(),
+                        replyTitle, replyContent,
+                        java.util.Map.of("instanceId", dto.getInstanceId(),
+                                "commentId", comment.getId(),
+                                "type", "REPLY"));
+            } catch (Exception e) {
+                log.warn("[FlowComment] P2-1 回复通知失败: commentId={} err={}",
+                        comment.getId(), e.getMessage());
+            }
+        }
+
         return comment.getId();
     }
 
@@ -103,5 +158,35 @@ public class FlowCommentServiceImpl implements FlowCommentService {
         commentMapper.updateById(comment);
         log.info("[FlowComment] 删除评论: commentId={} userId={}", commentId, userId);
         return true;
+    }
+
+    // ==================== P2-1: @提及解析 ====================
+
+    /**
+     * 解析评论内容中的 @提及，提取被提及的用户 ID 列表。
+     *
+     * <p>支持两种格式：
+     * <ul>
+     *   <li>{@code @{userId}} — 大括号包裹格式（推荐，避免歧义）</li>
+     *   <li>{@code @userId} — 简单格式</li>
+     * </ul>
+     *
+     * @param content 评论内容
+     * @return 去重后的用户 ID 列表（有序）
+     */
+    private List<String> parseMentions(String content) {
+        if (!StringUtils.hasText(content)) {
+            return List.of();
+        }
+        Set<String> userIds = new LinkedHashSet<>();
+        Matcher matcher = MENTION_PATTERN.matcher(content);
+        while (matcher.find()) {
+            // group(1) 为 @{userId} 格式，group(2) 为 @userId 格式
+            String userId = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+            if (userId != null && !userId.isBlank()) {
+                userIds.add(userId);
+            }
+        }
+        return new ArrayList<>(userIds);
     }
 }
