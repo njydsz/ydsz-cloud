@@ -46,6 +46,9 @@ import com.njydsz.pmis.literule.server.spi.DecisionTreeConfigProvider;
 import com.njydsz.pmis.literule.server.spi.FactProvider;
 import com.njydsz.pmis.literule.server.spi.FactProviderRegistry;
 import com.njydsz.pmis.literule.server.spi.FileRuleSource;
+import com.njydsz.pmis.literule.server.spi.DefaultAlertActionHandler;
+import com.njydsz.pmis.literule.server.spi.RuleActionDispatcher;
+import com.njydsz.pmis.literule.server.spi.RuleActionHandler;
 import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.server.spi.RuleVersionRepository;
@@ -125,6 +128,7 @@ public class LiteRuleAutoConfiguration {
                                   ObjectProvider<BreakpointHook> breakpointHookProvider,
                                   ObjectProvider<ModelInputRegistry> modelRegistryProvider,
                                   ObjectProvider<FactProviderRegistry> factRegistryProvider,
+                                  ObjectProvider<RuleActionDispatcher> actionDispatcherProvider,
                                   ApplicationContext applicationContext) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
@@ -139,6 +143,13 @@ public class LiteRuleAutoConfiguration {
         FactProviderRegistry factRegistry = factRegistryProvider.getIfAvailable();
         if (factRegistry != null) {
             engine.setFactProviderRegistry(factRegistry);
+        }
+
+        // P1-1 规则与消息通知联动：可选注入动作分发器
+        // actionDispatcherProvider 通过下方 Bean 自动装配
+        RuleActionDispatcher actionDispatcher = actionDispatcherProvider.getIfAvailable();
+        if (actionDispatcher != null) {
+            engine.setActionDispatcher(actionDispatcher);
         }
 
         // P3-1 规则+模型融合：可选注入模型注册表
@@ -914,6 +925,58 @@ public class LiteRuleAutoConfiguration {
         log.info("[LiteRule-Fact] 事实数据提供者注册表已初始化 (providers={}, timeoutMs={}, fallbackOnError={})",
                 registry.size(), cfg.getTimeoutMs(), cfg.isFallbackOnError());
         return registry;
+    }
+
+    // ------------------------------------------------------------------
+    // P1-1 规则与消息通知联动（RuleActionHandler SPI）
+    // ------------------------------------------------------------------
+
+    /**
+     * 规则动作分发器 Bean（P1-1）
+     *
+     * <p>当 {@code pmis.literule.action.enabled=true}（默认 true）时自动装配，
+     * 聚合所有 {@link RuleActionHandler} Bean。分发器会自动注入到 {@link DefaultRuleEngine}，
+     * 使规则触发后自动执行消息通知等后续动作。
+     *
+     * @param handlersProvider 所有 RuleActionHandler Bean（可选）
+     * @return RuleActionDispatcher 实例
+     * @since 2.1.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.action", name = "enabled",
+            havingValue = "true", matchIfMissing = true)
+    public RuleActionDispatcher ruleActionDispatcher(
+            ObjectProvider<RuleActionHandler> handlersProvider) {
+        RuleActionDispatcher dispatcher = new RuleActionDispatcher();
+        List<RuleActionHandler> handlers = handlersProvider.orderedStream().toList();
+        for (RuleActionHandler handler : handlers) {
+            dispatcher.register(handler);
+        }
+        log.info("[LiteRule-Action] 规则动作分发器已初始化 (handlers={})", dispatcher.size());
+        return dispatcher;
+    }
+
+    /**
+     * 默认告警动作处理器 Bean（P1-1）
+     *
+     * <p>当 {@code pmis.literule.action.default-alert-enabled=true}（默认 true）时自动装配，
+     * 将规则触发结果转换为 {@link DefaultAlertActionHandler.RuleTriggeredEvent} 并发布。
+     * 消费方可通过 {@code @EventListener} 监听此事件，转换为 {@code UnifiedAlertEvent}
+     * 由 common 模块的 {@code UnifiedAlertDispatcher} 统一发送通知。
+     *
+     * @param eventPublisher Spring 事件发布器
+     * @return DefaultAlertActionHandler 实例
+     * @since 2.1.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.action", name = "default-alert-enabled",
+            havingValue = "true", matchIfMissing = true)
+    public DefaultAlertActionHandler defaultAlertActionHandler(
+            ApplicationEventPublisher eventPublisher) {
+        log.info("[LiteRule-Action] 默认告警动作处理器已初始化");
+        return new DefaultAlertActionHandler(eventPublisher);
     }
 
     // ------------------------------------------------------------------

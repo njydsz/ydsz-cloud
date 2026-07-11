@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-userinfo-domain</artifactId>
     <name>ydsz-pmis-userinfo-domain</name>
-    <description>棰嗗煙灞傦細瀹炰�?鍊煎璞?鑱氬�?浜嬩�?/description>
+    <description>Domain Layer</description>
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-all</artifactId></dependency>
         <dependency><groupId>com.baomidou</groupId><artifactId>mybatis-plus-jsqlparser</artifactId></dependency>

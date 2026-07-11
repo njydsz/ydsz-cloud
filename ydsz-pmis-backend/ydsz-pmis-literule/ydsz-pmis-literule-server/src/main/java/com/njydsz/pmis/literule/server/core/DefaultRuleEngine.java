@@ -13,6 +13,7 @@ import com.njydsz.pmis.literule.domain.model.ModelInputRegistry;
 import com.njydsz.pmis.literule.domain.model.ModelInvocationException;
 import com.njydsz.pmis.literule.server.spi.FactCollectionException;
 import com.njydsz.pmis.literule.server.spi.FactProviderRegistry;
+import com.njydsz.pmis.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.pmis.literule.server.spi.TraceRecorder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -102,6 +103,16 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * 默认 null（向后兼容，不影响现有评估）。
      */
     private volatile FactProviderRegistry factProviderRegistry;
+
+    /**
+     * 规则动作分发器（可选，2.1.0 起 P1-1 规则与消息通知联动）
+     *
+     * <p>非 null 且已注册 handler 时，引擎在评估完成后调用
+     * {@link RuleActionDispatcher#dispatchActions} 分发触发结果，
+     * 执行消息通知、工作流触发等后续动作。
+     * 默认 null（向后兼容，不影响现有评估）。
+     */
+    private volatile RuleActionDispatcher actionDispatcher;
 
     /** 统计计数器 */
     private final AtomicLong totalEvaluations = new AtomicLong(0);
@@ -421,6 +432,10 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         // 记录本次评估遍历的规则数（用于规则规模监控）
         if (metrics != null) {
             metrics.recordEvaluatedRules(evaluatedCount);
+        }
+        // P1-1 规则与消息通知联动：评估完成后分发动作
+        if (actionDispatcher != null && !triggered.isEmpty()) {
+            actionDispatcher.dispatchActions(triggered, context);
         }
         return triggered;
     }
@@ -918,6 +933,34 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     public FactProviderRegistry getFactProviderRegistry() {
         return factProviderRegistry;
+    }
+
+    /**
+     * 设置规则动作分发器（P1-1 规则与消息通知联动）
+     *
+     * <p>注入后，引擎在 {@link #evaluate} 完成后会调用分发器，
+     * 将触发结果传递给所有已注册的 {@link com.njydsz.pmis.literule.server.spi.RuleActionHandler}。
+     * null 表示禁用动作分发（向后兼容）。
+     *
+     * @param actionDispatcher 动作分发器；null 表示禁用
+     * @since 2.1.0
+     */
+    public void setActionDispatcher(RuleActionDispatcher actionDispatcher) {
+        this.actionDispatcher = actionDispatcher;
+        if (actionDispatcher != null) {
+            log.info("[LiteRule-Action] 规则动作分发器已注入 (handlers={})",
+                    actionDispatcher.size());
+        }
+    }
+
+    /**
+     * 获取规则动作分发器（P1-1）
+     *
+     * @return 动作分发器；未配置返回 null
+     * @since 2.1.0
+     */
+    public RuleActionDispatcher getActionDispatcher() {
+        return actionDispatcher;
     }
 
     /**
