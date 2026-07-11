@@ -30,7 +30,7 @@ import java.util.List;
  */
 @Tag(name = "敏感操作审计", description = "敏感操作审计记录查询接口")
 @RestController
-@RequestMapping("/audit/sensitive-op")
+@RequestMapping("/audit/sensitiveOp")
 @RequiredArgsConstructor
 @Validated
 public class SensitiveOperationController {
@@ -65,7 +65,7 @@ public class SensitiveOperationController {
 
     @Operation(summary = "按用户查询敏感操作历史")
     @PrePermission("audit:sensitive:view")
-    @GetMapping("/by-user")
+    @GetMapping("/byUser")
     /**
      * 按用户查询敏感操作历史
      *

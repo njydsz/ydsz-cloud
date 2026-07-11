@@ -38,7 +38,7 @@ import java.util.List;
  */
 @Tag(name = "对外报价费率 Rate Card")
 @RestController
-@RequestMapping("/resource/rate-card")
+@RequestMapping("/resource/rateCard")
 @RequiredArgsConstructor
 @Validated
 public class RateCardController {
@@ -53,8 +53,8 @@ public class RateCardController {
      * @return 新建费率 ID
      */
     @Operation(summary = "创建对外报价费率")
-    @PrePermission("execution:rate-card:create")
-    @Idempotent(key = "rate-card:create", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("execution:rateCard:create")
+    @Idempotent(key = "rateCard:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody RateCardCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -68,8 +68,8 @@ public class RateCardController {
      * @return 空结果
      */
     @Operation(summary = "更新")
-    @PrePermission("execution:rate-card:update")
-    @Idempotent(key = "rate-card:update", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("execution:rateCard:update")
+    @Idempotent(key = "rateCard:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable String id, @Valid @RequestBody RateCardCreateDTO dto) {
         service.update(id, dto);
@@ -83,8 +83,8 @@ public class RateCardController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:rate-card:delete")
-    @Idempotent(key = "rate-card:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("execution:rateCard:delete")
+    @Idempotent(key = "rateCard:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
@@ -132,7 +132,7 @@ public class RateCardController {
      */
     @Operation(summary = "按职级查询")
     @PrePermission("execution:rate:list")
-    @GetMapping("/by-level")
+    @GetMapping("/byLevel")
     public Result<List<RateCardDO>> listByLevel(@RequestParam String levelCode) {
         return Result.ok(service.listByLevel(levelCode));
     }

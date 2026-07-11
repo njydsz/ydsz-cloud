@@ -145,7 +145,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/rule-engine/rules")
+@RequestMapping("/ruleEngine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、AI 增强、规则集市场")
@@ -233,7 +233,7 @@ public class RuleAdminController {
      * @param changeDesc 变更描述
      * @return 保存后的规则定义
      */
-    @Idempotent(key = "rule-admin:save", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @PrePermission("execution:rule:save")
     public Result<RuleDefinition> save(@RequestBody RuleDefinition definition,
@@ -250,7 +250,7 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 操作结果
      */
-    @Idempotent(key = "rule-admin:toggle", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/toggle")
     @PrePermission("execution:rule:toggle")
     public Result<Void> toggle(@PathVariable String ruleCode,
@@ -279,7 +279,7 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 回滚后的规则定义
      */
-    @Idempotent(key = "rule-admin:rollback", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/rollback")
     public Result<RuleDefinition> rollback(@PathVariable String ruleCode,
                                             @RequestParam int version,
@@ -294,8 +294,8 @@ public class RuleAdminController {
      * @param facts    事实数据
      * @return 仿真结果
      */
-    @Idempotent(key = "rule-admin:dry-run", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/dry-run")
+    @Idempotent(key = "ruleAdmin:dryRun", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/dryRun")
     public Result<List<RuleResult>> dryRun(@RequestParam(required = false) String ruleCode,
                                             @RequestBody Map<String, Object> facts) {
         return Result.ok(ruleAdminService.dryRun(ruleCode, facts));
@@ -331,7 +331,7 @@ public class RuleAdminController {
      * @return 追踪结果（含求值结果和追踪树）
      * @since 1.6.0
      */
-    @PostMapping("/expr-trace")
+    @PostMapping("/exprTrace")
     public Result<ExpressionEvaluator.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
         String expression = (String) request.get("expression");
         @SuppressWarnings("unchecked")
@@ -348,8 +348,8 @@ public class RuleAdminController {
      * @param expression 条件表达式
      * @return 校验结果
      */
-    @Idempotent(key = "rule-admin:validate-expression", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/validate-expression")
+    @Idempotent(key = "ruleAdmin:validateExpression", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/validateExpression")
     public Result<ExpressionValidationResult> validateExpression(@Valid @RequestBody ExpressionValidateDTO dto) {
         String expression = dto.getExpression();
         String type = dto.getType() == null ? "condition" : dto.getType();
@@ -375,8 +375,8 @@ public class RuleAdminController {
      * @param request key=标签，value=表达式
      * @return 校验结果（与输入顺序一致）
      */
-    @Idempotent(key = "rule-admin:validate-batch", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/validate-batch")
+    @Idempotent(key = "ruleAdmin:validateBatch", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/validateBatch")
     public Result<Map<String, ExpressionValidationResult>> validateBatch(@RequestBody Map<String, String> request) {
         return Result.ok(expressionValidationService.validateBatch(request));
     }
@@ -391,7 +391,7 @@ public class RuleAdminController {
      * @param request  请求体，包含 candidate（候选规则定义）和 facts（事实数据）
      * @return A/B 测试报告
      */
-    @PostMapping("/{ruleCode}/ab-test")
+    @PostMapping("/{ruleCode}/abTest")
     public Result<ABTestService.ABTestReport> abTest(@PathVariable String ruleCode,
                                                       @Valid @RequestBody RuleABTestDTO dto) {
         RuleDefinition currentDef = ruleAdminService.getByCode(ruleCode);
@@ -457,7 +457,7 @@ public class RuleAdminController {
      * @param operator     操作人（从 Header 获取）
      * @return 保存后的规则定义
      */
-    @Idempotent(key = "rule-admin:import-template", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/templates/{templateCode}/import")
     public Result<RuleDefinition> importTemplate(@PathVariable String templateCode,
                                                   @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -472,8 +472,8 @@ public class RuleAdminController {
      * @param request 请求体，包含 description（自然语言描述）和 availableFields（可用字段列表）
      * @return 生成的规则定义
      */
-    @Idempotent(key = "rule-admin:ai-generate", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/ai-generate")
+    @Idempotent(key = "ruleAdmin:aiGenerate", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/aiGenerate")
     public Result<RuleDefinition> aiGenerate(@Valid @RequestBody RuleAiGenerateDTO dto) {
         List<String> fields = dto.getAvailableFields();
         if (fields == null) fields = List.of();
@@ -487,8 +487,8 @@ public class RuleAdminController {
      * @param operator 操作人（从 Header 获取）
      * @return 保存后的规则定义
      */
-    @Idempotent(key = "rule-admin:ai-generate-and-save", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/ai-generate-and-save")
+    @Idempotent(key = "ruleAdmin:aiGenerateAndSave", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/aiGenerateAndSave")
     public Result<RuleDefinition> aiGenerateAndSave(@Valid @RequestBody RuleAiGenerateDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> fields = dto.getAvailableFields();
@@ -516,7 +516,7 @@ public class RuleAdminController {
      * @param ruleCode 规则编码（可选）
      * @return 测试用例列表
      */
-    @GetMapping("/test-cases")
+    @GetMapping("/testCases")
     public Result<List<RuleTestCaseDO>> listTestCases(@RequestParam(required = false) String ruleCode) {
         LambdaQueryWrapper<RuleTestCaseDO> wrapper = new LambdaQueryWrapper<>();
         if (ruleCode != null && !ruleCode.isBlank()) {
@@ -532,8 +532,8 @@ public class RuleAdminController {
      * @param testCase 测试用例
      * @return 保存后的测试用例
      */
-    @Idempotent(key = "rule-admin:save-test-case", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/test-cases")
+    @Idempotent(key = "ruleAdmin:saveTestCase", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/testCases")
     public Result<RuleTestCaseDO> saveTestCase(@RequestBody RuleTestCaseDO testCase) {
         if (testCase.getId() != null) {
             ruleTestCaseMapper.updateById(testCase);
@@ -550,8 +550,8 @@ public class RuleAdminController {
      * @return 操作结果
      */
     @OperationLog(module = "规则引擎", action = "删除测试用例", bizType = "RULE_TEST_CASE")
-    @Idempotent(key = "rule-admin:delete-test-case", ttlSeconds = 5, message = "请勿重复提交")
-    @DeleteMapping("/test-cases/{id}")
+    @Idempotent(key = "ruleAdmin:deleteTestCase", ttlSeconds = 5, message = "请勿重复提交")
+    @DeleteMapping("/testCases/{id}")
     public Result<Void> deleteTestCase(@PathVariable String id) {
         ruleTestCaseMapper.deleteById(id);
         return Result.ok();
@@ -567,8 +567,8 @@ public class RuleAdminController {
      * @param request 请求体，包含 ids（测试用例 ID 列表，为空则执行全部）
      * @return 回归测试报告（含每个用例的 pass/fail + 通过率统计）
      */
-    @Idempotent(key = "rule-admin:batch-run-test-cases", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/test-cases/batch-run")
+    @Idempotent(key = "ruleAdmin:batchRunTestCases", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/testCases/batchRun")
     public Result<Map<String, Object>> batchRunTestCases(@Valid @RequestBody TestCaseBatchRunDTO dto) {
         List<Long> ids = dto.getIds();
 
@@ -655,7 +655,7 @@ public class RuleAdminController {
      * @param operator   操作人
      * @return 操作结果
      */
-    @Idempotent(key = "rule-admin:change-status", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/status")
     @PrePermission("execution:rule:status")
     public Result<RuleDefinition> changeStatus(@PathVariable String ruleCode,
@@ -689,7 +689,7 @@ public class RuleAdminController {
      * @param operator 审批人
      * @return 审批后的规则定义
      */
-    @Idempotent(key = "rule-admin:approve", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/approve")
     @PrePermission("execution:rule:approve")
     public Result<RuleDefinition> approve(@PathVariable String ruleCode,
@@ -731,7 +731,7 @@ public class RuleAdminController {
      * @param operator 审批人
      * @return 驳回后的规则定义
      */
-    @Idempotent(key = "rule-admin:reject", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/reject")
     @PrePermission("execution:rule:approve")
     public Result<RuleDefinition> reject(@PathVariable String ruleCode,
@@ -785,8 +785,8 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 审批记录
      */
-    @Idempotent(key = "rule-admin:submit-review", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/submit-review")
+    @Idempotent(key = "ruleAdmin:submitReview", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/submitReview")
     @PrePermission("execution:rule:save")
     @OperationLog(module = "规则引擎", action = "提交审核", bizType = "RULE")
     public Result<ApprovalRecord> submitReview(@PathVariable String ruleCode,
@@ -811,8 +811,8 @@ public class RuleAdminController {
      * @param operator 审批人
      * @return 审批记录
      */
-    @Idempotent(key = "rule-admin:approve-level", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/approve-level")
+    @Idempotent(key = "ruleAdmin:approveLevel", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/approveLevel")
     @PrePermission("execution:rule:approve")
     @OperationLog(module = "规则引擎", action = "级别审批通过", bizType = "RULE")
     public Result<ApprovalRecord> approveLevel(@PathVariable String ruleCode,
@@ -836,8 +836,8 @@ public class RuleAdminController {
      * @param operator 审批人
      * @return 审批记录
      */
-    @Idempotent(key = "rule-admin:reject-level", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/reject-level")
+    @Idempotent(key = "ruleAdmin:rejectLevel", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/rejectLevel")
     @PrePermission("execution:rule:approve")
     @OperationLog(module = "规则引擎", action = "级别审批驳回", bizType = "RULE")
     public Result<ApprovalRecord> rejectLevel(@PathVariable String ruleCode,
@@ -860,7 +860,7 @@ public class RuleAdminController {
      * @param operator 委托人
      * @return 审批记录
      */
-    @Idempotent(key = "rule-admin:delegate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:delegate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/delegate")
     @PrePermission("execution:rule:approve")
     @OperationLog(module = "规则引擎", action = "委托审批", bizType = "RULE")
@@ -881,7 +881,7 @@ public class RuleAdminController {
      * @param ruleCode 规则编码
      * @return 审批记录；无审批记录时返回 null
      */
-    @GetMapping("/{ruleCode}/approval-status")
+    @GetMapping("/{ruleCode}/approvalStatus")
     public Result<ApprovalRecord> approvalStatus(@PathVariable String ruleCode) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
@@ -896,7 +896,7 @@ public class RuleAdminController {
      * @param approver 审批人工号
      * @return 待审批记录列表
      */
-    @GetMapping("/pending-approvals")
+    @GetMapping("/pendingApprovals")
     public Result<List<ApprovalRecord>> pendingApprovals(@RequestParam String approver) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
@@ -914,8 +914,8 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 审批记录
      */
-    @Idempotent(key = "rule-admin:cancel-review", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/cancel-review")
+    @Idempotent(key = "ruleAdmin:cancelReview", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/cancelReview")
     @PrePermission("execution:rule:save")
     @OperationLog(module = "规则引擎", action = "撤回审核", bizType = "RULE")
     public Result<ApprovalRecord> cancelReview(@PathVariable String ruleCode,
@@ -932,7 +932,7 @@ public class RuleAdminController {
      *
      * @return 审批流配置列表
      */
-    @GetMapping("/approval-flows")
+    @GetMapping("/approvalFlows")
     public Result<List<ApprovalFlow>> approvalFlows() {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
@@ -976,7 +976,7 @@ public class RuleAdminController {
      * @param traceId 追踪 ID
      * @return 回放结果（含历史快照 + 当前评估 + 差异分析）
      */
-    @Idempotent(key = "rule-admin:replay-trace", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:replayTrace", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/traces/{traceId}/replay")
     public Result<Map<String, Object>> replayTrace(@PathVariable String traceId) {
         List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
@@ -1059,8 +1059,8 @@ public class RuleAdminController {
      * @param request 请求体（startTime / endTime / ruleCode / limit）
      * @return 批量回放差异报告
      */
-    @Idempotent(key = "rule-admin:batch-replay-traces", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/traces/batch-replay")
+    @Idempotent(key = "ruleAdmin:batchReplayTraces", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/traces/batchReplay")
     public Result<Map<String, Object>> batchReplayTraces(@RequestBody Map<String, Object> request) {
         // 解析请求参数
         String startTimeStr = (String) request.get("startTime");
@@ -1174,7 +1174,7 @@ public class RuleAdminController {
      * @return 影响分析报告
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
-    @PostMapping("/{ruleCode}/impact-preview")
+    @PostMapping("/{ruleCode}/impactPreview")
     public Result<Map<String, Object>> impactPreview(@PathVariable String ruleCode,
                                                       @RequestBody Map<String, Object> request) {
         String conditionExpression = (String) request.get("conditionExpression");
@@ -1331,7 +1331,7 @@ public class RuleAdminController {
     /**
      * 查询全部决策表
      */
-    @GetMapping("/decision-tables")
+    @GetMapping("/decisionTables")
     public Result<List<DecisionTableDO>> listDecisionTables() {
         return Result.ok(decisionTableMapper.selectList(null));
     }
@@ -1339,7 +1339,7 @@ public class RuleAdminController {
     /**
      * 查询单条决策表
      */
-    @GetMapping("/decision-tables/{tableCode}")
+    @GetMapping("/decisionTables/{tableCode}")
     public Result<DecisionTableDO> getDecisionTable(@PathVariable String tableCode) {
         DecisionTableDO dt = decisionTableMapper.selectOne(
             new LambdaQueryWrapper<DecisionTableDO>().eq(DecisionTableDO::getTableCode, tableCode));
@@ -1349,8 +1349,8 @@ public class RuleAdminController {
     /**
      * 保存决策表
      */
-    @Idempotent(key = "rule-admin:save-decision-table", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/decision-tables")
+    @Idempotent(key = "ruleAdmin:saveDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/decisionTables")
     public Result<DecisionTableDO> saveDecisionTable(@RequestBody DecisionTableDO decisionTable) {
         if (decisionTable.getId() != null) {
             decisionTableMapper.updateById(decisionTable);
@@ -1364,8 +1364,8 @@ public class RuleAdminController {
      * 删除决策表
      */
     @OperationLog(module = "规则引擎", action = "删除决策表", bizType = "DECISION_TABLE")
-    @Idempotent(key = "rule-admin:delete-decision-table", ttlSeconds = 5, message = "请勿重复提交")
-    @DeleteMapping("/decision-tables/{id}")
+    @Idempotent(key = "ruleAdmin:deleteDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
+    @DeleteMapping("/decisionTables/{id}")
     public Result<Void> deleteDecisionTable(@PathVariable String id) {
         decisionTableMapper.deleteById(id);
         return Result.ok();
@@ -1381,8 +1381,8 @@ public class RuleAdminController {
      * @param facts     事实数据（变量名 -> 值）
      * @return 命中行的动作值列表
      */
-    @Idempotent(key = "rule-admin:evaluate-decision-table", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/decision-tables/{tableCode}/evaluate")
+    @Idempotent(key = "ruleAdmin:evaluateDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/decisionTables/{tableCode}/evaluate")
     public Result<List<Map<String, Object>>> evaluateDecisionTable(@PathVariable String tableCode,
                                                                    @RequestBody Map<String, Object> facts) {
         try {
@@ -1402,7 +1402,7 @@ public class RuleAdminController {
      * @return xlsx 文件流（Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
      */
     @OperationLog(module = "规则引擎", action = "导出决策表 Excel", bizType = "DECISION_TABLE")
-    @GetMapping("/decision-tables/{tableCode}/export-excel")
+    @GetMapping("/decisionTables/{tableCode}/exportExcel")
     @PrePermission("execution:rule:view")
     public ResponseEntity<byte[]> exportDecisionTableExcel(@PathVariable String tableCode) {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
@@ -1428,7 +1428,7 @@ public class RuleAdminController {
      * @return 保存后的决策表定义
      */
     @OperationLog(module = "规则引擎", action = "导入决策表 Excel", bizType = "DECISION_TABLE")
-    @PostMapping(value = "/decision-tables/import-excel", consumes = "multipart/form-data")
+    @PostMapping(value = "/decisionTables/importExcel", consumes = "multipart/form-data")
     @PrePermission("execution:rule:save")
     public Result<DecisionTableDefinition> importDecisionTableExcel(
             @RequestParam("file") MultipartFile file,
@@ -1460,7 +1460,7 @@ public class RuleAdminController {
      *
      * @return xlsx 模板文件流
      */
-    @GetMapping("/decision-tables/excel-template")
+    @GetMapping("/decisionTables/excelTemplate")
     @PrePermission("execution:rule:view")
     public ResponseEntity<byte[]> downloadDecisionTableExcelTemplate() {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
@@ -1574,7 +1574,7 @@ public class RuleAdminController {
     /**
      * 导入规则（JSON 格式）
      */
-    @Idempotent(key = "rule-admin:import-rules", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:importRules", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/import")
     public Result<Map<String, Object>> importRules(@Valid @RequestBody RuleImportDTO dto,
                                                     @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -1622,7 +1622,7 @@ public class RuleAdminController {
      * @return 操作结果
      */
     @OperationLog(module = "规则引擎", action = "删除规则", bizType = "RULE")
-    @Idempotent(key = "rule-admin:delete-rule", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:deleteRule", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}")
     @PrePermission("execution:rule:delete")
     public Result<Void> deleteRule(@PathVariable String ruleCode,
@@ -1652,8 +1652,8 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 成功与失败明细
      */
-    @Idempotent(key = "rule-admin:batch-toggle", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/batch-toggle")
+    @Idempotent(key = "ruleAdmin:batchToggle", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/batchToggle")
     @PrePermission("execution:rule:toggle")
     public Result<Map<String, Object>> batchToggle(@Valid @RequestBody RuleBatchToggleDTO dto,
                                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -1693,8 +1693,8 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 成功与失败明细
      */
-    @Idempotent(key = "rule-admin:batch-priority", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/batch-priority")
+    @Idempotent(key = "ruleAdmin:batchPriority", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/batchPriority")
     public Result<Map<String, Object>> batchPriority(@Valid @RequestBody RuleBatchPriorityDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> ruleCodes = dto.getRuleCodes();
@@ -1735,8 +1735,8 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 成功与失败明细
      */
-    @Idempotent(key = "rule-admin:batch-category", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/batch-category")
+    @Idempotent(key = "ruleAdmin:batchCategory", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/batchCategory")
     public Result<Map<String, Object>> batchCategory(@Valid @RequestBody RuleBatchCategoryDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> ruleCodes = dto.getRuleCodes();
@@ -1791,7 +1791,7 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 保存后的画布
      */
-    @Idempotent(key = "rule-admin:save-chain-graph", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:saveChainGraph", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/graph")
     public Result<Map<String, Object>> saveChainGraph(@PathVariable String ruleCode,
                                                        @Valid @RequestBody RuleChainGraph graph,
@@ -1818,7 +1818,7 @@ public class RuleAdminController {
      * 删除画布
      */
     @OperationLog(module = "规则引擎", action = "删除画布", bizType = "RULE_CHAIN_GRAPH")
-    @Idempotent(key = "rule-admin:delete-chain-graph", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:deleteChainGraph", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}/graph")
     public Result<Void> deleteChainGraph(@PathVariable String ruleCode) {
         ruleChainGraphProvider.delete(ruleCode);
@@ -1844,7 +1844,7 @@ public class RuleAdminController {
      * @param facts      样例事实数据
      * @return 求值结果（含 value / type / error）
      */
-    @PostMapping("/expression-preview")
+    @PostMapping("/expressionPreview")
     public Result<ExpressionPreviewResult> previewExpression(
             @RequestParam String expression,
             @RequestBody Map<String, Object> facts) {
@@ -1861,8 +1861,8 @@ public class RuleAdminController {
      * @param facts    事实数据
      * @return 评估结果列表
      */
-    @Idempotent(key = "rule-admin:dry-run-graph", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/graph/dry-run")
+    @Idempotent(key = "ruleAdmin:dryRunGraph", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/graph/dryRun")
     public Result<List<RuleResult>> dryRunGraph(@PathVariable String ruleCode,
                                                  @RequestBody Map<String, Object> facts) {
         try {
@@ -1883,7 +1883,7 @@ public class RuleAdminController {
      * @param ruleCode 规则编码
      * @return 失效规则编码列表
      */
-    @GetMapping("/{ruleCode}/graph/invalid-refs")
+    @GetMapping("/{ruleCode}/graph/invalidRefs")
     public Result<List<String>> invalidGraphRefs(@PathVariable String ruleCode) {
         return Result.ok(graphExecutionProvider.collectInvalidReferences(ruleCode));
     }
@@ -1899,7 +1899,7 @@ public class RuleAdminController {
      * @param engine 引擎类型（aviator/qlexpress/all），默认 all
      * @return 函数定义列表
      */
-    @GetMapping("/expression-functions")
+    @GetMapping("/expressionFunctions")
     public Result<List<ExpressionFunctionDef>> expressionFunctions(
             @RequestParam(value = "engine", defaultValue = "all") String engine) {
         List<ExpressionFunctionDef> all = ExpressionFunctionDef.defaults();
@@ -1915,7 +1915,7 @@ public class RuleAdminController {
     /**
      * 添加规则依赖
      */
-    @Idempotent(key = "rule-admin:add-dependency", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:addDependency", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/dependencies")
     public Result<RuleDependencyDO> addDependency(
             @PathVariable String ruleCode,
@@ -1932,7 +1932,7 @@ public class RuleAdminController {
      * 删除规则依赖
      */
     @OperationLog(module = "规则引擎", action = "删除规则依赖", bizType = "RULE_DEPENDENCY")
-    @Idempotent(key = "rule-admin:remove-dependency", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:removeDependency", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
     public Result<Void> removeDependency(
             @PathVariable String ruleCode,
@@ -1960,7 +1960,7 @@ public class RuleAdminController {
     /**
      * 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表）
      */
-    @GetMapping("/{ruleCode}/cascading-disable")
+    @GetMapping("/{ruleCode}/cascadingDisable")
     public Result<List<String>> cascadingDisable(@PathVariable String ruleCode) {
         return Result.ok(ruleDependencyProvider.cascadingDisable(ruleCode));
     }
@@ -1972,7 +1972,7 @@ public class RuleAdminController {
      *
      * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
      */
-    @GetMapping("/category-tree")
+    @GetMapping("/categoryTree")
     public Result<CategoryNode> categoryTree() {
         return Result.ok(ruleCategoryProvider.buildTree());
     }
@@ -1982,7 +1982,7 @@ public class RuleAdminController {
      *
      * @param path 分类路径前缀，例如 "finance" / "finance/credit"
      */
-    @GetMapping("/by-category-path")
+    @GetMapping("/byCategoryPath")
     public Result<List<RuleDefinition>> listByCategoryPath(
             @RequestParam(value = "path", required = false) String path) {
         return Result.ok(ruleCategoryProvider.listDefinitionsByCategoryPath(path));
@@ -1991,7 +1991,7 @@ public class RuleAdminController {
     /**
      * 按 Owner 查询规则
      */
-    @GetMapping("/by-owner")
+    @GetMapping("/byOwner")
     public Result<List<RuleDefinition>> listByOwner(
             @RequestParam(value = "owner") String owner) {
         return Result.ok(ruleCategoryProvider.listDefinitionsByOwner(owner));
@@ -2000,7 +2000,7 @@ public class RuleAdminController {
     /**
      * 设置规则责任人
      */
-    @Idempotent(key = "rule-admin:set-owner", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:setOwner", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/owner")
     public Result<Void> setOwner(
             @PathVariable String ruleCode,
@@ -2013,8 +2013,8 @@ public class RuleAdminController {
     /**
      * 设置规则分类路径
      */
-    @Idempotent(key = "rule-admin:set-category-path", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{ruleCode}/category-path")
+    @Idempotent(key = "ruleAdmin:setCategoryPath", ttlSeconds = 5, message = "请勿重复提交")
+    @PutMapping("/{ruleCode}/categoryPath")
     public Result<Void> setCategoryPath(
             @PathVariable String ruleCode,
             @RequestParam(value = "path") String path,
@@ -2028,7 +2028,7 @@ public class RuleAdminController {
     /**
      * 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
      */
-    @GetMapping("/{ruleCode}/ab-policy")
+    @GetMapping("/{ruleCode}/abPolicy")
     public Result<RuleABPolicyDO> getABPolicy(@PathVariable String ruleCode) {
         RuleABPolicyDO policy = abTestAutoRollbackProvider.getPolicy(ruleCode);
         return Result.ok(policy);
@@ -2037,8 +2037,8 @@ public class RuleAdminController {
     /**
      * 更新规则的 AB Test 自动回滚策略
      */
-    @Idempotent(key = "rule-admin:update-abpolicy", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{ruleCode}/ab-policy")
+    @Idempotent(key = "ruleAdmin:updateAbpolicy", ttlSeconds = 5, message = "请勿重复提交")
+    @PutMapping("/{ruleCode}/abPolicy")
     public Result<Void> updateABPolicy(
             @PathVariable String ruleCode,
             @Valid @RequestBody RuleABPolicyDO policy,
@@ -2051,7 +2051,7 @@ public class RuleAdminController {
     /**
      * 查询规则的回滚历史
      */
-    @GetMapping("/{ruleCode}/ab-rollbacks")
+    @GetMapping("/{ruleCode}/abRollbacks")
     public Result<List<RuleABRollbackDO>> listRollbackHistory(@PathVariable String ruleCode) {
         return Result.ok(abTestAutoRollbackProvider.listRollbackHistory(ruleCode));
     }
@@ -2059,8 +2059,8 @@ public class RuleAdminController {
     /**
      * 主动触发 AB Test 评估（人工立即检查）
      */
-    @Idempotent(key = "rule-admin:evaluate-ab", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/ab-evaluate")
+    @Idempotent(key = "ruleAdmin:evaluateAb", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/abEvaluate")
     public Result<Boolean> evaluateAB(@PathVariable String ruleCode) {
         return Result.ok(abTestAutoRollbackProvider.evaluateOne(ruleCode));
     }
@@ -2070,8 +2070,8 @@ public class RuleAdminController {
      *
      * @param reason MANUAL / OWNER_REQUEST
      */
-    @Idempotent(key = "rule-admin:manual-rollback", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/ab-rollback")
+    @Idempotent(key = "ruleAdmin:manualRollback", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/abRollback")
     public Result<RuleABRollbackDO> manualRollback(
             @PathVariable String ruleCode,
             @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,
@@ -2149,7 +2149,7 @@ public class RuleAdminController {
     /**
      * 发布规则集到市场
      */
-    @Idempotent(key = "rule-admin:publish-pack", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:publishPack", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/packs")
     public Result<RulePack> publishPack(
             @Valid @RequestBody RulePack pack,
@@ -2172,7 +2172,7 @@ public class RuleAdminController {
      * 删除规则集
      */
     @OperationLog(module = "规则引擎", action = "删除规则集", bizType = "RULE_PACK")
-    @Idempotent(key = "rule-admin:delete-pack", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:deletePack", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/packs/{id}")
     public Result<Void> deletePack(@PathVariable String id) {
         rulePackProvider.delete(id);
@@ -2182,7 +2182,7 @@ public class RuleAdminController {
     /**
      * 标记为官方
      */
-    @Idempotent(key = "rule-admin:mark-official-pack", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:markOfficialPack", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/packs/{id}/official")
     public Result<Void> markOfficialPack(
             @PathVariable String id,
@@ -2194,7 +2194,7 @@ public class RuleAdminController {
     /**
      * 评分（0-5）
      */
-    @Idempotent(key = "rule-admin:rate-pack", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:ratePack", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/packs/{id}/rate")
     public Result<Void> ratePack(
             @PathVariable String id,
@@ -2216,7 +2216,7 @@ public class RuleAdminController {
      * @param body 请求体，含 naturalLanguage 字段
      * @return LLM 生成的规则定义
      */
-    @Idempotent(key = "rule-admin:natural-language-to-rule", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:naturalLanguageToRule", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/ai/nl2rule")
     @Operation(summary = "AI 自然语言转规则（NL2Rule）", description = "调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）；LLM 不可用时降级返回空壳定义")
     public Result<RuleDefinition> naturalLanguageToRule(@Valid @RequestBody RuleNL2RuleDTO dto) {
@@ -2294,7 +2294,7 @@ public class RuleAdminController {
      *
      * @return 全部规则的健康度评分列表
      */
-    @GetMapping("/ai/health-batch")
+    @GetMapping("/ai/healthBatch")
     @Operation(summary = "批量规则健康度评分", description = "对全部规则逐条评分，返回健康度评分列表")
     public Result<List<RuleHealthScore>> healthScoreBatch() {
         RuleHealthScoreService svc = ruleHealthScoreServiceProvider.getIfAvailable();
@@ -2362,7 +2362,7 @@ public class RuleAdminController {
      * @param facts    事实数据
      * @return 归因分析报告
      */
-    @Idempotent(key = "rule-admin:attribution", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:attribution", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/attribution")
     @Operation(summary = "单规则归因分析", description = "基于表达式追踪 + LLM 生成规则触发/未触发的归因分析报告")
     public Result<AttributionReport> attribution(@PathVariable String ruleCode,
@@ -2382,7 +2382,7 @@ public class RuleAdminController {
      * @param traceIds traceId 列表
      * @return 归因分析报告列表
      */
-    @Idempotent(key = "rule-admin:batch-attribution", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:batchAttribution", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/attribution/batch")
     @Operation(summary = "批量归因分析", description = "按 traceId 列表对历史执行轨迹批量归因分析")
     public Result<List<AttributionReport>> batchAttribution(@RequestBody List<String> traceIds) {
@@ -2459,8 +2459,8 @@ public class RuleAdminController {
      * @param days     分析最近 N 天的数据（默认 30）
      * @return 阈值分析结果列表（一条规则可能含多个阈值比较项）
      */
-    @Idempotent(key = "rule-admin:analyze-threshold", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/threshold-analysis")
+    @Idempotent(key = "ruleAdmin:analyzeThreshold", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/thresholdAnalysis")
     @Operation(summary = "规则阈值自适应分析", description = "基于历史触发数据自动计算最优阈值，生成阈值调整建议")
     public Result<List<ThresholdAnalysis>> analyzeThreshold(
             @PathVariable String ruleCode,
@@ -2478,8 +2478,8 @@ public class RuleAdminController {
      * @param days 分析最近 N 天的数据（默认 30）
      * @return 全部规则的分析结果列表
      */
-    @Idempotent(key = "rule-admin:analyze-all-thresholds", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/threshold-analysis/all")
+    @Idempotent(key = "ruleAdmin:analyzeAllThresholds", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/thresholdAnalysis/all")
     @Operation(summary = "全部规则阈值自适应分析", description = "批量分析所有规则的阈值，生成调整建议")
     public Result<List<ThresholdAnalysis>> analyzeAllThresholds(
             @RequestParam(value = "days", defaultValue = "30") int days) {
@@ -2500,8 +2500,8 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 操作结果（true=应用成功）
      */
-    @Idempotent(key = "rule-admin:apply-threshold", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/apply-threshold")
+    @Idempotent(key = "ruleAdmin:applyThreshold", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/applyThreshold")
     @OperationLog(module = "规则引擎", action = "应用自适应阈值调整", bizType = "RULE")
     @Operation(summary = "应用阈值调整", description = "将建议阈值写入规则条件表达式并持久化")
     public Result<Boolean> applyThreshold(
@@ -2522,7 +2522,7 @@ public class RuleAdminController {
      * @param ruleCode 规则编码
      * @return 待处理建议列表
      */
-    @GetMapping("/{ruleCode}/threshold-suggestions")
+    @GetMapping("/{ruleCode}/thresholdSuggestions")
     @Operation(summary = "获取阈值调整建议", description = "返回最近一次分析生成的待处理阈值调整建议")
     public Result<List<ThresholdAnalysis>> thresholdSuggestions(@PathVariable String ruleCode) {
         AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
@@ -2557,7 +2557,7 @@ public class RuleAdminController {
      * @param request 请求体
      * @return Agent 执行结果（output / iterations / thoughts / elapsedMs）
      */
-    @Idempotent(key = "rule-admin:execute-agent", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:executeAgent", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/agent/execute")
     @Operation(summary = "执行 AI Agent 节点", description = "调用 ReAct Agent 执行器，在思考-行动-观察循环中逐步推理；Agent 可调用其他规则作为工具")
     public Result<Map<String, Object>> executeAgent(@RequestBody Map<String, Object> request) {
@@ -2637,7 +2637,7 @@ public class RuleAdminController {
      * @param request 压测请求
      * @return 压测结果（含 QPS、分位数耗时、错误率、直方图）
      */
-    @PostMapping("/stress-test")
+    @PostMapping("/stressTest")
     @Operation(summary = "规则压测", description = "使用线程池并发执行 Dry-run，统计 QPS、P50/P95/P99 耗时、错误率")
     public Result<RuleStressTestService.StressTestResult> stressTest(
             @RequestBody Map<String, Object> request) {
@@ -2683,7 +2683,7 @@ public class RuleAdminController {
      *
      * @return 更新检查结果列表
      */
-    @GetMapping("/packs/update-check")
+    @GetMapping("/packs/updateCheck")
     @Operation(summary = "知识包更新检查", description = "对比已安装知识包与市场最新版本，返回有更新的包列表")
     public Result<List<PackUpdateInfo>> checkPackUpdates() {
         return Result.ok(rulePackProvider.checkPackUpdates());
@@ -2695,7 +2695,7 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 每个包的更新结果
      */
-    @PostMapping("/packs/batch-update")
+    @PostMapping("/packs/batchUpdate")
     @OperationLog(module = "规则引擎", action = "批量更新知识包", bizType = "RULE_PACK")
     @Operation(summary = "批量更新知识包", description = "将指定知识包列表更新到最新版本")
     public Result<List<InstallResult>> batchUpdatePacks(

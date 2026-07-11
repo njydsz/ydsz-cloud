@@ -26,7 +26,7 @@ import java.util.Base64;
 @Slf4j
 @Tag(name = "已读回执", description = "邮件追踪像素与短信短链回调")
 @RestController
-@RequestMapping("/api/read-receipt")
+@RequestMapping("/api/readReceipt")
 @RequiredArgsConstructor
 public class ReadReceiptController {
 

@@ -47,7 +47,7 @@ public class JobRelationController {
     @Operation(summary = "添加任务依赖关系")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "添加任务依赖", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-relation:add-relation", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobRelation:addRelation", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> addRelation(@Valid @RequestBody JobRelationSaveDTO dto) {
         return Result.ok(jobRelationService.addRelation(
@@ -63,7 +63,7 @@ public class JobRelationController {
     @Operation(summary = "删除任务依赖关系")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "删除任务依赖", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-relation:remove-relation", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobRelation:removeRelation", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{relationId}")
     public Result<Void> removeRelation(@PathVariable String relationId) {
         jobRelationService.removeRelation(relationId);

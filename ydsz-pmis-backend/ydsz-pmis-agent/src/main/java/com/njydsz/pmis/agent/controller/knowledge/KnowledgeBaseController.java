@@ -41,7 +41,7 @@ import java.util.List;
 @Slf4j
 @Tag(name = "RAG 知识库")
 @RestController
-@RequestMapping("/agent/knowledge-base")
+@RequestMapping("/agent/knowledgeBase")
 @Validated
 public class KnowledgeBaseController {
 
@@ -63,7 +63,7 @@ public class KnowledgeBaseController {
      * @return 落库后的知识库
      */
     @Operation(summary = "创建知识库")
-    @Idempotent(key = "knowledge-base:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "knowledgeBase:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<KnowledgeBaseDO> create(@Valid @RequestBody KnowledgeBaseDO kb) {
         return Result.ok(kbService.create(kb));
@@ -106,7 +106,7 @@ public class KnowledgeBaseController {
      * @return 落库后的文档
      */
     @Operation(summary = "上传文档")
-    @Idempotent(key = "knowledge-base:upload-document", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "knowledgeBase:uploadDocument", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/documents")
     public Result<AgentDocumentDO> uploadDocument(
             @PathVariable("id") @NotBlank String knowledgeBaseId,

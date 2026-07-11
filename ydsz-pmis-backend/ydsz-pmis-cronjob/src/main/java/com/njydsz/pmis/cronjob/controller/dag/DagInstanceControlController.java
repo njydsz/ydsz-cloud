@@ -45,7 +45,7 @@ public class DagInstanceControlController {
      * @return 统一响应结果，true 表示暂停成功
      */
     @Operation(summary = "暂停 DAG 实例")
-    @Idempotent(key = "dag-instance-control:pause", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dagInstanceControl:pause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/pause")
     public Result<Boolean> pause(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.pause(instanceId);
@@ -59,7 +59,7 @@ public class DagInstanceControlController {
      * @return 统一响应结果，true 表示恢复成功
      */
     @Operation(summary = "恢复 DAG 实例")
-    @Idempotent(key = "dag-instance-control:resume", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dagInstanceControl:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/resume")
     public Result<Boolean> resume(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.resume(instanceId);
@@ -73,7 +73,7 @@ public class DagInstanceControlController {
      * @return 统一响应结果，true 表示取消成功
      */
     @Operation(summary = "取消 DAG 实例")
-    @Idempotent(key = "dag-instance-control:cancel", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dagInstanceControl:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{instanceId}/cancel")
     public Result<Boolean> cancel(@PathVariable String instanceId) {
         boolean success = dagInstanceControlService.cancel(instanceId);
@@ -88,8 +88,8 @@ public class DagInstanceControlController {
      * @return 统一响应结果，true 表示重试成功
      */
     @Operation(summary = "手动重试指定失败节点")
-    @Idempotent(key = "dag-instance-control:retry-node", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{instanceId}/retry-node")
+    @Idempotent(key = "dagInstanceControl:retryNode", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{instanceId}/retryNode")
     public Result<Boolean> retryNode(@PathVariable String instanceId,
                                       @RequestParam String jobKey) {
         boolean success = dagInstanceControlService.retryNode(instanceId, jobKey);

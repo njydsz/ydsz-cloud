@@ -47,7 +47,7 @@ public class AuthFeignController {
      * @return 统一响应结果，包含登录上下文
      */
     @Operation(summary = "根据用户名加载登录上下文")
-    @GetMapping("/context/by-username")
+    @GetMapping("/context/byUsername")
     public Result<LoginContextDTO> getLoginContextByUsername(@RequestParam String username) {
         UserAccountDO user = userAccountService.findByUsername(username);
         return Result.ok(buildContext(user));
@@ -60,7 +60,7 @@ public class AuthFeignController {
      * @return 统一响应结果，包含登录上下文
      */
     @Operation(summary = "根据用户 ID 加载登录上下文")
-    @GetMapping("/context/by-id")
+    @GetMapping("/context/byId")
     public Result<LoginContextDTO> getLoginContextById(@RequestParam String userId) {
         return Result.ok(buildContext(userAccountService.findById(userId)));
     }

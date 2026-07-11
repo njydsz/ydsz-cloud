@@ -114,7 +114,7 @@ public class HitlApprovalController {
      */
     @Operation(summary = "批准审批请求")
     @PrePermission("agent:hitl:approve")
-    @Idempotent(key = "hitl-approval:approve", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "hitlApproval:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/approve")
     public Result<ReActResult> approve(@PathVariable String id,
                                        @Valid @RequestBody HitlApprovalActionDTO dto) {
@@ -130,7 +130,7 @@ public class HitlApprovalController {
      */
     @Operation(summary = "拒绝审批请求")
     @PrePermission("agent:hitl:approve")
-    @Idempotent(key = "hitl-approval:reject", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "hitlApproval:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/reject")
     public Result<ReActResult> reject(@PathVariable String id,
                                       @Valid @RequestBody HitlApprovalActionDTO dto) {
@@ -146,7 +146,7 @@ public class HitlApprovalController {
      */
     @Operation(summary = "取消审批请求")
     @PrePermission("agent:hitl:approve")
-    @Idempotent(key = "hitl-approval:cancel", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "hitlApproval:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/cancel")
     public Result<Void> cancel(@PathVariable String id,
                                @Valid @RequestBody HitlApprovalActionDTO dto) {

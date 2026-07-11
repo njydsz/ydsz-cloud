@@ -22,7 +22,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/workflow/custom-buttons")
+@RequestMapping("/api/workflow/customButtons")
 @RequiredArgsConstructor
 @Tag(name = "节点自定义按钮", description = "流程节点的自定义操作按钮管理")
 public class FlowCustomButtonController {
@@ -53,7 +53,7 @@ public class FlowCustomButtonController {
      * @param buttons      按钮配置列表
      * @return 空响应
      */
-    @Idempotent(key = "flow-custom-button:save", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowCustomButton:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "保存节点的自定义按钮配置")
     public Result<Void> save(
@@ -73,7 +73,7 @@ public class FlowCustomButtonController {
      * @param variables 流程变量（可选）
      * @return 按钮执行结果
      */
-    @Idempotent(key = "flow-custom-button:execute", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowCustomButton:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/execute")
     @Operation(summary = "执行自定义按钮操作")
     public Result<Map<String, Object>> execute(

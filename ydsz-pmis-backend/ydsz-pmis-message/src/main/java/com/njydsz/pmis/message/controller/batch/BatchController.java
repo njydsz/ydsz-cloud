@@ -53,7 +53,7 @@ public class BatchController {
      */
     @Operation(summary = "异步批量发送消息")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "batch:submit-batch", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "batch:submitBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public Result<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
         if (dto == null) {

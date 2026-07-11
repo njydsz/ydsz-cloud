@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping("/agent/token-quota")
+@RequestMapping("/agent/tokenQuota")
 @RequiredArgsConstructor
 @Tag(name = "Token 配额管理", description = "租户级 Token 配额查询与重置")
 public class TokenQuotaController {
@@ -50,7 +50,7 @@ public class TokenQuotaController {
      *
      * @return 重置后的配额概览
      */
-    @Idempotent(key = "token-quota:reset", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "tokenQuota:reset", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reset")
     @Operation(summary = "重置当月 Token 配额")
     public Result<QuotaSummary> reset() {

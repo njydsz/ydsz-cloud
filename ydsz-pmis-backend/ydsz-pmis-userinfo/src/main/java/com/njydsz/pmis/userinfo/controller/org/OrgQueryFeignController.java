@@ -73,7 +73,7 @@ public class OrgQueryFeignController {
      * @return 用户 ID 列表（无匹配返回空列表）
      */
     @Operation(summary = "按角色编码查询用户 ID 列表")
-    @GetMapping("/users-by-role")
+    @GetMapping("/usersByRole")
     public Result<List<String>> listUserIdsByRoleCode(@RequestParam("roleCode") String roleCode) {
         if (roleCode == null || roleCode.isBlank()) {
             return Result.ok(Collections.emptyList());
@@ -107,7 +107,7 @@ public class OrgQueryFeignController {
      * @return 部门负责人用户 ID，未设置或部门不存在时返回 null
      */
     @Operation(summary = "按部门 ID 查询部门负责人")
-    @GetMapping("/dept-leader")
+    @GetMapping("/deptLeader")
     public Result<String> getDeptLeaderByDeptId(@RequestParam("deptId") String deptId) {
         if (deptId == null) {
             return Result.ok(null);
@@ -132,7 +132,7 @@ public class OrgQueryFeignController {
      * @return 部门负责人用户 ID，未设置或部门不存在时返回 null
      */
     @Operation(summary = "按部门编码查询部门负责人")
-    @GetMapping("/dept-leader-by-code")
+    @GetMapping("/deptLeaderByCode")
     public Result<String> getDeptLeaderByDeptCode(@RequestParam("deptCode") String deptCode) {
         if (deptCode == null || deptCode.isBlank()) {
             return Result.ok(null);
@@ -159,7 +159,7 @@ public class OrgQueryFeignController {
      * @return 角色编码列表（无匹配返回空列表）
      */
     @Operation(summary = "查询用户角色编码列表")
-    @GetMapping("/user-role-codes")
+    @GetMapping("/userRoleCodes")
     public Result<List<String>> listRoleCodesByUserId(@RequestParam("userId") String userId) {
         if (userId == null) {
             return Result.ok(Collections.emptyList());
@@ -191,7 +191,7 @@ public class OrgQueryFeignController {
      * @return 部门 ID 列表（字符串形式），未设置时返回空列表
      */
     @Operation(summary = "查询用户部门 ID 列表")
-    @GetMapping("/user-dept-ids")
+    @GetMapping("/userDeptIds")
     public Result<List<String>> listDeptIdsByUserId(@RequestParam("userId") String userId) {
         if (userId == null) {
             return Result.ok(Collections.emptyList());
@@ -215,7 +215,7 @@ public class OrgQueryFeignController {
      * @return 用户 ID 列表
      */
     @Operation(summary = "按部门 ID 查询用户 ID 列表")
-    @GetMapping("/users-by-dept")
+    @GetMapping("/usersByDept")
     public Result<List<String>> listUserIdsByDeptId(@RequestParam("deptId") String deptId) {
         if (deptId == null) {
             return Result.ok(Collections.emptyList());
@@ -243,7 +243,7 @@ public class OrgQueryFeignController {
      * @return 用户 ID 列表
      */
     @Operation(summary = "按岗位编码查询用户 ID 列表")
-    @GetMapping("/users-by-position")
+    @GetMapping("/usersByPosition")
     public Result<List<String>> listUserIdsByPositionCode(@RequestParam("positionCode") String positionCode) {
         if (positionCode == null || positionCode.isBlank()) {
             return Result.ok(Collections.emptyList());
@@ -271,7 +271,7 @@ public class OrgQueryFeignController {
      * @return 直属上级用户 ID，未设置时返回 null
      */
     @Operation(summary = "按用户 ID 查询直属上级")
-    @GetMapping("/leader-by-user")
+    @GetMapping("/leaderByUser")
     public Result<String> getLeaderByUserId(@RequestParam("userId") String userId) {
         if (userId == null) {
             return Result.ok(null);

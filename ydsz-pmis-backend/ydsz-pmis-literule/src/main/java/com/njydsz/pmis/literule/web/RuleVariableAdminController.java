@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/rule-engine/variables")
+@RequestMapping("/ruleEngine/variables")
 @RequiredArgsConstructor
 @Validated
 public class RuleVariableAdminController {
@@ -74,7 +74,7 @@ public class RuleVariableAdminController {
      * @param definition 变量定义
      * @return 保存后的变量定义
      */
-    @Idempotent(key = "rule-variable-admin:save", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleVariableAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<VariableDefinition> save(@RequestBody VariableDefinition definition) {
         if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
@@ -91,7 +91,7 @@ public class RuleVariableAdminController {
      * @return 操作结果
      */
     @OperationLog(module = "规则变量", action = "删除变量定义", bizType = "RULE_VARIABLE")
-    @Idempotent(key = "rule-variable-admin:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleVariableAdmin:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{varName}")
     public Result<Void> delete(@PathVariable String varName) {
         variableRegistry.unregister(varName);
@@ -103,7 +103,7 @@ public class RuleVariableAdminController {
      *
      * @return 操作结果
      */
-    @Idempotent(key = "rule-variable-admin:refresh", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleVariableAdmin:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
     public Result<Void> refresh() {
         variableRegistry.refresh();

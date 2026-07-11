@@ -46,7 +46,7 @@ public class MessageFeedbackController {
      * @return 统一响应结果，包含反馈记录 ID
      */
     @Operation(summary = "提交消息反馈")
-    @Idempotent(key = "message-feedback:submit-feedback", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "messageFeedback:submitFeedback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
         return Result.ok(messageFeedbackService.submitFeedback(dto));
@@ -99,7 +99,7 @@ public class MessageFeedbackController {
      */
     @Operation(summary = "检查用户是否需要降频")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
-    @GetMapping("/should-reduce-freq")
+    @GetMapping("/shouldReduceFreq")
     public Result<Map<String, Boolean>> shouldReduceFrequency(@RequestParam String userId) {
         return Result.ok(Map.of("shouldReduce", messageFeedbackService.shouldReduceFrequency(userId)));
     }

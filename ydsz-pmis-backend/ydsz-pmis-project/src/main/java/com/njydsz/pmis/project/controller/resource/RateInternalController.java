@@ -38,7 +38,7 @@ import java.util.List;
  */
 @Tag(name = "对内成本费率")
 @RestController
-@RequestMapping("/resource/rate-internal")
+@RequestMapping("/resource/rateInternal")
 @RequiredArgsConstructor
 @Validated
 public class RateInternalController {
@@ -53,8 +53,8 @@ public class RateInternalController {
      * @return 新建费率 ID
      */
     @Operation(summary = "创建对内成本费率")
-    @PrePermission("execution:rate-internal:create")
-    @Idempotent(key = "rate-internal:create", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("execution:rateInternal:create")
+    @Idempotent(key = "rateInternal:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody RateInternalCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -68,8 +68,8 @@ public class RateInternalController {
      * @return 空结果
      */
     @Operation(summary = "更新")
-    @PrePermission("execution:rate-internal:update")
-    @Idempotent(key = "rate-internal:update", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("execution:rateInternal:update")
+    @Idempotent(key = "rateInternal:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable String id, @Valid @RequestBody RateInternalCreateDTO dto) {
         service.update(id, dto);
@@ -83,8 +83,8 @@ public class RateInternalController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:rate-internal:delete")
-    @Idempotent(key = "rate-internal:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("execution:rateInternal:delete")
+    @Idempotent(key = "rateInternal:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
@@ -131,7 +131,7 @@ public class RateInternalController {
      */
     @Operation(summary = "按职级+部门查询")
     @PrePermission("execution:rate:list")
-    @GetMapping("/by-level-dept")
+    @GetMapping("/byLevelDept")
     public Result<List<RateInternalDO>> listByLevelAndDept(
             @RequestParam String levelCode,
             @RequestParam(required = false) String departmentId) {

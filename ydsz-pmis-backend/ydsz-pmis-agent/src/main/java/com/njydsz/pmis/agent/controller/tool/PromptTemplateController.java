@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping("/agent/prompt-template")
+@RequestMapping("/agent/promptTemplate")
 @RequiredArgsConstructor
 @Tag(name = "Prompt 模板管理", description = "Agent Prompt 模板的创建、查询、激活与删除")
 public class PromptTemplateController {
@@ -45,7 +45,7 @@ public class PromptTemplateController {
      * @param dto 模板创建参数
      * @return 落库后的模板
      */
-    @Idempotent(key = "prompt-template:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "promptTemplate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建模板", description = "创建新的 Prompt 模板（默认非生效，需手动激活）")
     public Result<AgentPromptTemplateDO> create(@Valid @RequestBody PromptTemplateCreateDTO dto) {
@@ -58,7 +58,7 @@ public class PromptTemplateController {
      * @param id 模板 ID
      * @return 激活后的模板
      */
-    @Idempotent(key = "prompt-template:activate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "promptTemplate:activate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/activate")
     @Operation(summary = "激活模板", description = "激活指定模板版本，同 code 的其他版本自动失效")
     public Result<AgentPromptTemplateDO> activate(@PathVariable String id) {
@@ -95,7 +95,7 @@ public class PromptTemplateController {
      * @param id 模板 ID
      * @return 空响应
      */
-    @Idempotent(key = "prompt-template:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "promptTemplate:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除模板", description = "软删除指定模板")
     public Result<Void> delete(@PathVariable String id) {

@@ -38,7 +38,7 @@ import java.util.Map;
  */
 @Tag(name = "利润测算")
 @RestController
-@RequestMapping("/finance/profit-simulation")
+@RequestMapping("/finance/profitSimulation")
 @RequiredArgsConstructor
 @Validated
 public class ProfitSimulationController {
@@ -54,7 +54,7 @@ public class ProfitSimulationController {
      */
     @Operation(summary = "创建测算版本")
     @PrePermission("execution:simulation:create")
-    @Idempotent(key = "profit-simulation:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "profitSimulation:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody ProfitSimulationCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -68,7 +68,7 @@ public class ProfitSimulationController {
      */
     @Operation(summary = "状态迁移")
     @PrePermission("execution:simulation:approve")
-    @Idempotent(key = "profit-simulation:change-status", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "profitSimulation:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody SimulationStatusDTO dto) {
         service.changeStatus(dto);
@@ -83,7 +83,7 @@ public class ProfitSimulationController {
      */
     @Operation(summary = "删除")
     @PrePermission("execution:simulation:delete")
-    @Idempotent(key = "profit-simulation:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "profitSimulation:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
@@ -111,7 +111,7 @@ public class ProfitSimulationController {
      */
     @Operation(summary = "按项目查询所有版本")
     @PrePermission("execution:simulation:list")
-    @GetMapping("/by-initiation")
+    @GetMapping("/byInitiation")
     public Result<List<ProfitSimulationDO>> listByInitiation(@RequestParam String initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }

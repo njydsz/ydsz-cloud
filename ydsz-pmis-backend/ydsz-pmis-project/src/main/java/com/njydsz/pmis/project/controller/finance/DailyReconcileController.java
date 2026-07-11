@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @Tag(name = "每日自动对账")
 @RestController
-@RequestMapping("/finance/daily-reconcile")
+@RequestMapping("/finance/dailyReconcile")
 @RequiredArgsConstructor
 @Validated
 public class DailyReconcileController {
@@ -42,7 +42,7 @@ public class DailyReconcileController {
      * @return 处理的对账记录数量
      */
     @Operation(summary = "运行某天的对账（默认今天）")
-    @Idempotent(key = "daily-reconcile:run", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dailyReconcile:run", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/run")
     public Result<Integer> run(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return Result.ok(service.runDaily(date));

@@ -71,8 +71,8 @@ public class FlowEventController {
      * @param tenantId       租户 ID（可选）
      * @return 触发的订阅数量
      */
-    @Idempotent(key = "flow-event:correlate-message", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/event/correlate-message")
+    @Idempotent(key = "flowEvent:correlateMessage", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/event/correlateMessage")
     public Result<Integer> correlateMessage(
             @RequestParam String messageName,
             @RequestParam(required = false) String correlationKey,
@@ -94,8 +94,8 @@ public class FlowEventController {
      * @param tenantId   租户 ID（可选）
      * @return 触发的订阅数量
      */
-    @Idempotent(key = "flow-event:throw-error", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/event/throw-error")
+    @Idempotent(key = "flowEvent:throwError", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/event/throwError")
     public Result<Integer> throwError(
             @RequestParam String errorCode,
             @RequestParam(required = false) String instanceId,
@@ -111,7 +111,7 @@ public class FlowEventController {
      * @param instanceId 实例 ID
      * @return 订阅列表（含 WAITING / COMPLETED / CANCELLED 状态）
      */
-    @GetMapping("/instance/{instanceId}/event-subscriptions")
+    @GetMapping("/instance/{instanceId}/eventSubscriptions")
     public Result<List<FlowEventSubscriptionDO>> listEventSubscriptions(
             @PathVariable String instanceId) {
         return Result.ok(eventSubscriptionService.listByInstance(instanceId));

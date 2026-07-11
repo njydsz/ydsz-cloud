@@ -55,7 +55,7 @@ public class FlowInstanceController {
      * @param dto 流程启动参数
      * @return 统一响应结果，包含流程实例 ID
      */
-    @Idempotent(key = "flow-instance:start-process", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:startProcess", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/start")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
     public Result<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
@@ -78,7 +78,7 @@ public class FlowInstanceController {
      * @param dtos 流程启动参数列表
      * @return 统一响应结果，包含 successCount / failedCount / instanceIds / failedItems
      */
-    @PostMapping("/instance/batch-start")
+    @PostMapping("/instance/batchStart")
     @Operation(summary = "批量启动流程实例")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
     public Result<Map<String, Object>> batchStartInstances(
@@ -106,7 +106,7 @@ public class FlowInstanceController {
      * @param reason 终止原因（可选）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-instance:terminate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:terminate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/terminate")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
@@ -120,7 +120,7 @@ public class FlowInstanceController {
      * @param id 流程实例 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-instance:suspend", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:suspend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/suspend")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> suspend(@PathVariable String id) {
@@ -134,7 +134,7 @@ public class FlowInstanceController {
      * @param id 流程实例 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-instance:activate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:activate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/activate")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> activate(@PathVariable String id) {
@@ -153,7 +153,7 @@ public class FlowInstanceController {
      * @param targetNodeCode  目标节点编码（可选，为空时撤回到开始节点下游第一节点）
      * @return 统一响应结果，包含是否撤回成功
      */
-    @Idempotent(key = "flow-instance:recall", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:recall", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/recall")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
     public Result<Boolean> recall(@PathVariable String id,
@@ -169,7 +169,7 @@ public class FlowInstanceController {
      * @param id 流程实例 ID
      * @return 统一响应结果，包含可撤回节点列表
      */
-    @GetMapping("/instance/{id}/recallable-nodes")
+    @GetMapping("/instance/{id}/recallableNodes")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
     public Result<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
         return Result.ok(instanceService.listRecallableNodes(id, SecurityContext.getUserId()));
@@ -188,7 +188,7 @@ public class FlowInstanceController {
      * @param maxRollbackDays 允许回滚的最大天数（可选，默认 7）
      * @return 统一响应结果，包含是否回滚成功
      */
-    @Idempotent(key = "flow-instance:rollback", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/rollback")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_ROLLBACK)
     public Result<Boolean> rollback(@PathVariable String id,
@@ -209,7 +209,7 @@ public class FlowInstanceController {
      *       创建全新实例，复用原实例的 flowCode/businessType/businessId/initiator，合并变量。</li>
      * </ul>
      */
-    @Idempotent(key = "flow-instance:resubmit", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:resubmit", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/resubmit")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
     public Result<String> resubmit(@PathVariable String id,
@@ -379,7 +379,7 @@ public class FlowInstanceController {
      * @param dto 变量 DTO
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-instance:set-variables", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:setVariables", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/variables")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> setVariables(@PathVariable String id,
@@ -397,7 +397,7 @@ public class FlowInstanceController {
      * @param comment 催办备注（可选）
      * @return 统一响应结果，包含被催办人列表
      */
-    @Idempotent(key = "flow-instance:urge", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:urge", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/urge")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_VIEW)
     public Result<List<String>> urge(@PathVariable String id,
@@ -410,7 +410,7 @@ public class FlowInstanceController {
      *
      * <p>nodeCode 不传时退化为实例级催办。
      */
-    @Idempotent(key = "flow-instance:urge-by-node", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowInstance:urgeByNode", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/urge/node")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_VIEW)
     public Result<List<String>> urgeByNode(@PathVariable String id,
@@ -426,7 +426,7 @@ public class FlowInstanceController {
      * @param taskId     任务 ID（可选，为空取当前节点）
      * @return 渲染数据（nodeCode / formFieldsConfig / variables）
      */
-    @GetMapping("/instance/{instanceId}/form-render")
+    @GetMapping("/instance/{instanceId}/formRender")
     public Result<Map<String, Object>> getFormRenderData(
             @PathVariable String instanceId,
             @RequestParam(required = false) String taskId) {

@@ -97,8 +97,8 @@ public class AgentController {
      */
     @Operation(summary = "执行 Agent（异步）")
     @PrePermission("agent:task:run")
-    @Idempotent(key = "agent:run-async", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/run-async")
+    @Idempotent(key = "agent:runAsync", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/runAsync")
     public Result<Void> runAsync(@Valid @RequestBody AgentRunRequestDTO req) {
         service.runAsync(req);
         return Result.ok();
@@ -113,8 +113,8 @@ public class AgentController {
      */
     @Operation(summary = "内存执行（不落库）")
     @PrePermission("agent:task:run")
-    @Idempotent(key = "agent:in-memory", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/in-memory")
+    @Idempotent(key = "agent:inMemory", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/inMemory")
     public Result<AgentResult> inMemory(@RequestParam String agentType,
                                     @Valid @RequestBody AgentContext ctx) {
         return Result.ok(service.executeInMemory(agentType, ctx));
@@ -157,7 +157,7 @@ public class AgentController {
      */
     @Operation(summary = "流式执行 Agent（SSE）")
     @PrePermission("agent:task:run")
-    @Idempotent(key = "agent:run-stream", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "agent:runStream", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping(value = "/run/stream", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter runStream(@RequestParam String agentType,
                                 @Valid @RequestBody AgentContext ctx) {
@@ -291,7 +291,7 @@ public class AgentController {
      */
     @Operation(summary = "AI Agent 执行耗时统计 (P50/P90/P95)")
     @PrePermission("agent:task:list")
-    @GetMapping("/duration-stats")
+    @GetMapping("/durationStats")
     public Result<Map<String, Object>> durationStats(
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
@@ -305,7 +305,7 @@ public class AgentController {
      */
     @Operation(summary = "按 Agent 类型统计耗时")
     @PrePermission("agent:task:list")
-    @GetMapping("/duration-stats/by-agent-type")
+    @GetMapping("/durationStats/byAgentType")
     public Result<List<Map<String, Object>>> durationStatsByAgentType(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
@@ -331,7 +331,7 @@ public class AgentController {
      * @return Agent 执行结果（payload 字段承载结构化输出）
      */
     @Operation(summary = "[内部] 同步执行 Agent（Feign 入口）")
-    @Idempotent(key = "agent:internal-execute", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "agent:internalExecute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/internal/execute")
     public Result<Map<String, Object>> internalExecute(
             @Valid @RequestBody AgentInternalExecuteDTO dto,

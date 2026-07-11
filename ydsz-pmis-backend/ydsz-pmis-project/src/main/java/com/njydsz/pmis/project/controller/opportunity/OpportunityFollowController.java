@@ -43,7 +43,7 @@ public class OpportunityFollowController {
      * @return 跟进记录 ID
      */
     @Operation(summary = "记录跟进")
-    @Idempotent(key = "opportunity-follow:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "opportunityFollow:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> record(@Valid @RequestBody OpportunityFollowDTO dto) {
         return Result.ok(service.record(dto));

@@ -83,7 +83,7 @@ public class NotificationController {
      */
     @Operation(summary = "未读数量")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_LIST)
-    @GetMapping("/unread-count")
+    @GetMapping("/unreadCount")
     public Result<Long> countUnread() {
         return Result.ok(notificationService.countUnread(SecurityContext.getUserId()));
     }
@@ -96,7 +96,7 @@ public class NotificationController {
      */
     @Operation(summary = "标记单条已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "notification:mark-read", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "notification:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/read")
     public Result<Boolean> markRead(@PathVariable String id) {
         return Result.ok(notificationService.markRead(SecurityContext.getUserId(), id));
@@ -109,8 +109,8 @@ public class NotificationController {
      */
     @Operation(summary = "全部标记已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "notification:mark-all-read", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/read-all")
+    @Idempotent(key = "notification:markAllRead", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/readAll")
     public Result<Integer> markAllRead() {
         return Result.ok(notificationService.markAllRead(SecurityContext.getUserId()));
     }

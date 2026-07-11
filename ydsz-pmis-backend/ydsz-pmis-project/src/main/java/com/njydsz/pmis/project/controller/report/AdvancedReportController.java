@@ -42,7 +42,7 @@ public class AdvancedReportController {
 
     @Operation(summary = "人效排行榜（默认近 3 个月）")
     @PrePermission("report:advanced:view")
-    @GetMapping("/utilization-rank")
+    @GetMapping("/utilizationRank")
     public Result<List<Map<String, Object>>> utilizationRank(
             @RequestParam(defaultValue = "20") int top) {
         return Result.ok(service.utilizationRank(top));
@@ -50,7 +50,7 @@ public class AdvancedReportController {
 
     @Operation(summary = "人效排行榜（自定义时间窗口/事业部）")
     @PrePermission("report:advanced:view")
-    @GetMapping("/utilization-rank/range")
+    @GetMapping("/utilizationRank/range")
     public Result<List<Map<String, Object>>> utilizationRankRange(
             @RequestParam(defaultValue = "20") int top,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -80,14 +80,14 @@ public class AdvancedReportController {
 
     @Operation(summary = "Bench 闲置成本报表（默认近 30 天）")
     @PrePermission("report:advanced:view")
-    @GetMapping("/bench-cost")
+    @GetMapping("/benchCost")
     public Result<List<Map<String, Object>>> benchCost() {
         return Result.ok(service.benchCostReport());
     }
 
     @Operation(summary = "Bench 闲置成本报表（自定义时间窗口）")
     @PrePermission("report:advanced:view")
-    @GetMapping("/bench-cost/range")
+    @GetMapping("/benchCost/range")
     public Result<List<Map<String, Object>>> benchCostRange(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
@@ -96,7 +96,7 @@ public class AdvancedReportController {
 
     @Operation(summary = "双费率利润对比表")
     @PrePermission("report:advanced:view")
-    @GetMapping("/dual-rate")
+    @GetMapping("/dualRate")
     public Result<List<Map<String, Object>>> dualRate(@RequestParam(required = false) String period) {
         return Result.ok(service.dualRateProfitCompare(period));
     }
@@ -110,14 +110,14 @@ public class AdvancedReportController {
 
     @Operation(summary = "项目风险预警看板")
     @PrePermission("report:advanced:view")
-    @GetMapping("/risk-dashboard")
+    @GetMapping("/riskDashboard")
     public Result<List<Map<String, Object>>> riskDashboard() {
         return Result.ok(service.riskDashboard());
     }
 
     @Operation(summary = "项目风险矩阵热力图（P2-2）")
     @PrePermission("report:advanced:view")
-    @GetMapping("/risk-matrix")
+    @GetMapping("/riskMatrix")
     public Result<Map<String, Object>> riskMatrix(
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String riskType,
@@ -127,7 +127,7 @@ public class AdvancedReportController {
 
     @Operation(summary = "资源占用趋势图 双 Y 轴（P2-3）")
     @PrePermission("report:advanced:view")
-    @GetMapping("/utilization-trend")
+    @GetMapping("/utilizationTrend")
     public Result<Map<String, Object>> utilizationTrend(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
@@ -137,7 +137,7 @@ public class AdvancedReportController {
 
     @Operation(summary = "项目健康仪表盘 CPI/SPI/毛利率（P2-5）")
     @PrePermission("report:advanced:view")
-    @GetMapping("/project-health-dashboard")
+    @GetMapping("/projectHealthDashboard")
     public Result<Map<String, Object>> projectHealthDashboard(
             @RequestParam(required = false) List<String> initiationIds,
             @RequestParam(required = false) String health) {

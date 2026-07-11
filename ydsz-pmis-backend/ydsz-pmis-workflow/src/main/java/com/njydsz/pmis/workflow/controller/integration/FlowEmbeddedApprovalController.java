@@ -91,7 +91,7 @@ public class FlowEmbeddedApprovalController {
      * @param dto 嵌入式快捷操作参数
      */
     @Operation(summary = "嵌入式快捷操作")
-    @Idempotent(key = "flow-embedded-approval:quick-action", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowEmbeddedApproval:quickAction", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/action")
     public Result<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
         LoginUser u = SecurityContext.getCurrentOrNull();
@@ -116,7 +116,7 @@ public class FlowEmbeddedApprovalController {
      * @return 空响应
      */
     @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
-    @Idempotent(key = "flow-embedded-approval:quick-action-by-path", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowEmbeddedApproval:quickActionByPath", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{businessType}/{businessId}/action")
     public Result<Void> quickActionByPath(@PathVariable String businessType,
                                           @PathVariable String businessId,

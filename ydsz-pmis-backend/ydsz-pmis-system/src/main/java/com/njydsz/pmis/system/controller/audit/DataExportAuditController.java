@@ -75,7 +75,7 @@ public class DataExportAuditController {
      */
     @Operation(summary = "按用户查询导出历史")
     @PrePermission("audit:export:view")
-    @GetMapping("/by-user")
+    @GetMapping("/byUser")
     public Result<List<DataExportAuditDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {

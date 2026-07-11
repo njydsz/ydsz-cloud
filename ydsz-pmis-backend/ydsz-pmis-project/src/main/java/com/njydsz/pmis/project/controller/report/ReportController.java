@@ -73,9 +73,9 @@ public class ReportController {
      * @return 回款台账数据
      */
     @Operation(summary = "项目回款台账")
-    @PrePermission("report:payment-ledger:view")
+    @PrePermission("report:paymentLedger:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
-    @GetMapping("/payment-ledger")
+    @GetMapping("/paymentLedger")
     public Result<Map<String, Object>> paymentLedger(@RequestParam String initiationId) {
         return Result.ok(service.paymentLedgerReport(initiationId));
     }
@@ -102,7 +102,7 @@ public class ReportController {
     @Operation(summary = "跨项目利润汇总")
     @PrePermission("report:profit:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
-    @GetMapping("/profit-summary")
+    @GetMapping("/profitSummary")
     public Result<List<Map<String, Object>>> profitSummary() {
         return Result.ok(service.profitSummaryAll());
     }
@@ -118,7 +118,7 @@ public class ReportController {
     @Operation(summary = "项目利润排行榜（P2-1）")
     @PrePermission("report:profit:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
-    @GetMapping("/profit-rank")
+    @GetMapping("/profitRank")
     public Result<List<Map<String, Object>>> profitRank(
             @RequestParam(defaultValue = "10") int top,
             @RequestParam(required = false) String sortBy,

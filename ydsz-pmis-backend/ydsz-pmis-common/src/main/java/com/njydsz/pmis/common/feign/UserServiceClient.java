@@ -59,7 +59,7 @@ public interface UserServiceClient {
      * @param customerIds 客户 ID 列表
      * @return 客户 ID 到名称的映射
      */
-    @GetMapping("/user/customers/batch-name")
+    @GetMapping("/user/customers/batchName")
     Result<Map<String, String>> batchCustomerName(@RequestParam("ids") List<String> customerIds);
 
     /**
@@ -68,6 +68,6 @@ public interface UserServiceClient {
      * @param levelCode 职级编码（如 L4、L5）
      * @return 内部日费率；服务降级时返回 0
      */
-    @GetMapping("/user/employee/level-rate")
+    @GetMapping("/user/employee/levelRate")
     Result<BigDecimal> getLevelRate(@RequestParam("levelCode") String levelCode);
 }

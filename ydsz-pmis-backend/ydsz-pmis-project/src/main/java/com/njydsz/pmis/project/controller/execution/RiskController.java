@@ -138,7 +138,7 @@ public class RiskController {
      */
     @Operation(summary = "按等级聚合")
     @PrePermission("execution:risk:list")
-    @GetMapping("/aggregate/by-level")
+    @GetMapping("/aggregate/byLevel")
     public Result<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "立项ID") @RequestParam String initiationId) {
         return Result.ok(service.aggregateByLevel(initiationId));
     }

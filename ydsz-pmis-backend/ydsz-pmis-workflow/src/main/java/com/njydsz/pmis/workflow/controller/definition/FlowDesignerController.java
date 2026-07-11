@@ -67,7 +67,7 @@ public class FlowDesignerController {
      * @param dto 设计器数据 DTO（designerData 为 JSON 字符串，含 nodes + edges）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-designer:save-designer-data", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowDesigner:saveDesignerData", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/designer")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<Void> saveDesignerData(@PathVariable String id,
@@ -96,7 +96,7 @@ public class FlowDesignerController {
      * @param id 流程定义 ID
      * @return 统一响应结果，true=加锁成功
      */
-    @Idempotent(key = "flow-designer:lock-definition", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowDesigner:lockDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/lock")
     @Operation(summary = "加锁流程定义（设计器协同编辑）")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
@@ -113,7 +113,7 @@ public class FlowDesignerController {
      * @param id 流程定义 ID
      * @return 统一响应结果，true=解锁成功
      */
-    @Idempotent(key = "flow-designer:unlock-definition", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowDesigner:unlockDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/unlock")
     @Operation(summary = "解锁流程定义（设计器协同编辑）")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
@@ -136,7 +136,7 @@ public class FlowDesignerController {
      * @param id 流程定义 ID
      * @return 统一响应结果，包含 locked / lockedBy / lockedAt / expired
      */
-    @GetMapping("/definition/{id}/lock-status")
+    @GetMapping("/definition/{id}/lockStatus")
     @Operation(summary = "查询流程定义锁定状态")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<Map<String, Object>> getLockStatus(@PathVariable String id) {
@@ -152,7 +152,7 @@ public class FlowDesignerController {
      * @param nodeCode 节点编码
      * @return 字段权限 JSON 字符串
      */
-    @GetMapping("/definition/{id}/form-config/{nodeCode}")
+    @GetMapping("/definition/{id}/formConfig/{nodeCode}")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<String> getFormConfig(@PathVariable String id,
                                          @PathVariable String nodeCode) {
@@ -167,8 +167,8 @@ public class FlowDesignerController {
      * @param formFieldsConfig 字段权限 JSON 字符串
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-designer:save-form-config", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/definition/{id}/form-config/{nodeCode}")
+    @Idempotent(key = "flowDesigner:saveFormConfig", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/definition/{id}/formConfig/{nodeCode}")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<Void> saveFormConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
@@ -186,7 +186,7 @@ public class FlowDesignerController {
      * @param nodeCode 节点编码
      * @return SLA 配置 JSON（未配置返回 null）
      */
-    @GetMapping("/definition/{id}/sla-config/{nodeCode}")
+    @GetMapping("/definition/{id}/slaConfig/{nodeCode}")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<String> getSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode) {
@@ -201,8 +201,8 @@ public class FlowDesignerController {
      * @param slaConfig  SLA 配置（JSON 对象，由 controller 序列化为字符串存储）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-designer:save-sla-config", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/definition/{id}/sla-config/{nodeCode}")
+    @Idempotent(key = "flowDesigner:saveSlaConfig", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/definition/{id}/slaConfig/{nodeCode}")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<Void> saveSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
@@ -233,7 +233,7 @@ public class FlowDesignerController {
      * @param flowName     自定义流程名称（可选，为空则使用模板名称）
      * @return 新创建的流程定义 ID
      */
-    @Idempotent(key = "flow-designer:import-template", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowDesigner:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/template/{templateCode}/import")
     @PrePermission(PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
     public Result<String> importTemplate(@PathVariable String templateCode,

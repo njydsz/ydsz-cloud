@@ -77,8 +77,8 @@ public class MessageController {
      */
     @Operation(summary = "直接发送消息(本模块 DTO)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:send-direct", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/send-direct")
+    @Idempotent(key = "message:sendDirect", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/sendDirect")
     public Result<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
         return Result.ok(messageService.sendDirect(dto));
     }
@@ -92,8 +92,8 @@ public class MessageController {
      */
     @Operation(summary = "异步发送消息(投递 RocketMQ)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:send-async", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/send-async")
+    @Idempotent(key = "message:sendAsync", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/sendAsync")
     public Result<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
         if (request == null) {
             return Result.failed(BizErrorCode.BAD_REQUEST, "消息请求为空");
@@ -140,8 +140,8 @@ public class MessageController {
      */
     @Operation(summary = "事务消息发送(RocketMQ 半消息)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:send-transactionally", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/send-transactional")
+    @Idempotent(key = "message:sendTransactionally", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/sendTransactional")
     public Result<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
         return Result.ok(messageService.sendTransactionally(request));
     }
@@ -155,8 +155,8 @@ public class MessageController {
      */
     @Operation(summary = "批量发送消息(限制 100 条/批)")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:batch-send", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/batch-send")
+    @Idempotent(key = "message:batchSend", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/batchSend")
     public Result<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
                                              @RequestParam String batchId) {
         if (requests == null || requests.isEmpty()) {

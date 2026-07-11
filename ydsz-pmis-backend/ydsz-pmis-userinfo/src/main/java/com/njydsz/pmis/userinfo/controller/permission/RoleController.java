@@ -133,7 +133,7 @@ public class RoleController {
     @Operation(summary = "为角色分配权限")
     @PrePermission("auth:role:assign")
     @OperationLog(module = "权限管理", action = "分配权限", bizType = "ROLE")
-    @Idempotent(key = "role:assign-permissions", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "role:assignPermissions", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/permissions")
     public Result<Void> assignPermissions(@Parameter(description = "角色ID") @PathVariable String id, @Valid @RequestBody List<String> permissionIds) {
         roleService.assignPermissions(id, permissionIds);

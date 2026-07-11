@@ -110,7 +110,7 @@ public class JobDagInstanceController {
     @Operation(summary = "暂停 DAG 实例")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "暂停DAG实例", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-dag-instance:pause-instance", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDagInstance:pauseInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/pause")
     public Result<Void> pauseInstance(@PathVariable String instanceId) {
         jobDagInstanceService.pauseInstance(instanceId);
@@ -126,7 +126,7 @@ public class JobDagInstanceController {
     @Operation(summary = "恢复 DAG 实例")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "恢复DAG实例", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-dag-instance:resume-instance", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDagInstance:resumeInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/resume")
     public Result<Void> resumeInstance(@PathVariable String instanceId) {
         jobDagInstanceService.resumeInstance(instanceId);
@@ -142,7 +142,7 @@ public class JobDagInstanceController {
     @Operation(summary = "取消 DAG 实例")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "取消DAG实例", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-dag-instance:cancel-instance", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDagInstance:cancelInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/cancel")
     public Result<Void> cancelInstance(@PathVariable String instanceId) {
         jobDagInstanceService.cancelInstance(instanceId);
@@ -159,7 +159,7 @@ public class JobDagInstanceController {
     @Operation(summary = "更新 DAG 实例上下文")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "更新DAG实例上下文", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-dag-instance:update-context", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDagInstance:updateContext", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/context")
     public Result<Void> updateContext(@PathVariable String instanceId, @RequestBody String contextJson) {
         jobDagInstanceService.updateContext(instanceId, contextJson);

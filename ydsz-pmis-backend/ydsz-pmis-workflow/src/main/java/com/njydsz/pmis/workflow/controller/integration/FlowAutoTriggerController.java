@@ -56,7 +56,7 @@ public class FlowAutoTriggerController {
      * @return 创建结果
      */
     @Operation(summary = "创建触发规则")
-    @Idempotent(key = "flow-auto-trigger:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowAutoTrigger:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Void> create(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
         String sourceFlowCode = dto.getSourceFlowCode();
@@ -74,7 +74,7 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "删除触发规则")
     @OperationLog(module = "工作流", action = "删除触发规则", bizType = "FLOW_AUTO_TRIGGER")
-    @Idempotent(key = "flow-auto-trigger:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowAutoTrigger:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         autoTriggerService.deleteById(id);
@@ -88,7 +88,7 @@ public class FlowAutoTriggerController {
      * @return 切换后的状态
      */
     @Operation(summary = "启用/禁用触发规则")
-    @Idempotent(key = "flow-auto-trigger:toggle", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowAutoTrigger:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/toggle")
     public Result<Map<String, Object>> toggle(@PathVariable String id) {
         boolean enabled = autoTriggerService.toggleEnabled(id);

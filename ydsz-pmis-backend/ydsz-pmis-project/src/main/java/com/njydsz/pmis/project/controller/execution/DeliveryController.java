@@ -70,7 +70,7 @@ public class DeliveryController {
     @Operation(summary = "删除交付物标准")
     @PrePermission("execution:delivery:delete")
     @OperationLog(module = "交付物管理", action = "删除交付物标准", bizType = "DELIVERY_STANDARD")
-    @Idempotent(key = "delivery:delete-standard", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "delivery:deleteStandard", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/standard/{id}")
     public Result<Void> deleteStandard(@PathVariable String id) {
         service.deleteStandard(id);
@@ -131,7 +131,7 @@ public class DeliveryController {
      */
     @Operation(summary = "创建项目交付物实例")
     @PrePermission("execution:delivery:create")
-    @Idempotent(key = "delivery:create-item", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "delivery:createItem", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/item")
     public Result<String> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
         return Result.ok(service.createItem(dto));
@@ -161,8 +161,8 @@ public class DeliveryController {
      */
     @Operation(summary = "标记 TR 完成")
     @PrePermission("execution:delivery:status")
-    @Idempotent(key = "delivery:mark-tr-completed", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/item/{id}/tr-completed")
+    @Idempotent(key = "delivery:markTrCompleted", ttlSeconds = 5, message = "请勿重复提交")
+    @PutMapping("/item/{id}/trCompleted")
     public Result<Void> markTrCompleted(@PathVariable String id,
                                    @RequestParam Integer completed) {
         service.markTrCompleted(id, completed);
@@ -178,7 +178,7 @@ public class DeliveryController {
     @Operation(summary = "删除交付物实例")
     @PrePermission("execution:delivery:delete")
     @OperationLog(module = "交付物管理", action = "删除交付物实例", bizType = "DELIVERY_ITEM")
-    @Idempotent(key = "delivery:delete-item", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "delivery:deleteItem", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/item/{id}")
     public Result<Void> deleteItem(@PathVariable String id) {
         service.deleteItem(id);
@@ -206,7 +206,7 @@ public class DeliveryController {
      */
     @Operation(summary = "按项目查询所有交付物")
     @PrePermission("execution:delivery:list")
-    @GetMapping("/item/list-by-initiation/{initiationId}")
+    @GetMapping("/item/listByInitiation/{initiationId}")
     public Result<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable String initiationId) {
         return Result.ok(service.listItemsByInitiation(initiationId));
     }
@@ -220,7 +220,7 @@ public class DeliveryController {
      */
     @Operation(summary = "按项目+阶段查询交付物")
     @PrePermission("execution:delivery:list")
-    @GetMapping("/item/list-by-stage")
+    @GetMapping("/item/listByStage")
     public Result<List<DeliveryItemDO>> listItemsByStage(@RequestParam String initiationId,
                                                     @RequestParam String stage) {
         return Result.ok(service.listItemsByStage(initiationId, stage));
@@ -251,7 +251,7 @@ public class DeliveryController {
      */
     @Operation(summary = "阶段门控校验")
     @PrePermission("execution:delivery:status")
-    @GetMapping("/stage-gate/check")
+    @GetMapping("/stageGate/check")
     public Result<StageGateValidator.GateCheckResult> checkStageGate(
             @RequestParam String initiationId,
             @RequestParam String targetStage,

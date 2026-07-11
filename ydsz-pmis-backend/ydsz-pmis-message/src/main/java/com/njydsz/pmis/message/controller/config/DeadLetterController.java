@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Tag(name = "死信管理", description = "死信查询与手动重发")
 @RestController
-@RequestMapping("/message/dead-letter")
+@RequestMapping("/message/deadLetter")
 @RequiredArgsConstructor
 public class DeadLetterController {
 
@@ -73,7 +73,7 @@ public class DeadLetterController {
      */
     @Operation(summary = "手动重发死信")
     @PrePermission(PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
-    @Idempotent(key = "dead-letter:resend", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "deadLetter:resend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{logId}/resend")
     public Result<Void> resend(@PathVariable String logId) {
         if (logId == null || logId.isBlank()) {

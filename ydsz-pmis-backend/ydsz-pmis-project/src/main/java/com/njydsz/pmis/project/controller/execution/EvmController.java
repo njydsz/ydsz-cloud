@@ -81,7 +81,7 @@ public class EvmController {
      */
     @Operation(summary = "按项目查询")
     @PrePermission("execution:evm:list")
-    @GetMapping("/by-initiation")
+    @GetMapping("/byInitiation")
     public Result<List<EvmMeasureVO>> listByInitiation(@RequestParam String initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
@@ -94,7 +94,7 @@ public class EvmController {
      */
     @Operation(summary = "按 WBS 查询")
     @PrePermission("execution:evm:list")
-    @GetMapping("/by-wbs")
+    @GetMapping("/byWbs")
     public Result<List<EvmMeasureVO>> listByWbs(@RequestParam String wbsTaskId) {
         return Result.ok(service.listByWbs(wbsTaskId));
     }

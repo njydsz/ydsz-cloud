@@ -52,7 +52,7 @@ public class JobDagController {
     @Operation(summary = "创建 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_CREATE)
     @OperationLog(module = "任务调度", action = "创建DAG", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-dag:create-dag", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDag:createDag", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/")
     public Result<String> createDag(@Valid @RequestBody JobDagSaveDTO dto) {
         return Result.ok(jobDagService.createDag(dto));
@@ -67,7 +67,7 @@ public class JobDagController {
      */
     @Operation(summary = "更新 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
-    @Idempotent(key = "job-dag:update-dag", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDag:updateDag", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{dagId}")
     public Result<Void> updateDag(@PathVariable String dagId, @Valid @RequestBody JobDagSaveDTO dto) {
         jobDagService.updateDag(dagId, dto);
@@ -83,7 +83,7 @@ public class JobDagController {
     @Operation(summary = "删除 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_DELETE)
     @OperationLog(module = "任务调度", action = "删除DAG", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-dag:delete-dag", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDag:deleteDag", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{dagId}")
     public Result<Void> deleteDag(@PathVariable String dagId) {
         jobDagService.deleteDag(dagId);
@@ -99,7 +99,7 @@ public class JobDagController {
     @Operation(summary = "启用 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "启用DAG", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-dag:enable-dag", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDag:enableDag", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{dagId}/enable")
     public Result<Void> enableDag(@PathVariable String dagId) {
         jobDagService.enableDag(dagId);
@@ -115,7 +115,7 @@ public class JobDagController {
     @Operation(summary = "禁用 DAG 工作流")
     @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "禁用DAG", bizType = "CRONJOB_DAG")
-    @Idempotent(key = "job-dag:disable-dag", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDag:disableDag", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{dagId}/disable")
     public Result<Void> disableDag(@PathVariable String dagId) {
         jobDagService.disableDag(dagId);
@@ -186,7 +186,7 @@ public class JobDagController {
      */
     @Operation(summary = "校验 DAG 定义")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
-    @Idempotent(key = "job-dag:validate-dag", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobDag:validateDag", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/validate")
     public Result<Boolean> validateDag(@RequestBody String dagDefinitionJson) {
         DagDefinition definition = dagDefinitionCodec.fromJson(dagDefinitionJson);

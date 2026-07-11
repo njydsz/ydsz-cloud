@@ -51,7 +51,7 @@ public class FlowAnalyticsController {
      * @param limit     返回条数上限，默认 20
      * @return 办理人效率排行列表
      */
-    @GetMapping("/approver-efficiency")
+    @GetMapping("/approverEfficiency")
     @Operation(summary = "办理人效率排行")
     public Result<Object> approverEfficiency(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
@@ -67,7 +67,7 @@ public class FlowAnalyticsController {
      * @param endTime   查询截止时间（可选）
      * @return 各流程效率对比数据
      */
-    @GetMapping("/flow-efficiency")
+    @GetMapping("/flowEfficiency")
     @Operation(summary = "流程效率对比")
     public Result<Object> flowEfficiency(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
@@ -81,7 +81,7 @@ public class FlowAnalyticsController {
      * @param flowCode 流程编码
      * @return 各节点耗时统计数据
      */
-    @GetMapping("/node-duration")
+    @GetMapping("/nodeDuration")
     @Operation(summary = "节点耗时分析")
     public Result<Object> nodeDuration(@RequestParam String flowCode) {
         return Result.ok(analyticsService.nodeDurationStats(flowCode, TenantContext.getTenantId()));
@@ -95,7 +95,7 @@ public class FlowAnalyticsController {
      * @param granularity 统计粒度，默认 DAY
      * @return 审批趋势时间序列数据
      */
-    @GetMapping("/approval-trend")
+    @GetMapping("/approvalTrend")
     @Operation(summary = "审批趋势分析")
     public Result<Object> approvalTrend(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,

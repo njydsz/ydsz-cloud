@@ -69,7 +69,7 @@ public class FlowAttachmentController {
      * @param operatorId   操作人 ID
      * @return 空响应
      */
-    @Idempotent(key = "flow-attachment:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowAttachment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/attachment/{attachmentId}")
     public Result<Void> delete(@PathVariable String attachmentId,
                                @RequestParam String operatorId) {

@@ -37,7 +37,7 @@ import java.util.Map;
  */
 @Tag(name = "资源分配管理")
 @RestController
-@RequestMapping("/resource-assignments")
+@RequestMapping("/resourceAssignments")
 @RequiredArgsConstructor
 @Validated
 public class ResourceAssignmentController {
@@ -54,7 +54,7 @@ public class ResourceAssignmentController {
     @Operation(summary = "分配动作（RESERVE/START/TRANSFER/RELEASE/CANCEL）")
     @PrePermission("resource:assign:act")
     @OperationLog(module = "资源分配", action = "分配动作", bizType = "RESOURCE_ASSIGN")
-    @Idempotent(key = "resource-assignment:act", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "resourceAssignment:act", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/act")
     public Result<String> act(@Valid @RequestBody ResourceAssignmentCreateDTO dto) {
         return Result.ok(assignmentService.act(dto));
@@ -79,7 +79,7 @@ public class ResourceAssignmentController {
      * @return 统一响应结果，包含分配记录列表
      */
     @Operation(summary = "按员工查询")
-    @GetMapping("/by-employee/{employeeId}")
+    @GetMapping("/byEmployee/{employeeId}")
     public Result<List<ResourceAssignmentDO>> listByEmployee(@PathVariable String employeeId) {
         return Result.ok(assignmentService.listByEmployee(employeeId));
     }
@@ -91,7 +91,7 @@ public class ResourceAssignmentController {
      * @return 统一响应结果，包含分配记录列表
      */
     @Operation(summary = "按项目查询")
-    @GetMapping("/by-initiation/{initiationId}")
+    @GetMapping("/byInitiation/{initiationId}")
     public Result<List<ResourceAssignmentDO>> listByInitiation(@PathVariable String initiationId) {
         return Result.ok(assignmentService.listByInitiation(initiationId));
     }
@@ -103,7 +103,7 @@ public class ResourceAssignmentController {
      * @return 统一响应结果，包含活跃项目数
      */
     @Operation(summary = "员工活跃项目数")
-    @GetMapping("/active-count/{employeeId}")
+    @GetMapping("/activeCount/{employeeId}")
     public Result<Integer> activeCount(@PathVariable String employeeId) {
         return Result.ok(assignmentService.activeCount(employeeId));
     }

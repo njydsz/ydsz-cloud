@@ -51,8 +51,8 @@ public class ContractTemplateController {
      * @return 模板 ID
      */
     @Operation(summary = "创建合同模板")
-    @PrePermission("project:contract-template:create")
-    @Idempotent(key = "contract-template:create", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("project:contractTemplate:create")
+    @Idempotent(key = "contractTemplate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody ContractTemplateCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -65,8 +65,8 @@ public class ContractTemplateController {
      * @return 空结果
      */
     @Operation(summary = "状态迁移")
-    @PrePermission("project:contract-template:publish")
-    @Idempotent(key = "contract-template:update", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("project:contractTemplate:publish")
+    @Idempotent(key = "contractTemplate:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody ContractTemplateStatusDTO dto) {
         service.changeStatus(dto);
@@ -80,8 +80,8 @@ public class ContractTemplateController {
      * @return 空结果
      */
     @Operation(summary = "删除模板")
-    @PrePermission("project:contract-template:delete")
-    @Idempotent(key = "contract-template:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("project:contractTemplate:delete")
+    @Idempotent(key = "contractTemplate:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "合同模板", action = "删除模板", bizType = "CONTRACT_TEMPLATE")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
@@ -96,7 +96,7 @@ public class ContractTemplateController {
      * @return 模板实体
      */
     @Operation(summary = "模板详情")
-    @PrePermission("project:contract-template:list")
+    @PrePermission("project:contractTemplate:list")
     @GetMapping("/{id}")
     public Result<ContractTemplateDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
@@ -113,7 +113,7 @@ public class ContractTemplateController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("project:contract-template:list")
+    @PrePermission("project:contractTemplate:list")
     @GetMapping("/page")
     public Result<Page<ContractTemplateDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -132,8 +132,8 @@ public class ContractTemplateController {
      * @return 模板列表
      */
     @Operation(summary = "按合同类型查询模板")
-    @PrePermission("project:contract-template:list")
-    @GetMapping("/list-by-type")
+    @PrePermission("project:contractTemplate:list")
+    @GetMapping("/listByType")
     public Result<List<ContractTemplateDO>> listByType(
             @RequestParam(required = false) String contractType,
             @RequestParam(required = false) String status) {

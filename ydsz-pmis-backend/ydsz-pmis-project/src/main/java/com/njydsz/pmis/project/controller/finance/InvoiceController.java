@@ -143,7 +143,7 @@ public class InvoiceController {
     @Operation(summary = "红冲")
     @PrePermission("finance:invoice:reverse")
     @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
-    @Idempotent(key = "invoice:red-reverse", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "invoice:redReverse", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
     public Result<Void> redReverse(@Parameter(description = "发票ID") @PathVariable String id,
                               @Parameter(description = "操作人ID") @RequestParam String operatorId,
@@ -237,7 +237,7 @@ public class InvoiceController {
      */
     @Operation(summary = "按合同汇总开票金额")
     @PrePermission("finance:invoice:list")
-    @GetMapping("/sum/by-contract")
+    @GetMapping("/sum/byContract")
     public Result<BigDecimal> sumByContract(@Parameter(description = "合同ID") @RequestParam String contractId) {
         return Result.ok(service.sumInvoicedByContract(contractId));
     }
@@ -250,7 +250,7 @@ public class InvoiceController {
      */
     @Operation(summary = "按状态分组台账")
     @PrePermission("finance:invoice:list")
-    @GetMapping("/aggregate/by-status")
+    @GetMapping("/aggregate/byStatus")
     public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "合同ID") @RequestParam String contractId) {
         return Result.ok(service.aggregateByStatus(contractId));
     }

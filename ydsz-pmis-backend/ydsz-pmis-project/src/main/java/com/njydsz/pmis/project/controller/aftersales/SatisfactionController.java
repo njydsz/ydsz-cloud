@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @Tag(name = "服务满意度评价")
 @RestController
-@RequestMapping("/after-sales/satisfaction")
+@RequestMapping("/afterSales/satisfaction")
 @RequiredArgsConstructor
 @Validated
 public class SatisfactionController {
@@ -49,18 +49,18 @@ public class SatisfactionController {
     }
 
     @Operation(summary = "标记跟进")
-    @PrePermission("aftersales:satisfaction:follow-up")
-    @Idempotent(key = "satisfaction:mark-follow-up", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/follow-up")
+    @PrePermission("aftersales:satisfaction:followUp")
+    @Idempotent(key = "satisfaction:markFollowUp", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/followUp")
     public Result<Void> markFollowUp(@RequestParam String id, @RequestParam(required = false) String note) {
         service.markFollowUp(id, note);
         return Result.ok();
     }
 
     @Operation(summary = "关闭跟进")
-    @PrePermission("aftersales:satisfaction:follow-up")
-    @Idempotent(key = "satisfaction:close-follow-up", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/follow-up/close")
+    @PrePermission("aftersales:satisfaction:followUp")
+    @Idempotent(key = "satisfaction:closeFollowUp", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/followUp/close")
     public Result<Void> closeFollowUp(@RequestParam String id) {
         service.closeFollowUp(id);
         return Result.ok();
@@ -75,7 +75,7 @@ public class SatisfactionController {
 
     @Operation(summary = "等级分布")
     @PrePermission("aftersales:satisfaction:list")
-    @GetMapping("/level-distribution")
+    @GetMapping("/levelDistribution")
     public Result<List<Map<String, Object>>> levelDistribution() {
         return Result.ok(service.levelDistribution());
     }

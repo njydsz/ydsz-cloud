@@ -55,7 +55,7 @@ public class ConfigController {
 
     @Operation(summary = "按 group+key 查配置")
     @RateLimit(key = "config", qps = 50, windowSeconds = 60)
-    @GetMapping("/by-key")
+    @GetMapping("/byKey")
     /**
      * 按 group + key 精确查询配置项
      *
@@ -146,7 +146,7 @@ public class ConfigController {
     @Operation(summary = "按分组批量删除")
     @PrePermission("sys:config:delete")
     @OperationLog(module = "系统配置", action = "按分组删除", bizType = "CONFIG")
-    @Idempotent(key = "config:delete-by-group", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "config:deleteByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/group/{group}")
     /**
      * 按分组批量删除配置
@@ -162,7 +162,7 @@ public class ConfigController {
     @Operation(summary = "按分组批量启停")
     @PrePermission("sys:config:update")
     @OperationLog(module = "系统配置", action = "按分组启停", bizType = "CONFIG")
-    @Idempotent(key = "config:update-status-by-group", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "config:updateStatusByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/group/{group}/status/{status}")
     /**
      * 按分组批量启停配置

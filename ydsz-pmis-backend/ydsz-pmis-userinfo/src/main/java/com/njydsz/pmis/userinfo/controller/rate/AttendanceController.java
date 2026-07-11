@@ -57,7 +57,7 @@ public class AttendanceController {
     @Operation(summary = "登记出勤")
     @PrePermission("attendance:record:create")
     @OperationLog(module = "考勤", action = "登记出勤", bizType = "ATTENDANCE")
-    @Idempotent(key = "attendance:record-attendance", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "attendance:recordAttendance", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/record")
     public Result<String> recordAttendance(@Valid @RequestBody AttendanceCreateDTO dto) {
         return Result.ok(attendanceService.recordAttendance(dto));
@@ -113,7 +113,7 @@ public class AttendanceController {
     @Operation(summary = "提交加班申请")
     @PrePermission("attendance:overtime:create")
     @OperationLog(module = "考勤", action = "提交加班", bizType = "OVERTIME")
-    @Idempotent(key = "attendance:submit-overtime", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "attendance:submitOvertime", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/overtime")
     public Result<String> submitOvertime(@Valid @RequestBody OvertimeCreateDTO dto) {
         return Result.ok(attendanceService.submitOvertime(dto));
@@ -132,7 +132,7 @@ public class AttendanceController {
     @Operation(summary = "审批加班")
     @PrePermission("attendance:overtime:approve")
     @OperationLog(module = "考勤", action = "审批加班", bizType = "OVERTIME")
-    @Idempotent(key = "attendance:approve-overtime", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "attendance:approveOvertime", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/overtime/{id}/approve")
     public Result<Void> approveOvertime(
             @PathVariable @NotBlank String id,
@@ -187,7 +187,7 @@ public class AttendanceController {
     @Operation(summary = "提交请假申请")
     @PrePermission("attendance:leave:create")
     @OperationLog(module = "考勤", action = "提交请假", bizType = "LEAVE")
-    @Idempotent(key = "attendance:submit-leave", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "attendance:submitLeave", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/leave")
     public Result<String> submitLeave(@Valid @RequestBody LeaveCreateDTO dto) {
         return Result.ok(attendanceService.submitLeave(dto));
@@ -206,7 +206,7 @@ public class AttendanceController {
     @Operation(summary = "审批请假")
     @PrePermission("attendance:leave:approve")
     @OperationLog(module = "考勤", action = "审批请假", bizType = "LEAVE")
-    @Idempotent(key = "attendance:approve-leave", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "attendance:approveLeave", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/leave/{id}/approve")
     public Result<Void> approveLeave(
             @PathVariable @NotBlank String id,

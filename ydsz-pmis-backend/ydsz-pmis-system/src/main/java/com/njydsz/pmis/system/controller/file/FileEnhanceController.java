@@ -51,7 +51,7 @@ public class FileEnhanceController {
     @Operation(summary = "病毒扫描")
     @RateLimit(key = "file-upload", qps = 10, windowSeconds = 60,
             message = "{validation.file.msg_f4ed69d1}")
-    @Idempotent(key = "file-enhance:scan-virus", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "fileEnhance:scanVirus", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan")
     public Result<Map<String, Object>> scanVirus(
             @Parameter(description = "待扫描文件") @RequestParam("file") @NotNull(message = "{validation.file.msg_3f00c223}") MultipartFile file) {
@@ -73,7 +73,7 @@ public class FileEnhanceController {
     @Operation(summary = "初始化分片上传")
     @RateLimit(key = "file-upload", qps = 10, windowSeconds = 60,
             message = "{validation.file.msg_f4ed69d1}")
-    @Idempotent(key = "file-enhance:init-multipart-upload", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "fileEnhance:initMultipartUpload", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/multipart/init")
     public Result<Map<String, Object>> initMultipartUpload(
             @Parameter(description = "文件名") @RequestParam @NotBlank(message = "{validation.file.msg_f185973c}") String filename,
@@ -95,7 +95,7 @@ public class FileEnhanceController {
      * @throws Exception 读取分片数据时发生异常
      */
     @Operation(summary = "上传分片")
-    @Idempotent(key = "file-enhance:upload-chunk", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "fileEnhance:uploadChunk", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/multipart/chunk")
     public Result<Map<String, Object>> uploadChunk(
             @Parameter(description = "分片上传ID") @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId,
@@ -115,7 +115,7 @@ public class FileEnhanceController {
      * @return 合并结果，包含 fileKey 和 success
      */
     @Operation(summary = "完成分片上传")
-    @Idempotent(key = "file-enhance:complete-multipart-upload", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "fileEnhance:completeMultipartUpload", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/multipart/complete")
     public Result<Map<String, Object>> completeMultipartUpload(
             @Parameter(description = "分片上传ID") @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {
@@ -133,7 +133,7 @@ public class FileEnhanceController {
      * @return 操作结果
      */
     @Operation(summary = "取消分片上传")
-    @Idempotent(key = "file-enhance:abort-multipart-upload", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "fileEnhance:abortMultipartUpload", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/multipart/abort")
     public Result<Map<String, Object>> abortMultipartUpload(
             @Parameter(description = "分片上传ID") @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {

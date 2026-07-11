@@ -42,7 +42,7 @@ public class AgentOrchestrationController {
      */
     @Operation(summary = "协调多 Agent 编排执行")
     @PrePermission("agent:orchestration:run")
-    @Idempotent(key = "agent-orchestration:coordinate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "agentOrchestration:coordinate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/coordinate")
     public Result<OrchestrationResult> coordinate(@RequestBody OrchestrationRequest req) {
         return Result.ok(service.orchestrate(req));

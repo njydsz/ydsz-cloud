@@ -55,7 +55,7 @@ public class AggregateController {
      */
     @Operation(summary = "按聚合组+接收人强制刷新")
     @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
-    @Idempotent(key = "aggregate:flush-by-group", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "aggregate:flushByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/flush")
     public Result<Integer> flushByGroup(@RequestParam String group, @RequestParam String receiver) {
         return Result.ok(aggregateService.flushByGroup(group, receiver));
@@ -68,8 +68,8 @@ public class AggregateController {
      */
     @Operation(summary = "刷新到期批次")
     @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
-    @Idempotent(key = "aggregate:flush-due", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/flush-due")
+    @Idempotent(key = "aggregate:flushDue", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/flushDue")
     public Result<Integer> flushDue() {
         return Result.ok(aggregateService.flushDue());
     }

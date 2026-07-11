@@ -102,7 +102,7 @@ public class FileController {
     @Operation(summary = "批量删除")
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "批量删除文件", bizType = "FILE")
-    @Idempotent(key = "file:delete-batch", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "file:deleteBatch", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/batch")
     public Result<Void> deleteBatch(@Valid @RequestBody List<String> ids) throws Exception {
         fileService.deleteBatch(ids);
@@ -130,7 +130,7 @@ public class FileController {
      * @return 统一响应结果，包含预签名 URL
      */
     @Operation(summary = "获取预签名下载 URL")
-    @GetMapping("/{id}/presigned-url")
+    @GetMapping("/{id}/presignedUrl")
     public Result<String> presignedUrl(
             @Parameter(description = "文件ID") @PathVariable String id,
             @Parameter(description = "URL有效期（秒）") @RequestParam(required = false) @Min(1) Integer expireSeconds) {
@@ -171,7 +171,7 @@ public class FileController {
      * @return 统一响应结果，包含文件元信息列表
      */
     @Operation(summary = "按业务查询")
-    @GetMapping("/by-biz")
+    @GetMapping("/byBiz")
     public Result<List<FileDO>> listByBiz(
             @Parameter(description = "业务类型") @RequestParam @NotBlank String bizType,
             @Parameter(description = "业务单据ID") @RequestParam @NotBlank String bizId) {

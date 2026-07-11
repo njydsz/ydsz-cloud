@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/workflow/offline-forward")
+@RequestMapping("/api/workflow/offlineForward")
 @RequiredArgsConstructor
 @Tag(name = "离线代理自动转发", description = "离线用户的待办自动转发给代理人")
 public class FlowOfflineForwardController {
@@ -33,7 +33,7 @@ public class FlowOfflineForwardController {
      * @param authId 代理授权记录 ID
      * @return 成功转发的任务数
      */
-    @Idempotent(key = "flow-offline-forward:auto-forward", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowOfflineForward:autoForward", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/auto")
     @Operation(summary = "按代理授权规则自动转发已有待办")
     public Result<Integer> autoForward(@RequestParam String authId) {
@@ -47,7 +47,7 @@ public class FlowOfflineForwardController {
      * @param delegateUserId 代理人 ID
      * @return 成功转发的任务数
      */
-    @Idempotent(key = "flow-offline-forward:manual-forward", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowOfflineForward:manualForward", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/manual")
     @Operation(summary = "手动触发离线转发")
     public Result<Integer> manualForward(

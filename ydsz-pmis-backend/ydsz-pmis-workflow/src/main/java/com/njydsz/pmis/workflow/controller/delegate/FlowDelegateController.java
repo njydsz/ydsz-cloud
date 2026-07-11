@@ -59,8 +59,8 @@ public class FlowDelegateController {
      * }
      * </pre>
      */
-    @Idempotent(key = "flow-delegate:create-delegate-auth", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/delegate-auth/create")
+    @Idempotent(key = "flowDelegate:createDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/delegateAuth/create")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public Result<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
         FlowDelegateAuthDO auth = new FlowDelegateAuthDO();
@@ -79,8 +79,8 @@ public class FlowDelegateController {
      * @param id 授权记录 ID
      * @return 空响应
      */
-    @Idempotent(key = "flow-delegate:revoke-delegate-auth", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/delegate-auth/{id}/revoke")
+    @Idempotent(key = "flowDelegate:revokeDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/delegateAuth/{id}/revoke")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public Result<Void> revokeDelegateAuth(@PathVariable String id) {
         String ownerId = SecurityContext.getUserId();
@@ -95,8 +95,8 @@ public class FlowDelegateController {
      * @param status 目标状态
      * @return 空响应
      */
-    @Idempotent(key = "flow-delegate:update-delegate-auth-status", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/delegate-auth/{id}/status")
+    @Idempotent(key = "flowDelegate:updateDelegateAuthStatus", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/delegateAuth/{id}/status")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public Result<Void> updateDelegateAuthStatus(@PathVariable String id,
                                                  @RequestParam String status) {
@@ -111,7 +111,7 @@ public class FlowDelegateController {
      * @param status 状态筛选（可选）
      * @return 授权列表
      */
-    @GetMapping("/delegate-auth/mine")
+    @GetMapping("/delegateAuth/mine")
     public Result<List<FlowDelegateAuthDO>> listMyDelegateAuths(
             @RequestParam(required = false) String status) {
         String ownerId = SecurityContext.getUserId();
@@ -125,7 +125,7 @@ public class FlowDelegateController {
      * @param status 状态筛选（可选）
      * @return 授权列表
      */
-    @GetMapping("/delegate-auth/as-delegate")
+    @GetMapping("/delegateAuth/asDelegate")
     public Result<List<FlowDelegateAuthDO>> listAsDelegate(
             @RequestParam(required = false) String status) {
         String delegateUserId = SecurityContext.getUserId();
@@ -140,7 +140,7 @@ public class FlowDelegateController {
      * @param size 每页大小
      * @return 委派处理日志分页
      */
-    @GetMapping("/delegate-auth/log/delegate")
+    @GetMapping("/delegateAuth/log/delegate")
     public Result<PageResult<?>> myDelegateLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
@@ -155,7 +155,7 @@ public class FlowDelegateController {
      * @param size 每页大小
      * @return 被代理任务日志分页
      */
-    @GetMapping("/delegate-auth/log/owner")
+    @GetMapping("/delegateAuth/log/owner")
     public Result<PageResult<?>> myOwnerLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {

@@ -31,7 +31,7 @@ public interface OrgQueryClient {
      * @param roleCode 角色编码
      * @return 用户 ID 列表（无匹配时返回空列表）
      */
-    @GetMapping("/users-by-role")
+    @GetMapping("/usersByRole")
     Result<List<Long>> listUserIdsByRoleCode(@RequestParam("roleCode") String roleCode);
 
     /**
@@ -40,7 +40,7 @@ public interface OrgQueryClient {
      * @param deptId 部门 ID
      * @return 部门负责人用户 ID，未设置时返回 null
      */
-    @GetMapping("/dept-leader")
+    @GetMapping("/deptLeader")
     Result<String> getDeptLeaderByDeptId(@RequestParam("deptId") Long deptId);
 
     /**
@@ -49,7 +49,7 @@ public interface OrgQueryClient {
      * @param deptCode 部门编码
      * @return 部门负责人用户 ID，未设置时返回 null
      */
-    @GetMapping("/dept-leader-by-code")
+    @GetMapping("/deptLeaderByCode")
     Result<String> getDeptLeaderByDeptCode(@RequestParam("deptCode") String deptCode);
 
     /**
@@ -58,7 +58,7 @@ public interface OrgQueryClient {
      * @param userId 用户 ID
      * @return 角色编码列表
      */
-    @GetMapping("/user-role-codes")
+    @GetMapping("/userRoleCodes")
     Result<List<String>> listRoleCodesByUserId(@RequestParam("userId") String userId);
 
     /**
@@ -69,7 +69,7 @@ public interface OrgQueryClient {
      * @param userId 用户 ID
      * @return 部门 ID 列表（字符串形式，便于 permissionFlag 字符串匹配）
      */
-    @GetMapping("/user-dept-ids")
+    @GetMapping("/userDeptIds")
     Result<List<String>> listDeptIdsByUserId(@RequestParam("userId") String userId);
 
     /**
@@ -78,7 +78,7 @@ public interface OrgQueryClient {
      * @param deptId 部门 ID
      * @return 用户 ID 列表
      */
-    @GetMapping("/users-by-dept")
+    @GetMapping("/usersByDept")
     Result<List<Long>> listUserIdsByDeptId(@RequestParam("deptId") Long deptId);
 
     /**
@@ -87,7 +87,7 @@ public interface OrgQueryClient {
      * @param positionCode 岗位编码
      * @return 用户 ID 列表
      */
-    @GetMapping("/users-by-position")
+    @GetMapping("/usersByPosition")
     Result<List<Long>> listUserIdsByPositionCode(@RequestParam("positionCode") String positionCode);
 
     /**
@@ -96,6 +96,6 @@ public interface OrgQueryClient {
      * @param userId 用户 ID
      * @return 直属上级用户 ID，未设置时返回 null
      */
-    @GetMapping("/leader-by-user")
+    @GetMapping("/leaderByUser")
     Result<String> getLeaderByUserId(@RequestParam("userId") String userId);
 }

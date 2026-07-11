@@ -123,7 +123,7 @@ public class InternalJobController {
      */
     @Operation(summary = "接收 MapReduce 子任务远程派发并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
-    @PostMapping("/execute-sub-task")
+    @PostMapping("/executeSubTask")
     public Result<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {
             log.warn("[InternalJob] 子任务请求参数为空");

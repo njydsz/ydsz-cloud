@@ -48,8 +48,8 @@ public class ContractChangeController {
      * @return 变更记录 ID
      */
     @Operation(summary = "提交变更申请")
-    @PrePermission("project:contract-change:create")
-    @Idempotent(key = "contract-change:create", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("project:contractChange:create")
+    @Idempotent(key = "contractChange:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> apply(@Valid @RequestBody ContractChangeDTO dto) {
         return Result.ok(service.apply(dto));
@@ -62,8 +62,8 @@ public class ContractChangeController {
      * @return 空结果
      */
     @Operation(summary = "提交审批")
-    @PrePermission("project:contract-change:approve")
-    @Idempotent(key = "contract-change:update", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("project:contractChange:approve")
+    @Idempotent(key = "contractChange:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
     public Result<Void> submit(@PathVariable String id) {
         service.submit(id);
@@ -79,8 +79,8 @@ public class ContractChangeController {
      * @return 空结果
      */
     @Operation(summary = "审批通过")
-    @PrePermission("project:contract-change:approve")
-    @Idempotent(key = "contract-change:approve", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("project:contractChange:approve")
+    @Idempotent(key = "contractChange:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/approve")
     public Result<Void> approve(@PathVariable String id,
                            @RequestParam String approverId,
@@ -99,8 +99,8 @@ public class ContractChangeController {
      * @return 空结果
      */
     @Operation(summary = "驳回")
-    @PrePermission("project:contract-change:approve")
-    @Idempotent(key = "contract-change:reject", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("project:contractChange:approve")
+    @Idempotent(key = "contractChange:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reject")
     public Result<Void> reject(@PathVariable String id,
                           @RequestParam String approverId,
@@ -117,7 +117,7 @@ public class ContractChangeController {
      * @return 变更实体
      */
     @Operation(summary = "变更详情")
-    @PrePermission("project:contract-change:list")
+    @PrePermission("project:contractChange:list")
     @GetMapping("/{id}")
     public Result<ContractChangeDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
@@ -133,7 +133,7 @@ public class ContractChangeController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("project:contract-change:list")
+    @PrePermission("project:contractChange:list")
     @GetMapping("/page")
     public Result<Page<ContractChangeDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -150,7 +150,7 @@ public class ContractChangeController {
      * @return 变更记录列表
      */
     @Operation(summary = "按合同列出")
-    @PrePermission("project:contract-change:list")
+    @PrePermission("project:contractChange:list")
     @GetMapping("/list")
     public Result<List<ContractChangeDO>> listByContract(@RequestParam String contractId) {
         return Result.ok(service.listByContract(contractId));

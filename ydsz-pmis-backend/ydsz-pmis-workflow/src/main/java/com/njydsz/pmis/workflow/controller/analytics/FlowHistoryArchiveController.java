@@ -71,7 +71,7 @@ public class FlowHistoryArchiveController {
      */
     @Operation(summary = "手动触发归档")
     @OperationLog(module = "流程历史归档", action = "手动触发归档", bizType = "FLOW_HISTORY_ARCHIVE")
-    @Idempotent(key = "flow-history-archive:archive", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowHistoryArchive:archive", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/archive")
     public Result<Map<String, Object>> archive(@RequestParam(required = false) @Min(1) Integer retentionDays,
                                                   @RequestParam(required = false) @Min(1) @Max(1000) Integer batchSize,
@@ -92,7 +92,7 @@ public class FlowHistoryArchiveController {
      */
     @Operation(summary = "手动触发清理（purge）")
     @OperationLog(module = "流程历史归档", action = "手动触发清理", bizType = "FLOW_HISTORY_PURGE")
-    @Idempotent(key = "flow-history-archive:purge", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowHistoryArchive:purge", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/purge")
     public Result<Map<String, Object>> purge(@RequestParam(required = false) Integer purgeDays) {
         log.info("[FlowHistoryArchiveController] 手动触发清理 purgeDays={}", purgeDays);

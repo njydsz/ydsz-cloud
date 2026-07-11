@@ -37,7 +37,7 @@ public interface BenchResourceClient {
      * @param initiationId 立项 ID
      * @return 资源分配列表（每条记录为一个 Map）
      */
-    @GetMapping("/resource-assignments/by-initiation/{initiationId}")
+    @GetMapping("/resourceAssignments/byInitiation/{initiationId}")
     Result<List<Map<String, Object>>> listResourceAssignmentsByInitiation(
             @PathVariable("initiationId") String initiationId);
 }

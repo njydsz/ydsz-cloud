@@ -33,7 +33,7 @@ import java.util.Map;
  */
 @Tag(name = "预警分级推送")
 @RestController
-@RequestMapping("/alert-dispatch")
+@RequestMapping("/alertDispatch")
 @RequiredArgsConstructor
 @Validated
 public class AlertDispatchController {
@@ -48,7 +48,7 @@ public class AlertDispatchController {
      * @return 预警记录 ID
      */
     @Operation(summary = "提交预警（自动按 level 解析目标角色）")
-    @Idempotent(key = "alert-dispatch:submit", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "alertDispatch:submit", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> submit(@Valid @RequestBody AlertDispatchDTO dto) {
         return Result.ok(service.submit(dto));
@@ -61,7 +61,7 @@ public class AlertDispatchController {
      * @return 分发是否成功
      */
     @Operation(summary = "立即分发")
-    @Idempotent(key = "alert-dispatch:dispatch-now", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "alertDispatch:dispatchNow", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/dispatch")
     public Result<Boolean> dispatchNow(@PathVariable String id) {
         return Result.ok(service.dispatchNow(id));
@@ -74,7 +74,7 @@ public class AlertDispatchController {
      * @return 重试成功的预警数量
      */
     @Operation(summary = "重试失败预警")
-    @Idempotent(key = "alert-dispatch:retry-failed", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "alertDispatch:retryFailed", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/retry")
     public Result<Integer> retryFailed(@RequestParam(defaultValue = "3") int maxRetry) {
         return Result.ok(service.retryFailed(maxRetry));
@@ -88,7 +88,7 @@ public class AlertDispatchController {
      * @return 空结果
      */
     @Operation(summary = "取消预警")
-    @Idempotent(key = "alert-dispatch:cancel", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "alertDispatch:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/cancel")
     public Result<Void> cancel(@PathVariable String id, @RequestParam(required = false) String reason) {
         service.cancel(id, reason);
@@ -128,7 +128,7 @@ public class AlertDispatchController {
      * @return 目标角色列表
      */
     @Operation(summary = "解析等级对应目标角色（黄 → PM/PMO；红 → PMO/GM/CFO）")
-    @GetMapping("/resolve-roles")
+    @GetMapping("/resolveRoles")
     public Result<List<String>> resolveRoles(@RequestParam String level) {
         return Result.ok(service.resolveTargetRoles(level));
     }

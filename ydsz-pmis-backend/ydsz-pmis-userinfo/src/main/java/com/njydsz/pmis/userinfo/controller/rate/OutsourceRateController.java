@@ -36,7 +36,7 @@ import java.util.List;
  */
 @Tag(name = "基础数据-外包职级费率")
 @RestController
-@RequestMapping("/outsource-rates")
+@RequestMapping("/outsourceRates")
 @RequiredArgsConstructor
 @Validated
 public class OutsourceRateController {
@@ -51,7 +51,7 @@ public class OutsourceRateController {
      * @return 统一响应结果，包含新建记录 ID
      */
     @Operation(summary = "创建外包职级费率")
-    @Idempotent(key = "outsource-rate:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "outsourceRate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody OutsourceRateCreateDTO dto) {
         return Result.ok(outsourceRateService.create(dto));
@@ -65,7 +65,7 @@ public class OutsourceRateController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新外包职级费率")
-    @Idempotent(key = "outsource-rate:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "outsourceRate:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable String id, @Valid @RequestBody OutsourceRateUpdateDTO dto) {
         outsourceRateService.update(id, dto);
@@ -79,7 +79,7 @@ public class OutsourceRateController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除外包职级费率")
-    @Idempotent(key = "outsource-rate:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "outsourceRate:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         outsourceRateService.delete(id);

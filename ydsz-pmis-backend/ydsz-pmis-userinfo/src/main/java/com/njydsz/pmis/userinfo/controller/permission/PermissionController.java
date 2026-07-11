@@ -65,7 +65,7 @@ public class PermissionController {
      * @return 统一响应结果，包含菜单树
      */
     @Operation(summary = "查询当前用户菜单树")
-    @GetMapping("/menu-tree")
+    @GetMapping("/menuTree")
     public Result<List<MenuTreeVO>> menuTree(@RequestHeader("X-User-Id") String userId) {
         return Result.ok(permissionService.listMenuTreeByUserId(userId));
     }
@@ -88,7 +88,7 @@ public class PermissionController {
      * @return 统一响应结果，包含权限列表
      */
     @Operation(summary = "查询角色的权限")
-    @GetMapping("/by-role/{roleId}")
+    @GetMapping("/byRole/{roleId}")
     public Result<List<PermissionDO>> listByRole(@Parameter(description = "角色ID") @PathVariable String roleId) {
         return Result.ok(permissionService.listByRoleId(roleId));
     }

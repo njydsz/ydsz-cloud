@@ -34,7 +34,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/rule-engine/dashboard")
+@RequestMapping("/ruleEngine/dashboard")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则引擎监控大盘", description = "P1-6 规则引擎指标聚合 API：概览 / 趋势 / 分布 / Top 规则 / 实时指标")
@@ -87,7 +87,7 @@ public class RuleDashboardController {
      * @param limit 返回条数（默认 10，最大 50）
      * @return Top 规则列表
      */
-    @GetMapping("/top-rules")
+    @GetMapping("/topRules")
     @Operation(summary = "Top 规则列表", description = "按触发次数/平均耗时/错误率排序的 Top 规则")
     public Result<List<RuleDashboardTopRuleVO>> topRules(
             @RequestParam(value = "type", defaultValue = "triggered") String type,

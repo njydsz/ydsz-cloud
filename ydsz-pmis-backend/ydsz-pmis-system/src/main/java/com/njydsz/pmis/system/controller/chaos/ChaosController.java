@@ -190,7 +190,7 @@ public class ChaosController {
     @Operation(summary = "清空历史")
     @PrePermission("sys:chaos:trigger")
     @OperationLog(module = "混沌工程", action = "清空实验历史", bizType = "CHAOS_EXPERIMENT")
-    @Idempotent(key = "chaos:clear-history", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "chaos:clearHistory", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/history/clear")
     public Result<Void> clearHistory() {
         chaosService.clearHistory();
@@ -205,8 +205,8 @@ public class ChaosController {
      */
     @Operation(summary = "dry-run: 主动触发一次注入以验证容错 (需 captureMode 包裹异常)")
     @PrePermission("sys:chaos:trigger")
-    @Idempotent(key = "chaos:dry-run", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/dry-run")
+    @Idempotent(key = "chaos:dryRun", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/dryRun")
     public Result<Map<String, Object>> dryRun(
             @Parameter(description = "实验目标标识") @RequestParam @NotBlank String target) {
         // 包装异常: ChaosService 注入时会抛, 这里把异常转成 outcome 字符串

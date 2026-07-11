@@ -100,7 +100,7 @@ public class FlowMonitorController {
      * @param limit     返回条数上限
      * @return 审批人排名列表
      */
-    @GetMapping("/efficiency/approver-ranking")
+    @GetMapping("/efficiency/approverRanking")
     public Result<List<Map<String, Object>>> approverRanking(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime,
@@ -136,7 +136,7 @@ public class FlowMonitorController {
      * @return 评分结果：score / level / deductions / totalCount / anomalyCount / overdueRate / proxyRate / avgDurationMs
      */
     @Operation(summary = "流程健康度综合评分")
-    @GetMapping("/efficiency/health-score")
+    @GetMapping("/efficiency/healthScore")
     public Result<Map<String, Object>> healthScore(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
@@ -347,7 +347,7 @@ public class FlowMonitorController {
      * @param days 统计天数（默认 7，可选 30）
      * @return 趋势列表
      */
-    @GetMapping("/monitor/instance-trend")
+    @GetMapping("/monitor/instanceTrend")
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<List<Map<String, Object>>> monitorInstanceTrend(
             @RequestParam(defaultValue = "7") int days) {
@@ -409,7 +409,7 @@ public class FlowMonitorController {
      * @param endTime   finish_at 上界（可空）
      * @return 审批人排名列表
      */
-    @GetMapping("/monitor/approver-efficiency")
+    @GetMapping("/monitor/approverEfficiency")
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<List<Map<String, Object>>> monitorApproverEfficiency(
             @RequestParam(defaultValue = "10") int topN,
@@ -450,7 +450,7 @@ public class FlowMonitorController {
      * @param endTime   start_at 上界（可空）
      * @return 分布列表
      */
-    @GetMapping("/monitor/flow-type-distribution")
+    @GetMapping("/monitor/flowTypeDistribution")
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<List<Map<String, Object>>> monitorFlowTypeDistribution(
             @RequestParam(required = false) String startTime,
@@ -573,7 +573,7 @@ public class FlowMonitorController {
      * @return 超期任务列表：taskId / instanceId / flowCode / flowName / title / nodeName /
      * assigneeId / assigneeName / dueAt / overdueHours / reminderCount
      */
-    @GetMapping("/monitor/overdue-tasks")
+    @GetMapping("/monitor/overdueTasks")
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     @Operation(summary = "超期任务 Top N 排行（按超期时长降序）")
     public Result<List<Map<String, Object>>> monitorOverdueTasks(
@@ -592,7 +592,7 @@ public class FlowMonitorController {
      * @param limit 返回条数上限（默认 10，最大 100）
      * @return 审批人负载列表，按 totalCount 降序
      */
-    @GetMapping("/monitor/approver-workload")
+    @GetMapping("/monitor/approverWorkload")
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     @Operation(summary = "审批人负载分布（当前待办数量）")
     public Result<List<Map<String, Object>>> monitorApproverWorkload(
@@ -618,7 +618,7 @@ public class FlowMonitorController {
      * @param endTime   finish_at 上界（可空）
      * @return 流程效率对比列表，按 totalCount 降序
      */
-    @GetMapping("/monitor/flow-efficiency-comparison")
+    @GetMapping("/monitor/flowEfficiencyComparison")
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     @Operation(summary = "流程效率对比（按流程编码分组）")
     public Result<List<Map<String, Object>>> monitorFlowEfficiencyComparison(

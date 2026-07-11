@@ -29,7 +29,7 @@ import java.util.List;
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("/api/workflow/quick-comments")
+@RequestMapping("/api/workflow/quickComments")
 @RequiredArgsConstructor
 @Tag(name = "审批常用语", description = "常用审批意见管理")
 public class FlowQuickCommentController {
@@ -56,7 +56,7 @@ public class FlowQuickCommentController {
      * @param dto 常用语信息
      * @return 新建常用语 ID
      */
-    @Idempotent(key = "flow-quick-comment:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowQuickComment:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "新增常用语")
     public Result<String> create(@Valid @RequestBody FlowQuickCommentDTO dto) {
@@ -71,7 +71,7 @@ public class FlowQuickCommentController {
      * @param dto 常用语信息
      * @return 空响应
      */
-    @Idempotent(key = "flow-quick-comment:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowQuickComment:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "编辑常用语")
     public Result<Void> update(@Valid @RequestBody FlowQuickCommentDTO dto) {
@@ -86,7 +86,7 @@ public class FlowQuickCommentController {
      * @param id 常用语 ID
      * @return 空响应
      */
-    @Idempotent(key = "flow-quick-comment:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowQuickComment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除常用语")
     public Result<Void> delete(@PathVariable String id) {
@@ -101,7 +101,7 @@ public class FlowQuickCommentController {
      * @param id 常用语 ID
      * @return 空响应
      */
-    @Idempotent(key = "flow-quick-comment:increment-use-count", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowQuickComment:incrementUseCount", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/use")
     @Operation(summary = "增加使用次数（审批时调用）")
     public Result<Void> incrementUseCount(@PathVariable String id) {

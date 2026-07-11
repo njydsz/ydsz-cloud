@@ -139,8 +139,8 @@ public class ContractController {
      */
     @Operation(summary = "重新评估风险等级")
     @PrePermission("project:contract:evaluate")
-    @Idempotent(key = "contract:evaluate-risk", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{id}/evaluate-risk")
+    @Idempotent(key = "contract:evaluateRisk", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{id}/evaluateRisk")
     public Result<String> evaluateRisk(@Parameter(description = "合同ID") @PathVariable String id) {
         return Result.ok(service.evaluateRisk(id));
     }

@@ -35,7 +35,7 @@ import java.util.List;
  */
 @Tag(name = "项目质保期管理")
 @RestController
-@RequestMapping("/after-sales/warranty")
+@RequestMapping("/afterSales/warranty")
 @RequiredArgsConstructor
 @Validated
 public class WarrantyController {
@@ -62,7 +62,7 @@ public class WarrantyController {
 
     @Operation(summary = "扫描即将到期（≤ today + noticeDays 天）")
     @PrePermission("aftersales:warranty:scan")
-    @Idempotent(key = "warranty:scan-expiring", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "warranty:scanExpiring", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/expiring")
     public Result<Integer> scanExpiring(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate today,
@@ -72,7 +72,7 @@ public class WarrantyController {
 
     @Operation(summary = "扫描已过期")
     @PrePermission("aftersales:warranty:scan")
-    @Idempotent(key = "warranty:scan-overdue", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "warranty:scanOverdue", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/overdue")
     public Result<Integer> scanOverdue(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate today) {

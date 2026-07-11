@@ -56,7 +56,7 @@ public class WbsTaskController {
      */
     @Operation(summary = "创建 WBS 任务")
     @PrePermission("execution:wbs:create")
-    @Idempotent(key = "wbs-task:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "wbsTask:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -70,7 +70,7 @@ public class WbsTaskController {
      */
     @Operation(summary = "变更任务状态")
     @PrePermission("execution:wbs:status")
-    @Idempotent(key = "wbs-task:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "wbsTask:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
         service.changeStatus(dto);
@@ -87,7 +87,7 @@ public class WbsTaskController {
      */
     @Operation(summary = "更新任务进度")
     @PrePermission("execution:wbs:update")
-    @Idempotent(key = "wbs-task:update-progress", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "wbsTask:updateProgress", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/progress")
     public Result<Void> updateProgress(@PathVariable String id,
                                    @RequestParam BigDecimal progressPct,
@@ -104,7 +104,7 @@ public class WbsTaskController {
      */
     @Operation(summary = "删除任务")
     @PrePermission("execution:wbs:delete")
-    @Idempotent(key = "wbs-task:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "wbsTask:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "WBS任务", action = "删除任务", bizType = "WBS_TASK")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
@@ -185,7 +185,7 @@ public class WbsTaskController {
      */
     @Operation(summary = "项目整体进度（按工时加权）")
     @PrePermission("execution:wbs:list")
-    @GetMapping("/initiation/{initiationId}/overall-progress")
+    @GetMapping("/initiation/{initiationId}/overallProgress")
     public Result<BigDecimal> overallProgress(@PathVariable String initiationId) {
         return Result.ok(service.calcOverallProgress(initiationId));
     }

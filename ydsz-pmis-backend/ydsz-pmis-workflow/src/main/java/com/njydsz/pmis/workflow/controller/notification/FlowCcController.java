@@ -60,7 +60,7 @@ public class FlowCcController {
      *
      * @return 未读抄送条数
      */
-    @GetMapping("/cc/unread-count")
+    @GetMapping("/cc/unreadCount")
     public Result<Long> ccUnreadCount() {
         String tenantId = SecurityContext.getTenantIdOrDefault("1");
         String userId = SecurityContext.getUserId();
@@ -73,7 +73,7 @@ public class FlowCcController {
      * @param id 抄送记录 ID
      * @return 操作结果
      */
-    @Idempotent(key = "flow-cc:cc-mark-read", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowCc:ccMarkRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/cc/{id}/read")
     public Result<Boolean> ccMarkRead(@PathVariable String id) {
         String tenantId = SecurityContext.getTenantIdOrDefault("1");
@@ -87,8 +87,8 @@ public class FlowCcController {
      *
      * @return 已标记已读的记录数
      */
-    @Idempotent(key = "flow-cc:cc-mark-all-read", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/cc/read-all")
+    @Idempotent(key = "flowCc:ccMarkAllRead", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/cc/readAll")
     public Result<Integer> ccMarkAllRead() {
         String tenantId = SecurityContext.getTenantIdOrDefault("1");
         String userId = SecurityContext.getUserId();

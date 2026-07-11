@@ -73,7 +73,7 @@ public class TaskTopologyController {
      * @return 拓扑图数据（DAG 定义 + 实例状态 + 节点执行详情）
      */
     @Operation(summary = "查询DAG实例执行拓扑图")
-    @GetMapping("/dag-instance/{dagInstanceId}")
+    @GetMapping("/dagInstance/{dagInstanceId}")
     public Result<Map<String, Object>> getDagInstanceTopology(@PathVariable String dagInstanceId) {
         JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
@@ -105,7 +105,7 @@ public class TaskTopologyController {
      * @return 执行历史列表
      */
     @Operation(summary = "查询任务执行历史")
-    @GetMapping("/job-history/{jobKey}")
+    @GetMapping("/jobHistory/{jobKey}")
     public Result<List<JobLogDO>> getJobExecutionHistory(@PathVariable String jobKey) {
         LambdaQueryWrapper<JobLogDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(JobLogDO::getJobKey, jobKey)

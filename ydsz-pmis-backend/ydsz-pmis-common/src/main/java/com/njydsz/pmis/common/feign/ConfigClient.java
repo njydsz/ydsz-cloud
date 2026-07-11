@@ -37,7 +37,7 @@ public interface ConfigClient {
      * @param key   配置键
      * @return 配置值
      */
-    @GetMapping("/configs/by-key")
+    @GetMapping("/configs/byKey")
     Result<String> getValue(@RequestParam("group") String group, @RequestParam("key") String key);
 
     /**

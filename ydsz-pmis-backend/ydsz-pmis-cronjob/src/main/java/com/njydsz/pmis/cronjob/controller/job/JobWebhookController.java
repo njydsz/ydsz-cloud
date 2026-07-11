@@ -43,7 +43,7 @@ public class JobWebhookController {
     @Operation(summary = "新增 WebHook 订阅")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "新增WebHook", bizType = "CRONJOB_WEBHOOK")
-    @Idempotent(key = "job-webhook:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobWebhook:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@RequestBody JobWebhookDO webhook) {
         webhook.setStatus("ACTIVE");
@@ -66,7 +66,7 @@ public class JobWebhookController {
     @Operation(summary = "更新 WebHook 订阅")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "更新WebHook", bizType = "CRONJOB_WEBHOOK")
-    @Idempotent(key = "job-webhook:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobWebhook:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@RequestBody JobWebhookDO webhook) {
         webhook.setUpdatedAt(LocalDateTime.now());
@@ -83,7 +83,7 @@ public class JobWebhookController {
     @Operation(summary = "删除 WebHook 订阅")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "删除WebHook", bizType = "CRONJOB_WEBHOOK")
-    @Idempotent(key = "job-webhook:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobWebhook:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         JobWebhookDO update = new JobWebhookDO();
@@ -140,7 +140,7 @@ public class JobWebhookController {
      */
     @Operation(summary = "测试 WebHook 推送")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
-    @Idempotent(key = "job-webhook:test-webhook", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "jobWebhook:testWebhook", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/test")
     public Result<Void> testWebhook(@PathVariable String id) {
         JobWebhookDO webhook = webhookMapper.selectById(id);

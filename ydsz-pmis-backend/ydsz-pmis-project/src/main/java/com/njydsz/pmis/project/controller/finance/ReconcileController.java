@@ -60,7 +60,7 @@ public class ReconcileController {
      */
     @Operation(summary = "工时漏算 / 幽灵成本")
     @PrePermission("execution:reconcile:view")
-    @GetMapping("/missing-cost")
+    @GetMapping("/missingCost")
     public Result<List<ReconcileResult>> missingCost(@RequestParam(required = false) String initiationId) {
         return Result.ok(reconcileService.checkMissingCost(initiationId));
     }
@@ -75,7 +75,7 @@ public class ReconcileController {
      */
     @Operation(summary = "工时异常(单日/单周/跨项目)")
     @PrePermission("execution:reconcile:view")
-    @GetMapping("/time-anomaly")
+    @GetMapping("/timeAnomaly")
     public Result<List<ReconcileResult>> timeAnomaly(
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,

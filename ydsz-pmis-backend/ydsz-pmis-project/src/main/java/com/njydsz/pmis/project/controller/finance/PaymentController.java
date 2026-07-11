@@ -142,8 +142,8 @@ public class PaymentController {
     @Operation(summary = "自动核销（按客户）")
     @PrePermission("finance:payment:allocate")
     @OperationLog(module = "回款管理", action = "自动核销（按客户）", bizType = "PAYMENT", saveResult = true)
-    @Idempotent(key = "payment:auto-allocate", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/auto-allocate")
+    @Idempotent(key = "payment:autoAllocate", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/autoAllocate")
     public Result<Integer> autoAllocate(@RequestParam String customerId,
                                    @RequestParam String operatorId) {
         return Result.ok(service.autoAllocate(customerId, operatorId));
@@ -211,7 +211,7 @@ public class PaymentController {
      */
     @Operation(summary = "按合同汇总回款")
     @PrePermission("finance:payment:list")
-    @GetMapping("/sum/by-contract")
+    @GetMapping("/sum/byContract")
     public Result<BigDecimal> sumByContract(@RequestParam String contractId) {
         return Result.ok(service.sumReceivedByContract(contractId));
     }
@@ -224,7 +224,7 @@ public class PaymentController {
      */
     @Operation(summary = "按月汇总")
     @PrePermission("finance:payment:list")
-    @GetMapping("/aggregate/by-month")
+    @GetMapping("/aggregate/byMonth")
     public Result<List<Map<String, Object>>> aggregateByMonth(@RequestParam String initiationId) {
         return Result.ok(service.aggregateByMonth(initiationId));
     }

@@ -68,7 +68,7 @@ public class LoginAuditController {
 
     @Operation(summary = "按用户名查询登录历史")
     @PrePermission("audit:login:view")
-    @GetMapping("/by-username")
+    @GetMapping("/byUsername")
     /**
      * 按用户名查询登录历史
      *
@@ -84,7 +84,7 @@ public class LoginAuditController {
 
     @Operation(summary = "统计某 IP 短期登录失败次数")
     @PrePermission("audit:login:view")
-    @GetMapping("/count-by-ip")
+    @GetMapping("/countByIp")
     /**
      * 统计某 IP 在指定时间窗口内的登录次数
      *

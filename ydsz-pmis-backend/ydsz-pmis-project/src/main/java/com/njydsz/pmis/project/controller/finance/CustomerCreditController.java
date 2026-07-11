@@ -52,7 +52,7 @@ public class CustomerCreditController {
      */
     @Operation(summary = "评估客户信用")
     @PrePermission("finance:credit:assess")
-    @Idempotent(key = "customer-credit:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "customerCredit:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/assess")
     public Result<CustomerCreditDO> assess(@Valid @RequestBody CreditAssessmentDTO dto) {
         return Result.ok(service.assess(dto));
@@ -104,7 +104,7 @@ public class CustomerCreditController {
      */
     @Operation(summary = "按等级列出")
     @PrePermission("finance:credit:list")
-    @GetMapping("/by-level")
+    @GetMapping("/byLevel")
     public Result<List<CustomerCreditDO>> listByLevel(@RequestParam CreditLevel level) {
         return Result.ok(service.listByLevel(level));
     }

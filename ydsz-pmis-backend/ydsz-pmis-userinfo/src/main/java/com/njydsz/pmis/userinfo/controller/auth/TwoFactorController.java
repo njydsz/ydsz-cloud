@@ -85,7 +85,7 @@ public class TwoFactorController {
      */
     @Operation(summary = "使用备份码")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
-    @PostMapping("/verify-backup")
+    @PostMapping("/verifyBackup")
     public Result<Boolean> verifyBackup(@RequestParam String code) {
         String userId = SecurityContext.getUserId();
         return Result.ok(service.verifyBackup(userId, code));
@@ -123,7 +123,7 @@ public class TwoFactorController {
      * @return 统一响应结果，包含脱敏后的备份码列表
      */
     @Operation(summary = "查询备份码（脱敏）")
-    @GetMapping("/backup-codes")
+    @GetMapping("/backupCodes")
     public Result<List<String>> backupCodes() {
         String userId = SecurityContext.getUserId();
         return Result.ok(service.listBackupCodesMasked(userId));

@@ -93,7 +93,7 @@ public class BenchController {
      * @return 统一响应结果，包含按池汇总数据
      */
     @Operation(summary = "按池汇总")
-    @GetMapping("/aggregate/by-pool")
+    @GetMapping("/aggregate/byPool")
     public Result<List<Map<String, Object>>> aggregateByPool() {
         return Result.ok(benchService.aggregateByPool());
     }
@@ -138,7 +138,7 @@ public class BenchController {
      * @return 统一响应结果，包含累计闲置成本
      */
     @Operation(summary = "累计闲置成本")
-    @GetMapping("/total-idle-cost")
+    @GetMapping("/totalIdleCost")
     public Result<BigDecimal> totalIdleCost() {
         return Result.ok(benchService.totalIdleCost());
     }

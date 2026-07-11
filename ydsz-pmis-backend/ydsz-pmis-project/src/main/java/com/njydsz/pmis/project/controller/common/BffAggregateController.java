@@ -65,7 +65,7 @@ public class BffAggregateController {
      * @param initiationId 立项 ID（必填）
      * @return 聚合视图对象（各维度独立填充，异常维度返回 fail section）
      */
-    @GetMapping("/project-detail/{initiationId}")
+    @GetMapping("/projectDetail/{initiationId}")
     @RateLimit(key = "bff", qps = 20, windowSeconds = 60)
     @Operation(summary = "项目详情聚合", description = "一次返回立项+合同+WBS概览+EVM摘要")
     public ProjectDetailAggregateVO projectDetailAggregate(
@@ -118,7 +118,7 @@ public class BffAggregateController {
      * @param userId 用户 ID（从请求头 X-User-Id 获取，可选）
      * @return 聚合数据 Map（key: kpi/alerts/todos）
      */
-    @GetMapping("/dashboard-summary")
+    @GetMapping("/dashboardSummary")
     @RateLimit(key = "bff", qps = 20, windowSeconds = 60)
     @Operation(summary = "首页仪表盘聚合", description = "一次返回KPI+图表+待办数据")
     public Map<String, Object> dashboardSummary(@RequestHeader(value = "X-User-Id", required = false) String userId) {

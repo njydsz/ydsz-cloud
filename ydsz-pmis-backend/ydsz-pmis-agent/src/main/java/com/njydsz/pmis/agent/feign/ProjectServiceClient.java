@@ -32,7 +32,7 @@ public interface ProjectServiceClient {
      * @param month        月份（yyyy-MM），为空时服务端取当前月
      * @return 异常统计 Map（overtimeCount/missingCount/abnormalCount/totalHours）
      */
-    @GetMapping("/execution/time-entry/abnormal-stat")
+    @GetMapping("/execution/timeEntry/abnormalStat")
     Result<Map<String, Object>> timeEntryAbnormalStat(
             @RequestParam("initiationId") String initiationId,
             @RequestParam(value = "month", required = false) String month);

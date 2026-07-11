@@ -38,7 +38,7 @@ import java.util.Map;
  */
 @Tag(name = "系统-特性开关", description = "特性开关管理、灰度发布接口")
 @RestController
-@RequestMapping("/feature-flags")
+@RequestMapping("/featureFlags")
 @RequiredArgsConstructor
 @Validated
 public class FeatureFlagController {
@@ -52,7 +52,7 @@ public class FeatureFlagController {
      * @return 统一响应结果，包含 flag 快照列表
      */
     @Operation(summary = "获取全量 flag 快照")
-    @PrePermission("sys:feature-flag:view")
+    @PrePermission("sys:featureFlag:view")
     @GetMapping("/snapshot")
     public Result<List<FeatureFlagSnapshot>> snapshot() {
         return Result.ok(featureFlagService.snapshot());
@@ -64,7 +64,7 @@ public class FeatureFlagController {
      * @return 统一响应结果，包含按分类分组的 flag 快照
      */
     @Operation(summary = "按分类聚合快照")
-    @PrePermission("sys:feature-flag:view")
+    @PrePermission("sys:featureFlag:view")
     @GetMapping("/snapshot/grouped")
     public Result<Map<String, List<FeatureFlagSnapshot>>> snapshotByCategory() {
         return Result.ok(featureFlagService.snapshotByCategory());
@@ -99,9 +99,9 @@ public class FeatureFlagController {
      * @return 统一响应结果，包含生效状态
      */
     @Operation(summary = "启停指定 flag")
-    @PrePermission("sys:feature-flag:update")
+    @PrePermission("sys:featureFlag:update")
     @OperationLog(module = "特性开关", action = "更新开关", bizType = "FEATURE_FLAG")
-    @Idempotent(key = "feature-flag:set-enabled", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "featureFlag:setEnabled", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/enabled")
     public Result<Boolean> setEnabled(
             @Parameter(description = "flag 键") @PathVariable String key,
@@ -119,9 +119,9 @@ public class FeatureFlagController {
      * @return 统一响应结果，包含实际生效的百分比
      */
     @Operation(summary = "设置灰度发布比例 (0-100)")
-    @PrePermission("sys:feature-flag:update")
+    @PrePermission("sys:featureFlag:update")
     @OperationLog(module = "特性开关", action = "更新灰度", bizType = "FEATURE_FLAG")
-    @Idempotent(key = "feature-flag:set-rollout", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "featureFlag:setRollout", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/rollout")
     public Result<Integer> setRollout(
             @Parameter(description = "flag 键") @PathVariable String key,
@@ -137,9 +137,9 @@ public class FeatureFlagController {
      * @return 统一响应结果
      */
     @Operation(summary = "强制刷新本地缓存")
-    @PrePermission("sys:feature-flag:update")
+    @PrePermission("sys:featureFlag:update")
     @OperationLog(module = "特性开关", action = "刷新缓存", bizType = "FEATURE_FLAG")
-    @Idempotent(key = "feature-flag:refresh", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "featureFlag:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
     public Result<Void> refresh() {
         featureFlagService.refresh();

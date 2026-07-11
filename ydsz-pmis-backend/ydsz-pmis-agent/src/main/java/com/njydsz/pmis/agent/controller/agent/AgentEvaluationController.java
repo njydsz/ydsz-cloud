@@ -55,7 +55,7 @@ public class AgentEvaluationController {
      */
     @Operation(summary = "执行评测")
     @PrePermission("agent:task:run")
-    @Idempotent(key = "agent-evaluation:run-evaluation", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "agentEvaluation:runEvaluation", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/run")
     public Result<EvaluationReport> runEvaluation(@RequestBody EvaluationRunRequest req) {
         if (req.getAgentType() == null || req.getAgentType().isBlank()) {

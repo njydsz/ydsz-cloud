@@ -53,7 +53,7 @@ public class FlowCategoryController {
      * @param dto 分类信息
      * @return 新建分类 ID
      */
-    @Idempotent(key = "flow-category:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowCategory:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "新增分类")
     public Result<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
@@ -66,7 +66,7 @@ public class FlowCategoryController {
      * @param dto 分类信息
      * @return 空响应
      */
-    @Idempotent(key = "flow-category:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowCategory:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "编辑分类")
     public Result<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
@@ -80,7 +80,7 @@ public class FlowCategoryController {
      * @param id 分类 ID
      * @return 空响应
      */
-    @Idempotent(key = "flow-category:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowCategory:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类")
     public Result<Void> delete(@PathVariable String id) {

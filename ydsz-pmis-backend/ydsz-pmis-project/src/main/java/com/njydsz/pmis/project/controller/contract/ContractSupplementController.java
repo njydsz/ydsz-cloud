@@ -48,7 +48,7 @@ public class ContractSupplementController {
      * @return 补充协议 ID
      */
     @Operation(summary = "创建补充协议")
-    @Idempotent(key = "contract-supplement:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "contractSupplement:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody ContractSupplementDTO dto) {
         return Result.ok(service.create(dto));
@@ -62,7 +62,7 @@ public class ContractSupplementController {
      */
     @Operation(summary = "删除补充协议")
     @OperationLog(module = "合同管理", action = "删除补充协议", bizType = "CONTRACT_SUPPLEMENT")
-    @Idempotent(key = "contract-supplement:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "contractSupplement:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);

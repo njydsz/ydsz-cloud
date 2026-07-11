@@ -35,7 +35,7 @@ import java.util.Map;
  */
 @Tag(name = "运维工单管理")
 @RestController
-@RequestMapping("/after-sales/ops-ticket")
+@RequestMapping("/afterSales/opsTicket")
 @RequiredArgsConstructor
 @Validated
 public class OpsTicketController {
@@ -44,16 +44,16 @@ public class OpsTicketController {
     private final OpsTicketService service;
 
     @Operation(summary = "创建工单")
-    @PrePermission("aftersales:ops-ticket:create")
-    @Idempotent(key = "ops-ticket:create", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("aftersales:opsTicket:create")
+    @Idempotent(key = "opsTicket:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody OpsTicketCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "派单")
-    @PrePermission("aftersales:ops-ticket:assign")
-    @Idempotent(key = "ops-ticket:update", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("aftersales:opsTicket:assign")
+    @Idempotent(key = "opsTicket:update", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/assign")
     public Result<Void> assign(@Valid @RequestBody OpsTicketAssignDTO dto) {
         service.assign(dto);
@@ -61,8 +61,8 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "状态变更")
-    @PrePermission("aftersales:ops-ticket:status")
-    @Idempotent(key = "ops-ticket:change-status", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("aftersales:opsTicket:status")
+    @Idempotent(key = "opsTicket:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.changeStatus(dto);
@@ -70,24 +70,24 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "关闭工单并评价")
-    @PrePermission("aftersales:ops-ticket:evaluate")
-    @Idempotent(key = "ops-ticket:close-and-evaluate", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/close-evaluate")
+    @PrePermission("aftersales:opsTicket:evaluate")
+    @Idempotent(key = "opsTicket:closeAndEvaluate", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/closeEvaluate")
     public Result<Void> closeAndEvaluate(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.closeAndEvaluate(dto);
         return Result.ok();
     }
 
     @Operation(summary = "SLA 扫描")
-    @PrePermission("aftersales:ops-ticket:scan")
-    @Idempotent(key = "ops-ticket:scan-sla", ttlSeconds = 5, message = "请勿重复提交")
+    @PrePermission("aftersales:opsTicket:scan")
+    @Idempotent(key = "opsTicket:scanSla", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/sla")
     public Result<Integer> scanSla() {
         return Result.ok(service.scanSlaBreaches());
     }
 
     @Operation(summary = "工单分页")
-    @PrePermission("aftersales:ops-ticket:list")
+    @PrePermission("aftersales:opsTicket:list")
     @GetMapping("/page")
     public Result<PageResult<OpsTicketDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -102,29 +102,29 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "SLA 达成率")
-    @PrePermission("aftersales:ops-ticket:list")
-    @GetMapping("/sla-summary")
+    @PrePermission("aftersales:opsTicket:list")
+    @GetMapping("/slaSummary")
     public Result<List<Map<String, Object>>> slaSummary() {
         return Result.ok(service.slaSummary());
     }
 
     @Operation(summary = "按状态聚合")
-    @PrePermission("aftersales:ops-ticket:list")
+    @PrePermission("aftersales:opsTicket:list")
     @GetMapping("/aggregate/status")
     public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) String initiationId) {
         return Result.ok(service.aggregateByStatus(initiationId));
     }
 
     @Operation(summary = "工单详情")
-    @PrePermission("aftersales:ops-ticket:list")
+    @PrePermission("aftersales:opsTicket:list")
     @GetMapping("/{id}")
     public Result<OpsTicketDO> getById(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "按项目查询工单")
-    @PrePermission("aftersales:ops-ticket:list")
-    @GetMapping("/by-initiation/{initiationId}")
+    @PrePermission("aftersales:opsTicket:list")
+    @GetMapping("/byInitiation/{initiationId}")
     public Result<List<OpsTicketDO>> listByInitiation(@PathVariable String initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }

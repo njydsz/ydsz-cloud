@@ -147,7 +147,7 @@ public class JobController {
      */
     @Operation(summary = "批量暂停任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
-    @Idempotent(key = "job:batch-pause", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "job:batchPause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/pause")
     public Result<Integer> batchPause(@RequestBody @Valid JobBatchDTO dto) {
         return Result.ok(jobService.batchPause(dto.getJobIds()));
@@ -161,7 +161,7 @@ public class JobController {
      */
     @Operation(summary = "批量恢复任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
-    @Idempotent(key = "job:batch-resume", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "job:batchResume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/resume")
     public Result<Integer> batchResume(@RequestBody @Valid JobBatchDTO dto) {
         return Result.ok(jobService.batchResume(dto.getJobIds()));
@@ -190,7 +190,7 @@ public class JobController {
     @Operation(summary = "批量删除任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
     @OperationLog(module = "任务调度", action = "批量删除任务", bizType = "CRONJOB_JOB")
-    @Idempotent(key = "job:batch-delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "job:batchDelete", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/delete")
     public Result<Integer> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
         return Result.ok(jobService.batchDelete(dto.getJobIds()));

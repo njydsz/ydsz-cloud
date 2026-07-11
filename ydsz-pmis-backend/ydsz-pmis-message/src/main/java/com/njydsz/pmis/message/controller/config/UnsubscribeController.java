@@ -59,8 +59,8 @@ public class UnsubscribeController {
      */
     @Operation(summary = "token 一键退订")
     @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
-    @Idempotent(key = "unsubscribe:one-click", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/one-click")
+    @Idempotent(key = "unsubscribe:oneClick", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/oneClick")
     public Result<MsgSubscriptionDO> oneClick(@RequestParam String token) {
         if (token == null || token.isBlank()) {
             return Result.failed(BizErrorCode.BAD_REQUEST, "退订 token 不能为空");

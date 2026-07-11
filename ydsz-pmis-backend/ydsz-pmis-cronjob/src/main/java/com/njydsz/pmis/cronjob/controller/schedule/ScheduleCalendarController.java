@@ -39,7 +39,7 @@ public class ScheduleCalendarController {
      * @return 触发时间列表
      */
     @Operation(summary = "查询任务未来触发时间")
-    @GetMapping("/fire-times")
+    @GetMapping("/fireTimes")
     public Result<List<LocalDateTime>> getUpcomingFireTimes(
             @RequestParam String jobKey,
             @RequestParam(defaultValue = "24") int hours,

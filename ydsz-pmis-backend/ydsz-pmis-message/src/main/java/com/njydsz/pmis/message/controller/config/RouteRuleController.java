@@ -32,7 +32,7 @@ import java.util.List;
  */
 @Tag(name = "路由规则", description = "消息路由规则管理")
 @RestController
-@RequestMapping("/message/route-rule")
+@RequestMapping("/message/routeRule")
 @RequiredArgsConstructor
 public class RouteRuleController {
 
@@ -47,7 +47,7 @@ public class RouteRuleController {
      */
     @Operation(summary = "创建路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
-    @Idempotent(key = "route-rule:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "routeRule:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
         return Result.ok(routeRuleService.create(dto));
@@ -62,7 +62,7 @@ public class RouteRuleController {
      */
     @Operation(summary = "更新路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
-    @Idempotent(key = "route-rule:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "routeRule:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
         return Result.ok(routeRuleService.update(id, dto));
@@ -76,7 +76,7 @@ public class RouteRuleController {
      */
     @Operation(summary = "删除路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
-    @Idempotent(key = "route-rule:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "routeRule:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         routeRuleService.delete(id);

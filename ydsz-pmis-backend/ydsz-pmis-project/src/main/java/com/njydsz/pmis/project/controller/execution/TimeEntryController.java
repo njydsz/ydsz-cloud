@@ -41,7 +41,7 @@ import java.util.Map;
  */
 @Tag(name = "工时管理")
 @RestController
-@RequestMapping("/execution/time-entry")
+@RequestMapping("/execution/timeEntry")
 @RequiredArgsConstructor
 @Validated
 public class TimeEntryController {
@@ -57,7 +57,7 @@ public class TimeEntryController {
      */
     @Operation(summary = "录入工时")
     @PrePermission("execution:time:create")
-    @Idempotent(key = "time-entry:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "timeEntry:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -71,7 +71,7 @@ public class TimeEntryController {
      */
     @Operation(summary = "提交工时审批")
     @PrePermission("execution:time:approve")
-    @Idempotent(key = "time-entry:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "timeEntry:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
     public Result<Void> submit(@PathVariable String id) {
         service.submit(id);
@@ -86,7 +86,7 @@ public class TimeEntryController {
      */
     @Operation(summary = "审批工时")
     @PrePermission("execution:time:approve")
-    @Idempotent(key = "time-entry:approve", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "timeEntry:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/approve")
     public Result<Void> approve(@Valid @RequestBody TimeEntryApprovalDTO dto) {
         service.approve(dto);
@@ -101,7 +101,7 @@ public class TimeEntryController {
      */
     @Operation(summary = "删除工时")
     @PrePermission("execution:time:delete")
-    @Idempotent(key = "time-entry:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "timeEntry:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "工时管理", action = "删除工时", bizType = "TIME_ENTRY")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
@@ -162,7 +162,7 @@ public class TimeEntryController {
      */
     @Operation(summary = "项目工时按人员+职级聚合")
     @PrePermission("execution:time:list")
-    @GetMapping("/aggregate/by-employee-level")
+    @GetMapping("/aggregate/byEmployeeLevel")
     public Result<List<Map<String, Object>>> aggregateByEmployeeLevel(
             @RequestParam String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -197,7 +197,7 @@ public class TimeEntryController {
      */
     @Operation(summary = "工时异常统计")
     @PrePermission("execution:time:list")
-    @GetMapping("/abnormal-stat")
+    @GetMapping("/abnormalStat")
     public Result<Map<String, Object>> abnormalStat(
             @RequestParam String initiationId,
             @RequestParam(required = false) String month) {

@@ -152,7 +152,7 @@ public class RevenueController {
      */
     @Operation(summary = "按合同汇总")
     @PrePermission("execution:revenue:list")
-    @GetMapping("/aggregate/by-contract")
+    @GetMapping("/aggregate/byContract")
     public Result<List<Map<String, Object>>> sumByContract(@RequestParam String contractId) {
         return Result.ok(service.sumByContract(contractId));
     }
@@ -165,7 +165,7 @@ public class RevenueController {
      */
     @Operation(summary = "按期间汇总")
     @PrePermission("execution:revenue:list")
-    @GetMapping("/aggregate/by-period")
+    @GetMapping("/aggregate/byPeriod")
     public Result<List<Map<String, Object>>> sumByPeriod(@RequestParam String initiationId) {
         return Result.ok(service.sumByPeriod(initiationId));
     }

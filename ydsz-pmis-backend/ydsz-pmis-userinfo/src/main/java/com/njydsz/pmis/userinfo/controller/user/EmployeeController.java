@@ -135,7 +135,7 @@ public class EmployeeController {
      * @return 统一响应结果，包含员工列表
      */
     @Operation(summary = "按部门查询员工")
-    @GetMapping("/by-department/{departmentId}")
+    @GetMapping("/byDepartment/{departmentId}")
     public Result<List<EmployeeDO>> listByDepartment(
             @Parameter(description = "部门 ID") @PathVariable String departmentId) {
         return Result.ok(employeeService.listByDepartment(departmentId));

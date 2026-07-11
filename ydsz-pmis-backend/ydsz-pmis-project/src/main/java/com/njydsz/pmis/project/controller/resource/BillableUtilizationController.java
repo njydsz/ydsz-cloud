@@ -147,7 +147,7 @@ public class BillableUtilizationController {
      */
     @Operation(summary = "触发快照重算（Cronjob 调用 / 运维手工）")
     @PrePermission("execution:utilization:recompute")
-    @Idempotent(key = "billable-utilization:recompute", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "billableUtilization:recompute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/recompute")
     public Result<Map<String, Object>> recompute(
             @RequestParam(required = false) String period,
@@ -163,7 +163,7 @@ public class BillableUtilizationController {
      */
     @Operation(summary = "读取最新一期快照均值（驾驶舱取数，快照为空时实时聚合兜底）")
     @PrePermission("execution:utilization:view")
-    @GetMapping("/snapshot-average")
+    @GetMapping("/snapshotAverage")
     public Result<Map<String, Object>> snapshotAverage(
             @RequestParam(required = false) String period) {
         return Result.ok(service.snapshotAverage(period));

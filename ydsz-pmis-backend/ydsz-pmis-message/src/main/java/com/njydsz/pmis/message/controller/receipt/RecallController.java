@@ -42,7 +42,7 @@ public class RecallController {
      */
     @Operation(summary = "撤回站内通知")
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
-    @Idempotent(key = "recall:recall-notification", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "recall:recallNotification", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification")
     public Result<Boolean> recallNotification(@RequestParam String userId,
                                               @Valid @RequestBody RecallRequestDTO dto) {
@@ -57,7 +57,7 @@ public class RecallController {
      */
     @Operation(summary = "撤回已发送消息")
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
-    @Idempotent(key = "recall:recall-message", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "recall:recallMessage", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/message/{logId}")
     public Result<Boolean> recallMessage(@PathVariable String logId) {
         return Result.ok(recallService.recallMessage(logId));
@@ -73,7 +73,7 @@ public class RecallController {
      */
     @Operation(summary = "按消息 ID 撤回消息")
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
-    @Idempotent(key = "recall:recall-by-msg-id", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "recall:recallByMsgId", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/msg/{msgId}")
     public Result<Boolean> recallByMsgId(@PathVariable String msgId) {
         return Result.ok(recallService.recallByMsgId(msgId));
@@ -87,7 +87,7 @@ public class RecallController {
      */
     @Operation(summary = "按业务类型+单据 ID 批量撤回")
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
-    @Idempotent(key = "recall:recall-batch", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "recall:recallBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch")
     public Result<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {
         return Result.ok(recallService.recallBatch(dto.getBizType(), dto.getBizId()));

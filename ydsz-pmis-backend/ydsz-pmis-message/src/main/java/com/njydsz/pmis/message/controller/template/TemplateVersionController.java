@@ -67,7 +67,7 @@ public class TemplateVersionController {
      */
     @Operation(summary = "回滚到指定版本")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
-    @Idempotent(key = "template-version:rollback", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "templateVersion:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
     public Result<String> rollback(@RequestParam String templateCode, @RequestParam int version) {
         return Result.ok(templateVersionService.rollbackToVersion(templateCode, version));
@@ -98,8 +98,8 @@ public class TemplateVersionController {
      */
     @Operation(summary = "试发模板（向测试接收人发送）")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
-    @Idempotent(key = "template-version:test-send", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/test-send")
+    @Idempotent(key = "templateVersion:testSend", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/testSend")
     public Result<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
         if (dto == null) {
             return Result.failed(BizErrorCode.BAD_REQUEST, "试发参数为空");

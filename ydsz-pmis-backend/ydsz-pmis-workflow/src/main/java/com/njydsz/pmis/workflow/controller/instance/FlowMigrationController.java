@@ -75,7 +75,7 @@ public class FlowMigrationController {
      * @param targetDefinitionId 目标定义 ID
      * @return 统一响应结果，包含 旧节点编码 -> 新节点编码 的映射
      */
-    @GetMapping("/instance/migrate/auto-map")
+    @GetMapping("/instance/migrate/autoMap")
     public Result<Map<String, String>> autoMapNodes(
             @RequestParam Long sourceDefinitionId,
             @RequestParam Long targetDefinitionId) {

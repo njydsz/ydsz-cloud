@@ -39,7 +39,7 @@ import java.util.Set;
  */
 @Slf4j
 @RestController
-@RequestMapping("/rule-engine/breakpoints")
+@RequestMapping("/ruleEngine/breakpoints")
 @RequiredArgsConstructor
 @Tag(name = "规则断点调试", description = "断点管理、调试指令、上下文快照")
 public class BreakpointController {
@@ -67,7 +67,7 @@ public class BreakpointController {
      * @param ruleCode 规则编码
      * @return 添加结果
      */
-    @Idempotent(key = "breakpoint:add-breakpoint", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "breakpoint:addBreakpoint", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}")
     public Result<Void> addBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -85,7 +85,7 @@ public class BreakpointController {
      * @param ruleCode 规则编码
      * @return 移除结果
      */
-    @Idempotent(key = "breakpoint:remove-breakpoint", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "breakpoint:removeBreakpoint", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}")
     public Result<Void> removeBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -102,7 +102,7 @@ public class BreakpointController {
      *
      * @return 清空结果
      */
-    @Idempotent(key = "breakpoint:clear-breakpoints", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "breakpoint:clearBreakpoints", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping
     public Result<Void> clearBreakpoints() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
@@ -137,8 +137,8 @@ public class BreakpointController {
      * @param ruleCode 规则编码
      * @return 下发结果
      */
-    @Idempotent(key = "breakpoint:step-over", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/step-over")
+    @Idempotent(key = "breakpoint:stepOver", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleCode}/stepOver")
     public Result<Boolean> stepOver(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
@@ -181,7 +181,7 @@ public class BreakpointController {
      *
      * @return 清空结果
      */
-    @Idempotent(key = "breakpoint:clear-snapshots", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "breakpoint:clearSnapshots", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/snapshots")
     public Result<Void> clearSnapshots() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();

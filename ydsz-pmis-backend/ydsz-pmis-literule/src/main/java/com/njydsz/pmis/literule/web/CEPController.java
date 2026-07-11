@@ -48,7 +48,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/rule-engine/cep")
+@RequestMapping("/ruleEngine/cep")
 @RequiredArgsConstructor
 @Tag(name = "CEP 复杂事件处理", description = "时间窗口/序列/聚合/缺失模式匹配")
 public class CEPController {
@@ -134,7 +134,7 @@ public class CEPController {
      * @param pattern 模式定义
      * @return 注册结果
      */
-    @Idempotent(key = "cep:register-pattern", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "cep:registerPattern", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/patterns")
     public Result<Void> registerPattern(@RequestBody CEPPattern pattern) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
@@ -155,7 +155,7 @@ public class CEPController {
      * @param patternId 模式 ID
      * @return 注销结果
      */
-    @Idempotent(key = "cep:unregister-pattern", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "cep:unregisterPattern", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/patterns/{patternId}")
     public Result<Void> unregisterPattern(@PathVariable String patternId) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
@@ -182,7 +182,7 @@ public class CEPController {
      * @param body 事件内容
      * @return 投递结果（含本次事件触发的命中数）
      */
-    @Idempotent(key = "cep:feed-event", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "cep:feedEvent", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/events")
     public Result<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
@@ -205,7 +205,7 @@ public class CEPController {
      * @param events 事件列表
      * @return 投递结果（含触发的命中数）
      */
-    @Idempotent(key = "cep:feed-events", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "cep:feedEvents", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/events/batch")
     public Result<Map<String, Object>> feedEvents(@RequestBody List<Map<String, Object>> events) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
@@ -299,7 +299,7 @@ public class CEPController {
      * @param body 包含 pattern 和 events 的请求体
      * @return 测试结果（含命中列表、命中数、投递事件数）
      */
-    @Idempotent(key = "cep:test-pattern", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "cep:testPattern", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/patterns/test")
     public Result<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();

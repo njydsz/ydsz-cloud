@@ -53,7 +53,7 @@ public class ProjectClosureController {
      */
     @Operation(summary = "创建项目结项")
     @PrePermission("closure:project:create")
-    @Idempotent(key = "project-closure:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "projectClosure:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody ProjectClosureCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -67,7 +67,7 @@ public class ProjectClosureController {
      */
     @Operation(summary = "状态迁移")
     @PrePermission("closure:project:status")
-    @Idempotent(key = "project-closure:change-status", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "projectClosure:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody ProjectClosureStatusDTO dto) {
         service.changeStatus(dto);
@@ -82,7 +82,7 @@ public class ProjectClosureController {
      */
     @Operation(summary = "删除结项记录")
     @PrePermission("closure:project:delete")
-    @Idempotent(key = "project-closure:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "projectClosure:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
@@ -110,7 +110,7 @@ public class ProjectClosureController {
      */
     @Operation(summary = "按项目查询结项")
     @PrePermission("closure:project:list")
-    @GetMapping("/by-initiation/{initiationId}")
+    @GetMapping("/byInitiation/{initiationId}")
     public Result<ProjectClosureDO> getByInitiation(@PathVariable String initiationId) {
         return Result.ok(service.getByInitiation(initiationId));
     }
@@ -145,7 +145,7 @@ public class ProjectClosureController {
      */
     @Operation(summary = "按结项类型查询")
     @PrePermission("closure:project:list")
-    @GetMapping("/list-by-type")
+    @GetMapping("/listByType")
     public Result<List<ProjectClosureDO>> listByType(@RequestParam(required = false) String closureType) {
         return Result.ok(service.listByType(closureType));
     }
@@ -171,7 +171,7 @@ public class ProjectClosureController {
      */
     @Operation(summary = "结项准入校验")
     @PrePermission("closure:project:list")
-    @GetMapping("/{id}/admission-check")
+    @GetMapping("/{id}/admissionCheck")
     public Result<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable String id) {
         return Result.ok(service.checkAdmission(id));
     }

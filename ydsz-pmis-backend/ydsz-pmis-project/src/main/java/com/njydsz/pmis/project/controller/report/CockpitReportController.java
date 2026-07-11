@@ -64,7 +64,7 @@ public class CockpitReportController {
     @Operation(summary = "EVM 健康分布")
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
-    @GetMapping("/evm-health")
+    @GetMapping("/evmHealth")
     public Result<Map<String, Integer>> evmHealth(@RequestParam(required = false) String period,
                                              CockpitDrillDownDTO drillDown) {
         return Result.ok(service.evmHealthDistribution(period, drillDown));
@@ -79,7 +79,7 @@ public class CockpitReportController {
     @Operation(summary = "Bench 闲置成本汇总")
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
-    @GetMapping("/bench-cost")
+    @GetMapping("/benchCost")
     public Result<Map<String, Object>> benchCost(CockpitDrillDownDTO drillDown) {
         return Result.ok(service.benchCostSummary(drillDown));
     }
@@ -121,7 +121,7 @@ public class CockpitReportController {
     @Operation(summary = "按项目类型下钻")
     @PrePermission("cockpit:drilldown:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
-    @GetMapping("/drill/project-type")
+    @GetMapping("/drill/projectType")
     public Result<List<Map<String, Object>>> drillProjectType(@RequestParam(required = false) String period) {
         return Result.ok(service.drillByProjectType(period));
     }
@@ -148,7 +148,7 @@ public class CockpitReportController {
     @Operation(summary = "合同总额年度趋势")
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
-    @GetMapping("/contract-yearly-trend")
+    @GetMapping("/contractYearlyTrend")
     public Result<Map<String, Object>> contractYearlyTrend() {
         return Result.ok(service.contractAmountYearlyTrend());
     }
@@ -181,7 +181,7 @@ public class CockpitReportController {
     @Operation(summary = "项目群驾驶舱（批次18）")
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
-    @GetMapping("/project-group")
+    @GetMapping("/projectGroup")
     public Result<List<ProjectGroupKpiDTO>> projectGroup(@RequestParam(required = false) String period,
                                                       CockpitDrillDownDTO drillDown) {
         return Result.ok(service.projectGroupOverview(period, drillDown));
@@ -212,7 +212,7 @@ public class CockpitReportController {
     @Operation(summary = "KPI 趋势（最近 N 个月，批次18）")
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
-    @GetMapping("/kpi-trend")
+    @GetMapping("/kpiTrend")
     public Result<KpiTrendVO> kpiTrend(@RequestParam(required = false, defaultValue = "12") Integer months) {
         return Result.ok(service.kpiTrend(months));
     }

@@ -31,7 +31,7 @@ import java.util.Map;
  */
 @Tag(name = "已读状态", description = "消息已读/未读状态同步")
 @RestController
-@RequestMapping("/message/read-status")
+@RequestMapping("/message/readStatus")
 @RequiredArgsConstructor
 public class ReadStatusController {
 
@@ -47,7 +47,7 @@ public class ReadStatusController {
      */
     @Operation(summary = "标记消息已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "read-status:mark-read", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "readStatus:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/read/{msgId}")
     public Result<Boolean> markRead(@PathVariable String msgId,
                                      @RequestParam String userId) {
@@ -63,8 +63,8 @@ public class ReadStatusController {
      */
     @Operation(summary = "批量标记消息已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "read-status:mark-read-batch", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/read-batch")
+    @Idempotent(key = "readStatus:markReadBatch", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/readBatch")
     public Result<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
                                           @RequestParam String userId) {
         return Result.ok(readStatusSyncService.markReadBatch(msgIds, userId));
@@ -79,7 +79,7 @@ public class ReadStatusController {
      */
     @Operation(summary = "标记站内通知已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "read-status:mark-notification-read", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "readStatus:markNotificationRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification/{notificationId}")
     public Result<Boolean> markNotificationRead(@PathVariable String notificationId,
                                                   @RequestParam String userId) {
@@ -95,8 +95,8 @@ public class ReadStatusController {
      */
     @Operation(summary = "全部通知标记已读")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "read-status:mark-all-notifications-read", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/notification/read-all")
+    @Idempotent(key = "readStatus:markAllNotificationsRead", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/notification/readAll")
     public Result<Integer> markAllNotificationsRead(@RequestParam String userId,
                                                       @RequestParam(required = false) String bizType) {
         return Result.ok(readStatusSyncService.markAllNotificationsRead(userId, bizType));
@@ -111,7 +111,7 @@ public class ReadStatusController {
      */
     @Operation(summary = "查询用户未读消息数量")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
-    @GetMapping("/unread-count")
+    @GetMapping("/unreadCount")
     public Result<Map<String, Long>> getUnreadCount(@RequestParam String userId,
                                                      @RequestParam(required = false) String channel) {
         long total = readStatusSyncService.getUnreadCount(userId);

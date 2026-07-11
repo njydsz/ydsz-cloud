@@ -60,7 +60,7 @@ public class FlowAiGenerateController {
      * @param body 请求体，需包含 description 字段
      * @return 包含 bpmnXml 字段的响应数据
      */
-    @Idempotent(key = "flow-ai-generate:generate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowAiGenerate:generate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/generate")
     @Operation(summary = "AI一句话生成流程")
     public Result<Map<String, Object>> generate(@Valid @RequestBody FlowAiGenerateDTO dto) {
@@ -84,8 +84,8 @@ public class FlowAiGenerateController {
      * @param body 请求体，需包含 instanceId 或 flowCode
      * @return 风险预测结果
      */
-    @Idempotent(key = "flow-ai-generate:predict-risk", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/predict-risk")
+    @Idempotent(key = "flowAiGenerate:predictRisk", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/predictRisk")
     @Operation(summary = "P3-1: 流程风险预测")
     public Result<Map<String, Object>> predictRisk(@RequestBody Map<String, Object> body) {
         validateRiskParams(body);
@@ -103,8 +103,8 @@ public class FlowAiGenerateController {
      * @param body 请求体，需包含 taskId 与 assigneeId
      * @return 智能催办建议
      */
-    @Idempotent(key = "flow-ai-generate:smart-remind", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/smart-remind")
+    @Idempotent(key = "flowAiGenerate:smartRemind", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/smartRemind")
     @Operation(summary = "P3-1: 智能催办")
     public Result<Map<String, Object>> smartRemind(@RequestBody Map<String, Object> body) {
         validateRemindParams(body);
@@ -122,8 +122,8 @@ public class FlowAiGenerateController {
      * @param body 请求体，需包含 instanceId 或 flowCode
      * @return SLA 预测结果
      */
-    @Idempotent(key = "flow-ai-generate:predict-sla", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/predict-sla")
+    @Idempotent(key = "flowAiGenerate:predictSla", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/predictSla")
     @Operation(summary = "P3-1: SLA 预测")
     public Result<Map<String, Object>> predictSla(@RequestBody Map<String, Object> body) {
         validateSlaParams(body);

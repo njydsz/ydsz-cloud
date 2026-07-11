@@ -95,7 +95,7 @@ public class OperationLogController {
      */
     @Operation(summary = "游标分页查询（深翻优化）")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
-    @GetMapping("/cursor-page")
+    @GetMapping("/cursorPage")
     public Result<CursorPageResult<OperationLogDO>> cursorPage(
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "游标（首次请求不传）") @RequestParam(required = false) String cursor,
@@ -121,7 +121,7 @@ public class OperationLogController {
      */
     @Operation(summary = "按用户查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
-    @GetMapping("/by-user")
+    @GetMapping("/byUser")
     public Result<List<OperationLogDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
@@ -138,7 +138,7 @@ public class OperationLogController {
      */
     @Operation(summary = "按业务查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
-    @GetMapping("/by-biz")
+    @GetMapping("/byBiz")
     public Result<List<OperationLogDO>> byBiz(
             @Parameter(description = "业务类型") @RequestParam String bizType,
             @Parameter(description = "业务单据ID") @RequestParam String bizId,

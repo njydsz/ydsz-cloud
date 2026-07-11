@@ -86,7 +86,7 @@ public class OpportunityController {
      */
     @Operation(summary = "变更状态")
     @PrePermission("project:opportunity:update")
-    @Idempotent(key = "opportunity:change-status", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "opportunity:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody OpportunityStatusDTO dto) {
         service.changeStatus(dto);
@@ -155,8 +155,8 @@ public class OpportunityController {
      */
     @Operation(summary = "评估并更新赢率")
     @PrePermission("project:opportunity:evaluate")
-    @Idempotent(key = "opportunity:evaluate-win-rate", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{id}/evaluate-winrate")
+    @Idempotent(key = "opportunity:evaluateWinRate", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{id}/evaluateWinrate")
     public Result<BigDecimal> evaluateWinRate(@Parameter(description = "商机ID") @PathVariable String id,
                                          @Parameter(description = "客户信用") @RequestParam(required = false) String customerCredit,
                                          @Parameter(description = "是否有历史合作") @RequestParam(defaultValue = "false") boolean hasHistory) {
@@ -199,8 +199,8 @@ public class OpportunityController {
      */
     @Operation(summary = "商机转立项自动化(WON -> CONVERTED + 创建预立项草稿)")
     @PrePermission("project:opportunity:convert")
-    @Idempotent(key = "opportunity:convert-to-initiation", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{id}/convert-to-initiation")
+    @Idempotent(key = "opportunity:convertToInitiation", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{id}/convertToInitiation")
     public Result<String> convertToInitiation(@Parameter(description = "商机ID") @PathVariable String id,
                                         @Parameter(description = "发起人ID") @RequestParam(required = false) String sponsorId,
                                         @Parameter(description = "项目经理ID") @RequestParam(required = false) String pmId) {

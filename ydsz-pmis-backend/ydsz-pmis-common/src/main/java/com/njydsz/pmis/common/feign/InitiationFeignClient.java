@@ -30,7 +30,7 @@ public interface InitiationFeignClient {
      * @param initiationId 立项 ID
      * @return 操作结果
      */
-    @PostMapping("/{id}/mark-processing")
+    @PostMapping("/{id}/markProcessing")
     Result<Void> markProcessing(@PathVariable("id") String initiationId);
 
     /**
@@ -39,7 +39,7 @@ public interface InitiationFeignClient {
      * @param initiationId 立项 ID
      * @return 操作结果
      */
-    @PostMapping("/{id}/mark-approved")
+    @PostMapping("/{id}/markApproved")
     Result<Void> markApproved(@PathVariable("id") String initiationId);
 
     /**
@@ -49,7 +49,7 @@ public interface InitiationFeignClient {
      * @param reason       驳回原因（可空）
      * @return 操作结果
      */
-    @PostMapping("/{id}/mark-rejected")
+    @PostMapping("/{id}/markRejected")
     Result<Void> markRejected(@PathVariable("id") String initiationId,
                               @RequestParam(value = "reason", required = false) String reason);
 }

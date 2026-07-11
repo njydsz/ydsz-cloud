@@ -103,7 +103,7 @@ public class ProfitController {
      */
     @Operation(summary = "项目健康度评分")
     @PrePermission("execution:profit:list")
-    @GetMapping("/health-score")
+    @GetMapping("/healthScore")
     public Result<Integer> healthScore(@RequestParam String initiationId, @RequestParam String period) {
         return Result.ok(service.healthScore(initiationId, period));
     }

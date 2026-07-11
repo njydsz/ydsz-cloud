@@ -83,7 +83,7 @@ public class FlowTaskController {
      * @param taskId 任务 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:claim", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:claim", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/claim")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> claim(@RequestParam String taskId) {
@@ -97,7 +97,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:pass", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:pass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/pass")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -113,7 +113,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数（可含 targetNodeCode 指定驳回目标；不填则按流程默认）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:reject", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/reject")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -131,7 +131,7 @@ public class FlowTaskController {
      * @param taskId 任务 ID
      * @return 该任务所属实例经过的历史节点列表（按首次完成时间正序）
      */
-    @GetMapping("/task/{taskId}/rejectable-nodes")
+    @GetMapping("/task/{taskId}/rejectableNodes")
     public Result<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
@@ -147,7 +147,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:transfer", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:transfer", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/transfer")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -163,7 +163,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:delegate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:delegate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/delegate")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -179,7 +179,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:countersign-before", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:countersignBefore", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignBefore")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -195,7 +195,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:countersign-after", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:countersignAfter", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignAfter")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -211,7 +211,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:countersign-parallel", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:countersignParallel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignParallel")
     @Operation(summary = "并加签（与原审批人并行审批）")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
@@ -228,7 +228,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数（需含 taskId + targetNodeCode）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:jump", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:jump", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/jump")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -251,7 +251,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数（需含 taskId + targetNodeCode + action=JUMP，可选 targetAssignees）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:free-jump", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:freeJump", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/freeJump")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
     public Result<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -271,7 +271,7 @@ public class FlowTaskController {
      * @param comment 审批意见（可选）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:batch-pass", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:batchPass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchPass")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> batchPass(@RequestParam List<String> taskIds,
@@ -288,7 +288,7 @@ public class FlowTaskController {
      * @param targetNodeCode 退回目标节点编码（可选）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:batch-reject", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:batchReject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchReject")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> batchReject(@RequestParam List<String> taskIds,
@@ -307,7 +307,7 @@ public class FlowTaskController {
      * @param targetUserName 目标人姓名
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:batch-transfer", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:batchTransfer", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchTransfer")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> batchTransfer(@RequestParam List<String> taskIds,
@@ -326,7 +326,7 @@ public class FlowTaskController {
      * @param comment     催办说明
      * @return 统一响应结果，包含成功催办的实例数量
      */
-    @Idempotent(key = "flow-task:batch-urge", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:batchUrge", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/batchUrge")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Integer> batchUrge(@RequestParam List<String> instanceIds,
@@ -342,7 +342,7 @@ public class FlowTaskController {
      * @param comment 审批意见（可选）
      * @return 统一响应结果，包含实际通过的任务数量
      */
-    @Idempotent(key = "flow-task:pass-all", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:passAll", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/passAll")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Integer> passAll(@RequestParam(required = false) String comment) {
@@ -400,7 +400,7 @@ public class FlowTaskController {
      * @param reason 超时原因（可选）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:timeout-task", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:timeoutTask", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/timeout")
     public Result<Void> timeoutTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
@@ -444,7 +444,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数（需含 taskId + targetUserId）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:countersign-remove", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:countersignRemove", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignRemove")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -460,7 +460,7 @@ public class FlowTaskController {
      * @param taskId 任务 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:mark-read", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/read")
     public Result<Void> markRead(@PathVariable String taskId) {
         String userId = SecurityContext.getUserId();
@@ -474,7 +474,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数（需含 taskId + userId + comment）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:communicate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:communicate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/communicate")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -490,7 +490,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数（需含 taskId + userId + comment）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:save-draft", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:saveDraft", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/saveDraft")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -506,7 +506,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:add-approver", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:addApprover", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/addApprover")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
@@ -525,7 +525,7 @@ public class FlowTaskController {
      * @param comment   取回说明（可选）
      * @return 统一响应结果，包含新创建的待办任务 ID
      */
-    @Idempotent(key = "flow-task:retract", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:retract", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{hisTaskId}/retract")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<String> retract(@PathVariable String hisTaskId,
@@ -543,7 +543,7 @@ public class FlowTaskController {
      * @param reason 挂起原因（可选）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:suspend-task", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:suspendTask", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/suspend")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> suspendTask(@PathVariable String taskId,
@@ -558,7 +558,7 @@ public class FlowTaskController {
      * @param taskId 任务 ID
      * @return 统一响应结果
      */
-    @Idempotent(key = "flow-task:activate-task", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowTask:activateTask", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/activate")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> activateTask(@PathVariable String taskId) {
@@ -595,8 +595,8 @@ public class FlowTaskController {
      *
      * @return 是否成功
      */
-    @Idempotent(key = "flow-task:push-my-todo-count", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/todo/push-mine")
+    @Idempotent(key = "flowTask:pushMyTodoCount", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/todo/pushMine")
     public Result<Boolean> pushMyTodoCount() {
         String userId = SecurityContext.getUserId();
         if (userId == null) {
@@ -616,8 +616,8 @@ public class FlowTaskController {
      * @param dto 推荐参数（taskId / context）
      * @return Top N 推荐审批人列表
      */
-    @Idempotent(key = "flow-task:recommend-approvers", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/ai/recommend-approvers")
+    @Idempotent(key = "flowTask:recommendApprovers", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/ai/recommendApprovers")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<List<Map<String, Object>>> recommendApprovers(
             @Valid @RequestBody FlowAiRecommendApproversDTO dto) {
@@ -640,8 +640,8 @@ public class FlowTaskController {
      * @param dto 起草参数（taskId / approveAction / hint）
      * @return 起草意见结果
      */
-    @Idempotent(key = "flow-task:draft-comment", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/ai/draft-comment")
+    @Idempotent(key = "flowTask:draftComment", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/ai/draftComment")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Map<String, Object>> draftComment(@Valid @RequestBody FlowAiDraftCommentDTO dto) {
         Map<String, Object> params = new LinkedHashMap<>();
@@ -694,8 +694,8 @@ public class FlowTaskController {
      * @param body 反馈数据
      * @return 包含反馈 ID 的响应
      */
-    @Idempotent(key = "flow-task:record-approver-feedback", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/ai/approver-feedback")
+    @Idempotent(key = "flowTask:recordApproverFeedback", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/ai/approverFeedback")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Map<String, Object>> recordApproverFeedback(@RequestBody Map<String, Object> body) {
         log.info("[FlowTask] 记录推荐反馈: traceId={} userId={} action={}",
@@ -713,7 +713,7 @@ public class FlowTaskController {
      * @param tenantId 租户 ID（可选，默认 '1'）
      * @return 统计结果（total/accepted/rejected/chosenOther/acceptanceRate）
      */
-    @GetMapping("/ai/approver-feedback/stats")
+    @GetMapping("/ai/approverFeedback/stats")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Map<String, Object>> approverFeedbackStats(
             @RequestParam(required = false) String recommendedUserId,

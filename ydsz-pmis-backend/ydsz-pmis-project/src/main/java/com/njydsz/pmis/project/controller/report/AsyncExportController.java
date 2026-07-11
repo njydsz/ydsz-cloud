@@ -35,7 +35,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/report/async-export")
+@RequestMapping("/report/asyncExport")
 @RequiredArgsConstructor
 @Tag(name = "异步导出", description = "异步导出任务管理与下载中心")
 @Validated

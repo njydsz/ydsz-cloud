@@ -38,7 +38,7 @@ import java.util.List;
  */
 @Tag(name = "资源池管理")
 @RestController
-@RequestMapping("/resource-pools")
+@RequestMapping("/resourcePools")
 @RequiredArgsConstructor
 @Validated
 public class ResourcePoolController {
@@ -55,7 +55,7 @@ public class ResourcePoolController {
     @Operation(summary = "创建资源池")
     @PrePermission("resource:pool:create")
     @OperationLog(module = "资源池", action = "创建资源池", bizType = "RESOURCE_POOL")
-    @Idempotent(key = "resource-pool:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "resourcePool:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
         return Result.ok(poolService.create(dto));
@@ -71,7 +71,7 @@ public class ResourcePoolController {
     @Operation(summary = "更新资源池")
     @PrePermission("resource:pool:update")
     @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
-    @Idempotent(key = "resource-pool:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "resourcePool:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable String id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
         poolService.update(id, dto);
@@ -87,7 +87,7 @@ public class ResourcePoolController {
     @Operation(summary = "删除资源池")
     @PrePermission("resource:pool:delete")
     @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
-    @Idempotent(key = "resource-pool:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "resourcePool:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         poolService.delete(id);
@@ -113,7 +113,7 @@ public class ResourcePoolController {
      * @return 统一响应结果，包含资源池列表
      */
     @Operation(summary = "按类型查询")
-    @GetMapping("/by-type")
+    @GetMapping("/byType")
     public Result<List<ResourcePoolDO>> listByType(@RequestParam String poolType) {
         return Result.ok(poolService.listByType(poolType));
     }
@@ -125,7 +125,7 @@ public class ResourcePoolController {
      * @return 统一响应结果，包含资源池列表
      */
     @Operation(summary = "按部门查询")
-    @GetMapping("/by-dept/{departmentId}")
+    @GetMapping("/byDept/{departmentId}")
     public Result<List<ResourcePoolDO>> listByDept(@PathVariable String departmentId) {
         return Result.ok(poolService.listByDept(departmentId));
     }

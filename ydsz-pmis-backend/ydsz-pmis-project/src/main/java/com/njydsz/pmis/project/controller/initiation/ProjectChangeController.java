@@ -56,7 +56,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "创建项目变更")
     @PrePermission("project:change:create")
-    @Idempotent(key = "project-change:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "projectChange:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -70,7 +70,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "状态迁移")
     @PrePermission("project:change:status")
-    @Idempotent(key = "project-change:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "projectChange:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody ProjectChangeStatusDTO dto) {
         service.changeStatus(dto);
@@ -85,7 +85,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "删除变更")
     @PrePermission("project:change:delete")
-    @Idempotent(key = "project-change:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "projectChange:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         service.delete(id);
@@ -137,7 +137,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "按项目查询变更列表")
     @PrePermission("project:change:list")
-    @GetMapping("/list-by-initiation/{initiationId}")
+    @GetMapping("/listByInitiation/{initiationId}")
     public Result<List<ProjectChangeDO>> listByInitiation(@PathVariable String initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
@@ -176,7 +176,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "统计项目重大变更数")
     @PrePermission("project:change:list")
-    @GetMapping("/major-count/{initiationId}")
+    @GetMapping("/majorCount/{initiationId}")
     public Result<Integer> countMajor(@PathVariable String initiationId) {
         return Result.ok(service.countMajorByInitiation(initiationId));
     }
@@ -193,7 +193,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "获取合法状态迁移列表")
     @PrePermission("project:change:list")
-    @GetMapping("/{id}/allowed-transitions")
+    @GetMapping("/{id}/allowedTransitions")
     public Result<List<String>> getAllowedTransitions(@PathVariable String id) {
         ProjectChangeDO change = service.getById(id);
         if (change == null) {
@@ -216,7 +216,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "获取所有变更状态字典")
     @PrePermission("project:change:list")
-    @GetMapping("/status-dict")
+    @GetMapping("/statusDict")
     public Result<List<Map<String, String>>> getStatusDict() {
         List<Map<String, String>> list = new ArrayList<>();
         for (ChangeStatus s : ChangeStatus.values()) {

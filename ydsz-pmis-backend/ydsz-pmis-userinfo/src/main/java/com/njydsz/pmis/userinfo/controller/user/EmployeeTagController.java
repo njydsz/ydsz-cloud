@@ -34,7 +34,7 @@ import java.util.List;
  */
 @Tag(name = "人员标签管理")
 @RestController
-@RequestMapping("/employee-tags")
+@RequestMapping("/employeeTags")
 @RequiredArgsConstructor
 @Validated
 public class EmployeeTagController {
@@ -51,7 +51,7 @@ public class EmployeeTagController {
     @Operation(summary = "添加标签")
     @PrePermission(PermissionCodes.RESOURCE_TAG_CREATE)
     @OperationLog(module = "人员标签", action = "添加标签", bizType = "EMPLOYEE_TAG")
-    @Idempotent(key = "employee-tag:add", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "employeeTag:add", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> add(@Valid @RequestBody EmployeeTagCreateDTO dto) {
         return Result.ok(tagService.add(dto));
@@ -66,7 +66,7 @@ public class EmployeeTagController {
     @Operation(summary = "删除标签")
     @PrePermission(PermissionCodes.RESOURCE_TAG_DELETE)
     @OperationLog(module = "人员标签", action = "删除标签", bizType = "EMPLOYEE_TAG")
-    @Idempotent(key = "employee-tag:remove", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "employeeTag:remove", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> remove(@PathVariable String id) {
         tagService.remove(id);
@@ -83,7 +83,7 @@ public class EmployeeTagController {
     @Operation(summary = "覆盖式设置员工标签")
     @PrePermission(PermissionCodes.RESOURCE_TAG_UPDATE)
     @OperationLog(module = "人员标签", action = "覆盖员工标签", bizType = "EMPLOYEE_TAG")
-    @Idempotent(key = "employee-tag:replace-by-employee", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "employeeTag:replaceByEmployee", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/replace/{employeeId}")
     public Result<Void> replaceByEmployee(@PathVariable String employeeId,
                                      @Valid @RequestBody List<EmployeeTagCreateDTO> tags) {
@@ -98,7 +98,7 @@ public class EmployeeTagController {
      * @return 统一响应结果，包含标签列表
      */
     @Operation(summary = "按员工查询")
-    @GetMapping("/by-employee/{employeeId}")
+    @GetMapping("/byEmployee/{employeeId}")
     public Result<List<EmployeeTagDO>> listByEmployee(@PathVariable String employeeId) {
         return Result.ok(tagService.listByEmployee(employeeId));
     }
