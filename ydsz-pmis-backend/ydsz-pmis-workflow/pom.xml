@@ -87,48 +87,11 @@
         </dependency>
 
         <!--
-            DMN 决策表评估服务（可选依赖）：
-            用于工作流 DMN 路由（路由表达式以 "dmn:" 开头时调用决策表）。
-            仅依赖 execution 模块的 DecisionTableEvalService 接口，运行时 Bean 不可用时
-            （分服务部署）自动回退到 Aviator 表达式评估。
-            通过 exclusions 排除 execution 中重型/会触发自动配置的传递依赖，避免污染 workflow 类路径。
+            P0-2 重构后已解除 workflow → project 编译期硬依赖：
+            原先依赖 project 仅为了引入 DecisionTableEvalService，现已替换为 literule.spi.DecisionTableEvalProvider。
+            若部署形态需要 workflow 与 project 同 JVM 运行（单体模式），由部署层（如启动包 / 装配模块）显式引入 project，
+            不再由 workflow 模块自身在 pom.xml 中传递依赖 project。
         -->
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-project</artifactId>
-            <version>${project.version}</version>
-            <optional>true</optional>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.njydsz.pmis</groupId>
-                    <artifactId>ydsz-pmis-project</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.njydsz.pmis</groupId>
-                    <artifactId>ydsz-pmis-system</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.alibaba</groupId>
-                    <artifactId>easyexcel</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.poi</groupId>
-                    <artifactId>poi-ooxml</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-csv</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.minio</groupId>
-                    <artifactId>minio</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.seata</groupId>
-                    <artifactId>seata-spring-boot-starter</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
 
     <build>

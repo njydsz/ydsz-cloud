@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 合同管理
   @description 合同的查询、新增、编辑与状态流转；状态按 DRAFT → UNDER_REVIEW → APPROVED → SIGNED → EXECUTING → CLOSED 流转
   @module views/contract
@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import type { FormInstance } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -23,6 +24,8 @@ import { useModalA11y } from '@/composables/useModalA11y'
 import { useUserStore } from '@/store/modules/user'
 import { handleError, confirmAction, showSuccess } from '@/utils/error'
 
+const { t } = useI18n()
+
 // ===== 列表查询状态 =====
 const loading = ref(false)
 const submitting = ref(false)
@@ -36,32 +39,32 @@ const query = reactive({
   customerId: undefined as number | undefined,
 })
 
-const statusMap = {
-  DRAFT: { label: '草稿', type: 'info' as const },
-  UNDER_REVIEW: { label: '审批中', type: 'warning' as const },
-  APPROVED: { label: '已审批', type: 'success' as const },
-  SIGNED: { label: '已签订', type: 'primary' as const },
-  EXECUTING: { label: '执行中', type: 'primary' as const },
-  CLOSED: { label: '已关闭', type: 'info' as const },
-  REJECTED: { label: '已驳回', type: 'danger' as const },
-}
+const statusMap = computed(() => ({
+  DRAFT: { label: t('project.contract.status.DRAFT'), type: 'info' as const },
+  UNDER_REVIEW: { label: t('project.contract.status.UNDER_REVIEW'), type: 'warning' as const },
+  APPROVED: { label: t('project.contract.status.APPROVED'), type: 'success' as const },
+  SIGNED: { label: t('project.contract.status.SIGNED'), type: 'primary' as const },
+  EXECUTING: { label: t('project.contract.status.EXECUTING'), type: 'primary' as const },
+  CLOSED: { label: t('project.contract.status.CLOSED'), type: 'info' as const },
+  REJECTED: { label: t('project.contract.status.REJECTED'), type: 'danger' as const },
+}))
 
-const typeMap = {
-  FIXED_PRICE: { label: '固定总价' },
-  T_M: { label: '人月计费' },
-  MILESTONE: { label: '里程碑' },
-  RETAINER: { label: '框架协议' },
-  LICENSE: { label: '授权' },
-  SAAS: { label: 'SaaS' },
-  MAINTENANCE: { label: '运维' },
-  OTHER: { label: '其他' },
-}
+const typeMap = computed(() => ({
+  FIXED_PRICE: { label: t('project.contract.type.FIXED_PRICE') },
+  T_M: { label: t('project.contract.type.T_M') },
+  MILESTONE: { label: t('project.contract.type.MILESTONE') },
+  RETAINER: { label: t('project.contract.type.RETAINER') },
+  LICENSE: { label: t('project.contract.type.LICENSE') },
+  SAAS: { label: t('project.contract.type.SAAS') },
+  MAINTENANCE: { label: t('project.contract.type.MAINTENANCE') },
+  OTHER: { label: t('project.contract.type.OTHER') },
+}))
 
-const riskMap = {
-  LOW: { label: '低', type: 'success' as const },
-  MEDIUM: { label: '中', type: 'warning' as const },
-  HIGH: { label: '高', type: 'danger' as const },
-}
+const riskMap = computed(() => ({
+  LOW: { label: t('project.contract.risk.LOW'), type: 'success' as const },
+  MEDIUM: { label: t('project.contract.risk.MEDIUM'), type: 'warning' as const },
+  HIGH: { label: t('project.contract.risk.HIGH'), type: 'danger' as const },
+}))
 
 // ===== 列表加载 =====
 /** 拉取合同分页列表 */
@@ -107,13 +110,13 @@ const form = reactive<Partial<ContractCreateDTO> & { id?: number }>({
   paymentTerms: '',
 })
 
-const formRules = {
-  contractCode: [{ required: true, message: '合同编码必填', trigger: 'blur' }],
-  contractName: [{ required: true, message: '合同名称必填', trigger: 'blur' }],
-  customerId: [{ required: true, message: '客户 ID 必填', trigger: 'blur' }],
-  contractType: [{ required: true, message: '合同类型必填', trigger: 'change' }],
-  amount: [{ required: true, message: '金额必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  contractCode: [{ required: true, message: t('project.contract.rules.contractCodeRequired'), trigger: 'blur' }],
+  contractName: [{ required: true, message: t('project.contract.rules.contractNameRequired'), trigger: 'blur' }],
+  customerId: [{ required: true, message: t('project.contract.rules.customerIdRequired'), trigger: 'blur' }],
+  contractType: [{ required: true, message: t('project.contract.rules.contractTypeRequired'), trigger: 'change' }],
+  amount: [{ required: true, message: t('project.contract.rules.amountRequired'), trigger: 'blur' }],
+}))
 
 // ===== 表单草稿 =====
 const userStore = useUserStore()
@@ -124,7 +127,7 @@ const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form,
 })
 
 // ===== 表单防误关闭守卫 =====
-const { setDirty } = useFormGuard({ message: '合同表单内容未保存，确定离开？' })
+const { setDirty } = useFormGuard({ message: t('project.contract.messages.formGuardLeave') })
 // 表单字段修改时启用守卫（仅弹窗打开期间）
 watch(form, () => {
   if (dialogVisible.value) setDirty(true)
@@ -145,10 +148,10 @@ const draftTimeText = computed(() => {
 /** 打开新增合同弹窗，重置表单为初始值；若检测到草稿则提示恢复 */
 async function openCreate() {
   if (hasDraft.value) {
-    const confirmed = await confirmAction('检测到未提交的草稿，是否恢复？', '提示')
+    const confirmed = await confirmAction(t('project.contract.messages.draftRestore'), t('common.tip'))
     if (confirmed) {
       restore()
-      showSuccess('草稿已恢复')
+      showSuccess(t('project.contract.messages.draftRestored'))
       formMode.value = 'create'
       dialogVisible.value = true
     } else {
@@ -225,7 +228,7 @@ async function submitForm() {
       }
       await createContract(dto)
       clearDraft()
-      showSuccess('创建成功')
+      showSuccess(t('project.contract.messages.createSuccess'))
     } else if (form.id) {
       await updateContract({
         id: form.id,
@@ -237,7 +240,7 @@ async function submitForm() {
         paymentTerms: form.paymentTerms,
         description: form.description,
       } as any)
-      showSuccess('更新成功')
+      showSuccess(t('project.contract.messages.updateSuccess'))
     }
     // 表单已保存，解除防误关闭守卫
     setDirty(false)
@@ -255,11 +258,11 @@ async function submitForm() {
  * @param row 选中的合同行数据
  */
 async function handleDelete(row: ContractVO) {
-  const confirmed = await confirmAction(`确认删除合同「${row.contractName}」吗？`, '提示')
+  const confirmed = await confirmAction(t('project.contract.messages.confirmDelete', { name: row.contractName }), t('common.tip'))
   if (!confirmed) return
   try {
     await deleteContract(row.id)
-    showSuccess('删除成功')
+    showSuccess(t('project.contract.messages.deleteSuccess'))
     fetchList()
   } catch (e) {
     handleError(e, 'handleDelete')
@@ -272,13 +275,13 @@ async function handleDelete(row: ContractVO) {
  * @param target 目标状态编码
  */
 async function handleStatus(row: ContractVO, target: string) {
-  const targetText = (statusMap as any)[target]?.label || target
-  const confirmed = await confirmAction(`确认将状态变更为「${targetText}」吗？`, '提示')
+  const targetText = statusMap.value[target as keyof typeof statusMap.value]?.label || target
+  const confirmed = await confirmAction(t('project.contract.messages.confirmStatusChange', { target: targetText }), t('common.tip'))
   if (!confirmed) return
   try {
     const dto: ContractStatusDTO = { id: row.id, targetStatus: target }
     await changeContractStatus(dto)
-    showSuccess('状态已更新')
+    showSuccess(t('project.contract.messages.statusUpdated'))
     fetchList()
   } catch (e) {
     handleError(e, 'handleStatus')
@@ -300,11 +303,11 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="编码/名称" clearable @keyup.enter="query.page = 1; fetchList()" />
+      <el-form-item :label="t('project.contract.search.keyword')">
+        <el-input v-model="query.keyword" :placeholder="t('project.contract.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" />
       </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+      <el-form-item :label="t('project.contract.search.status')">
+        <el-select v-model="query.status" :placeholder="t('project.contract.search.statusAll')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
@@ -312,144 +315,144 @@ onMounted(fetchList)
 
     <template #toolbar>
       <el-button v-permission="[PC.PROJECT_CONTRACT_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新增合同
+        {{ t('project.contract.buttons.create') }}
       </el-button>
     </template>
 
     <template #table="scope">
       <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
-        <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="contractCode" title="编码" width="160" />
-        <vxe-column field="contractName" title="合同名称" min-width="200" show-overflow />
-        <vxe-column field="customerName" title="客户" width="160" show-overflow />
-        <vxe-column field="initiationName" title="关联项目" width="160" show-overflow />
-        <vxe-column field="contractType" title="类型" width="110">
+        <vxe-column type="seq" :title="t('project.contract.columns.seq')" width="50" />
+        <vxe-column field="contractCode" :title="t('project.contract.columns.code')" width="160" />
+        <vxe-column field="contractName" :title="t('project.contract.columns.name')" min-width="200" show-overflow />
+        <vxe-column field="customerName" :title="t('project.contract.columns.customer')" width="160" show-overflow />
+        <vxe-column field="initiationName" :title="t('project.contract.columns.initiation')" width="160" show-overflow />
+        <vxe-column field="contractType" :title="t('project.contract.columns.type')" width="110">
           <template #default="{ row }">
             {{ typeMap[row.contractType as keyof typeof typeMap]?.label || row.contractType || '-' }}
           </template>
         </vxe-column>
-        <vxe-column field="amount" title="金额" width="130" align="right" :formatter="({ cellValue, row }: any) => cellValue != null ? `${row?.currency || '¥'} ${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="riskLevel" title="风险" width="80" align="center">
+        <vxe-column field="amount" :title="t('project.contract.columns.amount')" width="130" align="right" :formatter="({ cellValue, row }: any) => cellValue != null ? `${row?.currency || '¥'} ${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="riskLevel" :title="t('project.contract.columns.risk')" width="80" align="center">
           <template #default="{ row }">
             <StatusTag v-if="row.riskLevel" :value="row.riskLevel" :map="riskMap" />
             <span v-else>-</span>
           </template>
         </vxe-column>
-        <vxe-column field="signDate" title="签订日期" width="110" />
-        <vxe-column field="effectiveDate" title="生效日期" width="110" />
-        <vxe-column field="expireDate" title="到期日期" width="110" />
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="signDate" :title="t('project.contract.columns.signDate')" width="110" />
+        <vxe-column field="effectiveDate" :title="t('project.contract.columns.effectiveDate')" width="110" />
+        <vxe-column field="expireDate" :title="t('project.contract.columns.expireDate')" width="110" />
+        <vxe-column field="status" :title="t('project.contract.columns.status')" width="100">
           <template #default="{ row }">
             <StatusTag :value="row.status" :map="statusMap" />
           </template>
         </vxe-column>
-        <vxe-column title="操作" width="320" fixed="right">
+        <vxe-column :title="t('project.contract.columns.action')" width="320" fixed="right">
           <template #default="{ row }">
             <el-button v-permission="[PC.PROJECT_CONTRACT_UPDATE]" link type="primary" size="small" @click="openEdit(row)">
-              编辑
+              {{ t('project.contract.buttons.edit') }}
             </el-button>
             <el-button v-if="row.status === 'DRAFT'" v-permission="[PC.PROJECT_CONTRACT_STATUS]" link type="warning" size="small" @click="handleStatus(row, 'UNDER_REVIEW')">
-              提交评审
+              {{ t('project.contract.buttons.submitReview') }}
             </el-button>
             <el-button v-if="row.status === 'UNDER_REVIEW'" v-permission="[PC.PROJECT_CONTRACT_STATUS]" link type="success" size="small" @click="handleStatus(row, 'APPROVED')">
-              审批通过
+              {{ t('project.contract.buttons.approve') }}
             </el-button>
             <el-button v-if="row.status === 'APPROVED'" v-permission="[PC.PROJECT_CONTRACT_STATUS]" link type="primary" size="small" @click="handleStatus(row, 'SIGNED')">
-              签订
+              {{ t('project.contract.buttons.sign') }}
             </el-button>
             <el-button v-if="row.status === 'SIGNED'" v-permission="[PC.PROJECT_CONTRACT_STATUS]" link type="primary" size="small" @click="handleStatus(row, 'EXECUTING')">
-              启动执行
+              {{ t('project.contract.buttons.startExecute') }}
             </el-button>
             <el-button v-if="row.status === 'EXECUTING'" v-permission="[PC.PROJECT_CONTRACT_STATUS]" link type="info" size="small" @click="handleStatus(row, 'CLOSED')">
-              关闭
+              {{ t('project.contract.buttons.close') }}
             </el-button>
             <el-button v-permission="[PC.PROJECT_CONTRACT_DELETE]" link type="danger" size="small" @click="handleDelete(row)">
-              删除
+              {{ t('project.contract.buttons.delete') }}
             </el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
-    <el-dialog v-model="dialogVisible" :title="formMode === 'create' ? '新增合同' : '编辑合同'" width="720px" :close-on-click-modal="false" :close-on-press-escape="true">
+    <el-dialog v-model="dialogVisible" :title="formMode === 'create' ? t('project.contract.dialog.createTitle') : t('project.contract.dialog.editTitle')" width="720px" :close-on-click-modal="false" :close-on-press-escape="true">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="合同编码" prop="contractCode">
+            <el-form-item :label="t('project.contract.dialog.contractCode')" prop="contractCode">
               <el-input v-model="form.contractCode" :disabled="formMode === 'edit'" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="合同名称" prop="contractName">
+            <el-form-item :label="t('project.contract.dialog.contractName')" prop="contractName">
               <el-input v-model="form.contractName" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="客户 ID" prop="customerId">
+            <el-form-item :label="t('project.contract.dialog.customerId')" prop="customerId">
               <el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="客户名称">
+            <el-form-item :label="t('project.contract.dialog.customerName')">
               <el-input v-model="form.customerName" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="合同类型" prop="contractType">
+            <el-form-item :label="t('project.contract.dialog.contractType')" prop="contractType">
               <el-select v-model="form.contractType" style="width: 100%">
                 <el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="合同金额" prop="amount">
+            <el-form-item :label="t('project.contract.dialog.amount')" prop="amount">
               <el-input-number v-model="form.amount" :min="0" :controls="false" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="币种">
+            <el-form-item :label="t('project.contract.dialog.currency')">
               <el-select v-model="form.currency" style="width: 100%">
-                <el-option label="人民币 CNY" value="CNY" />
-                <el-option label="美元 USD" value="USD" />
-                <el-option label="欧元 EUR" value="EUR" />
+                <el-option :label="t('project.contract.dialog.currencyCNY')" value="CNY" />
+                <el-option :label="t('project.contract.dialog.currencyUSD')" value="USD" />
+                <el-option :label="t('project.contract.dialog.currencyEUR')" value="EUR" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="签订日期">
+            <el-form-item :label="t('project.contract.dialog.signDate')">
               <el-date-picker v-model="form.signDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="生效日期">
+            <el-form-item :label="t('project.contract.dialog.effectiveDate')">
               <el-date-picker v-model="form.effectiveDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="到期日期">
+            <el-form-item :label="t('project.contract.dialog.expireDate')">
               <el-date-picker v-model="form.expireDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="付款条款">
+        <el-form-item :label="t('project.contract.dialog.paymentTerms')">
           <el-input v-model="form.paymentTerms" type="textarea" :rows="2" />
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="t('project.contract.dialog.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <span v-if="draftTimeText" style="color: #909399; font-size: 12px; margin-right: auto;">草稿已保存 {{ draftTimeText }}</span>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
+        <span v-if="draftTimeText" style="color: #909399; font-size: 12px; margin-right: auto;">{{ t('project.contract.dialog.draftSaved', { time: draftTimeText }) }}</span>
+        <el-button @click="dialogVisible = false">{{ t('project.contract.buttons.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('project.contract.buttons.confirm') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

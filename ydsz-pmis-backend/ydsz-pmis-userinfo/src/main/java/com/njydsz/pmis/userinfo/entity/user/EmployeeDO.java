@@ -63,7 +63,8 @@ public class EmployeeDO extends BaseDO {
     /** 手机号 SM4 加密 */
     private String phoneEnc;
 
-    /** 邮箱 */
+    /** 邮箱（脱敏：a***@example.com） */
+    @Sensitive(SensitiveStrategy.EMAIL)
     private String email;
 
     /** 部门 ID（pmis_department.id） */
@@ -109,7 +110,8 @@ public class EmployeeDO extends BaseDO {
     /** 紧急联系人 */
     private String emergencyContact;
 
-    /** 紧急联系人电话 */
+    /** 紧急联系人电话（脱敏：138****8000） */
+    @Sensitive(SensitiveStrategy.PHONE)
     private String emergencyPhone;
 
     /** 备注 / 描述 */

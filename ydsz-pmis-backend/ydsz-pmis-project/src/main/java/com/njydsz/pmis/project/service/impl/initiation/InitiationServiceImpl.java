@@ -29,7 +29,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.apache.seata.spring.annotation.GlobalTransactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -435,13 +434,18 @@ public class InitiationServiceImpl implements InitiationService {
      * <p>若已存在 workflowId 则跳过；Feign 调用失败时返回 null 不抛异常，
      * 以保证主业务流不被工作流故障阻塞。</p>
      *
+     * <p><b>P0-3 修复</b>：移除 @GlobalTransactional 注解。原注解与 try-catch 吞异常的容错策略矛盾——
+     * Seata 全局事务依赖异常传播触发回滚，但本方法的业务语义是"失败返回 null 不阻断主流程"，
+     * 导致 @GlobalTransactional 形同虚设：Feign 失败时异常被 catch，Seata 误判为成功并提交全局事务，
+     * 若 workflow 端已注册分支事务，分支被错误提交，产生孤儿流程实例。
+     * 现保留本地 @Transactional 保证 DB 写入原子性，分布式一致性由上层补偿/对账机制兜底。</p>
+     *
      * @param id          立项 ID
      * @param initiatorId 发起人 ID
      * @return 流程实例 ID；已存在或调用失败时返回 null
      * @throws BizException 立项不存在时抛出
      */
     @Override
-    @GlobalTransactional(name = "pmis-initiation-start-process", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
     public String startProcess(String id, String initiatorId) {
         InitiationDO o = getById(id);

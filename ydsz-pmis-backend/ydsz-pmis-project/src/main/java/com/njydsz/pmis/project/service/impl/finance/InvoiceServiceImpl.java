@@ -3,8 +3,10 @@ package com.njydsz.pmis.project.service.impl.finance;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.dto.finance.InvoiceApprovalDTO;
 import com.njydsz.pmis.project.dto.finance.InvoiceCreateDTO;
 import com.njydsz.pmis.project.entity.finance.InvoiceDO;
@@ -238,6 +240,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @DataScope(userColumn = "applied_by")
     @Transactional(readOnly = true)
     public Page<InvoiceDO> page(int page, int size, String keyword, String status,
                                 String contractId, String initiationId, String customerId,
@@ -254,6 +257,9 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (contractId != null) w.eq(InvoiceDO::getContractId, contractId);
         if (initiationId != null) w.eq(InvoiceDO::getInitiationId, initiationId);
         if (customerId != null) w.eq(InvoiceDO::getCustomerId, customerId);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "applied_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(InvoiceDO::getInvoiceDate, InvoiceDO::getId);
         return invoiceMapper.selectPage(p, w);
     }

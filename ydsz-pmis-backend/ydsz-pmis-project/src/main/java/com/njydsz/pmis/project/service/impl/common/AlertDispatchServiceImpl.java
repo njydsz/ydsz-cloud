@@ -157,8 +157,8 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
         for (AlertDispatchDO d : list) {
             try {
                 mapper.incrementRetry(d.getId());
-                // P1-4: 通过 self 代理调用 dispatchNow，激活 @GlobalTransactional 注解
-                // （此前 this.dispatchNow() 会绕过 Spring AOP，导致分布式事务失效）
+                // P1-4: 通过 self 代理调用 dispatchNow，激活 @Transactional 注解
+                // （此前 this.dispatchNow() 会绕过 Spring AOP，导致本地事务失效）
                 if (self.dispatchNow(d.getId())) {
                     n++;
                 }

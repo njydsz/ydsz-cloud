@@ -84,6 +84,13 @@ public class EncryptedFieldSerializer extends JsonSerializer<String> implements 
         } else {
             cipher = CryptoUtil.aesGcmEncrypt(value, EncryptedFieldKeyRegistry.get(keyRef));
         }
+
+        // P2-14: 审计日志记录
+        DataAccessAuditService auditService = DataAccessAuditService.getInstance();
+        if (auditService != null) {
+            auditService.recordEncryption(keyRef, algorithm.name());
+        }
+
         gen.writeString(cipher);
     }
 }

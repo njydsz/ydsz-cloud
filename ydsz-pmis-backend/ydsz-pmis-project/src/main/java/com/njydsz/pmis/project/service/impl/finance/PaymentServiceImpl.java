@@ -3,8 +3,10 @@ package com.njydsz.pmis.project.service.impl.finance;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.dto.finance.PaymentAllocationDTO;
 import com.njydsz.pmis.project.dto.finance.PaymentCreateDTO;
 import com.njydsz.pmis.project.entity.finance.InvoiceDO;
@@ -279,6 +281,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @DataScope(userColumn = "recorded_by")
     @Transactional(readOnly = true)
     public Page<PaymentDO> page(int page, int size, String keyword, String status,
                                 String contractId, String customerId, String initiationId) {
@@ -293,6 +296,9 @@ public class PaymentServiceImpl implements PaymentService {
         if (contractId != null) w.eq(PaymentDO::getContractId, contractId);
         if (customerId != null) w.eq(PaymentDO::getCustomerId, customerId);
         if (initiationId != null) w.eq(PaymentDO::getInitiationId, initiationId);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "recorded_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(PaymentDO::getPaymentDate, PaymentDO::getId);
         return paymentMapper.selectPage(p, w);
     }

@@ -5,13 +5,11 @@ import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.entity.RuleDefinitionDO;
 import com.njydsz.pmis.literule.mapper.RuleDefinitionMapper;
+import com.njydsz.pmis.literule.spi.RuleCategoryProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,13 +21,15 @@ import java.util.Map;
  * <p>提供基于 category_path 的多级目录树构建、按路径过滤规则、按 Owner 筛选等能力。
  * 树形结构：节点包含子节点、规则数、Owner 列表等信息。
  *
+ * <p>实现 {@link RuleCategoryProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RuleCategoryTreeService {
+public class RuleCategoryTreeService implements RuleCategoryProvider {
 
     private final RuleDefinitionMapper ruleDefinitionMapper;
 
@@ -149,37 +149,6 @@ public class RuleCategoryTreeService {
         node.getChildren().sort((a, b) -> a.getPath().compareTo(b.getPath()));
         for (CategoryNode c : node.getChildren()) {
             sortChildren(c);
-        }
-    }
-
-    /**
-     * 目录树节点
-     */
-    @lombok.Data
-    public static class CategoryNode implements Serializable {
-        @Serial
-        private static final long serialVersionUID = 1L;
-
-        private String name;
-        private String path;
-        private int depth;
-        private boolean root;
-        private int ruleCount;
-        private List<String> owners = new ArrayList<>();
-        private List<CategoryNode> children = new ArrayList<>();
-
-        public CategoryNode() {
-        }
-
-        public CategoryNode(String name, String path, int depth, boolean root) {
-            this.name = name;
-            this.path = path;
-            this.depth = depth;
-            this.root = root;
-        }
-
-        public void increaseRuleCount() {
-            this.ruleCount++;
         }
     }
 }

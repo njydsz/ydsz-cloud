@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.literule;
 
 import com.njydsz.pmis.literule.entity.RuleDefinitionDO;
 import com.njydsz.pmis.literule.mapper.RuleDefinitionMapper;
+import com.njydsz.pmis.literule.spi.RuleConflictDetectorProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,13 +19,15 @@ import java.util.stream.Collectors;
  * 帮助运维人员识别潜在的规则冲突。
  * </p>
  *
+ * <p>实现 {@link RuleConflictDetectorProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis
  * @since 2026-07-02
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RuleConflictDetector {
+public class RuleConflictDetector implements RuleConflictDetectorProvider {
 
     private final RuleDefinitionMapper ruleDefinitionMapper;
 
@@ -48,6 +51,7 @@ public class RuleConflictDetector {
      *
      * @return 冲突规则对列表
      */
+    @Override
     public List<RuleConflictInfo> detectConflicts() {
         List<RuleDefinitionDO> rules = ruleDefinitionMapper.selectList(null);
         // 仅检查启用的规则
@@ -129,19 +133,5 @@ public class RuleConflictDetector {
             }
         }
         return vars;
-    }
-
-    /**
-     * 冲突信息 DTO
-     */
-    @lombok.Data
-    @lombok.Builder
-    public static class RuleConflictInfo {
-        private String ruleA;
-        private String ruleAName;
-        private String ruleB;
-        private String ruleBName;
-        private List<String> overlapFields;
-        private String severity;
     }
 }

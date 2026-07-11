@@ -70,8 +70,10 @@ public class OpportunityController {
     @Operation(summary = "更新商机")
     @PrePermission("project:opportunity:update")
     @Idempotent(key = "opportunity:update", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping
-    public Result<Void> update(@Valid @RequestBody OpportunityUpdateDTO dto) {
+    @PutMapping("/{id}")
+    public Result<Void> update(@Parameter(description = "商机ID") @PathVariable String id,
+                               @Valid @RequestBody OpportunityUpdateDTO dto) {
+        dto.setId(id);
         service.update(dto);
         return Result.ok();
     }

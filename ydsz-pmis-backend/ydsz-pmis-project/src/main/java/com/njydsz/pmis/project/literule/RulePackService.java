@@ -8,6 +8,7 @@ import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RulePack;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
+import com.njydsz.pmis.literule.spi.RulePackProvider;
 import com.njydsz.pmis.literule.entity.RulePackDO;
 import com.njydsz.pmis.literule.entity.RulePackInstallDO;
 import com.njydsz.pmis.literule.mapper.RulePackInstallMapper;
@@ -32,13 +33,15 @@ import java.util.Map;
  * <p>提供规则集（RulePack）的市场发布、查询、安装、版本管理等能力。
  * 安装过程：从 pack 中提取 rule_codes 列表，通过 {@link RuleConfigProvider} 加载规则定义。
  *
+ * <p>实现 {@link RulePackProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RulePackService {
+public class RulePackService implements RulePackProvider {
 
     private final RulePackMapper rulePackMapper;
     private final RulePackInstallMapper rulePackInstallMapper;
@@ -469,58 +472,6 @@ public class RulePackService {
             log.warn("[RulePackService] 整数解析失败 s={}: {}", s, e.getMessage());
             return 0;
         }
-    }
-
-    /**
-     * 安装结果
-     */
-    @lombok.Data
-    public static class InstallResult {
-        private String packCode;
-        private String version;
-        private int total;
-        private int success;
-        private int failed;
-        private List<String> failedCodes;
-    }
-
-    /**
-     * 知识包版本差异结果（P2-8）
-     */
-    @lombok.Data
-    public static class PackDiff {
-        private String packCode;
-        private String fromVersion;
-        private String toVersion;
-        /** 新增的规则编码 */
-        private List<String> added;
-        /** 移除的规则编码 */
-        private List<String> removed;
-        /** 内容发生变更的规则编码 */
-        private List<String> changed;
-    }
-
-    /**
-     * 知识包更新信息（P2-10）
-     */
-    @lombok.Data
-    public static class PackUpdateInfo {
-        /** 知识包编码 */
-        private String packCode;
-        /** 知识包名称 */
-        private String packName;
-        /** 已安装版本 */
-        private String installedVersion;
-        /** 市场最新版本 */
-        private String latestVersion;
-        /** 是否有更新 */
-        private boolean hasUpdate;
-        /** 安装时间 */
-        private LocalDateTime installedAt;
-        /** 行业 */
-        private String industry;
-        /** 描述 */
-        private String description;
     }
 
     /**

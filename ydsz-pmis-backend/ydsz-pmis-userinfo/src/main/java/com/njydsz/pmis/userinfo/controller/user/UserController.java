@@ -136,8 +136,10 @@ public class UserController {
     @PrePermission("auth:user:update")
     @OperationLog(module = "权限管理", action = "更新用户", bizType = "USER")
     @Idempotent(key = "user:update", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping
-    public Result<Void> update(@Valid @RequestBody UserUpdateDTO dto) {
+    @PutMapping("/{id}")
+    public Result<Void> update(@Parameter(description = "用户ID") @PathVariable String id,
+                               @Valid @RequestBody UserUpdateDTO dto) {
+        dto.setId(id);
         UserAccountDO user = new UserAccountDO();
         BeanUtils.copyProperties(dto, user);
         userAccountService.update(user);

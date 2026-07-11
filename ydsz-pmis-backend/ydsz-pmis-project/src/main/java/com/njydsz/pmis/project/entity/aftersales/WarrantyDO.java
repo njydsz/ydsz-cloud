@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.sensitive.Sensitive;
+import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
 import lombok.Data;
 
 import java.io.Serial;
@@ -61,7 +63,8 @@ public class WarrantyDO implements Serializable {
     private String terminatedReason;
     /** 联系人姓名 */
     private String contactName;
-    /** 联系人电话 */
+    /** 联系人电话（脱敏：138****8000） */
+    @Sensitive(SensitiveStrategy.PHONE)
     private String contactPhone;
     /** 备注 */
     private String remark;

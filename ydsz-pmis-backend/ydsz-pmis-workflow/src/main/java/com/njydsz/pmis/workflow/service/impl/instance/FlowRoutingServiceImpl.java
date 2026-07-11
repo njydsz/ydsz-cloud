@@ -1,9 +1,9 @@
 package com.njydsz.pmis.workflow.service.impl.instance;
 
-import com.njydsz.pmis.project.service.ruleengine.DecisionTableEvalService;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.spi.DecisionTableEvalProvider;
 import com.njydsz.pmis.workflow.entity.analytics.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
@@ -60,22 +60,25 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
     /** 流程实例 Mapper，查询运行中实例状态 */
     private final FlowInstanceMapper instanceMapper;
 
-    /** DMN 决策表评估服务（可选依赖，未注入时 DMN 路由不可用，回退到 Aviator 评估） */
-    private final DecisionTableEvalService decisionTableEvalService;
+    /** DMN 决策表评估提供者（SPI 可选依赖，未注入时 DMN 路由不可用，回退到 Aviator 评估） */
+    private final DecisionTableEvalProvider decisionTableEvalProvider;
 
     /**
-     * 构造注入：使用 {@link ObjectProvider} 支持可选依赖 {@link DecisionTableEvalService}。
+     * 构造注入：使用 {@link ObjectProvider} 支持可选依赖 {@link DecisionTableEvalProvider}。
+     *
+     * <p>通过 SPI 接口注入，解除 workflow 对 project 模块的编译期硬依赖；
+     * project 模块的 {@code DecisionTableEvalService} 已实现该 SPI，由 Spring 自动装配。
      */
     public FlowRoutingServiceImpl(ExpressionEvaluator expressionEvaluator,
                                   FlowRunTaskMapper taskMapper,
                                   FlowAuditLogMapper auditLogMapper,
                                   FlowInstanceMapper instanceMapper,
-                                  ObjectProvider<DecisionTableEvalService> decisionTableEvalServiceProvider) {
+                                  ObjectProvider<DecisionTableEvalProvider> decisionTableEvalProviderObjectProvider) {
         this.expressionEvaluator = expressionEvaluator;
         this.taskMapper = taskMapper;
         this.auditLogMapper = auditLogMapper;
         this.instanceMapper = instanceMapper;
-        this.decisionTableEvalService = decisionTableEvalServiceProvider.getIfAvailable();
+        this.decisionTableEvalProvider = decisionTableEvalProviderObjectProvider.getIfAvailable();
     }
 
     // ============================== 路由评估 ==============================
@@ -110,10 +113,10 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
     /**
      * 基于 DMN 决策表的路由评估
      *
-     * <p>调用 execution 模块的 {@link DecisionTableEvalService} 评估决策表，
+     * <p>调用 {@link DecisionTableEvalProvider} SPI 评估决策表，
      * 取首条命中行的第一个动作值作为目标节点编码。
      *
-     * <p>当 DecisionTableEvalService 未注入（如分服务部署、execution 模块未引入）时，
+     * <p>当 DecisionTableEvalProvider 未注入（如分服务部署、project 模块未引入）时，
      * 记录告警并返回 null，路由交由上层兜底处理。
      *
      * @param tableCode 决策表编码
@@ -121,12 +124,12 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
      * @return 目标节点编码；评估失败或无命中时返回 null
      */
     private String evaluateRouteByDmn(String tableCode, Map<String, Object> variables) {
-        if (decisionTableEvalService == null) {
-            log.warn("[FlowRoute] DMN 路由不可用（DecisionTableEvalService 未注入）: tableCode={}", tableCode);
+        if (decisionTableEvalProvider == null) {
+            log.warn("[FlowRoute] DMN 路由不可用（DecisionTableEvalProvider 未注入）: tableCode={}", tableCode);
             return null;
         }
         try {
-            List<Map<String, Object>> results = decisionTableEvalService.evaluate(tableCode, variables);
+            List<Map<String, Object>> results = decisionTableEvalProvider.evaluate(tableCode, variables);
             if (results == null || results.isEmpty()) {
                 log.warn("[FlowRoute] DMN 路由无匹配结果: tableCode={}", tableCode);
                 return null;

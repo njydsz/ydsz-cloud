@@ -2,8 +2,10 @@ package com.njydsz.pmis.userinfo.service.impl.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeCreateDTO;
 import com.njydsz.pmis.userinfo.dto.user.EmployeeUpdateDTO;
@@ -175,6 +177,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @DataScope(deptColumn = "department_id", userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<EmployeeDO> page(int page, int size, String keyword, String departmentId,
                                  String employeeType, String workStatus) {
@@ -193,6 +196,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (StringUtils.hasText(workStatus)) {
             wrapper.eq(EmployeeDO::getWorkStatus, workStatus);
         }
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "department_id", "created_by");
+        if (!ds.isEmpty()) wrapper.apply(ds);
         wrapper.orderByDesc(EmployeeDO::getCreatedAt);
         return employeeMapper.selectPage(p, wrapper);
     }

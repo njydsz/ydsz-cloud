@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -69,8 +70,10 @@ public class ContractController {
     @Operation(summary = "状态迁移")
     @PrePermission("project:contract:status")
     @Idempotent(key = "contract:update", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/status")
-    public Result<Void> changeStatus(@Valid @RequestBody ContractStatusDTO dto) {
+    @PatchMapping("/{id}/status")
+    public Result<Void> changeStatus(@Parameter(description = "合同ID") @PathVariable String id,
+                                     @Valid @RequestBody ContractStatusDTO dto) {
+        dto.setId(id);
         service.changeStatus(dto);
         return Result.ok();
     }

@@ -69,6 +69,7 @@ public class FlowTaskController {
      * @param taskId 任务 ID
      * @return 统一响应结果，包含任务详情
      */
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_VIEW)
     @GetMapping("/task/{taskId}")
     public Result<Map<String, Object>> taskDetail(@PathVariable String taskId) {
         return Result.ok(workflowFacade.getTaskDetail(taskId));
