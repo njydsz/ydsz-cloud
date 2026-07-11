@@ -7,8 +7,6 @@
  * <h3>核心组件</h3>
  * <ul>
  *   <li>{@link com.njydsz.pmis.common.feign.UserServiceClient} - 用户/客户/员工信息服务（已统一到 common/feign）</li>
- *   <li>{@link com.njydsz.pmis.project.feign.InitiationServiceClient} - 立项服务（用于预算查询）</li>
- *   <li>{@link com.njydsz.pmis.project.feign.MessageServiceClient} - 消息中心服务（告警/通知）</li>
  *   <li>{@link com.njydsz.pmis.project.feign.WorkflowServiceClient} - 工作流服务（审批流）</li>
  *   <li>{@link com.njydsz.pmis.project.feign.BenchResourceClient} - Bench 资源服务（人员分配/成本）</li>
  * </ul>

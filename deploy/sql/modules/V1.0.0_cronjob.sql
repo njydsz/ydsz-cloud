@@ -1534,104 +1534,6 @@ CREATE INDEX IF NOT EXISTS idx_pjw_event_job
 CREATE INDEX IF NOT EXISTS idx_pjw_status
     ON pmis_job_webhook (status) WHERE deleted = 0;
 
--- ----------------------------
--- 2) 预警分级推送表
--- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    alert_code          VARCHAR(64)  NOT NULL UNIQUE,
-    alert_type          VARCHAR(32)  NOT NULL,
-    alert_level         VARCHAR(8)   NOT NULL,
-    source_type         VARCHAR(32)  NOT NULL,
-    source_id           VARCHAR(20),
-    title               VARCHAR(256) NOT NULL,
-    content             TEXT,
-    target_role         VARCHAR(64),
-    target_user_ids     VARCHAR(1024),
-    push_channels       VARCHAR(64)  NOT NULL DEFAULT 'INAPP',
-    -- [P3-1-merge] cronjob 告警专用字段（source_type='CRONJOB' 时使用）
-    rule_id             VARCHAR(20),
-    trigger_log_id      VARCHAR(20),
-    trigger_value       VARCHAR(128),
-    threshold           BIGINT,
-    dispatched_at       TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    dispatched_by       VARCHAR(64),
-    status              VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
-    sent_at             TIMESTAMPTZ,
-    fail_reason         VARCHAR(512),
-    retry_count         INT          NOT NULL DEFAULT 0,
-    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
-    provider_trace_id   VARCHAR(64),
-    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    -- 枚举约束（P3-1-merge: 扩展支持 cronjob 告警类型和级别）
-    CONSTRAINT ck_pad_alert_type       CHECK (alert_type  IN ('BUDGET','EVM','SLA','RISK','PROFIT','BENCH','UTILIZATION','OTHER','FAIL','TIMEOUT','SLOW','FAIL_RATE','DURATION_P95')),
-    CONSTRAINT ck_pad_alert_level      CHECK (alert_level IN ('YELLOW','RED','INFO','WARN','ERROR','CRITICAL')),
-    CONSTRAINT ck_pad_source_type      CHECK (source_type IN ('PROJECT','EVM','TICKET','BENCH','CONFIG','OTHER','CRONJOB')),
-    CONSTRAINT ck_pad_push_channels    CHECK (push_channels ~ '^(INAPP|EMAIL|SMS|WECHAT|DINGTALK|WECOM|WEBHOOK)(,(INAPP|EMAIL|SMS|WECHAT|DINGTALK|WECOM|WEBHOOK))*$'),
-    CONSTRAINT ck_pad_status_enum      CHECK (status IN ('PENDING','SENT','FAILED','RETRYING','SUCCESS','PARTIAL','SUCCESS_RECOVERY','PARTIAL_RECOVERY','FAILED_RECOVERY')),
-    CONSTRAINT ck_pad_retry_count      CHECK (retry_count >= 0 AND retry_count <= 10),
-    CONSTRAINT ck_pad_deleted          CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_alert_dispatch IS '预警分级推送表: 黄/红不同层级触达,失败自动重试（最大 3 次,硬上限 10 次）';
-
-COMMENT ON COLUMN pmis_alert_dispatch.alert_code IS '预警编码: 业务唯一,如 ALERT-2026-001';
-
-COMMENT ON COLUMN pmis_alert_dispatch.alert_type IS '预警类型: BUDGET 预算 / EVM 挣值 / SLA 工单 / RISK 风险 / PROFIT 利润 / BENCH 闲置 / UTILIZATION 利用率 / OTHER 其他';
-
-COMMENT ON COLUMN pmis_alert_dispatch.alert_level IS '预警等级: YELLOW 黄色 / RED 红色';
-
-COMMENT ON COLUMN pmis_alert_dispatch.source_type IS '触发源类型: PROJECT/EVM/TICKET/BENCH/CONFIG/OTHER';
-
-COMMENT ON COLUMN pmis_alert_dispatch.source_id IS '触发源业务 ID';
-
-COMMENT ON COLUMN pmis_alert_dispatch.title IS '预警标题';
-
-COMMENT ON COLUMN pmis_alert_dispatch.content IS '预警内容（已渲染的模板）';
-
-COMMENT ON COLUMN pmis_alert_dispatch.target_role IS '目标角色: PM/PMO/CFO 等';
-
-COMMENT ON COLUMN pmis_alert_dispatch.target_user_ids IS '目标用户 ID 列表: 逗号分隔,精确触达';
-
-COMMENT ON COLUMN pmis_alert_dispatch.push_channels IS '推送渠道: INAPP 站内信 / EMAIL 邮件 / SMS 短信 / WECHAT 微信,逗号分隔';
-
-COMMENT ON COLUMN pmis_alert_dispatch.dispatched_at IS '派发时间';
-
-COMMENT ON COLUMN pmis_alert_dispatch.dispatched_by IS '派发人: 定时任务 / 系统 / 用户';
-
-COMMENT ON COLUMN pmis_alert_dispatch.status IS '发送状态: PENDING 待发送 / SENT 已发送 / FAILED 失败 / RETRYING 重试中';
-
-COMMENT ON COLUMN pmis_alert_dispatch.sent_at IS '发送成功时间';
-
-COMMENT ON COLUMN pmis_alert_dispatch.fail_reason IS '失败原因';
-
-COMMENT ON COLUMN pmis_alert_dispatch.retry_count IS '重试次数: 业务最大 3 次,硬上限 10 次';
-
-COMMENT ON COLUMN pmis_alert_dispatch.tenant_id IS '租户 ID';
-
-COMMENT ON COLUMN pmis_alert_dispatch.provider_trace_id IS '链路追踪 ID';
-
-COMMENT ON COLUMN pmis_alert_dispatch.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
--- 复合/部分索引(替代零散的单列索引)
-CREATE INDEX IF NOT EXISTS idx_pad_tenant_level_status
-    ON pmis_alert_dispatch(tenant_id, alert_level, status)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pad_tenant_type_dispatched
-    ON pmis_alert_dispatch(tenant_id, alert_type, dispatched_at DESC)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pad_tenant_source
-    ON pmis_alert_dispatch(tenant_id, source_type, source_id)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_pad_tenant_target
-    ON pmis_alert_dispatch(tenant_id, target_role)
-    WHERE deleted = 0;
-
 -- --------------------------------------------------------------------
 
 -- ============================ [021] register pmis smart jobs ============================
@@ -1839,19 +1741,6 @@ VALUES
      1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
 ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
 
--- =====================================================================
---  4) 预警 / 对账（4.2.2/4.2.3）
--- =====================================================================
-CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_recipient
-    ON pmis_alert_dispatch (target_role, sent_at DESC)
-    WHERE status IN ('PENDING', 'FAILED');
-
-CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
-    ON pmis_alert_dispatch (retry_count, sent_at DESC)
-    WHERE status = 'FAILED' AND retry_count < 3;
-
-ANALYZE pmis_alert_dispatch;
-
 -- ============================================================
 -- 七、补齐遗漏的 10 张业务表 tenant_id 字段
 --   首轮扫描漏掉，启用 TenantLineInnerInterceptor 前必须补齐
@@ -1863,10 +1752,6 @@ ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL
 CREATE INDEX IF NOT EXISTS idx_job_log_tenant ON pmis_job_log(tenant_id);
 
 ANALYZE pmis_job_log;
-
-CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_trace
-    ON pmis_alert_dispatch (provider_trace_id)
-    WHERE provider_trace_id IS NOT NULL;
 
 DO $$ BEGIN
   COMMENT ON COLUMN pmis_job_dag_node.condition_expression IS '条件表达式(CONDITION节点): 如 ${nodeA.result==''success''}';

@@ -1,12 +1,11 @@
 package com.njydsz.pmis.project.engine;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.project.feign.InitiationServiceClient;
 import com.njydsz.pmis.project.mapper.execution.CostAllocationMapper;
 import com.njydsz.pmis.project.mapper.finance.ExpenseMapper;
 import com.njydsz.pmis.project.mapper.execution.PurchaseMapper;
+import com.njydsz.pmis.project.service.initiation.InitiationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -37,7 +36,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BudgetGuard {
 
-    private final InitiationServiceClient initiationClient;
+    private final InitiationService initiationService;
     private final PurchaseMapper purchaseMapper;
     private final ExpenseMapper expenseMapper;
     private final CostAllocationMapper costAllocationMapper;
@@ -145,20 +144,23 @@ public class BudgetGuard {
     }
 
     /**
-     * 安全获取预算快照（Feign + try-catch 降级）
+     * 安全获取预算快照（本地 Service 调用 + try-catch 降级）
+     *
+     * <p>P1-9 重构：原通过 InitiationServiceClient Feign 自调用 project 服务自身，
+     * 违反 package-info.java 中"对外调用其他微服务"的设计原则，且引入不必要的网络开销。
+     * 现改为直接注入 {@link InitiationService} 走本地调用，保留 try-catch 以防数据库异常降级。
      *
      * @param initiationId 项目立项 ID
      * @return 预算快照；服务不可用或返回空时返回 null
      */
     private Map<String, Object> safeBudgetSnapshot(String initiationId) {
         try {
-            Result<Map<String, Object>> r = initiationClient.budgetSnapshot(initiationId);
-            if (r == null || !r.isSuccess() || r.getData() == null) {
-                log.warn("[BudgetGuard] budgetSnapshot 返回空: code={} msg={}",
-                        r == null ? "null" : r.getCode(), r == null ? "?" : r.getMessage());
+            Map<String, Object> snap = initiationService.budgetSnapshot(initiationId);
+            if (snap == null || snap.isEmpty()) {
+                log.warn("[BudgetGuard] budgetSnapshot 返回空: initiationId={}", initiationId);
                 return null;
             }
-            return r.getData();
+            return snap;
         } catch (Exception e) {
             log.error("[BudgetGuard] budgetSnapshot 调用异常，已降级: {}", e.getMessage());
             return null;

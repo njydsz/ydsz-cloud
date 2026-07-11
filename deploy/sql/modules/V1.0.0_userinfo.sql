@@ -2125,3 +2125,86 @@ CREATE INDEX IF NOT EXISTS idx_pmis_bench_record_trace
     ON pmis_bench_record (provider_trace_id)
     WHERE provider_trace_id <> '';
 
+-- P1-10: 从 V1.0.0_project.sql 迁移（ResourcePoolMapper 在 userinfo 模块）
+-- =====================================================
+-- 1. 资源池主表 pmis_resource_pool
+-- =====================================================
+-- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_resource_pool; -- 已废弃
+CREATE TABLE IF NOT EXISTS pmis_resource_pool(
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    pool_code           VARCHAR(64)  NOT NULL,
+    pool_name           VARCHAR(256) NOT NULL,
+    pool_type           VARCHAR(32)  NOT NULL,                 -- HQ/DIVISION/RESERVE
+    department_id       VARCHAR(20),                                -- 事业部/部门
+    department_name     VARCHAR(256),
+    level_range         VARCHAR(32),                           -- L1-L3 / L4-L12 / L13+
+    headcount           INTEGER      NOT NULL DEFAULT 0,
+    billable_target     INTEGER      NOT NULL DEFAULT 0,
+    description         TEXT,
+    status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
+    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+    created_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    CONSTRAINT uk_prp_code              UNIQUE (pool_code, deleted),
+    CONSTRAINT ck_prp_pool_type         CHECK (pool_type IN ('HQ','DIVISION','RESERVE')),
+    CONSTRAINT ck_prp_status_enum       CHECK (status IN ('ACTIVE','INACTIVE')),
+    CONSTRAINT ck_prp_headcount_nonneg  CHECK (headcount >= 0),
+    CONSTRAINT ck_prp_bill_target_nonneg CHECK (billable_target >= 0),
+    CONSTRAINT ck_prp_deleted_enum      CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_resource_pool IS '资源池表: 3 级资源池（HQ 总部 / DIVISION 事业部 / RESERVE 储备）,PoolType.inferByLevel 按职级自动分配';
+
+COMMENT ON COLUMN pmis_resource_pool.pool_code IS '资源池编码: 业务唯一,如 POOL-HQ-GLOBAL';
+
+COMMENT ON COLUMN pmis_resource_pool.pool_name IS '资源池名称';
+
+COMMENT ON COLUMN pmis_resource_pool.pool_type IS '资源池类型: HQ 总部 / DIVISION 事业部 / RESERVE 储备,按职级自动映射';
+
+COMMENT ON COLUMN pmis_resource_pool.department_id IS '所属部门 ID: 池归属的事业部/部门';
+
+COMMENT ON COLUMN pmis_resource_pool.department_name IS '所属部门名称（冗余）';
+
+COMMENT ON COLUMN pmis_resource_pool.level_range IS '职级范围: L1-L3 / L4-L12 / L13+';
+
+COMMENT ON COLUMN pmis_resource_pool.headcount IS '当前人数';
+
+COMMENT ON COLUMN pmis_resource_pool.billable_target IS '计费人头目标: 期望投入计费项目的人数';
+
+COMMENT ON COLUMN pmis_resource_pool.description IS '资源池描述';
+
+COMMENT ON COLUMN pmis_resource_pool.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
+
+COMMENT ON COLUMN pmis_resource_pool.tenant_id IS '租户 ID';
+
+COMMENT ON COLUMN pmis_resource_pool.provider_trace_id IS '链路追踪 ID';
+
+COMMENT ON COLUMN pmis_resource_pool.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
+-- 复合/部分索引(替代零散的 idx_prp_type_status / idx_prp_dept)
+CREATE INDEX IF NOT EXISTS idx_prp_tenant_type_status
+    ON pmis_resource_pool(tenant_id, pool_type, status)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_prp_tenant_dept
+    ON pmis_resource_pool(tenant_id, department_id)
+    WHERE deleted = 0 AND department_id IS NOT NULL;
+
+-- =====================================================
+-- 5. 初始化三级资源池（HQ/DIVISION/RESERVE）
+-- =====================================================
+INSERT INTO pmis_resource_pool
+    (pool_code, pool_name, pool_type, department_id, department_name, level_range, headcount, billable_target, status, tenant_id, provider_trace_id)
+VALUES
+    ('POOL-HQ-GLOBAL',        '总部高级资源池',   'HQ',       1, '总部',  'L13+', 0, 0, 'ACTIVE', 1, 'init'),
+    ('POOL-DIV-CONSULTING',   '咨询事业部池',    'DIVISION', 2, '咨询事业部', 'L4-L12', 0, 0, 'ACTIVE', 1, 'init'),
+    ('POOL-DIV-IMPL',         '实施事业部池',    'DIVISION', 3, '实施事业部', 'L4-L12', 0, 0, 'ACTIVE', 1, 'init'),
+        ('POOL-RESERVE-TRAINING', '储备培训池',      'RESERVE',  1, '总部',  'L1-L3', 0, 0, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_resource_pool_trace
+    ON pmis_resource_pool (provider_trace_id)
+    WHERE provider_trace_id <> '';

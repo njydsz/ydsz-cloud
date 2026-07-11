@@ -1,10 +1,9 @@
 package com.njydsz.pmis.project.literule;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.project.feign.InitiationServiceClient;
 import com.njydsz.pmis.project.mapper.execution.CostAllocationMapper;
 import com.njydsz.pmis.project.mapper.finance.ExpenseMapper;
 import com.njydsz.pmis.project.mapper.execution.PurchaseMapper;
+import com.njydsz.pmis.project.service.initiation.InitiationService;
 import com.njydsz.pmis.literule.spi.BudgetSnapshotProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,7 @@ import java.util.Map;
  * 预算快照提供者实现（execution 模块）
  *
  * <p>实现 literule 模块的 {@link BudgetSnapshotProvider} SPI 接口，
- * 通过 InitiationServiceClient 获取立项预算，通过 Mapper 汇总已发生成本。
+ * 通过 {@link InitiationService} 获取立项预算，通过 Mapper 汇总已发生成本。
  *
  * <p>说明：
  * <ul>
@@ -36,7 +35,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
 
-    private final InitiationServiceClient initiationClient;
+    private final InitiationService initiationService;
     private final PurchaseMapper purchaseMapper;
     private final ExpenseMapper expenseMapper;
     private final CostAllocationMapper costAllocationMapper;
@@ -44,7 +43,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
     /**
      * 获取项目预算总额
      *
-     * <p>通过 InitiationServiceClient 查询立项预算快照，提取 budgetAmount 字段。
+     * <p>通过 {@link InitiationService} 查询立项预算快照，提取 budgetAmount 字段。
      *
      * @param projectId 项目 ID（对应立项 initiationId 的字符串形式）
      * @return 预算总额；不存在或服务不可用返回 {@link BigDecimal#ZERO}
@@ -114,14 +113,14 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
      * 获取全部预算预警相关项目的快照
      *
      * <p>当前为简化实现，返回空列表。
-     * 完整实现需通过 InitiationServiceClient 批量查询活跃项目列表，
+     * 完整实现需通过 {@link InitiationService} 批量查询活跃项目列表，
      * 或查询本地表获取所有 initiationId 后逐个汇总。
      *
      * @return 项目预算快照列表（当前返回空列表）
      */
     @Override
     public List<BudgetSnapshot> getBudgetSnapshots() {
-        // P3 待实现：需通过 InitiationServiceClient 批量查询活跃项目列表，或查询本地 initiation 表获取所有活跃 initiationId 后逐个汇总预算快照
+        // P3 待实现：需通过 InitiationService 批量查询活跃项目列表，或查询本地 initiation 表获取所有活跃 initiationId 后逐个汇总预算快照
         log.debug("[BudgetSnapshotProvider] getBudgetSnapshots 暂未实现，返回空列表");
         return Collections.emptyList();
     }
@@ -142,23 +141,22 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
     }
 
     /**
-     * 安全获取预算快照（Feign + try-catch 降级）
+     * 安全获取预算快照（本地 Service 调用 + try-catch 降级）
      *
-     * <p>复用 {@code BudgetGuard.safeBudgetSnapshot} 的降级策略：
-     * 当项目服务不可用时返回 null，调用方据此跳过预算校验。
+     * <p>P1-9 重构：原通过 InitiationServiceClient Feign 自调用 project 服务自身，
+     * 现改为直接注入 {@link InitiationService} 走本地调用，保留 try-catch 以防数据库异常降级。
      *
      * @param initiationId 项目立项 ID
      * @return 预算快照 Map；服务不可用或返回空时返回 null
      */
     private Map<String, Object> safeBudgetSnapshot(String initiationId) {
         try {
-            Result<Map<String, Object>> r = initiationClient.budgetSnapshot(initiationId);
-            if (r == null || !r.isSuccess() || r.getData() == null) {
-                log.warn("[BudgetSnapshotProvider] budgetSnapshot 返回空: code={} msg={}",
-                        r == null ? "null" : r.getCode(), r == null ? "?" : r.getMessage());
+            Map<String, Object> snap = initiationService.budgetSnapshot(initiationId);
+            if (snap == null || snap.isEmpty()) {
+                log.warn("[BudgetSnapshotProvider] budgetSnapshot 返回空: initiationId={}", initiationId);
                 return null;
             }
-            return r.getData();
+            return snap;
         } catch (Exception e) {
             log.warn("[BudgetSnapshotProvider] budgetSnapshot 调用异常，已降级: {}", e.getMessage());
             return null;

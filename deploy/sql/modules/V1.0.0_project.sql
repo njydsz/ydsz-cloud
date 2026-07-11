@@ -3147,85 +3147,6 @@ VALUES
     ('RI-L17-DEFAULT', 'L17', 'DAY', 10000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
         ('RI-L18-DEFAULT', 'L18', 'DAY', 12000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
 
--- =====================================================
--- 1. 资源池主表 pmis_resource_pool
--- =====================================================
--- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_resource_pool; -- 已废弃
-CREATE TABLE IF NOT EXISTS pmis_resource_pool(
-    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    pool_code           VARCHAR(64)  NOT NULL,
-    pool_name           VARCHAR(256) NOT NULL,
-    pool_type           VARCHAR(32)  NOT NULL,                 -- HQ/DIVISION/RESERVE
-    department_id       VARCHAR(20),                                -- 事业部/部门
-    department_name     VARCHAR(256),
-    level_range         VARCHAR(32),                           -- L1-L3 / L4-L12 / L13+
-    headcount           INTEGER      NOT NULL DEFAULT 0,
-    billable_target     INTEGER      NOT NULL DEFAULT 0,
-    description         TEXT,
-    status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
-    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
-    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_prp_code              UNIQUE (pool_code, deleted),
-    CONSTRAINT ck_prp_pool_type         CHECK (pool_type IN ('HQ','DIVISION','RESERVE')),
-    CONSTRAINT ck_prp_status_enum       CHECK (status IN ('ACTIVE','INACTIVE')),
-    CONSTRAINT ck_prp_headcount_nonneg  CHECK (headcount >= 0),
-    CONSTRAINT ck_prp_bill_target_nonneg CHECK (billable_target >= 0),
-    CONSTRAINT ck_prp_deleted_enum      CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_resource_pool IS '资源池表: 3 级资源池（HQ 总部 / DIVISION 事业部 / RESERVE 储备）,PoolType.inferByLevel 按职级自动分配';
-
-COMMENT ON COLUMN pmis_resource_pool.pool_code IS '资源池编码: 业务唯一,如 POOL-HQ-GLOBAL';
-
-COMMENT ON COLUMN pmis_resource_pool.pool_name IS '资源池名称';
-
-COMMENT ON COLUMN pmis_resource_pool.pool_type IS '资源池类型: HQ 总部 / DIVISION 事业部 / RESERVE 储备,按职级自动映射';
-
-COMMENT ON COLUMN pmis_resource_pool.department_id IS '所属部门 ID: 池归属的事业部/部门';
-
-COMMENT ON COLUMN pmis_resource_pool.department_name IS '所属部门名称（冗余）';
-
-COMMENT ON COLUMN pmis_resource_pool.level_range IS '职级范围: L1-L3 / L4-L12 / L13+';
-
-COMMENT ON COLUMN pmis_resource_pool.headcount IS '当前人数';
-
-COMMENT ON COLUMN pmis_resource_pool.billable_target IS '计费人头目标: 期望投入计费项目的人数';
-
-COMMENT ON COLUMN pmis_resource_pool.description IS '资源池描述';
-
-COMMENT ON COLUMN pmis_resource_pool.status IS '状态: ACTIVE 启用 / INACTIVE 停用';
-
-COMMENT ON COLUMN pmis_resource_pool.tenant_id IS '租户 ID';
-
-COMMENT ON COLUMN pmis_resource_pool.provider_trace_id IS '链路追踪 ID';
-
-COMMENT ON COLUMN pmis_resource_pool.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
--- 复合/部分索引(替代零散的 idx_prp_type_status / idx_prp_dept)
-CREATE INDEX IF NOT EXISTS idx_prp_tenant_type_status
-    ON pmis_resource_pool(tenant_id, pool_type, status)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_prp_tenant_dept
-    ON pmis_resource_pool(tenant_id, department_id)
-    WHERE deleted = 0 AND department_id IS NOT NULL;
-
--- =====================================================
--- 5. 初始化三级资源池（HQ/DIVISION/RESERVE）
--- =====================================================
-INSERT INTO pmis_resource_pool
-    (pool_code, pool_name, pool_type, department_id, department_name, level_range, headcount, billable_target, status, tenant_id, provider_trace_id)
-VALUES
-    ('POOL-HQ-GLOBAL',        '总部高级资源池',   'HQ',       1, '总部',  'L13+', 0, 0, 'ACTIVE', 1, 'init'),
-    ('POOL-DIV-CONSULTING',   '咨询事业部池',    'DIVISION', 2, '咨询事业部', 'L4-L12', 0, 0, 'ACTIVE', 1, 'init'),
-    ('POOL-DIV-IMPL',         '实施事业部池',    'DIVISION', 3, '实施事业部', 'L4-L12', 0, 0, 'ACTIVE', 1, 'init'),
-        ('POOL-RESERVE-TRAINING', '储备培训池',      'RESERVE',  1, '总部',  'L1-L3', 0, 0, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
-
 -- --------------------------------------------------------------------
 
 -- ============================ [015] init pmis cockpit views ============================
@@ -3645,7 +3566,7 @@ CREATE INDEX IF NOT EXISTS idx_satisfaction_tenant_level
 -- ============================================================
 -- 说明：批次 15 智能化升级-系统内部数据管理（PRD 4.2）
 -- 1) 工时表新增 billable 字段（可计费标识）
--- 2) 预警分级推送表 pmis_alert_dispatch
+-- 2) 预警分级推送表 pmis_alert_dispatch（DDL 见文件末尾 P1-10，从 V1.0.0_cronjob.sql 迁入）
 -- 3) 每日对账表 pmis_reconcile_daily
 -- ============================================================
 
@@ -4647,10 +4568,6 @@ CREATE INDEX IF NOT EXISTS idx_pmis_profit_simulation_trace
     ON pmis_profit_simulation (provider_trace_id)
     WHERE provider_trace_id <> '';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_resource_pool_trace
-    ON pmis_resource_pool (provider_trace_id)
-    WHERE provider_trace_id <> '';
-
 -- 4) 运维/告警/工单(5 张)
 CREATE INDEX IF NOT EXISTS idx_pmis_warranty_trace
     ON pmis_warranty (provider_trace_id)
@@ -4698,5 +4615,119 @@ CREATE INDEX IF NOT EXISTS idx_pmis_rule_ab_policy_trace
 
 CREATE INDEX IF NOT EXISTS idx_pmis_rule_ab_rollback_trace
     ON pmis_rule_ab_rollback (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+-- P1-10: 从 V1.0.0_cronjob.sql 迁移（AlertDispatchMapper 在 project 模块）
+-- ----------------------------
+-- 预警分级推送表 pmis_alert_dispatch
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
+    id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    alert_code          VARCHAR(64)  NOT NULL UNIQUE,
+    alert_type          VARCHAR(32)  NOT NULL,
+    alert_level         VARCHAR(8)   NOT NULL,
+    source_type         VARCHAR(32)  NOT NULL,
+    source_id           VARCHAR(20),
+    title               VARCHAR(256) NOT NULL,
+    content             TEXT,
+    target_role         VARCHAR(64),
+    target_user_ids     VARCHAR(1024),
+    push_channels       VARCHAR(64)  NOT NULL DEFAULT 'INAPP',
+    -- [P3-1-merge] cronjob 告警专用字段（source_type='CRONJOB' 时使用）
+    rule_id             VARCHAR(20),
+    trigger_log_id      VARCHAR(20),
+    trigger_value       VARCHAR(128),
+    threshold           BIGINT,
+    dispatched_at       TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    dispatched_by       VARCHAR(64),
+    status              VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
+    sent_at             TIMESTAMPTZ,
+    fail_reason         VARCHAR(512),
+    retry_count         INT          NOT NULL DEFAULT 0,
+    tenant_id           VARCHAR(20)       NOT NULL DEFAULT '1',
+    provider_trace_id   VARCHAR(64),
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    -- 枚举约束（P3-1-merge: 扩展支持 cronjob 告警类型和级别）
+    CONSTRAINT ck_pad_alert_type       CHECK (alert_type  IN ('BUDGET','EVM','SLA','RISK','PROFIT','BENCH','UTILIZATION','OTHER','FAIL','TIMEOUT','SLOW','FAIL_RATE','DURATION_P95')),
+    CONSTRAINT ck_pad_alert_level      CHECK (alert_level IN ('YELLOW','RED','INFO','WARN','ERROR','CRITICAL')),
+    CONSTRAINT ck_pad_source_type      CHECK (source_type IN ('PROJECT','EVM','TICKET','BENCH','CONFIG','OTHER','CRONJOB')),
+    CONSTRAINT ck_pad_push_channels    CHECK (push_channels ~ '^(INAPP|EMAIL|SMS|WECHAT|DINGTALK|WECOM|WEBHOOK)(,(INAPP|EMAIL|SMS|WECHAT|DINGTALK|WECOM|WEBHOOK))*$'),
+    CONSTRAINT ck_pad_status_enum      CHECK (status IN ('PENDING','SENT','FAILED','RETRYING','SUCCESS','PARTIAL','SUCCESS_RECOVERY','PARTIAL_RECOVERY','FAILED_RECOVERY')),
+    CONSTRAINT ck_pad_retry_count      CHECK (retry_count >= 0 AND retry_count <= 10),
+    CONSTRAINT ck_pad_deleted          CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  pmis_alert_dispatch IS '预警分级推送表: 黄/红不同层级触达,失败自动重试（最大 3 次,硬上限 10 次）';
+
+COMMENT ON COLUMN pmis_alert_dispatch.alert_code IS '预警编码: 业务唯一,如 ALERT-2026-001';
+
+COMMENT ON COLUMN pmis_alert_dispatch.alert_type IS '预警类型: BUDGET 预算 / EVM 挣值 / SLA 工单 / RISK 风险 / PROFIT 利润 / BENCH 闲置 / UTILIZATION 利用率 / OTHER 其他';
+
+COMMENT ON COLUMN pmis_alert_dispatch.alert_level IS '预警等级: YELLOW 黄色 / RED 红色';
+
+COMMENT ON COLUMN pmis_alert_dispatch.source_type IS '触发源类型: PROJECT/EVM/TICKET/BENCH/CONFIG/OTHER';
+
+COMMENT ON COLUMN pmis_alert_dispatch.source_id IS '触发源业务 ID';
+
+COMMENT ON COLUMN pmis_alert_dispatch.title IS '预警标题';
+
+COMMENT ON COLUMN pmis_alert_dispatch.content IS '预警内容（已渲染的模板）';
+
+COMMENT ON COLUMN pmis_alert_dispatch.target_role IS '目标角色: PM/PMO/CFO 等';
+
+COMMENT ON COLUMN pmis_alert_dispatch.target_user_ids IS '目标用户 ID 列表: 逗号分隔,精确触达';
+
+COMMENT ON COLUMN pmis_alert_dispatch.push_channels IS '推送渠道: INAPP 站内信 / EMAIL 邮件 / SMS 短信 / WECHAT 微信,逗号分隔';
+
+COMMENT ON COLUMN pmis_alert_dispatch.dispatched_at IS '派发时间';
+
+COMMENT ON COLUMN pmis_alert_dispatch.dispatched_by IS '派发人: 定时任务 / 系统 / 用户';
+
+COMMENT ON COLUMN pmis_alert_dispatch.status IS '发送状态: PENDING 待发送 / SENT 已发送 / FAILED 失败 / RETRYING 重试中';
+
+COMMENT ON COLUMN pmis_alert_dispatch.sent_at IS '发送成功时间';
+
+COMMENT ON COLUMN pmis_alert_dispatch.fail_reason IS '失败原因';
+
+COMMENT ON COLUMN pmis_alert_dispatch.retry_count IS '重试次数: 业务最大 3 次,硬上限 10 次';
+
+COMMENT ON COLUMN pmis_alert_dispatch.tenant_id IS '租户 ID';
+
+COMMENT ON COLUMN pmis_alert_dispatch.provider_trace_id IS '链路追踪 ID';
+
+COMMENT ON COLUMN pmis_alert_dispatch.deleted IS '逻辑删除: 0=未删除,1=已删除';
+
+-- 复合/部分索引(替代零散的单列索引)
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_level_status
+    ON pmis_alert_dispatch(tenant_id, alert_level, status)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_type_dispatched
+    ON pmis_alert_dispatch(tenant_id, alert_type, dispatched_at DESC)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_source
+    ON pmis_alert_dispatch(tenant_id, source_type, source_id)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_target
+    ON pmis_alert_dispatch(tenant_id, target_role)
+    WHERE deleted = 0;
+
+-- 分散索引（从 V1.0.0_cronjob.sql 迁入）
+CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_recipient
+    ON pmis_alert_dispatch (target_role, sent_at DESC)
+    WHERE status IN ('PENDING', 'FAILED');
+
+CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
+    ON pmis_alert_dispatch (retry_count, sent_at DESC)
+    WHERE status = 'FAILED' AND retry_count < 3;
+
+ANALYZE pmis_alert_dispatch;
+
+CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_trace
+    ON pmis_alert_dispatch (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
