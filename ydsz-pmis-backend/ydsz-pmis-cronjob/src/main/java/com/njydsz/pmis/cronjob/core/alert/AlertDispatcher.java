@@ -3,6 +3,7 @@ package com.njydsz.pmis.cronjob.core.alert;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.alert.UnifiedAlertEvent;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.MessageServiceClient;
@@ -14,6 +15,7 @@ import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -60,6 +62,8 @@ public class AlertDispatcher {
     private final MessageServiceClient messageServiceClient;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
+    /** P0-2: Spring 事件发布器（统一告警事件总线） */
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -144,6 +148,29 @@ public class AlertDispatcher {
 
         log.info("[AlertDispatcher] 告警派发完成: ruleId={} ruleName={} channels={} failed={} status={} recovery={}",
                 rule.getId(), rule.getRuleName(), channels.size(), failedChannels.size(), status, recovery);
+
+        // P0-2: 发布统一告警事件到事件总线（由 UnifiedAlertDispatcher 消费，实现实时广播等统一后处理）
+        try {
+            UnifiedAlertEvent alertEvent = UnifiedAlertEvent.builder()
+                    .alertCode("CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId())
+                    .alertType(rule.getAlertType())
+                    .alertLevel(rule.getAlertLevel())
+                    .sourceModule("cronjob")
+                    .sourceId(context.jobId())
+                    .sourceRef(context.jobKey())
+                    .title(buildTitle(context, rule))
+                    .content(buildContent(context, rule))
+                    .pushChannels(convertChannelsToCsv(rule.getChannels()))
+                    .triggeredAt(java.time.LocalDateTime.now())
+                    .tenantId(context.tenantId())
+                    .traceId(context.traceId())
+                    .recovery(recovery)
+                    .build();
+            eventPublisher.publishEvent(alertEvent);
+        } catch (Exception e) {
+            log.debug("[AlertDispatcher] 统一告警事件发布失败(不影响主流程): ruleId={} err={}",
+                    rule.getId(), e.getMessage());
+        }
     }
 
     /**
