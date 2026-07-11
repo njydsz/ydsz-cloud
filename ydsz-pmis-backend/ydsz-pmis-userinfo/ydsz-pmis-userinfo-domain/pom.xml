@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.njydsz.pmis</groupId>
+        <artifactId>ydsz-pmis-userinfo</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>ydsz-pmis-userinfo-domain</artifactId>
+    <name>ydsz-pmis-userinfo-domain</name>
+    <description>棰嗗煙灞傦細瀹炰綋/鍊煎璞?鑱氬悎/浜嬩欢</description>
+    <dependencies>
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common</artifactId></dependency>
+    </dependencies>
+</project>

@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.config;
+﻿package com.njydsz.pmis.common.config;
 
-import com.njydsz.pmis.common.feign.ConfigClient;
+import com.njydsz.pmis.system.api.client.ConfigClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

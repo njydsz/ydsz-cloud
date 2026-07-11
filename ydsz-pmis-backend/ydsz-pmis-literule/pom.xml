@@ -1,167 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+﻿﻿<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>com.njydsz.pmis</groupId>
         <artifactId>ydsz-pmis-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
-
     <artifactId>ydsz-pmis-literule</artifactId>
+    <packaging>pom</packaging>
     <name>ydsz-pmis-literule</name>
-    <description>轻量规则引擎：表达式驱动、动态配置、热加载、版本管理、dry-run 仿真</description>
-
-    <properties>
-        <aviator.version>5.4.3</aviator.version>
-        <groovy.version>4.0.22</groovy.version>
+    <description>LiteRule Engine: Expression/DynamicConfig/HotReload/Version (DDD 5-Layer, Library)</description>
+        <properties>
         <jmh.version>1.37</jmh.version>
-        <nashorn.version>15.4</nashorn.version>
-        <qlexpress.version>3.3.1</qlexpress.version>
-        <redisson.version>4.6.1</redisson.version>
     </properties>
-
-    <dependencies>
-        <!-- 公共模块（Result/BizException 等基础类型） -->
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common</artifactId>
-        </dependency>
-
-        <!-- Aviator 高性能表达式引擎 -->
-        <dependency>
-            <groupId>com.googlecode.aviator</groupId>
-            <artifactId>aviator</artifactId>
-            <version>${aviator.version}</version>
-        </dependency>
-
-        <!-- Groovy 脚本引擎（脚本规则支持，JSR-223） -->
-        <dependency>
-            <groupId>org.apache.groovy</groupId>
-            <artifactId>groovy-jsr223</artifactId>
-            <version>${groovy.version}</version>
-        </dependency>
-
-        <!-- Nashorn JavaScript 引擎（脚本规则多语言支持，1.5.0 起；JSR-223） -->
-        <dependency>
-            <groupId>org.openjdk.nashorn</groupId>
-            <artifactId>nashorn-core</artifactId>
-            <version>${nashorn.version}</version>
-        </dependency>
-
-        <!-- QLExpress 阿里表达式引擎（P0-3：与 Aviator 双引擎可切换） -->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>QLExpress</artifactId>
-            <version>${qlexpress.version}</version>
-        </dependency>
-
-        <!-- Spring Context（自动配置 + 事件驱动热加载） -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Micrometer Prometheus（监控指标，可选；1.4.0 起） -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Redisson（分布式广播与节点注册，可选；1.5.0 起） -->
-        <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson-spring-boot-starter</artifactId>
-            <version>${redisson.version}</version>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Caffeine（L1 本地缓存，P1-1 多级缓存；版本由 spring-boot-dependencies 管理） -->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-        </dependency>
-
-        <!-- MyBatis-Plus（规则配置持久化，可选，由消费方提供 Mapper 实现） -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Hutool（工具类） -->
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-        </dependency>
-
-        <!-- Fastjson2（JSON 序列化） -->
-        <dependency>
-            <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2</artifactId>
-        </dependency>
-
-        <!-- SnakeYAML（声明式 DSL 解析，1.5.0 起；版本由 spring-boot-dependencies 管理） -->
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-        </dependency>
-
-        <!-- Apache POI（Excel 决策表导入导出，P0-3） -->
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- JMH 性能基准（1.5.1 起；test-scope，仅 RuleEngineBenchmark 使用） -->
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-core</artifactId>
-            <version>${jmh.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-generator-annprocess</artifactId>
-            <version>${jmh.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- 单元测试（P2-9 / P2-10 回归；版本由 spring-boot-starter-test 统一管理） -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-launcher</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <modules>
+        <module>ydsz-pmis-literule-api</module>
+        <module>ydsz-pmis-literule-domain</module>
+        <module>ydsz-pmis-literule-infra</module>
+        <module>ydsz-pmis-literule-server</module>
+        <module>ydsz-pmis-literule-web</module>
+    </modules>
 </project>

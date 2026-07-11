@@ -1,111 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>com.njydsz.pmis</groupId>
         <artifactId>ydsz-pmis-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
-
     <artifactId>ydsz-pmis-workflow</artifactId>
+    <packaging>pom</packaging>
     <name>ydsz-pmis-workflow</name>
-    <description>工作流服务：基于自研 pmis_flow_* 引擎（兼容 BPMN 2.0 标准）</description>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common</artifactId>
-        </dependency>
-
-        <!-- 服务发现与配置 -->
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-bootstrap</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-
-        <!-- Web/DB/Cache -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-jsqlparser</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-3-starter</artifactId>
-        </dependency>
-        <!-- P1: 流程定义元数据本地缓存（Caffeine，版本由 Spring Boot 父 pom 管理） -->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-        </dependency>
-
-        <!-- 文档 -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba.fastjson2</groupId>
-            <artifactId>fastjson2</artifactId>
-        </dependency>
-
-        <!-- 自研规则引擎：智能路由与异常检测（可选依赖，不可用时回退到 DefaultFlowVariableStrategy） -->
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-literule</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!--
-            P0-2 重构后已解除 workflow → project 编译期硬依赖：
-            原先依赖 project 仅为了引入 DecisionTableEvalService，现已替换为 literule.spi.DecisionTableEvalProvider。
-            若部署形态需要 workflow 与 project 同 JVM 运行（单体模式），由部署层（如启动包 / 装配模块）显式引入 project，
-            不再由 workflow 模块自身在 pom.xml 中传递依赖 project。
-        -->
-    </dependencies>
-
-    <build>
-        <finalName>${project.artifactId}</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <!-- 显式启用 lombok 注解处理（继承父 pom pluginManagement 模板） -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+    <description>Workflow Engine: Definition/Instance/Approval/DMN/Delegate (DDD 5-Layer)</description>
+    <modules>
+        <module>ydsz-pmis-workflow-api</module>
+        <module>ydsz-pmis-workflow-domain</module>
+        <module>ydsz-pmis-workflow-infra</module>
+        <module>ydsz-pmis-workflow-server</module>
+        <module>ydsz-pmis-workflow-web</module>
+    </modules>
 </project>

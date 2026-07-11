@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.featureflag;
+﻿package com.njydsz.pmis.common.featureflag;
 
-import com.njydsz.pmis.common.feign.ConfigClient;
+import com.njydsz.pmis.system.api.client.ConfigClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;

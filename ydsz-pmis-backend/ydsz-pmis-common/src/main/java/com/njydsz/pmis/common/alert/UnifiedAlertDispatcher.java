@@ -1,11 +1,11 @@
-package com.njydsz.pmis.common.alert;
+﻿package com.njydsz.pmis.common.alert;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.feign.MessageServiceClient;
-import com.njydsz.pmis.common.feign.NotificationClient;
-import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
+import com.njydsz.pmis.message.api.dto.MessageRequest;
+import com.njydsz.pmis.message.api.dto.MessageResult;
+import com.njydsz.pmis.message.api.client.MessageServiceClient;
+import com.njydsz.pmis.message.api.client.NotificationClient;
+import com.njydsz.pmis.message.api.dto.RealtimePushDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Feign 客户端统一管理层（P2-1 架构优化）。
  *
  * <p>所有微服务间 Feign 调用统一在此包定义，避免各模块各自创建 Feign 客户端导致重复。
@@ -8,47 +8,47 @@
  * <table border="1">
  * <caption>Feign 客户端注册表</caption>
  * <tr><th>客户端</th><th>目标服务</th><th>功能</th><th>降级</th></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.MessageServiceClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.message.api.client.MessageServiceClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#MESSAGE}</td>
  *     <td>消息发送（多通道路由）</td>
  *     <td>MessageServiceClientFallback</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.NotificationClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.message.api.client.NotificationClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#MESSAGE}</td>
  *     <td>通知发送 + 实时推送 + 广播</td>
  *     <td>NotificationClientFallback</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.UserServiceClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.userinfo.api.client.UserServiceClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#USER_CENTER}</td>
  *     <td>用户信息查询</td>
  *     <td>—</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.OrgQueryClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.userinfo.api.client.OrgQueryClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#PROJECT}</td>
  *     <td>组织架构查询</td>
  *     <td>—</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.ExecutionClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.project.api.client.ExecutionClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#PROJECT}</td>
  *     <td>执行项查询</td>
  *     <td>—</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.ConfigClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.system.api.client.ConfigClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#CONFIG_CENTER}</td>
  *     <td>配置中心查询</td>
  *     <td>—</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.AgentClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.agent.api.client.AgentClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#AGENT}</td>
  *     <td>Agent 调用（编排/工具）</td>
  *     <td>—</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.InitiationFeignClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.project.api.client.InitiationFeignClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#PROJECT}</td>
  *     <td>立项信息查询</td>
  *     <td>—</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.WorkflowServiceClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.workflow.api.client.WorkflowServiceClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#WORKFLOW}</td>
  *     <td>工作流服务（启动/查询/终止流程）</td>
  *     <td>WorkflowServiceClientFallback</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.BenchResourceClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.userinfo.api.client.BenchResourceClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#USERINFO}</td>
  *     <td>Bench 资源仪表盘 + 资源分配查询</td>
  *     <td>BenchResourceClientFallback</td></tr>
- * <tr><td>{@link com.njydsz.pmis.common.feign.ProjectServiceClient}</td>
+ * <tr><td>{@link com.njydsz.pmis.project.api.client.ProjectServiceClient}</td>
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#PROJECT}</td>
  *     <td>项目执行数据（工时异常/风险/EVM）</td>
  *     <td>ProjectServiceClientFallback</td></tr>
