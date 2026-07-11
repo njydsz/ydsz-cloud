@@ -29,9 +29,6 @@
         <module>ydsz-pmis-cronjob</module>
         <module>ydsz-pmis-workflow</module>
         <module>ydsz-pmis-agent</module>
-        <module>ydsz-pmis-sales</module>
-        <module>ydsz-pmis-execution</module>
-        <module>ydsz-pmis-finance</module>
     </modules>
 
     <properties>
@@ -138,21 +135,6 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-message</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-sales</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-execution</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-finance</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -439,9 +421,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- P0-1: failIfNoTests=false 避免无测试的模块阻断构建，
-                         JaCoCo 覆盖率门禁（jacoco-check）会拦截覆盖率不达标的情况。
-                         门禁策略分阶段提升：当前 LINE>=30%（初始阈值），逐步提升至 80%。 -->
+                    <!-- P0-1: 保留 failIfNoTests=false 避免无测试的模块阻断构建，
+                         但 JaCoCo 覆盖率门禁（jacoco-check）会拦截覆盖率不达标的情况 -->
                     <failIfNoTests>false</failIfNoTests>
                     <!-- Windows 下 classpath 含不同盘符根路径时禁用 URL 校验,避免 fork JVM 启动失败 -->
                     <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
@@ -528,10 +509,9 @@
                     <!--
                         覆盖率门禁检查（分阶段提升计划）
                         ==============================================================
-                        阶段 1（当前, 2026-07）: LINE>=30%, BRANCH>=25%  — 初始阈值，不阻断现有构建
-                        阶段 2（2026-08）:      LINE>=50%, BRANCH>=40%  — 逐步提升
-                        阶段 3（2026-09）:      LINE>=70%, BRANCH>=60%  — 接近大厂标准
-                        阶段 4（2026-10）:      LINE>=80%, BRANCH>=70%  — 对齐大厂标准
+                        阶段 1（当前, 2026-07）: LINE>=80%, BRANCH>=70%  — 立即收口
+                        阶段 2（2026-08）:      LINE>=90%, BRANCH>=85%  — 接近大厂标准
+                        阶段 3（2026-09）:      LINE>=95%, BRANCH>=90%  — 对齐项目规范 100% 覆盖目标
                         ==============================================================
                         规则设计:
                           1. BUNDLE 级别: 整体行/分支覆盖率, 拦截整体退化
@@ -554,12 +534,12 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.30</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.25</minimum>
+                                            <minimum>0.70</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -570,12 +550,12 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.25</minimum>
+                                            <minimum>0.75</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.20</minimum>
+                                            <minimum>0.65</minimum>
                                         </limit>
                                     </limits>
                                     <excludes>
@@ -584,14 +564,14 @@
                                         <exclude>com.njydsz.pmis.*.migration</exclude>
                                     </excludes>
                                 </rule>
-                                <!-- 规则 3: METHOD 级别, 单方法行覆盖≥20%, 拦截完全未测试的核心方法 -->
+                                <!-- 规则 3: METHOD 级别, 单方法行覆盖≥50%, 拦截完全未测试的核心方法 -->
                                 <rule>
                                     <element>METHOD</element>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.20</minimum>
+                                            <minimum>0.50</minimum>
                                         </limit>
                                     </limits>
                                     <excludes>

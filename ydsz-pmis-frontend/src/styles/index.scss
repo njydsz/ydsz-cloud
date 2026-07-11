@@ -148,34 +148,3 @@
 #nprogress .spinner {
   display: none !important;
 }
-
-// ===== a11y: Skip to main content 跳过链接 =====
-// 视觉隐藏，仅在键盘 Tab 聚焦时显现，便于使用键盘/读屏器的用户跳过导航直达主内容
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: var(--el-color-primary);
-  color: white;
-  padding: 8px 16px;
-  z-index: 9999;
-  border-radius: 0 0 4px 0;
-  text-decoration: none;
-  transition: top 0.2s;
-  &:focus {
-    top: 0;
-  }
-}
-
-// ===== a11y: prefers-reduced-motion 适配 =====
-// 尊重用户系统偏好设置，减少动画与过渡，避免前庭功能障碍/癫痫用户不适
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}

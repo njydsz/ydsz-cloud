@@ -21,7 +21,6 @@
  */
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useI18n } from 'vue-i18n'
 import { CopyDocument, VideoPlay, Refresh, Search, Files, MagicStick, Upload } from '@element-plus/icons-vue'
 import FlowDesigner from '../components/FlowDesigner.vue'
 import BpmnDesigner from '../components/BpmnDesigner.vue'
@@ -46,13 +45,11 @@ import type {
 } from '@/api/workflow/types'
 import { useFormGuard } from '@/composables/useFormGuard'
 
-const { t } = useI18n()
-
 // ==================== 设计器模式 ====================
 const designerMode = ref<'bpmn' | 'classic'>('bpmn')
 
 // ==================== 表单防误关闭守卫 ====================
-const { setDirty } = useFormGuard({ message: t('workflow.design.messages.formGuardLeave') })
+const { setDirty } = useFormGuard({ message: '流程设计器内容未保存，确定离开？' })
 
 // ==================== 流程定义选择 ====================
 const definitionList = ref<FlowDefinitionDTO[]>([])
@@ -75,7 +72,7 @@ async function loadDefinitions() {
       selectedDefinition.value = definitionList.value[0]
     }
   } catch {
-    ElMessage.error(t('workflow.design.messages.loadDefinitionFailed'))
+    ElMessage.error('加载流程定义列表失败')
   } finally {
     definitionLoading.value = false
   }
@@ -92,7 +89,7 @@ const versionList = ref<FlowVersionDTO[]>([])
 
 async function openVersionDrawer() {
   if (!selectedDefinitionId.value) {
-    ElMessage.warning(t('workflow.design.messages.selectDefinitionFirst'))
+    ElMessage.warning('请先选择流程定义')
     return
   }
   versionDrawer.value = true
@@ -106,7 +103,7 @@ async function loadVersions() {
     const res = await listVersions(selectedDefinitionId.value)
     versionList.value = res.data?.data ?? []
   } catch {
-    ElMessage.error(t('workflow.design.messages.loadVersionFailed'))
+    ElMessage.error('加载版本列表失败')
   } finally {
     versionLoading.value = false
   }
@@ -115,15 +112,15 @@ async function loadVersions() {
 async function handleSwitchVersion(row: FlowVersionDTO) {
   try {
     await ElMessageBox.confirm(
-      t('workflow.design.messages.switchVersionConfirm', { version: row.version }),
-      t('workflow.design.messages.switchVersionTitle'),
+      `确认将版本 ${row.version} 设为激活版本？`,
+      '切换激活版本',
       { type: 'warning' },
     )
     await switchVersion(row.flowCode, row.version)
-    ElMessage.success(t('workflow.design.messages.switchVersionSuccess'))
+    ElMessage.success('版本切换成功')
     await loadVersions()
   } catch (e) {
-    if (e !== 'cancel') ElMessage.error(t('workflow.design.messages.switchVersionFailed'))
+    if (e !== 'cancel') ElMessage.error('版本切换失败')
   }
 }
 
@@ -136,7 +133,7 @@ const diffV2 = ref<number | undefined>(undefined)
 
 async function openDiffDialog() {
   if (versionList.value.length < 2) {
-    ElMessage.warning(t('workflow.design.messages.diffNeedTwoVersions'))
+    ElMessage.warning('至少需要 2 个版本才能对比')
     return
   }
   diffV1.value = versionList.value[0].version
@@ -148,7 +145,7 @@ async function openDiffDialog() {
 async function doDiff() {
   if (!selectedDefinitionId.value || !diffV1.value || !diffV2.value) return
   if (diffV1.value === diffV2.value) {
-    ElMessage.warning(t('workflow.design.messages.diffSelectDifferent'))
+    ElMessage.warning('请选择不同的版本进行对比')
     return
   }
   diffLoading.value = true
@@ -160,7 +157,7 @@ async function doDiff() {
     )
     diffData.value = res.data?.data ?? null
   } catch {
-    ElMessage.error(t('workflow.design.messages.diffFailed'))
+    ElMessage.error('差异对比失败')
   } finally {
     diffLoading.value = false
   }
@@ -177,7 +174,7 @@ const simulateResult = ref<SimulateResultDTO | null>(null)
 
 function openSimulateDialog() {
   if (!selectedDefinition.value) {
-    ElMessage.warning(t('workflow.design.messages.selectDefinitionFirst'))
+    ElMessage.warning('请先选择流程定义')
     return
   }
   simulateForm.flowCode = selectedDefinition.value.flowCode
@@ -188,14 +185,14 @@ function openSimulateDialog() {
 
 async function doSimulate() {
   if (!simulateForm.flowCode) {
-    ElMessage.warning(t('workflow.design.messages.fillFlowCode'))
+    ElMessage.warning('请填写流程编码')
     return
   }
   let variables: Record<string, unknown>
   try {
     variables = JSON.parse(simulateForm.variablesJson || '{}')
   } catch {
-    ElMessage.error(t('workflow.design.messages.invalidJson'))
+    ElMessage.error('变量 JSON 格式错误')
     return
   }
   simulating.value = true
@@ -204,7 +201,7 @@ async function doSimulate() {
     const res = await simulateFlow(simulateForm.flowCode, variables)
     simulateResult.value = res.data?.data ?? null
   } catch (e) {
-    ElMessage.error(t('workflow.design.messages.simulateFailed', { reason: (e as Error)?.message ?? t('workflow.design.messages.unknownError') }))
+    ElMessage.error('模拟运行失败：' + ((e as Error)?.message ?? '未知错误'))
   } finally {
     simulating.value = false
   }
@@ -252,7 +249,7 @@ async function loadTemplates() {
     const res = await listFlowTemplates(templateCategory.value || undefined)
     templateList.value = res.data?.data ?? []
   } catch {
-    ElMessage.error(t('workflow.design.messages.loadTemplateFailed'))
+    ElMessage.error('加载模板列表失败')
   } finally {
     templateLoading.value = false
   }
@@ -261,16 +258,16 @@ async function loadTemplates() {
 async function handleImportTemplate(tpl: FlowTemplateDTO) {
   try {
     await ElMessageBox.confirm(
-      t('workflow.design.template.importConfirm', { name: tpl.templateName }),
-      t('workflow.design.messages.importTemplateTitle'),
+      `确认从模板「${tpl.templateName}」创建新流程定义？`,
+      '导入模板',
       { type: 'info' },
     )
     const res = await importFlowTemplate(tpl.templateCode)
-    ElMessage.success(t('workflow.design.messages.importTemplateSuccess', { id: res.data?.data }))
+    ElMessage.success(`模板导入成功，新定义 ID: ${res.data?.data}`)
     templateDialog.value = false
     await loadDefinitions()
   } catch (e) {
-    if (e !== 'cancel') ElMessage.error(t('workflow.design.messages.importTemplateFailed'))
+    if (e !== 'cancel') ElMessage.error('模板导入失败')
   }
 }
 
@@ -283,7 +280,7 @@ const exportForm = reactive({
 
 function openExportDialog() {
   if (!selectedDefinitionId.value) {
-    ElMessage.warning(t('workflow.design.messages.selectDefinitionFirst'))
+    ElMessage.warning('请先选择流程定义')
     return
   }
   exportForm.templateName = selectedDefinition.value?.flowName || ''
@@ -293,7 +290,7 @@ function openExportDialog() {
 
 async function doExport() {
   if (!exportForm.templateName.trim()) {
-    ElMessage.warning(t('workflow.design.messages.inputTemplateName'))
+    ElMessage.warning('请输入模板名称')
     return
   }
   try {
@@ -302,10 +299,10 @@ async function doExport() {
       exportForm.templateName.trim(),
       exportForm.category,
     )
-    ElMessage.success(t('workflow.design.messages.exportSuccess'))
+    ElMessage.success('导出模板成功')
     exportDialog.value = false
   } catch {
-    ElMessage.error(t('workflow.design.messages.exportFailed'))
+    ElMessage.error('导出失败')
   }
 }
 
@@ -314,7 +311,7 @@ const zipUploading = ref(false)
 
 function handleZipBeforeUpload(file: File): boolean {
   if (!file.name.toLowerCase().endsWith('.zip')) {
-    ElMessage.warning(t('workflow.design.messages.zipOnly'))
+    ElMessage.warning('仅支持 .zip 文件')
     return false
   }
   return true
@@ -327,21 +324,21 @@ async function handleZipUpload(options: { file: File }) {
     if (res.data?.code === 0) {
       const { successCount, failedItems } = res.data.data || { successCount: 0, failedItems: [] }
       if (failedItems.length === 0) {
-        ElMessage.success(t('workflow.design.messages.batchImportSuccess', { count: successCount }))
+        ElMessage.success(`批量导入成功，共部署 ${successCount} 个流程定义`)
       } else {
         const detail = failedItems.map((f) => `${f.fileName}: ${f.reason}`).join('\n')
         ElMessageBox.alert(
-          t('workflow.design.messages.batchImportResult', { success: successCount, failed: failedItems.length, detail }),
-          t('workflow.design.messages.batchImportResultTitle'),
+          `成功 ${successCount} 个，失败 ${failedItems.length} 个：\n${detail}`,
+          '批量导入结果',
           { type: successCount > 0 ? 'warning' : 'error' },
         )
       }
       loadDefinitions()
     } else {
-      ElMessage.error(res.data?.message || t('workflow.design.messages.batchImportFailed'))
+      ElMessage.error(res.data?.message || '批量导入失败')
     }
   } catch (e: any) {
-    ElMessage.error(e?.message || t('workflow.design.messages.batchImportFailed'))
+    ElMessage.error(e?.message || '批量导入失败')
   } finally {
     zipUploading.value = false
   }
@@ -380,22 +377,22 @@ function openAiGenerateDialog() {
 
 async function doAiGenerate() {
   if (!aiDescription.value.trim()) {
-    ElMessage.warning(t('workflow.design.messages.inputDescription'))
+    ElMessage.warning('请输入流程描述')
     return
   }
   aiGenerating.value = true
   try {
     const res = await generateBpmn(aiDescription.value.trim())
     if (res.data?.code === 0 && res.data.data?.bpmnXml) {
-      ElMessage.success(t('workflow.design.messages.aiGenerateSuccess'))
+      ElMessage.success('流程生成成功，已加载到设计器')
       aiGenerateDialog.value = false
       // 将生成的 BPMN XML 加载到 BPMN 设计器（通过 ref 调用）
       ;(bpmnDesignerRef.value as unknown as { importXml: (xml: string) => void } | null)?.importXml(res.data.data.bpmnXml)
     } else {
-      ElMessage.error(res.data?.message || t('workflow.design.messages.aiGenerateFailed'))
+      ElMessage.error(res.data?.message || '生成失败')
     }
   } catch (e) {
-    ElMessage.error(t('workflow.design.messages.aiGenerateError', { reason: (e as Error)?.message ?? t('workflow.design.messages.unknownError') }))
+    ElMessage.error('AI 生成失败：' + ((e as Error)?.message ?? '未知错误'))
   } finally {
     aiGenerating.value = false
   }

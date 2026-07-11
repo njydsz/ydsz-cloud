@@ -21,14 +21,6 @@ spec:
         - name: workflow
           image: ydsz-pmis/workflow:IMAGE_TAG
           imagePullPolicy: IfNotPresent
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 65532
-            readOnlyRootFilesystem: true
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
           ports:
             - name: http
               containerPort: 9006
@@ -55,13 +47,6 @@ spec:
             limits:
               cpu: 1000m
               memory: 1Gi
-          startupProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: 9006
-            failureThreshold: 30
-            periodSeconds: 10
-            timeoutSeconds: 3
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
@@ -75,12 +60,6 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 20
             failureThreshold: 5
-          volumeMounts:
-            - name: tmp-volume
-              mountPath: /tmp
-      volumes:
-        - name: tmp-volume
-          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

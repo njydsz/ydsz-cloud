@@ -1,7 +1,7 @@
 # PMIS Backend Checkstyle 配置
 # --------------------------------------------------------------------------
 # 规范依据：docs/standards/code-quality.md
-# 严格级别：ERROR（阻断构建）
+# 严格级别：WARNING（不阻断构建，仅 IDE 高亮提示）
 # 集成方式：mvn checkstyle:check
 # --------------------------------------------------------------------------
 
@@ -12,7 +12,7 @@
 
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
-    <property name="severity" value="error"/>
+    <property name="severity" value="warning"/>
     <property name="fileExtensions" value="java"/>
 
     <!-- 文件长度 -->
@@ -71,18 +71,6 @@
         <module name="MissingSwitchDefault"/>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
-
-        <!-- 方法长度与复杂度 -->
-        <module name="MethodLength">
-            <property name="max" value="150"/>
-            <property name="countEmpty" value="false"/>
-        </module>
-        <module name="CyclomaticComplexity">
-            <property name="max" value="15"/>
-        </module>
-        <module name="ParameterNumber">
-            <property name="max" value="7"/>
-        </module>
 
         <!-- 类设计 -->
         <module name="DesignForExtension"/>

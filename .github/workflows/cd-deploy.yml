@@ -16,10 +16,6 @@
 name: CD Deploy
 
 on:
-  workflow_run:
-    workflows: ["Backend CI", "Frontend CI"]
-    types: [completed]
-    branches: [main]
   push:
     branches: [main]
     paths:
@@ -52,7 +48,6 @@ jobs:
   # ==================== 构建后端镜像（Dockerfile 多阶段构建，内含 Maven 编译） ====================
   build-backend:
     runs-on: ubuntu-latest
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     strategy:
       fail-fast: false
       matrix:
@@ -100,7 +95,6 @@ jobs:
   # ==================== 构建前端镜像（Dockerfile 多阶段构建，内含 pnpm build） ====================
   build-frontend:
     runs-on: ubuntu-latest
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
 

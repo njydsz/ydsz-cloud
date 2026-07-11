@@ -26,7 +26,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 >
 >- **当前版本**: `v1.3.0-SNAPSHOT` · **最近更新**: 2026-07-06
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?logo=springboot)]()
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.7-6DB33F?logo=springboot)]()
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.2-6DB33F?logo=spring)]()
 [![SCA](https://img.shields.io/badge/Spring%20Cloud%20Alibaba-2025.1.0.0-FF6A00)]()
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk)]()
@@ -95,7 +95,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 
 | 维度 | 选型 |
 |---|---|
-| **后端框架** | Spring Boot 4.1.0 + Spring Cloud 2025.1.2 + Spring Cloud Alibaba 2025.1.0.0 |
+| **后端框架** | Spring Boot 4.0.7 + Spring Cloud 2025.1.2 + Spring Cloud Alibaba 2025.1.0.0 |
 | **后端治理** | Nacos 2.3.2（注册/配置）+ Sentinel 1.8.9（限流/熔断）+ Seata 2.5.0（AT 模式分布式事务）+ OpenFeign + RocketMQ 5.x + XXL-JOB 2.4+ |
 | **数据** | PostgreSQL 18 + MyBatis-Plus 3.5.16 + Redis 8 + MinIO + 5 张聚合 SQL 视图（零 Java JOIN） |
 | **可观测** | Sentry（异常，默认关闭需手动启用）+ Logback + TraceId（MDC）+ Actuator（健康检查） |
@@ -117,7 +117,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 | 前端设计器 | bpmn-js / form-create / CodeMirror | 17.x / 3.5 / 6.x | 流程设计 + 表单设计 + 表达式编辑 |
 | 前端状态 | Pinia / Vue Router / Vue i18n | 2.2 / 4.4 / 10.0 | 状态 + 路由 + 国际化 |
 | 前端测试 | vitest | 2.1 | 单元测试 |
-| 后端框架 | Spring Boot / Spring Cloud / SCA | 4.1.0 / 2025.1.2 / 2025.1.0.0 | 微服务 |
+| 后端框架 | Spring Boot / Spring Cloud / SCA | 4.0.7 / 2025.1.2 / 2025.1.0.0 | 微服务 |
 | 后端 ORM | MyBatis-Plus | 3.5.16 | 持久层 |
 | 后端治理 | Nacos / Sentinel / Seata / OpenFeign | 2.3.2 / 1.8.9 / 2.5.0 / 4.x | 注册/限流/事务/调用 |
 | 表达式 | Aviator（literule 模块） | 5.4.3 | 规则引擎表达式 |
@@ -172,9 +172,9 @@ literule  → common
 
 ### 5.2 本地启动
 
-**5 分钟快速启动**：参考 [deploy/README.md](deploy/README.md)
-**详细部署手册**：参考 [deploy/k8s/README.md](deploy/k8s/README.md)
-**7 大中间件部署**（PG/Redis/Nacos/MinIO/Seata/RocketMQ/XXL-Job）：参考 [deploy/README.md](deploy/README.md)
+**5 分钟快速启动**：参考 [docs/QUICKSTART.md](docs/QUICKSTART.md)
+**详细部署手册**：参考 [docs/DEPLOY.md](docs/DEPLOY.md)
+**7 大中间件部署**（PG/Redis/Nacos/MinIO/Seata/RocketMQ/XXL-Job）：参考 [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)
 （全文检索已统一改用 PostgreSQL tsvector，无需 ES）
 
 ```bash
@@ -414,8 +414,8 @@ ydsz-pmis/
 
 | 文档 | 链接 |
 |---|---|
-| 5 分钟快速启动 | [deploy/README.md](deploy/README.md) |
-| 详细部署手册 | [deploy/k8s/README.md](deploy/k8s/README.md) |
+| 5 分钟快速启动 | [docs/QUICKSTART.md](docs/QUICKSTART.md) |
+| 详细部署手册 | [docs/DEPLOY.md](docs/DEPLOY.md) |
 | 数据库初始化脚本 | [docs/V1.0.0.sql](docs/V1.0.0.sql) |
 
 > **说明**: 项目规范、运维手册、安全合规、API 文档等将在后续批次补齐。当前所有规范与决策记录请参考代码注释与项目记忆（`.trae-cn/memory/projects/`）。
