@@ -97,6 +97,22 @@ public final class PermissionCodes {
     public static final String CRONJOB_JOB_DELETE = "cronjob:job:delete";
     public static final String CRONJOB_JOB_TRIGGER = "cronjob:job:trigger";
     public static final String CRONJOB_JOB_RELOAD = "cronjob:job:reload";
+    /** P2-1: 任务查看/列表（细粒度 RBAC） */
+    public static final String CRONJOB_JOB_VIEW = "cronjob:job:view";
+    /** P2-1: 任务暂停/恢复操作 */
+    public static final String CRONJOB_JOB_PAUSE = "cronjob:job:pause";
+    /** P2-1: 执行日志查看 */
+    public static final String CRONJOB_LOG_VIEW = "cronjob:log:view";
+    /** P2-1: 执行器节点查看 */
+    public static final String CRONJOB_NODE_VIEW = "cronjob:node:view";
+    /** P2-1: 执行器节点管理（上线/下线/排空） */
+    public static final String CRONJOB_NODE_MANAGE = "cronjob:node:manage";
+    /** P2-1: GLUE 代码管理（保存/回滚） */
+    public static final String CRONJOB_GLUE_MANAGE = "cronjob:glue:manage";
+    /** P2-1: GLUE 代码在线测试 */
+    public static final String CRONJOB_GLUE_TEST = "cronjob:glue:test";
+    /** P2-1: GLUE 代码查看 */
+    public static final String CRONJOB_GLUE_VIEW = "cronjob:glue:view";
     /** 告警规则管理（P5 告警 + 监控） */
     public static final String CRONJOB_ALERT_CREATE = "cronjob:alert:create";
     public static final String CRONJOB_ALERT_UPDATE = "cronjob:alert:update";

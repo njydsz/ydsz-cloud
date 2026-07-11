@@ -49,6 +49,8 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     private static final String KEY_PREFIX = "flow:join:";
     /** 分支总数 key 后缀 */
     private static final String TOTAL_SUFFIX = ":total";
+    /** P0-3: N/M join 所需到达数 key 后缀 */
+    private static final String REQUIRED_SUFFIX = ":required";
     /** 默认 TTL：7 天 */
     private static final Duration TTL = Duration.ofDays(7);
     /** 默认 TTL 秒数（Lua 脚本用） */
@@ -89,6 +91,30 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
           + "redis.call('EXPIRE', KEYS[1], ARGV[1])\n"
           + "local total = tonumber(redis.call('GET', KEYS[2]))\n"
           + "if total and arrived >= total then\n"
+          + "  return 1\n"
+          + "end\n"
+          + "return 0", Long.class);
+
+    /**
+     * P0-3: N/M join 初始化脚本 —— 原子写入 total + required + arrived 并带 TTL。
+     * KEYS[1]=arrivedKey, KEYS[2]=totalKey, KEYS[3]=requiredKey,
+     * ARGV[1]=total, ARGV[2]=required, ARGV[3]=ttlSeconds
+     */
+    private static final RedisScript<Long> INIT_REQUIRED_SCRIPT = new DefaultRedisScript<>(
+            "redis.call('SET', KEYS[1], '0', 'EX', ARGV[3])\n"
+          + "redis.call('SET', KEYS[2], ARGV[1], 'EX', ARGV[3])\n"
+          + "redis.call('SET', KEYS[3], ARGV[2], 'EX', ARGV[3])\n"
+          + "return 1", Long.class);
+
+    /**
+     * P0-3: N/M join 到达脚本 —— INCR arrived + 比较 required + 补设 TTL。
+     * KEYS[1]=arrivedKey, KEYS[2]=requiredKey, ARGV[1]=ttlSeconds
+     */
+    private static final RedisScript<Long> ARRIVE_REQUIRED_SCRIPT = new DefaultRedisScript<>(
+            "local arrived = redis.call('INCR', KEYS[1])\n"
+          + "redis.call('EXPIRE', KEYS[1], ARGV[1])\n"
+          + "local required = tonumber(redis.call('GET', KEYS[2]))\n"
+          + "if required and arrived >= required then\n"
           + "  return 1\n"
           + "end\n"
           + "return 0", Long.class);
@@ -187,6 +213,94 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
 
     /**
+     * P0-3: 初始化 N/M join 令牌
+     */
+    @Override
+    public void initTokensWithRequired(String instanceId, String joinNodeCode,
+                                        int branchCount, int requiredCount) {
+        if (!isValidParam(instanceId, joinNodeCode)) {
+            return;
+        }
+        int total = Math.max(1, branchCount);
+        int required = Math.min(Math.max(1, requiredCount), total);
+        String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
+        String totalKey = buildTotalKey(instanceId, joinNodeCode);
+        String requiredKey = buildRequiredKey(instanceId, joinNodeCode);
+        try {
+            redisTemplate.execute(INIT_REQUIRED_SCRIPT,
+                    List.of(arrivedKey, totalKey, requiredKey),
+                    String.valueOf(total), String.valueOf(required),
+                    String.valueOf(TTL_SECONDS));
+            log.info("[FlowJoinToken] P0-3 初始化 N/M join 令牌 instanceId={} node={} total={} required={}",
+                    instanceId, joinNodeCode, total, required);
+        } catch (Exception e) {
+            log.warn("[FlowJoinToken] P0-3 初始化 N/M 令牌失败 instanceId={} node={} err={}",
+                    instanceId, joinNodeCode, e.getMessage());
+        }
+    }
+
+    /**
+     * P0-3: 标记分支到达并检查 N/M 聚合条件
+     */
+    @Override
+    public boolean arriveTokenWithRequired(String instanceId, String joinNodeCode) {
+        if (!isValidParam(instanceId, joinNodeCode)) {
+            return false;
+        }
+        String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
+        String requiredKey = buildRequiredKey(instanceId, joinNodeCode);
+        try {
+            // 先尝试 N/M 评估
+            Long result = redisTemplate.execute(ARRIVE_REQUIRED_SCRIPT,
+                    List.of(arrivedKey, requiredKey), String.valueOf(TTL_SECONDS));
+            if (result != null && result == 1L) {
+                log.debug("[FlowJoinToken] P0-3 N/M 聚合条件满足 instanceId={} node={}",
+                        instanceId, joinNodeCode);
+                return true;
+            }
+            // required key 不存在时回退到全部分支语义
+            Boolean hasRequired = redisTemplate.hasKey(requiredKey);
+            if (Boolean.FALSE.equals(hasRequired)) {
+                return arriveToken(instanceId, joinNodeCode);
+            }
+            return false;
+        } catch (Exception e) {
+            log.warn("[FlowJoinToken] P0-3 N/M 到达标记失败 instanceId={} node={} err={}",
+                    instanceId, joinNodeCode, e.getMessage());
+            return arriveToken(instanceId, joinNodeCode);
+        }
+    }
+
+    /**
+     * P0-3: 检查是否满足 N/M 聚合条件
+     */
+    @Override
+    public boolean requirementMet(String instanceId, String joinNodeCode) {
+        if (!isValidParam(instanceId, joinNodeCode)) {
+            return false;
+        }
+        try {
+            String requiredStr = redisTemplate.opsForValue().get(
+                    buildRequiredKey(instanceId, joinNodeCode));
+            if (requiredStr == null) {
+                // 未设置 required，回退到全部分支到达语义
+                return allArrived(instanceId, joinNodeCode);
+            }
+            int required = Integer.parseInt(requiredStr);
+            String arrivedStr = redisTemplate.opsForValue().get(
+                    buildArrivedKey(instanceId, joinNodeCode));
+            if (arrivedStr == null) {
+                return false;
+            }
+            return Long.parseLong(arrivedStr) >= required;
+        } catch (Exception e) {
+            log.warn("[FlowJoinToken] P0-3 检查 N/M 条件失败 instanceId={} node={} err={}",
+                    instanceId, joinNodeCode, e.getMessage());
+            return allArrived(instanceId, joinNodeCode);
+        }
+    }
+
+    /**
      * 清除 join 令牌：删除到达计数与分支总数 key
      *
      * @param instanceId   流程实例 ID
@@ -200,6 +314,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         try {
             redisTemplate.delete(buildArrivedKey(instanceId, joinNodeCode));
             redisTemplate.delete(buildTotalKey(instanceId, joinNodeCode));
+            redisTemplate.delete(buildRequiredKey(instanceId, joinNodeCode));
             log.info("[FlowJoinToken] 清除 join 令牌 instanceId={} node={}",
                     instanceId, joinNodeCode);
         } catch (Exception e) {
@@ -271,5 +386,10 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     /** 构建分支总数 key：flow:join:{instanceId}:{joinNodeCode}:total */
     private String buildTotalKey(String instanceId, String joinNodeCode) {
         return buildArrivedKey(instanceId, joinNodeCode) + TOTAL_SUFFIX;
+    }
+
+    /** P0-3: 构建 N/M join required key：flow:join:{instanceId}:{joinNodeCode}:required */
+    private String buildRequiredKey(String instanceId, String joinNodeCode) {
+        return buildArrivedKey(instanceId, joinNodeCode) + REQUIRED_SUFFIX;
     }
 }

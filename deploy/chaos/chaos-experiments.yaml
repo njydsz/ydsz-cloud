@@ -1,0 +1,155 @@
+# ============================================================
+# PMIS 混沌工程自动化流水线（P2-2）
+# ------------------------------------------------------------
+# 使用 Chaos Mesh 进行自动化混沌实验，验证系统韧性。
+# 定期在 Staging 环境执行，验证服务可用性和故障恢复能力。
+#
+# 前提条件：
+#   - 集群已安装 Chaos Mesh
+#   - 安装命令: kubectl apply -f https://mirrors.chaos-mesh.org/v2.7.0/chaos-mesh.yaml
+#   - chaos-mesh 命名空间已创建
+#
+# 使用方式：
+#   kubectl apply -f deploy/chaos/chaos-experiments.yaml
+#   kubectl describe networkchaos -n chaos-mesh
+#   kubectl describe podchaos -n chaos-mesh
+# ============================================================
+
+---
+# ============================================================
+# 实验一：网络延迟注入（验证超时与重试机制）
+# 对 userinfo 服务注入 200ms 网络延迟，持续 5 分钟
+# ============================================================
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: userinfo-network-delay
+  namespace: chaos-mesh
+  labels:
+    experiment: chaos-night
+    service: ydsz-pmis-userinfo
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - pmis
+    labelSelectors:
+      app: ydsz-pmis-userinfo
+  delay:
+    latency: "200ms"
+    correlation: "100"
+    jitter: "50ms"
+  duration: "5m"
+  scheduler:
+    cron: "@every 6h"
+
+---
+# ============================================================
+# 实验二：Pod 故障注入（验证自动恢复与健康检查）
+# 随机 kill userinfo 服务的一个 Pod，持续 10 分钟
+# ============================================================
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: userinfo-pod-kill
+  namespace: chaos-mesh
+  labels:
+    experiment: chaos-night
+    service: ydsz-pmis-userinfo
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - pmis
+    labelSelectors:
+      app: ydsz-pmis-userinfo
+  scheduler:
+    cron: "@every 30m"
+  duration: "10m"
+
+---
+# ============================================================
+# 实验三：网络分区（验证降级与熔断）
+# 将 workflow 服务与 project 服务之间的网络断开 3 分钟
+# ============================================================
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: workflow-project-partition
+  namespace: chaos-mesh
+  labels:
+    experiment: chaos-night
+spec:
+  action: partition
+  mode: all
+  selector:
+    namespaces:
+      - pmis
+    labelSelectors:
+      app: ydsz-pmis-workflow
+  direction: to
+  target:
+    selector:
+      namespaces:
+        - pmis
+      labelSelectors:
+        app: ydsz-pmis-project
+    mode: all
+  duration: "3m"
+  scheduler:
+    cron: "@every 12h"
+
+---
+# ============================================================
+# 实验四：CPU 压力测试（验证 HPA 弹性扩容）
+# 对 project 服务注入 CPU 压力，持续 5 分钟
+# ============================================================
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: project-cpu-stress
+  namespace: chaos-mesh
+  labels:
+    experiment: chaos-night
+    service: ydsz-pmis-project
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - pmis
+    labelSelectors:
+      app: ydsz-pmis-project
+  stressors:
+    cpu:
+      workers: 2
+      load: 80
+  duration: "5m"
+  scheduler:
+    cron: "@every 6h"
+
+---
+# ============================================================
+# 实验五：DNS 故障（验证服务发现韧性）
+# 对 gateway 服务注入 DNS 错误，持续 2 分钟
+# ============================================================
+apiVersion: chaos-mesh.org/v1alpha1
+kind: DNSChaos
+metadata:
+  name: gateway-dns-error
+  namespace: chaos-mesh
+  labels:
+    experiment: chaos-night
+    service: ydsz-pmis-gateway
+spec:
+  action: error
+  mode: all
+  selector:
+    namespaces:
+      - pmis
+    labelSelectors:
+      app: ydsz-pmis-gateway
+  duration: "2m"
+  scheduler:
+    cron: "@every 24h"

@@ -22,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 流程委派代理（长期授权）服务实现
@@ -256,5 +258,51 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
         return PageResult.of(list, list.size(), safePage, safeSize);
+    }
+
+    // ==================== P1-7: 链式解析代理人 ====================
+
+    /** 最大委派链深度，防止无限递归 */
+    private static final int MAX_CHAIN_DEPTH = 5;
+
+    @Override
+    @Transactional(readOnly = true)
+    public String resolveDelegateChain(String tenantId, String ownerUserId,
+                                         String flowCode, String nodeCode) {
+        if (tenantId == null || ownerUserId == null) {
+            return ownerUserId;
+        }
+        Set<String> visited = new HashSet<>();
+        visited.add(ownerUserId);
+        String currentUserId = ownerUserId;
+        int depth = 0;
+
+        while (depth < MAX_CHAIN_DEPTH) {
+            FlowDelegateAuthDO matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
+            if (matched == null) {
+                // 无进一步委派，当前用户即为最终代理人
+                break;
+            }
+            String nextUserId = matched.getDelegateUserId();
+            // 循环检测：A→B→A
+            if (visited.contains(nextUserId)) {
+                log.warn("[FlowDelegate] P1-7 检测到循环委派: chain={} nextUserId={} → 停止于 {}",
+                        visited, nextUserId, currentUserId);
+                break;
+            }
+            visited.add(nextUserId);
+            currentUserId = nextUserId;
+            depth++;
+            if (log.isDebugEnabled()) {
+                log.debug("[FlowDelegate] P1-7 链式解析 depth={} → userId={} authId={}",
+                        depth, currentUserId, matched.getId());
+            }
+        }
+
+        if (depth > 0) {
+            log.info("[FlowDelegate] P1-7 链式解析完成: owner={} → final={} depth={} chain={}",
+                    ownerUserId, currentUserId, depth, visited);
+        }
+        return currentUserId;
     }
 }

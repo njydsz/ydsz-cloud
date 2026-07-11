@@ -17,6 +17,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Bell, InfoFilled, WarningFilled, CircleCloseFilled, ArrowRight } from '@element-plus/icons-vue'
+import { ElNotification } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import {
   getUnreadCount,
@@ -157,12 +158,40 @@ const handleShow = () => {
 onMounted(() => {
   fetchUnreadCount()
   // WebSocket 推送到达时刷新未读数
-  on('NOTIFICATION', () => {
+  on('NOTIFICATION', (payload: any) => {
     fetchUnreadCount()
+    // P1-9: URGENT 级别强提醒（全屏弹窗+声音）
+    if (payload?.level === 'URGENT' || payload?.data?.level === 'URGENT') {
+      const title = payload?.title || payload?.data?.title || t('notification.urgentAlert')
+      const content = payload?.content || payload?.data?.content || ''
+      ElNotification({
+        title: '🔴 ' + title,
+        message: content,
+        type: 'error',
+        duration: 0, // 不自动关闭
+        position: 'top-right',
+        customClass: 'urgent-notification-alert',
+      })
+      // 播放提醒音
+      playUrgentSound()
+    }
   })
   // 定时轮询作为 WebSocket 降级方案
   pollTimer = setInterval(fetchUnreadCount, 60000)
 })
+
+/** P1-9: 播放 URGENT 提醒音 */
+const playUrgentSound = () => {
+  try {
+    const audio = new Audio('/sounds/urgent-alert.mp3')
+    audio.volume = 0.8
+    audio.play().catch(() => {
+      // 浏览器可能阻止自动播放,静默失败
+    })
+  } catch {
+    // 音频文件不存在时静默失败
+  }
+}
 
 onUnmounted(() => {
   if (pollTimer) {

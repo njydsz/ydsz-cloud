@@ -15,6 +15,7 @@ import com.njydsz.pmis.message.mapper.core.MsgNotificationMapper;
 import com.njydsz.pmis.message.realtime.RealtimePushService;
 import com.njydsz.pmis.message.service.core.NotificationService;
 import com.njydsz.pmis.message.service.receipt.RecallService;
+import com.njydsz.pmis.message.vo.NotificationGroupVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 站内通知服务实现。
@@ -124,6 +128,55 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public boolean recall(String userId, String id) {
         return recallService.recallNotification(userId, id);
+    }
+
+    @Override
+    public Page<NotificationGroupVO> inboxGrouped(String userId, NotificationQueryDTO query) {
+        // 查询用户全部通知（按时间倒序），按 message_group 折叠
+        Page<MsgNotificationDO> allPage = inbox(userId, query);
+        Map<String, NotificationGroupVO> groupMap = new LinkedHashMap<>();
+
+        for (MsgNotificationDO n : allPage.getRecords()) {
+            String groupKey = n.getMessageGroup();
+            if (!StringUtils.hasText(groupKey)) {
+                // 无分组键的消息独立成组（用 id 作为 groupKey）
+                groupKey = "UNG:" + n.getId();
+            }
+            NotificationGroupVO vo = groupMap.get(groupKey);
+            if (vo == null) {
+                vo = new NotificationGroupVO();
+                vo.setMessageGroup(groupKey);
+                vo.setLatestId(n.getId());
+                vo.setLatestTitle(n.getTitle());
+                vo.setLatestContent(n.getContent());
+                vo.setLatestTime(n.getCreatedAt());
+                vo.setLatestLevel(n.getLevel());
+                vo.setLatestCategory(n.getCategory());
+                vo.setUnreadCount(0);
+                vo.setTotalCount(0);
+                groupMap.put(groupKey, vo);
+            }
+            vo.setTotalCount(vo.getTotalCount() + 1);
+            if (n.getReadStatus() != null && n.getReadStatus() == 0) {
+                vo.setUnreadCount(vo.getUnreadCount() + 1);
+            }
+        }
+
+        Page<NotificationGroupVO> result = new Page<>(allPage.getCurrent(), allPage.getSize(), allPage.getTotal());
+        result.setRecords(new ArrayList<>(groupMap.values()));
+        return result;
+    }
+
+    @Override
+    public List<MsgNotificationDO> listByGroup(String userId, String messageGroup) {
+        if (!StringUtils.hasText(userId) || !StringUtils.hasText(messageGroup)) {
+            return List.of();
+        }
+        return msgNotificationMapper.selectList(new LambdaQueryWrapper<MsgNotificationDO>()
+                .eq(MsgNotificationDO::getReceiverId, userId)
+                .eq(MsgNotificationDO::getMessageGroup, messageGroup)
+                .eq(MsgNotificationDO::getTenantId, TenantContext.getTenantId())
+                .orderByDesc(MsgNotificationDO::getCreatedAt));
     }
 
     private List<String> resolveReceiverIds(NotificationSendDTO dto) {

@@ -40,7 +40,7 @@
     "test:ci": "vitest run --reporter=junit --outputFile=test-results.xml",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "i18n:check": "node scripts/check-i18n-coverage.mjs --threshold=20",
+    "i18n:check": "node scripts/check-i18n-coverage.mjs --threshold=50",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:smoke": "playwright test e2e/smoke.spec.ts",
     "test:e2e:report": "playwright show-report",

@@ -169,27 +169,41 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                         skip.getId(), skip.getNextNodeCode());
                 continue;
             }
-            // P0-5 / GAP-P2: 网关 join 聚合 — 使用 Redis join 令牌精确跟踪分支到达状态
+            // P0-5 / GAP-P2 / P0-3: 网关 join 聚合 — 支持 N/M join 策略
             if (isJoinNode(next) && hasMultipleIncoming(currentInstance.getDefinitionId(), next.getNodeCode())) {
                 int incomingCount = flowDefinitionCacheService.getSkipsByNextNode(
                         currentInstance.getDefinitionId(), next.getNodeCode()).size();
                 String instId = currentInstance.getId();
                 String joinCode = next.getNodeCode();
                 try {
-                    // 懒初始化：首次到达时初始化令牌（branchCount = 入边数）
+                    // P0-3: 解析节点 ext 中的 joinRequired 配置
+                    int requiredCount = parseJoinRequired(next, incomingCount);
+                    // 懒初始化：首次到达时初始化令牌
                     if (!joinTokenService.isInitialized(instId, joinCode)) {
-                        joinTokenService.initTokens(instId, joinCode, incomingCount);
+                        if (requiredCount < incomingCount) {
+                            // N/M join: 部分分支到达即可聚合
+                            joinTokenService.initTokensWithRequired(
+                                    instId, joinCode, incomingCount, requiredCount);
+                            log.info("[Flow] P0-3 N/M join 初始化: instanceId={} node={} total={} required={}",
+                                    instId, joinCode, incomingCount, requiredCount);
+                        } else {
+                            joinTokenService.initTokens(instId, joinCode, incomingCount);
+                        }
                     }
                     // 标记本次到达
-                    boolean allArrived = joinTokenService.arriveToken(instId, joinCode);
-                    if (allArrived) {
-                        // 全部分支到达：清理令牌，继续推进
-                        joinTokenService.clearTokens(instId, joinCode);
-                        log.info("[Flow] 并行网关 join 聚合通过（令牌）: instanceId={} node={}",
-                                instId, joinCode);
+                    boolean canJoin;
+                    if (requiredCount < incomingCount) {
+                        canJoin = joinTokenService.arriveTokenWithRequired(instId, joinCode);
                     } else {
-                        log.info("[Flow] 并行网关 join 等待（令牌）: instanceId={} node={} arrived<{}",
-                                instId, joinCode, incomingCount);
+                        canJoin = joinTokenService.arriveToken(instId, joinCode);
+                    }
+                    if (canJoin) {
+                        joinTokenService.clearTokens(instId, joinCode);
+                        log.info("[Flow] 并行网关 join 聚合通过: instanceId={} node={} required={}/{}",
+                                instId, joinCode, requiredCount, incomingCount);
+                    } else {
+                        log.info("[Flow] 并行网关 join 等待: instanceId={} node={} required={}/{}",
+                                instId, joinCode, requiredCount, incomingCount);
                         continue; // 等待其他分支
                     }
                 } catch (Exception e) {
@@ -384,6 +398,51 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     private boolean hasMultipleIncoming(String definitionId, String nodeCode) {
         List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, nodeCode);
         return incoming != null && incoming.size() > 1;
+    }
+
+    /**
+     * P0-3: 解析节点 ext 中的 joinRequired 配置
+     *
+     * <p>支持格式：
+     * <ul>
+     *   <li>{@code "joinRequired": 3} — 数值，表示需要 3 个分支到达</li>
+     *   <li>{@code "joinRequired": "3/5"} — 分数，表示 5 个分支中 3 个到达</li>
+     *   <li>{@code "joinRequired": "majority"} — 过半数</li>
+     *   <li>未配置 — 返回 incomingCount（默认全部到达）</li>
+     * </ul>
+     */
+    private int parseJoinRequired(FlowNodeDO node, int incomingCount) {
+        if (node.getExt() == null || node.getExt().isBlank()) {
+            return incomingCount;
+        }
+        try {
+            Map<String, Object> ext = JsonUtils.parseMap(node.getExt());
+            if (ext == null) {
+                return incomingCount;
+            }
+            Object val = ext.get("joinRequired");
+            if (val == null) {
+                return incomingCount;
+            }
+            if (val instanceof Number n) {
+                int required = n.intValue();
+                return Math.min(Math.max(1, required), incomingCount);
+            }
+            String s = String.valueOf(val).trim();
+            if ("majority".equalsIgnoreCase(s)) {
+                return incomingCount / 2 + 1;
+            }
+            if (s.contains("/")) {
+                String[] parts = s.split("/");
+                int required = Integer.parseInt(parts[0].trim());
+                return Math.min(Math.max(1, required), incomingCount);
+            }
+            return Math.min(Math.max(1, Integer.parseInt(s)), incomingCount);
+        } catch (Exception e) {
+            log.warn("[Flow] P0-3 解析 joinRequired 失败: node={} ext={} err={}",
+                    node.getNodeCode(), node.getExt(), e.getMessage());
+            return incomingCount;
+        }
     }
 
     private String lookupNodeCodeByName(String definitionId, String skipName) {

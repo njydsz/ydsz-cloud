@@ -79,6 +79,9 @@ public class MsgTemplateDO extends BaseDO {
     /** 描述说明 */
     private String description;
 
+    /** P0-3: 模板变量定义 JSON(变量名→类型/必填/默认值/枚举值) */
+    private String variableDefs;
+
     /** 租户 ID(单租户部署默认 1) */
     private String tenantId;
 }

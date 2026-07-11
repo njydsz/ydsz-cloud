@@ -268,4 +268,34 @@ public interface FlowDefinitionService {
      *   </ul>
      */
     Map<String, Object> analyzeMigrationImpact(String oldDefinitionId, String newDefinitionId);
+
+    /**
+     * P0-2: 流程定义一键回滚
+     *
+     * <p>对标钉钉/飞书"流程定义一键回滚"能力。将指定 flowCode 的激活版本
+     * 从当前版本切换回上一个已发布版本，并自动迁移在途实例。
+     *
+     * <p>执行步骤：
+     * <ol>
+     *   <li>查询当前激活版本（status=1）</li>
+     *   <li>查询上一个已发布版本（按 flow_version DESC 排除当前版本取第一条）</li>
+     *   <li>调用 {@link #analyzeMigrationImpact} 评估迁移影响</li>
+     *   <li>风险等级为 HIGH 时抛异常（需人工介入），否则继续</li>
+     *   <li>调用 {@link #switchActiveVersion} 切换激活版本到上一个版本</li>
+     *   <li>调用 FlowInstanceMigrationService 迁移在途实例（自动映射节点）</li>
+     *   <li>返回回滚结果报告</li>
+     * </ol>
+     *
+     * @param flowCode 流程编码
+     * @param tenantId 租户 ID（可空，默认从上下文获取）
+     * @return Map 包含：
+     *   <ul>
+     *     <li>{@code fromDefinition} — 回滚前版本信息</li>
+     *     <li>{@code toDefinition} — 回滚后版本信息</li>
+     *     <li>{@code migrationImpact} — 迁移影响分析报告</li>
+     *     <li>{@code migrationResult} — 实例迁移执行结果</li>
+     *     <li>{@code rollbackTime} — 回滚时间</li>
+     *   </ul>
+     */
+    Map<String, Object> rollbackDefinition(String flowCode, String tenantId);
 }

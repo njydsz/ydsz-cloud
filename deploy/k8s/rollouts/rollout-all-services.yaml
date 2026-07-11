@@ -1,0 +1,446 @@
+# ============================================================
+# PMIS Argo Rollouts — 全服务金丝雀发布策略（P2-1）
+#
+# 覆盖所有核心微服务，统一渐进式发布策略：
+#   5% → 25% → 50% → 75% → 100%
+# 基于 Prometheus 错误率自动回滚。
+#
+# 使用方式：
+#   kubectl apply -f deploy/k8s/rollouts/rollout-all-services.yaml
+#   kubectl argo rollouts get rollout <name> -n pmis --watch
+#
+# ============================================================
+
+---
+# ============================================================
+# userinfo 服务
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ydsz-pmis-userinfo
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-userinfo
+    tier: service
+spec:
+  replicas: 3
+  strategy:
+    canary:
+      canaryService: ydsz-pmis-userinfo-canary
+      stableService: ydsz-pmis-userinfo-stable
+      trafficRouting:
+        nginx:
+          stableIngress: pmis-userinfo-ingress
+      steps:
+        - setWeight: 5
+        - pause: { duration: 2m }
+        - setWeight: 25
+        - pause: { duration: 3m }
+        - setWeight: 50
+        - pause: { duration: 3m }
+        - setWeight: 75
+        - pause: {}
+      analysis:
+        templates:
+          - templateName: success-rate
+        args:
+          - name: service-name
+            value: ydsz-pmis-userinfo-canary
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-userinfo
+  template:
+    metadata:
+      labels:
+        app: ydsz-pmis-userinfo
+        tier: service
+    spec:
+      containers:
+        - name: userinfo
+          image: ydsz-pmis/userinfo:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9001
+          envFrom:
+            - configMapRef:
+                name: pmis-common-config
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/app/logs/heapdump
+                -Dfile.encoding=UTF-8
+                -Duser.timezone=Asia/Shanghai
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9001
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+---
+# ============================================================
+# project 服务
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ydsz-pmis-project
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-project
+    tier: service
+spec:
+  replicas: 3
+  strategy:
+    canary:
+      canaryService: ydsz-pmis-project-canary
+      stableService: ydsz-pmis-project-stable
+      trafficRouting:
+        nginx:
+          stableIngress: pmis-project-ingress
+      steps:
+        - setWeight: 5
+        - pause: { duration: 2m }
+        - setWeight: 25
+        - pause: { duration: 3m }
+        - setWeight: 50
+        - pause: { duration: 3m }
+        - setWeight: 75
+        - pause: {}
+      analysis:
+        templates:
+          - templateName: success-rate
+        args:
+          - name: service-name
+            value: ydsz-pmis-project-canary
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-project
+  template:
+    metadata:
+      labels:
+        app: ydsz-pmis-project
+        tier: service
+    spec:
+      containers:
+        - name: project
+          image: ydsz-pmis/project:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9002
+          envFrom:
+            - configMapRef:
+                name: pmis-common-config
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/app/logs/heapdump
+                -Dfile.encoding=UTF-8
+                -Duser.timezone=Asia/Shanghai
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9002
+            initialDelaySeconds: 40
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9002
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+---
+# ============================================================
+# workflow 服务
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ydsz-pmis-workflow
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-workflow
+    tier: service
+spec:
+  replicas: 3
+  strategy:
+    canary:
+      canaryService: ydsz-pmis-workflow-canary
+      stableService: ydsz-pmis-workflow-stable
+      trafficRouting:
+        nginx:
+          stableIngress: pmis-workflow-ingress
+      steps:
+        - setWeight: 5
+        - pause: { duration: 2m }
+        - setWeight: 25
+        - pause: { duration: 3m }
+        - setWeight: 50
+        - pause: { duration: 3m }
+        - setWeight: 75
+        - pause: {}
+      analysis:
+        templates:
+          - templateName: success-rate
+        args:
+          - name: service-name
+            value: ydsz-pmis-workflow-canary
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-workflow
+  template:
+    metadata:
+      labels:
+        app: ydsz-pmis-workflow
+        tier: service
+    spec:
+      containers:
+        - name: workflow
+          image: ydsz-pmis/workflow:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9003
+          envFrom:
+            - configMapRef:
+                name: pmis-common-config
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/app/logs/heapdump
+                -Dfile.encoding=UTF-8
+                -Duser.timezone=Asia/Shanghai
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9003
+            initialDelaySeconds: 40
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9003
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+---
+# ============================================================
+# agent 服务
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ydsz-pmis-agent
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-agent
+    tier: service
+spec:
+  replicas: 2
+  strategy:
+    canary:
+      canaryService: ydsz-pmis-agent-canary
+      stableService: ydsz-pmis-agent-stable
+      trafficRouting:
+        nginx:
+          stableIngress: pmis-agent-ingress
+      steps:
+        - setWeight: 10
+        - pause: { duration: 3m }
+        - setWeight: 50
+        - pause: { duration: 3m }
+        - setWeight: 100
+      analysis:
+        templates:
+          - templateName: success-rate
+        args:
+          - name: service-name
+            value: ydsz-pmis-agent-canary
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-agent
+  template:
+    metadata:
+      labels:
+        app: ydsz-pmis-agent
+        tier: service
+    spec:
+      containers:
+        - name: agent
+          image: ydsz-pmis/agent:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9004
+          envFrom:
+            - configMapRef:
+                name: pmis-common-config
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/app/logs/heapdump
+                -Dfile.encoding=UTF-8
+                -Duser.timezone=Asia/Shanghai
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+            limits:
+              cpu: 4000m
+              memory: 4Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9004
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9004
+            initialDelaySeconds: 90
+            periodSeconds: 20
+
+---
+# ============================================================
+# cronjob 服务
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ydsz-pmis-cronjob
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-cronjob
+    tier: service
+spec:
+  replicas: 2
+  strategy:
+    canary:
+      canaryService: ydsz-pmis-cronjob-canary
+      stableService: ydsz-pmis-cronjob-stable
+      steps:
+        - setWeight: 50
+        - pause: { duration: 5m }
+        - setWeight: 100
+      analysis:
+        templates:
+          - templateName: success-rate
+        args:
+          - name: service-name
+            value: ydsz-pmis-cronjob-canary
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-cronjob
+  template:
+    metadata:
+      labels:
+        app: ydsz-pmis-cronjob
+        tier: service
+    spec:
+      containers:
+        - name: cronjob
+          image: ydsz-pmis/cronjob:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9005
+          envFrom:
+            - configMapRef:
+                name: pmis-common-config
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/app/logs/heapdump
+                -Dfile.encoding=UTF-8
+                -Duser.timezone=Asia/Shanghai
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9005
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9005
+            initialDelaySeconds: 60
+            periodSeconds: 20

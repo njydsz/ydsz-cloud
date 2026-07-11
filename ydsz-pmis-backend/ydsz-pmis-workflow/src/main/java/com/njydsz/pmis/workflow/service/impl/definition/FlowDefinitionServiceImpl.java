@@ -24,7 +24,10 @@ import com.njydsz.pmis.workflow.mapper.definition.FlowDefinitionMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.definition.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowSkipMapper;
+import com.njydsz.pmis.workflow.dto.instance.InstanceMigrationDTO;
+import com.njydsz.pmis.workflow.dto.instance.InstanceMigrationResultDTO;
 import com.njydsz.pmis.workflow.service.definition.FlowDefinitionService;
+import com.njydsz.pmis.workflow.service.instance.FlowInstanceMigrationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -80,6 +83,9 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     private final FlowDefinitionServiceImpl self;
     /** P2-5: 流程实例 Mapper，用于变更影响分析 */
     private final FlowInstanceMapper instanceMapper;
+    /** P0-2: 流程实例迁移服务（一键回滚时迁移在途实例） */
+    @Lazy
+    private final FlowInstanceMigrationService migrationService;
 
     /**
      * P2-4: 设计器协同编辑锁定超时阈值（分钟）。
@@ -98,6 +104,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             FlowGraphValidator graphValidator,
             FlowDefinitionCacheService flowDefinitionCacheService,
             FlowInstanceMapper instanceMapper,
+            @Lazy FlowInstanceMigrationService migrationService,
             @Lazy FlowDefinitionServiceImpl self) {
         this.definitionMapper = definitionMapper;
         this.nodeMapper = nodeMapper;
@@ -106,6 +113,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         this.graphValidator = graphValidator;
         this.flowDefinitionCacheService = flowDefinitionCacheService;
         this.instanceMapper = instanceMapper;
+        this.migrationService = migrationService;
         this.self = self;
     }
 
@@ -1486,5 +1494,112 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 recs.add("未知风险等级: " + riskLevel);
         }
         return recs;
+    }
+
+    // ============================== P0-2: 一键回滚 ==============================
+
+    /**
+     * P0-2: 流程定义一键回滚
+     *
+     * <p>将指定 flowCode 的激活版本切换回上一个已发布版本，
+     * 并自动迁移在途实例。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
+            CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
+    public Map<String, Object> rollbackDefinition(String flowCode, String tenantId) {
+        if (!StringUtils.hasText(flowCode)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode 不能为空");
+        }
+        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+
+        // 1. 查询当前激活版本
+        FlowDefinitionDO currentDef = definitionMapper.selectPublished(flowCode, null, tid);
+        if (currentDef == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "未找到当前激活的流程定义: flowCode=" + flowCode);
+        }
+
+        // 2. 查询上一个已发布版本（排除当前版本，按版本号降序取第一条）
+        LambdaQueryWrapper<FlowDefinitionDO> qw = new LambdaQueryWrapper<>();
+        qw.eq(FlowDefinitionDO::getFlowCode, flowCode)
+                .eq(FlowDefinitionDO::getTenantId, tid)
+                .ne(FlowDefinitionDO::getId, currentDef.getId())
+                .eq(FlowDefinitionDO::getIsPublish, 1)
+                .eq(FlowDefinitionDO::getDeleted, 0)
+                .orderByDesc(FlowDefinitionDO::getFlowVersion)
+                .last("LIMIT 1");
+        FlowDefinitionDO previousDef = definitionMapper.selectOne(qw);
+        if (previousDef == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "无可回滚的历史版本: flowCode=" + flowCode);
+        }
+
+        // 3. 评估迁移影响
+        Map<String, Object> migrationImpact = analyzeMigrationImpact(
+                currentDef.getId(), previousDef.getId());
+        String riskLevel = (String) migrationImpact.get("riskLevel");
+
+        // 4. HIGH 风险时阻止回滚
+        if ("HIGH".equals(riskLevel)) {
+            log.warn("[Flow] 一键回滚中止（HIGH 风险）: flowCode={} current={} target={} risk={}",
+                    flowCode, currentDef.getId(), previousDef.getId(), riskLevel);
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "回滚风险等级为 HIGH，存在在途实例将卡死，请先处理在途实例后再回滚");
+        }
+
+        // 5. 切换激活版本到上一个版本
+        switchActiveVersion(flowCode, previousDef.getId(), tid);
+
+        // 6. 迁移在途实例
+        InstanceMigrationResultDTO migrationResult = null;
+        try {
+            InstanceMigrationDTO migrateDto = new InstanceMigrationDTO();
+            migrateDto.setSourceDefinitionId(currentDef.getId());
+            migrateDto.setTargetDefinitionId(previousDef.getId());
+            migrateDto.setTenantId(tid);
+            // 自动映射节点（编码相同的自动配对）
+            Map<String, String> nodeMapping = new HashMap<>();
+            List<FlowNodeDO> oldNodes = nodeMapper.selectByDefinitionId(currentDef.getId());
+            List<FlowNodeDO> newNodes = nodeMapper.selectByDefinitionId(previousDef.getId());
+            java.util.Set<String> newNodeCodes = newNodes.stream()
+                    .map(FlowNodeDO::getNodeCode)
+                    .collect(Collectors.toSet());
+            for (FlowNodeDO oldNode : oldNodes) {
+                if (newNodeCodes.contains(oldNode.getNodeCode())) {
+                    nodeMapping.put(oldNode.getNodeCode(), oldNode.getNodeCode());
+                }
+            }
+            migrateDto.setNodeMapping(nodeMapping);
+            migrationResult = migrationService.migrate(migrateDto);
+            log.info("[Flow] 一键回滚实例迁移完成: flowCode={} migrated={} skipped={}",
+                    flowCode,
+                    migrationResult != null ? migrationResult.getMigratedCount() : 0,
+                    migrationResult != null ? migrationResult.getSkippedCount() : 0);
+        } catch (Exception e) {
+            log.error("[Flow] 一键回滚实例迁移异常: flowCode={} err={}",
+                    flowCode, e.getMessage(), e);
+        }
+
+        // 7. 组装回滚报告
+        Map<String, Object> fromInfo = new LinkedHashMap<>();
+        fromInfo.put("id", currentDef.getId());
+        fromInfo.put("flowVersion", currentDef.getFlowVersion());
+
+        Map<String, Object> toInfo = new LinkedHashMap<>();
+        toInfo.put("id", previousDef.getId());
+        toInfo.put("flowVersion", previousDef.getFlowVersion());
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("fromDefinition", fromInfo);
+        result.put("toDefinition", toInfo);
+        result.put("migrationImpact", migrationImpact);
+        result.put("migrationResult", migrationResult);
+        result.put("rollbackTime", LocalDateTime.now().toString());
+
+        log.info("[Flow] 一键回滚完成: flowCode={} from=v{} to=v{} risk={}",
+                flowCode, currentDef.getFlowVersion(), previousDef.getFlowVersion(), riskLevel);
+        return result;
     }
 }

@@ -364,4 +364,22 @@ public class FlowDefinitionController {
             @RequestParam String newDefinitionId) {
         return Result.ok(definitionService.analyzeMigrationImpact(oldDefinitionId, newDefinitionId));
     }
+
+    /**
+     * P0-2: 流程定义一键回滚
+     *
+     * <p>将指定 flowCode 的激活版本切换回上一个已发布版本，
+     * 并自动迁移在途实例。HIGH 风险时阻止回滚。
+     *
+     * @param flowCode 流程编码
+     * @return 统一响应结果，包含回滚报告
+     */
+    @PostMapping("/definition/rollback")
+    @Operation(summary = "一键回滚流程定义到上一版本")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public Result<Map<String, Object>> rollbackDefinition(
+            @RequestParam String flowCode) {
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        return Result.ok(definitionService.rollbackDefinition(flowCode, tenantId));
+    }
 }

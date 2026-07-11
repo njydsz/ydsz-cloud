@@ -19,7 +19,7 @@ import { readFileSync, readdirSync, statSync } from 'fs'
 import { join, extname } from 'path'
 
 const ROOT = join(process.cwd(), 'src')
-const THRESHOLD = parseInt(process.argv.find(a => a.startsWith('--threshold='))?.split('=')[1] || '30', 10)
+const THRESHOLD = parseInt(process.argv.find(a => a.startsWith('--threshold='))?.split('=')[1] || '50', 10)
 
 // 匹配 template 区域中的硬编码中文（不在 {{ }} 内，不在 t() / $t() 内）
 const CHINESE_REGEX = /[\u4e00-\u9fa5]+/

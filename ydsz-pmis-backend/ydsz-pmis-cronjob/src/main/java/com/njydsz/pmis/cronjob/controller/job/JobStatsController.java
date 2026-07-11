@@ -4,10 +4,15 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.cronjob.entity.log.JobDailyStatsDO;
+import com.njydsz.pmis.cronjob.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.log.JobDailyStatsMapper;
+import com.njydsz.pmis.cronjob.mapper.log.JobLogMapper;
+import com.njydsz.pmis.cronjob.mapper.job.JobMapper;
+import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +41,12 @@ public class JobStatsController {
 
     /** 每日统计 Mapper */
     private final JobDailyStatsMapper jobDailyStatsMapper;
+    /** P1-2: 日志 Mapper（仪表盘实时数据查询） */
+    private final JobLogMapper jobLogMapper;
+    /** P1-2: 任务 Mapper（任务总数统计） */
+    private final JobMapper jobMapper;
+    /** P1-2: Prometheus 指标（可选注入） */
+    private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
     /**
      * 查询指定任务的每日统计（趋势图数据源）。
@@ -106,5 +118,107 @@ public class JobStatsController {
         summary.put("timeoutCount", timeoutCount);
         summary.put("avgDurationMs", durationSamples > 0 ? totalDuration / durationSamples : 0L);
         return Result.ok(summary);
+    }
+
+    // ==================== P1-2: 运维监控仪表盘增强 ====================
+
+    /**
+     * P1-2: 获取全局监控仪表盘数据。
+     *
+     * <p>返回调度引擎的整体运行状态概览，包括：
+     * <ul>
+     *   <li>任务总数/正常运行/已暂停/异常</li>
+     *   <li>今日执行统计（触发/成功/失败/成功率）</li>
+     *   <li>当前运行中任务数</li>
+     *   <li>系统负载评分</li>
+     *   <li>最近失败任务列表（Top 10）</li>
+     * </ul>
+     *
+     * @return 仪表盘数据
+     */
+    @Operation(summary = "全局监控仪表盘")
+    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @GetMapping("/dashboard")
+    public Result<Map<String, Object>> dashboard() {
+        Map<String, Object> dashboard = new HashMap<>();
+        // 1. 任务状态分布
+        Map<String, Object> taskStats = new HashMap<>();
+        taskStats.put("total", jobMapper.selectCount(null));
+        taskStats.put("normal", jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.cronjob.entity.job.JobDO>().eq(com.njydsz.pmis.cronjob.entity.job.JobDO::getStatus, "NORMAL")));
+        taskStats.put("paused", jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.cronjob.entity.job.JobDO>().eq(com.njydsz.pmis.cronjob.entity.job.JobDO::getStatus, "PAUSED")));
+        taskStats.put("error", jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.cronjob.entity.job.JobDO>().eq(com.njydsz.pmis.cronjob.entity.job.JobDO::getStatus, "ERROR")));
+        taskStats.put("autoPaused", jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.cronjob.entity.job.JobDO>().eq(com.njydsz.pmis.cronjob.entity.job.JobDO::getStatus, "AUTO_PAUSED")));
+        dashboard.put("taskStats", taskStats);
+
+        // 2. 今日执行统计
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        Map<String, Object> todayExec = new HashMap<>();
+        Long todayTotal = jobLogMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart));
+        Long todaySuccess = jobLogMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart).eq(JobLogDO::getStatus, "SUCCESS"));
+        Long todayFailed = jobLogMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart).eq(JobLogDO::getStatus, "FAILED"));
+        Long todayRunning = jobLogMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>().eq(JobLogDO::getStatus, "RUNNING"));
+        todayExec.put("total", todayTotal);
+        todayExec.put("success", todaySuccess);
+        todayExec.put("failed", todayFailed);
+        todayExec.put("running", todayRunning);
+        todayExec.put("successRate", todayTotal != null && todayTotal > 0 ? String.format("%.1f%%", todaySuccess * 100.0 / todayTotal) : "N/A");
+        dashboard.put("todayExec", todayExec);
+
+        // 3. Prometheus 指标
+        CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+        if (metrics != null) {
+            Map<String, Object> systemMetrics = new HashMap<>();
+            systemMetrics.put("running", todayRunning);
+            dashboard.put("systemMetrics", systemMetrics);
+        }
+
+        return Result.ok(dashboard);
+    }
+
+    /**
+     * P1-2: 获取最近失败任务列表。
+     *
+     * @param limit 返回条数（默认 10）
+     * @return 失败日志列表
+     */
+    @Operation(summary = "最近失败任务")
+    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @GetMapping("/recent-failures")
+    public Result<List<JobLogDO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
+        return Result.ok(jobLogMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>()
+                        .eq(JobLogDO::getStatus, "FAILED")
+                        .orderByDesc(JobLogDO::getStartTime)
+                        .last("LIMIT " + Math.min(limit, 100))));
+    }
+
+    /**
+     * P1-2: 获取任务执行热力图数据。
+     *
+     * <p>按小时聚合统计任务执行分布，用于识别高峰时段。
+     *
+     * @param date 查询日期（默认今天）
+     * @return 24 小时执行分布
+     */
+    @Operation(summary = "执行热力图（按小时分布）")
+    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @GetMapping("/heatmap")
+    public Result<List<Map<String, Object>>> heatmap(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        LocalDate queryDate = date != null ? date : LocalDate.now();
+        List<Map<String, Object>> heatmap = new java.util.ArrayList<>();
+        for (int hour = 0; hour < 24; hour++) {
+            LocalDateTime hourStart = queryDate.atTime(hour, 0);
+            LocalDateTime hourEnd = queryDate.atTime(hour, 59, 59);
+            Long count = jobLogMapper.selectCount(
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>()
+                            .ge(JobLogDO::getStartTime, hourStart)
+                            .le(JobLogDO::getStartTime, hourEnd));
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("hour", hour);
+            entry.put("count", count);
+            heatmap.add(entry);
+        }
+        return Result.ok(heatmap);
     }
 }

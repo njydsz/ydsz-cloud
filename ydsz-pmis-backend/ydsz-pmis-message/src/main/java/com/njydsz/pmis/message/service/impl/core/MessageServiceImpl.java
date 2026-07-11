@@ -112,6 +112,10 @@ public class MessageServiceImpl implements MessageService {
     private final RichMediaRenderer richMediaRenderer;
     /** P0-1: 用户通道绑定服务（userId → 通道联系方式解析） */
     private final UserChannelBindingService userChannelBindingService;
+    /** P0-3: 模板变量校验器 */
+    private final com.njydsz.pmis.message.template.TemplateVariableValidator templateVariableValidator;
+    /** P0-4: 变量数据源解析器 */
+    private final com.njydsz.pmis.message.service.config.VariableSourceResolver variableSourceResolver;
 
     /** P2-3: RocketMQ 事务消息生产者（可选,未配置 RocketMQ 时为 null） */
     private final ObjectProvider<RocketMQMessageProducer> mqProducerProvider;
@@ -286,6 +290,25 @@ public class MessageServiceImpl implements MessageService {
                     templateCode, channel, prefLocale, TenantContext.getTenantId());
             if (template == null) {
                 return MessageResult.fail(channel, "模板不存在: " + templateCode);
+            }
+            // P0-3: 模板变量类型校验（有 variableDefs 时校验+填充默认值）
+            if (StringUtils.hasText(template.getVariableDefs())) {
+                var varDefs = templateVariableValidator.parse(template.getVariableDefs());
+                if (!varDefs.isEmpty() && request.getParams() != null) {
+                    templateVariableValidator.validateAndFill(request.getParams(), varDefs, templateCode);
+                }
+            }
+            // P0-4: 变量数据源自动拉取（params 中缺失的变量从数据源补全）
+            if (request.getParams() != null) {
+                java.util.Map<String, Object> ctx = new java.util.HashMap<>();
+                if (StringUtils.hasText(request.getBizId())) {
+                    ctx.put("bizId", request.getBizId());
+                }
+                if (StringUtils.hasText(bizType)) {
+                    ctx.put("bizType", bizType);
+                }
+                ctx.put("receiver", receiver);
+                variableSourceResolver.resolveVariables(templateCode, request.getParams(), ctx);
             }
             if (StringUtils.hasText(template.getContent())) {
                 content = templateEngine.render(template.getContent(), request.getParams());

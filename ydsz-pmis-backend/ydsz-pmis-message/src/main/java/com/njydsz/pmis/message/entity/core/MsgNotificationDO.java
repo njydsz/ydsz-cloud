@@ -91,6 +91,9 @@ public class MsgNotificationDO extends BaseDO {
     /** 过期时间(过期后不再展示) */
     private LocalDateTime expiredAt;
 
+    /** P1-3: @提及用户 ID 列表(逗号分隔,如 "user1,user2"),被@用户收到额外提醒 */
+    private String mentionUserIds;
+
     /** 租户 ID(单租户部署默认 1,P2-7 补齐与其他消息实体一致) */
     private String tenantId;
 }

@@ -51,6 +51,7 @@ public class JobController {
      */
     @Operation(summary = "新增任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_CREATE)
+    @OperationLog(module = "任务调度", action = "新增任务", bizType = "CRONJOB_JOB", saveResult = true)
     @Idempotent(key = "job:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<String> create(@Valid @RequestBody JobSaveDTO dto) {
@@ -67,6 +68,7 @@ public class JobController {
      */
     @Operation(summary = "更新任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @OperationLog(module = "任务调度", action = "更新任务", bizType = "CRONJOB_JOB", saveDiff = true)
     @Idempotent(key = "job:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@Valid @RequestBody JobSaveDTO dto) {
@@ -99,7 +101,8 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "暂停任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @PrePermission(PermissionCodes.CRONJOB_JOB_PAUSE)
+    @OperationLog(module = "任务调度", action = "暂停任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:pause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/pause")
     public Result<Void> pause(@PathVariable String id) {
@@ -114,7 +117,8 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "恢复任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @PrePermission(PermissionCodes.CRONJOB_JOB_PAUSE)
+    @OperationLog(module = "任务调度", action = "恢复任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/resume")
     public Result<Void> resume(@PathVariable String id) {
@@ -132,6 +136,7 @@ public class JobController {
      */
     @Operation(summary = "立即执行一次")
     @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
+    @OperationLog(module = "任务调度", action = "手动触发任务", bizType = "CRONJOB_JOB", saveParams = false)
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/{id}/trigger")
     public Result<String> trigger(@PathVariable String id,

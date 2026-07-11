@@ -113,6 +113,127 @@ class FeignContractTest {
     }
 
     @Nested
+    @DisplayName("AgentClient 契约")
+    class AgentClientContract {
+
+        @Test
+        @DisplayName("@FeignClient 注解 name 和 path 正确")
+        void shouldHaveCorrectFeignClientNameAndPath() {
+            FeignClient annotation = AgentClient.class.getAnnotation(FeignClient.class);
+            assertNotNull(annotation);
+            assertEquals("ydsz-pmis-agent", annotation.name());
+            assertEquals("/agent", annotation.path());
+        }
+
+        @Test
+        @DisplayName("fallbackFactory 正确配置")
+        void shouldHaveFallbackFactory() {
+            FeignClient annotation = AgentClient.class.getAnnotation(FeignClient.class);
+            assertNotNull(annotation);
+            assertEquals(AgentClientFallbackFactory.class, annotation.fallbackFactory());
+        }
+
+        @Test
+        @DisplayName("execute 方法返回 Result<Map<String, Object>>")
+        void shouldReturnCorrectType() throws NoSuchMethodException {
+            var method = AgentClient.class.getMethod("execute", Map.class);
+            assertEquals(Result.class, method.getReturnType());
+        }
+    }
+
+    @Nested
+    @DisplayName("ExecutionClient 契约")
+    class ExecutionClientContract {
+
+        @Test
+        @DisplayName("@FeignClient 注解 name 正确")
+        void shouldHaveCorrectFeignClientName() {
+            FeignClient annotation = ExecutionClient.class.getAnnotation(FeignClient.class);
+            assertNotNull(annotation);
+            assertEquals("ydsz-pmis-project", annotation.name());
+        }
+
+        @Test
+        @DisplayName("fallbackFactory 正确配置")
+        void shouldHaveFallbackFactory() {
+            FeignClient annotation = ExecutionClient.class.getAnnotation(FeignClient.class);
+            assertNotNull(annotation);
+            assertEquals(ExecutionClientFallback.class, annotation.fallbackFactory());
+        }
+
+        @Test
+        @DisplayName("recomputeBillableUtilization 返回 Result<Map<String, Object>>")
+        void shouldRecomputeReturnCorrectType() throws NoSuchMethodException {
+            var method = ExecutionClient.class.getMethod(
+                    "recomputeBillableUtilization", String.class, boolean.class);
+            assertEquals(Result.class, method.getReturnType());
+        }
+
+        @Test
+        @DisplayName("snapshotAverage 返回 Result<Map<String, Object>>")
+        void shouldSnapshotAverageReturnCorrectType() throws NoSuchMethodException {
+            var method = ExecutionClient.class.getMethod("snapshotAverage", String.class);
+            assertEquals(Result.class, method.getReturnType());
+        }
+    }
+
+    @Nested
+    @DisplayName("MessageRequest DTO 序列化契约")
+    class MessageRequestSerializationContract {
+
+        @Test
+        @DisplayName("MessageRequest 必须包含 channel 字段")
+        void shouldHaveChannelField() throws NoSuchFieldException {
+            var field = MessageRequest.class.getDeclaredField("channel");
+            assertNotNull(field);
+            assertEquals(String.class, field.getType());
+        }
+
+        @Test
+        @DisplayName("MessageRequest 必须包含 receiver 字段")
+        void shouldHaveReceiverField() throws NoSuchFieldException {
+            var field = MessageRequest.class.getDeclaredField("receiver");
+            assertNotNull(field);
+            assertEquals(String.class, field.getType());
+        }
+
+        @Test
+        @DisplayName("MessageRequest 必须包含 templateCode 字段")
+        void shouldHaveTemplateCodeField() throws NoSuchFieldException {
+            var field = MessageRequest.class.getDeclaredField("templateCode");
+            assertNotNull(field);
+            assertEquals(String.class, field.getType());
+        }
+    }
+
+    @Nested
+    @DisplayName("MessageResult DTO 序列化契约")
+    class MessageResultSerializationContract {
+
+        @Test
+        @DisplayName("MessageResult.ok() 返回 SUCCESS 状态")
+        void shouldOkReturnSuccessStatus() {
+            MessageResult result = MessageResult.ok("SMS", "trace-123");
+            assertEquals("SMS", result.getChannel());
+            assertEquals("SUCCESS", result.getStatus());
+            assertEquals("trace-123", result.getProviderTraceId());
+            assertNull(result.getErrorMessage());
+            assertTrue(result.isSuccess());
+        }
+
+        @Test
+        @DisplayName("MessageResult.fail() 返回 FAILED 状态")
+        void shouldFailReturnFailedStatus() {
+            MessageResult result = MessageResult.fail("EMAIL", "发送失败");
+            assertEquals("EMAIL", result.getChannel());
+            assertEquals("FAILED", result.getStatus());
+            assertNull(result.getProviderTraceId());
+            assertEquals("发送失败", result.getErrorMessage());
+            assertFalse(result.isSuccess());
+        }
+    }
+
+    @Nested
     @DisplayName("Fallback 降级行为测试")
     class FallbackBehaviorTest {
 

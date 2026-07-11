@@ -85,4 +85,24 @@ public interface FlowDelegateAuthService {
      * 分页查询"我的被代理日志"
      */
     PageResult<?> listOwnerLog(String ownerUserId, int page, int size);
+
+    /**
+     * P1-7: 链式解析代理人
+     *
+     * <p>对标钉钉/飞书"代理链"能力。当 A 委派给 B，B 又委派给 C 时，
+     * A 的任务最终应流转到 C。本方法递归匹配代理人，直到：
+     * <ul>
+     *   <li>被代理人无进一步委派 → 返回最终代理人</li>
+     *   <li>达到最大链深度（5） → 返回当前代理人（防止循环）</li>
+     *   <li>检测到循环（A→B→A） → 返回当前代理人并记录警告</li>
+     * </ul>
+     *
+     * @param tenantId    租户 ID
+     * @param ownerUserId 原始办理人 ID
+     * @param flowCode    流程编码
+     * @param nodeCode    节点编码
+     * @return 最终代理人 ID（无委派时返回 ownerUserId 本身）
+     */
+    String resolveDelegateChain(String tenantId, String ownerUserId,
+                                 String flowCode, String nodeCode);
 }

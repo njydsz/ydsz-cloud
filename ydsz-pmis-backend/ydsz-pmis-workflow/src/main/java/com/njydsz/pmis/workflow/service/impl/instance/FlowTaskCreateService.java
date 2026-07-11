@@ -106,6 +106,9 @@ public class FlowTaskCreateService {
     /** 使用 @Lazy 避免循环依赖：FlowTaskPassService → FlowTaskCreateService */
     @Lazy
     private final FlowTaskPassService passService;
+    /** P0-4: 自动审批 REJECT 动作使用 */
+    @Lazy
+    private final FlowTaskRejectService rejectService;
     private final FlowInstanceService instanceService;
     /** P1-6: SLA 服务（任务创建时应用 SLA 配置） */
     @Lazy
@@ -347,7 +350,26 @@ public class FlowTaskCreateService {
     }
 
     /**
-     * P2-4 (GAP-14): 自动审批节点
+     * P2-4 (GAP-14) / P0-4: 自动审批节点（配置化规则引擎）
+     *
+     * <p>P0-4 增强：支持多规则配置（rules 数组），每条规则可指定 type + action。
+     *
+     * <p>ext JSON 配置示例：
+     * <pre>
+     * {
+     *   "autoApprove": {
+     *     "enabled": true,
+     *     "rules": [
+     *       {"type": "INITIATOR_IS_APPROVER", "action": "PASS"},
+     *       {"type": "AMOUNT_BELOW", "threshold": 1000, "variable": "amount", "action": "PASS"},
+     *       {"type": "EXPR", "expr": "deptType == 'engineering' && urgency == 'low'", "action": "PASS"},
+     *       {"type": "AMOUNT_ABOVE", "threshold": 100000, "variable": "amount", "action": "REJECT"}
+     *     ]
+     *   }
+     * }
+     * </pre>
+     *
+     * <p>兼容旧配置：enabled + whenInitiatorIsApprover + expr 单条规则格式。
      */
     private void tryAutoApprove(FlowInstanceDO instance, FlowNodeDO node,
                                 FlowRunTaskDO task, Map<String, Object> variables) {
@@ -377,7 +399,38 @@ public class FlowTaskCreateService {
         if (!FlowPerformType.OR.name().equals(task.getPerformType())) {
             return;
         }
+
+        // P0-4: 构建评估环境
+        Map<String, Object> env = new HashMap<>();
+        if (variables != null) {
+            env.putAll(variables);
+        }
+        env.put("_initiatorId", instance.getInitiatorId());
+        env.put("_assigneeId", task.getAssigneeId());
+        env.put("_nodeCode", node.getNodeCode());
+
+        // P0-4: 优先使用 rules 数组（新配置）
+        Object rulesObj = cfg.get("rules");
+        if (rulesObj instanceof List<?> rulesList && !rulesList.isEmpty()) {
+            for (Object ruleObj : rulesList) {
+                if (!(ruleObj instanceof Map<?, ?> rule)) {
+                    continue;
+                }
+                @SuppressWarnings("unchecked")
+                Map<String, Object> ruleCfg = (Map<String, Object>) rule;
+                String action = evaluateAutoApproveRule(ruleCfg, instance, task, env);
+                if (action != null) {
+                    executeAutoAction(action, instance, node, task, variables, ruleCfg);
+                    return; // 命中第一条规则即执行
+                }
+            }
+            return; // 规则数组无命中
+        }
+
+        // 兼容旧配置：单条规则
         boolean matched = false;
+        String action = "PASS";
+
         // 条件1：发起人是审批人
         Object whenInitiator = cfg.get("whenInitiatorIsApprover");
         if (Boolean.TRUE.equals(whenInitiator) && instance.getInitiatorId() != null) {
@@ -393,9 +446,6 @@ public class FlowTaskCreateService {
             Object exprObj = cfg.get("expr");
             if (exprObj instanceof String expr && !expr.isBlank()) {
                 try {
-                    Map<String, Object> env = new HashMap<>(variables);
-                    env.put("_initiatorId", instance.getInitiatorId());
-                    env.put("_assigneeId", task.getAssigneeId());
                     Object result = serviceNodeExecutor.evalExpr(expr, env);
                     matched = Boolean.TRUE.equals(result);
                 } catch (Exception e) {
@@ -405,18 +455,101 @@ public class FlowTaskCreateService {
             }
         }
         if (matched) {
-            FlowTaskOperateDTO autoDto = new FlowTaskOperateDTO();
-            autoDto.setTaskId(task.getId());
-            autoDto.setUserId("0");
-            autoDto.setUserName("SYSTEM_AUTO_APPROVE");
-            autoDto.setComment("自动审批节点满足条件，自动通过");
+            executeAutoAction(action, instance, node, task, variables, null);
+        }
+    }
+
+    /**
+     * P0-4: 评估单条自动审批规则
+     *
+     * @return "PASS" / "REJECT" / null（未命中）
+     */
+    private String evaluateAutoApproveRule(Map<String, Object> rule, FlowInstanceDO instance,
+                                            FlowRunTaskDO task, Map<String, Object> env) {
+        String type = String.valueOf(rule.getOrDefault("type", "")).toUpperCase();
+        String action = String.valueOf(rule.getOrDefault("action", "PASS")).toUpperCase();
+        boolean matched = false;
+
+        switch (type) {
+            case "INITIATOR_IS_APPROVER" -> {
+                if (instance.getInitiatorId() != null) {
+                    String initiator = String.valueOf(instance.getInitiatorId());
+                    matched = initiator.equals(task.getAssigneeId())
+                            || (task.getAssigneeName() != null
+                            && task.getAssigneeName().contains(initiator));
+                }
+            }
+            case "EXPR" -> {
+                Object exprObj = rule.get("expr");
+                if (exprObj instanceof String expr && !expr.isBlank()) {
+                    try {
+                        Object result = serviceNodeExecutor.evalExpr(expr, env);
+                        matched = Boolean.TRUE.equals(result);
+                    } catch (Exception e) {
+                        log.warn("[Flow] P0-4 自动审批规则表达式求值失败: type={} expr={} err={}",
+                                type, exprObj, e.getMessage());
+                    }
+                }
+            }
+            case "AMOUNT_BELOW" -> {
+                String varName = String.valueOf(rule.getOrDefault("variable", "amount"));
+                Object thresholdObj = rule.get("threshold");
+                Object val = env.get(varName);
+                if (thresholdObj != null && val instanceof Number n) {
+                    double threshold = ((Number) thresholdObj).doubleValue();
+                    matched = n.doubleValue() < threshold;
+                }
+            }
+            case "AMOUNT_ABOVE" -> {
+                String varName = String.valueOf(rule.getOrDefault("variable", "amount"));
+                Object thresholdObj = rule.get("threshold");
+                Object val = env.get(varName);
+                if (thresholdObj != null && val instanceof Number n) {
+                    double threshold = ((Number) thresholdObj).doubleValue();
+                    matched = n.doubleValue() > threshold;
+                }
+            }
+            case "ALWAYS" -> matched = true;
+            default -> {
+                log.debug("[Flow] P0-4 未知自动审批规则类型: type={}", type);
+            }
+        }
+
+        return matched ? action : null;
+    }
+
+    /**
+     * P0-4: 执行自动审批动作（PASS / REJECT）
+     */
+    private void executeAutoAction(String action, FlowInstanceDO instance, FlowNodeDO node,
+                                    FlowRunTaskDO task, Map<String, Object> variables,
+                                    Map<String, Object> ruleCfg) {
+        FlowTaskOperateDTO autoDto = new FlowTaskOperateDTO();
+        autoDto.setTaskId(task.getId());
+        autoDto.setUserId("0");
+        autoDto.setUserName("SYSTEM_AUTO_APPROVE");
+        String ruleDesc = ruleCfg != null
+                ? String.valueOf(ruleCfg.getOrDefault("type", "UNKNOWN")) : "LEGACY";
+        if ("REJECT".equals(action)) {
+            autoDto.setComment("P0-4 自动审批规则[" + ruleDesc + "]命中，自动驳回");
+            try {
+                // 调用 rejectService 驳回
+                rejectService.reject(autoDto);
+                log.info("[Flow] P0-4 自动审批规则驳回: instanceId={} node={} taskId={} rule={}",
+                        instance.getId(), node.getNodeCode(), task.getId(), ruleDesc);
+            } catch (Exception e) {
+                log.warn("[Flow] P0-4 自动审批驳回失败（降级为人工）: instanceId={} node={} err={}",
+                        instance.getId(), node.getNodeCode(), e.getMessage());
+            }
+        } else {
+            autoDto.setComment("P0-4 自动审批规则[" + ruleDesc + "]命中，自动通过");
             autoDto.setVariables(variables);
             try {
                 passService.pass(autoDto);
-                log.info("[Flow] 自动审批节点通过: instanceId={} node={} taskId={}",
-                        instance.getId(), node.getNodeCode(), task.getId());
+                log.info("[Flow] P0-4 自动审批规则通过: instanceId={} node={} taskId={} rule={}",
+                        instance.getId(), node.getNodeCode(), task.getId(), ruleDesc);
             } catch (Exception e) {
-                log.warn("[Flow] 自动审批节点通过失败（降级为人工）: instanceId={} node={} err={}",
+                log.warn("[Flow] P0-4 自动审批通过失败（降级为人工）: instanceId={} node={} err={}",
                         instance.getId(), node.getNodeCode(), e.getMessage());
             }
         }
@@ -605,7 +738,10 @@ public class FlowTaskCreateService {
     }
 
     /**
-     * P1-4: 长期授权委派改写
+     * P1-4/P1-7: 长期授权委派改写（支持链式解析）
+     *
+     * <p>P1-7 增强：使用 {@code resolveDelegateChain} 递归解析 A→B→C 链式委派，
+     * 最终将任务分配给链路末端的代理人。
      */
     private void applyDelegateRedirect(FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node) {
         try {
@@ -617,23 +753,31 @@ public class FlowTaskCreateService {
                 return;
             }
             String currentUserId = currentAssigneeId.trim();
+            // P1-7: 链式解析最终代理人
+            String finalDelegateId = delegateAuthService.resolveDelegateChain(
+                    instance.getTenantId(), currentUserId,
+                    instance.getFlowCode(), node.getNodeCode());
+            if (finalDelegateId == null || finalDelegateId.equals(currentUserId)) {
+                // 无委派规则，或最终代理人就是原办理人
+                return;
+            }
+            // 仍需匹配首条授权规则用于审计记录
             FlowDelegateAuthDO matched = delegateAuthService.matchAuth(
                     instance.getTenantId(), currentUserId,
                     instance.getFlowCode(), node.getNodeCode());
-            if (matched == null) {
-                return;
-            }
             task.setAssignorId(currentUserId);
-            task.setAssignorName(matched.getOwnerUserName());
-            task.setAssigneeId(matched.getDelegateUserId());
-            task.setAssigneeName(matched.getDelegateUserName());
+            task.setAssignorName(matched != null ? matched.getOwnerUserName() : null);
+            task.setAssigneeId(finalDelegateId);
+            // 最终代理人姓名：优先从链路末端匹配记录获取
+            task.setAssigneeName(matched != null ? matched.getDelegateUserName() : finalDelegateId);
             taskMapper.updateById(task);
-            support.audit(task, "DELEGATE_AUTH_APPLIED", matched.getDelegateUserId(),
+            String authId = matched != null ? matched.getId() : "CHAIN_RESOLVED";
+            String scopeType = matched != null ? matched.getScopeType() : "CHAIN";
+            support.audit(task, "DELEGATE_AUTH_APPLIED", finalDelegateId,
                     currentUserId,
-                    "长期授权委派生效: " + matched.getId() + " (" + matched.getScopeType() + ")");
-            log.info("[Flow] 长期授权委派改写: taskId={} owner={} → delegate={} authId={} scope={}",
-                    task.getId(), currentUserId, matched.getDelegateUserId(),
-                    matched.getId(), matched.getScopeType());
+                    "长期授权委派生效(链式): " + authId + " (" + scopeType + ") → " + finalDelegateId);
+            log.info("[Flow] 长期授权委派改写(链式): taskId={} owner={} → finalDelegate={} authId={} scope={}",
+                    task.getId(), currentUserId, finalDelegateId, authId, scopeType);
         } catch (Exception e) {
             log.error("[Flow] 长期授权委派改写异常: taskId={} err={}",
                     task == null ? "null" : task.getId(), e.getMessage(), e);

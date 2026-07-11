@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.message.dto.core.NotificationQueryDTO;
 import com.njydsz.pmis.message.dto.core.NotificationSendDTO;
 import com.njydsz.pmis.message.entity.core.MsgNotificationDO;
+import com.njydsz.pmis.message.vo.NotificationGroupVO;
 
 import java.util.List;
 
@@ -73,4 +74,22 @@ public interface NotificationService {
      * @return true 表示撤回成功
      */
     boolean recall(String userId, String id);
+
+    /**
+     * P1-2: 分组查询收件箱（按 message_group 折叠,每组返回最新一条+未读数）。
+     *
+     * @param userId 用户 ID
+     * @param query  查询参数
+     * @return 分组列表
+     */
+    Page<NotificationGroupVO> inboxGrouped(String userId, NotificationQueryDTO query);
+
+    /**
+     * P1-2: 查询指定分组的所有通知。
+     *
+     * @param userId       用户 ID
+     * @param messageGroup 分组键
+     * @return 通知列表
+     */
+    List<MsgNotificationDO> listByGroup(String userId, String messageGroup);
 }

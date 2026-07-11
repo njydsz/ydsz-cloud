@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_notification(
     recall_status   VARCHAR(16)    NOT NULL DEFAULT 'NONE',
     recall_at       TIMESTAMPTZ,
     expired_at      TIMESTAMPTZ,
+    mention_user_ids VARCHAR(512),
     created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
@@ -148,7 +149,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_preference(
     deleted           SMALLINT     NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmp_user_chan_biz UNIQUE (user_id, channel, biz_type, tenant_id, deleted),
-    CONSTRAINT ck_pmp_channel_enum  CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmp_channel_enum  CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
     CONSTRAINT ck_pmp_enabled_enum  CHECK (enabled IN (0, 1)),
     CONSTRAINT ck_pmp_dnd_enum      CHECK (dnd_enabled IN (0, 1)),
     CONSTRAINT ck_pmp_digest_enum   CHECK (digest_enabled IN (0, 1)),
@@ -206,7 +207,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_subscription(
     deleted         SMALLINT     NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT uk_pms_user_topic_chan UNIQUE (user_id, topic_code, channel, tenant_id, deleted),
-    CONSTRAINT ck_pms_channel_enum    CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pms_channel_enum    CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
     CONSTRAINT ck_pms_status_enum     CHECK (status IN ('SUBSCRIBED', 'UNSUBSCRIBED')),
     CONSTRAINT ck_pms_deleted_enum    CHECK (deleted IN (0, 1))
 );
@@ -303,7 +304,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     -- 复合主键(分区表要求分区键 created_at 必须在主键中)
     CONSTRAINT pk_pml PRIMARY KEY (id, created_at),
     -- 数据完整性约束
-    CONSTRAINT ck_pml_channel_enum      CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pml_channel_enum      CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
     CONSTRAINT ck_pml_status_enum       CHECK (status IN ('PENDING', 'SENDING', 'SUCCESS', 'FAILED', 'RETRY', 'DEAD', 'RECALLED', 'SCHEDULED')),
     CONSTRAINT ck_pml_priority_enum     CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'URGENT')),
     CONSTRAINT ck_pml_recall_enum       CHECK (recall_status IN ('NONE', 'RECALLED')),
@@ -460,6 +461,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_template(
     audit_at        TIMESTAMPTZ,
     audit_remark    VARCHAR(512),
     description     VARCHAR(512),
+    variable_defs   TEXT,
     created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
@@ -467,7 +469,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_template(
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     tenant_id       VARCHAR(20)         NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmt_code_chan_locale_tenant UNIQUE (template_code, channel, locale, tenant_id, deleted),
-    CONSTRAINT ck_pmt_channel_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmt_channel_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
     CONSTRAINT ck_pmt_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pmt_audit_enum     CHECK (audit_status IN ('DRAFT', 'AUDITING', 'APPROVED', 'REJECTED')),
     CONSTRAINT ck_pmt_deleted_enum   CHECK (deleted IN (0, 1))
@@ -530,9 +532,9 @@ CREATE TABLE IF NOT EXISTS pmis_msg_route_rule(
     deleted           SMALLINT     NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmrr_code UNIQUE (rule_code, tenant_id, deleted),
-    CONSTRAINT ck_pmrr_chan_enum   CHECK (channel IS NULL OR channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmrr_target_enum CHECK (target_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
-    CONSTRAINT ck_pmrr_fb_enum     CHECK (fallback_channel IS NULL OR fallback_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmrr_chan_enum   CHECK (channel IS NULL OR channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
+    CONSTRAINT ck_pmrr_target_enum CHECK (target_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
+    CONSTRAINT ck_pmrr_fb_enum     CHECK (fallback_channel IS NULL OR fallback_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
     CONSTRAINT ck_pmrr_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pmrr_deleted_enum CHECK (deleted IN (0, 1)),
     CONSTRAINT ck_pmrr_priority_nonneg CHECK (priority >= 0)
@@ -601,7 +603,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT     NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
-    CONSTRAINT ck_pmag_chan_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmag_chan_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
     CONSTRAINT ck_pmag_status_enum CHECK (batch_status IN ('PENDING', 'READY', 'SENT', 'CANCELLED')),
     CONSTRAINT ck_pmag_count_nonneg CHECK (message_count >= 0),
     CONSTRAINT ck_pmag_deleted_enum CHECK (deleted IN (0, 1))
@@ -640,7 +642,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_canary(
     CONSTRAINT ck_pmc_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
     CONSTRAINT ck_pmc_pct_range   CHECK (percentage >= 0 AND percentage <= 100),
     CONSTRAINT ck_pmc_bucket_pos  CHECK (bucket_total > 0),
-    CONSTRAINT ck_pmc_exp_chan_enum CHECK (experiment_channel IS NULL OR experiment_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmc_exp_chan_enum CHECK (experiment_channel IS NULL OR experiment_channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
     CONSTRAINT ck_pmc_deleted_enum CHECK (deleted IN (0, 1))
 );
 
@@ -867,4 +869,40 @@ CREATE INDEX IF NOT EXISTS idx_pmuc_user ON pmis_msg_user_channel(user_id) WHERE
 CREATE INDEX IF NOT EXISTS idx_pmuc_user_chan_type ON pmis_msg_user_channel(user_id, channel_type) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_pmuc_tenant ON pmis_msg_user_channel(tenant_id);
+
+-- ====================================================================
+-- P0-4: 消息变量数据源绑定表
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS pmis_msg_variable_source(
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    template_code     VARCHAR(128)   NOT NULL,
+    variable_name     VARCHAR(64)    NOT NULL,
+    source_type       VARCHAR(16)    NOT NULL DEFAULT 'BEAN',
+    source_expr       VARCHAR(512)   NOT NULL,
+    cache_ttl         INTEGER        NOT NULL DEFAULT 0,
+    description       VARCHAR(512),
+    created_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT     NOT NULL DEFAULT 0,
+    tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
+    CONSTRAINT uk_pmvs_tpl_var UNIQUE (template_code, variable_name, tenant_id, deleted),
+    CONSTRAINT ck_pmvs_src_enum CHECK (source_type IN ('BEAN', 'SQL', 'HTTP', 'STATIC')),
+    CONSTRAINT ck_pmvs_deleted  CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_msg_variable_source IS 'P0-4: 消息变量数据源绑定表,模板变量自动从数据源拉取,免去调用方手动传参';
+
+COMMENT ON COLUMN pmis_msg_variable_source.template_code IS '模板编码';
+
+COMMENT ON COLUMN pmis_msg_variable_source.variable_name IS '变量名(与模板 ${var} 对应)';
+
+COMMENT ON COLUMN pmis_msg_variable_source.source_type IS '数据源类型: BEAN(Spring Bean方法) / SQL(SQL查询) / HTTP(远程接口) / STATIC(静态值)';
+
+COMMENT ON COLUMN pmis_msg_variable_source.source_expr IS '数据源表达式: BEAN=beanName.method(#bizId) / SQL=SELECT xxx FROM ... / HTTP=https://... / STATIC=直接值';
+
+COMMENT ON COLUMN pmis_msg_variable_source.cache_ttl IS '缓存有效期(秒),0=不缓存';
+
+CREATE INDEX IF NOT EXISTS idx_pmvs_tpl ON pmis_msg_variable_source(template_code) WHERE deleted = 0;
 

@@ -101,6 +101,65 @@ function getNavigationType(): string {
   }
 }
 
+// ==================== 批量上报通道（P1-5 增强） ====================
+
+/** 批量上报缓冲区 */
+const batchBuffer: VitalBeaconPayload[] = []
+/** 批量上报阈值 */
+const BATCH_SIZE = 5
+/** 批量上报超时（ms） */
+const BATCH_TIMEOUT_MS = 5000
+/** 批量定时器 */
+let batchTimer: ReturnType<typeof setTimeout> | null = null
+
+/**
+ * 刷新批量缓冲区，通过 sendBeacon 一次性上报
+ */
+function flushBatch(): void {
+  if (batchBuffer.length === 0) return
+
+  const payload = JSON.stringify({
+    metrics: batchBuffer.splice(0),
+    page: location.pathname,
+    timestamp: Date.now(),
+  })
+
+  try {
+    const blob = new Blob([payload], { type: 'application/json' })
+    navigator.sendBeacon('/api/vitals/batch', blob)
+  } catch {
+    // 静默失败
+  }
+
+  if (batchTimer) {
+    clearTimeout(batchTimer)
+    batchTimer = null
+  }
+}
+
+/**
+ * 将指标加入批量缓冲区
+ */
+function addToBatch(payload: VitalBeaconPayload): void {
+  batchBuffer.push(payload)
+
+  if (batchBuffer.length >= BATCH_SIZE) {
+    flushBatch()
+  } else if (!batchTimer) {
+    batchTimer = setTimeout(flushBatch, BATCH_TIMEOUT_MS)
+  }
+}
+
+// 页面隐藏时刷新剩余指标
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      flushBatch()
+    }
+  })
+  window.addEventListener('pagehide', flushBatch)
+}
+
 // ==================== 上报通道 ====================
 
 /** 已上报的指标集合，避免重复上报 */
@@ -108,7 +167,7 @@ const reportedMetrics = new Set<WebVitalName>()
 
 /**
  * 上报指标到后端（beacon）
- * 仅生产环境且开启 VITE_ENABLE_VITALS_BEACON 时启用，避免开发环境产生 404 噪音
+ * 生产环境且开启 VITE_ENABLE_VITALS_BEACON 时启用批量上报，避免开发环境产生 404 噪音
  */
 function reportToBackend(metric: WebVitalMetric): void {
   if (!import.meta.env.PROD) return
@@ -126,8 +185,8 @@ function reportToBackend(metric: WebVitalMetric): void {
       page: location.pathname,
       timestamp: Date.now(),
     }
-    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
-    navigator.sendBeacon('/api/vitals', blob)
+    // P1-5 增强：使用批量上报代替逐条上报
+    addToBatch(payload)
   } catch {
     // 静默失败，性能上报不能影响主流程
   }
