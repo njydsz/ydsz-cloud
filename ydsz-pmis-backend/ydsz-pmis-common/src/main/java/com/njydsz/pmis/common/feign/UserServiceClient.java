@@ -20,7 +20,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @FeignClient(
-        name = "ydsz-pmis-userinfo",
+        name = FeignClientConstants.USERINFO,
         contextId = "commonUserServiceClient",
         fallbackFactory = UserServiceClientFallback.class
 )

@@ -18,7 +18,7 @@ import java.util.List;
  * @since 1.2.0
  */
 @FeignClient(
-        name = "ydsz-pmis-userinfo",
+        name = FeignClientConstants.USERINFO,
         contextId = "orgQueryClient",
         path = "/feign/org",
         fallbackFactory = OrgQueryClientFallbackFactory.class

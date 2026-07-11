@@ -18,7 +18,7 @@ import com.njydsz.pmis.project.entity.initiation.GateReviewDO;
 import com.njydsz.pmis.project.entity.initiation.InitiationDO;
 import com.njydsz.pmis.project.enums.initiation.GateCode;
 import com.njydsz.pmis.project.enums.initiation.InitiationStage;
-import com.njydsz.pmis.project.feign.WorkflowServiceClient;
+import com.njydsz.pmis.common.feign.WorkflowServiceClient;
 import com.njydsz.pmis.project.mapper.execution.BudgetItemMapper;
 import com.njydsz.pmis.project.mapper.initiation.GateReviewMapper;
 import com.njydsz.pmis.project.mapper.initiation.InitiationMapper;

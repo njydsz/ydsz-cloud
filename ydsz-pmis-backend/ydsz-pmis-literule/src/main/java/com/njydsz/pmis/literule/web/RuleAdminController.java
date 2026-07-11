@@ -80,6 +80,8 @@ import com.njydsz.pmis.literule.spi.RulePackProvider.PackUpdateInfo;
 import com.njydsz.pmis.literule.spi.RuleCategoryProvider.CategoryNode;
 import com.njydsz.pmis.literule.spi.RuleTemplateProvider;
 import com.njydsz.pmis.literule.spi.RuleVersion;
+import com.njydsz.pmis.literule.version.RuleVersionDiff;
+import com.njydsz.pmis.literule.version.RuleVersionDiffService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -269,6 +271,41 @@ public class RuleAdminController {
     @GetMapping("/{ruleCode}/versions")
     public Result<List<RuleVersion>> listVersions(@PathVariable String ruleCode) {
         return Result.ok(ruleAdminService.listVersions(ruleCode));
+    }
+
+    /**
+     * 版本 Diff（结构化对比两个版本的定义差异）
+     *
+     * <p>对指定规则的两个版本进行字段级结构化对比，产出变更项列表。
+     * 前端可据此高亮具体变更字段，并渲染 diff 视图。
+     *
+     * @param ruleCode    规则编码
+     * @param oldVersion  旧版本号
+     * @param newVersion  新版本号
+     * @return 结构化 Diff 结果
+     * @since 2.0.0
+     */
+    @GetMapping("/{ruleCode}/versionDiff")
+    public Result<RuleVersionDiff> versionDiff(@PathVariable String ruleCode,
+                                                @RequestParam int oldVersion,
+                                                @RequestParam int newVersion) {
+        List<RuleVersion> versions = ruleAdminService.listVersions(ruleCode);
+        RuleVersion oldV = versions.stream().filter(v -> v.getVersion() == oldVersion).findFirst().orElse(null);
+        RuleVersion newV = versions.stream().filter(v -> v.getVersion() == newVersion).findFirst().orElse(null);
+
+        if (oldV == null || newV == null) {
+            return Result.fail("版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
+        }
+
+        try {
+            RuleDefinition oldDef = objectMapper.readValue(oldV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition newDef = objectMapper.readValue(newV.getDefinitionJson(), RuleDefinition.class);
+            RuleVersionDiffService diffService = new RuleVersionDiffService();
+            return Result.ok(diffService.diff(oldDef, newDef));
+        } catch (Exception e) {
+            log.error("[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}", ruleCode, oldVersion, newVersion, e);
+            return Result.fail("版本 Diff 解析失败: " + e.getMessage());
+        }
     }
 
     /**

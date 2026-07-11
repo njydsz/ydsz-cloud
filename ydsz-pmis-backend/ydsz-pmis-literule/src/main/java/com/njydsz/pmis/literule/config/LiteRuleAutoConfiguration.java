@@ -4,7 +4,9 @@ import com.njydsz.pmis.literule.adaptive.AdaptiveThresholdService;
 import com.njydsz.pmis.literule.agent.AgentRuleNode;
 import com.njydsz.pmis.literule.agent.AgentRuleNodeFactory;
 import com.njydsz.pmis.literule.agent.ReActAgentExecutor;
+import com.njydsz.pmis.common.ai.LlmClient;
 import com.njydsz.pmis.literule.ai.LLMClient;
+import com.njydsz.pmis.literule.ai.LlmClientDelegate;
 import com.njydsz.pmis.literule.ai.MockLLMClient;
 import com.njydsz.pmis.literule.ai.OpenAICompatibleLLMClient;
 import com.njydsz.pmis.literule.ai.RuleAttributionService;
@@ -461,19 +463,33 @@ public class LiteRuleAutoConfiguration {
     /**
      * LLM 客户端（P2-15）
      *
+     * <p>优先复用 common 模块的 {@link LlmClient} Bean（由 {@code LlmClientAutoConfiguration} 创建），
+     * 避免重复创建 LLM 客户端实例。若 common 模块未启用 AI（{@code pmis.common.ai.enabled=false}），
+     * 则回退到 literule 自有的配置创建 {@link MockLLMClient} 或 {@link OpenAICompatibleLLMClient}。
+     *
      * <p>根据 {@code pmis.literule.ai.llm-client} 配置选择实现：
      * <ul>
      *   <li>OPENAI_COMPATIBLE：{@link OpenAICompatibleLLMClient}（OpenAI/DeepSeek/通义千问/Ollama 等兼容协议）</li>
      *   <li>MOCK（默认）：{@link MockLLMClient}（离线/单元测试）</li>
      * </ul>
      *
-     * @param properties 配置
+     * @param properties       配置
+     * @param commonLlmClientProvider common 模块 LLM 客户端（可选，优先使用）
      * @return LLMClient 实例
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
-    public LLMClient llmClient(LiteRuleProperties properties) {
+    public LLMClient llmClient(LiteRuleProperties properties,
+                                 ObjectProvider<LlmClient> commonLlmClientProvider) {
+        // P0-2: 优先复用 common 模块的 LlmClient Bean
+        LlmClient commonClient = commonLlmClientProvider.getIfAvailable();
+        if (commonClient != null) {
+            log.info("[LiteRule-AI] 复用 common 模块 LlmClient（provider={}, model={}）",
+                    commonClient.provider(), commonClient.model());
+            return new LlmClientDelegate(commonClient);
+        }
+        // 回退到 literule 自有配置
         LiteRuleProperties.Ai ai = properties.getAi();
         String type = ai.getLlmClient();
         if (type == null || type.isEmpty() || "MOCK".equalsIgnoreCase(type)) {

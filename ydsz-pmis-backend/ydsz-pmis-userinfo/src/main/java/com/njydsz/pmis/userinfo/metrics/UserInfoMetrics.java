@@ -1,18 +1,14 @@
 package com.njydsz.pmis.userinfo.metrics;
 
-import io.micrometer.core.instrument.Counter;
+import com.njydsz.pmis.common.metrics.AbstractModuleMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -32,16 +28,9 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class UserInfoMetrics {
+public class UserInfoMetrics extends AbstractModuleMetrics {
 
-    private final MeterRegistry meterRegistry;
     private final JdbcTemplate jdbcTemplate;
-
-    /** Counter 缓存（避免重复注册） */
-    private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
-    /** Timer 缓存 */
-    private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
 
     // ============================== Gauge 指标 ==============================
 
@@ -56,27 +45,32 @@ public class UserInfoMetrics {
     /** 总用户数 */
     private final AtomicLong totalUsers = new AtomicLong(0);
 
+    public UserInfoMetrics(MeterRegistry meterRegistry, JdbcTemplate jdbcTemplate) {
+        super(meterRegistry, "pmis_user_");
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
     @PostConstruct
     public void init() {
         Gauge.builder("pmis_user_online_count", onlineUsers, AtomicLong::doubleValue)
                 .description("在线用户数（活跃会话去重）")
-                .register(meterRegistry);
+                .register(registry);
 
         Gauge.builder("pmis_user_active_sessions", activeSessions, AtomicLong::doubleValue)
                 .description("活跃会话数")
-                .register(meterRegistry);
+                .register(registry);
 
         Gauge.builder("pmis_user_locked_accounts", lockedAccounts, AtomicLong::doubleValue)
                 .description("锁定账号数")
-                .register(meterRegistry);
+                .register(registry);
 
         Gauge.builder("pmis_user_disabled_accounts", disabledAccounts, AtomicLong::doubleValue)
                 .description("停用账号数")
-                .register(meterRegistry);
+                .register(registry);
 
         Gauge.builder("pmis_user_total", totalUsers, AtomicLong::doubleValue)
                 .description("总用户数")
-                .register(meterRegistry);
+                .register(registry);
 
         log.info("[UserInfoMetrics] 指标注册完成: pmis_user_online_count, pmis_user_active_sessions, pmis_user_locked_accounts, pmis_user_disabled_accounts, pmis_user_total");
     }
@@ -125,7 +119,7 @@ public class UserInfoMetrics {
      * @param clientType 客户端类型（PC/APP/H5）
      */
     public void recordLoginSuccess(String clientType) {
-        incrementCounter("pmis_user_login_success_total", "client_type", clientType);
+        incrementCounter("login_success_total", "client_type", safe(clientType));
     }
 
     /**
@@ -134,21 +128,21 @@ public class UserInfoMetrics {
      * @param reason 失败原因（USER_NOT_FOUND / PASSWORD_INCORRECT / USER_LOCKED / USER_DISABLED）
      */
     public void recordLoginFailure(String reason) {
-        incrementCounter("pmis_user_login_failure_total", "reason", reason);
+        incrementCounter("login_failure_total", "reason", safe(reason));
     }
 
     /**
      * 记录 Token 刷新
      */
     public void recordTokenRefresh() {
-        incrementCounter("pmis_user_token_refresh_total");
+        incrementCounter("token_refresh_total");
     }
 
     /**
      * 记录登出
      */
     public void recordLogout() {
-        incrementCounter("pmis_user_logout_total");
+        incrementCounter("logout_total");
     }
 
     /**
@@ -157,14 +151,14 @@ public class UserInfoMetrics {
      * @param trigger 触发方式（SELF / ADMIN / EXPIRED）
      */
     public void recordPasswordChange(String trigger) {
-        incrementCounter("pmis_user_password_change_total", "trigger", trigger);
+        incrementCounter("password_change_total", "trigger", safe(trigger));
     }
 
     /**
      * 记录账号锁定
      */
     public void recordAccountLocked() {
-        incrementCounter("pmis_user_account_locked_total");
+        incrementCounter("account_locked_total");
     }
 
     /**
@@ -173,7 +167,7 @@ public class UserInfoMetrics {
      * @param reason 踢出原因（CONCURRENT_LIMIT / KICK_OTHERS / EXPIRED）
      */
     public void recordSessionKicked(String reason) {
-        incrementCounter("pmis_user_session_kicked_total", "reason", reason);
+        incrementCounter("session_kicked_total", "reason", safe(reason));
     }
 
     // ============================== Timer 方法 ==============================
@@ -184,7 +178,7 @@ public class UserInfoMetrics {
      * @param elapsedMs 耗时（毫秒）
      */
     public void recordLoginDuration(long elapsedMs) {
-        getTimer("pmis_user_login_duration_seconds").record(java.time.Duration.ofMillis(elapsedMs));
+        recordTimer("login_duration_seconds", elapsedMs);
     }
 
     /**
@@ -193,23 +187,7 @@ public class UserInfoMetrics {
      * @param elapsedMs 耗时（毫秒）
      */
     public void recordTokenValidationDuration(long elapsedMs) {
-        getTimer("pmis_user_token_validation_duration_seconds").record(java.time.Duration.ofMillis(elapsedMs));
+        recordTimer("token_validation_duration_seconds", elapsedMs);
     }
 
-    // ============================== 工具方法 ==============================
-
-    private void incrementCounter(String name, String... tags) {
-        counterCache.computeIfAbsent(name + (tags.length > 0 ? String.join(",", tags) : ""),
-                k -> Counter.builder(name)
-                        .tags(tags.length > 0 ? io.micrometer.core.instrument.Tags.of(tags) : io.micrometer.core.instrument.Tags.empty())
-                        .register(meterRegistry))
-                .increment();
-    }
-
-    private Timer getTimer(String name) {
-        return timerCache.computeIfAbsent(name,
-                k -> Timer.builder(name)
-                        .publishPercentiles(0.5, 0.9, 0.99)
-                        .register(meterRegistry));
-    }
 }

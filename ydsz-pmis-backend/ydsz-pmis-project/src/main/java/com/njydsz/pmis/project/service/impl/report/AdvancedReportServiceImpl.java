@@ -8,7 +8,7 @@ import com.njydsz.pmis.project.entity.finance.ProfitSnapshotDO;
 import com.njydsz.pmis.project.entity.resource.RateCardDO;
 import com.njydsz.pmis.project.entity.resource.RateInternalDO;
 import com.njydsz.pmis.project.entity.execution.RiskDO;
-import com.njydsz.pmis.project.feign.BenchResourceClient;
+import com.njydsz.pmis.common.feign.BenchResourceClient;
 import com.njydsz.pmis.project.mapper.execution.EvmMeasureMapper;
 import com.njydsz.pmis.project.mapper.finance.ProfitSnapshotMapper;
 import com.njydsz.pmis.project.mapper.resource.RateCardMapper;

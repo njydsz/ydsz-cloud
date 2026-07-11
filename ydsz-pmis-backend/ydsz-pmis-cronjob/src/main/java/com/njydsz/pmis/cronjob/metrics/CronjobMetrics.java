@@ -1,19 +1,16 @@
 package com.njydsz.pmis.cronjob.metrics;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.metrics.AbstractModuleMetrics;
 import com.njydsz.pmis.cronjob.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.log.JobLogMapper;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -51,13 +48,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Slf4j
 @Component("cronjobMetrics")
-public class CronjobMetrics {
-
-    private final MeterRegistry registry;
-
-    // ============================== Counter / Timer 缓存（避免重复注册） ==============================
-    private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+public class CronjobMetrics extends AbstractModuleMetrics {
 
     // ============================== Gauge 状态字段（由 Scanner 更新，Gauge 回调读取） ==============================
     /** 上次扫描到的待触发任务数 */
@@ -78,7 +69,7 @@ public class CronjobMetrics {
 
     public CronjobMetrics(MeterRegistry registry,
                           ObjectProvider<JobLogMapper> jobLogMapperProvider) {
-        this.registry = registry;
+        super(registry, "pmis_cronjob_");
         this.jobLogMapper = jobLogMapperProvider.getIfAvailable();
         registerGauges();
         log.info("[CronjobMetrics] 初始化完成，Prometheus 端点可访问 /actuator/prometheus");
@@ -95,7 +86,7 @@ public class CronjobMetrics {
      * @param status      执行结果：SUCCESS / FAILED / TIMEOUT
      */
     public void incJobDispatched(String triggerType, String status) {
-        counter("pmis_cronjob_job_dispatched_total",
+        counter("job_dispatched_total",
                 "trigger_type", safe(triggerType),
                 "status", safe(status)).increment();
     }
@@ -106,7 +97,7 @@ public class CronjobMetrics {
      * @param jobKey 任务 KEY
      */
     public void incJobFailed(String jobKey) {
-        counter("pmis_cronjob_job_failed_total",
+        counter("job_failed_total",
                 "job_key", safe(jobKey)).increment();
     }
 
@@ -116,7 +107,7 @@ public class CronjobMetrics {
      * @param jobKey 任务 KEY
      */
     public void incJobTimeout(String jobKey) {
-        counter("pmis_cronjob_job_timeout_total",
+        counter("job_timeout_total",
                 "job_key", safe(jobKey)).increment();
     }
 
@@ -126,7 +117,7 @@ public class CronjobMetrics {
      * @param policy Misfire 策略：SKIP / FIRE_NOW / COALESCE
      */
     public void incMisfire(String policy) {
-        counter("pmis_cronjob_misfire_total",
+        counter("misfire_total",
                 "policy", safe(policy)).increment();
     }
 
@@ -141,7 +132,7 @@ public class CronjobMetrics {
      * @param status    派发结果：SUCCESS / PARTIAL / FAILED / SKIPPED
      */
     public void incAlertDispatched(String alertType, String status) {
-        counter("pmis_cronjob_alert_dispatched_total",
+        counter("alert_dispatched_total",
                 "alert_type", safe(alertType),
                 "status", safe(status)).increment();
     }
@@ -161,7 +152,7 @@ public class CronjobMetrics {
         if (millis < 0) {
             return;
         }
-        timer("pmis_cronjob_job_duration_ms",
+        timer("job_duration_ms",
                 "job_key", safe(jobKey),
                 "status", safe(status))
                 .record(Duration.ofMillis(millis));
@@ -250,27 +241,6 @@ public class CronjobMetrics {
     }
 
     // ===========================================
-    // 通用工具：Counter / Timer 缓存
+    // Gauge 注册
     // ===========================================
-
-    private Counter counter(String name, String... kvs) {
-        String key = name + "|" + String.join(",", kvs);
-        return counterCache.computeIfAbsent(key, k -> Counter.builder(name)
-                .tags(kvs)
-                .description("PMIS cronjob " + name)
-                .register(registry));
-    }
-
-    private Timer timer(String name, String... kvs) {
-        String key = name + "|" + String.join(",", kvs);
-        return timerCache.computeIfAbsent(key, k -> Timer.builder(name)
-                .tags(kvs)
-                .description("PMIS cronjob " + name)
-                .publishPercentileHistogram()
-                .register(registry));
-    }
-
-    private static String safe(String v) {
-        return v == null || v.isEmpty() ? "unknown" : v;
-    }
 }

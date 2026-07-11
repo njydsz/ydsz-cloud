@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.feign;
+package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -14,13 +14,18 @@ import java.util.Map;
  * <p>P1-12 跨模块真实聚合：
  * <ul>
  *   <li>{@link #getBenchDashboard()}：调用 user 服务获取 Bench 仪表盘</li>
- *   <li>{@link #listResourceAssignmentsByInitiation(Long)}：调用 user 服务按项目查询资源分配</li>
+ *   <li>{@link #listResourceAssignmentsByInitiation(String)}：调用 user 服务按项目查询资源分配</li>
  * </ul>
+ *
+ * <p>P2-1-followup: 从 project.feign 迁移至 common.feign，使用 {@link FeignClientConstants#USERINFO} 常量。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-userinfo", fallbackFactory = BenchResourceClientFallback.class)
+@FeignClient(
+        name = FeignClientConstants.USERINFO,
+        contextId = "benchResourceClient",
+        fallbackFactory = BenchResourceClientFallback.class)
 public interface BenchResourceClient {
 
     /**

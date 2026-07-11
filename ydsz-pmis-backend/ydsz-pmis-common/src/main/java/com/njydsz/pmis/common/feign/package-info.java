@@ -40,6 +40,18 @@
  *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#PROJECT}</td>
  *     <td>立项信息查询</td>
  *     <td>—</td></tr>
+ * <tr><td>{@link com.njydsz.pmis.common.feign.WorkflowServiceClient}</td>
+ *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#WORKFLOW}</td>
+ *     <td>工作流服务（启动/查询/终止流程）</td>
+ *     <td>WorkflowServiceClientFallback</td></tr>
+ * <tr><td>{@link com.njydsz.pmis.common.feign.BenchResourceClient}</td>
+ *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#USERINFO}</td>
+ *     <td>Bench 资源仪表盘 + 资源分配查询</td>
+ *     <td>BenchResourceClientFallback</td></tr>
+ * <tr><td>{@link com.njydsz.pmis.common.feign.ProjectServiceClient}</td>
+ *     <td>{@link com.njydsz.pmis.common.feign.FeignClientConstants#PROJECT}</td>
+ *     <td>项目执行数据（工时异常/风险/EVM）</td>
+ *     <td>ProjectServiceClientFallback</td></tr>
  * </table>
  *
  * <h3>使用规范</h3>
@@ -51,11 +63,11 @@
  *   <li>不要在业务模块中重复创建指向同一服务的 Feign 客户端</li>
  * </ol>
  *
- * <h3>待迁移</h3>
+ * <h3>已迁移完成</h3>
  * <ul>
- *   <li>{@code project.feign.WorkflowServiceClient} → 迁移到 common.feign</li>
- *   <li>{@code project.feign.BenchResourceClient} → 迁移到 common.feign</li>
- *   <li>{@code agent.feign.ProjectServiceClient} → 迁移到 common.feign</li>
+ *   <li>{@code project.feign.WorkflowServiceClient} → 已迁移到 common.feign</li>
+ *   <li>{@code project.feign.BenchResourceClient} → 已迁移到 common.feign</li>
+ *   <li>{@code agent.feign.ProjectServiceClient} → 已迁移到 common.feign</li>
  * </ul>
  *
  * @author ydsz-pmis-team

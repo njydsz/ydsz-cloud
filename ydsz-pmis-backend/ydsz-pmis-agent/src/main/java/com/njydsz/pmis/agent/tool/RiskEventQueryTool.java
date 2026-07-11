@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.tool;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
-import com.njydsz.pmis.agent.feign.ProjectServiceClient;
+import com.njydsz.pmis.common.feign.ProjectServiceClient;
 import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

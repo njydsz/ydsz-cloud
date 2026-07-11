@@ -21,7 +21,7 @@ import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.project.feign.BenchResourceClient;
+import com.njydsz.pmis.common.feign.BenchResourceClient;
 import com.njydsz.pmis.project.mapper.resource.BillableUtilizationSnapshotMapper;
 import com.njydsz.pmis.project.mapper.execution.CostAllocationMapper;
 import com.njydsz.pmis.project.mapper.execution.EvmMeasureMapper;

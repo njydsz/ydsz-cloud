@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.feign;
+package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -11,18 +11,23 @@ import java.util.Map;
  * 项目执行模块 Feign 客户端（供 Agent 工具调用真实数据源）
  *
  * <p>聚合工时异常统计、风险分页查询、EVM 仪表盘三个接口，供
- * {@link com.njydsz.pmis.agent.tool.TimesheetStatTool}、
- * {@link com.njydsz.pmis.agent.tool.RiskEventQueryTool}、
- * {@link com.njydsz.pmis.agent.tool.ProjectStatusTool}
+ * {@code com.njydsz.pmis.agent.tool.TimesheetStatTool}、
+ * {@code com.njydsz.pmis.agent.tool.RiskEventQueryTool}、
+ * {@code com.njydsz.pmis.agent.tool.ProjectStatusTool}
  * 在 {@code pmis.agent.tool.mock-enabled=false} 时调用。
  *
  * <p>project 服务不可用时由 {@link ProjectServiceClientFallback} 返回降级空数据，
  * 避免 Agent 推理链路级联失败。
  *
+ * <p>P2-1-followup: 从 agent.feign 迁移至 common.feign，使用 {@link FeignClientConstants#PROJECT} 常量。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0 (P0-5)
  */
-@FeignClient(name = "ydsz-pmis-project", fallbackFactory = ProjectServiceClientFallback.class)
+@FeignClient(
+        name = FeignClientConstants.PROJECT,
+        contextId = "projectServiceClient",
+        fallbackFactory = ProjectServiceClientFallback.class)
 public interface ProjectServiceClient {
 
     /**

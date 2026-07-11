@@ -1,23 +1,20 @@
 package com.njydsz.pmis.workflow.metrics;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.metrics.AbstractModuleMetrics;
 import com.njydsz.pmis.workflow.entity.instance.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.mapper.notification.FlowCcMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.instance.FlowRunTaskMapper;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 /**
@@ -40,13 +37,7 @@ import java.util.function.Supplier;
  */
 @Slf4j
 @Component("flowMetrics")
-public class FlowMetrics {
-
-    private final MeterRegistry registry;
-
-    // ============================== Counter 缓存（避免重复注册） ==============================
-    private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+public class FlowMetrics extends AbstractModuleMetrics {
 
     // ============================== Gauge 弱引用 mapper（避免循环依赖） ==============================
     /**
@@ -61,7 +52,7 @@ public class FlowMetrics {
                        ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
                        ObjectProvider<FlowRunTaskMapper> taskMapperProvider,
                        ObjectProvider<FlowCcMapper> ccMapperProvider) {
-        this.registry = registry;
+        super(registry, "pmis_flow_");
         this.instanceMapper = instanceMapperProvider.getIfAvailable();
         this.taskMapper = taskMapperProvider.getIfAvailable();
         this.ccMapper = ccMapperProvider.getIfAvailable();
@@ -78,14 +69,14 @@ public class FlowMetrics {
      * 实例创建计数
      */
     public void incInstanceCreated(String flowCode) {
-        counter("pmis_flow_instance_created_total", "flow_code", safe(flowCode)).increment();
+        counter("instance_created_total", "flow_code", safe(flowCode)).increment();
     }
 
     /**
      * 实例完成计数（result=COMPLETED / REJECTED / TERMINATED）
      */
     public void incInstanceFinished(String flowCode, String result) {
-        counter("pmis_flow_instance_finished_total",
+        counter("instance_finished_total",
                 "flow_code", safe(flowCode),
                 "result", safe(result)).increment();
     }
@@ -94,14 +85,14 @@ public class FlowMetrics {
      * 实例挂起计数
      */
     public void incInstanceSuspended(String flowCode) {
-        counter("pmis_flow_instance_suspended_total", "flow_code", safe(flowCode)).increment();
+        counter("instance_suspended_total", "flow_code", safe(flowCode)).increment();
     }
 
     /**
      * 实例激活计数
      */
     public void incInstanceActivated(String flowCode) {
-        counter("pmis_flow_instance_activated_total", "flow_code", safe(flowCode)).increment();
+        counter("instance_activated_total", "flow_code", safe(flowCode)).increment();
     }
 
     // ===========================================
@@ -109,53 +100,53 @@ public class FlowMetrics {
     // ===========================================
 
     public void incTaskCreated(String flowCode, String nodeCode) {
-        counter("pmis_flow_task_created_total",
+        counter("task_created_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
     public void incTaskPassed(String flowCode, String nodeCode) {
-        counter("pmis_flow_task_passed_total",
+        counter("task_passed_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
     public void incTaskRejected(String flowCode, String nodeCode) {
-        counter("pmis_flow_task_rejected_total",
+        counter("task_rejected_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
     public void incTaskTransferred(String flowCode, String nodeCode) {
-        counter("pmis_flow_task_transferred_total",
+        counter("task_transferred_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
     public void incTaskDelegated(String flowCode, String nodeCode) {
-        counter("pmis_flow_task_delegated_total",
+        counter("task_delegated_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
     public void incTaskUrged(String flowCode) {
-        counter("pmis_flow_task_urged_total", "flow_code", safe(flowCode)).increment();
+        counter("task_urged_total", "flow_code", safe(flowCode)).increment();
     }
 
     public void incTaskClaimed(String flowCode, String nodeCode) {
-        counter("pmis_flow_task_claimed_total",
+        counter("task_claimed_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
     public void incTaskSkipped(String flowCode, String nodeCode) {
-        counter("pmis_flow_task_skipped_total",
+        counter("task_skipped_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode)).increment();
     }
 
     public void incTaskAutoHandled(String flowCode, String nodeCode, String action) {
-        counter("pmis_flow_task_auto_handled_total",
+        counter("task_auto_handled_total",
                 "flow_code", safe(flowCode),
                 "node_code", safe(nodeCode),
                 "action", safe(action)).increment();
@@ -166,17 +157,17 @@ public class FlowMetrics {
     // ===========================================
 
     public void incStartError(String flowCode, String reason) {
-        counter("pmis_flow_start_error_total",
+        counter("start_error_total",
                 "flow_code", safe(flowCode),
                 "reason", safe(reason)).increment();
     }
 
     public void incRecall(String flowCode) {
-        counter("pmis_flow_recall_total", "flow_code", safe(flowCode)).increment();
+        counter("recall_total", "flow_code", safe(flowCode)).increment();
     }
 
     public void incSlaTimeout(String flowCode, String action) {
-        counter("pmis_flow_sla_timeout_total",
+        counter("sla_timeout_total",
                 "flow_code", safe(flowCode),
                 "action", safe(action)).increment();
     }
@@ -202,7 +193,7 @@ public class FlowMetrics {
         if (millis < 0) {
             return;
         }
-        timer("pmis_flow_instance_duration_ms",
+        timer("instance_duration_ms",
                 "flow_code", safe(instance.getFlowCode()),
                 "result", safe(result))
                 .record(Duration.ofMillis(millis));
@@ -224,7 +215,7 @@ public class FlowMetrics {
         if (millis < 0) {
             return;
         }
-        timer("pmis_flow_task_duration_ms",
+        timer("task_duration_ms",
                 "flow_code", safe(task.getFlowCode()),
                 "node_code", safe(task.getNodeCode()),
                 "result", safe(result))
@@ -319,31 +310,6 @@ public class FlowMetrics {
             log.warn("[FlowMetrics] ccMapper.countUnread 调用失败，按 0 处理: {}", e.getMessage());
             return 0L;
         }
-    }
-
-    // ===========================================
-    // 通用工具：Counter / Timer 缓存
-    // ===========================================
-
-    private Counter counter(String name, String... kvs) {
-        String key = name + "|" + String.join(",", kvs);
-        return counterCache.computeIfAbsent(key, k -> Counter.builder(name)
-                .tags(kvs)
-                .description("PMIS workflow " + name)
-                .register(registry));
-    }
-
-    private Timer timer(String name, String... kvs) {
-        String key = name + "|" + String.join(",", kvs);
-        return timerCache.computeIfAbsent(key, k -> Timer.builder(name)
-                .tags(kvs)
-                .description("PMIS workflow " + name)
-                .publishPercentileHistogram()
-                .register(registry));
-    }
-
-    private static String safe(String v) {
-        return v == null || v.isEmpty() ? "unknown" : v;
     }
 
     /**

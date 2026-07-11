@@ -42,9 +42,15 @@ public final class FeignClientConstants {
     /** API 网关服务名 */
     public static final String GATEWAY = "ydsz-pmis-gateway";
 
+    /** 用户中心服务名（userinfo 模块） */
+    public static final String USERINFO = "ydsz-pmis-userinfo";
+
     /** 用户中心服务名（如有独立部署） */
     public static final String USER_CENTER = "ydsz-pmis-user-center";
 
     /** 配置中心服务名（如有独立部署） */
     public static final String CONFIG_CENTER = "ydsz-pmis-config-center";
+
+    /** 系统管理服务名 */
+    public static final String SYSTEM = "ydsz-pmis-system";
 }

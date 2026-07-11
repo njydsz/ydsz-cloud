@@ -59,7 +59,6 @@ public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendSe
             return List.of();
         }
         int limit = Math.min(topN, 10);
-        String tid = tenantId != null ? tenantId : "1";
 
         // 1. 获取全部模板（最新版本）
         List<FlowTemplateDO> allTemplates = templateMapper.selectByCategory(null);

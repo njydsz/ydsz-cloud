@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.feign;
+package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -15,10 +15,15 @@ import java.util.Map;
  *
  * <p>用于将立项 / 合同变更 / 销项等关键业务环节关联到自建工作流引擎。
  *
+ * <p>P2-1-followup: 从 project.feign 迁移至 common.feign，使用 {@link FeignClientConstants#WORKFLOW} 常量。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-workflow", fallbackFactory = WorkflowServiceClientFallback.class)
+@FeignClient(
+        name = FeignClientConstants.WORKFLOW,
+        contextId = "workflowServiceClient",
+        fallbackFactory = WorkflowServiceClientFallback.class)
 public interface WorkflowServiceClient {
 
     /**
