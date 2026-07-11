@@ -1,0 +1,96 @@
+# =============================================================================
+# Loki Ruler 告警规则 - 基于日志内容的告警（P0-4）
+# -----------------------------------------------------------------------------
+# 部署:
+#   kubectl apply -f deploy/monitoring/loki/loki-rules.yaml -n observability
+#   或挂载至 Loki Pod 的 /loki/rules/ 目录
+#
+# 告警策略:
+#   1. ERROR 日志突增：5 分钟内 ERROR 级别日志 > 10 条 → 告警
+#   2. 服务异常：5 分钟内某服务 ERROR 日志 > 5 条 → 告警
+#   3. OOM / StackOverflow：匹配关键字 → 立即告警
+#
+# 告警链路:
+#   Loki Ruler → Alertmanager → 企业微信/钉钉/飞书 Webhook
+# =============================================================================
+groups:
+  - name: pmis-log-alerts
+    interval: 1m
+    rules:
+      # ----------------------------------------------------------------------
+      # 1. ERROR 日志突增告警（全集群维度）
+      # 5 分钟内 ERROR 级别日志超过 10 条，触发告警
+      # ----------------------------------------------------------------------
+      - alert: PmisErrorLogSpike
+        expr: |
+          sum by (appName) (
+            count_over_time(
+              {namespace="pmis", level="ERROR"}[5m]
+            )
+          ) > 10
+        for: 2m
+        labels:
+          severity: warning
+          category: log
+        annotations:
+          summary: "ERROR 日志突增: {{ $labels.appName }}"
+          description: "服务 {{ $labels.appName }} 在过去 5 分钟内产生了超过 10 条 ERROR 日志，请检查日志排查问题。"
+
+      # ----------------------------------------------------------------------
+      # 2. 单服务 ERROR 日告警（严重级别）
+      # 5 分钟内某服务 ERROR 日志超过 50 条 → critical
+      # ----------------------------------------------------------------------
+      - alert: PmisErrorLogCritical
+        expr: |
+          sum by (appName) (
+            count_over_time(
+              {namespace="pmis", level="ERROR"}[5m]
+            )
+          ) > 50
+        for: 1m
+        labels:
+          severity: critical
+          category: log
+        annotations:
+          summary: "严重: 服务 {{ $labels.appName }} ERROR 日志暴增"
+          description: "服务 {{ $labels.appName }} 在过去 5 分钟内产生了超过 50 条 ERROR 日志，可能存在严重故障，请立即排查。"
+
+      # ----------------------------------------------------------------------
+      # 3. OOM / StackOverflow 关键字检测
+      # 匹配 OutOfMemoryError / StackOverflowError 关键字 → 立即告警
+      # ----------------------------------------------------------------------
+      - alert: PmisJvmCriticalError
+        expr: |
+          sum by (appName) (
+            count_over_time(
+              {namespace="pmis"} |~ "(?i)(OutOfMemoryError|StackOverflowError|GC overhead limit exceeded)"
+              [1m]
+            )
+          ) > 0
+        for: 0s
+        labels:
+          severity: critical
+          category: jvm
+        annotations:
+          summary: "JVM 严重错误: {{ $labels.appName }}"
+          description: "服务 {{ $labels.appName }} 检测到 JVM 严重错误（OOM/StackOverflow），可能需要立即重启或扩容。"
+
+      # ----------------------------------------------------------------------
+      # 4. 数据库连接池耗尽告警
+      # 匹配 connection refused / connection timeout / pool exhausted
+      # ----------------------------------------------------------------------
+      - alert: PmisDatabaseConnectionIssue
+        expr: |
+          sum by (appName) (
+            count_over_time(
+              {namespace="pmis"} |~ "(?i)(connection refused|connection timeout|pool exhausted|cannot get a connection)"
+              [3m]
+            )
+          ) > 5
+        for: 2m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "数据库连接异常: {{ $labels.appName }}"
+          description: "服务 {{ $labels.appName }} 检测到数据库连接异常，请检查连接池配置和数据库状态。"

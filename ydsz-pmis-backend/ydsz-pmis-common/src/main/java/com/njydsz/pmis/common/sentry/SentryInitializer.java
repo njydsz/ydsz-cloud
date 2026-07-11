@@ -76,6 +76,17 @@ public class SentryInitializer {
                 if (requestUrl != null && requestUrl.contains("/actuator/")) {
                     return null; // 丢弃 actuator 异常
                 }
+                // P0-5: 过滤 4xx 客户端错误（业务预期的 400/401/403/404，非系统 Bug）
+                // 保留 5xx 服务端错误（真正的系统异常）
+                if (event.getThrowable() instanceof org.springframework.web.client.HttpClientErrorException) {
+                    return null;
+                }
+                // 过滤 Sentinel 限流降级异常（业务预期行为）
+                String exClass = event.getThrowable() != null
+                        ? event.getThrowable().getClass().getName() : null;
+                if (exClass != null && exClass.contains("Sentinel")) {
+                    return null;
+                }
                 return event;
             });
         });

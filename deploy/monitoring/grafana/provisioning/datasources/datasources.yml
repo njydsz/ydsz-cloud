@@ -1,7 +1,7 @@
 # =============================================================================
 # Grafana Datasource Provisioning 配置
 # -----------------------------------------------------------------------------
-# 作用: 启动时自动配置数据源(Prometheus + Loki),无需手动在 UI 添加
+# 作用: 启动时自动配置数据源(Prometheus + Loki + SkyWalking)，无需手动在 UI 添加
 # 挂载路径(docker-compose): /etc/grafana/provisioning/datasources/datasources.yml
 # =============================================================================
 apiVersion: 1
@@ -25,7 +25,7 @@ datasources:
       # 启用 exemplar(配合 trace 查询)
       exemplarTraceIdDestinations:
         - name: traceId
-          datasourceUid: jaeger
+          datasourceUid: skywalking
 
   # ----------------------------------------------------------------------
   # 2. Loki - 日志数据源
@@ -41,8 +41,22 @@ datasources:
       maxLines: 1000
       # 启用 trace 链接(Prometheus exemplar → Loki 日志上下文)
       derivedFields:
-        # traceId 字段 → 跳转至 Jaeger/Tempo 查询
+        # traceId 字段 → 跳转至 SkyWalking 查询
         - name: traceId
           matcherRegex: "traceId=(\\w+)"
-          url: "http://localhost:16686/trace/$${__value.raw}"
-          datasourceUid: jaeger
+          url: "http://localhost:8080/trace/$${__value.raw}"
+          datasourceUid: skywalking
+
+  # ----------------------------------------------------------------------
+  # 3. SkyWalking - 链路追踪数据源（P0-3 全链路追踪接入）
+  # ----------------------------------------------------------------------
+  - name: SkyWalking
+    type: skywalking
+    uid: skywalking
+    access: proxy
+    url: http://skywalking-oap:12800
+    isDefault: false
+    editable: true
+    jsonData:
+      # SkyWalking 8.x+ GraphQL API 路径
+      path: /graphql

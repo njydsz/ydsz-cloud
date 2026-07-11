@@ -120,13 +120,19 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 })
 
-// P2-1: 生产环境启用 Sentry 错误监控
+// P0-5: 生产环境启用 Sentry 错误监控
+// 采样策略（对齐大厂标准）：
+//   - tracesSampleRate: 0.2（20% 性能事件，平衡可见度与成本）
+//   - sampleRate: 1.0（100% 错误事件，确保不遗漏任何异常）
+//   - replaysSessionSampleRate: 0.1（10% 正常会话回放，用于 UX 分析）
+//   - replaysOnErrorSampleRate: 1.0（100% 错误会话回放，辅助复现）
 if (import.meta.env.PROD) {
   initSentry({
     dsn: import.meta.env.VITE_SENTRY_DSN || '',
     environment: import.meta.env.MODE,
-    release: import.meta.env.VITE_APP_VERSION,
-    tracesSampleRate: 0.1,
+    release: __VITE_APP_VERSION__,
+    tracesSampleRate: 0.2,
+    sampleRate: 1.0,
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
   }, app, router)
