@@ -15,10 +15,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.project", "com.njydsz.pmis.common"})
+@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.project", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.njydsz.pmis.project.feign")
-@MapperScan("com.njydsz.pmis.project.mapper")
+@MapperScan({"com.njydsz.pmis.project.mapper", "com.njydsz.pmis.literule.mapper"})
 @EnableScheduling
 public class ProjectApplication {
 
