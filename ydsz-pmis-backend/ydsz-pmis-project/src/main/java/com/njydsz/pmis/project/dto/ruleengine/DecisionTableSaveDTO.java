@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * 决策表保存 DTO
  *
- * <p>隔离 {@link com.njydsz.pmis.project.entity.DecisionTableDO} 的
+ * <p>隔离 {@link com.njydsz.pmis.literule.entity.DecisionTableDO} 的
  * id/version/createdBy/createdAt/updatedBy/updatedAt 审计字段，避免越权写入。
  *
  * @author ydsz-pmis-team

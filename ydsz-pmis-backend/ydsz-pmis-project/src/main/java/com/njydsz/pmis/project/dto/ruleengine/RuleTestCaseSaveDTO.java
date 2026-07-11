@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * 规则测试用例保存 DTO
  *
- * <p>隔离 {@link com.njydsz.pmis.project.entity.RuleTestCaseDO} 的
+ * <p>隔离 {@link com.njydsz.pmis.literule.entity.RuleTestCaseDO} 的
  * id/createdAt/updatedAt 审计字段，避免越权写入。
  *
  * @author ydsz-pmis-team
