@@ -11,10 +11,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Map;
 
 /**
- * 通知中心 Feign 客户端
+ * Unified Notification Feign Client.
  *
- * <p>工作流引擎通过本接口触发站内信/邮件触达，避免直接依赖 notification 模块的具体类路径。
- * 配套 NotificationClientFallback 保证 notification 模块不可用时工作流主流程不被拖垮。
+ * <p>All modules communicate with {@code ydsz-pmis-message} through this interface
+ * for notification sending, realtime push, and broadcast.
+ * {@link NotificationClientFallback} ensures caller's main flow is not affected
+ * when the message module is unavailable.
+ *
+ * <h3>Endpoints</h3>
+ * <ul>
+ *   <li>{@link #send} - Send notification (in-app / email / SMS), persists to notification table</li>
+ *   <li>{@link #pushRealtime} - Push realtime WebSocket message to a specific user</li>
+ *   <li>{@link #broadcast} - Broadcast message to all online users (alerts / announcements)</li>
+ * </ul>
+ *
+ * <p>P0-2 refactor: Merged the former {@code NotificationPushClient}'s pushToUser / broadcast
+ * capabilities into this single client, eliminating redundant Feign clients targeting the same service.
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
@@ -23,27 +35,42 @@ import java.util.Map;
 public interface NotificationClient {
 
     /**
-     * 发送通知（单接收/批量均可）
+     * Send notification (single or batch).
      *
-     * @param payload 通知发送参数（与 NotificationSendDTO 字段对齐）
-     * @return 实际入库条数
+     * @param payload notification parameters (aligned with NotificationSendDTO)
+     * @return actual persisted record count
      */
     @PostMapping("/notifications/send")
     Result<Integer> send(@RequestBody NotificationFeignDTO payload);
 
     /**
-     * P1-7: 实时推送消息到指定用户（WebSocket）
+     * Push realtime message to a specific user (WebSocket).
      *
-     * <p>工作流引擎通过本接口在任务创建/完成时向办理人推送实时消息，
-     * 包括待办数更新 / 通知消息等。前端订阅 /user/{userId}/queue/notifications 即可接收。
+     * <p>The workflow engine uses this to push realtime messages to assignees
+     * on task creation/completion, including todo count updates and notifications.
+     * Frontend subscribes to /user/{userId}/queue/notifications to receive.
      *
-     * @param userId  接收用户 ID
-     * @param type    消息类型 (TASK_ASSIGNED/TASK_COMPLETED/TODO_COUNT/NOTIFICATION)
-     * @param payload 消息内容
-     * @return 推送结果
+     * @param userId  target user ID
+     * @param type    message type (TASK_ASSIGNED/TASK_COMPLETED/TODO_COUNT/NOTIFICATION)
+     * @param payload message content
+     * @return push result
      */
     @PostMapping("/notifications/push")
     Result<Map<String, Object>> pushRealtime(@RequestParam("userId") String userId,
-                                             @RequestParam("type") String type,
-                                             @RequestBody RealtimePushDTO payload);
+                                                @RequestParam("type") String type,
+                                                 @RequestBody RealtimePushDTO payload);
+
+    /**
+     * Broadcast message to all online users.
+     *
+     * <p>Suitable for alerts / announcements targeting all users.
+     * Push failures are handled by FallbackFactory, does not affect caller's main flow.
+     *
+     * @param type    message type (NOTIFICATION/ALERT/DASHBOARD)
+     * @param payload message content
+     * @return push result
+     */
+    @PostMapping("/notifications/broadcast")
+    Result<Map<String, Object>> broadcast(@RequestParam("type") String type,
+                                                 @RequestBody RealtimePushDTO payload);
 }

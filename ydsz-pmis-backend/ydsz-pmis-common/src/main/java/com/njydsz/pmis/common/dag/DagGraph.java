@@ -96,7 +96,7 @@ public final class DagGraph {
             String node = queue.poll();
             result.add(node);
             for (String child : adj.getOrDefault(node, Collections.emptyList())) {
-                int newDegree = inDegree.merge(child, -1, Integer::sum);
+                int newDegree = inDegree.merge(child, -1, (a, b) -> a + b);
                 if (newDegree == 0) {
                     queue.offer(child);
                 }
@@ -322,7 +322,7 @@ public final class DagGraph {
         }
         for (List<String> children : adj.values()) {
             for (String child : children) {
-                inDegree.merge(child, 1, Integer::sum);
+                inDegree.merge(child, 1, (a, b) -> a + b);
             }
         }
         return inDegree;

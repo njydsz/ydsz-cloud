@@ -13,7 +13,8 @@ import com.njydsz.pmis.project.mapper.common.AlertDispatchMapper;
 import com.njydsz.pmis.project.service.common.AlertDispatchService;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.feign.NotificationPushClient;
+import com.njydsz.pmis.common.feign.NotificationClient;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
@@ -47,7 +48,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     /** 消息服务 Feign 客户端（发送预警消息） */
     private final MessageServiceClient messageClient;
     /** 通知实时推送 Feign 客户端（P0-2，通过 notification 服务 WebSocket 下发） */
-    private final NotificationPushClient pushClient;
+    private final NotificationClient pushClient;
     /**
      * 自身代理引用，避免内部 this 调用绕过 Spring AOP（@GlobalTransactional / @Transactional）。
      * <p>P1-4 修复：retryFailed 通过 this.dispatchNow() 调用时，AOP 注解不生效，导致
@@ -58,7 +59,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
 
     public AlertDispatchServiceImpl(AlertDispatchMapper mapper,
                                     MessageServiceClient messageClient,
-                                    NotificationPushClient pushClient,
+                                    NotificationClient pushClient,
                                     @Lazy AlertDispatchService self) {
         this.mapper = mapper;
         this.messageClient = messageClient;
@@ -210,7 +211,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     /**
      * P0-2: 通过 Feign 调用 notification 服务实时广播告警。
      *
-     * <p>告警面向角色而非具体用户，故采用广播；推送失败由 NotificationPushClientFallbackFactory 兜底，
+     * <p>告警面向角色而非具体用户，故采用广播；推送失败由 NotificationClientFallback 兜底，
      * 额外 try-catch 保证绝不影响分发主流程。
      *
      * @param d 预警分发实体
@@ -224,7 +225,8 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
             payload.put("alertLevel", d.getAlertLevel());
             payload.put("title", d.getTitle());
             payload.put("targetRole", d.getTargetRole());
-            pushClient.broadcast("ALERT", payload);
+            RealtimePushDTO pushDTO = new RealtimePushDTO(payload);
+            pushClient.broadcast("ALERT", pushDTO);
         } catch (Exception e) {
             log.warn("[Alert] 实时推送降级忽略: id={} err={}", d.getId(), e.getMessage());
         }

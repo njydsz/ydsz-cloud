@@ -39,6 +39,13 @@ public class NotificationClientFallback implements FallbackFactory<NotificationC
                         userId, type, cause == null ? "null" : cause.getMessage());
                 return Result.ok(Collections.emptyMap());
             }
+
+            @Override
+            public Result<Map<String, Object>> broadcast(String type, RealtimePushDTO payload) {
+                log.warn("[Feign] NotificationClient fallback broadcast: type={} cause={}",
+                        type, cause == null ? "null" : cause.getMessage());
+                return Result.ok(Collections.emptyMap());
+            }
         };
     }
 }

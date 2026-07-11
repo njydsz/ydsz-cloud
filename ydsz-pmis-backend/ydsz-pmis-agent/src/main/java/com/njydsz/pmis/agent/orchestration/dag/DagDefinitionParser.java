@@ -3,6 +3,8 @@ package com.njydsz.pmis.agent.orchestration.dag;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.common.dag.DagFailureStrategy;
+import com.njydsz.pmis.common.dag.DagGraph;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -138,7 +140,7 @@ public class DagDefinitionParser {
         String failureStrategyStr = root.getString("failureStrategy");
         if (failureStrategyStr != null) {
             try {
-                builder.failureStrategy(DagFailureStrategy.valueOf(failureStrategyStr));
+                builder.failureStrategy(DagFailureStrategy.parse(failureStrategyStr));
             } catch (IllegalArgumentException e) {
                 log.warn("[DagParser] 未知 failureStrategy: {}, 使用默认值", failureStrategyStr);
             }
@@ -206,7 +208,16 @@ public class DagDefinitionParser {
      */
     private static void validateDag(DagDefinition dag) {
         try {
-            DagTopology.validate(dag);
+            Map<String, List<String>> adj = new java.util.HashMap<>();
+            for (DagNode node : dag.getNodes()) {
+                adj.computeIfAbsent(node.getName(), k -> new java.util.ArrayList<>());
+                if (node.getDependsOn() != null) {
+                    for (String dep : node.getDependsOn()) {
+                        adj.computeIfAbsent(dep, k -> new java.util.ArrayList<>()).add(node.getName());
+                    }
+                }
+            }
+            DagGraph.validate(adj, dag.getName());
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
