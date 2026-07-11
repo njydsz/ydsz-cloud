@@ -33,11 +33,9 @@ import com.njydsz.pmis.literule.server.core.RuleLifecycleService;
 import com.njydsz.pmis.literule.server.core.ParallelRuleEvaluator;
 import com.njydsz.pmis.literule.server.core.RuleMetrics;
 import com.njydsz.pmis.literule.server.core.RuleTimeoutExecutor;
-import com.njydsz.pmis.literule.server.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.server.expr.EmptyVariableRegistry;
 import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.server.expr.ExpressionValidationService;
-import com.njydsz.pmis.literule.server.expr.QLExpressExpressionEvaluator;
 import com.njydsz.pmis.literule.server.expr.VariableRegistry;
 import com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator;
 import com.njydsz.pmis.literule.domain.model.ModelInputProvider;
@@ -87,12 +85,7 @@ public class LiteRuleAutoConfiguration {
     /**
      * 表达式求值器
      *
-     * <p>根据 {@code pmis.literule.evaluator} 配置选择实现：
-     * <ul>
-     *   <li>{@code aviator}（默认）- {@link AviatorExpressionEvaluator}，高性能、AST 缓存</li>
-     *   <li>{@code qlexpress} - {@link QLExpressExpressionEvaluator}，
-     *       阿里 QLExpress，语法接近 Java，支持流程控制</li>
-     * </ul>
+     * <p>2.1.0 起仅保留自研 {@link LiteExprEvaluator}，零外部依赖、AST 原生追踪/沙箱/变量提取。
      *
      * @param properties 配置属性
      * @return ExpressionEvaluator 实例
@@ -100,25 +93,8 @@ public class LiteRuleAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ExpressionEvaluator expressionEvaluator(LiteRuleProperties properties) {
-        String type = properties.getEvaluator() == null ? "liteexpr" : properties.getEvaluator().trim().toLowerCase();
-        switch (type) {
-            case "liteexpr" -> {
-                log.info("[LiteRule] LiteExpr 自研表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
-                return new LiteExprEvaluator(properties.isSandboxEnabled());
-            }
-            case "qlexpress" -> {
-                log.info("[LiteRule] QLExpress 表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
-                return new QLExpressExpressionEvaluator();
-            }
-            case "aviator" -> {
-                log.info("[LiteRule] Aviator 表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
-                return new AviatorExpressionEvaluator(properties.isSandboxEnabled());
-            }
-            default -> {
-                log.warn("[LiteRule] 未知表达式引擎类型: {}，回退到 LiteExpr", properties.getEvaluator());
-                return new LiteExprEvaluator(properties.isSandboxEnabled());
-            }
-        }
+        log.info("[LiteRule] LiteExpr 自研表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
+        return new LiteExprEvaluator(properties.isSandboxEnabled());
     }
 
     /**

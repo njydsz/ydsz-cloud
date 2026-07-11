@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.server.service.impl.instance;
+package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.njydsz.pmis.message.api.client.NotificationClient;
 import com.njydsz.pmis.message.api.dto.RealtimePushDTO;

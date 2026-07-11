@@ -447,7 +447,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *   <li>调用 {@link ModelInputRegistry#collectAllModelOutputs} 获取模型输出
      *       （key 带 "model." 前缀，如 "model.riskScore"）</li>
      *   <li>将扁平 key 转换为嵌套结构 {@code {"model": {"riskScore": ..., ...}}}，
-     *       以兼容 Aviator 表达式 {@code model.riskScore} 的属性访问语法</li>
+     *       以兼容 LiteExpr 表达式 {@code model.riskScore} 的属性访问语法</li>
      *   <li>合并到 facts 中，构建新的 {@link RuleContext}（保留原 scenario/source/traceId/tenantId/environment）</li>
      * </ol>
      *

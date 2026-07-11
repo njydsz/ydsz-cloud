@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  */
 public class RuleHealthScoreService {
 
-    /** 变量名提取正则（Aviator 标识符，但排除常见关键字） */
+    /** 变量名提取正则（LiteExpr 标识符，但排除常见关键字） */
     private static final Pattern IDENTIFIER_PATTERN =
             Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_]{0,63})\\b");
 

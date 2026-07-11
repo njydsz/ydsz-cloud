@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.service.impl;
+package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.api.fallback;
+package com.njydsz.pmis.userinfo.api.fallback;
 import com.njydsz.pmis.userinfo.api.client.UserServiceClient;
 
 import com.njydsz.pmis.common.api.BizErrorCode;

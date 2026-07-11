@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  *
  * <p>决策树由内部节点（条件判断）和叶子节点（决策结果）构成：
  * <ul>
- *   <li>内部节点：包含 Aviator 条件表达式，true 走 trueBranch，false 走 falseBranch</li>
+ *   <li>内部节点：包含 LiteExpr 条件表达式，true 走 trueBranch，false 走 falseBranch</li>
  *   <li>叶子节点：包含严重度、标题、描述等决策结果</li>
  * </ul>
  *

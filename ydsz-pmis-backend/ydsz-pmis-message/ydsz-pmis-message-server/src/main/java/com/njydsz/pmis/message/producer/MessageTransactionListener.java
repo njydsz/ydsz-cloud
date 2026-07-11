@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.producer;
+package com.njydsz.pmis.message.server.producer;
 
 import com.njydsz.pmis.message.api.dto.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;

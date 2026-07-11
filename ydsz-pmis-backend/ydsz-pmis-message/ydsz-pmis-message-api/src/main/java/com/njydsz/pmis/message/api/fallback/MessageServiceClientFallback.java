@@ -1,5 +1,7 @@
-﻿package com.njydsz.pmis.message.api.fallback;
+package com.njydsz.pmis.message.api.fallback;
 import com.njydsz.pmis.message.api.client.MessageServiceClient;
+import com.njydsz.pmis.message.api.dto.MessageRequest;
+import com.njydsz.pmis.message.api.dto.MessageResult;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;

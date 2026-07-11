@@ -74,6 +74,8 @@
         <rocketmq.spring.version>2.3.1</rocketmq.spring.version>
         <seata.version>2.5.0</seata.version>
         <sentry.version>7.13.0</sentry.version>
+        <spring-ai.version>1.0.0-M6</spring-ai.version>
+        <jtokkit.version>1.1.0</jtokkit.version>
 
         <!-- 测试 -->
         <springdoc.version>2.8.13</springdoc.version>
@@ -149,6 +151,76 @@
                 <artifactId>ydsz-pmis-message</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-workflow</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- DDD 子模块：api（Feign 门面） -->
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-api</artifactId><version>${project.version}</version></dependency>
+
+            <!-- DDD 子模块：domain -->
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-domain</artifactId><version>${project.version}</version></dependency>
+
+            <!-- DDD 子模块：infra -->
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-infra</artifactId><version>${project.version}</version></dependency>
+
+            <!-- DDD 子模块：server -->
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-server</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-server</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-server</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-server</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-server</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-server</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-server</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-server</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-server</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-server</artifactId><version>${project.version}</version></dependency>
+
+            <!-- DDD 子模块：web -->
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-web</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-web</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-web</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-web</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-web</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-web</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-web</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-web</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-web</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-web</artifactId><version>${project.version}</version></dependency>
 
             <!-- MyBatis-Plus (Spring Boot 4 专用 starter) -->
             <dependency>
@@ -212,6 +284,25 @@
                 <groupId>io.github.resilience4j</groupId>
                 <artifactId>resilience4j-reactor</artifactId>
                 <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+
+            <!-- Spring AI -->
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+                <version>${spring-ai.version}</version>
+            </dependency>
+
+            <!-- JTokkit (Token 计算) -->
+            <dependency>
+                <groupId>com.knuddels</groupId>
+                <artifactId>jtokkit</artifactId>
+                <version>${jtokkit.version}</version>
             </dependency>
 
             <!-- Hutool 工具 -->

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.web;
+package com.njydsz.pmis.project.web;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

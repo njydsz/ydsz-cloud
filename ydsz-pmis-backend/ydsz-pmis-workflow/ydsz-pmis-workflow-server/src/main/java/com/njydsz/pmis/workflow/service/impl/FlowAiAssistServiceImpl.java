@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.server.service.impl.ai;
+package com.njydsz.pmis.workflow.server.service.impl.ai;
 
 import com.alibaba.fastjson2.JSON;
 import com.github.benmanes.caffeine.cache.Cache;

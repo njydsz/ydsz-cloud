@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.api.fallback;
+package com.njydsz.pmis.workflow.api.fallback;
 import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
 
 import com.njydsz.pmis.common.api.BizErrorCode;

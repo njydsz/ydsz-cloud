@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.server.service.dag;
 
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
-import com.njydsz.pmis.cronjob.domain.vo.DagInstanceVisualizationVO;
+import com.njydsz.pmis.cronjob.server.vo.DagInstanceVisualizationVO;
 
 import java.util.List;
 

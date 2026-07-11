@@ -14,7 +14,7 @@ import java.util.UUID;
 /**
  * LiteExpr 内置函数库
  *
- * <p>替代 Aviator 5.4 标准库，提供表达式引擎所需的基础函数。
+ * <p>替代 LiteExpr 标准库，提供表达式引擎所需的基础函数。
  * 按 5 大类组织：数学、字符串、集合、类型转换、时间。
  *
  * <p>所有函数在 {@link FunctionRegistry} 构造时自动注册。

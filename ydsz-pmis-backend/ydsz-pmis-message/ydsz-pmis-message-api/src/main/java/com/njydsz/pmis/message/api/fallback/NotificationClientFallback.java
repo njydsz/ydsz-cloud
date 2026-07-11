@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.api.fallback;
+package com.njydsz.pmis.message.api.fallback;
 import com.njydsz.pmis.message.api.client.NotificationClient;
 
 import com.njydsz.pmis.common.api.Result;

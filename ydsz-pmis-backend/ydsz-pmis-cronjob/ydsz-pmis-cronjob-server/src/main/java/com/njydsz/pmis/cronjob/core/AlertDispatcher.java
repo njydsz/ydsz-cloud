@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.alert;
+package com.njydsz.pmis.cronjob.server.core.alert;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;

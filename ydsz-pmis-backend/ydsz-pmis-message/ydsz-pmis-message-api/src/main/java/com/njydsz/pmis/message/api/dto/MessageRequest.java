@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.api.dto;
+package com.njydsz.pmis.message.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.alert;
+package com.njydsz.pmis.common.alert;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.message.api.dto.MessageRequest;

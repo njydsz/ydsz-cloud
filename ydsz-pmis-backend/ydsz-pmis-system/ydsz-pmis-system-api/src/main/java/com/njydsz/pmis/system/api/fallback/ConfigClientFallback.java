@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.system.api.fallback;
+package com.njydsz.pmis.system.api.fallback;
 import com.njydsz.pmis.system.api.client.ConfigClient;
 
 import com.njydsz.pmis.common.api.Result;

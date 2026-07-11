@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.config;
+package com.njydsz.pmis.common.config;
 
 import com.njydsz.pmis.system.api.client.ConfigClient;
 import lombok.RequiredArgsConstructor;

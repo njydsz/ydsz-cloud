@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.web.controller.template;
+package com.njydsz.pmis.message.web.controller.template;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;

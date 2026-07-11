@@ -301,7 +301,7 @@ public class RuleDocumentationService {
         // 规则配置
         sb.append("## 规则配置\n\n");
         sb.append("### 条件表达式\n\n");
-        sb.append("```aviator\n");
+        sb.append("```liteexpr\n");
         sb.append(safe(doc.getConditionExpression())).append("\n");
         sb.append("```\n\n");
         if (doc.getConditionExplanation() != null && !doc.getConditionExplanation().isBlank()) {
@@ -571,7 +571,7 @@ public class RuleDocumentationService {
 
         // 如果说明与原始表达式差异不大，返回提示
         if (explained.equals(expr)) {
-            return "自定义条件表达式，请参考 Aviator 语法文档。";
+            return "自定义条件表达式，请参考 LiteExpr 语法文档。";
         }
         return "当满足以下条件时触发：" + explained;
     }

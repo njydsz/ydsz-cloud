@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.service.impl.core;
+package com.njydsz.pmis.message.server.service.impl.core;
 
 import com.njydsz.pmis.message.api.dto.MessageRequest;
 import com.njydsz.pmis.message.api.dto.MessageResult;

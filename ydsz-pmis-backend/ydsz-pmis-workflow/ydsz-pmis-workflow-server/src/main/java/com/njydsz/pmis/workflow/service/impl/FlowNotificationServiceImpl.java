@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.server.service.impl.notification;
+package com.njydsz.pmis.workflow.server.service.impl.notification;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.message.api.dto.MessageRequest;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.api.client;
+package com.njydsz.pmis.userinfo.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.userinfo.api.fallback.UserServiceClientFallback;
 

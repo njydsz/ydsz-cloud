@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * AI 辅助规则生成提供者 SPI
  *
- * <p>由消费方（如 project 模块）提供实现，基于自然语言描述调用 LLM 生成 Aviator 表达式规则。
+ * <p>由消费方（如 project 模块）提供实现，基于自然语言描述调用 LLM 生成 LiteExpr 表达式规则。
  * 将原有 {@code RuleGenerationService} 的能力抽象为 SPI，避免 literule 模块直接依赖 project 模块。
  *
  * @author ydsz-pmis-team

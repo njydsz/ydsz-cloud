@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.expr;
+﻿package com.njydsz.pmis.literule.server.expr;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -93,8 +93,8 @@ public class ExpressionSandbox {
             "openConnection", "connect", "openStream"
     ));
 
-    /** Aviator 关键字（表达式语法关键字） */
-    private static final Set<String> AVIATOR_KEYWORDS = new HashSet<>(Arrays.asList(
+    /** LiteExpr 关键字（表达式语法关键字） */
+    private static final Set<String> EXPR_KEYWORDS = new HashSet<>(Arrays.asList(
             "true", "false", "nil", "null", "and", "or", "not",
             "if", "elsif", "else", "endif", "for", "in", "end", "return",
             "let", "break", "continue", "while", "lambda", "fn",
@@ -103,7 +103,7 @@ public class ExpressionSandbox {
             "boolean", "int", "tuple", "map", "set", "sorted", "sort"
     ));
 
-    /** 内置函数白名单（Aviator 5.4 标准库） */
+    /** 内置函数白名单（LiteExpr 标准库） */
     @Getter
     private final Set<String> allowedFunctions = new HashSet<>(Arrays.asList(
             // 数学
@@ -220,7 +220,7 @@ public class ExpressionSandbox {
             int idEnd = identifierEndPositions.get(i);
 
             // 跳过关键字和已知白名单
-            if (AVIATOR_KEYWORDS.contains(id)) continue;
+            if (EXPR_KEYWORDS.contains(id)) continue;
             if (variableWhitelist.contains(id)) continue;
             if (factsKeys.contains(id)) continue;
             if (allowedFunctions.contains(id)) continue;
@@ -255,7 +255,7 @@ public class ExpressionSandbox {
 
             // 检测未识别标识符（不在白名单中、不是变量规则、不是关键字）
             // 小写开头 + 前后是 . 链式访问的，已经在前面 continue
-            if (!AVIATOR_KEYWORDS.contains(id)
+            if (!EXPR_KEYWORDS.contains(id)
                     && !variableWhitelist.contains(id)
                     && !allowedFunctions.contains(id)
                     && !Character.isUpperCase(id.charAt(0))

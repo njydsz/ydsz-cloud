@@ -17,7 +17,7 @@ import java.util.List;
  *   <li>description — 函数说明（用于 hover tooltip）</li>
  *   <li>sample — 示例代码（用于模板片段）</li>
  *   <li>category — 函数分类（用于前端分组）</li>
- *   <li>supportedEngines — 适用的表达式引擎（aviator/qlexpress/all）</li>
+ *   <li>supportedEngines — 适用的表达式引擎（2.1.0 起仅 liteexpr/all）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -45,7 +45,7 @@ public class ExpressionFunctionDef implements Serializable {
     /** 函数分类 */
     private String category;
 
-    /** 适用引擎：aviator / qlexpress / all */
+    /** 适用引擎：liteexpr / all（2.1.0 起仅保留 LiteExpr） */
     private String supportedEngines;
 
     public static List<ExpressionFunctionDef> defaults() {

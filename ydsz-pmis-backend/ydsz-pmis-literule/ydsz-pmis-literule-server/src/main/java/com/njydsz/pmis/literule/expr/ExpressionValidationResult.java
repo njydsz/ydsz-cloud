@@ -35,7 +35,7 @@ public class ExpressionValidationResult implements Serializable {
         OK,
         /** 表达式为空或全为空白字符 */
         EMPTY,
-        /** Aviator 语法错误（缺括号、运算符错误等） */
+        /** LiteExpr 语法错误（缺括号、运算符错误等） */
         SYNTAX_ERROR,
         /** 沙箱拦截（包含危险函数或类访问） */
         SANDBOX_VIOLATION,

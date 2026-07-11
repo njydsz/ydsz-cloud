@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.consumer;
+package com.njydsz.pmis.message.server.consumer;
 
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.message.api.dto.MessageRequest;

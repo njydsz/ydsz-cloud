@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.finance.web.controller;
+package com.njydsz.pmis.finance.web.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.finance.infra.mapper.InvoiceMapper;

@@ -32,17 +32,14 @@ public class LiteRuleProperties {
     private boolean sandboxEnabled = true;
 
     /**
-     * 表达式引擎类型（2.0.0 起）
+     * 表达式引擎类型（2.1.0 起已废弃，仅保留 LiteExpr）
      *
-     * <p>可选值：
-     * <ul>
-     *   <li>{@code liteexpr}（默认，2.0.0 起）- 自研表达式引擎，零外部依赖、AST 原生追踪/沙箱/变量提取</li>
-     *   <li>{@code aviator} - Aviator 5.x，高性能、AST 缓存、函数丰富（向后兼容）</li>
-     *   <li>{@code qlexpress} - 阿里 QLExpress 3.x，语法更接近 Java，支持流程控制（向后兼容）</li>
-     * </ul>
+     * <p>2.1.0 起移除了 Aviator / QLExpress 多引擎适配，仅保留自研 LiteExpr。
+     * 此字段保留用于向后兼容，但不再产生实际效果。
      *
-     * <p>切换引擎后，已有规则的条件表达式需保证在目标引擎语法下合法。
+     * @deprecated 2.1.0 起仅保留 LiteExpr，不再支持引擎切换
      */
+    @Deprecated
     private String evaluator = "liteexpr";
 
     /** 是否启用执行轨迹记录（1.4.0） */

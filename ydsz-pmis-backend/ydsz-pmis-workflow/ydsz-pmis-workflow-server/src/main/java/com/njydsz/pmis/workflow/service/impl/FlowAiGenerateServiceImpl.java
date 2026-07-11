@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.server.service.impl.ai;
+package com.njydsz.pmis.workflow.server.service.impl.ai;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.agent.api.client.AgentClient;

@@ -82,7 +82,7 @@ public class RuleDslEntry implements Serializable {
 
     // ============ expression 类型专用 ============
 
-    /** 条件表达式（Aviator 语法，返回 boolean） */
+    /** 条件表达式（LiteExpr 语法，返回 boolean） */
     private String condition;
 
     /** 严重度表达式（可选，动态决定严重度） */

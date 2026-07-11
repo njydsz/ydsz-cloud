@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.alert;
+package com.njydsz.pmis.cronjob.server.core.alert;
 
 import java.io.Serializable;
 

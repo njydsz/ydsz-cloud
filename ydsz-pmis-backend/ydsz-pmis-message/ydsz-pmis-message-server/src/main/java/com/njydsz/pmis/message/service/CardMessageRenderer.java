@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.service.core;
+package com.njydsz.pmis.message.server.service.core;
 
 import com.njydsz.pmis.message.api.dto.MessageRequest;
 import com.njydsz.pmis.message.domain.dto.core.CardMessageDTO;

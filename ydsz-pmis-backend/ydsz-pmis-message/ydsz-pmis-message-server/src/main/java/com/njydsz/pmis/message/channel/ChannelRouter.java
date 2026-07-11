@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.channel;
+package com.njydsz.pmis.message.server.channel;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;

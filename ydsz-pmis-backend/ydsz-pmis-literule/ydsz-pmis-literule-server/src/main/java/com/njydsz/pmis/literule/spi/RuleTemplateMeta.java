@@ -44,10 +44,10 @@ public class RuleTemplateMeta implements Serializable {
     /** 模板描述 */
     private String description;
 
-    /** 条件表达式模板（Aviator 语法） */
+    /** 条件表达式模板（LiteExpr 语法） */
     private String conditionTemplate;
 
-    /** 严重度表达式模板（Aviator 语法，可选） */
+    /** 严重度表达式模板（LiteExpr 语法，可选） */
     private String severityTemplate;
 
     /** 默认严重度编码（RED / YELLOW / INFO / GREEN） */

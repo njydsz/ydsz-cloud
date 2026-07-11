@@ -553,8 +553,7 @@ public class RuleAdminService {
      * <p>对标 QLExpress4 的 ExpressionTrace 能力，将表达式执行过程转换为计算树，
      * 用于规则归因分析、短路排查和中间结果可视化。
      *
-     * <p>Aviator 引擎提供完整的追踪树（逻辑/比较/变量节点 + 短路分析）；
-     * QLExpress 引擎降级为 ROOT 节点（仅记录最终结果）。
+     * <p>LiteExpr 引擎提供完整的追踪树（逻辑/比较/变量节点 + 短路分析）。
      *
      * @param expression 表达式字符串
      * @param facts      事实数据

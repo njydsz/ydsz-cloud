@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  *   <li>FIRST/ANY/PRIORITY 仅返回首条/优先级最高的命中行</li>
  * </ol>
  *
- * <p>条件表达式解析由 {@link #matchCondition} 实现，支持字面值、比较、区间、枚举、Aviator 表达式。
+ * <p>条件表达式解析由 {@link #matchCondition} 实现，支持字面值、比较、区间、枚举、LiteExpr 表达式。
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
@@ -208,14 +208,14 @@ public class DecisionTableRule implements Rule {
     }
 
     /**
-     * 条件匹配（支持字面值 / 比较表达式 / 区间 / 枚举 / Aviator 表达式）
+     * 条件匹配（支持字面值 / 比较表达式 / 区间 / 枚举 / LiteExpr 表达式）
      */
     private boolean matchCondition(String column, String condExpr, Object factValue, RuleContext context) {
         if (condExpr == null) return true;
         condExpr = condExpr.trim();
         if (condExpr.isEmpty() || "*".equals(condExpr)) return true;
 
-        // Aviator 表达式：expr:>amount*0.1
+        // LiteExpr 表达式：expr:>amount*0.1
         if (condExpr.startsWith(EXPR_PREFIX)) {
             String expr = condExpr.substring(EXPR_PREFIX.length());
             try {

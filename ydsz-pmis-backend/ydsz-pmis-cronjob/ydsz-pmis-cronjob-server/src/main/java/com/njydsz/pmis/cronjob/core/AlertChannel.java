@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.alert;
+package com.njydsz.pmis.cronjob.server.core.alert;
 
 /**
  * 告警通知通道枚举（P5 告警 + 监控）。

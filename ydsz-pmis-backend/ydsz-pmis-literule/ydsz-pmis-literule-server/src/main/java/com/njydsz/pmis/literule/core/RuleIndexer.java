@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.core;
+﻿package com.njydsz.pmis.literule.server.core;
 
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleDefinition;
@@ -88,10 +88,10 @@ public class RuleIndexer {
     private volatile boolean indexEnabled = false;
 
     /**
-     * Aviator 关键字与内置函数，字段提取时不应作为变量返回。
-     * 与 {@code AviatorExpressionEvaluator.AVIATOR_KEYWORDS} 保持一致。
+     * LiteExpr 关键字与内置函数，字段提取时不应作为变量返回。
+     * 与 {@code LiteExprEvaluator.EXPR_KEYWORDS} 保持一致。
      */
-    private static final Set<String> AVIATOR_KEYWORDS = Set.of(
+    private static final Set<String> EXPR_KEYWORDS = Set.of(
             "true", "false", "nil", "null",
             "RED", "YELLOW", "INFO", "GREEN",
             "if", "else", "return", "seq", "lambda", "fn",
@@ -479,9 +479,9 @@ public class RuleIndexer {
      * <ul>
      *   <li>仅对 {@link Rule#getRuleDefinition()} 返回非空且 conditionExpression 非空的规则提取
      *     （即仅 ExpressionRule 等基于定义的规则参与倒排索引过滤）</li>
-     *   <li>复用 AviatorExpressionEvaluator 的正则逻辑：{@code \b([a-zA-Z_]\w*)\b}，
+     *   <li>复用 LiteExprEvaluator 的正则逻辑：{@code \b([a-zA-Z_]\w*)\b}，
      *     扩展支持中文标识符</li>
-     *   <li>过滤 Aviator 关键字（true/false/null/if/else/return 等）</li>
+     *   <li>过滤 LiteExpr 关键字（true/false/null/if/else/return 等）</li>
      *   <li>过滤纯数字字面量</li>
      *   <li>过滤首字母大写的标识符（类名/常量），保留首字母小写、含下划线或中文开头的标识符</li>
      * </ul>
@@ -509,7 +509,7 @@ public class RuleIndexer {
         Matcher m = FIELD_PATTERN.matcher(expr);
         while (m.find()) {
             String word = m.group(1);
-            if (AVIATOR_KEYWORDS.contains(word)) {
+            if (EXPR_KEYWORDS.contains(word)) {
                 continue;
             }
             if (word.matches("\\d+")) {

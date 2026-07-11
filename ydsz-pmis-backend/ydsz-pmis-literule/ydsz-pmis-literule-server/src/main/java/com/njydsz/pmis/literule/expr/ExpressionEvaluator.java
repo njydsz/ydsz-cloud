@@ -7,8 +7,7 @@ import java.util.List;
 /**
  * 表达式求值器接口
  *
- * <p>抽象表达式引擎，支持 Aviator / QLExpress / SpEL 等多种实现。
- * 默认提供 {@link AviatorExpressionEvaluator}。
+ * <p>抽象表达式引擎，默认提供 {@link com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator}。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
@@ -49,7 +48,7 @@ public interface ExpressionEvaluator {
      * 包含错误类型、错误位置、错误描述，供前端表达式编辑器渲染。
      *
      * <p>默认实现仅调用 {@link #validate(String)} 返回简单结果；
-     * 具体实现类（如 {@link AviatorExpressionEvaluator}）应 override 本方法提供详细错误信息。
+     * 具体实现类（如 {@link com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator}）应 override 本方法提供详细错误信息。
      *
      * @param expression 表达式字符串
      * @return 校验结果

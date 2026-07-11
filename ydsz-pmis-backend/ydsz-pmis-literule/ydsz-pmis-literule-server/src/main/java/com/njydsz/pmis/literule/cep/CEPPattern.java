@@ -111,7 +111,7 @@ public class CEPPattern implements Serializable {
     /** 事件类型列表（多类型 OR 匹配，如 LOGIN_FAILED 或 LOGIN_TIMEOUT） */
     private List<String> eventTypes;
 
-    /** 事件过滤条件（Aviator 表达式，可访问 $event.attr('xxx')） */
+    /** 事件过滤条件（LiteExpr 表达式，可访问 $event.attr('xxx')） */
     private String filter;
 
     /** 聚合函数（AGGREGATE 模式使用） */

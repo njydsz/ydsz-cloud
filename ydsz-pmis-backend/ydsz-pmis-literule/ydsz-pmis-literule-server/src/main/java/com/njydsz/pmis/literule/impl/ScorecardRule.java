@@ -22,7 +22,7 @@ import java.util.List;
  *
  * <p><b>复杂评分卡增强（1.5.0）</b>：
  * <ul>
- *   <li>动态分值表达式（scoreExpression）：分值可通过 Aviator 表达式动态计算</li>
+ *   <li>动态分值表达式（scoreExpression）：分值可通过 LiteExpr 表达式动态计算</li>
  *   <li>权重（weight）：实际得分 = 分值 × 权重，默认 1.0</li>
  *   <li>评分方向（scoreDirection）：DESCENDING 分数越低风险越高 / ASCENDING 分数越高风险越高</li>
  *   <li>自定义评级映射（grades）：按分数区间映射 A/B/C/D 等自定义评级</li>
@@ -275,12 +275,12 @@ public class ScorecardRule implements Rule {
     @Data
     @Builder
     public static class ScoreFactor {
-        /** 条件表达式（Aviator，返回 boolean） */
+        /** 条件表达式（LiteExpr，返回 boolean） */
         private String conditionExpression;
         /** 命中时的固定得分（正分加分，负分扣分） */
         @Builder.Default
         private double score = 0;
-        /** 动态分值表达式（Aviator，返回 Number；与 score 二选一，优先使用 scoreExpression） */
+        /** 动态分值表达式（LiteExpr，返回 Number；与 score 二选一，优先使用 scoreExpression） */
         private String scoreExpression;
         /** 权重（实际得分 = 分值 × 权重，默认 1.0） */
         @Builder.Default

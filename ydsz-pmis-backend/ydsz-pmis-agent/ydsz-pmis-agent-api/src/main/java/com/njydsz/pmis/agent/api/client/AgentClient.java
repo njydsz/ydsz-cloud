@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.agent.api.client;
+package com.njydsz.pmis.agent.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.agent.api.fallback.AgentClientFallbackFactory;
 

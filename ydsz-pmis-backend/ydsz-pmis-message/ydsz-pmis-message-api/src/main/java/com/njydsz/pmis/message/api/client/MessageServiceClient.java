@@ -1,5 +1,7 @@
-﻿package com.njydsz.pmis.message.api.client;
+package com.njydsz.pmis.message.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
+import com.njydsz.pmis.message.api.dto.MessageRequest;
+import com.njydsz.pmis.message.api.dto.MessageResult;
 import com.njydsz.pmis.message.api.fallback.MessageServiceClientFallback;
 
 import com.njydsz.pmis.common.api.Result;

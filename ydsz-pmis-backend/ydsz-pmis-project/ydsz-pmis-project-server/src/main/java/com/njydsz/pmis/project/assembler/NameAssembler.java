@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.server.assembler;
+package com.njydsz.pmis.project.server.assembler;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.userinfo.api.client.UserServiceClient;

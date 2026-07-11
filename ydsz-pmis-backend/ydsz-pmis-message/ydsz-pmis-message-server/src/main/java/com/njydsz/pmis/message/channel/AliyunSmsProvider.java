@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.channel.sms;
+package com.njydsz.pmis.message.server.channel.sms;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;

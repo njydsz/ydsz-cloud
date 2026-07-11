@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 表达式规则：基于 Aviator 表达式动态评估
+ * 表达式规则：基于 LiteExpr 表达式动态评估
  *
  * <p>从 {@link RuleDefinition} 构建，条件表达式返回 boolean 决定是否触发，
  * 严重度表达式可动态决定严重等级。支持 ${var} 模板渲染标题和描述。
@@ -213,12 +213,12 @@ public class ExpressionRule implements Rule {
     }
 
     /**
-     * 渲染模板（支持 ${var} 占位符 + ${expression} Aviator 表达式 + 格式化）
+     * 渲染模板（支持 ${var} 占位符 + ${expression} LiteExpr 表达式 + 格式化）
      *
      * <p>支持的模板语法：
      * <ul>
      *   <li>{@code ${var}} — 简单变量替换（向后兼容）</li>
-     *   <li>{@code ${amount * 0.1}} — Aviator 表达式求值</li>
+     *   <li>{@code ${amount * 0.1}} — LiteExpr 表达式求值</li>
      *   <li>{@code ${amount | #,##0.00}} — 数字格式化（| 后为格式模式）</li>
      *   <li>{@code ${amount | %.2f}} — printf 风格格式化</li>
      * </ul>

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.finance.api.fallback;
+package com.njydsz.pmis.finance.api.fallback;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 
 import com.njydsz.pmis.common.api.Result;

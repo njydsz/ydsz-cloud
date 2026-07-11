@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.handler;
+package com.njydsz.pmis.cronjob.server.handler;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;

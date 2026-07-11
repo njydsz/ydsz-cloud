@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 /**
  * 条件表达式阈值提取器（P3-4 自适应智能风控）
  *
- * <p>从 Aviator 条件表达式中提取变量与阈值的比较关系，用于自适应阈值调整。
+ * <p>从 LiteExpr 条件表达式中提取变量与阈值的比较关系，用于自适应阈值调整。
  *
  * <p>支持的表达式形态：
  * <ul>
@@ -64,7 +64,7 @@ public final class ThresholdExtractor {
     /**
      * 从表达式中提取阈值信息
      *
-     * @param conditionExpression 条件表达式（Aviator 语法）
+     * @param conditionExpression 条件表达式（LiteExpr 语法）
      * @return 阈值信息列表；表达式为空或不包含可识别的阈值比较时返回空列表
      */
     public static List<ThresholdInfo> extract(String conditionExpression) {

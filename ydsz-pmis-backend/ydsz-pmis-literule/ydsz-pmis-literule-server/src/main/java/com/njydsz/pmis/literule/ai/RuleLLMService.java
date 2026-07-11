@@ -34,7 +34,7 @@ public class RuleLLMService {
 
     /** 自然语言转规则的系统提示词 */
     private static final String NL2RULE_SYSTEM_PROMPT = "你是一个规则引擎专家。根据用户的自然语言描述，输出严格的 JSON 格式规则定义，"
-            + "字段包括：code（kebab-case 英文编码）、name（中文名称）、conditionExpression（Aviator 语法表达式）、"
+            + "字段包括：code（kebab-case 英文编码）、name（中文名称）、conditionExpression（LiteExpr 语法表达式）、"
             + "defaultSeverity（RED/YELLOW/GREEN/BLUE 之一）、description（中文描述）。"
             + "不要输出任何额外解释，只输出一个 JSON 对象。";
 
@@ -43,7 +43,7 @@ public class RuleLLMService {
             + "说明该规则在什么场景下触发、严重度如何。语气简洁专业，不要带任何前后缀。";
 
     /** 表达式优化的系统提示词 */
-    private static final String OPTIMIZE_SYSTEM_PROMPT = "你是 Aviator 表达式专家。请分析给定的表达式并给出 1~3 条优化建议，"
+    private static final String OPTIMIZE_SYSTEM_PROMPT = "你是 LiteExpr 表达式专家。请分析给定的表达式并给出 1~3 条优化建议，"
             + "建议关注：可读性、性能、可测试性、潜在边界条件。每条建议一行，不要带编号和前后缀。";
 
     /** LLM 客户端，用于自然语言与规则定义之间的相互转换 */
@@ -103,7 +103,7 @@ public class RuleLLMService {
     /**
      * 表达式优化建议
      *
-     * @param expression 待优化的 Aviator 表达式
+     * @param expression 待优化的 LiteExpr 表达式
      * @return 优化建议文本（可能包含多行）；LLM 不可用时返回 {@code null}
      */
     public String optimizeExpression(String expression) {

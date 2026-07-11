@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.service.core;
+package com.njydsz.pmis.message.server.service.core;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.message.api.dto.MessageRequest;

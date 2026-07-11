@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.featureflag;
+package com.njydsz.pmis.common.featureflag;
 
 import com.njydsz.pmis.system.api.client.ConfigClient;
 import org.springframework.beans.factory.ObjectProvider;

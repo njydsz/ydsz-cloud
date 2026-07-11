@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.sales.api.fallback;
+package com.njydsz.pmis.sales.api.fallback;
 import com.njydsz.pmis.sales.api.client.SalesDataClient;
 
 import com.njydsz.pmis.common.api.Result;
