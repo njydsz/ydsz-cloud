@@ -1,13 +1,13 @@
-﻿-- ============================================================
--- PMIS sales module SQL
--- 鍟嗗姟閿€鍞湇鍔?(ydsz-pmis-sales, port 9010)
 -- ============================================================
--- 鏈剼鏈?DDL 瀵瑰簲鍚庣 sales 鏈嶅姟鐨?Mapper / DO,
---   鐗╃悊 Mapper 瀹為檯鎵€鍦ㄦā鍧楀嵆琛ㄥ綊灞炪€傝法鏈嶅姟寮曠敤绂佹鐩磋繛,缁熶竴璧?
---   Feign Client (SalesDataClient / FinanceDataClient)銆?
+-- PMIS sales module SQL
+-- 商务销售服务 (ydsz-pmis-sales, port 9010)
+-- ============================================================
+-- 本脚本 DDL 对应后端 sales 服务的 Mapper / DO,
+--   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
+--   Feign Client (SalesDataClient / FinanceDataClient)。
 --
--- 琛ㄥ綊灞炰緷鎹? ydsz-pmis-sales/src/main/java/.../infra/mapper/
--- 琛ㄦ暟閲? 6 寮?
+-- 表归属依据: ydsz-pmis-sales/src/main/java/.../infra/mapper/
+-- 表数量: 6 张
 -- --------------------------------------------------------------------
 
 -- =====================================================
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
     deleted           SMALLINT       NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
-    -- 鏁版嵁瀹屾暣鎬х害鏉?
+    -- 数据完整性约束
     CONSTRAINT uk_ppo_code           UNIQUE (opportunity_code, deleted),
     CONSTRAINT ck_ppo_level_enum     CHECK (level IN ('A', 'B', 'C')),
     CONSTRAINT ck_ppo_status_enum    CHECK (status IN ('FOLLOWING', 'QUOTED', 'NEGOTIATING', 'WON', 'LOST', 'INVALID', 'CONVERTED')),
@@ -50,63 +50,63 @@ CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
     CONSTRAINT ck_ppo_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_project_opportunity IS '鍟嗘満涓昏〃: 閿€鍞嚎绱㈠埌鍚堝悓鍓嶇殑婕忔枟绠＄悊,鏀寔璧㈢巼/鍒嗙骇/杞寲绔嬮」';
+COMMENT ON TABLE pmis_project_opportunity IS '商机主表: 销售线索到合同前的漏斗管理,支持赢率/分级/转化立项';
 
-COMMENT ON COLUMN pmis_project_opportunity.id IS '涓婚敭 ID';
+COMMENT ON COLUMN pmis_project_opportunity.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_project_opportunity.opportunity_code IS '鍟嗘満缂栫爜(鍏ㄥ眬鍞竴,濡?OPP20260001)';
+COMMENT ON COLUMN pmis_project_opportunity.opportunity_code IS '商机编码(全局唯一,如 OPP20260001)';
 
-COMMENT ON COLUMN pmis_project_opportunity.opportunity_name IS '鍟嗘満鍚嶇О';
+COMMENT ON COLUMN pmis_project_opportunity.opportunity_name IS '商机名称';
 
-COMMENT ON COLUMN pmis_project_opportunity.customer_id IS '瀹㈡埛 ID';
+COMMENT ON COLUMN pmis_project_opportunity.customer_id IS '客户 ID';
 
-COMMENT ON COLUMN pmis_project_opportunity.customer_name IS '瀹㈡埛鍚嶇О(鍐椾綑,鍑忓皯杩炶〃)';
+COMMENT ON COLUMN pmis_project_opportunity.customer_name IS '客户名称(冗余,减少连表)';
 
-COMMENT ON COLUMN pmis_project_opportunity.business_dept_id IS '璐熻矗浜嬩笟閮?ID';
+COMMENT ON COLUMN pmis_project_opportunity.business_dept_id IS '负责事业部 ID';
 
-COMMENT ON COLUMN pmis_project_opportunity.owner_id IS '鍟嗘満璐熻矗浜?ID(閿€鍞?BD)';
+COMMENT ON COLUMN pmis_project_opportunity.owner_id IS '商机负责人 ID(销售/BD)';
 
-COMMENT ON COLUMN pmis_project_opportunity.owner_name IS '鍟嗘満璐熻矗浜哄鍚?;
+COMMENT ON COLUMN pmis_project_opportunity.owner_name IS '商机负责人姓名';
 
-COMMENT ON COLUMN pmis_project_opportunity.level IS '鍟嗘満鍒嗙骇: A 澶у鎴?/ B 涓瀷 / C 灏忓瀷';
+COMMENT ON COLUMN pmis_project_opportunity.level IS '商机分级: A 大客户 / B 中型 / C 小型';
 
-COMMENT ON COLUMN pmis_project_opportunity.source IS '鍟嗘満鏉ユ簮(鑰佸鎴蜂粙缁?灞曚細/瀹樼綉/鎷涙姇鏍?鍏朵粬)';
+COMMENT ON COLUMN pmis_project_opportunity.source IS '商机来源(老客户介绍/展会/官网/招投标/其他)';
 
-COMMENT ON COLUMN pmis_project_opportunity.industry IS '瀹㈡埛鎵€灞炶涓?;
+COMMENT ON COLUMN pmis_project_opportunity.industry IS '客户所属行业';
 
-COMMENT ON COLUMN pmis_project_opportunity.estimated_amount IS '棰勮绛剧害閲戦(鍏?';
+COMMENT ON COLUMN pmis_project_opportunity.estimated_amount IS '预计签约金额(元)';
 
-COMMENT ON COLUMN pmis_project_opportunity.win_rate IS '璧㈢巼(0.0000-1.0000,鐢ㄤ簬鏀跺叆棰勬祴)';
+COMMENT ON COLUMN pmis_project_opportunity.win_rate IS '赢率(0.0000-1.0000,用于收入预测)';
 
-COMMENT ON COLUMN pmis_project_opportunity.expected_sign_date IS '棰勮绛剧害鏃ユ湡';
+COMMENT ON COLUMN pmis_project_opportunity.expected_sign_date IS '预计签约日期';
 
-COMMENT ON COLUMN pmis_project_opportunity.expected_start_date IS '棰勮椤圭洰寮€濮嬫棩鏈?;
+COMMENT ON COLUMN pmis_project_opportunity.expected_start_date IS '预计项目开始日期';
 
-COMMENT ON COLUMN pmis_project_opportunity.expected_end_date IS '棰勮椤圭洰缁撴潫鏃ユ湡';
+COMMENT ON COLUMN pmis_project_opportunity.expected_end_date IS '预计项目结束日期';
 
-COMMENT ON COLUMN pmis_project_opportunity.status IS '鍟嗘満鐘舵€? FOLLOWING 璺熻繘涓?/ QUOTED 宸叉姤浠?/ NEGOTIATING 璋堝垽涓?/ WON 涓爣 / LOST 杈撳崟 / INVALID 鏃犳晥 / CONVERTED 宸茶浆绔嬮」';
+COMMENT ON COLUMN pmis_project_opportunity.status IS '商机状态: FOLLOWING 跟进中 / QUOTED 已报价 / NEGOTIATING 谈判中 / WON 中标 / LOST 输单 / INVALID 无效 / CONVERTED 已转立项';
 
-COMMENT ON COLUMN pmis_project_opportunity.lost_reason IS '杈撳崟鍘熷洜';
+COMMENT ON COLUMN pmis_project_opportunity.lost_reason IS '输单原因';
 
-COMMENT ON COLUMN pmis_project_opportunity.competitor IS '绔炰簤瀵规墜';
+COMMENT ON COLUMN pmis_project_opportunity.competitor IS '竞争对手';
 
-COMMENT ON COLUMN pmis_project_opportunity.remark IS '澶囨敞';
+COMMENT ON COLUMN pmis_project_opportunity.remark IS '备注';
 
-COMMENT ON COLUMN pmis_project_opportunity.tags IS '鏍囩(閫楀彿鍒嗛殧,鐢ㄤ簬妫€绱?';
+COMMENT ON COLUMN pmis_project_opportunity.tags IS '标签(逗号分隔,用于检索)';
 
-COMMENT ON COLUMN pmis_project_opportunity.created_by IS '鍒涘缓浜?ID';
+COMMENT ON COLUMN pmis_project_opportunity.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN pmis_project_opportunity.created_at IS '鍒涘缓鏃堕棿';
+COMMENT ON COLUMN pmis_project_opportunity.created_at IS '创建时间';
 
-COMMENT ON COLUMN pmis_project_opportunity.updated_by IS '鏈€鍚庝慨鏀逛汉 ID';
+COMMENT ON COLUMN pmis_project_opportunity.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN pmis_project_opportunity.updated_at IS '鏈€鍚庝慨鏀规椂闂?;
+COMMENT ON COLUMN pmis_project_opportunity.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN pmis_project_opportunity.deleted IS '閫昏緫鍒犻櫎鏍囪: 0 鏈垹闄?/ 1 宸插垹闄?;
+COMMENT ON COLUMN pmis_project_opportunity.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_project_opportunity.tenant_id IS '绉熸埛 ID(鍗曠鎴烽儴缃查粯璁?1)';
+COMMENT ON COLUMN pmis_project_opportunity.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-COMMENT ON COLUMN pmis_project_opportunity.version IS '涔愯閿佺増鏈彿(鏇存柊鏃惰嚜澧?闃叉骞跺彂瑕嗙洊)';
+COMMENT ON COLUMN pmis_project_opportunity.version IS '乐观锁版本号(更新时自增,防止并发覆盖)';
 
 CREATE INDEX IF NOT EXISTS idx_ppo_customer
     ON pmis_project_opportunity (customer_id) WHERE deleted = 0;
@@ -120,20 +120,20 @@ CREATE INDEX IF NOT EXISTS idx_ppo_status
 CREATE INDEX IF NOT EXISTS idx_ppo_level
     ON pmis_project_opportunity (level) WHERE deleted = 0;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绉熸埛 + 瀹㈡埛 + 鐘舵€?婕忔枟瑙嗗浘)
+-- [INLINE-OPT] 复合索引:租户 + 客户 + 状态(漏斗视图)
 CREATE INDEX IF NOT EXISTS idx_ppo_tenant_customer_status
     ON pmis_project_opportunity (tenant_id, customer_id, status) WHERE deleted = 0;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绉熸埛 + 鍒涘缓鏃堕棿鍊掑簭(鍟嗘満涓績鍒楄〃)
+-- [INLINE-OPT] 复合索引:租户 + 创建时间倒序(商机中心列表)
 CREATE INDEX IF NOT EXISTS idx_ppo_tenant_created
     ON pmis_project_opportunity (tenant_id, created_at DESC) WHERE deleted = 0;
 
--- [INLINE-OPT] 棰勮绛剧害鏃ユ湡绱㈠紩(鐢ㄤ簬璧㈢巼鍔犳潈鏀跺叆棰勬祴鎵弿)
+-- [INLINE-OPT] 预计签约日期索引(用于赢率加权收入预测扫描)
 CREATE INDEX IF NOT EXISTS idx_ppo_expected_sign
     ON pmis_project_opportunity (expected_sign_date) WHERE deleted = 0 AND status IN ('FOLLOWING', 'QUOTED', 'NEGOTIATING');
 
 -- =====================================================
--- 2. 鍟嗘満璺熻繘璁板綍 pmis_project_opportunity_follow
+-- 2. 商机跟进记录 pmis_project_opportunity_follow
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_opportunity_follow(
@@ -153,60 +153,60 @@ CREATE TABLE IF NOT EXISTS pmis_project_opportunity_follow(
     deleted           SMALLINT       NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
-    -- 鏁版嵁瀹屾暣鎬х害鏉?
+    -- 数据完整性约束
     CONSTRAINT ck_ppof_type_enum     CHECK (follow_type IN ('VISIT', 'CALL', 'QUOTE', 'NEGOTIATE', 'OTHER')),
     CONSTRAINT ck_ppof_version_nonneg CHECK (version >= 0),
     CONSTRAINT ck_ppof_deleted_enum  CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_project_opportunity_follow IS '鍟嗘満璺熻繘璁板綍: 鎷滆/鐢佃瘽/鎶ヤ环/璋堝垽鐨勭棔杩圭鐞?鏀寔鏃堕棿绾垮洖婧?;
+COMMENT ON TABLE pmis_project_opportunity_follow IS '商机跟进记录: 拜访/电话/报价/谈判的痕迹管理,支持时间线回溯';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.id IS '涓婚敭 ID';
+COMMENT ON COLUMN pmis_project_opportunity_follow.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.opportunity_id IS '鍟嗘満 ID(鍏宠仈 pmis_project_opportunity.id)';
+COMMENT ON COLUMN pmis_project_opportunity_follow.opportunity_id IS '商机 ID(关联 pmis_project_opportunity.id)';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.follow_type IS '璺熻繘绫诲瀷: VISIT 鎷滆 / CALL 鐢佃瘽 / QUOTE 鎶ヤ环 / NEGOTIATE 璋堝垽 / OTHER 鍏朵粬';
+COMMENT ON COLUMN pmis_project_opportunity_follow.follow_type IS '跟进类型: VISIT 拜访 / CALL 电话 / QUOTE 报价 / NEGOTIATE 谈判 / OTHER 其他';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.follow_at IS '璺熻繘鏃堕棿';
+COMMENT ON COLUMN pmis_project_opportunity_follow.follow_at IS '跟进时间';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.follower_id IS '璺熻繘浜?ID';
+COMMENT ON COLUMN pmis_project_opportunity_follow.follower_id IS '跟进人 ID';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.follower_name IS '璺熻繘浜哄鍚?;
+COMMENT ON COLUMN pmis_project_opportunity_follow.follower_name IS '跟进人姓名';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.content IS '璺熻繘鍐呭';
+COMMENT ON COLUMN pmis_project_opportunity_follow.content IS '跟进内容';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.next_step IS '涓嬩竴姝ヨ鍒?;
+COMMENT ON COLUMN pmis_project_opportunity_follow.next_step IS '下一步计划';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.next_follow_date IS '涓嬫璺熻繘鏃ユ湡';
+COMMENT ON COLUMN pmis_project_opportunity_follow.next_follow_date IS '下次跟进日期';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.created_by IS '鍒涘缓浜?ID';
+COMMENT ON COLUMN pmis_project_opportunity_follow.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.created_at IS '鍒涘缓鏃堕棿';
+COMMENT ON COLUMN pmis_project_opportunity_follow.created_at IS '创建时间';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.updated_by IS '鏈€鍚庝慨鏀逛汉 ID';
+COMMENT ON COLUMN pmis_project_opportunity_follow.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.updated_at IS '鏈€鍚庝慨鏀规椂闂?;
+COMMENT ON COLUMN pmis_project_opportunity_follow.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.deleted IS '閫昏緫鍒犻櫎鏍囪: 0 鏈垹闄?/ 1 宸插垹闄?;
+COMMENT ON COLUMN pmis_project_opportunity_follow.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.tenant_id IS '绉熸埛 ID(鍗曠鎴烽儴缃查粯璁?1)';
+COMMENT ON COLUMN pmis_project_opportunity_follow.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-COMMENT ON COLUMN pmis_project_opportunity_follow.version IS '涔愯閿佺増鏈彿';
+COMMENT ON COLUMN pmis_project_opportunity_follow.version IS '乐观锁版本号';
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:鍟嗘満 + 璺熻繘鏃堕棿鍊掑簭(鏃堕棿绾垮睍绀?
+-- [INLINE-OPT] 复合索引:商机 + 跟进时间倒序(时间线展示)
 CREATE INDEX IF NOT EXISTS idx_ppof_opp
     ON pmis_project_opportunity_follow (opportunity_id, follow_at DESC) WHERE deleted = 0;
 
--- [INLINE-OPT] 璺熻繘浜?+ 鏃堕棿绱㈠紩(閿€鍞釜浜哄伐浣滃彴)
+-- [INLINE-OPT] 跟进人 + 时间索引(销售个人工作台)
 CREATE INDEX IF NOT EXISTS idx_ppof_follower_at
     ON pmis_project_opportunity_follow (follower_id, follow_at DESC) WHERE deleted = 0;
 
--- [INLINE-OPT] 涓嬫璺熻繘鏃ユ湡鎻愰啋(鍚庡彴鎵弿)
+-- [INLINE-OPT] 下次跟进日期提醒(后台扫描)
 CREATE INDEX IF NOT EXISTS idx_ppof_next_date
     ON pmis_project_opportunity_follow (next_follow_date) WHERE deleted = 0 AND next_follow_date IS NOT NULL;
 
 -- =====================================================
--- 3. 绔嬮」涓昏〃 pmis_project_initiation
+-- 3. 立项主表 pmis_project_initiation
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract(
@@ -240,7 +240,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract(
     deleted           SMALLINT       NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
-    -- 鏁版嵁瀹屾暣鎬х害鏉?
+    -- 数据完整性约束
     CONSTRAINT uk_ppc_code           UNIQUE (contract_code, deleted),
     CONSTRAINT ck_ppc_type_enum      CHECK (contract_type IN ('FIXED_PRICE', 'T_M', 'OUTSOURCING', 'PRODUCT', 'MAINTENANCE', 'CONSULTING', 'TRAINING', 'OTHER')),
     CONSTRAINT ck_ppc_status_enum    CHECK (status IN ('DRAFT', 'SUBMITTED', 'APPROVING', 'ACTIVE', 'SUSPENDED', 'EXPIRED', 'TERMINATED')),
@@ -253,67 +253,67 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract(
     CONSTRAINT ck_ppc_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_project_contract IS '鍚堝悓涓昏〃: 椤圭洰绛剧害鍚堝悓,鍏宠仈绔嬮」/瀹㈡埛/浠樻鏉℃,鏀拺寮€绁ㄥ洖娆?;
+COMMENT ON TABLE pmis_project_contract IS '合同主表: 项目签约合同,关联立项/客户/付款条款,支撑开票回款';
 
-COMMENT ON COLUMN pmis_project_contract.id IS '涓婚敭 ID';
+COMMENT ON COLUMN pmis_project_contract.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_project_contract.contract_code IS '鍚堝悓缂栫爜(鍏ㄥ眬鍞竴,濡?CT20260001)';
+COMMENT ON COLUMN pmis_project_contract.contract_code IS '合同编码(全局唯一,如 CT20260001)';
 
-COMMENT ON COLUMN pmis_project_contract.contract_name IS '鍚堝悓鍚嶇О';
+COMMENT ON COLUMN pmis_project_contract.contract_name IS '合同名称';
 
-COMMENT ON COLUMN pmis_project_contract.initiation_id IS '鍏宠仈绔嬮」 ID(鍏宠仈 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_project_contract.initiation_id IS '关联立项 ID(关联 pmis_project_initiation.id)';
 
-COMMENT ON COLUMN pmis_project_contract.customer_id IS '瀹㈡埛 ID';
+COMMENT ON COLUMN pmis_project_contract.customer_id IS '客户 ID';
 
-COMMENT ON COLUMN pmis_project_contract.customer_name IS '瀹㈡埛鍚嶇О(鍐椾綑)';
+COMMENT ON COLUMN pmis_project_contract.customer_name IS '客户名称(冗余)';
 
-COMMENT ON COLUMN pmis_project_contract.contract_type IS '鍚堝悓绫诲瀷: FIXED_PRICE / T_M / OUTSOURCING / PRODUCT / MAINTENANCE / CONSULTING / TRAINING / OTHER';
+COMMENT ON COLUMN pmis_project_contract.contract_type IS '合同类型: FIXED_PRICE / T_M / OUTSOURCING / PRODUCT / MAINTENANCE / CONSULTING / TRAINING / OTHER';
 
-COMMENT ON COLUMN pmis_project_contract.sign_date IS '绛剧害鏃ユ湡';
+COMMENT ON COLUMN pmis_project_contract.sign_date IS '签约日期';
 
-COMMENT ON COLUMN pmis_project_contract.effective_date IS '鍚堝悓鐢熸晥鏃ユ湡';
+COMMENT ON COLUMN pmis_project_contract.effective_date IS '合同生效日期';
 
-COMMENT ON COLUMN pmis_project_contract.expire_date IS '鍚堝悓鍒版湡鏃ユ湡';
+COMMENT ON COLUMN pmis_project_contract.expire_date IS '合同到期日期';
 
-COMMENT ON COLUMN pmis_project_contract.total_amount IS '鍚堝悓鎬婚(鍏?鍚◣)';
+COMMENT ON COLUMN pmis_project_contract.total_amount IS '合同总额(元,含税)';
 
-COMMENT ON COLUMN pmis_project_contract.currency IS '甯佺(榛樿 CNY)';
+COMMENT ON COLUMN pmis_project_contract.currency IS '币种(默认 CNY)';
 
-COMMENT ON COLUMN pmis_project_contract.payment_terms IS '浠樻鏉℃(濡?3-3-3-1 棰勪粯/鍚姩/UAT/璐ㄤ繚)';
+COMMENT ON COLUMN pmis_project_contract.payment_terms IS '付款条款(如 3-3-3-1 预付/启动/UAT/质保)';
 
-COMMENT ON COLUMN pmis_project_contract.billing_cycle IS '缁撶畻鍛ㄦ湡(MONTHLY 鏈堢粨 / QUARTERLY 瀛ｇ粨 / MILESTONE 閲岀▼纰?/ ONEOFF 涓€娆℃€?';
+COMMENT ON COLUMN pmis_project_contract.billing_cycle IS '结算周期(MONTHLY 月结 / QUARTERLY 季结 / MILESTONE 里程碑 / ONEOFF 一次性)';
 
-COMMENT ON COLUMN pmis_project_contract.tax_rate IS '閫傜敤绋庣巼(0.0000-1.0000)';
+COMMENT ON COLUMN pmis_project_contract.tax_rate IS '适用税率(0.0000-1.0000)';
 
-COMMENT ON COLUMN pmis_project_contract.status IS '鍚堝悓鐘舵€? DRAFT 鑽夌 / SUBMITTED 宸叉彁浜?/ APPROVING 瀹℃壒涓?/ ACTIVE 鎵ц涓?/ SUSPENDED 鏆傚仠 / EXPIRED 宸插埌鏈?/ TERMINATED 宸茬粓姝?;
+COMMENT ON COLUMN pmis_project_contract.status IS '合同状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / ACTIVE 执行中 / SUSPENDED 暂停 / EXPIRED 已到期 / TERMINATED 已终止';
 
-COMMENT ON COLUMN pmis_project_contract.risk_level IS '椋庨櫓绛夌骇: LOW 浣?/ MEDIUM 涓?/ HIGH 楂?;
+COMMENT ON COLUMN pmis_project_contract.risk_level IS '风险等级: LOW 低 / MEDIUM 中 / HIGH 高';
 
-COMMENT ON COLUMN pmis_project_contract.risk_notes IS '椋庨櫓璇存槑';
+COMMENT ON COLUMN pmis_project_contract.risk_notes IS '风险说明';
 
-COMMENT ON COLUMN pmis_project_contract.owner_id IS '鍚堝悓璐熻矗浜?ID(閿€鍞?瀹㈡埛缁忕悊)';
+COMMENT ON COLUMN pmis_project_contract.owner_id IS '合同负责人 ID(销售/客户经理)';
 
-COMMENT ON COLUMN pmis_project_contract.owner_name IS '鍚堝悓璐熻矗浜哄鍚?;
+COMMENT ON COLUMN pmis_project_contract.owner_name IS '合同负责人姓名';
 
-COMMENT ON COLUMN pmis_project_contract.contract_file_id IS '鍚堝悓鏂囦欢 ID(鍏宠仈 pmis_file.id)';
+COMMENT ON COLUMN pmis_project_contract.contract_file_id IS '合同文件 ID(关联 pmis_file.id)';
 
-COMMENT ON COLUMN pmis_project_contract.workflow_id IS '瀹℃壒娴佺▼瀹炰緥 ID';
+COMMENT ON COLUMN pmis_project_contract.workflow_id IS '审批流程实例 ID';
 
-COMMENT ON COLUMN pmis_project_contract.remark IS '澶囨敞';
+COMMENT ON COLUMN pmis_project_contract.remark IS '备注';
 
-COMMENT ON COLUMN pmis_project_contract.created_by IS '鍒涘缓浜?ID';
+COMMENT ON COLUMN pmis_project_contract.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN pmis_project_contract.created_at IS '鍒涘缓鏃堕棿';
+COMMENT ON COLUMN pmis_project_contract.created_at IS '创建时间';
 
-COMMENT ON COLUMN pmis_project_contract.updated_by IS '鏈€鍚庝慨鏀逛汉 ID';
+COMMENT ON COLUMN pmis_project_contract.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN pmis_project_contract.updated_at IS '鏈€鍚庝慨鏀规椂闂?;
+COMMENT ON COLUMN pmis_project_contract.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN pmis_project_contract.deleted IS '閫昏緫鍒犻櫎鏍囪: 0 鏈垹闄?/ 1 宸插垹闄?;
+COMMENT ON COLUMN pmis_project_contract.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_project_contract.tenant_id IS '绉熸埛 ID(鍗曠鎴烽儴缃查粯璁?1)';
+COMMENT ON COLUMN pmis_project_contract.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-COMMENT ON COLUMN pmis_project_contract.version IS '涔愯閿佺増鏈彿';
+COMMENT ON COLUMN pmis_project_contract.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ppc_customer
     ON pmis_project_contract (customer_id) WHERE deleted = 0;
@@ -330,20 +330,20 @@ CREATE INDEX IF NOT EXISTS idx_ppc_sign
 CREATE INDEX IF NOT EXISTS idx_ppc_risk
     ON pmis_project_contract (risk_level) WHERE deleted = 0;
 
--- [INLINE-OPT] 鍚堝悓璐熻矗浜?+ 鐘舵€?閿€鍞悎鍚屽彴璐?
+-- [INLINE-OPT] 合同负责人 + 状态(销售合同台账)
 CREATE INDEX IF NOT EXISTS idx_ppc_owner_status
     ON pmis_project_contract (owner_id, status) WHERE deleted = 0;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绉熸埛 + 鍒版湡鏃ユ湡(鍒版湡棰勮鎵弿)
+-- [INLINE-OPT] 复合索引:租户 + 到期日期(到期预警扫描)
 CREATE INDEX IF NOT EXISTS idx_ppc_tenant_expire
     ON pmis_project_contract (tenant_id, expire_date) WHERE deleted = 0 AND expire_date IS NOT NULL;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绉熸埛 + 鍒涘缓鏃堕棿鍊掑簭(鍚堝悓涓績鍒楄〃)
+-- [INLINE-OPT] 复合索引:租户 + 创建时间倒序(合同中心列表)
 CREATE INDEX IF NOT EXISTS idx_ppc_tenant_created
     ON pmis_project_contract (tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- =====================================================
--- 7. 鍚堝悓琛ュ厖鍗忚 pmis_project_contract_supplement
+-- 7. 合同补充协议 pmis_project_contract_supplement
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
@@ -366,7 +366,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
     deleted           SMALLINT       NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
-    -- 鏁版嵁瀹屾暣鎬х害鏉?
+    -- 数据完整性约束
     CONSTRAINT uk_ppcs_code          UNIQUE (supplement_code, deleted),
     CONSTRAINT ck_ppcs_type_enum     CHECK (supplement_type IN ('AMOUNT', 'SCOPE', 'TERM', 'OTHER')),
     CONSTRAINT ck_ppcs_status_enum   CHECK (status IN ('DRAFT', 'APPROVED', 'REJECTED')),
@@ -375,56 +375,56 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
     CONSTRAINT ck_ppcs_deleted_enum  CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_project_contract_supplement IS '鍚堝悓琛ュ厖鍗忚: 涓诲悎鍚岀璁㈠悗鐨勯噾棰?鑼冨洿/宸ユ湡/鍏朵粬琛ュ厖鏉℃,娉曞姟澶囨';
+COMMENT ON TABLE pmis_project_contract_supplement IS '合同补充协议: 主合同签订后的金额/范围/工期/其他补充条款,法务备案';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.id IS '涓婚敭 ID';
+COMMENT ON COLUMN pmis_project_contract_supplement.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.contract_id IS '涓诲悎鍚?ID(鍏宠仈 pmis_project_contract.id)';
+COMMENT ON COLUMN pmis_project_contract_supplement.contract_id IS '主合同 ID(关联 pmis_project_contract.id)';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.supplement_code IS '琛ュ厖鍗忚缂栫爜(鍏ㄥ眬鍞竴)';
+COMMENT ON COLUMN pmis_project_contract_supplement.supplement_code IS '补充协议编码(全局唯一)';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.supplement_name IS '琛ュ厖鍗忚鍚嶇О';
+COMMENT ON COLUMN pmis_project_contract_supplement.supplement_name IS '补充协议名称';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.supplement_type IS '琛ュ厖绫诲瀷: AMOUNT 閲戦 / SCOPE 鑼冨洿 / TERM 宸ユ湡 / OTHER 鍏朵粬';
+COMMENT ON COLUMN pmis_project_contract_supplement.supplement_type IS '补充类型: AMOUNT 金额 / SCOPE 范围 / TERM 工期 / OTHER 其他';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.change_amount IS '鍙樻洿閲戦(鍙鍙礋)';
+COMMENT ON COLUMN pmis_project_contract_supplement.change_amount IS '变更金额(可正可负)';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.new_total_amount IS '鍙樻洿鍚庡悎鍚屾€婚';
+COMMENT ON COLUMN pmis_project_contract_supplement.new_total_amount IS '变更后合同总额';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.effective_date IS '鐢熸晥鏃ユ湡';
+COMMENT ON COLUMN pmis_project_contract_supplement.effective_date IS '生效日期';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.expire_date IS '鍒版湡鏃ユ湡';
+COMMENT ON COLUMN pmis_project_contract_supplement.expire_date IS '到期日期';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.content IS '鍗忚姝ｆ枃';
+COMMENT ON COLUMN pmis_project_contract_supplement.content IS '协议正文';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.file_id IS '鍗忚鏂囦欢 ID(鍏宠仈 pmis_file.id)';
+COMMENT ON COLUMN pmis_project_contract_supplement.file_id IS '协议文件 ID(关联 pmis_file.id)';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.status IS '鐘舵€? DRAFT 鑽夌 / APPROVED 宸茬 / REJECTED 宸查┏鍥?;
+COMMENT ON COLUMN pmis_project_contract_supplement.status IS '状态: DRAFT 草稿 / APPROVED 已签 / REJECTED 已驳回';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.created_by IS '鍒涘缓浜?ID';
+COMMENT ON COLUMN pmis_project_contract_supplement.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.created_at IS '鍒涘缓鏃堕棿';
+COMMENT ON COLUMN pmis_project_contract_supplement.created_at IS '创建时间';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.updated_by IS '鏈€鍚庝慨鏀逛汉 ID';
+COMMENT ON COLUMN pmis_project_contract_supplement.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.updated_at IS '鏈€鍚庝慨鏀规椂闂?;
+COMMENT ON COLUMN pmis_project_contract_supplement.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.deleted IS '閫昏緫鍒犻櫎鏍囪: 0 鏈垹闄?/ 1 宸插垹闄?;
+COMMENT ON COLUMN pmis_project_contract_supplement.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.tenant_id IS '绉熸埛 ID(鍗曠鎴烽儴缃查粯璁?1)';
+COMMENT ON COLUMN pmis_project_contract_supplement.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-COMMENT ON COLUMN pmis_project_contract_supplement.version IS '涔愯閿佺増鏈彿';
+COMMENT ON COLUMN pmis_project_contract_supplement.version IS '乐观锁版本号';
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:鍚堝悓 + 绫诲瀷(鎸夌被鍨嬫煡鐪嬭ˉ鍏呭崗璁?
+-- [INLINE-OPT] 复合索引:合同 + 类型(按类型查看补充协议)
 CREATE INDEX IF NOT EXISTS idx_ppcs_contract_type
     ON pmis_project_contract_supplement (contract_id, supplement_type) WHERE deleted = 0;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绉熸埛 + 鐘舵€?琛ュ厖鍗忚鍙拌处)
+-- [INLINE-OPT] 复合索引:租户 + 状态(补充协议台账)
 CREATE INDEX IF NOT EXISTS idx_ppcs_tenant_status
     ON pmis_project_contract_supplement (tenant_id, status) WHERE deleted = 0;
 
 -- =====================================================
--- 8. 鍚堝悓鍙樻洿璁板綍 pmis_project_contract_change
+-- 8. 合同变更记录 pmis_project_contract_change
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
@@ -451,7 +451,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
     deleted           SMALLINT       NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)         NOT NULL DEFAULT '1',
     version           INTEGER        NOT NULL DEFAULT 0,
-    -- 鏁版嵁瀹屾暣鎬х害鏉?
+    -- 数据完整性约束
     CONSTRAINT uk_ppcc_code          UNIQUE (change_code, deleted),
     CONSTRAINT ck_ppcc_type_enum     CHECK (change_type IN ('SCOPE', 'AMOUNT', 'TERM', 'PERSONNEL', 'PROGRESS')),
     CONSTRAINT ck_ppcc_status_enum   CHECK (status IN ('DRAFT', 'SUBMITTED', 'APPROVING', 'APPROVED', 'REJECTED')),
@@ -459,89 +459,89 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
     CONSTRAINT ck_ppcc_deleted_enum  CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_project_contract_change IS '鍚堝悓鍙樻洿璁板綍: 鑼冨洿/閲戦/宸ユ湡/浜哄憳/杩涘害鐨勫彉鏇?闇€璧板鎵规祦';
+COMMENT ON TABLE pmis_project_contract_change IS '合同变更记录: 范围/金额/工期/人员/进度的变更,需走审批流';
 
-COMMENT ON COLUMN pmis_project_contract_change.id IS '涓婚敭 ID';
+COMMENT ON COLUMN pmis_project_contract_change.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_project_contract_change.contract_id IS '涓诲悎鍚?ID(鍏宠仈 pmis_project_contract.id)';
+COMMENT ON COLUMN pmis_project_contract_change.contract_id IS '主合同 ID(关联 pmis_project_contract.id)';
 
-COMMENT ON COLUMN pmis_project_contract_change.change_code IS '鍙樻洿鍗曠紪鐮?鍏ㄥ眬鍞竴)';
+COMMENT ON COLUMN pmis_project_contract_change.change_code IS '变更单编码(全局唯一)';
 
-COMMENT ON COLUMN pmis_project_contract_change.change_type IS '鍙樻洿绫诲瀷: SCOPE 鑼冨洿 / AMOUNT 閲戦 / TERM 宸ユ湡 / PERSONNEL 浜哄憳 / PROGRESS 杩涘害';
+COMMENT ON COLUMN pmis_project_contract_change.change_type IS '变更类型: SCOPE 范围 / AMOUNT 金额 / TERM 工期 / PERSONNEL 人员 / PROGRESS 进度';
 
-COMMENT ON COLUMN pmis_project_contract_change.change_reason IS '鍙樻洿鍘熷洜';
+COMMENT ON COLUMN pmis_project_contract_change.change_reason IS '变更原因';
 
-COMMENT ON COLUMN pmis_project_contract_change.before_value IS '鍙樻洿鍓嶅€?;
+COMMENT ON COLUMN pmis_project_contract_change.before_value IS '变更前值';
 
-COMMENT ON COLUMN pmis_project_contract_change.after_value IS '鍙樻洿鍚庡€?;
+COMMENT ON COLUMN pmis_project_contract_change.after_value IS '变更后值';
 
-COMMENT ON COLUMN pmis_project_contract_change.amount_delta IS '閲戦鍙樺寲(鍙鍙礋)';
+COMMENT ON COLUMN pmis_project_contract_change.amount_delta IS '金额变化(可正可负)';
 
-COMMENT ON COLUMN pmis_project_contract_change.impact_analysis IS '褰卞搷鍒嗘瀽(鑼冨洿/宸ユ湡/鎴愭湰/椋庨櫓)';
+COMMENT ON COLUMN pmis_project_contract_change.impact_analysis IS '影响分析(范围/工期/成本/风险)';
 
-COMMENT ON COLUMN pmis_project_contract_change.status IS '鐘舵€? DRAFT 鑽夌 / SUBMITTED 宸叉彁浜?/ APPROVING 瀹℃壒涓?/ APPROVED 宸叉壒鍑?/ REJECTED 宸查┏鍥?;
+COMMENT ON COLUMN pmis_project_contract_change.status IS '状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / APPROVED 已批准 / REJECTED 已驳回';
 
-COMMENT ON COLUMN pmis_project_contract_change.applicant_id IS '鐢宠浜?ID';
+COMMENT ON COLUMN pmis_project_contract_change.applicant_id IS '申请人 ID';
 
-COMMENT ON COLUMN pmis_project_contract_change.applicant_name IS '鐢宠浜哄鍚?;
+COMMENT ON COLUMN pmis_project_contract_change.applicant_name IS '申请人姓名';
 
-COMMENT ON COLUMN pmis_project_contract_change.approver_id IS '瀹℃壒浜?ID';
+COMMENT ON COLUMN pmis_project_contract_change.approver_id IS '审批人 ID';
 
-COMMENT ON COLUMN pmis_project_contract_change.approver_name IS '瀹℃壒浜哄鍚?;
+COMMENT ON COLUMN pmis_project_contract_change.approver_name IS '审批人姓名';
 
-COMMENT ON COLUMN pmis_project_contract_change.approved_at IS '瀹℃壒鏃堕棿';
+COMMENT ON COLUMN pmis_project_contract_change.approved_at IS '审批时间';
 
-COMMENT ON COLUMN pmis_project_contract_change.workflow_id IS '瀹℃壒娴佺▼瀹炰緥 ID';
+COMMENT ON COLUMN pmis_project_contract_change.workflow_id IS '审批流程实例 ID';
 
-COMMENT ON COLUMN pmis_project_contract_change.created_by IS '鍒涘缓浜?ID';
+COMMENT ON COLUMN pmis_project_contract_change.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN pmis_project_contract_change.created_at IS '鍒涘缓鏃堕棿';
+COMMENT ON COLUMN pmis_project_contract_change.created_at IS '创建时间';
 
-COMMENT ON COLUMN pmis_project_contract_change.updated_by IS '鏈€鍚庝慨鏀逛汉 ID';
+COMMENT ON COLUMN pmis_project_contract_change.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN pmis_project_contract_change.updated_at IS '鏈€鍚庝慨鏀规椂闂?;
+COMMENT ON COLUMN pmis_project_contract_change.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN pmis_project_contract_change.deleted IS '閫昏緫鍒犻櫎鏍囪: 0 鏈垹闄?/ 1 宸插垹闄?;
+COMMENT ON COLUMN pmis_project_contract_change.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_project_contract_change.tenant_id IS '绉熸埛 ID(鍗曠鎴烽儴缃查粯璁?1)';
+COMMENT ON COLUMN pmis_project_contract_change.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-COMMENT ON COLUMN pmis_project_contract_change.version IS '涔愯閿佺増鏈彿';
+COMMENT ON COLUMN pmis_project_contract_change.version IS '乐观锁版本号';
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:鍚堝悓 + 绫诲瀷(鍚堝悓鍙樻洿鍘嗗彶)
+-- [INLINE-OPT] 复合索引:合同 + 类型(合同变更历史)
 CREATE INDEX IF NOT EXISTS idx_ppcc_contract_type
     ON pmis_project_contract_change (contract_id, change_type) WHERE deleted = 0;
 
--- [INLINE-OPT] 鐘舵€佺储寮?寰呭鎵瑰伐浣滃彴)
+-- [INLINE-OPT] 状态索引(待审批工作台)
 CREATE INDEX IF NOT EXISTS idx_ppcc_status
     ON pmis_project_contract_change (status) WHERE deleted = 0;
 
--- [INLINE-OPT] 瀹℃壒浜?+ 鐘舵€?瀹℃壒浜哄伐浣滃彴)
+-- [INLINE-OPT] 审批人 + 状态(审批人工作台)
 CREATE INDEX IF NOT EXISTS idx_ppcc_approver_status
     ON pmis_project_contract_change (approver_id, status) WHERE deleted = 0;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绉熸埛 + 瀹℃壒鏃堕棿鍊掑簭(鍙樻洿瀹¤)
+-- [INLINE-OPT] 复合索引:租户 + 审批时间倒序(变更审计)
 CREATE INDEX IF NOT EXISTS idx_ppcc_tenant_approved
     ON pmis_project_contract_change (tenant_id, approved_at DESC) WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
 
 -- ============================ [010] init pmis execution schema ============================
--- [INLINE-OPT] 宸茬粺涓€涓哄崟鏂囦欢 V1.0.0.sql 鐨勬渶缁堝舰鎬?
---   1) 鏃堕棿瀛楁 TIMESTAMP 鈫?TIMESTAMPTZ
---   2) 鍏ㄩ儴瀹¤瀛楁缁熶竴涓?created_by/created_at/updated_by/updated_at
+-- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
+--   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
+--   2) 全部审计字段统一为 created_by/created_at/updated_by/updated_at
 --   3) tenant_id NOT NULL DEFAULT 1
---   4) 鍐呰仈 status/category/type/deleted/window_check CHECK 绾︽潫
---   5) 鍐呰仈 (tenant_id, created_at DESC) WHERE deleted = 0 澶嶅悎閮ㄥ垎绱㈠紩
---   6) status/owner/category 绫荤储寮曞叏閮ㄥ姞 WHERE deleted = 0 閮ㄥ垎鏉′欢
---   7) 鍐呰仈 (initiation_id, period) 绛変笟鍔′笓鐢ㄥ鍚堢储寮?
+--   4) 内联 status/category/type/deleted/window_check CHECK 约束
+--   5) 内联 (tenant_id, created_at DESC) WHERE deleted = 0 复合部分索引
+--   6) status/owner/category 类索引全部加 WHERE deleted = 0 部分条件
+--   7) 内联 (initiation_id, period) 等业务专用复合索引
 -- =====================================================
--- PMIS 椤圭洰鎵ц/鎴愭湰/鍒╂鼎妯″潡 DDL
--- 鐗堟湰: V1.0.0_010 (merged into V1.0.0.sql)
--- 鎻忚堪: WBS 浠诲姟銆佸伐鏃躲€佹垚鏈綊闆嗐€佸埄娑︽牳绠?
+-- PMIS 项目执行/成本/利润模块 DDL
+-- 版本: V1.0.0_010 (merged into V1.0.0.sql)
+-- 描述: WBS 任务、工时、成本归集、利润核算
 -- =====================================================
 
 -- =====================================================
--- 1. WBS 浠诲姟琛?pmis_execution_wbs_task
+-- 1. WBS 任务表 pmis_execution_wbs_task
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_project_contract_template(
@@ -555,7 +555,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_template(
     default_penalty_rate   NUMERIC(5,4) NOT NULL DEFAULT 0,
     sla_description        TEXT,
     deliverables           TEXT,
-    content                TEXT,                              -- 妯℃澘姝ｆ枃
+    content                TEXT,                              -- 模板正文
     customer_level         VARCHAR(16),                      -- A/B/C/D
     project_level          VARCHAR(16),                      -- L1-L18
     status                 VARCHAR(32)  NOT NULL DEFAULT 'DRAFT', -- DRAFT/PUBLISHED/DEPRECATED
@@ -568,57 +568,57 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_template(
     updated_by             VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
     updated_at             TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                SMALLINT     NOT NULL DEFAULT 0,
-    -- 涓氬姟鍞竴鎬? 鍚岀鎴蜂笅 template_code + 杞垹闄や綅 鍞竴
+    -- 业务唯一性: 同租户下 template_code + 软删除位 唯一
     CONSTRAINT uk_ppct_code            UNIQUE (template_code, deleted),
-    -- 鏋氫妇绾︽潫
+    -- 枚举约束
     CONSTRAINT ck_ppct_contract_type   CHECK (contract_type IN ('FIXED_PRICE','T_M','OUTSOURCING','PRODUCT','MAINTENANCE','CONSULTING','TRAINING','OTHER')),
     CONSTRAINT ck_ppct_customer_level  CHECK (customer_level IS NULL OR customer_level IN ('A','B','C','D')),
     CONSTRAINT ck_ppct_status_enum     CHECK (status IN ('DRAFT','PUBLISHED','DEPRECATED')),
-    -- 鏁板€奸潪璐?/ 姣斾緥鑼冨洿
+    -- 数值非负 / 比例范围
     CONSTRAINT ck_ppct_payment_days    CHECK (default_payment_days >= 0),
     CONSTRAINT ck_ppct_penalty_range   CHECK (default_penalty_rate >= 0 AND default_penalty_rate <= 1),
     CONSTRAINT ck_ppct_deleted_enum    CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_project_contract_template IS '鍚堝悓妯℃澘琛? 8 绫婚」鐩被鍨嬶紙FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER锛夌殑鏍囧噯鍖栧悎鍚屾ā鏉?鍚堝悓璧疯崏鏃舵寜绫诲瀷寮曠敤';
+COMMENT ON TABLE  pmis_project_contract_template IS '合同模板表: 8 类项目类型（FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER）的标准化合同模板,合同起草时按类型引用';
 
-COMMENT ON COLUMN pmis_project_contract_template.template_code IS '妯℃澘缂栫爜: 涓氬姟鍞竴,濡?TPL-FIX-001';
+COMMENT ON COLUMN pmis_project_contract_template.template_code IS '模板编码: 业务唯一,如 TPL-FIX-001';
 
-COMMENT ON COLUMN pmis_project_contract_template.template_name IS '妯℃澘鍚嶇О';
+COMMENT ON COLUMN pmis_project_contract_template.template_name IS '模板名称';
 
-COMMENT ON COLUMN pmis_project_contract_template.contract_type IS '鍚堝悓绫诲瀷: FIXED_PRICE 鍥哄畾鎬讳环 / T_M 浜烘湀璁¤垂 / OUTSOURCING 浜哄姏澶栧寘 / PRODUCT 浜у搧閿€鍞?/ MAINTENANCE 杩愮淮鏈嶅姟 / CONSULTING 鍜ㄨ鏈嶅姟 / TRAINING 鍩硅鏈嶅姟 / OTHER 鍏朵粬';
+COMMENT ON COLUMN pmis_project_contract_template.contract_type IS '合同类型: FIXED_PRICE 固定总价 / T_M 人月计费 / OUTSOURCING 人力外包 / PRODUCT 产品销售 / MAINTENANCE 运维服务 / CONSULTING 咨询服务 / TRAINING 培训服务 / OTHER 其他';
 
-COMMENT ON COLUMN pmis_project_contract_template.version IS '妯℃澘鐗堟湰鍙? 璇箟鍖栫増鏈?榛樿 1.0.0';
+COMMENT ON COLUMN pmis_project_contract_template.version IS '模板版本号: 语义化版本,默认 1.0.0';
 
-COMMENT ON COLUMN pmis_project_contract_template.payment_terms IS '浠樻鏉℃: 鏂囨湰鎻忚堪,渚嬪"3-3-3-1"鍒嗛樁娈垫瘮渚?;
+COMMENT ON COLUMN pmis_project_contract_template.payment_terms IS '付款条款: 文本描述,例如"3-3-3-1"分阶段比例';
 
-COMMENT ON COLUMN pmis_project_contract_template.default_payment_days IS '榛樿璐︽湡(澶?: 0=棰勪粯,30=鏈堢粨30澶?;
+COMMENT ON COLUMN pmis_project_contract_template.default_payment_days IS '默认账期(天): 0=预付,30=月结30天';
 
-COMMENT ON COLUMN pmis_project_contract_template.default_penalty_rate IS '榛樿杩濈害閲戞瘮渚? 0.0010=鍗冨垎涔嬩竴,浣滀负鍚堝悓鍩哄噯';
+COMMENT ON COLUMN pmis_project_contract_template.default_penalty_rate IS '默认违约金比例: 0.0010=千分之一,作为合同基准';
 
-COMMENT ON COLUMN pmis_project_contract_template.sla_description IS 'SLA 鎻忚堪: 鏈嶅姟绛夌骇鍗忚,渚嬪 P1 4 灏忔椂鍝嶅簲';
+COMMENT ON COLUMN pmis_project_contract_template.sla_description IS 'SLA 描述: 服务等级协议,例如 P1 4 小时响应';
 
-COMMENT ON COLUMN pmis_project_contract_template.deliverables IS '浜や粯鐗╂竻鍗? 鍚堝悓绾﹀畾鐨勪氦浠樼墿鍒楄〃';
+COMMENT ON COLUMN pmis_project_contract_template.deliverables IS '交付物清单: 合同约定的交付物列表';
 
-COMMENT ON COLUMN pmis_project_contract_template.content IS '妯℃澘姝ｆ枃: 鍚崰浣嶇 ${} 鐨勫悎鍚屾鏂?;
+COMMENT ON COLUMN pmis_project_contract_template.content IS '模板正文: 含占位符 ${} 的合同正文';
 
-COMMENT ON COLUMN pmis_project_contract_template.customer_level IS '瀹㈡埛绾у埆: A/B/C/D 淇＄敤绛夌骇,NULL=鍏ㄧ骇鍒€傜敤';
+COMMENT ON COLUMN pmis_project_contract_template.customer_level IS '客户级别: A/B/C/D 信用等级,NULL=全级别适用';
 
-COMMENT ON COLUMN pmis_project_contract_template.project_level IS '椤圭洰绾у埆: L1-L18 澶嶆潅搴︾瓑绾?NULL=鍏ㄧ骇鍒€傜敤';
+COMMENT ON COLUMN pmis_project_contract_template.project_level IS '项目级别: L1-L18 复杂度等级,NULL=全级别适用';
 
-COMMENT ON COLUMN pmis_project_contract_template.status IS '妯℃澘鐘舵€? DRAFT 鑽夌 / PUBLISHED 宸插彂甯?/ DEPRECATED 宸插簾寮?鐘舵€佹満绾挎€?;
+COMMENT ON COLUMN pmis_project_contract_template.status IS '模板状态: DRAFT 草稿 / PUBLISHED 已发布 / DEPRECATED 已废弃,状态机线性';
 
-COMMENT ON COLUMN pmis_project_contract_template.author_id IS '妯℃澘浣滆€?ID';
+COMMENT ON COLUMN pmis_project_contract_template.author_id IS '模板作者 ID';
 
-COMMENT ON COLUMN pmis_project_contract_template.author_name IS '妯℃澘浣滆€呭鍚嶏紙鍐椾綑锛?;
+COMMENT ON COLUMN pmis_project_contract_template.author_name IS '模板作者姓名（冗余）';
 
-COMMENT ON COLUMN pmis_project_contract_template.remark IS '澶囨敞';
+COMMENT ON COLUMN pmis_project_contract_template.remark IS '备注';
 
-COMMENT ON COLUMN pmis_project_contract_template.tenant_id IS '绉熸埛 ID: 澶氱鎴烽殧绂?;
+COMMENT ON COLUMN pmis_project_contract_template.tenant_id IS '租户 ID: 多租户隔离';
 
-COMMENT ON COLUMN pmis_project_contract_template.deleted IS '閫昏緫鍒犻櫎: 0=鏈垹闄?1=宸插垹闄?;
+COMMENT ON COLUMN pmis_project_contract_template.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
--- 澶嶅悎/閮ㄥ垎绱㈠紩(鏇夸唬闆舵暎鐨?idx_ppct_type_status / idx_ppct_tenant)
+-- 复合/部分索引(替代零散的 idx_ppct_type_status / idx_ppct_tenant)
 CREATE INDEX IF NOT EXISTS idx_ppct_tenant_type_status
     ON pmis_project_contract_template(tenant_id, contract_type, status)
     WHERE deleted = 0;
@@ -628,5 +628,5 @@ CREATE INDEX IF NOT EXISTS idx_ppct_tenant_created
     WHERE deleted = 0;
 
 -- =====================================================
--- 2. 椤圭洰鍙樻洿涓昏〃 pmis_project_change
+-- 2. 项目变更主表 pmis_project_change
 

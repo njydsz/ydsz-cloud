@@ -1,13 +1,13 @@
-﻿-- ============================================================
--- PMIS finance module SQL
--- 璐㈠姟浼氳鏈嶅姟 (ydsz-pmis-finance, port 9011)
 -- ============================================================
--- 鏈剼鏈?DDL 瀵瑰簲鍚庣 finance 鏈嶅姟鐨?Mapper / DO,
---   鐗╃悊 Mapper 瀹為檯鎵€鍦ㄦā鍧楀嵆琛ㄥ綊灞炪€傝法鏈嶅姟寮曠敤绂佹鐩磋繛,缁熶竴璧?
---   Feign Client (FinanceDataClient / SalesDataClient)銆?
+-- PMIS finance module SQL
+-- 财务会计服务 (ydsz-pmis-finance, port 9011)
+-- ============================================================
+-- 本脚本 DDL 对应后端 finance 服务的 Mapper / DO,
+--   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
+--   Feign Client (FinanceDataClient / SalesDataClient)。
 --
--- 琛ㄥ綊灞炰緷鎹? ydsz-pmis-finance/src/main/java/.../infra/mapper/
--- 琛ㄦ暟閲? 8 寮?
+-- 表归属依据: ydsz-pmis-finance/src/main/java/.../infra/mapper/
+-- 表数量: 8 张
 -- --------------------------------------------------------------------
 
 -- =====================================================
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS pmis_cost_expense(
     deleted             SMALLINT       NOT NULL DEFAULT 0,
     tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
-    -- 鏁版嵁瀹屾暣鎬х害鏉?
+    -- 数据完整性约束
     CONSTRAINT uk_pce_code           UNIQUE (expense_code, deleted),
     CONSTRAINT ck_pce_type_enum      CHECK (expense_type IN ('TRAVEL', 'CATERING', 'MEETING', 'SUPPLIES', 'COMMUNICATION', 'OTHER')),
     CONSTRAINT ck_pce_status_enum    CHECK (status IN ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'PAID')),
@@ -43,51 +43,51 @@ CREATE TABLE IF NOT EXISTS pmis_cost_expense(
     CONSTRAINT ck_pce_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_cost_expense IS '璐圭敤鎶ラ攢琛? 宸梾/鍥㈠缓/浼氳/鍔炲叕绛夎垂鐢ㄦ姤閿€,鍙叧鑱旈」鐩?褰卞搷椤圭洰棰勭畻)';
+COMMENT ON TABLE pmis_cost_expense IS '费用报销表: 差旅/团建/会议/办公等费用报销,可关联项目(影响项目预算)';
 
-COMMENT ON COLUMN pmis_cost_expense.id IS '涓婚敭 ID';
+COMMENT ON COLUMN pmis_cost_expense.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_cost_expense.expense_code IS '鎶ラ攢鍗曠紪鐮?鍏ㄥ眬鍞竴)';
+COMMENT ON COLUMN pmis_cost_expense.expense_code IS '报销单编码(全局唯一)';
 
-COMMENT ON COLUMN pmis_cost_expense.initiation_id IS '鍏宠仈绔嬮」 ID(椤圭洰绾ц垂鐢ㄥ繀濉?鍏徃鍏叡璐圭敤鍙┖)';
+COMMENT ON COLUMN pmis_cost_expense.initiation_id IS '关联立项 ID(项目级费用必填,公司公共费用可空)';
 
-COMMENT ON COLUMN pmis_cost_expense.employee_id IS '鎶ラ攢浜?ID';
+COMMENT ON COLUMN pmis_cost_expense.employee_id IS '报销人 ID';
 
-COMMENT ON COLUMN pmis_cost_expense.employee_name IS '鎶ラ攢浜哄鍚?;
+COMMENT ON COLUMN pmis_cost_expense.employee_name IS '报销人姓名';
 
-COMMENT ON COLUMN pmis_cost_expense.expense_type IS '璐圭敤绫诲瀷: TRAVEL 宸梾 / CATERING 椁愰ギ / MEETING 浼氳 / SUPPLIES 鍔炲叕 / COMMUNICATION 閫氳 / OTHER 鍏朵粬';
+COMMENT ON COLUMN pmis_cost_expense.expense_type IS '费用类型: TRAVEL 差旅 / CATERING 餐饮 / MEETING 会议 / SUPPLIES 办公 / COMMUNICATION 通讯 / OTHER 其他';
 
-COMMENT ON COLUMN pmis_cost_expense.amount IS '鎶ラ攢閲戦(鍏?';
+COMMENT ON COLUMN pmis_cost_expense.amount IS '报销金额(元)';
 
-COMMENT ON COLUMN pmis_cost_expense.expense_date IS '璐圭敤鍙戠敓鏃ユ湡';
+COMMENT ON COLUMN pmis_cost_expense.expense_date IS '费用发生日期';
 
-COMMENT ON COLUMN pmis_cost_expense.description IS '璐圭敤璇存槑';
+COMMENT ON COLUMN pmis_cost_expense.description IS '费用说明';
 
-COMMENT ON COLUMN pmis_cost_expense.receipt_url IS '鍙戠エ/鍑瘉 URL';
+COMMENT ON COLUMN pmis_cost_expense.receipt_url IS '发票/凭证 URL';
 
-COMMENT ON COLUMN pmis_cost_expense.status IS '瀹℃壒鐘舵€? DRAFT 鑽夌 / SUBMITTED 宸叉彁浜?/ APPROVED 宸叉壒鍑?/ REJECTED 宸查┏鍥?/ PAID 宸叉墦娆?;
+COMMENT ON COLUMN pmis_cost_expense.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / PAID 已打款';
 
-COMMENT ON COLUMN pmis_cost_expense.approver_id IS '瀹℃壒浜?ID';
+COMMENT ON COLUMN pmis_cost_expense.approver_id IS '审批人 ID';
 
-COMMENT ON COLUMN pmis_cost_expense.approver_name IS '瀹℃壒浜哄鍚?;
+COMMENT ON COLUMN pmis_cost_expense.approver_name IS '审批人姓名';
 
-COMMENT ON COLUMN pmis_cost_expense.approved_at IS '瀹℃壒鏃堕棿';
+COMMENT ON COLUMN pmis_cost_expense.approved_at IS '审批时间';
 
-COMMENT ON COLUMN pmis_cost_expense.provider_trace_id IS '閾捐矾杩借釜 ID';
+COMMENT ON COLUMN pmis_cost_expense.provider_trace_id IS '链路追踪 ID';
 
-COMMENT ON COLUMN pmis_cost_expense.created_by IS '鍒涘缓浜?ID';
+COMMENT ON COLUMN pmis_cost_expense.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN pmis_cost_expense.created_at IS '鍒涘缓鏃堕棿';
+COMMENT ON COLUMN pmis_cost_expense.created_at IS '创建时间';
 
-COMMENT ON COLUMN pmis_cost_expense.updated_by IS '鏈€鍚庝慨鏀逛汉 ID';
+COMMENT ON COLUMN pmis_cost_expense.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN pmis_cost_expense.updated_at IS '鏈€鍚庝慨鏀规椂闂?;
+COMMENT ON COLUMN pmis_cost_expense.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN pmis_cost_expense.deleted IS '閫昏緫鍒犻櫎鏍囪: 0 鏈垹闄?/ 1 宸插垹闄?;
+COMMENT ON COLUMN pmis_cost_expense.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_cost_expense.tenant_id IS '绉熸埛 ID(鍗曠鎴烽儴缃查粯璁?1)';
+COMMENT ON COLUMN pmis_cost_expense.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-COMMENT ON COLUMN pmis_cost_expense.version IS '涔愯閿佺増鏈彿';
+COMMENT ON COLUMN pmis_cost_expense.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_pce_initiation
     ON pmis_cost_expense (initiation_id) WHERE deleted = 0;
@@ -98,20 +98,20 @@ CREATE INDEX IF NOT EXISTS idx_pce_employee
 CREATE INDEX IF NOT EXISTS idx_pce_status
     ON pmis_cost_expense (status) WHERE deleted = 0;
 
--- [INLINE-OPT] 鍛樺伐 + 鐘舵€?鍛樺伐鎶ラ攢鍙拌处)
+-- [INLINE-OPT] 员工 + 状态(员工报销台账)
 CREATE INDEX IF NOT EXISTS idx_pce_employee_status
     ON pmis_cost_expense (employee_id, status) WHERE deleted = 0;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绉熸埛 + 璐圭敤鏃ユ湡(鎶ラ攢涓績鏃堕棿绛涢€?
+-- [INLINE-OPT] 复合索引:租户 + 费用日期(报销中心时间筛选)
 CREATE INDEX IF NOT EXISTS idx_pce_tenant_date
     ON pmis_cost_expense (tenant_id, expense_date DESC) WHERE deleted = 0;
 
--- [INLINE-OPT] 閾捐矾杩借釜 ID 绱㈠紩
+-- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_pce_trace
     ON pmis_cost_expense (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 6. 鏀跺叆纭琛?pmis_profit_revenue
+-- 6. 收入确认表 pmis_profit_revenue
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
     deleted             SMALLINT       NOT NULL DEFAULT 0,
     tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
-    -- 鏁版嵁瀹屾暣鎬х害鏉?
+    -- 数据完整性约束
     CONSTRAINT uk_ppr_code              UNIQUE (revenue_code, deleted),
     CONSTRAINT ck_ppr_method_enum       CHECK (recognition_method IN ('MILESTONE', 'PERCENTAGE', 'PERCENT_COMPLETE', 'POINTS', 'MANUAL')),
     CONSTRAINT ck_ppr_status_enum       CHECK (status IN ('DRAFT', 'CONFIRMED', 'REVERSED')),
@@ -148,78 +148,78 @@ CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
     CONSTRAINT ck_ppr_deleted_enum      CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_profit_revenue IS '鏀跺叆纭琛? 鎸夐噷绋嬬/鐧惧垎姣?瀹屽伐娉?鎵嬪姩娉曠瓑澶氱淮搴︾‘璁ら」鐩敹鍏?;
+COMMENT ON TABLE pmis_profit_revenue IS '收入确认表: 按里程碑/百分比/完工法/手动法等多维度确认项目收入';
 
-COMMENT ON COLUMN pmis_profit_revenue.id IS '涓婚敭 ID';
+COMMENT ON COLUMN pmis_profit_revenue.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_profit_revenue.contract_id IS '鍚堝悓 ID(鍏宠仈 pmis_project_contract.id)';
+COMMENT ON COLUMN pmis_profit_revenue.contract_id IS '合同 ID(关联 pmis_project_contract.id)';
 
-COMMENT ON COLUMN pmis_profit_revenue.initiation_id IS '绔嬮」 ID(鍏宠仈 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_profit_revenue.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
 
-COMMENT ON COLUMN pmis_profit_revenue.revenue_code IS '鏀跺叆纭鍗曠紪鐮?鍏ㄥ眬鍞竴)';
+COMMENT ON COLUMN pmis_profit_revenue.revenue_code IS '收入确认单编码(全局唯一)';
 
-COMMENT ON COLUMN pmis_profit_revenue.recognition_method IS '纭鏂规硶: MILESTONE 閲岀▼纰戞硶 / PERCENTAGE 姣斾緥娉?/ PERCENT_COMPLETE 瀹屽伐娉?/ POINTS 宸ュ垎娉?/ MANUAL 鎵嬪姩';
+COMMENT ON COLUMN pmis_profit_revenue.recognition_method IS '确认方法: MILESTONE 里程碑法 / PERCENTAGE 比例法 / PERCENT_COMPLETE 完工法 / POINTS 工分法 / MANUAL 手动';
 
-COMMENT ON COLUMN pmis_profit_revenue.period IS '鎵€灞炴湡闂?YYYY-MM)';
+COMMENT ON COLUMN pmis_profit_revenue.period IS '所属期间(YYYY-MM)';
 
-COMMENT ON COLUMN pmis_profit_revenue.amount IS '纭閲戦(鍏?';
+COMMENT ON COLUMN pmis_profit_revenue.amount IS '确认金额(元)';
 
-COMMENT ON COLUMN pmis_profit_revenue.recognition_date IS '纭鏃ユ湡';
+COMMENT ON COLUMN pmis_profit_revenue.recognition_date IS '确认日期';
 
-COMMENT ON COLUMN pmis_profit_revenue.milestone IS '閲岀▼纰戞弿杩?;
+COMMENT ON COLUMN pmis_profit_revenue.milestone IS '里程碑描述';
 
-COMMENT ON COLUMN pmis_profit_revenue.percent_complete IS '瀹屽伐鐧惧垎姣?0-100,瀹屽伐娉?';
+COMMENT ON COLUMN pmis_profit_revenue.percent_complete IS '完工百分比(0-100,完工法)';
 
-COMMENT ON COLUMN pmis_profit_revenue.invoice_id IS '鍏宠仈寮€绁ㄧ敵璇?ID';
+COMMENT ON COLUMN pmis_profit_revenue.invoice_id IS '关联开票申请 ID';
 
-COMMENT ON COLUMN pmis_profit_revenue.status IS '鐘舵€? DRAFT 鑽夌 / CONFIRMED 宸茬‘璁?/ REVERSED 宸插啿閿€';
+COMMENT ON COLUMN pmis_profit_revenue.status IS '状态: DRAFT 草稿 / CONFIRMED 已确认 / REVERSED 已冲销';
 
-COMMENT ON COLUMN pmis_profit_revenue.confirmed_by IS '纭浜?ID';
+COMMENT ON COLUMN pmis_profit_revenue.confirmed_by IS '确认人 ID';
 
-COMMENT ON COLUMN pmis_profit_revenue.confirmed_at IS '纭鏃堕棿';
+COMMENT ON COLUMN pmis_profit_revenue.confirmed_at IS '确认时间';
 
-COMMENT ON COLUMN pmis_profit_revenue.description IS '鏀跺叆纭璇存槑';
+COMMENT ON COLUMN pmis_profit_revenue.description IS '收入确认说明';
 
-COMMENT ON COLUMN pmis_profit_revenue.provider_trace_id IS '閾捐矾杩借釜 ID';
+COMMENT ON COLUMN pmis_profit_revenue.provider_trace_id IS '链路追踪 ID';
 
-COMMENT ON COLUMN pmis_profit_revenue.created_by IS '鍒涘缓浜?ID';
+COMMENT ON COLUMN pmis_profit_revenue.created_by IS '创建人 ID';
 
-COMMENT ON COLUMN pmis_profit_revenue.created_at IS '鍒涘缓鏃堕棿';
+COMMENT ON COLUMN pmis_profit_revenue.created_at IS '创建时间';
 
-COMMENT ON COLUMN pmis_profit_revenue.updated_by IS '鏈€鍚庝慨鏀逛汉 ID';
+COMMENT ON COLUMN pmis_profit_revenue.updated_by IS '最后修改人 ID';
 
-COMMENT ON COLUMN pmis_profit_revenue.updated_at IS '鏈€鍚庝慨鏀规椂闂?;
+COMMENT ON COLUMN pmis_profit_revenue.updated_at IS '最后修改时间';
 
-COMMENT ON COLUMN pmis_profit_revenue.deleted IS '閫昏緫鍒犻櫎鏍囪: 0 鏈垹闄?/ 1 宸插垹闄?;
+COMMENT ON COLUMN pmis_profit_revenue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_profit_revenue.tenant_id IS '绉熸埛 ID(鍗曠鎴烽儴缃查粯璁?1)';
+COMMENT ON COLUMN pmis_profit_revenue.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-COMMENT ON COLUMN pmis_profit_revenue.version IS '涔愯閿佺増鏈彿';
+COMMENT ON COLUMN pmis_profit_revenue.version IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ppr_contract
     ON pmis_profit_revenue (contract_id) WHERE deleted = 0;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绔嬮」 + 鏈熼棿(椤圭洰鏈堝害鏀跺叆璧板娍)
+-- [INLINE-OPT] 复合索引:立项 + 期间(项目月度收入走势)
 CREATE INDEX IF NOT EXISTS idx_ppr_initiation
     ON pmis_profit_revenue (initiation_id, period) WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_ppr_status
     ON pmis_profit_revenue (status) WHERE deleted = 0;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绉熸埛 + 鏈熼棿(鍏ㄥ叕鍙告敹鍏ユ湀鎶?
+-- [INLINE-OPT] 复合索引:租户 + 期间(全公司收入月报)
 CREATE INDEX IF NOT EXISTS idx_ppr_tenant_period
     ON pmis_profit_revenue (tenant_id, period) WHERE deleted = 0;
 
--- [INLINE-OPT] 鍏宠仈寮€绁ㄧ敵璇?ID
+-- [INLINE-OPT] 关联开票申请 ID
 CREATE INDEX IF NOT EXISTS idx_ppr_invoice
     ON pmis_profit_revenue (invoice_id) WHERE deleted = 0 AND invoice_id IS NOT NULL;
 
--- [INLINE-OPT] 閾捐矾杩借釜 ID 绱㈠紩
+-- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_ppr_trace
     ON pmis_profit_revenue (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 7. 椤圭洰鍒╂鼎蹇収琛?pmis_profit_snapshot
+-- 7. 项目利润快照表 pmis_profit_snapshot
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
     deleted             SMALLINT       NOT NULL DEFAULT 0,
     tenant_id           VARCHAR(20)         NOT NULL DEFAULT '1',
     version             INTEGER        NOT NULL DEFAULT 0,
-    -- 鏁版嵁瀹屾暣鎬х害鏉?
+    -- 数据完整性约束
     CONSTRAINT uk_pps_init_period     UNIQUE (initiation_id, period, deleted),
     CONSTRAINT ck_pps_amount_nonneg   CHECK (contract_amount >= 0 AND recognized_revenue >= 0 AND billed_amount >= 0
                                               AND received_amount >= 0 AND labor_cost >= 0 AND purchase_cost >= 0
@@ -259,96 +259,96 @@ CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
     CONSTRAINT ck_pps_deleted_enum    CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_profit_snapshot IS '椤圭洰鍒╂鼎蹇収(鎸夋湀): 绔嬮」 脳 鏈熼棿 鍞竴绾︽潫,鍛ㄦ湡鎬ф粴鍔ㄧ敓鎴?;
+COMMENT ON TABLE pmis_profit_snapshot IS '项目利润快照(按月): 立项 × 期间 唯一约束,周期性滚动生成';
 
-COMMENT ON COLUMN pmis_profit_snapshot.id IS '涓婚敭 ID';
+COMMENT ON COLUMN pmis_profit_snapshot.id IS '主键 ID';
 
-COMMENT ON COLUMN pmis_profit_snapshot.initiation_id IS '绔嬮」 ID(鍏宠仈 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_profit_snapshot.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.period IS '蹇収鍛ㄦ湡(YYYY-MM)';
+COMMENT ON COLUMN pmis_profit_snapshot.period IS '快照周期(YYYY-MM)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.contract_amount IS '鍚堝悓鎬婚(鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.contract_amount IS '合同总额(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.recognized_revenue IS '宸茬‘璁ゆ敹鍏?鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.recognized_revenue IS '已确认收入(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.billed_amount IS '宸插紑绁ㄩ噾棰?鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.billed_amount IS '已开票金额(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.received_amount IS '宸插洖娆鹃噾棰?鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.received_amount IS '已回款金额(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.labor_cost IS '浜哄姏鎴愭湰(鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.labor_cost IS '人力成本(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.purchase_cost IS '閲囪喘鎴愭湰(鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.purchase_cost IS '采购成本(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.expense_cost IS '璐圭敤(鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.expense_cost IS '费用(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.outsource_cost IS '澶栧寘(鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.outsource_cost IS '外包(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.allocation_cost IS '鍒嗘憡璐圭敤(鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.allocation_cost IS '分摊费用(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.total_cost IS '鎬绘垚鏈?鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.total_cost IS '总成本(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.gross_profit IS '姣涘埄(鍏?';
+COMMENT ON COLUMN pmis_profit_snapshot.gross_profit IS '毛利(元)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.gross_margin IS '姣涘埄鐜?0.0000-1.0000';
+COMMENT ON COLUMN pmis_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
 
-COMMENT ON COLUMN pmis_profit_snapshot.progress_pct IS '瀹屽伐杩涘害(0-100)';
+COMMENT ON COLUMN pmis_profit_snapshot.progress_pct IS '完工进度(0-100)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.billable_hours IS '鍙璐瑰伐鏃?灏忔椂)';
+COMMENT ON COLUMN pmis_profit_snapshot.billable_hours IS '可计费工时(小时)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.non_billable_hours IS '涓嶅彲璁¤垂宸ユ椂(灏忔椂)';
+COMMENT ON COLUMN pmis_profit_snapshot.non_billable_hours IS '不可计费工时(小时)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.snapshot_at IS '蹇収鐢熸垚鏃堕棿';
+COMMENT ON COLUMN pmis_profit_snapshot.snapshot_at IS '快照生成时间';
 
-COMMENT ON COLUMN pmis_profit_snapshot.provider_trace_id IS '閾捐矾杩借釜 ID';
+COMMENT ON COLUMN pmis_profit_snapshot.provider_trace_id IS '链路追踪 ID';
 
-COMMENT ON COLUMN pmis_profit_snapshot.deleted IS '閫昏緫鍒犻櫎鏍囪: 0 鏈垹闄?/ 1 宸插垹闄?;
+COMMENT ON COLUMN pmis_profit_snapshot.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-COMMENT ON COLUMN pmis_profit_snapshot.tenant_id IS '绉熸埛 ID(鍗曠鎴烽儴缃查粯璁?1)';
+COMMENT ON COLUMN pmis_profit_snapshot.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-COMMENT ON COLUMN pmis_profit_snapshot.version IS '涔愯閿佺増鏈彿';
+COMMENT ON COLUMN pmis_profit_snapshot.version IS '乐观锁版本号';
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绔嬮」 + 鏈熼棿(椤圭洰鍒╂鼎璧板娍)
+-- [INLINE-OPT] 复合索引:立项 + 期间(项目利润走势)
 CREATE INDEX IF NOT EXISTS idx_pps_initiation
     ON pmis_profit_snapshot (initiation_id, period) WHERE deleted = 0;
 
--- [INLINE-OPT] 澶嶅悎绱㈠紩:绉熸埛 + 鏈熼棿(鍏ㄥ叕鍙告湀搴﹀埄娑﹂┚椹惰埍)
+-- [INLINE-OPT] 复合索引:租户 + 期间(全公司月度利润驾驶舱)
 CREATE INDEX IF NOT EXISTS idx_pps_tenant_period
     ON pmis_profit_snapshot (tenant_id, period) WHERE deleted = 0;
 
--- [INLINE-OPT] 閾捐矾杩借釜 ID 绱㈠紩
+-- [INLINE-OPT] 链路追踪 ID 索引
 CREATE INDEX IF NOT EXISTS idx_pps_trace
     ON pmis_profit_snapshot (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
--- 8. 椤圭洰椋庨櫓鐧昏琛?pmis_execution_risk
+-- 8. 项目风险登记表 pmis_execution_risk
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_finance_invoice(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    invoice_no          VARCHAR(64),                              -- 璐㈠姟鍙戠エ鍙?
-    invoice_code        VARCHAR(64)  NOT NULL,                    -- 涓氬姟缂栧彿锛堢郴缁熺敓鎴愶級
+    invoice_no          VARCHAR(64),                              -- 财务发票号
+    invoice_code        VARCHAR(64)  NOT NULL,                    -- 业务编号（系统生成）
     invoice_type        VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',   -- NORMAL/RED_REVERSE
     contract_id         VARCHAR(20)       NOT NULL,
     initiation_id       VARCHAR(20)       NOT NULL,
     customer_id         VARCHAR(20)       NOT NULL,
     customer_name       VARCHAR(256),
     invoice_basis       VARCHAR(32)  NOT NULL,                    -- MILESTONE/OUTSOURCING/MONTHLY/FINAL/OTHER
-    amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 鍚◣閲戦
+    amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 含税金额
     tax_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,
-    net_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 涓嶅惈绋庨噾棰?
+    net_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 不含税金额
     tax_rate            NUMERIC(5,4) NOT NULL DEFAULT 0.06,
     currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
     invoice_date        DATE,
     tax_period          VARCHAR(16),                              -- YYYY-MM
-    title               VARCHAR(256),                             -- 鍙戠エ鎶ご
-    tax_no              VARCHAR(64),                              -- 绾崇◣浜鸿瘑鍒彿
-    bank_info           VARCHAR(256),                             -- 寮€鎴疯+璐﹀彿
+    title               VARCHAR(256),                             -- 发票抬头
+    tax_no              VARCHAR(64),                              -- 纳税人识别号
+    bank_info           VARCHAR(256),                             -- 开户行+账号
     address             VARCHAR(256),
     phone               VARCHAR(64),
     remark              TEXT,
     status              VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',     -- InvoiceStatus
-    reversed_by_id      VARCHAR(20),                                   -- 琚孩鍐茬殑鍙戠エID
-    attachment_id       VARCHAR(64),                              -- 鍙戠エ鎵弿浠?
+    reversed_by_id      VARCHAR(20),                                   -- 被红冲的发票ID
+    attachment_id       VARCHAR(64),                              -- 发票扫描件
     approval_comment    TEXT,
     applied_by          VARCHAR(20),
     approved_at         TIMESTAMPTZ,
@@ -372,75 +372,75 @@ CREATE TABLE IF NOT EXISTS pmis_finance_invoice(
     CONSTRAINT ck_pfi_deleted_enum      CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_finance_invoice IS '鍙戠エ涓昏〃: 鏀寔姝ｅ父寮€绁ㄤ笌绾㈠啿锛圧ED_REVERSED锛?鎵ц InvoiceStatus 鐘舵€佹満鏍￠獙,invoice_code 鍞竴,invoice_no 鍦?ISSUED 鏃跺垎閰?;
+COMMENT ON TABLE  pmis_finance_invoice IS '发票主表: 支持正常开票与红冲（RED_REVERSED）,执行 InvoiceStatus 状态机校验,invoice_code 唯一,invoice_no 在 ISSUED 时分配';
 
-COMMENT ON COLUMN pmis_finance_invoice.invoice_no IS '璐㈠姟鍙戠エ鍙? 绋庡姟灞€鍒嗛厤鐨勭焊璐?鐢靛瓙鍙戠エ鍙?ISSUED 鐘舵€佹椂鍒嗛厤';
+COMMENT ON COLUMN pmis_finance_invoice.invoice_no IS '财务发票号: 税务局分配的纸质/电子发票号,ISSUED 状态时分配';
 
-COMMENT ON COLUMN pmis_finance_invoice.invoice_code IS '涓氬姟缂栧彿: 绯荤粺鐢熸垚鐨勫敮涓€缂栫爜,濡?INV-2026-001';
+COMMENT ON COLUMN pmis_finance_invoice.invoice_code IS '业务编号: 系统生成的唯一编码,如 INV-2026-001';
 
-COMMENT ON COLUMN pmis_finance_invoice.invoice_type IS '鍙戠エ绫诲瀷: NORMAL 姝ｅ父寮€绁?/ RED_REVERSE 绾㈠啿鍙戠エ';
+COMMENT ON COLUMN pmis_finance_invoice.invoice_type IS '发票类型: NORMAL 正常开票 / RED_REVERSE 红冲发票';
 
-COMMENT ON COLUMN pmis_finance_invoice.contract_id IS '鎵€灞炲悎鍚?ID';
+COMMENT ON COLUMN pmis_finance_invoice.contract_id IS '所属合同 ID';
 
-COMMENT ON COLUMN pmis_finance_invoice.initiation_id IS '鎵€灞炵珛椤?ID';
+COMMENT ON COLUMN pmis_finance_invoice.initiation_id IS '所属立项 ID';
 
-COMMENT ON COLUMN pmis_finance_invoice.customer_id IS '瀹㈡埛 ID';
+COMMENT ON COLUMN pmis_finance_invoice.customer_id IS '客户 ID';
 
-COMMENT ON COLUMN pmis_finance_invoice.customer_name IS '瀹㈡埛鍚嶇О锛堝啑浣欙級';
+COMMENT ON COLUMN pmis_finance_invoice.customer_name IS '客户名称（冗余）';
 
-COMMENT ON COLUMN pmis_finance_invoice.invoice_basis IS '寮€绁ㄤ緷鎹? MILESTONE 閲岀▼纰?/ OUTSOURCING 澶栧寘浜哄ぉ / MONTHLY 鏈堝害缁撶畻 / FINAL 缁堥獙 / OTHER 鍏朵粬';
+COMMENT ON COLUMN pmis_finance_invoice.invoice_basis IS '开票依据: MILESTONE 里程碑 / OUTSOURCING 外包人天 / MONTHLY 月度结算 / FINAL 终验 / OTHER 其他';
 
-COMMENT ON COLUMN pmis_finance_invoice.amount IS '鍚◣閲戦(鍏?';
+COMMENT ON COLUMN pmis_finance_invoice.amount IS '含税金额(元)';
 
-COMMENT ON COLUMN pmis_finance_invoice.tax_amount IS '绋庨(鍏?';
+COMMENT ON COLUMN pmis_finance_invoice.tax_amount IS '税额(元)';
 
-COMMENT ON COLUMN pmis_finance_invoice.net_amount IS '涓嶅惈绋庨噾棰?鍏?';
+COMMENT ON COLUMN pmis_finance_invoice.net_amount IS '不含税金额(元)';
 
-COMMENT ON COLUMN pmis_finance_invoice.tax_rate IS '绋庣巼: 0.06=6%,0.13=13%';
+COMMENT ON COLUMN pmis_finance_invoice.tax_rate IS '税率: 0.06=6%,0.13=13%';
 
-COMMENT ON COLUMN pmis_finance_invoice.currency IS '甯佺: CNY/USD/EUR,榛樿 CNY';
+COMMENT ON COLUMN pmis_finance_invoice.currency IS '币种: CNY/USD/EUR,默认 CNY';
 
-COMMENT ON COLUMN pmis_finance_invoice.invoice_date IS '寮€绁ㄦ棩鏈?;
+COMMENT ON COLUMN pmis_finance_invoice.invoice_date IS '开票日期';
 
-COMMENT ON COLUMN pmis_finance_invoice.tax_period IS '绋庡姟鎵€灞炴湡: 鏍煎紡 YYYY-MM,鐢ㄤ簬绋庡姟鐢虫姤';
+COMMENT ON COLUMN pmis_finance_invoice.tax_period IS '税务所属期: 格式 YYYY-MM,用于税务申报';
 
-COMMENT ON COLUMN pmis_finance_invoice.title IS '鍙戠エ鎶ご';
+COMMENT ON COLUMN pmis_finance_invoice.title IS '发票抬头';
 
-COMMENT ON COLUMN pmis_finance_invoice.tax_no IS '绾崇◣浜鸿瘑鍒彿: 瀹㈡埛绋庡彿';
+COMMENT ON COLUMN pmis_finance_invoice.tax_no IS '纳税人识别号: 客户税号';
 
-COMMENT ON COLUMN pmis_finance_invoice.bank_info IS '寮€鎴疯+璐﹀彿: 瀹㈡埛鏀剁エ鏂归摱琛屼俊鎭?;
+COMMENT ON COLUMN pmis_finance_invoice.bank_info IS '开户行+账号: 客户收票方银行信息';
 
-COMMENT ON COLUMN pmis_finance_invoice.address IS '瀹㈡埛鍦板潃';
+COMMENT ON COLUMN pmis_finance_invoice.address IS '客户地址';
 
-COMMENT ON COLUMN pmis_finance_invoice.phone IS '瀹㈡埛鐢佃瘽';
+COMMENT ON COLUMN pmis_finance_invoice.phone IS '客户电话';
 
-COMMENT ON COLUMN pmis_finance_invoice.remark IS '澶囨敞';
+COMMENT ON COLUMN pmis_finance_invoice.remark IS '备注';
 
-COMMENT ON COLUMN pmis_finance_invoice.status IS '鍙戠エ鐘舵€? DRAFT 鑽夌 / SUBMITTED 宸叉彁浜?/ ISSUED 宸插紑绁?/ RED_REVERSED 宸茬孩鍐?/ CANCELLED 宸插彇娑?涓ユ牸鐘舵€佹満';
+COMMENT ON COLUMN pmis_finance_invoice.status IS '发票状态: DRAFT 草稿 / SUBMITTED 已提交 / ISSUED 已开票 / RED_REVERSED 已红冲 / CANCELLED 已取消,严格状态机';
 
-COMMENT ON COLUMN pmis_finance_invoice.reversed_by_id IS '绾㈠啿鏉ユ簮鍙戠エ ID: 绾㈠啿鍙戠エ鎸囧悜琚孩鍐茬殑鍘熷鍙戠エ';
+COMMENT ON COLUMN pmis_finance_invoice.reversed_by_id IS '红冲来源发票 ID: 红冲发票指向被红冲的原始发票';
 
-COMMENT ON COLUMN pmis_finance_invoice.attachment_id IS '鍙戠エ鎵弿浠? 寮曠敤 pmis_file_metadata.id';
+COMMENT ON COLUMN pmis_finance_invoice.attachment_id IS '发票扫描件: 引用 pmis_file_metadata.id';
 
-COMMENT ON COLUMN pmis_finance_invoice.approval_comment IS '瀹℃壒鎰忚';
+COMMENT ON COLUMN pmis_finance_invoice.approval_comment IS '审批意见';
 
-COMMENT ON COLUMN pmis_finance_invoice.applied_by IS '鐢宠浜?ID';
+COMMENT ON COLUMN pmis_finance_invoice.applied_by IS '申请人 ID';
 
-COMMENT ON COLUMN pmis_finance_invoice.approved_by IS '瀹℃壒浜?ID';
+COMMENT ON COLUMN pmis_finance_invoice.approved_by IS '审批人 ID';
 
-COMMENT ON COLUMN pmis_finance_invoice.approved_at IS '瀹℃壒鏃堕棿';
+COMMENT ON COLUMN pmis_finance_invoice.approved_at IS '审批时间';
 
-COMMENT ON COLUMN pmis_finance_invoice.issued_by IS '寮€绁ㄤ汉 ID';
+COMMENT ON COLUMN pmis_finance_invoice.issued_by IS '开票人 ID';
 
-COMMENT ON COLUMN pmis_finance_invoice.issued_at IS '寮€绁ㄦ椂闂?;
+COMMENT ON COLUMN pmis_finance_invoice.issued_at IS '开票时间';
 
-COMMENT ON COLUMN pmis_finance_invoice.tenant_id IS '绉熸埛 ID';
+COMMENT ON COLUMN pmis_finance_invoice.tenant_id IS '租户 ID';
 
-COMMENT ON COLUMN pmis_finance_invoice.provider_trace_id IS '閾捐矾杩借釜 ID';
+COMMENT ON COLUMN pmis_finance_invoice.provider_trace_id IS '链路追踪 ID';
 
-COMMENT ON COLUMN pmis_finance_invoice.deleted IS '閫昏緫鍒犻櫎: 0=鏈垹闄?1=宸插垹闄?;
+COMMENT ON COLUMN pmis_finance_invoice.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
--- 澶嶅悎/閮ㄥ垎绱㈠紩(鏇夸唬闆舵暎鐨?idx_pfi_*)
+-- 复合/部分索引(替代零散的 idx_pfi_*)
 CREATE INDEX IF NOT EXISTS idx_pfi_tenant_contract
     ON pmis_finance_invoice(tenant_id, contract_id)
     WHERE deleted = 0;
@@ -466,28 +466,28 @@ CREATE INDEX IF NOT EXISTS idx_pfi_tenant_tax_period
     WHERE deleted = 0;
 
 -- =====================================================
--- 2. 鍥炴涓昏〃 pmis_finance_payment
+-- 2. 回款主表 pmis_finance_payment
 
 -- =====================================================
--- P1-6: 宸插簾寮?鏃犻渶 DROP
+-- P1-6: 已废弃,无需 DROP
 CREATE TABLE IF NOT EXISTS pmis_finance_payment(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    payment_no          VARCHAR(64),                              -- 閾惰娴佹按鍙?绯荤粺娴佹按
-    payment_code        VARCHAR(64)  NOT NULL,                    -- 涓氬姟缂栧彿
+    payment_no          VARCHAR(64),                              -- 银行流水号/系统流水
+    payment_code        VARCHAR(64)  NOT NULL,                    -- 业务编号
     contract_id         VARCHAR(20)       NOT NULL,
     initiation_id       VARCHAR(20)       NOT NULL,
     customer_id         VARCHAR(20)       NOT NULL,
     customer_name       VARCHAR(256),
-    amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 鍥炴鎬婚噾棰?
+    amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 回款总金额
     currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
     payment_method      VARCHAR(32)  NOT NULL DEFAULT 'BANK_TRANSFER', -- BANK_TRANSFER/CHECK/CASH/OTHER
-    payment_date        DATE         NOT NULL,                    -- 鍒拌处鏃ユ湡
-    bank_account        VARCHAR(64),                              -- 瀹㈡埛浠樻璐﹀彿
-    our_bank_account    VARCHAR(64),                              -- 鎴戞柟鏀舵璐﹀彿
-    bank_reference      VARCHAR(128),                             -- 閾惰娴佹按鍙?
-    invoice_allocation  TEXT,                                     -- 宸插垎閰嶅彂绁↖D锛堥€楀彿鍒嗛殧锛?
-    allocated_amount    NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 宸叉牳閿€閲戦
-    unallocated_amount  NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 鏈牳閿€閲戦
+    payment_date        DATE         NOT NULL,                    -- 到账日期
+    bank_account        VARCHAR(64),                              -- 客户付款账号
+    our_bank_account    VARCHAR(64),                              -- 我方收款账号
+    bank_reference      VARCHAR(128),                             -- 银行流水号
+    invoice_allocation  TEXT,                                     -- 已分配发票ID（逗号分隔）
+    allocated_amount    NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 已核销金额
+    unallocated_amount  NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 未核销金额
     status              VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- PaymentStatus
     remark              TEXT,
     confirmed_by        VARCHAR(20),
@@ -508,57 +508,57 @@ CREATE TABLE IF NOT EXISTS pmis_finance_payment(
     CONSTRAINT ck_pfp_deleted_enum      CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_finance_payment IS '鍥炴涓昏〃: 瀹㈡埛鍥炴璁板綍,鏀寔鏍搁攢鍙戠エ锛坅llocated_amount/unallocated_amount锛?unallocatedAmount=0 鏃惰嚜鍔ㄨ浆 ALLOCATED';
+COMMENT ON TABLE  pmis_finance_payment IS '回款主表: 客户回款记录,支持核销发票（allocated_amount/unallocated_amount）,unallocatedAmount=0 时自动转 ALLOCATED';
 
-COMMENT ON COLUMN pmis_finance_payment.payment_no IS '鍥炴娴佹按鍙? 閾惰娴佹按鍙锋垨绯荤粺鐢熸垚';
+COMMENT ON COLUMN pmis_finance_payment.payment_no IS '回款流水号: 银行流水号或系统生成';
 
-COMMENT ON COLUMN pmis_finance_payment.payment_code IS '涓氬姟缂栧彿: 绯荤粺鐢熸垚鐨勫敮涓€缂栫爜,濡?PAY-2026-001';
+COMMENT ON COLUMN pmis_finance_payment.payment_code IS '业务编号: 系统生成的唯一编码,如 PAY-2026-001';
 
-COMMENT ON COLUMN pmis_finance_payment.contract_id IS '鎵€灞炲悎鍚?ID';
+COMMENT ON COLUMN pmis_finance_payment.contract_id IS '所属合同 ID';
 
-COMMENT ON COLUMN pmis_finance_payment.initiation_id IS '鎵€灞炵珛椤?ID';
+COMMENT ON COLUMN pmis_finance_payment.initiation_id IS '所属立项 ID';
 
-COMMENT ON COLUMN pmis_finance_payment.customer_id IS '瀹㈡埛 ID';
+COMMENT ON COLUMN pmis_finance_payment.customer_id IS '客户 ID';
 
-COMMENT ON COLUMN pmis_finance_payment.customer_name IS '瀹㈡埛鍚嶇О锛堝啑浣欙級';
+COMMENT ON COLUMN pmis_finance_payment.customer_name IS '客户名称（冗余）';
 
-COMMENT ON COLUMN pmis_finance_payment.amount IS '鍥炴鎬婚噾棰?鍏?';
+COMMENT ON COLUMN pmis_finance_payment.amount IS '回款总金额(元)';
 
-COMMENT ON COLUMN pmis_finance_payment.currency IS '甯佺: 榛樿 CNY';
+COMMENT ON COLUMN pmis_finance_payment.currency IS '币种: 默认 CNY';
 
-COMMENT ON COLUMN pmis_finance_payment.payment_method IS '鏀粯鏂瑰紡: BANK_TRANSFER 閾惰杞处 / CHECK 鏀エ / CASH 鐜伴噾 / OTHER 鍏朵粬';
+COMMENT ON COLUMN pmis_finance_payment.payment_method IS '支付方式: BANK_TRANSFER 银行转账 / CHECK 支票 / CASH 现金 / OTHER 其他';
 
-COMMENT ON COLUMN pmis_finance_payment.payment_date IS '鍒拌处鏃ユ湡';
+COMMENT ON COLUMN pmis_finance_payment.payment_date IS '到账日期';
 
-COMMENT ON COLUMN pmis_finance_payment.bank_account IS '瀹㈡埛浠樻璐﹀彿';
+COMMENT ON COLUMN pmis_finance_payment.bank_account IS '客户付款账号';
 
-COMMENT ON COLUMN pmis_finance_payment.our_bank_account IS '鎴戞柟鏀舵璐﹀彿';
+COMMENT ON COLUMN pmis_finance_payment.our_bank_account IS '我方收款账号';
 
-COMMENT ON COLUMN pmis_finance_payment.bank_reference IS '閾惰娴佹按鍙? 閾惰绔殑娴佹按鏍囪瘑';
+COMMENT ON COLUMN pmis_finance_payment.bank_reference IS '银行流水号: 银行端的流水标识';
 
-COMMENT ON COLUMN pmis_finance_payment.invoice_allocation IS '宸插垎閰嶅彂绁?ID 鍒楄〃: 閫楀彿鍒嗛殧';
+COMMENT ON COLUMN pmis_finance_payment.invoice_allocation IS '已分配发票 ID 列表: 逗号分隔';
 
-COMMENT ON COLUMN pmis_finance_payment.allocated_amount IS '宸叉牳閿€閲戦(鍏?: 鍏宠仈鍒板彂绁?;
+COMMENT ON COLUMN pmis_finance_payment.allocated_amount IS '已核销金额(元): 关联到发票';
 
-COMMENT ON COLUMN pmis_finance_payment.unallocated_amount IS '鏈牳閿€閲戦(鍏?: amount - allocatedAmount';
+COMMENT ON COLUMN pmis_finance_payment.unallocated_amount IS '未核销金额(元): amount - allocatedAmount';
 
-COMMENT ON COLUMN pmis_finance_payment.status IS '鍥炴鐘舵€? PENDING 寰呯‘璁?/ RECEIVED 宸插埌璐?/ PARTIAL 閮ㄥ垎鏍搁攢 / ALLOCATED 宸叉牳閿€瀹?/ CANCELLED 宸插彇娑?;
+COMMENT ON COLUMN pmis_finance_payment.status IS '回款状态: PENDING 待确认 / RECEIVED 已到账 / PARTIAL 部分核销 / ALLOCATED 已核销完 / CANCELLED 已取消';
 
-COMMENT ON COLUMN pmis_finance_payment.remark IS '澶囨敞';
+COMMENT ON COLUMN pmis_finance_payment.remark IS '备注';
 
-COMMENT ON COLUMN pmis_finance_payment.confirmed_by IS '纭浜?ID: 璐㈠姟纭鍒拌处';
+COMMENT ON COLUMN pmis_finance_payment.confirmed_by IS '确认人 ID: 财务确认到账';
 
-COMMENT ON COLUMN pmis_finance_payment.confirmed_at IS '纭鏃堕棿';
+COMMENT ON COLUMN pmis_finance_payment.confirmed_at IS '确认时间';
 
-COMMENT ON COLUMN pmis_finance_payment.recorded_by IS '褰曞叆浜?ID';
+COMMENT ON COLUMN pmis_finance_payment.recorded_by IS '录入人 ID';
 
-COMMENT ON COLUMN pmis_finance_payment.tenant_id IS '绉熸埛 ID';
+COMMENT ON COLUMN pmis_finance_payment.tenant_id IS '租户 ID';
 
-COMMENT ON COLUMN pmis_finance_payment.provider_trace_id IS '閾捐矾杩借釜 ID';
+COMMENT ON COLUMN pmis_finance_payment.provider_trace_id IS '链路追踪 ID';
 
-COMMENT ON COLUMN pmis_finance_payment.deleted IS '閫昏緫鍒犻櫎: 0=鏈垹闄?1=宸插垹闄?;
+COMMENT ON COLUMN pmis_finance_payment.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
--- 澶嶅悎/閮ㄥ垎绱㈠紩(鏇夸唬闆舵暎鐨?idx_pfp_*)
+-- 复合/部分索引(替代零散的 idx_pfp_*)
 CREATE INDEX IF NOT EXISTS idx_pfp_tenant_contract
     ON pmis_finance_payment(tenant_id, contract_id)
     WHERE deleted = 0;
@@ -580,7 +580,7 @@ CREATE INDEX IF NOT EXISTS idx_pfp_tenant_customer_unalloc
     WHERE deleted = 0 AND status IN ('PENDING','RECEIVED','PARTIAL');
 
 -- =====================================================
--- 3. 瀹㈡埛淇＄敤琛?pmis_finance_customer_credit
+-- 3. 客户信用表 pmis_finance_customer_credit
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_finance_customer_credit(
@@ -592,7 +592,7 @@ CREATE TABLE IF NOT EXISTS pmis_finance_customer_credit(
     total_contract_amount NUMERIC(15,2) NOT NULL DEFAULT 0,
     total_invoiced_amount NUMERIC(15,2) NOT NULL DEFAULT 0,
     total_received_amount NUMERIC(15,2) NOT NULL DEFAULT 0,
-    on_time_rate          NUMERIC(5,4) NOT NULL DEFAULT 0,        -- 鍙婃椂鍥炴鐜?
+    on_time_rate          NUMERIC(5,4) NOT NULL DEFAULT 0,        -- 及时回款率
     contract_count        INTEGER      NOT NULL DEFAULT 0,
     overdue_count         INTEGER      NOT NULL DEFAULT 0,
     last_evaluation_at    TIMESTAMPTZ,
@@ -614,41 +614,41 @@ CREATE TABLE IF NOT EXISTS pmis_finance_customer_credit(
     CONSTRAINT ck_pfcc_deleted_enum      CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_finance_customer_credit IS '瀹㈡埛淇＄敤琛? 瀹㈡埛淇＄敤璇勫垎涓庣瓑绾э紙A/B/C/D锛?CustomerCreditScoreEvaluator 璇勫垎锛?-100锛?;
+COMMENT ON TABLE  pmis_finance_customer_credit IS '客户信用表: 客户信用评分与等级（A/B/C/D）,CustomerCreditScoreEvaluator 评分（0-100）';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.customer_id IS '瀹㈡埛 ID: 鍏ㄥ眬鍞竴';
+COMMENT ON COLUMN pmis_finance_customer_credit.customer_id IS '客户 ID: 全局唯一';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.customer_name IS '瀹㈡埛鍚嶇О锛堝啑浣欙級';
+COMMENT ON COLUMN pmis_finance_customer_credit.customer_name IS '客户名称（冗余）';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.credit_level IS '淇＄敤绛夌骇: A=浼樿川(90-100) B=鑹ソ(75-89) C=涓€鑸?60-74) D=椋庨櫓(0-59),fromScore() 浣跨敤 >= 姣旇緝';
+COMMENT ON COLUMN pmis_finance_customer_credit.credit_level IS '信用等级: A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59),fromScore() 使用 >= 比较';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.credit_score IS '淇＄敤鍒? 0-100,鏂板鎴烽粯璁?30 鍒嗭紙A 绾у熀绾匡級';
+COMMENT ON COLUMN pmis_finance_customer_credit.credit_score IS '信用分: 0-100,新客户默认 30 分（A 级基线）';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.total_contract_amount IS '绱鍚堝悓閲戦(鍏?';
+COMMENT ON COLUMN pmis_finance_customer_credit.total_contract_amount IS '累计合同金额(元)';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.total_invoiced_amount IS '绱寮€绁ㄩ噾棰?鍏?';
+COMMENT ON COLUMN pmis_finance_customer_credit.total_invoiced_amount IS '累计开票金额(元)';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.total_received_amount IS '绱鍥炴閲戦(鍏?';
+COMMENT ON COLUMN pmis_finance_customer_credit.total_received_amount IS '累计回款金额(元)';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.on_time_rate IS '鍙婃椂鍥炴鐜? 0.85=85%';
+COMMENT ON COLUMN pmis_finance_customer_credit.on_time_rate IS '及时回款率: 0.85=85%';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.contract_count IS '鍚堝悓鎬绘暟';
+COMMENT ON COLUMN pmis_finance_customer_credit.contract_count IS '合同总数';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.overdue_count IS '閫炬湡娆℃暟';
+COMMENT ON COLUMN pmis_finance_customer_credit.overdue_count IS '逾期次数';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.last_evaluation_at IS '鏈€杩戜竴娆¤瘎浼版椂闂?;
+COMMENT ON COLUMN pmis_finance_customer_credit.last_evaluation_at IS '最近一次评估时间';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.evaluator IS '璇勪及浜?璇勪及鍣ㄥ悕绉?;
+COMMENT ON COLUMN pmis_finance_customer_credit.evaluator IS '评估人/评估器名称';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.remark IS '澶囨敞';
+COMMENT ON COLUMN pmis_finance_customer_credit.remark IS '备注';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.tenant_id IS '绉熸埛 ID';
+COMMENT ON COLUMN pmis_finance_customer_credit.tenant_id IS '租户 ID';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.provider_trace_id IS '閾捐矾杩借釜 ID';
+COMMENT ON COLUMN pmis_finance_customer_credit.provider_trace_id IS '链路追踪 ID';
 
-COMMENT ON COLUMN pmis_finance_customer_credit.deleted IS '閫昏緫鍒犻櫎: 0=鏈垹闄?1=宸插垹闄?;
+COMMENT ON COLUMN pmis_finance_customer_credit.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
--- 澶嶅悎/閮ㄥ垎绱㈠紩(鏇夸唬闆舵暎鐨?idx_pfcc_level / idx_pfcc_tenant)
+-- 复合/部分索引(替代零散的 idx_pfcc_level / idx_pfcc_tenant)
 CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_level_score
     ON pmis_finance_customer_credit(tenant_id, credit_level, credit_score DESC)
     WHERE deleted = 0;
@@ -658,23 +658,23 @@ CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_updated
     WHERE deleted = 0;
 
 -- =====================================================
--- 4. 鍒濆鏁版嵁锛氫俊鐢ㄧ瓑绾у瓧鍏革紙鐢ㄤ簬鍓嶇灞曠ず锛?
+-- 4. 初始数据：信用等级字典（用于前端展示）
 -- =====================================================
--- credit_level 瀛楁鍚箟锛堣涓婃柟 COLUMN COMMENT锛? A=浼樿川(90-100) B=鑹ソ(75-89) C=涓€鑸?60-74) D=椋庨櫓(0-59)
+-- credit_level 字段含义（见上方 COLUMN COMMENT）: A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59)
 
 -- --------------------------------------------------------------------
 
 -- ============================ [013] init pmis evm schema ============================
 
 -- =====================================================
--- PMIS 鎵规10 DDL锛欵VM 鎸ｅ€?/ 瀵瑰鎶ヤ环璐圭巼 / 瀵瑰唴鎴愭湰璐圭巼 / 鍒╂鼎娴嬬畻
--- 鐗堟湰: V1.0.0_013
--- 鎻忚堪: 鎸ｅ€兼祴閲?pmis_evm_measure)銆佸澶栨姤浠疯垂鐜?pmis_rate_card)銆?
---       瀵瑰唴鎴愭湰璐圭巼(pmis_rate_internal)銆佸埄娑︽祴绠楃増鏈?pmis_profit_simulation)
+-- PMIS 批次10 DDL：EVM 挣值 / 对外报价费率 / 对内成本费率 / 利润测算
+-- 版本: V1.0.0_013
+-- 描述: 挣值测量(pmis_evm_measure)、对外报价费率(pmis_rate_card)、
+--       对内成本费率(pmis_rate_internal)、利润测算版本(pmis_profit_simulation)
 -- =====================================================
 
 -- =====================================================
--- 1. EVM 鎸ｅ€兼祴閲忚〃 pmis_evm_measure
+-- 1. EVM 挣值测量表 pmis_evm_measure
 
 -- =====================================================
 CREATE TABLE IF NOT EXISTS pmis_profit_simulation(
@@ -722,63 +722,63 @@ CREATE TABLE IF NOT EXISTS pmis_profit_simulation(
     CONSTRAINT ck_pps_deleted_enum      CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_profit_simulation IS '鍒╂鼎娴嬬畻鐗堟湰琛?What-if: 鍚屼竴绔嬮」鏀寔澶氫釜娴嬬畻鐗堟湰,create() 鑷姩 version=max+1,APPROVED/ARCHIVED 鐘舵€佺姝㈠垹闄?;
+COMMENT ON TABLE  pmis_profit_simulation IS '利润测算版本表 What-if: 同一立项支持多个测算版本,create() 自动 version=max+1,APPROVED/ARCHIVED 状态禁止删除';
 
-COMMENT ON COLUMN pmis_profit_simulation.simulation_code IS '娴嬬畻鍗曞彿: 涓氬姟鍞竴,濡?SIM-2026-001';
+COMMENT ON COLUMN pmis_profit_simulation.simulation_code IS '测算单号: 业务唯一,如 SIM-2026-001';
 
-COMMENT ON COLUMN pmis_profit_simulation.simulation_name IS '娴嬬畻鍚嶇О';
+COMMENT ON COLUMN pmis_profit_simulation.simulation_name IS '测算名称';
 
-COMMENT ON COLUMN pmis_profit_simulation.initiation_id IS '鎵€灞炵珛椤?ID';
+COMMENT ON COLUMN pmis_profit_simulation.initiation_id IS '所属立项 ID';
 
-COMMENT ON COLUMN pmis_profit_simulation.version IS '鐗堟湰鍙? 鍚岀珛椤瑰唴閫掑,create() 鏃惰嚜鍔?max+1';
+COMMENT ON COLUMN pmis_profit_simulation.version IS '版本号: 同立项内递增,create() 时自动 max+1';
 
-COMMENT ON COLUMN pmis_profit_simulation.scenario_type IS '鍦烘櫙绫诲瀷: BASE 鍩哄噯 / OPTIMISTIC 涔愯 / PESSIMISTIC 鎮茶 / CUSTOM 鑷畾涔?;
+COMMENT ON COLUMN pmis_profit_simulation.scenario_type IS '场景类型: BASE 基准 / OPTIMISTIC 乐观 / PESSIMISTIC 悲观 / CUSTOM 自定义';
 
-COMMENT ON COLUMN pmis_profit_simulation.contract_amount IS '鍚堝悓閲戦(鍏?';
+COMMENT ON COLUMN pmis_profit_simulation.contract_amount IS '合同金额(元)';
 
-COMMENT ON COLUMN pmis_profit_simulation.external_revenue IS '澶栭儴鏀跺叆(鍏?: 瀵瑰鎶ヤ环鍚堣';
+COMMENT ON COLUMN pmis_profit_simulation.external_revenue IS '外部收入(元): 对外报价合计';
 
-COMMENT ON COLUMN pmis_profit_simulation.internal_cost IS '鍐呴儴鎴愭湰(鍏?: 浜哄姏 + 閲囪喘 + 璐圭敤 + 澶栧寘';
+COMMENT ON COLUMN pmis_profit_simulation.internal_cost IS '内部成本(元): 人力 + 采购 + 费用 + 外包';
 
-COMMENT ON COLUMN pmis_profit_simulation.expected_hours IS '棰勮宸ユ椂(灏忔椂)';
+COMMENT ON COLUMN pmis_profit_simulation.expected_hours IS '预计工时(小时)';
 
-COMMENT ON COLUMN pmis_profit_simulation.blended_rate IS '缁煎悎浜哄ぉ璐圭巼(鍏?';
+COMMENT ON COLUMN pmis_profit_simulation.blended_rate IS '综合人天费率(元)';
 
-COMMENT ON COLUMN pmis_profit_simulation.gross_profit IS '姣涘埄娑?鍏? = external_revenue - internal_cost';
+COMMENT ON COLUMN pmis_profit_simulation.gross_profit IS '毛利润(元) = external_revenue - internal_cost';
 
-COMMENT ON COLUMN pmis_profit_simulation.gross_margin IS '姣涘埄鐜? 0.25=25%';
+COMMENT ON COLUMN pmis_profit_simulation.gross_margin IS '毛利率: 0.25=25%';
 
-COMMENT ON COLUMN pmis_profit_simulation.target_margin IS '鐩爣姣涘埄鐜? 涓氬姟鏂归璁剧殑杈炬爣绾?;
+COMMENT ON COLUMN pmis_profit_simulation.target_margin IS '目标毛利率: 业务方预设的达标线';
 
-COMMENT ON COLUMN pmis_profit_simulation.labor_cost IS '浜哄伐鎴愭湰(鍏?';
+COMMENT ON COLUMN pmis_profit_simulation.labor_cost IS '人工成本(元)';
 
-COMMENT ON COLUMN pmis_profit_simulation.purchase_cost IS '閲囪喘鎴愭湰(鍏?';
+COMMENT ON COLUMN pmis_profit_simulation.purchase_cost IS '采购成本(元)';
 
-COMMENT ON COLUMN pmis_profit_simulation.expense_cost IS '璐圭敤(鍏?';
+COMMENT ON COLUMN pmis_profit_simulation.expense_cost IS '费用(元)';
 
-COMMENT ON COLUMN pmis_profit_simulation.outsource_cost IS '澶栧寘鎴愭湰(鍏?';
+COMMENT ON COLUMN pmis_profit_simulation.outsource_cost IS '外包成本(元)';
 
-COMMENT ON COLUMN pmis_profit_simulation.assumptions IS '鍋囪鏉′欢 JSON: 杈撳叆鍙傛暟蹇収';
+COMMENT ON COLUMN pmis_profit_simulation.assumptions IS '假设条件 JSON: 输入参数快照';
 
-COMMENT ON COLUMN pmis_profit_simulation.status IS '娴嬬畻鐘舵€? DRAFT 鑽夌 / SUBMITTED 宸叉彁浜?/ APPROVED 宸叉壒鍑?/ REJECTED 宸查┏鍥?/ ARCHIVED 宸插綊妗?REJECTED 鍙洖閫€鍒?DRAFT';
+COMMENT ON COLUMN pmis_profit_simulation.status IS '测算状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / ARCHIVED 已归档,REJECTED 可回退到 DRAFT';
 
-COMMENT ON COLUMN pmis_profit_simulation.approver_name IS '瀹℃壒浜哄鍚嶏紙鍐椾綑锛?;
+COMMENT ON COLUMN pmis_profit_simulation.approver_name IS '审批人姓名（冗余）';
 
-COMMENT ON COLUMN pmis_profit_simulation.approved_at IS '瀹℃壒鏃堕棿';
+COMMENT ON COLUMN pmis_profit_simulation.approved_at IS '审批时间';
 
-COMMENT ON COLUMN pmis_profit_simulation.remark IS '澶囨敞';
+COMMENT ON COLUMN pmis_profit_simulation.remark IS '备注';
 
-COMMENT ON COLUMN pmis_profit_simulation.applicant_id IS '鐢宠浜?ID';
+COMMENT ON COLUMN pmis_profit_simulation.applicant_id IS '申请人 ID';
 
-COMMENT ON COLUMN pmis_profit_simulation.applicant_name IS '鐢宠浜哄鍚嶏紙鍐椾綑锛?;
+COMMENT ON COLUMN pmis_profit_simulation.applicant_name IS '申请人姓名（冗余）';
 
-COMMENT ON COLUMN pmis_profit_simulation.tenant_id IS '绉熸埛 ID';
+COMMENT ON COLUMN pmis_profit_simulation.tenant_id IS '租户 ID';
 
-COMMENT ON COLUMN pmis_profit_simulation.provider_trace_id IS '閾捐矾杩借釜 ID';
+COMMENT ON COLUMN pmis_profit_simulation.provider_trace_id IS '链路追踪 ID';
 
-COMMENT ON COLUMN pmis_profit_simulation.deleted IS '閫昏緫鍒犻櫎: 0=鏈垹闄?1=宸插垹闄?;
+COMMENT ON COLUMN pmis_profit_simulation.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
--- 澶嶅悎/閮ㄥ垎绱㈠紩(鏇夸唬闆舵暎鐨?idx_psm_initiation / idx_psm_version / idx_psm_status)
+-- 复合/部分索引(替代零散的 idx_psm_initiation / idx_psm_version / idx_psm_status)
 CREATE INDEX IF NOT EXISTS idx_psm_tenant_initiation_version
     ON pmis_profit_simulation(tenant_id, initiation_id, version DESC)
     WHERE deleted = 0;
@@ -788,7 +788,7 @@ CREATE INDEX IF NOT EXISTS idx_psm_tenant_status_scenario
     WHERE deleted = 0;
 
 -- =====================================================
--- 5. 鍒濆鍖?L1-L18 鑱岀骇榛樿瀵瑰鎶ヤ环璐圭巼锛堝熀绾垮弬鑰冿級
+-- 5. 初始化 L1-L18 职级默认对外报价费率（基线参考）
 -- =====================================================
 INSERT INTO pmis_rate_card
     (rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, status, tenant_id, provider_trace_id)
@@ -813,7 +813,7 @@ VALUES
         ('RC-L18-DEFAULT', 'L18', NULL, NULL, 'DAY', 18000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
 
 -- =====================================================
--- 6. 鍒濆鍖?L1-L18 鑱岀骇榛樿瀵瑰唴鎴愭湰璐圭巼锛堝熀绾垮弬鑰冿級
+-- 6. 初始化 L1-L18 职级默认对内成本费率（基线参考）
 -- =====================================================
 INSERT INTO pmis_rate_internal
     (rate_code, level_code, billing_unit, cost_amount, currency, effective_date, status, tenant_id, provider_trace_id)
@@ -842,17 +842,17 @@ VALUES
 -- ============================ [015] init pmis cockpit views ============================
 
 -- ============================================================
--- V1.0.0_015  缁忚惀椹鹃┒鑸?+ 楂樼骇鎶ヨ〃  瑙嗗浘鑴氭湰
+-- V1.0.0_015  经营驾驶舱 + 高级报表  视图脚本
 -- ============================================================
--- 璇存槑锛氫负椹鹃┒鑸变笌楂樼骇鎶ヨ〃鎻愪緵璺ㄦā鍧楄仛鍚堣鍥撅紝閬垮厤鍦?Java 灞傚仛
---      澶氭鍗曡〃鏌ヨ銆傛墍鏈夎鍥?LEFT JOIN + COALESCE 纭繚 0 鏀跺叆/0 鎴愭湰
---      鐨勯」鐩篃鑳藉嚭鐜板湪涓嬮捇缁撴灉涓€?
+-- 说明：为驾驶舱与高级报表提供跨模块聚合视图，避免在 Java 层做
+--      多次单表查询。所有视图 LEFT JOIN + COALESCE 确保 0 收入/0 成本
+--      的项目也能出现在下钻结果中。
 -- ============================================================
 
 -- ----------------------------
--- 1. 椤圭洰鏀跺叆 + 鎴愭湰瑙嗗浘锛堟寜 initiation 脳 period锛?
+-- 1. 项目收入 + 成本视图（按 initiation × period）
 -- ----------------------------
--- 浼樺寲: 鏄惧紡甯?tenant_id,閬垮厤 JOIN 鏀惧ぇ瀵艰嚧璺ㄧ鎴锋暟鎹硠闇?
+-- 优化: 显式带 tenant_id,避免 JOIN 放大导致跨租户数据泄露
 CREATE OR REPLACE VIEW pmis_view_initiation_revenue_cost
     WITH (security_invoker = true) AS
 SELECT i.tenant_id,
@@ -879,10 +879,10 @@ SELECT i.tenant_id,
 FROM pmis_project_initiation i
 WHERE i.deleted = 0;
 
-COMMENT ON VIEW pmis_view_initiation_revenue_cost IS '椤圭洰鏀跺叆 + 鎴愭湰鑱氬悎瑙嗗浘: CockpitReportServiceImpl 璇诲彇,total_revenue 鍖呭惈鎵€鏈夋敹鍏ヨ褰?confirmed_revenue 浠?CONFIRMED 鐘舵€?labor/purchase/expense 涓夌被鎴愭湰鍒嗗埆鑱氬悎;LEFT JOIN + COALESCE 淇濊瘉 0 鏀跺叆/0 鎴愭湰椤圭洰涔熷嚭鐜?姣忔潯瀛愭煡璇㈠己鍒跺甫 tenant_id = i.tenant_id 闃叉璺ㄧ鎴锋暟鎹薄鏌?;
+COMMENT ON VIEW pmis_view_initiation_revenue_cost IS '项目收入 + 成本聚合视图: CockpitReportServiceImpl 读取,total_revenue 包含所有收入记录,confirmed_revenue 仅 CONFIRMED 状态;labor/purchase/expense 三类成本分别聚合;LEFT JOIN + COALESCE 保证 0 收入/0 成本项目也出现;每条子查询强制带 tenant_id = i.tenant_id 防止跨租户数据污染';
 
 -- ----------------------------
--- 2. 椤圭洰 EVM 棰勮鍒嗗竷
+-- 2. 项目 EVM 预警分布
 -- ----------------------------
 CREATE OR REPLACE VIEW pmis_view_initiation_evm
     WITH (security_invoker = true) AS
@@ -900,12 +900,12 @@ FROM pmis_evm_measure
 WHERE deleted = 0
 GROUP BY tenant_id, initiation_id;
 
-COMMENT ON VIEW pmis_view_initiation_evm IS '椤圭洰 EVM 棰勮鍒嗗竷瑙嗗浘: 鎸?tenant_id + 绔嬮」鑱氬悎 RED/YELLOW/NORMAL 璁℃暟,AdvancedReportService#evmReport 璇诲彇,top_alert 鍙栨渶楂樼瓑绾?;
+COMMENT ON VIEW pmis_view_initiation_evm IS '项目 EVM 预警分布视图: 按 tenant_id + 立项聚合 RED/YELLOW/NORMAL 计数,AdvancedReportService#evmReport 读取,top_alert 取最高等级';
 
 -- ----------------------------
--- 3. 缁忚惀椹鹃┒鑸?KPI 鎬昏瑙嗗浘
+-- 3. 经营驾驶舱 KPI 总览视图
 -- ----------------------------
--- 娉ㄦ剰: 澶氱鎴峰満鏅笅,姝よ鍥炬寜 tenant_id 鍒嗙粍鑱氬悎,纭繚绉熸埛闂存暟鎹殧绂?
+-- 注意: 多租户场景下,此视图按 tenant_id 分组聚合,确保租户间数据隔离
 CREATE OR REPLACE VIEW pmis_view_cockpit_overview
     WITH (security_invoker = true) AS
 SELECT
@@ -921,32 +921,32 @@ SELECT
           AND tenant_id = t.tenant_id)                                           AS confirmed_revenue
 FROM (SELECT DISTINCT tenant_id FROM pmis_project_initiation WHERE deleted = 0) t;
 
-COMMENT ON VIEW pmis_view_cockpit_overview IS '缁忚惀椹鹃┒鑸?KPI 鎬昏瑙嗗浘: 鎸?tenant_id 鍒嗙粍姹囨€?active_projects/total_invoiced/confirmed_revenue,鍗曠鎴峰満鏅繑鍥炲崟琛?澶氱鎴烽渶鍓嶇鎸夌鎴疯繃婊?搴曞眰瀛愭煡璇㈤兘寮哄埗甯?tenant_id 鍏宠仈,鏉滅粷璺ㄧ鎴锋暟鎹薄鏌?CockpitReportController#overview 鐩存帴璇诲彇';
+COMMENT ON VIEW pmis_view_cockpit_overview IS '经营驾驶舱 KPI 总览视图: 按 tenant_id 分组汇总 active_projects/total_invoiced/confirmed_revenue,单租户场景返回单行;多租户需前端按租户过滤;底层子查询都强制带 tenant_id 关联,杜绝跨租户数据污染;CockpitReportController#overview 直接读取';
 
 -- --------------------------------------------------------------------
 
 -- ============================ [017] init pmis after sales schema ============================
 
 -- ============================================================
--- V1.0.0_017  椤圭洰鍞悗绠＄悊  鑴氭湰
+-- V1.0.0_017  项目售后管理  脚本
 -- ============================================================
--- 璇存槑锛氭壒娆?14 椤圭洰鍞悗绠＄悊锛圥RD 3.8锛?
--- 1) 璐ㄤ繚鏈燂細pmis_warranty
--- 2) 杩愮淮宸ュ崟锛歱mis_ops_ticket
--- 3) 婊℃剰搴﹁瘎浠凤細pmis_satisfaction
+-- 说明：批次 14 项目售后管理（PRD 3.8）
+-- 1) 质保期：pmis_warranty
+-- 2) 运维工单：pmis_ops_ticket
+-- 3) 满意度评价：pmis_satisfaction
 
 -- ============================================================
 
 -- ----------------------------
--- 1) 宸ユ椂琛ㄦ柊澧?billable 瀛楁
+-- 1) 工时表新增 billable 字段
 -- ----------------------------
 ALTER TABLE pmis_execution_time_entry
     ADD COLUMN IF NOT EXISTS billable SMALLINT NOT NULL DEFAULT 1;
 
-COMMENT ON COLUMN pmis_execution_time_entry.billable IS '鍙璐规爣璇? 1=鍙璐癸紙璁″叆 BillableUtilization锛?0=闈炶璐?;
+COMMENT ON COLUMN pmis_execution_time_entry.billable IS '可计费标识: 1=可计费（计入 BillableUtilization）,0=非计费';
 
 -- ----------------------------
--- 3) 姣忔棩瀵硅处琛?
+-- 3) 每日对账表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_reconcile_daily (
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
@@ -964,42 +964,42 @@ CREATE TABLE IF NOT EXISTS pmis_reconcile_daily (
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    -- 鏋氫妇绾︽潫
+    -- 枚举约束
     CONSTRAINT ck_prd_reconcile_type    CHECK (reconcile_type IN ('COST','REVENUE','PAYMENT','INVOICE','TIMESHEET','PROFIT','BENCH','BUDGET')),
     CONSTRAINT ck_prd_status_enum       CHECK (status IN ('OK','WARN','FAIL')),
-    -- 鏁板€间笌姣斾緥鑼冨洿
+    -- 数值与比例范围
     CONSTRAINT ck_prd_diff_amount_eq    CHECK (diff_amount = actual_amount - expected_amount),
     CONSTRAINT ck_prd_diff_pct_range    CHECK (diff_pct >= -1 AND diff_pct <= 1),
     CONSTRAINT ck_prd_deleted           CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE  pmis_reconcile_daily IS '姣忔棩鑷姩瀵硅处琛? 鎴愭湰/鏀跺叆/鍥炴/寮€绁?璺ㄦā鍧楁牎楠?ReconcileServiceImpl 鎵ц';
+COMMENT ON TABLE  pmis_reconcile_daily IS '每日自动对账表: 成本/收入/回款/开票 跨模块校验,ReconcileServiceImpl 执行';
 
-COMMENT ON COLUMN pmis_reconcile_daily.reconcile_date IS '瀵硅处鏃ユ湡: 姣忔棩 02:00 瑙﹀彂';
+COMMENT ON COLUMN pmis_reconcile_daily.reconcile_date IS '对账日期: 每日 02:00 触发';
 
-COMMENT ON COLUMN pmis_reconcile_daily.reconcile_type IS '瀵硅处绫诲瀷: COST 鎴愭湰 / REVENUE 鏀跺叆 / PAYMENT 鍥炴 / INVOICE 寮€绁?/ TIMESHEET 宸ユ椂 / PROFIT 鍒╂鼎 / BENCH 闂茬疆 / BUDGET 棰勭畻';
+COMMENT ON COLUMN pmis_reconcile_daily.reconcile_type IS '对账类型: COST 成本 / REVENUE 收入 / PAYMENT 回款 / INVOICE 开票 / TIMESHEET 工时 / PROFIT 利润 / BENCH 闲置 / BUDGET 预算';
 
-COMMENT ON COLUMN pmis_reconcile_daily.initiation_id IS '鎵€灞炵珛椤?ID: 鍙┖,NULL 琛ㄧず鍏ㄥ眬缁村害';
+COMMENT ON COLUMN pmis_reconcile_daily.initiation_id IS '所属立项 ID: 可空,NULL 表示全局维度';
 
-COMMENT ON COLUMN pmis_reconcile_daily.expected_amount IS '搴旇閲戦(鍏?';
+COMMENT ON COLUMN pmis_reconcile_daily.expected_amount IS '应计金额(元)';
 
-COMMENT ON COLUMN pmis_reconcile_daily.actual_amount IS '瀹炶閲戦(鍏?';
+COMMENT ON COLUMN pmis_reconcile_daily.actual_amount IS '实计金额(元)';
 
-COMMENT ON COLUMN pmis_reconcile_daily.diff_amount IS '宸紓閲戦(鍏? = actual - expected';
+COMMENT ON COLUMN pmis_reconcile_daily.diff_amount IS '差异金额(元) = actual - expected';
 
-COMMENT ON COLUMN pmis_reconcile_daily.diff_pct IS '宸紓姣斾緥: -1 ~ 1,渚嬪 0.05=5%';
+COMMENT ON COLUMN pmis_reconcile_daily.diff_pct IS '差异比例: -1 ~ 1,例如 0.05=5%';
 
-COMMENT ON COLUMN pmis_reconcile_daily.status IS '瀵硅处鐘舵€? OK 涓€鑷?/ WARN 璀﹀憡锛坾diff_pct| < 5%锛? FAIL 澶辫触锛坾diff_pct| >= 5%锛?;
+COMMENT ON COLUMN pmis_reconcile_daily.status IS '对账状态: OK 一致 / WARN 警告（|diff_pct| < 5%）/ FAIL 失败（|diff_pct| >= 5%）';
 
-COMMENT ON COLUMN pmis_reconcile_daily.detail IS '瀵硅处鏄庣粏 JSON: 鍒楀嚭宸紓椤?;
+COMMENT ON COLUMN pmis_reconcile_daily.detail IS '对账明细 JSON: 列出差异项';
 
-COMMENT ON COLUMN pmis_reconcile_daily.tenant_id IS '绉熸埛 ID';
+COMMENT ON COLUMN pmis_reconcile_daily.tenant_id IS '租户 ID';
 
-COMMENT ON COLUMN pmis_reconcile_daily.provider_trace_id IS '閾捐矾杩借釜 ID';
+COMMENT ON COLUMN pmis_reconcile_daily.provider_trace_id IS '链路追踪 ID';
 
-COMMENT ON COLUMN pmis_reconcile_daily.deleted IS '閫昏緫鍒犻櫎: 0=鏈垹闄?1=宸插垹闄?;
+COMMENT ON COLUMN pmis_reconcile_daily.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
--- 澶嶅悎/閮ㄥ垎绱㈠紩(鏇夸唬闆舵暎鐨勫崟鍒楃储寮?
+-- 复合/部分索引(替代零散的单列索引)
 CREATE INDEX IF NOT EXISTS idx_prd_tenant_date_type
     ON pmis_reconcile_daily(tenant_id, reconcile_date DESC, reconcile_type)
     WHERE deleted = 0;
@@ -1012,7 +1012,7 @@ CREATE INDEX IF NOT EXISTS idx_prd_tenant_status_date
     ON pmis_reconcile_daily(tenant_id, status, reconcile_date DESC)
     WHERE deleted = 0 AND status IN ('WARN','FAIL');
 
--- 鍞竴绾︽潫锛氭瘡澶╂瘡涓淮搴﹀彧鑳芥湁涓€鏉?
+-- 唯一约束：每天每个维度只能有一条
 CREATE UNIQUE INDEX IF NOT EXISTS uk_prd_tenant_date_type_init
     ON pmis_reconcile_daily(tenant_id, reconcile_date, reconcile_type, COALESCE(initiation_id, '0'), deleted);
 
@@ -1021,17 +1021,17 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_prd_tenant_date_type_init
 -- ============================ [020] init pmis billable utilization snapshot ============================
 
 -- ====================================================================
--- V1.0.0_020  鍙璐瑰埄鐢ㄧ巼蹇収琛?
+-- V1.0.0_020  可计费利用率快照表
 --
---  璇存槑锛氬彲璁¤垂鍒╃敤鐜囷紙BillableUtilization锛夌敱 cronjob 姣忔棩璁＄畻鍚?
---        鎸佷箙鍖栧埌鏈〃锛岄┚椹惰埍 / 鎺掕姒?/ 瓒嬪娍鍒嗘瀽鍧囩洿鎺ヨ蹇収锛?
---        閬垮厤姣忔瀹炴椂鑱氬悎 pmis_execution_time_entry 澶ц〃銆?
+--  说明：可计费利用率（BillableUtilization）由 cronjob 每日计算后
+--        持久化到本表，驾驶舱 / 排行榜 / 趋势分析均直接读快照，
+--        避免每次实时聚合 pmis_execution_time_entry 大表。
 --
---  鍐欏叆璺緞锛歽dsz-pmis-cronjob 妯″潡鐨?
+--  写入路径：ydsz-pmis-cronjob 模块的
 --           BillableUtilizationJobHandler#execute
---  璇诲彇璺緞锛欳ockpitReportService / AdvancedReportService /
+--  读取路径：CockpitReportService / AdvancedReportService /
 --           BillableUtilizationController
 --
---  閿璁★細(period, employee_id) 鍞竴锛?
---         PostgreSQL UPSERT ON CONFLICT 淇濊瘉骞傜瓑銆?
+--  键设计：(period, employee_id) 唯一，
+--         PostgreSQL UPSERT ON CONFLICT 保证幂等。
 

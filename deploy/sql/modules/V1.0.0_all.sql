@@ -1,22 +1,22 @@
 -- ============================================================
--- PMIS Full Database Initialization Script
+-- PMIS Full Database Initialization Script (V1.0.0 版本)
 -- Executes all module scripts in dependency order
 -- ============================================================
 
+-- V1.0.0 模块 SQL（按后端服务拆分）
 \i V1.0.0_system.sql
 \i V1.0.0_userinfo.sql
-\i V1.0.0_project.sql
+\i V1.0.0_sales.sql       -- 商务销售服务 (port 9010, 6 张表)
+\i V1.0.0_finance.sql     -- 财务会计服务 (port 9011, 8 张表)
+\i V1.0.0_project.sql     -- 项目执行服务 (port 9003, 20 张表)
 \i V1.0.0_cronjob.sql
 \i V1.0.0_message.sql
 \i V1.0.0_workflow.sql
 \i V1.0.0_agent.sql
-\i V1.0.0_literule.sql
+\i V1.0.0_literule.sql    -- 规则引擎服务 (含 8 张业务表, 2026-07-12 从 project 迁移)
 
 -- V1.1.0 架构优化：废弃重复表清理与数据迁移
 \i V1.1.0_refactor_deprecated_tables.sql
 
 -- V1.1.0 架构优化：统一 DAG 引擎表
 \i V1.1.0_unified_dag.sql
-
--- V1.1.0 架构优化：规则表归口迁移 (project → literule)
-\i V1.1.0_rule_table_migration.sql
