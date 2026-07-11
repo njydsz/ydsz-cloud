@@ -133,7 +133,9 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
         if ("!".equals(op) || "not".equals(op)) {
             result = !BuiltinFunctions.toBool(operandVal);
         } else if ("-".equals(op)) {
-            result = BuiltinFunctions.toDecimal(operandVal).negate();
+            result = BuiltinFunctions.isIntegerLike(operandVal)
+                    ? -BuiltinFunctions.toLong(operandVal)
+                    : BuiltinFunctions.toDecimal(operandVal).negate();
         } else {
             throw new LiteExprException("未知一元运算符: " + op, node.line(), node.column());
         }
@@ -300,10 +302,10 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
                 if (left instanceof String || right instanceof String) {
                     yield BuiltinFunctions.str(left) + BuiltinFunctions.str(right);
                 }
-                yield BuiltinFunctions.toDecimal(left).add(BuiltinFunctions.toDecimal(right));
+                yield BuiltinFunctions.smartAdd(left, right);
             }
-            case "-" -> BuiltinFunctions.toDecimal(left).subtract(BuiltinFunctions.toDecimal(right));
-            case "*" -> BuiltinFunctions.toDecimal(left).multiply(BuiltinFunctions.toDecimal(right));
+            case "-" -> BuiltinFunctions.smartSubtract(left, right);
+            case "*" -> BuiltinFunctions.smartMultiply(left, right);
             case "/" -> {
                 BigDecimal divisor = BuiltinFunctions.toDecimal(right);
                 if (divisor.compareTo(BigDecimal.ZERO) == 0) {
@@ -311,7 +313,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
                 }
                 yield BuiltinFunctions.toDecimal(left).divide(divisor, 10, java.math.RoundingMode.HALF_UP);
             }
-            case "%" -> BuiltinFunctions.toDecimal(left).remainder(BuiltinFunctions.toDecimal(right));
+            case "%" -> BuiltinFunctions.smartRemainder(left, right);
             case "==" -> equals(left, right);
             case "!=" -> !equals(left, right);
             case ">" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) > 0;

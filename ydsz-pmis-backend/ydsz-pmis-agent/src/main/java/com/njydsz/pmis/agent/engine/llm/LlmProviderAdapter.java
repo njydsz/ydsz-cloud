@@ -3,7 +3,6 @@ package com.njydsz.pmis.agent.engine.llm;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.common.ai.LlmClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;

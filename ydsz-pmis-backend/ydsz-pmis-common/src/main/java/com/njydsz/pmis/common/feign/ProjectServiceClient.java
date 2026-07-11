@@ -27,7 +27,8 @@ import java.util.Map;
 @FeignClient(
         name = FeignClientConstants.PROJECT,
         contextId = "projectServiceClient",
-        fallbackFactory = ProjectServiceClientFallback.class)
+        fallbackFactory = ProjectServiceClientFallback.class
+)
 public interface ProjectServiceClient {
 
     /**

@@ -130,13 +130,28 @@ public class LiteExprSandbox {
                 checkNode(man.target(), violations);
             }
             case FunctionCallNode fcn -> {
-                if (FORBIDDEN_METHODS.contains(fcn.functionName())) {
-                    violations.add("禁止调用危险方法: " + fcn.functionName());
+                String funcName = fcn.functionName();
+                if (FORBIDDEN_METHODS.contains(funcName)) {
+                    violations.add("禁止调用危险方法: " + funcName);
                 }
-                if (!allowedFunctions.isEmpty() && !allowedFunctions.contains(fcn.functionName())) {
+                // 检查方法调用链（如 "System.exit"、"Runtime.getRuntime"）
+                for (String root : FORBIDDEN_ROOTS) {
+                    if (funcName.startsWith(root + ".")) {
+                        violations.add("禁止访问危险类方法: " + funcName);
+                        break;
+                    }
+                }
+                // 检查链中的方法名
+                String[] parts = funcName.split("\\.");
+                for (String part : parts) {
+                    if (FORBIDDEN_METHODS.contains(part)) {
+                        violations.add("禁止调用危险方法: " + part);
+                    }
+                }
+                if (!allowedFunctions.isEmpty() && !allowedFunctions.contains(funcName)) {
                     // 函数不在白名单中 — 仅当白名单已初始化时检查
-                    if (FORBIDDEN_ROOTS.contains(fcn.functionName())) {
-                        violations.add("禁止调用危险类构造器: " + fcn.functionName());
+                    if (FORBIDDEN_ROOTS.contains(funcName)) {
+                        violations.add("禁止调用危险类构造器: " + funcName);
                     }
                 }
                 for (ExprNode arg : fcn.arguments()) {

@@ -40,10 +40,10 @@ class LiteExprEvaluatorTest {
         @Test
         @DisplayName("整数算术")
         void testIntegerArithmetic() {
-            assertEquals(3, evaluator.<Integer>eval("1 + 2", ctx(Map.of())));
-            assertEquals(6, evaluator.<Integer>eval("2 * 3", ctx(Map.of())));
-            assertEquals(7, evaluator.<Integer>eval("1 + 2 * 3", ctx(Map.of())));
-            assertEquals(2, evaluator.<Integer>eval("10 % 4", ctx(Map.of())));
+            assertEquals(3, ((Number) evaluator.eval("1 + 2", ctx(Map.of()))).intValue());
+            assertEquals(6, ((Number) evaluator.eval("2 * 3", ctx(Map.of()))).intValue());
+            assertEquals(7, ((Number) evaluator.eval("1 + 2 * 3", ctx(Map.of()))).intValue());
+            assertEquals(2, ((Number) evaluator.eval("10 % 4", ctx(Map.of()))).intValue());
         }
 
         @Test
@@ -116,13 +116,14 @@ class LiteExprEvaluatorTest {
         void testMemberAccess() {
             Map<String, Object> facts = Map.of("user", Map.of("name", "Alice", "age", 30));
             assertEquals("Alice", evaluator.eval("user.name", ctx(facts)));
-            assertEquals(30, evaluator.<Integer>eval("user.age", ctx(facts)));
+            assertEquals(30, ((Number) evaluator.eval("user.age", ctx(facts))).intValue());
         }
 
         @Test
         @DisplayName("空值安全")
         void testNullSafety() {
-            Map<String, Object> facts = Map.of("missing", null);
+            Map<String, Object> facts = new java.util.HashMap<>();
+            facts.put("missing", null);
             assertNull(evaluator.eval("missing.field", ctx(facts)));
         }
     }
@@ -159,9 +160,9 @@ class LiteExprEvaluatorTest {
         @Test
         @DisplayName("数学函数")
         void testMathFunctions() {
-            assertEquals(5, evaluator.<Integer>eval("abs(-5)", ctx(Map.of())));
-            assertEquals(3, evaluator.<Integer>eval("max(1, 2, 3)", ctx(Map.of())));
-            assertEquals(1, evaluator.<Integer>eval("min(1, 2, 3)", ctx(Map.of())));
+            assertEquals(5, ((Number) evaluator.eval("abs(-5)", ctx(Map.of()))).intValue());
+            assertEquals(3, ((Number) evaluator.eval("max(1, 2, 3)", ctx(Map.of()))).intValue());
+            assertEquals(1, ((Number) evaluator.eval("min(1, 2, 3)", ctx(Map.of()))).intValue());
             assertEquals(3.14, evaluator.<BigDecimal>eval("round(3.14159, 2)", ctx(Map.of())).doubleValue());
         }
 
@@ -194,8 +195,8 @@ class LiteExprEvaluatorTest {
         @DisplayName("自定义函数注册")
         void testCustomFunction() {
             LiteExprEvaluator liteEval = (LiteExprEvaluator) evaluator;
-            liteEval.getFunctionRegistry().register("double", args -> BuiltinFunctions.toDecimal(args[0]).multiply(new BigDecimal("2")));
-            assertEquals(10, evaluator.<Integer>eval("double(5)", ctx(Map.of())));
+            liteEval.getFunctionRegistry().register("double", args -> BuiltinFunctions.toLong(args[0]) * 2);
+            assertEquals(10L, evaluator.<Long>eval("double(5)", ctx(Map.of())));
         }
     }
 
@@ -253,7 +254,7 @@ class LiteExprEvaluatorTest {
             ExprNode ast = compiler.compile("1 + 2 * 3");
             // 折叠后应为 LiteralNode(7)
             assertInstanceOf(LiteralNode.class, ast, "1+2*3 应被折叠为字面值");
-            assertEquals(7, ((LiteralNode) ast).value());
+            assertEquals(7, ((Number) ((LiteralNode) ast).value()).intValue());
         }
 
         @Test

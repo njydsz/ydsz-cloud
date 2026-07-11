@@ -179,14 +179,19 @@ public class ExprParser {
                 consume(TokenType.RBRACKET, "索引访问缺少 ']'");
                 node = new IndexNode(node, index, bracket.line(), bracket.column());
             } else if (match(TokenType.LPAREN)) {
-                // 函数调用：仅当 node 是 VariableNode 时
-                if (!(node instanceof VariableNode vn)) {
-                    throw new LiteExprException("不能对非函数表达式进行调用", ((ExprNode) node).line(), ((ExprNode) node).column());
-                }
+                // 函数调用：支持 name(args) 和 obj.method(args)
                 Token paren = previous();
                 List<ExprNode> args = parseArguments();
                 consume(TokenType.RPAREN, "函数调用缺少 ')'");
-                node = new FunctionCallNode(vn.name(), args, vn.line(), vn.column());
+                if (node instanceof VariableNode vn) {
+                    node = new FunctionCallNode(vn.name(), args, vn.line(), vn.column());
+                } else if (node instanceof MemberAccessNode man) {
+                    // 方法调用：obj.method(args) → 函数名 = "obj.method"
+                    String methodName = buildMemberChain(man);
+                    node = new FunctionCallNode(methodName, args, man.line(), man.column());
+                } else {
+                    throw new LiteExprException("不能对非函数表达式进行调用", node.line(), node.column());
+                }
             } else {
                 break;
             }
@@ -345,6 +350,24 @@ public class ExprParser {
     }
 
     // ===== Token 操作辅助方法 =====
+
+    /**
+     * 构建成员访问链的完整路径名（如 System.exit → "System.exit"）
+     */
+    private String buildMemberChain(MemberAccessNode man) {
+        StringBuilder sb = new StringBuilder();
+        buildMemberChain(man, sb);
+        return sb.toString();
+    }
+
+    private void buildMemberChain(ExprNode node, StringBuilder sb) {
+        if (node instanceof MemberAccessNode man) {
+            buildMemberChain(man.target(), sb);
+            sb.append('.').append(man.member());
+        } else if (node instanceof VariableNode vn) {
+            sb.append(vn.name());
+        }
+    }
 
     private boolean match(TokenType... types) {
         for (TokenType type : types) {

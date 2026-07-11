@@ -63,7 +63,7 @@ public class RuleTestReport implements Serializable {
      * 计算通过率
      */
     public static String calculatePassRate(int passed, int total) {
-        if (total == 0) return "100%";
+        if (total == 0) return "100.0%";
         double rate = (double) passed / total * 100;
         return String.format("%.1f%%", rate);
     }

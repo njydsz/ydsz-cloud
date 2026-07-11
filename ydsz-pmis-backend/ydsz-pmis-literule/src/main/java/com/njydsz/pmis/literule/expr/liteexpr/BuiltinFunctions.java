@@ -309,6 +309,55 @@ public final class BuiltinFunctions {
 
     // ===== 类型转换辅助方法 =====
 
+    /**
+     * 检查是否为整数类型（Integer/Long 或 scale=0 的 BigDecimal）
+     */
+    static boolean isIntegerLike(Object v) {
+        if (v instanceof Integer || v instanceof Long) return true;
+        if (v instanceof BigDecimal bd) return bd.scale() <= 0;
+        return false;
+    }
+
+    /**
+     * 智能加法：两个整数返回 Long，否则返回 BigDecimal
+     */
+    static Object smartAdd(Object left, Object right) {
+        if (isIntegerLike(left) && isIntegerLike(right)) {
+            return toLong(left) + toLong(right);
+        }
+        return toDecimal(left).add(toDecimal(right));
+    }
+
+    /**
+     * 智能减法：两个整数返回 Long，否则返回 BigDecimal
+     */
+    static Object smartSubtract(Object left, Object right) {
+        if (isIntegerLike(left) && isIntegerLike(right)) {
+            return toLong(left) - toLong(right);
+        }
+        return toDecimal(left).subtract(toDecimal(right));
+    }
+
+    /**
+     * 智能乘法：两个整数返回 Long，否则返回 BigDecimal
+     */
+    static Object smartMultiply(Object left, Object right) {
+        if (isIntegerLike(left) && isIntegerLike(right)) {
+            return toLong(left) * toLong(right);
+        }
+        return toDecimal(left).multiply(toDecimal(right));
+    }
+
+    /**
+     * 智能取模：两个整数返回 Long，否则返回 BigDecimal
+     */
+    static Object smartRemainder(Object left, Object right) {
+        if (isIntegerLike(left) && isIntegerLike(right)) {
+            return toLong(left) % toLong(right);
+        }
+        return toDecimal(left).remainder(toDecimal(right));
+    }
+
     static String str(Object v) {
         if (v == null) return "";
         return String.valueOf(v);

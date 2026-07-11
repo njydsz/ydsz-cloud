@@ -179,16 +179,16 @@ public class LiteExprCompiler {
                     if (left instanceof String || right instanceof String) {
                         yield BuiltinFunctions.str(left) + BuiltinFunctions.str(right);
                     }
-                    yield BuiltinFunctions.toDecimal(left).add(BuiltinFunctions.toDecimal(right));
+                    yield BuiltinFunctions.smartAdd(left, right);
                 }
-                case "-" -> BuiltinFunctions.toDecimal(left).subtract(BuiltinFunctions.toDecimal(right));
-                case "*" -> BuiltinFunctions.toDecimal(left).multiply(BuiltinFunctions.toDecimal(right));
+                case "-" -> BuiltinFunctions.smartSubtract(left, right);
+                case "*" -> BuiltinFunctions.smartMultiply(left, right);
                 case "/" -> {
                     var divisor = BuiltinFunctions.toDecimal(right);
                     if (divisor.signum() == 0) yield null;
                     yield BuiltinFunctions.toDecimal(left).divide(divisor, 10, java.math.RoundingMode.HALF_UP);
                 }
-                case "%" -> BuiltinFunctions.toDecimal(left).remainder(BuiltinFunctions.toDecimal(right));
+                case "%" -> BuiltinFunctions.smartRemainder(left, right);
                 case "==" -> left != null && left.equals(right);
                 case "!=" -> left == null || !left.equals(right);
                 case ">" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) > 0;
@@ -211,7 +211,9 @@ public class LiteExprCompiler {
         try {
             return switch (op) {
                 case "!", "not" -> !BuiltinFunctions.toBool(operand);
-                case "-" -> BuiltinFunctions.toDecimal(operand).negate();
+                case "-", "neg" -> BuiltinFunctions.isIntegerLike(operand)
+                        ? -BuiltinFunctions.toLong(operand)
+                        : BuiltinFunctions.toDecimal(operand).negate();
                 default -> null;
             };
         } catch (Exception e) {
