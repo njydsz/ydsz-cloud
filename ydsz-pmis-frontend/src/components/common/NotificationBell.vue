@@ -25,6 +25,7 @@ import {
   markAllRead,
 } from '@/api/notification'
 import { useWebSocket } from '@/composables/useWebSocket'
+import { onKeyActivate } from '@/composables/useKeyboardA11y'
 import type { NotificationVO } from '@/api/notification/types'
 
 const { t } = useI18n()
@@ -235,7 +236,14 @@ onUnmounted(() => {
       </el-scrollbar>
 
       <!-- 底部：查看全部入口（批次 30-4） -->
-      <div class="notification-footer" @click="handleViewAll">
+      <div
+        class="notification-footer"
+        role="button"
+        tabindex="0"
+        aria-label="查看全部通知"
+        @click="handleViewAll"
+        @keydown="onKeyActivate(handleViewAll)"
+      >
         <span>{{ t('notification.viewAll') }}</span>
         <el-icon :size="12"><ArrowRight /></el-icon>
       </div>

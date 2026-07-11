@@ -18,6 +18,7 @@ import { getCaptchaApi } from '@/api/user'
 import { verify2fa, verifyBackupCode } from '@/api/user/two-factor'
 import { handleError, showSuccess } from '@/utils/error'
 import { useResponsive } from '@/composables/useResponsive'
+import { onKeyActivate } from '@/composables/useKeyboardA11y'
 
 const router = useRouter()
 const route = useRoute()
@@ -260,7 +261,15 @@ onMounted(() => {
             <el-form-item prop="captchaCode">
               <div class="captcha-row">
                 <el-input v-model="form.captchaCode" :placeholder="t('login.captchaPlaceholder')" :prefix-icon="'Picture'" />
-                <div class="captcha-img" :class="{ loading: captchaLoading }" @click="refreshCaptcha">
+                <div
+                  class="captcha-img"
+                  :class="{ loading: captchaLoading }"
+                  role="button"
+                  tabindex="0"
+                  aria-label="点击刷新验证码"
+                  @click="refreshCaptcha"
+                  @keydown="onKeyActivate(refreshCaptcha)"
+                >
                   <img v-if="captchaImage" :src="captchaImage" alt="captcha" loading="lazy" />
                   <span v-else class="captcha-placeholder">{{ captchaLoading ? t('login.captchaLoading') : t('login.captchaClickToLoad') }}</span>
                 </div>

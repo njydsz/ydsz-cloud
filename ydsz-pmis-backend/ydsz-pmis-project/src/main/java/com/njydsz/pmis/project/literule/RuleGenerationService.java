@@ -10,6 +10,7 @@ import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
 import com.njydsz.pmis.literule.expr.ExpressionValidationService;
+import com.njydsz.pmis.literule.spi.RuleGenerationProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,13 +33,15 @@ import java.util.Map;
  *   <li>changeDesc 中追加 {@code [AI 生成]} / {@code [AI 降级]} 来源标记</li>
  * </ul>
  *
+ * <p>实现 {@link RuleGenerationProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class RuleGenerationService {
+public class RuleGenerationService implements RuleGenerationProvider {
 
     private final AgentClient agentClient;
     private final RuleAdminService ruleAdminService;

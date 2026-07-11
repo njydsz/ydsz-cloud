@@ -1,10 +1,11 @@
 package com.njydsz.pmis.project.service.ruleengine;
 
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardDistributionVO;
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardOverviewVO;
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardRealtimeVO;
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardTopRuleVO;
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardTrendVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardDistributionVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardOverviewVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardRealtimeVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardTopRuleVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardTrendVO;
+import com.njydsz.pmis.literule.spi.DashboardDataProvider;
 
 import java.util.List;
 
@@ -19,10 +20,13 @@ import java.util.List;
  *   <li>{@code RuleEngine#getStats()} 实时指标（当前 QPS、注册规则数）</li>
  * </ul>
  *
+ * <p>继承 {@link DashboardDataProvider} 作为 literule 模块的 SPI 实现，
+ * 供 {@code RuleDashboardController} 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.6.0
  */
-public interface RuleEngineDashboardService {
+public interface RuleEngineDashboardService extends DashboardDataProvider {
 
     /**
      * 概览指标（首屏卡片）

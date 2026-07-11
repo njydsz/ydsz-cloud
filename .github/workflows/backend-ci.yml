@@ -123,6 +123,30 @@ jobs:
           retention-days: 7
 
   # ============================================================
+  # Schema 漂移检测（无 Flyway 方案：pg_dump diff）
+  # ============================================================
+  schema-drift-check:
+    name: Schema Drift Check
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Schema Drift Detection (pg_dump diff)
+        working-directory: .
+        run: |
+          chmod +x deploy/scripts/schema-drift-check.sh
+          bash deploy/scripts/schema-drift-check.sh
+
+      - name: Upload Drift Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-drift-report
+          path: deploy/sql/.schema-drift.diff
+          retention-days: 14
+
+  # ============================================================
   # 质量门禁（SonarQube + Checkstyle）
   # ============================================================
   quality:
@@ -197,3 +221,33 @@ jobs:
           name: security-report
           path: ydsz-pmis-backend/target/dependency-check-report/
           retention-days: 7
+
+  # ============================================================
+  # 性能基线测试（k6，仅 PR 到 main 时触发）
+  # ============================================================
+  performance-baseline:
+    name: Performance Baseline (k6)
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run k6 Performance Test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: deploy/perf/k6-baseline-test.js
+        env:
+          K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+          BASE_URL: ${{ secrets.PERF_TARGET_URL || 'http://localhost:8080' }}
+
+      - name: Upload Performance Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: |
+            deploy/perf/*.json
+            deploy/perf/*.html
+          retention-days: 30
+

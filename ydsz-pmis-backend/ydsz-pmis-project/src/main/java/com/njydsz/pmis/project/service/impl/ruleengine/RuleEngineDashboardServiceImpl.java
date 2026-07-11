@@ -2,11 +2,11 @@ package com.njydsz.pmis.project.service.impl.ruleengine;
 
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardDistributionVO;
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardOverviewVO;
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardRealtimeVO;
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardTopRuleVO;
-import com.njydsz.pmis.project.dto.ruleengine.RuleDashboardTrendVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardDistributionVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardOverviewVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardRealtimeVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardTopRuleVO;
+import com.njydsz.pmis.literule.api.dto.RuleDashboardTrendVO;
 import com.njydsz.pmis.literule.entity.RuleDefinitionDO;
 import com.njydsz.pmis.literule.mapper.RuleDefinitionMapper;
 import com.njydsz.pmis.literule.mapper.RuleExecutionTraceMapper;

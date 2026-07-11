@@ -6,6 +6,7 @@ import com.njydsz.pmis.literule.mapper.RuleTemplateMapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.config.RuleAdminService;
+import com.njydsz.pmis.literule.spi.RuleTemplateProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,13 +19,15 @@ import java.util.List;
  * <p>提供规则模板的查询与一键导入功能。
  * 导入时从模板创建 {@link RuleDefinition}，并通过 {@link RuleAdminService} 保存为正式规则。
  *
+ * <p>实现 {@link RuleTemplateProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RuleTemplateService {
+public class RuleTemplateService implements RuleTemplateProvider {
 
     private final RuleTemplateMapper ruleTemplateMapper;
     private final RuleAdminService ruleAdminService;

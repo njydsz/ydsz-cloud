@@ -1714,21 +1714,13 @@ COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级（1-100�
 -- ============================ [050] add pmis flow notify outbox ============================
 
 -- ============================================================
--- V1.0.0_050  P2-1 可靠消息投递 — 工作流通知外发箱（pmis_flow_notify_outbox）
+-- [DEPRECATED] V1.0.0_050  P2-1 可靠消息投递 — 工作流通知外发箱（pmis_flow_notify_outbox）
 -- ============================================================
--- 说明：本地消息表（Outbox Pattern），保证业务事务与消息投递的最终一致性。
---   工作流关键事件（任务创建/通过/驳回/转办/委派/催办/超时/实例终止等）
---   在主事务内写入本表（同表同事务原子性），事务提交后由扫描任务异步投递
---   到 NotificationClient / NotificationPushClient / MessageFeignClient。
---
--- 工作流：
---   1. 主事务内：INSERT outbox (status=PENDING)
---   2. 事务提交后：@TransactionalEventListener(AFTER_COMMIT) 触发，但实际投递由扫描任务做
---   3. 扫描任务（@Scheduled 30s）：查 status=PENDING AND next_retry_at <= NOW()
---      → 调 Feign 投递 → 成功标 SENT，失败 retry_count++，超过阈值标 DEAD
---   4. DEAD 行由管理员人工重投（后台入口）
---
--- 状态机：PENDING → SENT（成功）/ DEAD（超过最大重试次数）
+-- 说明：工作流通知已统一迁移到 ydsz-pmis-message 模块（pmis_msg_* 表）。
+--   本表为历史遗留设计，无 Java 实现（无 Mapper/DO/Service），不应再使用。
+--   工作流通知请通过 MessageServiceClient (common/feign) 调用 message 服务。
+-- P4 架构优化：统一通知模板，删除 workflow 废弃通知表。
+-- 保留此 DDL 仅作参考，新部署不执行。实际使用请删除本段。
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
@@ -2206,7 +2198,9 @@ COMMENT ON COLUMN pmis_flow_auto_trigger.updated_at IS '更新时间';
 COMMENT ON COLUMN pmis_flow_auto_trigger.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
--- pmis_flow_notify_channel -- P3-3: notification channel config
+-- [DEPRECATED] pmis_flow_notify_channel -- P3-3: notification channel config
+-- 工作流通知已统一迁移到 ydsz-pmis-message 模块（pmis_msg_* 表），本表无 Java 实现，不应再使用。
+-- 保留此 DDL 仅作参考，新部署不执行。实际使用请删除本段。
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_channel (
     id                VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
@@ -2473,10 +2467,12 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_task_comment_trace
 -- ----------------------------------------------------------------------------
 
 -- ====================================================================
--- ============================ [067] P1-2 工作流通知模板表 ============================
+-- ============================ [DEPRECATED] [067] P1-2 工作流通知模板表 ============================
 -- ====================================================================
 -- GAP-38: 通知内容模板化管理，替代硬编码
 -- 支持 ${flowName}/${nodeName}/${assigneeName} 等变量占位符
+-- [DEPRECATED] 工作流通知已统一迁移到 ydsz-pmis-message 模块（pmis_msg_* 表），
+--   本表无 Java 实现，通知模板请使用 pmis_msg_template。保留此 DDL 仅作参考，新部署不执行。
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_template (
@@ -2641,11 +2637,13 @@ CREATE INDEX IF NOT EXISTS idx_pfws_trace
     WHERE provider_trace_id IS NOT NULL;
 
 -- ====================================================================
--- ====================== [067C] P1-7 工作流通知偏好表 ======================
+-- ====================== [DEPRECATED] [067C] P1-7 工作流通知偏好表 ======================
 -- ====================================================================
 -- P1-7: 免打扰时段 / 通知聚合 — 用户可配置 quietHours（免打扰时段）和 digestMode（聚合模式）
 -- 免打扰时段内（支持跨午夜，如 22:00→08:00）+ digestMode=1 时，站内推送延迟到时段结束后投递
 -- 每个用户在租户内至多一条偏好记录（uk_pfnp_tenant_user）
+-- [DEPRECATED] 工作流通知已统一迁移到 ydsz-pmis-message 模块（pmis_msg_* 表），
+--   本表无 Java 实现，通知偏好请使用 pmis_msg_preference。保留此 DDL 仅作参考，新部署不执行。
 
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_preference (
     id                  VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),

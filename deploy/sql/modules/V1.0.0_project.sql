@@ -5,6 +5,11 @@
 -- 本脚本 DDL 对应后端 project 服务 (ydsz-pmis-project) 的 Mapper / DO,
 --   物理 Mapper 实际所在模块即表归属。跨服务引用禁止直连,统一走
 --   Feign + NameAssembler(在 CommonAutoConfiguration 注册)。
+--
+-- [P4 架构优化提示] 跨模块冗余字段：pmis_cost_allocation.employee_name、
+--   pmis_cost_purchase.applicant_name / approver_name 等 *_name 字段为历史
+--   冗余存储，原则上应通过 NameAssembler 实时解析，禁止在写入时同步冗余。
+--   现有数据保留（兼容历史查询），新写入由 Java 端 NameAssembler 自动注入。
 -- --------------------------------------------------------------------
 
 -- ====================================================================

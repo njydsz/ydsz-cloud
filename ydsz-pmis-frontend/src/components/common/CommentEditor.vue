@@ -24,6 +24,7 @@ import {
   View,
 } from '@element-plus/icons-vue'
 import { UserPicker } from '@/components/common'
+import { onKeyActivate } from '@/composables/useKeyboardA11y'
 
 const { t } = useI18n()
 
@@ -479,7 +480,14 @@ defineExpose({
           :key="att.uid"
           class="attachment-item"
         >
-          <div class="attachment-thumb" @click="previewAttachment(att)">
+          <div
+            class="attachment-thumb"
+            role="button"
+            tabindex="0"
+            :aria-label="`预览附件 ${att.name}`"
+            @click="previewAttachment(att)"
+            @keydown="onKeyActivate(() => previewAttachment(att))"
+          >
             <img v-if="att.type?.startsWith('image/')" :src="att.url" :alt="att.name" loading="lazy" />
             <el-icon v-else><Picture /></el-icon>
           </div>

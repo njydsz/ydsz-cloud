@@ -1,4 +1,4 @@
-﻿<!--
+﻿﻿<!--
   @file 首页仪表盘
   @description 系统首页仪表盘，基于 Cockpit 总览 API 与 ECharts 可视化展示活跃项目、本月合同/收入/毛利、EVM 健康度分布、近 6 月趋势与预警 TOP 5，对接 @/api/report/cockpit 与 @/api/alert 模块。
   @module views/dashboard
@@ -29,6 +29,7 @@ import { isHandledError } from '@/utils/error'
 import SkeletonCard from '@/components/common/SkeletonCard.vue'
 import SkeletonTable from '@/components/common/SkeletonTable.vue'
 import { useDashboardLayout, type WidgetConfig } from '@/composables/useDashboardLayout'
+import { onKeyActivate } from '@/composables/useKeyboardA11y'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -560,7 +561,15 @@ onMounted(async () => {
       <el-col :xs="24" :sm="12" :md="8">
         <el-card shadow="never">
           <div v-if="kpiLoading" class="chart-skeleton"><SkeletonTable :rows="6" /></div>
-          <div v-else-if="kpiError" class="chart-error" @click="loadOverview">
+          <div
+            v-else-if="kpiError"
+            class="chart-error"
+            role="button"
+            tabindex="0"
+            aria-label="加载失败，点击重试"
+            @click="loadOverview"
+            @keydown="onKeyActivate(loadOverview)"
+          >
             <el-icon :size="32"><WarningFilled /></el-icon>
             <p>{{ t('dashboard.messages.loadFailed') }}</p>
             <el-button text type="primary" @click="loadOverview">{{ t('common.retry') }}</el-button>
@@ -571,7 +580,15 @@ onMounted(async () => {
       <el-col :xs="24" :sm="12" :md="10">
         <el-card shadow="never">
           <div v-if="trendLoading" class="chart-skeleton"><SkeletonTable :rows="6" /></div>
-          <div v-else-if="trendError" class="chart-error" @click="loadTrendData">
+          <div
+            v-else-if="trendError"
+            class="chart-error"
+            role="button"
+            tabindex="0"
+            aria-label="趋势加载失败，点击重试"
+            @click="loadTrendData"
+            @keydown="onKeyActivate(loadTrendData)"
+          >
             <el-icon :size="32"><WarningFilled /></el-icon>
             <p>{{ t('dashboard.messages.trendLoadFailed') }}</p>
             <el-button text type="primary" @click="loadTrendData">{{ t('common.retry') }}</el-button>
@@ -617,7 +634,15 @@ onMounted(async () => {
       <el-col :xs="24" :sm="12" :md="10">
         <el-card shadow="never">
           <div v-if="kpiLoading" class="chart-skeleton"><SkeletonTable :rows="6" /></div>
-          <div v-else-if="kpiError" class="chart-error" @click="loadOverview">
+          <div
+            v-else-if="kpiError"
+            class="chart-error"
+            role="button"
+            tabindex="0"
+            aria-label="加载失败，点击重试"
+            @click="loadOverview"
+            @keydown="onKeyActivate(loadOverview)"
+          >
             <el-icon :size="32"><WarningFilled /></el-icon>
             <p>{{ t('dashboard.messages.loadFailed') }}</p>
             <el-button text type="primary" @click="loadOverview">{{ t('common.retry') }}</el-button>
@@ -628,7 +653,15 @@ onMounted(async () => {
       <el-col :xs="24" :sm="12" :md="14">
         <el-card shadow="never">
           <div v-if="alertLoading" class="chart-skeleton"><SkeletonTable :rows="6" /></div>
-          <div v-else-if="alertError" class="chart-error" @click="loadAlertTopN">
+          <div
+            v-else-if="alertError"
+            class="chart-error"
+            role="button"
+            tabindex="0"
+            aria-label="预警加载失败，点击重试"
+            @click="loadAlertTopN"
+            @keydown="onKeyActivate(loadAlertTopN)"
+          >
             <el-icon :size="32"><WarningFilled /></el-icon>
             <p>{{ t('dashboard.messages.alertLoadFailed') }}</p>
             <el-button text type="primary" @click="loadAlertTopN">{{ t('common.retry') }}</el-button>

@@ -1,0 +1,38 @@
+groups:
+  - name: pg-backup
+    rules:
+      - alert: PgBackupFailed
+        expr: pmis_pg_backup_status{job="pg-backup-exporter"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL 备份失败 ({{ $labels.instance }})"
+          description: "PG 备份任务连续失败超过 5 分钟，请检查 /var/log/pmis/backup.log"
+
+      - alert: PgWalArchiveLag
+        expr: time() - pmis_pg_wal_archive_last_success_timestamp > 900
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "WAL 归档延迟超过 15 分钟 ({{ $labels.instance }})"
+          description: "WAL 归档异常可能导致 RPO 超标，请立即检查"
+
+      - alert: PgBackupSizeAnomaly
+        expr: pmis_pg_backup_size_bytes / pmis_pg_backup_size_bytes offset 1d < 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "备份文件大小异常缩减 ({{ $labels.instance }})"
+          description: "今日备份较昨日缩小超过 20%，可能存在数据丢失"
+
+      - alert: PgBackupDiskUsage
+        expr: (1 - node_filesystem_avail_bytes{mountpoint="/data/backups"} / node_filesystem_size_bytes{mountpoint="/data/backups"}) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "备份磁盘使用率超过 80% ({{ $labels.instance }})"
+          description: "备份存储空间不足，请清理过期备份或扩容"

@@ -210,10 +210,18 @@ public final class RuleContext implements Serializable {
      * @since 1.5.2
      */
     public Map<String, Object> getExpressionCache() {
-        if (expressionCache == null) {
-            expressionCache = new ConcurrentHashMap<>();
+        // P0-4 修复：双重检查锁确保线程安全的懒初始化
+        // 多线程场景（如 ParallelRuleEvaluator）下可能并发调用此方法
+        Map<String, Object> cache = expressionCache;
+        if (cache == null) {
+            synchronized (this) {
+                cache = expressionCache;
+                if (cache == null) {
+                    expressionCache = cache = new ConcurrentHashMap<>();
+                }
+            }
         }
-        return expressionCache;
+        return cache;
     }
 
     /**

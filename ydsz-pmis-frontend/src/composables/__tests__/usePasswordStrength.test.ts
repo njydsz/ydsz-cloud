@@ -1,84 +1,102 @@
-/**
- * @file usePasswordStrength composable 单元测试
- * @description 测试密码强度检测逻辑
- * @module composables/__tests__/usePasswordStrength
- */
 import { describe, it, expect, vi } from 'vitest'
 import { ref } from 'vue'
-import { usePasswordStrength, calcPasswordStrength } from '../usePasswordStrength'
+import { calcPasswordStrength, usePasswordStrength } from '../usePasswordStrength'
 
-// Mock i18n
+// Mock i18n to avoid importing full locale setup
 vi.mock('@/locales', () => ({
   default: {
     global: {
-      t: (key: string) => key,
+      t: (key: string) => key, // Return the key as-is for testing
     },
   },
 }))
 
-describe('calcPasswordStrength', () => {
-  it('空密码强度为 0 (WEAKEST)', () => {
-    const result = calcPasswordStrength('')
-    expect(result.score).toBe(0)
-    expect(result.level).toBe('WEAKEST')
+describe('composables/usePasswordStrength', () => {
+  describe('calcPasswordStrength', () => {
+    it('should return score 0 for null', () => {
+      const result = calcPasswordStrength(null)
+      expect(result.score).toBe(0)
+      expect(result.level).toBe('WEAKEST')
+      expect(result.percent).toBe(10)
+    })
+
+    it('should return score 0 for empty string', () => {
+      const result = calcPasswordStrength('')
+      expect(result.score).toBe(0)
+    })
+
+    it('should return score 1 for 8-char lowercase only', () => {
+      const result = calcPasswordStrength('abcdefgh')
+      expect(result.score).toBe(1)
+    })
+
+    it('should return score 2 for 8-char mixed case', () => {
+      const result = calcPasswordStrength('Abcdefgh')
+      expect(result.score).toBe(2)
+    })
+
+    it('should return score 3 for 12-char mixed case + digits', () => {
+      const result = calcPasswordStrength('Abcdefghijkl1')
+      expect(result.score).toBe(3)
+    })
+
+    it('should return score 4 for 12-char mixed case + digits + special', () => {
+      const result = calcPasswordStrength('Abcdefghij1!')
+      expect(result.score).toBe(4)
+      expect(result.level).toBe('STRONGEST')
+      expect(result.percent).toBe(100)
+    })
+
+    it('should cap score at 4', () => {
+      const result = calcPasswordStrength('Abcdefghijklmnop123!@#')
+      expect(result.score).toBe(4)
+    })
+
+    it('should include rules array with 4 items', () => {
+      const result = calcPasswordStrength('Ab1!')
+      expect(result.rules).toHaveLength(4)
+      expect(result.rules[0].pass).toBe(true) // uppercase
+      expect(result.rules[1].pass).toBe(true) // lowercase
+      expect(result.rules[2].pass).toBe(true) // digit
+      expect(result.rules[3].pass).toBe(true) // special
+    })
+
+    it('should include suggestions for weak passwords', () => {
+      const result = calcPasswordStrength('a')
+      expect(result.suggestions.length).toBeGreaterThan(0)
+    })
+
+    it('should have empty suggestions for strong passwords', () => {
+      const result = calcPasswordStrength('Abcdefghij1!')
+      expect(result.suggestions).toHaveLength(0)
+    })
+
+    it('should return correct color for each level', () => {
+      expect(calcPasswordStrength('').color).toBe('#f56c6c')     // WEAKEST
+      expect(calcPasswordStrength('abcdefgh').color).toBe('#e6a23c') // WEAK
+      expect(calcPasswordStrength('Abcdefgh').color).toBe('#f0c40c') // MEDIUM
+      expect(calcPasswordStrength('Abcdefghijkl1').color).toBe('#409eff') // STRONG
+      expect(calcPasswordStrength('Abcdefghij1!').color).toBe('#67c23a') // STRONGEST
+    })
   })
 
-  it('短密码强度为弱', () => {
-    const result = calcPasswordStrength('abc')
-    expect(result.score).toBeLessThanOrEqual(1)
-  })
+  describe('usePasswordStrength', () => {
+    it('should return reactive result', () => {
+      const password = ref<string | null>(null)
+      const { result } = usePasswordStrength(password)
+      expect(result.value.score).toBe(0)
 
-  it('包含大小写+数字+特殊字符的长密码为最强', () => {
-    const result = calcPasswordStrength('Abc@1234xyz!')
-    expect(result.score).toBe(4)
-    expect(result.level).toBe('STRONGEST')
-    expect(result.percent).toBe(100)
-  })
+      password.value = 'Abcdefghij1!'
+      expect(result.value.score).toBe(4)
+    })
 
-  it('中等复杂度密码为中或良', () => {
-    const result = calcPasswordStrength('abcdef12345')
-    expect(result.score).toBeGreaterThanOrEqual(2)
-    expect(result.score).toBeLessThanOrEqual(3)
-  })
+    it('should update when password changes', () => {
+      const password = ref('weak')
+      const { result } = usePasswordStrength(password)
+      expect(result.value.score).toBe(0)
 
-  it('仅大小写字母（长度>=8）得分为 2', () => {
-    const result = calcPasswordStrength('Abcdefghij')
-    expect(result.score).toBe(2) // length>=8 + upper&lower
-  })
-
-  it('仅数字（长度>=12）得分为 3', () => {
-    const result = calcPasswordStrength('123456789012')
-    expect(result.score).toBe(3) // length>=8 + length>=12 + digit
-  })
-
-  it('suggestions 包含未通过规则的提示', () => {
-    const result = calcPasswordStrength('abc')
-    expect(result.suggestions.length).toBeGreaterThan(0)
-  })
-
-  it('rules 数组包含 4 条规则检查结果', () => {
-    const result = calcPasswordStrength('Test123!')
-    expect(result.rules).toHaveLength(4)
-    expect(result.rules[0].pass).toBe(true) // uppercase
-    expect(result.rules[1].pass).toBe(true) // lowercase
-    expect(result.rules[2].pass).toBe(true) // digit
-    expect(result.rules[3].pass).toBe(true) // special
-  })
-
-  it('null/undefined 密码视为空', () => {
-    expect(calcPasswordStrength(null).score).toBe(0)
-    expect(calcPasswordStrength(undefined).score).toBe(0)
-  })
-})
-
-describe('usePasswordStrength (composable)', () => {
-  it('返回响应式结果', () => {
-    const password = ref('')
-    const { result } = usePasswordStrength(password)
-    expect(result.value.score).toBe(0)
-
-    password.value = 'Abc@1234xyz!'
-    expect(result.value.score).toBe(4)
-    expect(result.value.level).toBe('STRONGEST')
+      password.value = 'Abcdefghij1!'
+      expect(result.value.score).toBe(4)
+    })
   })
 })

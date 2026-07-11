@@ -25,8 +25,10 @@ import {
 } from '@/api/execution/time-entry'
 import type { TimeEntryVO, TimeEntryCreateDTO } from '@/api/execution/time-entry/types'
 import { PC } from '@/constants/permissionCodes'
+import { useUserStore } from '@/store/modules/user'
 
 const { t } = useI18n()
+const userStore = useUserStore()
 
 // 列表查询状态
 const loading = ref(false)
@@ -92,6 +94,7 @@ function handleReset() {
 
 // 弹窗 - 填写工时
 const dialogVisible = ref(false)
+const submitting = ref(false)
 const formRef = ref<FormInstance>()
 const form = reactive<Partial<TimeEntryCreateDTO>>({
   entryDate: new Date().toISOString().slice(0, 10),
@@ -133,17 +136,22 @@ function openCreate() {
 /** 提交新建表单：校验通过后调用创建接口（TimeEntryValidator 校验），状态为待审批 */
 async function submitForm() {
   await formRef.value?.validate()
-  await createTimeEntry(form as TimeEntryCreateDTO)
-  ElMessage.success(t('execution.timeEntry.messages.submitSuccess'))
-  dialogVisible.value = false
-  fetchList()
+  submitting.value = true
+  try {
+    await createTimeEntry(form as TimeEntryCreateDTO)
+    ElMessage.success(t('execution.timeEntry.messages.submitSuccess'))
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    submitting.value = false
+  }
 }
 
 /** 审批通过：二次确认后推进状态，通过后自动触发成本分摊 */
 async function handleApprove(row: TimeEntryVO) {
   try {
     await ElMessageBox.confirm(t('execution.timeEntry.messages.confirmApprove'), t('common.confirm'), { type: 'warning' })
-    await approveTimeEntry({ id: row.id, approverId: 1, approverName: t('execution.timeEntry.systemApprover') })
+    await approveTimeEntry({ id: row.id, approverId: Number(userStore.userInfo?.id) || 0, approverName: userStore.realName || t('execution.timeEntry.systemApprover') })
     ElMessage.success(t('execution.timeEntry.messages.approveSuccess'))
     fetchList()
   } catch { /* 取消 */ }
@@ -153,7 +161,7 @@ async function handleApprove(row: TimeEntryVO) {
 async function handleReject(row: TimeEntryVO) {
   try {
     const { value } = await ElMessageBox.prompt(t('execution.timeEntry.messages.rejectPrompt'), t('execution.timeEntry.messages.rejectTitle'), { inputValidator: (v) => !!v || t('execution.timeEntry.messages.rejectReasonRequired') })
-    await rejectTimeEntry({ id: row.id, approverId: 1, approverName: t('execution.timeEntry.systemApprover'), reason: value })
+    await rejectTimeEntry({ id: row.id, approverId: Number(userStore.userInfo?.id) || 0, approverName: userStore.realName || t('execution.timeEntry.systemApprover'), reason: value })
     ElMessage.success(t('execution.timeEntry.messages.rejectSuccess'))
     fetchList()
   } catch { /* 取消 */ }
@@ -279,7 +287,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ $t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>
