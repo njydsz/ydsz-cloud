@@ -217,16 +217,6 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-            <!-- P3-16: Spring Cloud Contract 插件 — 自动生成契约测试代码 -->
-            <plugin>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <baseClassForTests>com.njydsz.pmis.common.contract.ContractTestBase</baseClassForTests>
-                    <testFramework>JUNIT5</testFramework>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 </project>
