@@ -3,7 +3,7 @@ package com.njydsz.pmis.cronjob.core.alert;
 /**
  * 告警发送异常（P5 告警 + 监控）。
  *
- * <p>由 {@link AlertNotifier} 实现类在发送失败时抛出，由 {@link AlertDispatcher}
+ * <p>由 {@link AlertDispatcher} 实现类在发送失败时抛出，由 {@link AlertDispatcher}
  * 捕获并记录到 {@code pmis_job_alert_log.error_message}。
  *
  * @author ydsz-pmis-team

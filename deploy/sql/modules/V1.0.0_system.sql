@@ -1664,7 +1664,6 @@ COMMENT ON INDEX idx_pmis_flow_template_trace IS 'P1-7: provider_trace_id 反查
 
 COMMENT ON INDEX idx_pmis_flow_auto_trigger_trace IS 'P1-7: provider_trace_id 反查';
 
-COMMENT ON INDEX idx_pmis_flow_notify_channel_trace IS 'P1-7: provider_trace_id 反查';
 
 COMMENT ON INDEX idx_pmis_flow_task_comment_trace IS 'P1-7: provider_trace_id 反查';
 

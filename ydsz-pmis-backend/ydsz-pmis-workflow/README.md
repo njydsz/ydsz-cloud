@@ -84,15 +84,11 @@
 | | `pmis_flow_audit_log_default` | 审计默认分区 |
 | **事件/触发** | `pmis_flow_event_subscription` | 事件订阅（开始/结束/节点进出） |
 | | `pmis_flow_auto_trigger` | 自动触发器（业务事件→发起流程） |
-| **通知** | `pmis_flow_notify_channel` | 通知渠道（飞书/钉钉/邮件） |
-| | `pmis_flow_notify_outbox` | 通知发件箱（异步发送） |
-| | `pmis_flow_notify_preference` | 通知偏好 |
-| | `pmis_flow_notify_template` | 通知模板 |
+| **通知** | _(已收敛至 ydsz-pmis-message 模块)_ | 通知渠道/模板/外发箱/偏好均已移除 |
 | **第三方** | `pmis_flow_third_party_account` | 第三方账号（企业微信/钉钉/飞书） |
 | | `pmis_flow_third_party_log` | 第三方交互日志 |
 | **AI 增强** | `pmis_flow_ai_feedback` | AI 辅助审批反馈（用于学习） |
 | **用户** | `pmis_flow_user` | 流程用户（含离职/兼职） |
-| **Webhook** | `pmis_flow_webhook_subscription` | Webhook 订阅（流程事件回调） |
 
 > **索引关键点**：
 > - `pmis_flow_definition(template_key, version)` 唯一（最新版查找）

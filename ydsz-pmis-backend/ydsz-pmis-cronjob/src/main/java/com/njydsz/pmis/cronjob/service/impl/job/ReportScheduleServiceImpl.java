@@ -2,7 +2,9 @@ package com.njydsz.pmis.cronjob.service.impl.job;
 
 import com.alibaba.excel.EasyExcel;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.feign.MessageFeignClient;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.feign.MessageServiceClient;
 import com.njydsz.pmis.cronjob.config.MinioConfig;
 import com.njydsz.pmis.cronjob.service.job.ReportScheduleService;
 import io.minio.MinioClient;
@@ -53,7 +55,7 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
     /** MinIO 配置（bucket 名称等） */
     private final MinioConfig minioConfig;
     /** P1-8: 报表分发邮件通知（Feign 调用 message 模块） */
-    private final MessageFeignClient messageFeignClient;
+    private final MessageServiceClient messageServiceClient;
 
     @Override
     public void executeDailyReports() {
@@ -303,14 +305,14 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
             return;
         }
         try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("channel", "EMAIL");
-            payload.put("receiver", recipients);
-            payload.put("subject", "【PMIS报表】" + (reportType == null ? "" : reportType) + " 报表已生成");
-            payload.put("content", "您好，您订阅的 " + reportType + " 报表已生成，下载链接：" + fileKey);
-            payload.put("bizType", "REPORT");
-            payload.put("bizId", String.valueOf(subId));
-            Result<Map<String, Object>> result = messageFeignClient.send(payload);
+            MessageRequest request = new MessageRequest();
+            request.setChannel("EMAIL");
+            request.setReceiver(recipients);
+            request.setSubject("【PMIS报表】" + (reportType == null ? "" : reportType) + " 报表已生成");
+            request.setContent("您好，您订阅的 " + reportType + " 报表已生成，下载链接：" + fileKey);
+            request.setBizType("REPORT");
+            request.setBizId(String.valueOf(subId));
+            Result<MessageResult> result = messageServiceClient.send(request);
             if (result != null && result.isSuccess()) {
                 log.info("[ReportSchedule] 报表邮件通知发送成功: subId={}, recipients={}", subId, recipients);
             } else {

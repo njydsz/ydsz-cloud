@@ -4450,7 +4450,7 @@ COMMENT ON COLUMN pmis_rule_ab_policy.min_sample_size IS '最小评估样本数'
 
 COMMENT ON COLUMN pmis_rule_ab_policy.check_window_minutes IS '评估窗口 (分钟)';
 
-COMMENT ON COLUMN pmis_rule_ab_policy.notify_channels IS '通知通道 (逗号分隔, 引用 pmis_flow_notify_channel.id)';
+COMMENT ON COLUMN pmis_rule_ab_policy.notify_channels IS '通知通道 (逗号分隔, 引用 消息中心通道配置)';
 
 COMMENT ON COLUMN pmis_rule_ab_policy.description IS '策略描述';
 

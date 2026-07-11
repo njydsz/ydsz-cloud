@@ -257,7 +257,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
 
     /**
-     * WEBHOOK 通道：通过 RestTemplate POST 发送到 extra.webhookUrl 指定的机器人地址。
+     * WEBHOOK 通道：通过 {@link MessageServiceClient} 委托消息中心发送到 extra.webhookUrl 指定的机器人地址。
      * webhookUrl 未配置时直接跳过（不算异常）。
      */
     private void sendWebhook(String userId, String title, String content, Map<String, Object> extra) {
@@ -266,22 +266,28 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             log.debug("[FlowNotify][WEBHOOK] 未配置 webhookUrl，跳过: userId={} title={}", userId, title);
             return;
         }
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("userId", userId);
-        payload.put("title", title);
-        payload.put("content", content);
-        payload.put("channel", "WEBHOOK");
+        MessageRequest request = new MessageRequest();
+        request.setChannel("WEBHOOK");
+        request.setReceiver(userId);
+        request.setSubject(title);
+        request.setContent(content);
+        request.setBizType(extra == null ? null : asString(extra.get("bizType")));
+        request.setBizId(extra == null ? null : asString(extra.get("bizId")));
+        Map<String, Object> params = new HashMap<>();
         if (extra != null) {
-            payload.putAll(extra);
+            params.putAll(extra);
         }
+        params.put("webhookUrl", webhookUrl);
+        request.setParams(params);
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> request = new HttpEntity<>(JSON.toJSONString(payload), headers);
-            restTemplate.postForEntity(webhookUrl, request, String.class);
+            Result<MessageResult> result = messageServiceClient.send(request);
+            if (result != null && result.getData() != null && !result.getData().isSuccess()) {
+                log.warn("[FlowNotify][WEBHOOK] 发送失败: userId={} url={} err={}",
+                        userId, webhookUrl, result.getData().getErrorMessage());
+            }
         } catch (Exception e) {
-            log.warn("[FlowNotify][WEBHOOK] 发送失败: url={} userId={} err={}",
-                    webhookUrl, userId, e.getMessage());
+            log.warn("[FlowNotify][WEBHOOK] 发送异常: userId={} url={} err={}",
+                    userId, webhookUrl, e.getMessage());
         }
         log.debug("[FlowNotify][WEBHOOK] userId={} title={} url={}", userId, title, webhookUrl);
     }
