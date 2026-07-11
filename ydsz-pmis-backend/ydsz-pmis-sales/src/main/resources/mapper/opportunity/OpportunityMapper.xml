@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.pmis.sales.mapper.opportunity.OpportunityMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.OpportunityDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.sales.entity.OpportunityDO">
         <id column="id" property="id"/>
         <result column="opportunity_code" property="opportunityCode"/>
         <result column="opportunity_name" property="opportunityName"/>

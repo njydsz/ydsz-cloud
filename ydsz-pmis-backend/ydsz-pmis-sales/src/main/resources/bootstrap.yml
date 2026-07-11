@@ -4,7 +4,7 @@
 #  端口：9008
 #  职责：售前售后全生命周期
 #    - 商机 / 合同 / 立项 / 结项 / 售后
-#  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、Seata
+#  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、MinIO、Seata
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
 # =====================================================================
 

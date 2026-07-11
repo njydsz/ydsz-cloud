@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.pmis.sales.mapper.aftersales.SatisfactionMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.SatisfactionDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.sales.entity.SatisfactionDO">
         <id column="id" property="id"/>
         <result column="survey_code" property="surveyCode"/>
         <result column="initiation_id" property="initiationId"/>

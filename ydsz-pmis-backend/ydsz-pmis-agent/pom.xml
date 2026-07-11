@@ -93,7 +93,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
-        <!-- P1-3: Resilience4j 熔断器（替代自研 LlmCircuitBreaker） -->
+        <!-- P1-3/P2-14: Resilience4j 熔断器（LlmCircuitBreaker 内部委托 Resilience4j 实现） -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-circuitbreaker</artifactId>

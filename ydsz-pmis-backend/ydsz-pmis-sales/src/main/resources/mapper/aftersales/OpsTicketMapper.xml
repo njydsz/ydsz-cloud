@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.pmis.sales.mapper.aftersales.OpsTicketMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.OpsTicketDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.sales.entity.OpsTicketDO">
         <id column="id" property="id"/>
         <result column="ticket_code" property="ticketCode"/>
         <result column="initiation_id" property="initiationId"/>

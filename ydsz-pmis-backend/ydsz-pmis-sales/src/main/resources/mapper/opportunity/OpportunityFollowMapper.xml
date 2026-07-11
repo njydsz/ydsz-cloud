@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.pmis.sales.mapper.opportunity.OpportunityFollowMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.OpportunityFollowDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.sales.entity.OpportunityFollowDO">
         <id column="id" property="id"/>
         <result column="opportunity_id" property="opportunityId"/>
         <result column="follow_type" property="followType"/>

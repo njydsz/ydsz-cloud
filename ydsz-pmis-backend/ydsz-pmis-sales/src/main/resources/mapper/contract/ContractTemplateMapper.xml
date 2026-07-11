@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.pmis.sales.mapper.contract.ContractTemplateMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.ContractTemplateDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.sales.entity.ContractTemplateDO">
         <id column="id" property="id"/>
         <result column="template_code" property="templateCode"/>
         <result column="template_name" property="templateName"/>

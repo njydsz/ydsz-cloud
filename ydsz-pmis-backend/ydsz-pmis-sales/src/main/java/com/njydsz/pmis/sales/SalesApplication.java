@@ -1,5 +1,6 @@
 package com.njydsz.pmis.sales;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -18,6 +19,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @since 1.0.0
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.sales", "com.njydsz.pmis.common"})
+@MapperScan("com.njydsz.pmis.sales.mapper")
 @EnableDiscoveryClient
 @EnableFeignClients
 public class SalesApplication {

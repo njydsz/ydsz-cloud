@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.pmis.sales.mapper.initiation.InitiationMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.InitiationDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.sales.entity.InitiationDO">
         <id column="id" property="id"/>
         <result column="project_code" property="projectCode"/>
         <result column="project_name" property="projectName"/>
@@ -67,7 +67,7 @@
       排序: ts_rank 倒序 + id 升序保证稳定排序
       关键点: plainto_tsquery 防 SQL 注入;且仅在 keyword 非空时计算 tsquery
     -->
-    <select id="searchByFullText" resultType="com.njydsz.pmis.project.search.ProjectSearchVO">
+    <select id="searchByFullText" resultType="com.njydsz.pmis.sales.search.ProjectSearchVO">
         SELECT
             i.id              AS id,
             i.project_code    AS projectCode,
