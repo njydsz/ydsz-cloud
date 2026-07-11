@@ -2,7 +2,8 @@ package com.njydsz.pmis.workflow.listener;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.InitiationFeignClient;
-import com.njydsz.pmis.common.feign.NotificationPushClient;
+import com.njydsz.pmis.common.feign.NotificationClient;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import com.njydsz.pmis.workflow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.engine.FlowNotificationHelper;
 import com.njydsz.pmis.workflow.engine.FlowWorkflowEvent;
@@ -61,7 +62,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     /** P1-7: 立项状态联动 Feign 客户端（审批中 / 已批准 / 已驳回） */
     private final InitiationFeignClient initiationFeignClient;
     /** P1-7: 实时推送 Feign 客户端（IM 渠道待办通知） */
-    private final NotificationPushClient notificationPushClient;
+    private final NotificationClient notificationClient;
 
     @Override
     public void onInstanceStart(String instanceId, Map<String, Object> variables) {
@@ -419,7 +420,8 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
             payload.put("content", content);
             payload.put("taskId", taskId);
             payload.put("type", "WORKFLOW_TASK");
-            notificationPushClient.pushToUser(assigneeId, "NOTIFICATION", payload);
+            RealtimePushDTO pushDTO = new RealtimePushDTO(payload);
+            notificationClient.pushRealtime(assigneeId, "NOTIFICATION", pushDTO);
         } catch (Exception e) {
             log.warn("[FlowListener] IM 推送失败: assigneeId={} taskId={}: {}",
                     assigneeId, taskId, e.getMessage());

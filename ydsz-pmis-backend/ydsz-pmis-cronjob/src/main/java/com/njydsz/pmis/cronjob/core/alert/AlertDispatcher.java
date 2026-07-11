@@ -2,6 +2,10 @@ package com.njydsz.pmis.cronjob.core.alert;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
+import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.feign.MessageServiceClient;
 import com.njydsz.pmis.cronjob.entity.job.JobAlertLogDO;
 import com.njydsz.pmis.cronjob.entity.job.JobAlertRuleDO;
 import com.njydsz.pmis.cronjob.mapper.job.JobAlertLogMapper;
@@ -10,17 +14,17 @@ import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 告警派发器（P5 告警 + 监控）。
@@ -29,8 +33,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * <ol>
  *   <li><b>冷却去重</b>：通过 CAS 更新 {@code pmis_job_alert_rule.last_alert_at}，
  *       仅当上次告警时间早于冷却窗口起点时才更新成功（分布式环境下保证同一规则不重复告警）</li>
- *   <li><b>通道路由</b>：解析规则配置的 channels JSON，按通道查找对应的 {@link AlertNotifier} Bean</li>
- *   <li><b>多通道派发</b>：逐个通道调用 notifier，单个通道失败不影响其他通道（status=PARTIAL）</li>
+ *   <li><b>通道路由</b>：解析规则配置的 channels JSON，逐通道构建 MessageRequest</li>
+ *   <li><b>统一派发</b>：通过 MessageServiceClient Feign 委托到 message 模块，
+ *       由 message 模块路由到具体通道实现，单个通道失败不影响其他通道（status=PARTIAL）</li>
  *   <li><b>日志持久化</b>：将告警派发结果记录到 {@code pmis_job_alert_log}，便于审计与效果统计</li>
  * </ol>
  *
@@ -40,7 +45,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * <ul>
  *   <li>跳过冷却窗口检查（恢复通知不需要去重）</li>
  *   <li>持久化的日志 status 带 {@code _RECOVERY} 后缀（如 SUCCESS_RECOVERY）</li>
- *   <li>通知器可通过 {@link AlertContext#recovery()} 判断文案</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -53,15 +57,13 @@ public class AlertDispatcher {
 
     private final JobAlertRuleMapper jobAlertRuleMapper;
     private final JobAlertLogMapper jobAlertLogMapper;
-    private final ApplicationContext applicationContext;
+    private final MessageServiceClient messageServiceClient;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
-    /** AlertChannel → AlertNotifier 缓存（懒加载，避免启动顺序问题） */
-    private final Map<AlertChannel, AlertNotifier> notifierCache = new ConcurrentHashMap<>();
+    private static final DateTimeFormatter TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    /** 缓存是否已初始化（懒加载标记，避免每次都同步） */
-    private volatile boolean notifierCacheInitialized = false;
 
     /**
      * 监听告警事件，异步派发通知。
@@ -117,13 +119,7 @@ public class AlertDispatcher {
         List<String> errorMessages = new ArrayList<>();
         for (AlertChannel channel : channels) {
             try {
-                AlertNotifier notifier = getNotifier(channel);
-                if (notifier == null) {
-                    log.warn("[AlertDispatcher] 通道未注册 Notifier, 跳过: channel={}", channel);
-                    failedChannels.add(channel.name() + "(未注册)");
-                    continue;
-                }
-                notifier.notify(context, rule, receivers);
+                sendViaMessageCenter(channel, context, rule, receivers);
                 log.info("[AlertDispatcher] 通道派发成功: channel={} ruleId={} jobId={} recovery={}",
                         channel, rule.getId(), context.jobId(), recovery);
             } catch (AlertSendException e) {
@@ -228,38 +224,104 @@ public class AlertDispatcher {
     }
 
     /**
-     * 懒加载获取通道对应的通知器（首次调用时从 Spring 容器加载全部 AlertNotifier Bean）。
-     *
-     * @param channel 通道
-     * @return 通知器实例；未注册返回 null
+     * Dispatch alert via message module using Feign.
+     * <p>Builds MessageRequest and calls MessageServiceClient.send(),
+     * message module routes to specific channel implementation.
      */
-    private AlertNotifier getNotifier(AlertChannel channel) {
-        if (!notifierCacheInitialized) {
-            synchronized (this) {
-                if (!notifierCacheInitialized) {
-                    initNotifierCache();
-                    notifierCacheInitialized = true;
-                }
+    private void sendViaMessageCenter(AlertChannel channel, AlertContext context,
+                                          JobAlertRuleDO rule, List<String> receivers) throws AlertSendException {
+        String title = buildTitle(context, rule);
+        String content = buildContent(context, rule);
+        MessageRequest request = new MessageRequest();
+        request.setChannel(channel.name());
+        request.setSubject(title);
+        request.setContent(content);
+        request.setBizType("CRONJOB_ALERT");
+        request.setBizId(String.valueOf(rule.getId()));
+        request.setReceiver(receivers.isEmpty() ? null : String.join(",", receivers));
+        Map<String, Object> params = new HashMap<>();
+        params.put("ruleId", rule.getId());
+        params.put("ruleName", rule.getRuleName());
+        params.put("alertType", rule.getAlertType());
+        params.put("alertLevel", rule.getAlertLevel());
+        params.put("jobId", context.jobId());
+        params.put("jobKey", context.jobKey());
+        params.put("jobName", context.jobName());
+        params.put("triggerValue", context.triggerValue());
+        params.put("threshold", rule.getThreshold());
+        params.put("errorMessage", context.errorMessage());
+        params.put("traceId", context.traceId());
+        params.put("triggerLogId", context.triggerLogId());
+        params.put("tenantId", context.tenantId());
+        params.put("recovery", context.recovery());
+        params.put("receivers", receivers);
+        request.setParams(params);
+        try {
+            Result<MessageResult> result = messageServiceClient.send(request);
+            if (result == null || !result.isSuccess()) {
+                String reason = result != null && result.getMessage() != null
+                         ? result.getMessage() : "unknown";
+                throw new AlertSendException("message module returned failure: " + reason);
             }
+            MessageResult msgResult = result.getData();
+            if (msgResult != null && !msgResult.isSuccess()) {
+                throw new AlertSendException(
+                         msgResult.getErrorMessage() != null ? msgResult.getErrorMessage() : "send failed");
+            }
+        } catch (AlertSendException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AlertSendException("Feign call error: " + e.getMessage(), e);
         }
-        return notifierCache.get(channel);
+    }
+    private String buildTitle(AlertContext context, JobAlertRuleDO rule) {
+        String prefix = context.recovery() ? "[recovery] " : "";
+        return String.format("%s[%s] %s - %s",
+                prefix,
+                rule.getAlertLevel(),
+                rule.getAlertType(),
+                context.jobName() != null ? context.jobName()
+                        : (context.jobKey() != null ? context.jobKey() : "global"));
+    }
+    private String buildContent(AlertContext context, JobAlertRuleDO rule) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(context.recovery() ? "## Alert Recovery\n\n" : "## Alert Details\n\n");
+        sb.append("| Field | Value |\n|------|----|\n");
+        sb.append("| Rule | ").append(rule.getRuleName()).append(" |\n");
+        sb.append("| Type | ").append(rule.getAlertType()).append(" |\n");
+        sb.append("| Level | ").append(rule.getAlertLevel()).append(" |\n");
+        if (context.jobKey() != null) {
+            sb.append("| Job Key | ").append(context.jobKey()).append(" |\n");
+        }
+        if (context.jobName() != null) {
+            sb.append("| Job Name | ").append(context.jobName()).append(" |\n");
+        }
+        if (context.triggerValue() != null) {
+            sb.append("| Trigger Value | ").append(context.triggerValue()).append(" |\n");
+        }
+        if (rule.getThreshold() != null) {
+            sb.append("| Threshold | ").append(rule.getThreshold()).append(" |\n");
+        }
+        if (context.errorMessage() != null) {
+            sb.append("| Error | ").append(escapeMarkdown(context.errorMessage())).append(" |\n");
+        }
+        if (context.triggerLogId() != null) {
+            sb.append("| Log ID | ").append(context.triggerLogId()).append(" |\n");
+        }
+        if (context.traceId() != null) {
+            sb.append("| Trace ID | ").append(context.traceId()).append(" |\n");
+        }
+        sb.append("| Time | ").append(LocalDateTime.now().format(TIME_FORMATTER)).append(" |\n");
+        return sb.toString();
     }
 
-    /**
-     * 初始化通知器缓存：从 Spring 容器加载全部 AlertNotifier Bean，按 supportedChannel 分组。
-     */
-    private void initNotifierCache() {
-        Map<String, AlertNotifier> beans = applicationContext.getBeansOfType(AlertNotifier.class);
-        for (AlertNotifier notifier : beans.values()) {
-            AlertChannel channel = notifier.supportedChannel();
-            if (channel != null) {
-                notifierCache.put(channel, notifier);
-                log.info("[AlertDispatcher] 注册通知器: channel={} class={}",
-                        channel, notifier.getClass().getSimpleName());
-            }
+    private String escapeMarkdown(String text) {
+        if (text == null) {
+            return "";
         }
-        log.info("[AlertDispatcher] 通知器缓存初始化完成: count={}", notifierCache.size());
+        return text.replace("|", "\\|").replace("\n", " ");
     }
+
 
     /**
      * 根据失败通道数量确定告警状态。

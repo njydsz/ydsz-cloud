@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.dto.common.AlertDispatchDTO;
 import com.njydsz.pmis.project.engine.AlertCodeGen;
 import com.njydsz.pmis.project.entity.common.AlertDispatchDO;
-import com.njydsz.pmis.project.feign.MessageServiceClient;
+import com.njydsz.pmis.common.feign.MessageServiceClient;
 import com.njydsz.pmis.project.mapper.common.AlertDispatchMapper;
 import com.njydsz.pmis.project.service.common.AlertDispatchService;
 import com.njydsz.pmis.common.feign.MessageRequest;

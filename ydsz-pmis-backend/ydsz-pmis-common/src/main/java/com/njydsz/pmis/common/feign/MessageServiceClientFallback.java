@@ -1,40 +1,34 @@
-package com.njydsz.pmis.project.feign;
+package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.feign.MessageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
 
 /**
- * MessageServiceClient 降级工厂
+ * MessageServiceClient fallback factory.
  *
- * <p>消息中心不可用时, 返回成功占位 + 记录 WARN 日志;
- * 避免预警 / 工单通知的失败向上传播到业务主流程.
+ * <p>Returns degraded success (with FAILED status) when the message module is unavailable.
+ * Ensures caller's main flow is not affected by message delivery failures.
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j
+@Component
 public class MessageServiceClientFallback implements FallbackFactory<MessageServiceClient> {
 
-    /**
-     * 创建降级客户端实例
-     *
-     * @param cause 触发降级的异常
-     * @return 降级后的 MessageServiceClient 实例
-     */
     @Override
     public MessageServiceClient create(Throwable cause) {
-        log.warn("[MessageClientFallback] 消息中心降级: {}", cause == null ? "?" : cause.getMessage());
+        log.warn("[Feign] MessageServiceClient degraded: {}", cause == null ? "?" : cause.getMessage());
         return new MessageServiceClient() {
             @Override
             public Result<MessageResult> send(MessageRequest request) {
                 if (request == null) {
                     return Result.ok(MessageResult.fail("UNKNOWN", "Degraded: empty request"));
                 }
-                log.warn("[MessageClientFallback] 降级 send: bizType={} bizId={} channel={} template={}",
+                log.warn("[Feign] Degraded send: bizType={} bizId={} channel={} template={}",
                         request.getBizType(), request.getBizId(),
                         request.getChannel(), request.getTemplateCode());
                 MessageResult r = MessageResult.fail(request.getChannel(),

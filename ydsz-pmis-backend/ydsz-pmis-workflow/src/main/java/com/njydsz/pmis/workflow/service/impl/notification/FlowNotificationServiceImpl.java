@@ -1,17 +1,15 @@
 package com.njydsz.pmis.workflow.service.impl.notification;
 
+import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.feign.MessageServiceClient;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.pmis.workflow.service.notification.FlowNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import com.alibaba.fastjson2.JSON;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,7 +29,7 @@ import java.util.Map;
  * <ul>
  *   <li>INAPP  — 通过 NotificationClient Feign 调用 notification 服务写入站内信（channel=PUSH）</li>
  *   <li>EMAIL   — 同样通过 NotificationClient 投递（channel=EMAIL），由 notification 服务负责实际邮件发送</li>
- *   <li>WEBHOOK — 通过 RestTemplate POST 发送到 extra.webhookUrl 指定的企业微信/钉钉机器人</li>
+ *   <li>WEBHOOK — 通过 {@link MessageServiceClient} 委托消息中心发送到 extra.webhookUrl 指定的企业微信/钉钉机器人</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -50,14 +48,8 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     /** Feign 通知客户端（INAPP / EMAIL 通道），由 @RequiredArgsConstructor 注入 */
     private final NotificationClient notificationClient;
 
-    /**
-     * WEBHOOK 通道使用的 RestTemplate。
-     *
-     * <p>不通过构造器/字段注入，避免强制要求容器中存在 RestTemplate Bean。
-     * 此处直接 new 出默认实例即可满足 best-effort 投递需求；
-     * final + 内联初始化使 Lombok @RequiredArgsConstructor 跳过该字段。
-     */
-    private final RestTemplate restTemplate = new RestTemplate();
+    /** 消息中心客户端（WEBHOOK 通道），由 @RequiredArgsConstructor 注入 */
+    private final MessageServiceClient messageServiceClient;
 
     @Override
     public void notifyTaskCreated(String instanceId, String taskId, String assigneeId, String assigneeName) {
