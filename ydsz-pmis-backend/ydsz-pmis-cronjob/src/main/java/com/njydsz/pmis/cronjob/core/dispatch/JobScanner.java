@@ -73,6 +73,8 @@ public class JobScanner {
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
     /** P2-9: 分区 Leader 管理器（可选注入，仅分区调度启用时存在） */
     private final ObjectProvider<PartitionLeaderManager> partitionLeaderManagerProvider;
+    /** P1-1: 自适应批量调度器（可选注入，启用时动态调整 batchSize） */
+    private final ObjectProvider<com.njydsz.pmis.cronjob.core.scheduler.AdaptiveBatchScheduler> adaptiveBatchSchedulerProvider;
 
     /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
     private final AtomicBoolean scanning = new AtomicBoolean(false);
@@ -161,7 +163,8 @@ public class JobScanner {
      */
     private void doScan() {
         LocalDateTime now = LocalDateTime.now();
-        int batchSize = cronjobProperties.getScanner().getBatchSize();
+        // P1-1: 支持自适应 batchSize（AdaptiveBatchScheduler 启用时动态调整）
+        int batchSize = resolveBatchSize();
         List<JobDO> dueJobs = acquireDueJobs(now, batchSize);
         // P6-2: 更新上次扫描到的待触发任务数指标
         CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
@@ -377,6 +380,23 @@ public class JobScanner {
      */
     String getLeaderRole() {
         return leaderRole;
+    }
+
+    /**
+     * P1-1: 解析当前扫描的 batchSize。
+     *
+     * <p>当 AdaptiveBatchScheduler 启用时，返回自适应调整后的 batchSize；
+     * 否则返回配置的固定 batchSize。
+     *
+     * @return 当前扫描使用的 batchSize
+     */
+    private int resolveBatchSize() {
+        com.njydsz.pmis.cronjob.core.scheduler.AdaptiveBatchScheduler adaptive =
+                adaptiveBatchSchedulerProvider.getIfAvailable();
+        if (adaptive != null) {
+            return adaptive.getCurrentBatchSize();
+        }
+        return cronjobProperties.getScanner().getBatchSize();
     }
 
     /**

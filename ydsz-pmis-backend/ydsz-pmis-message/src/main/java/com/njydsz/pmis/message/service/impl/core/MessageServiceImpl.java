@@ -38,6 +38,7 @@ import com.njydsz.pmis.message.service.core.DeliveryTimeOptimizer;
 import com.njydsz.pmis.message.service.core.MessageService;
 import com.njydsz.pmis.message.service.core.MessageTraceService;
 import com.njydsz.pmis.message.service.config.PreferenceService;
+import com.njydsz.pmis.message.service.config.UserChannelBindingService;
 import com.njydsz.pmis.message.service.core.RateLimitService;
 import com.njydsz.pmis.message.service.config.RouteRuleService;
 import com.njydsz.pmis.message.service.config.SubscriptionService;
@@ -109,6 +110,8 @@ public class MessageServiceImpl implements MessageService {
     private final DeliveryTimeOptimizer deliveryTimeOptimizer;
     /** 富媒体内容渲染器（HTML / Markdown / 纯文本） */
     private final RichMediaRenderer richMediaRenderer;
+    /** P0-1: 用户通道绑定服务（userId → 通道联系方式解析） */
+    private final UserChannelBindingService userChannelBindingService;
 
     /** P2-3: RocketMQ 事务消息生产者（可选,未配置 RocketMQ 时为 null） */
     private final ObjectProvider<RocketMQMessageProducer> mqProducerProvider;

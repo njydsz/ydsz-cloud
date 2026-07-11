@@ -824,3 +824,47 @@ CREATE TABLE IF NOT EXISTS pmis_msg_template_version(
 
 CREATE INDEX IF NOT EXISTS idx_pmtv_template_code ON pmis_msg_template_version(template_code);
 
+-- ====================================================================
+-- P0-1: 用户通道绑定表（userId → 各通道联系方式映射）
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS pmis_msg_user_channel(
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    user_id           VARCHAR(20)   NOT NULL,
+    channel_type      VARCHAR(32)   NOT NULL,
+    channel_user_id   VARCHAR(256)  NOT NULL,
+    verified          SMALLINT      NOT NULL DEFAULT 0,
+    is_primary        SMALLINT      NOT NULL DEFAULT 0,
+    extra             TEXT,
+    created_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT     NOT NULL DEFAULT 0,
+    tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
+    CONSTRAINT uk_pmuc_user_chan UNIQUE (user_id, channel_type, tenant_id, deleted),
+    CONSTRAINT ck_pmuc_chan_enum  CHECK (channel_type IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
+    CONSTRAINT ck_pmuc_verified   CHECK (verified IN (0, 1)),
+    CONSTRAINT ck_pmuc_primary    CHECK (is_primary IN (0, 1)),
+    CONSTRAINT ck_pmuc_deleted    CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_msg_user_channel IS '用户通道绑定表: userId → 各通道联系方式(phone/email/dingtalkUserId等)映射,发送时自动解析';
+
+COMMENT ON COLUMN pmis_msg_user_channel.user_id IS '用户 ID(关联 pmis_employee.id)';
+
+COMMENT ON COLUMN pmis_msg_user_channel.channel_type IS '通道类型: SMS(phone)/EMAIL(email)/DINGTALK(userId)/WECOM(userId)/FEISHU(userId)/PUSH(cid)';
+
+COMMENT ON COLUMN pmis_msg_user_channel.channel_user_id IS '通道用户标识(手机号/邮箱/钉钉userId/企微userId/飞书userId/个推cid)';
+
+COMMENT ON COLUMN pmis_msg_user_channel.verified IS '是否已验证: 0 未验证 / 1 已验证(未验证的绑定发送时降级日志)';
+
+COMMENT ON COLUMN pmis_msg_user_channel.is_primary IS '是否主绑定: 0 否 / 1 是(同通道多绑定时优先使用主绑定)';
+
+COMMENT ON COLUMN pmis_msg_user_channel.extra IS '扩展字段 JSON(如 deviceToken / openId 等)';
+
+CREATE INDEX IF NOT EXISTS idx_pmuc_user ON pmis_msg_user_channel(user_id) WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pmuc_user_chan_type ON pmis_msg_user_channel(user_id, channel_type) WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pmuc_tenant ON pmis_msg_user_channel(tenant_id);
+

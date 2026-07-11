@@ -64,6 +64,10 @@ public class CronjobMetrics {
     private final AtomicLong lastScanDueJobs = new AtomicLong(0);
     /** 扫描器扫描中标志（0=空闲，1=扫描中） */
     private final AtomicLong scanningFlag = new AtomicLong(0);
+    /** P1-1: 自适应批量大小（由 AdaptiveBatchScheduler 更新） */
+    private final AtomicLong adaptiveBatchSize = new AtomicLong(0);
+    /** P1-1: 系统负载评分（0-1，由 AdaptiveBatchScheduler 更新） */
+    private final AtomicLong systemLoadScore = new AtomicLong(0);
 
     // ============================== Gauge 数据源（可选注入，避免循环依赖） ==============================
     /**
@@ -185,6 +189,24 @@ public class CronjobMetrics {
         scanningFlag.set(scanning ? 1L : 0L);
     }
 
+    /**
+     * P1-1: 更新自适应批量大小。
+     *
+     * @param size 当前建议的 batchSize
+     */
+    public void setAdaptiveBatchSize(int size) {
+        adaptiveBatchSize.set(size);
+    }
+
+    /**
+     * P1-1: 更新系统负载评分。
+     *
+     * @param score 负载评分（0-1）
+     */
+    public void setSystemLoadScore(double score) {
+        systemLoadScore.set((long) (score * 1000));
+    }
+
     // ===========================================
     // Gauge 注册
     // ===========================================
@@ -209,6 +231,12 @@ public class CronjobMetrics {
 
         // 扫描器扫描中标志
         registry.gauge("pmis_cronjob_scanner_scanning", Tags.empty(), scanningFlag);
+
+        // P1-1: 自适应批量大小
+        registry.gauge("pmis_cronjob_adaptive_batch_size", Tags.empty(), adaptiveBatchSize);
+
+        // P1-1: 系统负载评分（0-1000，除以1000得到 0-1）
+        registry.gauge("pmis_cronjob_system_load_score", Tags.empty(), systemLoadScore);
     }
 
     /**

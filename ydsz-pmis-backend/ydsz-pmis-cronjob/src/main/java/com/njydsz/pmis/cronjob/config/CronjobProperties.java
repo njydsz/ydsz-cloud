@@ -91,6 +91,18 @@ public class CronjobProperties {
     /** P0-1: 调度器-执行器分离配置 */
     private SchedulerExecutorSeparation schedulerExecutorSeparation = new SchedulerExecutorSeparation();
 
+    /** P1-1: 自适应批量调度配置 */
+    private AdaptiveBatch adaptiveBatch = new AdaptiveBatch();
+
+    /** P1-3: 告警智能降噪配置 */
+    private AlertDedup alertDedup = new AlertDedup();
+
+    /** P3-1: AI 驱动调度优化配置 */
+    private AiScheduling aiScheduling = new AiScheduling();
+
+    /** P3-2: 自愈系统配置 */
+    private SelfHealing selfHealing = new SelfHealing();
+
     /**
      * 校验并规整化 TTL 值。
      *
@@ -602,6 +614,139 @@ public class CronjobProperties {
 
         /** 单节点最大并行任务数（用于 least_load 策略的负载评估） */
         private int maxConcurrentPerWorker = 16;
+    }
+
+    /**
+     * P1-1: 自适应批量调度配置。
+     *
+     * <p>根据系统实时负载指标（CPU、内存、线程池活跃度）动态调整 JobScanner 的 batchSize，
+     * 避免高负载时大批量派发压垮系统，低负载时提升吞吐量。
+     *
+     * <h3>工作原理</h3>
+     * <ol>
+     *   <li>定时采集 JVM 和操作系统指标（CPU 使用率、堆内存使用率、线程池活跃线程数）</li>
+     *   <li>根据负载评分计算最优 batchSize（低负载时放大，高负载时缩小）</li>
+     *   <li>通过 AtomicReference 安全发布新值，JobScanner 下次扫描时自动生效</li>
+     * </ol>
+     *
+     * <p>对标 PowerJob 的自适应调度和 SchedulerX 的流量控制能力。
+     */
+    @Data
+    public static class AdaptiveBatch {
+        /** 是否启用自适应批量调度（false=使用固定 batchSize，向后兼容） */
+        private boolean enabled = false;
+
+        /** 最小批量大小（高负载时不低于此值，防止饥饿） */
+        private int minBatchSize = 50;
+
+        /** 最大批量大小（低负载时不超过此值，防止 DB 连接耗尽） */
+        private int maxBatchSize = 1000;
+
+        /** CPU 使用率阈值（百分比），超过此值开始缩减批量 */
+        private double cpuThreshold = 70.0;
+
+        /** 内存使用率阈值（百分比），超过此值开始缩减批量 */
+        private double memThreshold = 80.0;
+
+        /** 线程池活跃度阈值（百分比，activeThreads/maxThreads），超过此值开始缩减批量 */
+        private double poolActiveThreshold = 80.0;
+
+        /** 负载评估间隔（秒，默认 10s） */
+        private int evalIntervalSeconds = 10;
+    }
+
+    /**
+     * P1-3: 告警智能降噪与聚合配置。
+     *
+     * <p>对同一任务/同组任务的告警进行时间窗口内聚合，避免告警风暴。
+     * 支持基于告警频次的自动升降级：短时间内多次告警升级通知渠道，
+     * 长时间无告警后自动恢复降级。
+     *
+     * <p>对标 SchedulerX 的告警降噪和 PowerJob 的告警聚合能力。
+     */
+    @Data
+    public static class AlertDedup {
+        /** 是否启用告警降噪（false=使用原有冷却窗口逻辑，向后兼容） */
+        private boolean enabled = false;
+
+        /** 聚合窗口（秒，窗口内同规则的告警合并为一条） */
+        private int aggregateWindowSeconds = 60;
+
+        /** 窗口内最大聚合告警数（超过此数触发升级通知） */
+        private int maxAggregateCount = 5;
+
+        /** 升级通知通道（如 "sms,phone"，在原有 channels 基础上追加） */
+        private String escalateChannels = "sms";
+
+        /** 降级冷却时间（秒，无告警后恢复原始通道） */
+        private long downgradeCooldownSeconds = 3600;
+    }
+
+    /**
+     * P3-1: AI 驱动调度优化配置。
+     *
+     * <p>基于历史执行数据预测任务执行时间和失败概率，辅助调度决策：
+     * <ul>
+     *   <li>预测执行时间 → 优化任务排队顺序</li>
+     *   <li>预测失败概率 → 提前触发预警</li>
+     *   <li>资源利用率预测 → 弹性扩缩容建议</li>
+     * </ul>
+     *
+     * <p>采用指数加权移动平均（EWMA）作为基础预测模型，轻量无外部依赖。
+     */
+    @Data
+    public static class AiScheduling {
+        /** 是否启用 AI 调度优化（false=不启用预测，向后兼容） */
+        private boolean enabled = false;
+
+        /** EWMA 衰减因子（0-1，越大越偏向近期数据，默认 0.3） */
+        private double ewmaAlpha = 0.3;
+
+        /** 历史数据最小样本数（不足此数时不预测，使用默认值） */
+        private int minSamples = 5;
+
+        /** 最大历史样本数（滑动窗口大小） */
+        private int maxSamples = 100;
+
+        /** 预测失败概率阈值（超过此值触发预警，0-1） */
+        private double failurePredictThreshold = 0.5;
+
+        /** 预测评估间隔（分钟，定时从日志表统计并更新模型） */
+        private int evalIntervalMinutes = 30;
+    }
+
+    /**
+     * P3-2: 自愈系统配置。
+     *
+     * <p>定时检测异常状态的任务并自动修复：
+     * <ul>
+     *   <li>RUNNING 状态超时未更新 → 标记 FAILED 并重新派发</li>
+     *   <li>AUTO_PAUSED 状态到达恢复时间 → 自动恢复为 NORMAL</li>
+     *   <li>连续失败任务 → 触发降级通知</li>
+     *   <li>孤儿任务（所属节点下线但日志仍 RUNNING） → 清理并转移</li>
+     * </ul>
+     *
+     * <p>对标 PowerJob 的自愈能力和 SchedulerX 的自动恢复机制。
+     */
+    @Data
+    public static class SelfHealing {
+        /** 是否启用自愈系统（false=不启用，向后兼容） */
+        private boolean enabled = false;
+
+        /** 检测间隔（秒，默认 60s） */
+        private int scanIntervalSeconds = 60;
+
+        /** RUNNING 状态无更新超时阈值（秒，超过此值视为卡死） */
+        private int stuckThresholdSeconds = 300;
+
+        /** 单次扫描最大修复任务数（防止批量修复压垮系统） */
+        private int maxHealPerScan = 20;
+
+        /** 是否自动重新派发修复后的任务 */
+        private boolean autoRedispatch = true;
+
+        /** 重新派发最大重试次数（超过此数不再自动派发，标记为需人工介入） */
+        private int maxRedispatchRetries = 3;
     }
 }
 
