@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.project.mapper.resource.BillableUtilizationSnapshotMapper">
+<mapper namespace="com.njydsz.pmis.project.infra.mapper.BillableUtilizationSnapshotMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.BillableUtilizationSnapshotDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.domain.entity.BillableUtilizationSnapshotDO">
         <id column="id" property="id"/>
         <result column="period" property="period"/>
         <result column="employee_id" property="employeeId"/>
@@ -29,7 +29,7 @@
         PostgreSQL UPSERT：ON CONFLICT (period, employee_id) DO UPDATE
         保证 cronjob 重跑 / 跨天重复触发时不会产生重复记录
     -->
-    <insert id="upsert" parameterType="com.njydsz.pmis.project.entity.BillableUtilizationSnapshotDO">
+    <insert id="upsert" parameterType="com.njydsz.pmis.project.domain.entity.BillableUtilizationSnapshotDO">
         INSERT INTO pmis_billable_utilization_snapshot
             (period, employee_id, employee_name, level_code, department,
              total_hours, billable_hours, overtime_hours, leave_hours, training_hours, bench_hours,

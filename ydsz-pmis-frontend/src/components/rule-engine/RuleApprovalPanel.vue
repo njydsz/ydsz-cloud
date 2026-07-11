@@ -19,8 +19,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Check, Close, Share, Refresh, Clock } from '@element-plus/icons-vue'
-import * as ruleApi from '@/api/rule-engine'
-import type { ApprovalRecord } from '@/api/rule-engine'
+import * as ruleApi from '@/api/rule-engine/index'
+import type { ApprovalRecord } from '@/api/rule-engine/index'
 import { logger } from '@/utils/logger'
 
 interface Props {
@@ -37,6 +37,14 @@ const records = ref<ApprovalRecord[]>([])
 const activeTab = ref('pending')
 
 // 审批对话框
+const approvalDialog = reactive({
+  visible: false,
+  type: '' as 'approve' | 'reject' | 'delegate',
+  record: null as ApprovalRecord | null,
+  comment: '',
+  delegateTo: ''
+})
+
 // ===== 计算属性 =====
 const filteredRecords = computed(() => {
   if (activeTab.value === 'all') return records.value
