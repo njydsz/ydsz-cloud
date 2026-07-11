@@ -1,7 +1,13 @@
 package com.njydsz.pmis.workflow.service.impl.definition;
 
 import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.workflow.entity.definition.FlowNodeDO;
+import com.njydsz.pmis.workflow.form.FlowFormSchema;
+import com.njydsz.pmis.workflow.form.FlowFormField;
+import com.njydsz.pmis.workflow.mapper.definition.FlowNodeMapper;
 import com.njydsz.pmis.workflow.service.definition.FlowConditionExprService;
+import com.googlecode.aviator.AviatorEvaluator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +26,10 @@ import java.util.Map;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FlowConditionExprServiceImpl implements FlowConditionExprService {
+
+    private final FlowNodeMapper nodeMapper;
 
     /** 操作符映射：枚举 → Aviator / SpEL 符号 */
     private static final Map<String, String[]> OPERATOR_MAP = new LinkedHashMap<>();
