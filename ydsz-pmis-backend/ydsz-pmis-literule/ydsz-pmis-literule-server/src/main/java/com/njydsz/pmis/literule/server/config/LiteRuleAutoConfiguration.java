@@ -877,6 +877,46 @@ public class LiteRuleAutoConfiguration {
     }
 
     // ------------------------------------------------------------------
+    // P0-2 动态事实采集管道（FactProvider SPI）
+    // ------------------------------------------------------------------
+
+    /**
+     * 事实数据提供者注册表 Bean（P0-2）
+     *
+     * <p>当 {@code pmis.literule.fact.enabled=true} 时自动装配，聚合所有
+     * {@link FactProvider} Bean。注册表会自动注入到 {@link DefaultRuleEngine}，
+     * 使规则引擎在评估前从外部数据源动态采集事实数据。
+     *
+     * <p>对标滴滴 Newton、字节风控的"动态事实采集"能力：
+     * <ul>
+     *   <li>规则评估时自动从 DB/Redis/HTTP API 查询业务数据</li>
+     *   <li>支持多数据源聚合，按优先级排序执行</li>
+     *   <li>超时与异常隔离，单个数据源故障不影响整体评估</li>
+     * </ul>
+     *
+     * @param properties        配置属性
+     * @param providersProvider 所有 FactProvider Bean（可选）
+     * @return FactProviderRegistry 实例
+     * @since 2.1.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.fact", name = "enabled", havingValue = "true")
+    public FactProviderRegistry factProviderRegistry(LiteRuleProperties properties,
+                                                       ObjectProvider<FactProvider> providersProvider) {
+        LiteRuleProperties.FactConfig cfg = properties.getFact();
+        FactProviderRegistry registry = new FactProviderRegistry(cfg.getTimeoutMs(), cfg.isFallbackOnError());
+        // 注册所有 FactProvider Bean
+        List<FactProvider> providers = providersProvider.orderedStream().toList();
+        for (FactProvider provider : providers) {
+            registry.register(provider);
+        }
+        log.info("[LiteRule-Fact] 事实数据提供者注册表已初始化 (providers={}, timeoutMs={}, fallbackOnError={})",
+                registry.size(), cfg.getTimeoutMs(), cfg.isFallbackOnError());
+        return registry;
+    }
+
+    // ------------------------------------------------------------------
     // P2-2 规则效果评估体系
     // ------------------------------------------------------------------
 
