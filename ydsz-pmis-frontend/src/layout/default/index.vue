@@ -19,13 +19,18 @@ import MainContent from './components/MainContent.vue'
 import RouteSkeleton from './components/RouteSkeleton.vue'
 import GlobalSearch from '@/components/common/GlobalSearch.vue'
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
+import PasswordExpiryBanner from '@/components/common/PasswordExpiryBanner.vue'
 import { useAppStore } from '@/store/modules/app'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
 import { useResponsive } from '@/composables/useResponsive'
+import { useDevWarmup } from '@/composables/useDevWarmup'
 import { logger } from '@/utils/logger'
 
 const appStore = useAppStore()
 const { open } = useGlobalSearch()
+
+// 开发环境自动预热
+useDevWarmup()
 
 // 响应式：小屏幕时自动收起侧边栏
 const { isMobile } = useResponsive()
@@ -57,6 +62,7 @@ function onError(err: unknown, info: string) {
     </aside>
     <section class="layout-container" aria-label="主内容区域">
       <AppHeader />
+      <PasswordExpiryBanner />
       <div class="layout-tags">
         <TagsView />
       </div>

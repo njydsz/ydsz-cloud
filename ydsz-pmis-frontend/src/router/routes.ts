@@ -130,6 +130,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         meta: { title: 'route.systemFeatureFlag', icon: 'Flag', keepAlive: true, permCode: PC.SYS_FEATURE_FLAG_VIEW },
       },
       {
+        path: 'changelog',
+        name: 'SystemChangelog',
+        component: () => import('@/views/system/changelog/index.vue'),
+        meta: { title: 'route.systemChangelog', icon: 'Document', keepAlive: true },
+      },
+      {
         path: 'session',
         name: 'SystemSession',
         component: () => import('@/views/system/session/index.vue'),

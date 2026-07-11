@@ -8,6 +8,7 @@ import com.njydsz.pmis.userinfo.mapper.user.UserSessionMapper;
 import com.njydsz.pmis.userinfo.service.auth.SessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +28,16 @@ public class SessionServiceImpl implements SessionService {
 
     private final UserSessionMapper sessionMapper;
 
+    /** 最大并发会话数（可配置） */
+    @Value("${pmis.security.max-concurrent-sessions:5}")
+    private int maxConcurrentSessions;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserSessionDO create(String userId, String clientIp, String userAgent, String deviceType, int expireSeconds) {
+        // P2-11: 创建新会话前，先检查并强制踢出超限的旧会话
+        enforceMaxSessions(userId, maxConcurrentSessions);
+
         UserSessionDO s = new UserSessionDO();
         s.setUserId(userId);
         s.setSessionId(SnowflakeIdGenerator.nextIdStr());
@@ -92,5 +100,33 @@ public class SessionServiceImpl implements SessionService {
             n++;
         }
         return n;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int enforceMaxSessions(String userId, int maxSessions) {
+        if (maxSessions <= 0) {
+            return 0;
+        }
+        List<UserSessionDO> active = sessionMapper.selectActiveByUserId(userId);
+        if (active.size() <= maxSessions) {
+            return 0;
+        }
+        // 按 loginAt 升序排序，踢出最早的会话
+        active.sort((a, b) -> {
+            if (a.getLoginAt() == null) return -1;
+            if (b.getLoginAt() == null) return 1;
+            return a.getLoginAt().compareTo(b.getLoginAt());
+        });
+        int toKick = active.size() - maxSessions;
+        int kicked = 0;
+        for (int i = 0; i < toKick; i++) {
+            UserSessionDO s = active.get(i);
+            sessionMapper.updateStatus(s.getSessionId(), "KICKED", LocalDateTime.now(), "并发会话数超限");
+            kicked++;
+            log.info("[SessionConcurrent] 踢出超限会话: userId={}, sessionId={}, loginAt={}",
+                    userId, s.getSessionId(), s.getLoginAt());
+        }
+        return kicked;
     }
 }

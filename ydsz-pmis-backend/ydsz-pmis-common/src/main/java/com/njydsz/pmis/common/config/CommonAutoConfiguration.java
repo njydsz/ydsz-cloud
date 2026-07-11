@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.config;
 
 import com.njydsz.pmis.common.chaos.ChaosAutoConfiguration;
 import com.njydsz.pmis.common.featureflag.FeatureFlagAutoConfiguration;
+import com.njydsz.pmis.common.filter.ContentSecurityPolicyFilter;
 import com.njydsz.pmis.common.filter.SameSiteCookieFilter;
 import com.njydsz.pmis.common.filter.StrictContentTypeFilter;
 import com.njydsz.pmis.common.interceptor.AuthInterceptor;
@@ -158,6 +159,20 @@ public class CommonAutoConfiguration {
     @ConditionalOnMissingBean
     public StrictContentTypeFilter strictContentTypeFilter() {
         return new StrictContentTypeFilter();
+    }
+
+    /**
+     * 注册 Content-Security-Policy 安全响应头过滤器(P2-11 安全闭环)
+     *
+     * <p>为所有 HTTP 响应注入 CSP、X-Content-Type-Options、X-Frame-Options 等安全头。
+     * 顺序在 {@code StrictContentTypeFilter}(HIGHEST_PRECEDENCE + 3)之后。
+     *
+     * @return ContentSecurityPolicyFilter 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ContentSecurityPolicyFilter contentSecurityPolicyFilter() {
+        return new ContentSecurityPolicyFilter();
     }
 
     /**

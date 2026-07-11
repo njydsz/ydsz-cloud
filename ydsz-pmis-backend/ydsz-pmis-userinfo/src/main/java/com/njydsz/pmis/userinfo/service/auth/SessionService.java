@@ -12,6 +12,9 @@ import java.util.List;
  */
 public interface SessionService {
 
+    /** 默认最大并发会话数 */
+    int DEFAULT_MAX_CONCURRENT_SESSIONS = 5;
+
     /**
      * 创建会话
      *
@@ -70,4 +73,16 @@ public interface SessionService {
      * @return 清理的会话数
      */
     int cleanExpired();
+
+    /**
+     * 强制执行最大并发会话数限制（P2-11 安全闭环）
+     *
+     * <p>当用户活跃会话数超过 maxSessions 时，自动踢出最早的会话。
+     * 在 create 方法内部调用，也可在外部（如登录流程）手动调用。
+     *
+     * @param userId     用户 ID
+     * @param maxSessions 最大并发会话数
+     * @return 被踢出的会话数
+     */
+    int enforceMaxSessions(String userId, int maxSessions);
 }
