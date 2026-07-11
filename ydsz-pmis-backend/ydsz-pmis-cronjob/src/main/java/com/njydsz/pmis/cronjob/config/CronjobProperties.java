@@ -341,22 +341,6 @@ public class CronjobProperties {
 
         /** 远程派发失败时是否降级到 Leader 本地执行（true=保证分片不丢失） */
         private boolean fallbackToLocal = true;
-
-        /**
-         * P1-6: 传输协议类型（http / grpc）。
-         *
-         * <p>{@code http}（默认）：使用 HTTP + JSON 远程派发。
-         * {@code grpc}：使用 gRPC + Protobuf 远程派发（高性能，需 gRPC 依赖）。
-         */
-        private String transport = "http";
-
-        /**
-         * P1-6: gRPC 服务端端口（Worker 节点监听端口）。
-         *
-         * <p>仅当 {@code transport=grpc} 时生效。
-         * Leader 节点通过此端口连接 Worker 节点的 gRPC 服务。
-         */
-        private int grpcPort = 9090;
     }
 
     /**

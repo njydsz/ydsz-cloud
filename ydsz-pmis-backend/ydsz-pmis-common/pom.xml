@@ -193,12 +193,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- P3-16: Spring Cloud Contract 契约测试 -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
-            <scope>test</scope>
-        </dependency>
         <!-- P2-2: ArchUnit 架构约束测试 -->
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
