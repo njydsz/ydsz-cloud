@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.core.dag;
 
+import com.njydsz.pmis.common.dag.DagInstanceStatus;
+import com.njydsz.pmis.common.dag.DagNodeStatus;
 import com.njydsz.pmis.cronjob.entity.dag.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.entity.dag.JobDagNodeInstanceDO;
 import com.njydsz.pmis.cronjob.entity.job.JobDO;
