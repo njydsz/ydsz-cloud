@@ -171,8 +171,12 @@ public final class RuleDslConverter {
 
     /**
      * 将 DSL 规则条目转换为 RuleDefinition（expression 类型）
+     *
+     * @param entry DSL 规则条目
+     * @return RuleDefinition
+     * @since 2.0.0
      */
-    private static RuleDefinition toRuleDefinition(RuleDslEntry entry) {
+    public static RuleDefinition toRuleDefinition(RuleDslEntry entry) {
         RuleSeverity defaultSeverity = parseSeverity(entry.getSeverity(), RuleSeverity.INFO);
         return RuleDefinition.builder()
                 .code(entry.getCode())

@@ -1053,4 +1053,71 @@ public class LiteRuleAutoConfiguration {
                 versionRepoProvider.getIfAvailable() != null, effectivenessService != null);
         return service;
     }
+
+    // ------------------------------------------------------------------
+    // P3-4 执行回放服务
+    // ------------------------------------------------------------------
+
+    /**
+     * 执行回放服务（P3-4）
+     *
+     * <p>当存在 {@link RuleAdminService} 时自动装配，
+     * 提供基于历史执行轨迹的事实快照重新评估规则的能力。
+     *
+     * @param ruleAdminService   规则管理服务
+     * @param traceRecorderProvider 轨迹记录器（可选）
+     * @param versionRepoProvider   版本仓库（可选，支持版本回放）
+     * @param evaluator         表达式求值器
+     * @return ExecutionReplayService 实例
+     * @since 2.0.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(RuleAdminService.class)
+    public com.njydsz.pmis.literule.replay.ExecutionReplayService executionReplayService(
+            RuleAdminService ruleAdminService,
+            ObjectProvider<TraceRecorder> traceRecorderProvider,
+            ObjectProvider<RuleVersionRepository> versionRepoProvider,
+            ExpressionEvaluator evaluator) {
+        com.njydsz.pmis.literule.replay.ExecutionReplayService service =
+                new com.njydsz.pmis.literule.replay.ExecutionReplayService(
+                        ruleAdminService,
+                        traceRecorderProvider.getIfAvailable(),
+                        versionRepoProvider.getIfAvailable(),
+                        evaluator);
+        log.info("[LiteRule-Replay] 执行回放服务已初始化（traceRecorder={}, versionRepo={}）",
+                traceRecorderProvider.getIfAvailable() != null,
+                versionRepoProvider.getIfAvailable() != null);
+        return service;
+    }
+
+    // ------------------------------------------------------------------
+    // P3-5 审计日志服务
+    // ------------------------------------------------------------------
+
+    /**
+     * 规则审计日志服务（P3-5）
+     *
+     * <p>当存在 {@link RuleAdminService} 时自动装配，
+     * 记录规则全生命周期操作的审计日志。
+     * 默认使用内存存储，可通过 {@link com.njydsz.pmis.literule.audit.RuleAuditLogService.AuditLogStore}
+     * SPI 提供持久化实现。
+     *
+     * @param auditLogStoreProvider 审计日志存储（可选，为空使用内存存储）
+     * @return RuleAuditLogService 实例
+     * @since 2.0.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(RuleAdminService.class)
+    public com.njydsz.pmis.literule.audit.RuleAuditLogService ruleAuditLogService(
+            ObjectProvider<com.njydsz.pmis.literule.audit.RuleAuditLogService.AuditLogStore> auditLogStoreProvider) {
+        com.njydsz.pmis.literule.audit.RuleAuditLogService.AuditLogStore store =
+                auditLogStoreProvider.getIfAvailable();
+        com.njydsz.pmis.literule.audit.RuleAuditLogService service =
+                new com.njydsz.pmis.literule.audit.RuleAuditLogService(store);
+        log.info("[LiteRule-Audit] 规则审计日志服务已初始化（store={}）",
+                store != null ? store.getClass().getSimpleName() : "InMemory");
+        return service;
+    }
 }
