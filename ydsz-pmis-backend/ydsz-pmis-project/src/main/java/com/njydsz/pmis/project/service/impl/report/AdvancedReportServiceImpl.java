@@ -1,16 +1,14 @@
 package com.njydsz.pmis.project.service.impl.report;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.project.entity.execution.EvmMeasureDO;
-import com.njydsz.pmis.project.entity.finance.ProfitSnapshotDO;
+import com.njydsz.pmis.common.feign.FinanceDataClient;
 import com.njydsz.pmis.project.entity.resource.RateCardDO;
 import com.njydsz.pmis.project.entity.resource.RateInternalDO;
 import com.njydsz.pmis.project.entity.execution.RiskDO;
 import com.njydsz.pmis.common.feign.BenchResourceClient;
 import com.njydsz.pmis.project.mapper.execution.EvmMeasureMapper;
-import com.njydsz.pmis.project.mapper.finance.ProfitSnapshotMapper;
 import com.njydsz.pmis.project.mapper.resource.RateCardMapper;
 import com.njydsz.pmis.project.mapper.resource.RateInternalMapper;
 import com.njydsz.pmis.project.mapper.execution.RiskMapper;
@@ -70,8 +68,8 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     private final ThresholdProvider thresholdProvider;
     /** Bench 资源 Feign 客户端 */
     private final BenchResourceClient benchResourceClient;
-    /** 利润快照 Mapper */
-    private final ProfitSnapshotMapper profitSnapshotMapper;
+    /** 财务数据 Feign 客户端（跨域查询利润快照） */
+    private final FinanceDataClient financeDataClient;
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final BigDecimal HUNDRED = new BigDecimal("100");
@@ -729,27 +727,25 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         Map<String, Object> out = new LinkedHashMap<>();
         // 1) 加载 EVM 健康聚合
         List<Map<String, Object>> evmRows = safeAll(evmMapper, m -> m.aggregateHealthByInitiation());
-        // 2) 加载 ProfitSnapshot 全部
-        List<ProfitSnapshotDO> snaps = new ArrayList<>();
+        // 2) 加载 ProfitSnapshot 全量（跨域 Feign 调用财务服务）
+        List<Map<String, Object>> snapRows = new ArrayList<>();
         try {
-            LambdaQueryWrapper<ProfitSnapshotDO> w = new LambdaQueryWrapper<>();
-            w.orderByDesc(ProfitSnapshotDO::getSnapshotAt);
-            List<ProfitSnapshotDO> all = profitSnapshotMapper.selectList(w);
-            if (all != null) snaps.addAll(all);
+            Result<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotSummaryAll();
+            if (resp != null && resp.getData() != null) {
+                snapRows = resp.getData();
+            }
         } catch (Exception e) {
             log.warn("[AdvancedReport] projectHealthDashboard 快照查询失败: {}", e.getMessage());
         }
 
         // 3) 取每个项目最新 snapshot
-        Map<String, ProfitSnapshotDO> latestSnap = new LinkedHashMap<>();
-        for (ProfitSnapshotDO s : snaps) {
-            if (s == null || s.getInitiationId() == null) continue;
-            ProfitSnapshotDO prev = latestSnap.get(s.getInitiationId());
-            if (prev == null
-                    || (s.getSnapshotAt() != null
-                        && (prev.getSnapshotAt() == null
-                            || s.getSnapshotAt().isAfter(prev.getSnapshotAt())))) {
-                latestSnap.put(s.getInitiationId(), s);
+        Map<String, Map<String, Object>> latestSnap = new LinkedHashMap<>();
+        for (Map<String, Object> s : snapRows) {
+            String initId = stringOf(s.get("initiationId"));
+            if (initId == null) continue;
+            Map<String, Object> prev = latestSnap.get(initId);
+            if (prev == null) {
+                latestSnap.put(initId, s);
             }
         }
 
@@ -771,19 +767,20 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             p.put("topAlert", row.getOrDefault("top_alert", "NORMAL"));
         }
         // 从 snapshot 补 margin
-        for (Map.Entry<String, ProfitSnapshotDO> e : latestSnap.entrySet()) {
+        for (Map.Entry<String, Map<String, Object>> e : latestSnap.entrySet()) {
             Map<String, Object> p = projectMap.computeIfAbsent(e.getKey(), k -> {
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("initiationId", k);
                 return m;
             });
-            p.put("margin", nz(e.getValue().getGrossMargin()));
-            p.put("totalCost", nz(e.getValue().getTotalCost()));
-            p.put("grossProfit", nz(e.getValue().getGrossProfit()));
-            p.put("contractAmount", nz(e.getValue().getContractAmount()));
-            p.put("recognizedRevenue", nz(e.getValue().getRecognizedRevenue()));
-            p.put("period", e.getValue().getPeriod());
-            p.put("snapshotAt", e.getValue().getSnapshotAt());
+            Map<String, Object> snap = e.getValue();
+            p.put("margin", toBigDecimal(snap.get("grossMargin")));
+            p.put("totalCost", toBigDecimal(snap.get("totalCost")));
+            p.put("grossProfit", toBigDecimal(snap.get("grossProfit")));
+            p.put("contractAmount", toBigDecimal(snap.get("contractAmount")));
+            p.put("recognizedRevenue", toBigDecimal(snap.get("recognizedRevenue")));
+            p.put("period", snap.get("period"));
+            p.put("snapshotAt", snap.get("snapshotAt"));
         }
 
         // 5) 计算健康度评分

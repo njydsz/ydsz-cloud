@@ -1,4 +1,4 @@
-﻿<!--
+﻿﻿<!--
   @file 规则引擎可视化管理
   @description 规则引擎管理页面：支持规则列表查看、新建/编辑、启停切换、版本历史与回滚、
                Dry-run 仿真、表达式校验、模板市场导入及 AI 辅助生成，
@@ -22,7 +22,7 @@ import { ref, reactive, computed, onMounted, watch, nextTick, shallowRef } from 
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { CircleCheck, CircleClose, Connection, Expand, Fold, User, Document, DataLine, Cpu, Histogram } from '@element-plus/icons-vue'
+import { CircleCheck, CircleClose, Connection, Expand, Fold, User, Document, DataLine, Cpu, Histogram, Lock, VideoPlay } from '@element-plus/icons-vue'
 import * as echarts from '@/utils/echarts'
 import * as ruleApi from '@/api/rule-engine'
 import type {
@@ -386,6 +386,21 @@ function openDependencyGraph() {
 /** 跳转到 CEP 模式可视化编辑器（P2-7） */
 function openCepPatternEditor() {
   router.push('/execution/rule-engine/cep-patterns')
+}
+
+/** 跳转到 DSL 管理页面（P3-6） */
+function openDslManager() {
+  router.push('/execution/rule-engine/dsl-manager')
+}
+
+/** 跳转到审计日志页面（P3-5） */
+function openAuditLog() {
+  router.push('/execution/rule-engine/audit-log')
+}
+
+/** 跳转到执行回放页面（P3-4） */
+function openReplay() {
+  router.push('/execution/rule-engine/replay')
 }
 
 // ==================== P2-9 规则压测 ====================
@@ -1472,6 +1487,15 @@ onMounted(() => {
           </el-button>
           <el-button type="danger" plain aria-label="规则压测" @click="openStressTest()">
             <el-icon><Histogram /></el-icon>压测
+          </el-button>
+          <el-button plain aria-label="DSL 管理" @click="openDslManager()">
+            <el-icon><Document /></el-icon>DSL 管理
+          </el-button>
+          <el-button plain aria-label="审计日志" @click="openAuditLog()">
+            <el-icon><Lock /></el-icon>审计日志
+          </el-button>
+          <el-button type="success" plain aria-label="执行回放" @click="openReplay()">
+            <el-icon><VideoPlay /></el-icon>执行回放
           </el-button>
         </div>
         <div class="toolbar-right">

@@ -129,6 +129,10 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-finance</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

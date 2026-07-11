@@ -196,6 +196,123 @@ public class FinanceDataController {
         }
     }
 
+    @GetMapping("/profitSnapshot/summaryAll")
+    @Operation(summary = "利润快照汇总")
+    public Result<List<Map<String, Object>>> profitSnapshotSummaryAll() {
+        try {
+            var wrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.finance.domain.entity.ProfitSnapshot>();
+            wrapper.orderByDesc(com.njydsz.pmis.finance.domain.entity.ProfitSnapshot::getSnapshotAt).last("LIMIT 200");
+            var snaps = profitSnapshotMapper.selectList(wrapper);
+            if (snaps == null) return Result.ok(List.of());
+            List<Map<String, Object>> result = new java.util.ArrayList<>();
+            for (var s : snaps) {
+                Map<String, Object> m = new java.util.HashMap<>();
+                m.put("initiationId", s.getInitiationId());
+                m.put("period", s.getPeriod());
+                m.put("totalCost", s.getTotalCost());
+                m.put("grossMargin", s.getGrossMargin());
+                result.add(m);
+            }
+            return Result.ok(result);
+        } catch (Exception e) {
+            log.error("[FinanceData] profitSnapshotSummaryAll 失败: {}", e.getMessage());
+            return Result.ok(List.of());
+        }
+    }
+
+    @GetMapping("/profitSnapshot/rank")
+    @Operation(summary = "利润排名")
+    public Result<List<Map<String, Object>>> profitSnapshotRank(
+            @RequestParam("top") Integer top,
+            @RequestParam("sortBy") String sortBy,
+            @RequestParam(value = "period", required = false) String period) {
+        try {
+            var wrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.finance.domain.entity.ProfitSnapshot>();
+            if (period != null && !period.isEmpty()) {
+                wrapper.eq(com.njydsz.pmis.finance.domain.entity.ProfitSnapshot::getPeriod, period);
+            }
+            var all = profitSnapshotMapper.selectList(wrapper);
+            if (all == null) return Result.ok(List.of());
+            // Deduplicate by initiationId, keeping latest snapshot
+            Map<String, com.njydsz.pmis.finance.domain.entity.ProfitSnapshot> latest = new java.util.HashMap<>();
+            for (var s : all) {
+                if (s == null || s.getInitiationId() == null) continue;
+                var prev = latest.get(s.getInitiationId());
+                if (prev == null || (s.getSnapshotAt() != null && (prev.getSnapshotAt() == null || s.getSnapshotAt().isAfter(prev.getSnapshotAt())))) {
+                    latest.put(s.getInitiationId(), s);
+                }
+            }
+            List<Map<String, Object>> rows = new java.util.ArrayList<>();
+            for (var s : latest.values()) {
+                Map<String, Object> row = new java.util.HashMap<>();
+                row.put("initiationId", s.getInitiationId());
+                row.put("period", s.getPeriod());
+                row.put("contractAmount", s.getContractAmount());
+                row.put("recognizedRevenue", s.getRecognizedRevenue());
+                row.put("totalCost", s.getTotalCost());
+                row.put("grossProfit", s.getGrossProfit());
+                row.put("grossMargin", s.getGrossMargin());
+                row.put("progressPct", s.getProgressPct());
+                row.put("snapshotAt", s.getSnapshotAt());
+                rows.add(row);
+            }
+            // Sort
+            String dim = sortBy != null ? sortBy : "grossMargin";
+            java.util.Comparator<Map<String, Object>> cmp = switch (dim) {
+                case "grossProfit" -> java.util.Comparator.comparing(m -> toDecimal(m.get("grossProfit")));
+                case "contractAmount" -> java.util.Comparator.comparing(m -> toDecimal(m.get("contractAmount")));
+                default -> java.util.Comparator.comparing(m -> toDecimal(m.get("grossMargin")));
+            };
+            rows.sort(cmp.reversed());
+            int limit = top <= 0 ? 10 : top;
+            if (rows.size() > limit) rows = rows.subList(0, limit);
+            return Result.ok(rows);
+        } catch (Exception e) {
+            log.error("[FinanceData] profitSnapshotRank 失败: {}", e.getMessage());
+            return Result.ok(List.of());
+        }
+    }
+
+    @GetMapping("/revenue/selectByInitiation")
+    @Operation(summary = "按项目查询收入明细列表")
+    public Result<List<Map<String, Object>>> revenueByInitiation(@RequestParam("initiationId") String initiationId) {
+        try {
+            var revs = revenueMapper.selectByInitiation(initiationId);
+            if (revs == null) return Result.ok(List.of());
+            List<Map<String, Object>> result = new java.util.ArrayList<>();
+            for (var r : revs) {
+                Map<String, Object> m = new java.util.HashMap<>();
+                m.put("id", r.getId());
+                m.put("status", r.getStatus());
+                m.put("amount", r.getAmount());
+                m.put("period", r.getPeriod());
+                result.add(m);
+            }
+            return Result.ok(result);
+        } catch (Exception e) {
+            log.error("[FinanceData] revenueByInitiation 失败: {}", e.getMessage());
+            return Result.ok(List.of());
+        }
+    }
+
+    @GetMapping("/revenue/sumByPeriod")
+    @Operation(summary = "按项目查询收入期间汇总")
+    public Result<List<Map<String, Object>>> revenueSumByPeriod(@RequestParam("initiationId") String initiationId) {
+        try {
+            return Result.ok(revenueMapper.sumByPeriod(initiationId));
+        } catch (Exception e) {
+            log.error("[FinanceData] revenueSumByPeriod 失败: {}", e.getMessage());
+            return Result.ok(List.of());
+        }
+    }
+
+    private BigDecimal toDecimal(Object o) {
+        if (o == null) return BigDecimal.ZERO;
+        if (o instanceof BigDecimal bd) return bd;
+        if (o instanceof Number n) return new BigDecimal(n.toString());
+        try { return new BigDecimal(String.valueOf(o)); } catch (Exception e) { return BigDecimal.ZERO; }
+    }
+
     private BigDecimal nz(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
     }

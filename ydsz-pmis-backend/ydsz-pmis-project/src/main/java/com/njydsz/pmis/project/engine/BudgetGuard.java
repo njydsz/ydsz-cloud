@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.engine;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.mapper.execution.CostAllocationMapper;
-import com.njydsz.pmis.project.mapper.finance.ExpenseMapper;
+import com.njydsz.pmis.common.feign.FinanceDataClient;
 import com.njydsz.pmis.project.mapper.execution.PurchaseMapper;
 import com.njydsz.pmis.project.service.initiation.InitiationService;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ public class BudgetGuard {
 
     private final InitiationService initiationService;
     private final PurchaseMapper purchaseMapper;
-    private final ExpenseMapper expenseMapper;
+    private final FinanceDataClient financeDataClient;
     private final CostAllocationMapper costAllocationMapper;
     /**
      * Spring 事件发布器; null-safe(单元测试场景下未注入时直接跳过)
@@ -76,7 +76,7 @@ public class BudgetGuard {
         }
 
         BigDecimal purchaseUsed = nz(purchaseMapper.sumByInitiation(initiationId));
-        BigDecimal expenseUsed = nz(expenseMapper.sumByInitiation(initiationId));
+        BigDecimal expenseUsed = nz(financeDataClient.sumExpense(initiationId, null).getData());
         BigDecimal allocatedUsed = nz(costAllocationMapper.sumByInitiation(initiationId));
         // 已发生 = 采购已发生 + 费用已发生 + 已归集成本
         BigDecimal used = purchaseUsed.add(expenseUsed).add(allocatedUsed);
@@ -125,7 +125,7 @@ public class BudgetGuard {
         }
         BigDecimal budget = toBigDecimal(snap.get("budgetAmount"));
         BigDecimal used = nz(purchaseMapper.sumByInitiation(initiationId))
-                .add(nz(expenseMapper.sumByInitiation(initiationId)))
+                .add(nz(financeDataClient.sumExpense(initiationId, null).getData()))
                 .add(nz(costAllocationMapper.sumByInitiation(initiationId)));
         BigDecimal ratio = (budget != null && budget.signum() > 0)
                 ? used.divide(budget, 4, RoundingMode.HALF_UP)

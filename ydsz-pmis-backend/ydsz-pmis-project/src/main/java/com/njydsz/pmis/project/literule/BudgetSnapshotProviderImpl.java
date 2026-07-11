@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.literule;
 
 import com.njydsz.pmis.project.mapper.execution.CostAllocationMapper;
-import com.njydsz.pmis.project.mapper.finance.ExpenseMapper;
+import com.njydsz.pmis.common.feign.FinanceDataClient;
 import com.njydsz.pmis.project.mapper.execution.PurchaseMapper;
 import com.njydsz.pmis.project.service.initiation.InitiationService;
 import com.njydsz.pmis.literule.spi.BudgetSnapshotProvider;
@@ -37,7 +37,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
 
     private final InitiationService initiationService;
     private final PurchaseMapper purchaseMapper;
-    private final ExpenseMapper expenseMapper;
+    private final FinanceDataClient financeDataClient;
     private final CostAllocationMapper costAllocationMapper;
 
     /**
@@ -83,7 +83,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
             return BigDecimal.ZERO;
         }
         BigDecimal purchaseUsed = nz(purchaseMapper.sumByInitiation(initiationId));
-        BigDecimal expenseUsed = nz(expenseMapper.sumByInitiation(initiationId));
+        BigDecimal expenseUsed = nz(financeDataClient.sumExpense(initiationId, null).getData());
         BigDecimal allocatedUsed = nz(costAllocationMapper.sumByInitiation(initiationId));
         BigDecimal incurred = purchaseUsed.add(expenseUsed).add(allocatedUsed);
         log.debug("[BudgetSnapshotProvider] 项目 {} 已发生成本: 采购 {} + 费用 {} + 已归集 {} = {}",

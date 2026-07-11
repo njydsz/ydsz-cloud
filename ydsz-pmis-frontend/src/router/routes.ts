@@ -330,6 +330,24 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/rule-engine/variables/index.vue'),
         meta: { title: 'rule-engine.variables', icon: 'Setting', activeMenu: '/execution/rule-engine', keepAlive: true, permCode: PC.EXECUTION_RULE_ENGINE_VIEW },
       },
+      {
+        path: 'rule-engine/dsl-manager',
+        name: 'RuleEngineDslManager',
+        component: () => import('@/views/execution/rule-engine/dsl-manager.vue'),
+        meta: { title: 'rule-engine.dslManager', icon: 'Document', activeMenu: '/execution/rule-engine', keepAlive: true, permCode: PC.EXECUTION_RULE_ENGINE_VIEW },
+      },
+      {
+        path: 'rule-engine/audit-log',
+        name: 'RuleEngineAuditLog',
+        component: () => import('@/views/execution/rule-engine/audit-log.vue'),
+        meta: { title: 'rule-engine.auditLog', icon: 'Lock', activeMenu: '/execution/rule-engine', keepAlive: true, permCode: PC.EXECUTION_RULE_ENGINE_VIEW },
+      },
+      {
+        path: 'rule-engine/replay',
+        name: 'RuleEngineReplay',
+        component: () => import('@/views/execution/rule-engine/replay.vue'),
+        meta: { title: 'rule-engine.replay', icon: 'VideoPlay', activeMenu: '/execution/rule-engine', keepAlive: true, permCode: PC.EXECUTION_RULE_ENGINE_VIEW },
+      },
     ],
   },
   {
