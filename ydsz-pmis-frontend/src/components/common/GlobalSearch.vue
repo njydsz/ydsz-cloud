@@ -1,14 +1,15 @@
-﻿<!--
-  @fileoverview 全局搜索弹窗（Ctrl+K 唤起）
-  @description 顶部全局搜索入口：
-  - 空关键词：展示最近访问
-  - 有关键词：菜单导航本地过滤 + 统一全文检索（项目/合同/审批/工单/人员/知识库）
+﻿﻿<!--
+  @fileoverview 命令面板（Ctrl+K 唤起）
+  @description P1-2: 从 GlobalSearch 升级为 Command Palette：
+  - 空关键词：展示最近访问 + 快捷操作命令
+  - 有关键词：命令 + 菜单导航 + 统一全文检索（项目/合同/审批/工单/人员/知识库）
   - 键盘导航：↑↓ 切换、Enter 打开、Esc 关闭
   - 打开页面后自动记录到最近访问
+  - 最近使用命令 localStorage 持久化
   - 数据来源: @/api/search、@/api/favorite
   @module components/common/GlobalSearch
   @author ydsz-pmis-team
-  @since 1.0.0
+  @since 1.1.0
 -->
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
@@ -26,9 +27,18 @@ import {
   Avatar,
   Collection,
   Checked,
+  Sunny,
+  Moon,
+  Fold,
+  Expand,
+  Refresh,
+  Plus,
+  Bell,
+  List,
 } from '@element-plus/icons-vue'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
 import { usePermissionStore } from '@/store/modules/permission'
+import { useAppStore } from '@/store/modules/app'
 import {
   searchProjects,
   searchAll,
@@ -44,6 +54,7 @@ const { visible, close } = useGlobalSearch()
 const router = useRouter()
 const { t } = useI18n()
 const permissionStore = usePermissionStore()
+const appStore = useAppStore()
 
 /** 搜索关键词 */
 const keyword = ref('')
@@ -84,8 +95,18 @@ interface EntityItem {
   subtitle: string
   path: string
 }
+/** P1-2: 快捷命令项 */
+interface CommandItem {
+  type: 'command'
+  id: string
+  title: string
+  subtitle?: string
+  icon: typeof Folder
+  keywords: string
+  handler: () => void
+}
 
-type SearchItem = MenuItem | RecentItem | EntityItem
+type SearchItem = MenuItem | RecentItem | EntityItem | CommandItem
 
 /** 实体类型 → 图标组件 映射 */
 const entityIconMap: Record<SearchEntityType, typeof Folder> = {
@@ -173,6 +194,126 @@ const allEntityItems = computed<EntityItem[]>(() => [
 ])
 
 // ===========================================
+// P1-2: 快捷命令定义
+// ===========================================
+
+/** 最近使用命令存储 key */
+const RECENT_CMDS_KEY = 'command_palette_recent_cmds'
+/** 最近使用命令 ID 列表（最多 5 条） */
+const recentCmdIds = ref<string[]>([])
+
+function loadRecentCmds() {
+  try {
+    const raw = localStorage.getItem(RECENT_CMDS_KEY)
+    if (raw) recentCmdIds.value = JSON.parse(raw).slice(0, 5)
+  } catch { /* 静默失败 */ }
+}
+
+function saveRecentCmd(id: string) {
+  recentCmdIds.value = [id, ...recentCmdIds.value.filter((c) => c !== id)].slice(0, 5)
+  try {
+    localStorage.setItem(RECENT_CMDS_KEY, JSON.stringify(recentCmdIds.value))
+  } catch { /* 静默失败 */ }
+}
+
+/** 所有预定义快捷命令 */
+const allCommands = computed<CommandItem[]>(() => [
+  {
+    id: 'cmd:toggle-theme',
+    type: 'command',
+    title: t('common.commandPalette.toggleTheme'),
+    subtitle: t('common.commandPalette.toggleThemeDesc'),
+    icon: appStore.theme === 'dark' ? Sunny : Moon,
+    keywords: 'theme dark light 主题 暗黑 明亮 切换',
+    handler: () => appStore.toggleTheme(),
+  },
+  {
+    id: 'cmd:toggle-sidebar',
+    type: 'command',
+    title: t('common.commandPalette.toggleSidebar'),
+    subtitle: t('common.commandPalette.toggleSidebarDesc'),
+    icon: appStore.sidebarCollapsed ? Expand : Fold,
+    keywords: 'sidebar collapse expand 侧边栏 折叠 展开',
+    handler: () => appStore.toggleSidebar(),
+  },
+  {
+    id: 'cmd:refresh',
+    type: 'command',
+    title: t('common.commandPalette.refresh'),
+    subtitle: t('common.commandPalette.refreshDesc'),
+    icon: Refresh,
+    keywords: 'refresh reload 刷新 重新加载',
+    handler: () => window.location.reload(),
+  },
+  {
+    id: 'cmd:new-invoice',
+    type: 'command',
+    title: t('common.commandPalette.newInvoice'),
+    subtitle: t('common.commandPalette.newInvoiceDesc'),
+    icon: Plus,
+    keywords: 'invoice create new 发票 新建 创建',
+    handler: () => router.push('/finance/invoice'),
+  },
+  {
+    id: 'cmd:new-contract',
+    type: 'command',
+    title: t('common.commandPalette.newContract'),
+    subtitle: t('common.commandPalette.newContractDesc'),
+    icon: Plus,
+    keywords: 'contract create new 合同 新建 创建',
+    handler: () => router.push('/project/contract'),
+  },
+  {
+    id: 'cmd:new-wbs-task',
+    type: 'command',
+    title: t('common.commandPalette.newWbsTask'),
+    subtitle: t('common.commandPalette.newWbsTaskDesc'),
+    icon: Plus,
+    keywords: 'wbs task create new 任务 新建 创建',
+    handler: () => router.push('/execution/wbs-task'),
+  },
+  {
+    id: 'cmd:approval-center',
+    type: 'command',
+    title: t('common.commandPalette.approvalCenter'),
+    subtitle: t('common.commandPalette.approvalCenterDesc'),
+    icon: Bell,
+    keywords: 'approval todo task center 审批 待办 中心',
+    handler: () => router.push('/workflow/approval-center'),
+  },
+  {
+    id: 'cmd:my-todos',
+    type: 'command',
+    title: t('common.commandPalette.myTodos'),
+    subtitle: t('common.commandPalette.myTodosDesc'),
+    icon: List,
+    keywords: 'todo task my 我的 待办 任务',
+    handler: () => router.push('/workflow/approval-center'),
+  },
+])
+
+/** 关键词过滤后的命令结果 */
+const commandResults = computed<CommandItem[]>(() => {
+  const kw = keyword.value.trim().toLowerCase()
+  if (!kw) return []
+  return allCommands.value
+    .filter((c) =>
+      c.title.toLowerCase().includes(kw) ||
+      c.keywords.toLowerCase().includes(kw),
+    )
+    .slice(0, 5)
+})
+
+/** 空关键词时展示最近使用的命令 */
+const recentCommands = computed<CommandItem[]>(() => {
+  if (keyword.value.trim()) return []
+  return recentCmdIds.value
+    .map((id) => allCommands.value.find((c) => c.id === id))
+    .filter((c): c is CommandItem => !!c)
+    .slice(0, 5)
+})
+
+// ===========================================
 // 二、分组结果与扁平索引
 // ===========================================
 
@@ -203,7 +344,7 @@ const groupedResults = computed<ResultGroup[]>(() => {
   const kw = keyword.value.trim()
 
   if (!kw) {
-    // 空关键词：展示最近访问
+    // 空关键词：展示最近访问 + 最近命令
     const recent: RecentItem[] = recentAccess.value.slice(0, 6).map((r) => ({
       type: 'recent',
       title: r.title,
@@ -212,8 +353,19 @@ const groupedResults = computed<ResultGroup[]>(() => {
     if (recent.length) {
       groups.push({ label: t('common.globalSearch.groupRecent'), items: recent })
     }
+    // P1-2: 最近使用命令
+    if (recentCommands.value.length) {
+      groups.push({ label: t('common.commandPalette.groupRecentCommands'), items: recentCommands.value })
+    }
+    // P1-2: 全部快捷命令（空关键词时展示）
+    if (allCommands.value.length) {
+      groups.push({ label: t('common.commandPalette.groupQuickActions'), items: allCommands.value })
+    }
   } else {
-    // 有关键词：菜单 + 实体搜索
+    // 有关键词：命令 + 菜单 + 实体搜索
+    if (commandResults.value.length) {
+      groups.push({ label: t('common.commandPalette.groupQuickActions'), items: commandResults.value })
+    }
     if (menuResults.value.length) {
       groups.push({ label: t('common.globalSearch.groupMenu'), items: menuResults.value })
     }
@@ -316,6 +468,7 @@ watch(visible, async (val) => {
     universalResults.value = []
     projectResults.value = []
     searchLoading.value = false
+    loadRecentCmds()
     await nextTick()
     inputRef.value?.focus()
     // 加载最近访问
@@ -348,7 +501,7 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 /**
- * 选中某项：关闭弹窗 → 路由跳转 → 记录访问
+ * 选中某项：关闭弹窗 → 路由跳转/执行命令 → 记录访问
  *
  * @param index 扁平列表中的索引
  */
@@ -356,8 +509,14 @@ function selectItem(index: number) {
   const item = flatResults.value[index]
   if (!item) return
   close()
-  router.push(item.path).catch(() => {})
-  recordAccess(item.path, item.title).catch(() => {})
+  if (item.type === 'command') {
+    // P1-2: 执行快捷命令并记录使用
+    saveRecentCmd(item.id)
+    item.handler()
+  } else {
+    router.push(item.path).catch(() => {})
+    recordAccess(item.path, item.title).catch(() => {})
+  }
 }
 
 /** 滚动选中项到可视区域 */
@@ -418,12 +577,16 @@ watch(activeIndex, scrollToActive)
                 v-else-if="item.type === 'entity'"
                 :is="entityIconMap[item.entityType] || Connection"
               />
+              <component
+                v-else-if="item.type === 'command'"
+                :is="item.icon"
+              />
               <Document v-else />
             </el-icon>
             <div class="gs-item-content">
               <span class="gs-item-title">{{ item.title }}</span>
               <span
-                v-if="(item.type === 'entity') && item.subtitle"
+                v-if="(item.type === 'entity' || item.type === 'command') && item.subtitle"
                 class="gs-item-subtitle"
               >
                 {{ item.subtitle }}

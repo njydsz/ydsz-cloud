@@ -1,4 +1,4 @@
-﻿<!--
+﻿﻿<!--
   @file 发票管理
   @description 项目执行过程中的发票管理页面，覆盖发票全生命周期：草稿 → 提交 → 审批 → 开票 → 红冲/取消；
                支持蓝字发票与红字发票（红冲），开票依据包括里程碑、外协人天、按月、终验等；
@@ -19,6 +19,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import { BatchToolbar } from '@/components/common'
+import type { BatchAction } from '@/components/common'
 import {
   pageInvoices,
   createInvoice,
@@ -29,8 +31,10 @@ import {
 } from '@/api/finance/invoice'
 import type { InvoiceVO, InvoiceCreateDTO } from '@/api/finance/invoice/types'
 import { PC } from '@/constants/permissionCodes'
+import { useOptimisticUpdate } from '@/composables/useOptimisticUpdate'
 
 const { t } = useI18n()
+const { optimistic } = useOptimisticUpdate()
 
 /** 列表加载状态 */
 const loading = ref(false)
@@ -173,7 +177,7 @@ async function submitForm() {
 }
 
 /**
- * 审批发票（通过/驳回），需二次确认
+ * 审批发票（通过/驳回），需二次确认 — P1-3: 乐观更新
  * @param row 发票记录
  * @param action 审批动作（APPROVED 通过 / REJECTED 驳回）
  */
@@ -181,25 +185,36 @@ async function handleApprove(row: InvoiceVO, action: 'APPROVED' | 'REJECTED') {
   const text = action === 'APPROVED' ? t('finance.invoice.messages.approvePass') : t('finance.invoice.messages.approveReject')
   try {
     await ElMessageBox.confirm(t('finance.invoice.messages.approvePrompt', { text }), t('common.tip'), { type: 'warning' })
-    await approveInvoice({ id: row.id, approverId: 1, approverName: t('finance.invoice.systemApprover') })
-    ElMessage.success(t('finance.invoice.messages.approved', { text }))
-    fetchList()
+    const oldStatus = row.status
+    await optimistic({
+      mutate: () => { row.status = action },
+      snapshot: () => oldStatus,
+      rollback: (snap) => { row.status = snap },
+      api: () => approveInvoice({ id: row.id, approverId: 1, approverName: t('finance.invoice.systemApprover') }),
+      successMsg: t('finance.invoice.messages.approved', { text }),
+      onSuccess: () => fetchList(),
+    })
   } catch { /* 取消 */ }
 }
 
 /**
- * 开票操作，后端将自动生成发票号（invoiceNo）
+ * 开票操作，后端将自动生成发票号（invoiceNo） — P1-3: 乐观更新
  * @param row 发票记录
  */
 async function handleIssue(row: InvoiceVO) {
   try {
     await ElMessageBox.confirm(t('finance.invoice.messages.issuePrompt'), t('common.tip'), { type: 'warning' })
-    await issueInvoice({ id: row.id })
-    ElMessage.success(t('finance.invoice.messages.issued'))
-    fetchList()
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('finance.invoice.messages.issueFailed'))
-  }
+    const oldStatus = row.status
+    await optimistic({
+      mutate: () => { row.status = 'ISSUED' },
+      snapshot: () => oldStatus,
+      rollback: (snap) => { row.status = snap },
+      api: () => issueInvoice({ id: row.id }),
+      successMsg: t('finance.invoice.messages.issued'),
+      errorMsg: t('finance.invoice.messages.issueFailed'),
+      onSuccess: () => fetchList(),
+    })
+  } catch { /* 取消 */ }
 }
 
 /**
@@ -219,16 +234,130 @@ async function handleReverse(row: InvoiceVO) {
 }
 
 /**
- * 删除指定发票，需二次确认
+ * 删除指定发票，需二次确认 — P1-3: 乐观更新
  * @param row 发票记录
  */
 async function handleDelete(row: InvoiceVO) {
   try {
     await ElMessageBox.confirm(t('finance.invoice.messages.deletePrompt'), t('common.tip'), { type: 'warning' })
-    await deleteInvoice(row.id)
-    ElMessage.success(t('finance.invoice.messages.deleted'))
-    fetchList()
+    await optimistic({
+      mutate: () => { list.value = list.value.filter((r) => r.id !== row.id) },
+      snapshot: () => [...list.value],
+      rollback: (snap) => { list.value = snap },
+      api: () => deleteInvoice(row.id),
+      successMsg: t('finance.invoice.messages.deleted'),
+      onSuccess: () => fetchList(),
+    })
   } catch { /* 取消 */ }
+}
+
+// ===== P1-1: 批量操作 =====
+/** vxe-table 引用 */
+const tableRef = ref()
+/** 选中的行 */
+const selectedRows = ref<InvoiceVO[]>([])
+/** 批量操作 loading */
+const batchLoading = ref(false)
+
+/** vxe checkbox 变化回调 */
+function onCheckboxChange() {
+  selectedRows.value = tableRef.value?.getCheckboxRecords() || []
+}
+
+/** 批量审批通过（仅 SUBMITTED 状态可操作） */
+async function batchApprove() {
+  const rows = selectedRows.value.filter((r) => r.status === 'SUBMITTED')
+  if (rows.length === 0) {
+    ElMessage.warning(t('finance.invoice.messages.batchSelectFirst'))
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      t('finance.invoice.messages.batchApproveConfirm', { n: rows.length }),
+      t('common.tip'),
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(
+      rows.map((r) => approveInvoice({ id: r.id, approverId: 1, approverName: t('finance.invoice.systemApprover') })),
+    )
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(t('finance.invoice.messages.batchApproveSuccess', { success, failed }))
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量开票（仅 APPROVED 状态可操作） */
+async function batchIssue() {
+  const rows = selectedRows.value.filter((r) => r.status === 'APPROVED')
+  if (rows.length === 0) {
+    ElMessage.warning(t('finance.invoice.messages.batchSelectFirst'))
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      t('finance.invoice.messages.batchIssueConfirm', { n: rows.length }),
+      t('common.tip'),
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(rows.map((r) => issueInvoice({ id: r.id })))
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(t('finance.invoice.messages.batchIssueSuccess', { success, failed }))
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量删除 */
+async function batchDelete() {
+  const rows = selectedRows.value
+  if (rows.length === 0) {
+    ElMessage.warning(t('finance.invoice.messages.batchSelectFirst'))
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      t('finance.invoice.messages.batchDeleteConfirm', { n: rows.length }),
+      t('common.tip'),
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(rows.map((r) => deleteInvoice(r.id)))
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(t('finance.invoice.messages.batchDeleteSuccess', { success, failed }))
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量操作配置 */
+const batchActions = computed<BatchAction[]>(() => [
+  { label: t('finance.invoice.batch.approve'), type: 'success', permission: PC.FINANCE_INVOICE_APPROVE, handler: batchApprove },
+  { label: t('finance.invoice.batch.issue'), type: 'primary', permission: PC.FINANCE_INVOICE_ISSUE, handler: batchIssue },
+  { label: t('finance.invoice.batch.delete'), type: 'danger', permission: PC.FINANCE_INVOICE_CREATE, handler: batchDelete },
+])
+
+/** 清空选择 */
+function clearSelection() {
+  tableRef.value?.clearCheckboxRow()
+  selectedRows.value = []
 }
 
 /** 页面挂载时加载列表 */
@@ -270,7 +399,13 @@ onMounted(fetchList)
     </template>
 
     <template #table="scope">
-      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
+      <BatchToolbar
+        :selected-count="selectedRows.length"
+        :actions="batchActions"
+        @clear="clearSelection"
+      />
+      <vxe-table ref="tableRef" :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY" :checkbox-config="{ highlight: true }" @checkbox-change="onCheckboxChange" @checkbox-all="onCheckboxChange">
+        <vxe-column type="checkbox" width="50" />
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="invoiceCode" :title="t('finance.invoice.columns.code')" width="160" />
         <vxe-column field="invoiceNo" :title="t('finance.invoice.columns.no')" width="160" />

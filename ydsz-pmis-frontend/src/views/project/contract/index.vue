@@ -6,8 +6,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import type { FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import { BatchToolbar } from '@/components/common'
+import type { BatchAction } from '@/components/common'
 import {
   pageContracts,
   createContract,
@@ -22,6 +25,7 @@ import { useFormGuard } from '@/composables/useFormGuard'
 import { useModalA11y } from '@/composables/useModalA11y'
 import { useUserStore } from '@/store/modules/user'
 import { handleError, confirmAction, showSuccess } from '@/utils/error'
+import { useOptimisticUpdate } from '@/composables/useOptimisticUpdate'
 
 // ===== 列表查询状态 =====
 const loading = ref(false)
@@ -117,6 +121,7 @@ const formRules = {
 
 // ===== 表单草稿 =====
 const userStore = useUserStore()
+const { optimistic } = useOptimisticUpdate()
 const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form, {
   key: 'contract-create',
   debounce: 3000,
@@ -251,23 +256,24 @@ async function submitForm() {
 }
 
 /**
- * 删除合同（二次确认）
+ * 删除合同（二次确认） — P1-3: 乐观更新
  * @param row 选中的合同行数据
  */
 async function handleDelete(row: ContractVO) {
   const confirmed = await confirmAction(`确认删除合同「${row.contractName}」吗？`, '提示')
   if (!confirmed) return
-  try {
-    await deleteContract(row.id)
-    showSuccess('删除成功')
-    fetchList()
-  } catch (e) {
-    handleError(e, 'handleDelete')
-  }
+  await optimistic({
+    mutate: () => { list.value = list.value.filter((r) => r.id !== row.id) },
+    snapshot: () => [...list.value],
+    rollback: (snap) => { list.value = snap },
+    api: () => deleteContract(row.id),
+    successMsg: '删除成功',
+    onSuccess: () => fetchList(),
+  })
 }
 
 /**
- * 变更合同状态（二次确认），状态机见文件头
+ * 变更合同状态（二次确认） — P1-3: 乐观更新
  * @param row 选中的合同行数据
  * @param target 目标状态编码
  */
@@ -275,17 +281,129 @@ async function handleStatus(row: ContractVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   const confirmed = await confirmAction(`确认将状态变更为「${targetText}」吗？`, '提示')
   if (!confirmed) return
-  try {
-    const dto: ContractStatusDTO = { id: row.id, targetStatus: target }
-    await changeContractStatus(dto)
-    showSuccess('状态已更新')
-    fetchList()
-  } catch (e) {
-    handleError(e, 'handleStatus')
-  }
+  const oldStatus = row.status
+  await optimistic({
+    mutate: () => { row.status = target },
+    snapshot: () => oldStatus,
+    rollback: (snap) => { row.status = snap },
+    api: () => changeContractStatus({ id: row.id, targetStatus: target }),
+    successMsg: '状态已更新',
+    onSuccess: () => fetchList(),
+  })
 }
 
 onMounted(fetchList)
+
+// ===== P1-1: 批量操作 =====
+/** vxe-table 引用 */
+const tableRef = ref()
+/** 选中的行 */
+const selectedRows = ref<ContractVO[]>([])
+/** 批量操作 loading */
+const batchLoading = ref(false)
+
+/** vxe checkbox 变化回调 */
+function onCheckboxChange() {
+  selectedRows.value = tableRef.value?.getCheckboxRecords() || []
+}
+
+/** 批量提交评审（仅 DRAFT 状态可操作） */
+async function batchSubmitReview() {
+  const rows = selectedRows.value.filter((r) => r.status === 'DRAFT')
+  if (rows.length === 0) {
+    ElMessage.warning('请先勾选草稿状态的合同')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确认批量提交评审选中的 ${rows.length} 份合同？`,
+      '提示',
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(
+      rows.map((r) => changeContractStatus({ id: r.id, targetStatus: 'UNDER_REVIEW' })),
+    )
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(`批量提交评审完成：成功 ${success} 条，失败 ${failed} 条`)
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量审批通过（仅 UNDER_REVIEW 状态可操作） */
+async function batchApprove() {
+  const rows = selectedRows.value.filter((r) => r.status === 'UNDER_REVIEW')
+  if (rows.length === 0) {
+    ElMessage.warning('请先勾选审批中的合同')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确认批量审批通过选中的 ${rows.length} 份合同？`,
+      '提示',
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(
+      rows.map((r) => changeContractStatus({ id: r.id, targetStatus: 'APPROVED' })),
+    )
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(`批量审批完成：成功 ${success} 条，失败 ${failed} 条`)
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量删除 */
+async function batchDelete() {
+  const rows = selectedRows.value
+  if (rows.length === 0) {
+    ElMessage.warning('请先勾选要操作的合同')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确认批量删除选中的 ${rows.length} 份合同？`,
+      '提示',
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(rows.map((r) => deleteContract(r.id)))
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(`批量删除完成：成功 ${success} 条，失败 ${failed} 条`)
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量操作配置 */
+const batchActions = computed<BatchAction[]>(() => [
+  { label: '批量提交评审', type: 'warning', permission: PC.PROJECT_CONTRACT_STATUS, handler: batchSubmitReview },
+  { label: '批量审批通过', type: 'success', permission: PC.PROJECT_CONTRACT_STATUS, handler: batchApprove },
+  { label: '批量删除', type: 'danger', permission: PC.PROJECT_CONTRACT_DELETE, handler: batchDelete },
+])
+
+/** 清空选择 */
+function clearSelection() {
+  tableRef.value?.clearCheckboxRow()
+  selectedRows.value = []
+}
 </script>
 
 <template>
@@ -317,7 +435,13 @@ onMounted(fetchList)
     </template>
 
     <template #table="scope">
-      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
+      <BatchToolbar
+        :selected-count="selectedRows.length"
+        :actions="batchActions"
+        @clear="clearSelection"
+      />
+      <vxe-table ref="tableRef" :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY" :checkbox-config="{ highlight: true }" @checkbox-change="onCheckboxChange" @checkbox-all="onCheckboxChange">
+        <vxe-column type="checkbox" width="50" />
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="contractCode" title="编码" width="160" />
         <vxe-column field="contractName" title="合同名称" min-width="200" show-overflow />

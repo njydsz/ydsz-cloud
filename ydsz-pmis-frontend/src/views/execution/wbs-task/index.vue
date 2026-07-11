@@ -15,6 +15,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import { BatchToolbar } from '@/components/common'
+import type { BatchAction } from '@/components/common'
 import {
   pageWbsTasks,
   createWbsTask,
@@ -23,8 +25,10 @@ import {
 } from '@/api/execution/wbs-task'
 import type { WbsTaskVO, WbsTaskCreateDTO } from '@/api/execution/wbs-task/types'
 import { PC } from '@/constants/permissionCodes'
+import { useOptimisticUpdate } from '@/composables/useOptimisticUpdate'
 
 const { t } = useI18n()
+const { optimistic } = useOptimisticUpdate()
 
 // P0-1: 视图切换 — 列表视图 / 甘特图视图
 const viewMode = ref<'list' | 'gantt'>('list')
@@ -146,28 +150,39 @@ async function submitForm() {
   fetchList()
 }
 
-/** 删除任务（二次确认） */
+/** P1-3: 删除任务（乐观更新，二次确认） */
 async function handleDelete(row: WbsTaskVO) {
   try {
     await ElMessageBox.confirm(t('execution.wbsTask.messages.confirmDelete', { name: row.taskName }), t('common.confirm'), { type: 'warning' })
-    await deleteWbsTask(row.id)
-    ElMessage.success(t('execution.wbsTask.messages.deleteSuccess'))
-    fetchList()
+    await optimistic({
+      mutate: () => { list.value = list.value.filter((r) => r.id !== row.id) },
+      snapshot: () => [...list.value],
+      rollback: (snap) => { list.value = snap },
+      api: () => deleteWbsTask(row.id),
+      successMsg: t('execution.wbsTask.messages.deleteSuccess'),
+      onSuccess: () => fetchList(),
+    })
   } catch { /* 取消 */ }
 }
 
-/** 状态流转：根据目标状态推进任务流程（启动/提评审/阻塞/解除阻塞/完成） */
+/** P1-3: 状态流转（乐观更新，根据目标状态推进任务流程） */
 async function handleStatus(row: WbsTaskVO, target: string) {
   const targetText = statusMap.value[target as keyof typeof statusMap.value]?.label || target
   try {
     await ElMessageBox.confirm(t('execution.wbsTask.messages.confirmStatusChange', { target: targetText }), t('common.confirm'), { type: 'warning' })
-    await changeWbsTaskStatus({ id: row.id, targetStatus: target })
-    ElMessage.success(t('execution.wbsTask.messages.statusUpdated'))
-    fetchList()
+    const oldStatus = row.status
+    await optimistic({
+      mutate: () => { row.status = target },
+      snapshot: () => oldStatus,
+      rollback: (snap) => { row.status = snap },
+      api: () => changeWbsTaskStatus({ id: row.id, targetStatus: target }),
+      successMsg: t('execution.wbsTask.messages.statusUpdated'),
+      onSuccess: () => fetchList(),
+    })
   } catch { /* 取消 */ }
 }
 
-/** 更新任务进度：输入 0-100 的百分比，校验后调用状态变更接口带 progressPct */
+/** P1-3: 更新任务进度（乐观更新） */
 async function handleProgress(row: WbsTaskVO) {
   try {
     const { value } = await ElMessageBox.prompt(t('execution.wbsTask.messages.progressPrompt'), t('execution.wbsTask.messages.progressTitle'), {
@@ -179,10 +194,158 @@ async function handleProgress(row: WbsTaskVO) {
       ElMessage.warning(t('execution.wbsTask.messages.progressRange'))
       return
     }
-    await changeWbsTaskStatus({ id: row.id, targetStatus: 'IN_PROGRESS', progressPct: pct })
-    ElMessage.success(t('execution.wbsTask.messages.progressUpdated'))
-    fetchList()
+    const oldProgress = row.progressPct
+    const oldStatus = row.status
+    await optimistic({
+      mutate: () => { row.progressPct = pct; row.status = 'IN_PROGRESS' },
+      snapshot: () => ({ progressPct: oldProgress, status: oldStatus }),
+      rollback: (snap) => { row.progressPct = snap.progressPct; row.status = snap.status },
+      api: () => changeWbsTaskStatus({ id: row.id, targetStatus: 'IN_PROGRESS', progressPct: pct }),
+      successMsg: t('execution.wbsTask.messages.progressUpdated'),
+      onSuccess: () => fetchList(),
+    })
   } catch { /* 取消 */ }
+}
+
+// ===== P1-1: 批量操作 =====
+/** vxe-table 引用 */
+const tableRef = ref()
+/** 选中的行 */
+const selectedRows = ref<WbsTaskVO[]>([])
+/** 批量操作 loading */
+const batchLoading = ref(false)
+
+/** vxe checkbox 变化回调 */
+function onCheckboxChange() {
+  selectedRows.value = tableRef.value?.getCheckboxRecords() || []
+}
+
+/** 批量启动（仅 PLANNED 状态可操作） */
+async function batchStart() {
+  const rows = selectedRows.value.filter((r) => r.status === 'PLANNED')
+  if (rows.length === 0) {
+    ElMessage.warning(t('execution.wbsTask.messages.batchSelectFirst'))
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      t('execution.wbsTask.messages.batchStartConfirm', { n: rows.length }),
+      t('common.confirm'),
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(
+      rows.map((r) => changeWbsTaskStatus({ id: r.id, targetStatus: 'IN_PROGRESS' })),
+    )
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(t('execution.wbsTask.messages.batchStartSuccess', { success, failed }))
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量提评审（仅 IN_PROGRESS 状态可操作） */
+async function batchSubmitReview() {
+  const rows = selectedRows.value.filter((r) => r.status === 'IN_PROGRESS')
+  if (rows.length === 0) {
+    ElMessage.warning(t('execution.wbsTask.messages.batchSelectFirst'))
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      t('execution.wbsTask.messages.batchReviewConfirm', { n: rows.length }),
+      t('common.confirm'),
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(
+      rows.map((r) => changeWbsTaskStatus({ id: r.id, targetStatus: 'IN_REVIEW' })),
+    )
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(t('execution.wbsTask.messages.batchReviewSuccess', { success, failed }))
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量完成（仅 IN_REVIEW 状态可操作） */
+async function batchComplete() {
+  const rows = selectedRows.value.filter((r) => r.status === 'IN_REVIEW')
+  if (rows.length === 0) {
+    ElMessage.warning(t('execution.wbsTask.messages.batchSelectFirst'))
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      t('execution.wbsTask.messages.batchCompleteConfirm', { n: rows.length }),
+      t('common.confirm'),
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(
+      rows.map((r) => changeWbsTaskStatus({ id: r.id, targetStatus: 'COMPLETED' })),
+    )
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(t('execution.wbsTask.messages.batchCompleteSuccess', { success, failed }))
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量删除 */
+async function batchDelete() {
+  const rows = selectedRows.value
+  if (rows.length === 0) {
+    ElMessage.warning(t('execution.wbsTask.messages.batchSelectFirst'))
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      t('execution.wbsTask.messages.batchDeleteConfirm', { n: rows.length }),
+      t('common.confirm'),
+      { type: 'warning' },
+    )
+    batchLoading.value = true
+    const results = await Promise.allSettled(rows.map((r) => deleteWbsTask(r.id)))
+    const success = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - success
+    ElMessage.success(t('execution.wbsTask.messages.batchDeleteSuccess', { success, failed }))
+    selectedRows.value = []
+    fetchList()
+  } catch {
+    // 用户取消
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/** 批量操作配置 */
+const batchActions = computed<BatchAction[]>(() => [
+  { label: t('execution.wbsTask.batch.start'), type: 'primary', permission: PC.EXECUTION_WBS_STATUS, handler: batchStart },
+  { label: t('execution.wbsTask.batch.submitReview'), type: 'warning', permission: PC.EXECUTION_WBS_STATUS, handler: batchSubmitReview },
+  { label: t('execution.wbsTask.batch.complete'), type: 'success', permission: PC.EXECUTION_WBS_STATUS, handler: batchComplete },
+  { label: t('execution.wbsTask.batch.delete'), type: 'danger', permission: PC.EXECUTION_WBS_DELETE, handler: batchDelete },
+])
+
+/** 清空选择 */
+function clearSelection() {
+  tableRef.value?.clearCheckboxRow()
+  selectedRows.value = []
 }
 
 onMounted(fetchList)
@@ -233,7 +396,13 @@ onMounted(fetchList)
 
     <!-- 默认列表视图 -->
     <template v-else #table="scope">
-      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
+      <BatchToolbar
+        :selected-count="selectedRows.length"
+        :actions="batchActions"
+        @clear="clearSelection"
+      />
+      <vxe-table ref="tableRef" :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY" :checkbox-config="{ highlight: true }" @checkbox-change="onCheckboxChange" @checkbox-all="onCheckboxChange">
+        <vxe-column type="checkbox" width="50" />
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="taskCode" :title="$t('execution.wbsTask.columns.taskCode')" width="140" />
         <vxe-column field="taskName" :title="$t('execution.wbsTask.columns.taskName')" min-width="200" show-overflow />
