@@ -2,7 +2,6 @@ package com.njydsz.pmis.gateway.filter;
 
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.gateway.config.CachedJwtValidator;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.impl.DefaultClaims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

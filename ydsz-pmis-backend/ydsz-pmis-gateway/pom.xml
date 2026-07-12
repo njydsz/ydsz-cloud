@@ -65,6 +65,12 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+        <!-- Fastjson2（JSON 序列化，gateway 各 filter/config 使用） -->
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+        </dependency>
+
         <!-- 健康检�?-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -80,6 +86,12 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- jjwt-impl（test scope: AuthGlobalFilterTest 使用 DefaultClaims） -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
