@@ -18,5 +18,8 @@ public enum ExceptionLevel {
     ERROR,
 
     /** 致命级（记录、告警、阻断业务、需立即处理） */
-    FATAL
+    FATAL,
+
+    /** 灾难级（基础设施不可用、熔断触发、需紧急处理） */
+    CRITICAL
 }

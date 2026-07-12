@@ -7,6 +7,8 @@ import com.njydsz.pmis.common.exception.i18n.MessageResolverHolder;
 import lombok.Getter;
 
 import java.io.Serial;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 抽象异常基类
@@ -169,12 +171,13 @@ public abstract class AbstractPmisException extends RuntimeException {
      * @param value 数据值
      * @return 当前异常对象
      */
+    @SuppressWarnings("unchecked")
     public AbstractPmisException data(String key, Object value) {
         if (this.extData == null) {
-            this.extData = new java.util.concurrent.ConcurrentHashMap<>();
+            this.extData = new ConcurrentHashMap<>();
         }
-        if (this.extData instanceof java.util.Map) {
-            ((java.util.Map<String, Object>) this.extData).put(key, value);
+        if (this.extData instanceof Map) {
+            ((Map<String, Object>) this.extData).put(key, value);
         }
         return this;
     }
