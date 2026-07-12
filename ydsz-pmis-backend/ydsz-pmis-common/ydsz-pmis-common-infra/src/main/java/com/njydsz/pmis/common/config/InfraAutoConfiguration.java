@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Import;
  *   <li>{@link SentinelAutoConfiguration} - Sentinel 限流/熔断</li>
  *   <li>{@link SeataAutoConfiguration} - Seata 分布式事务</li>
  *   <li>{@link Resilience4jConfig} - Resilience4j 熔断器</li>
- *   <li>{@link MinioConfig} - MinIO 对象存储</li>
+ *   <li>MinIO 对象存储（由 ydsz-pmis-common-file 模块提供，此处不再重复导入）</li>
  *   <li>{@link ChaosAutoConfiguration} - 混沌工程</li>
  *   <li>{@link FeatureFlagAutoConfiguration} - 功能开关</li>
  *   <li>{@link LlmClientAutoConfiguration} - LLM 客户端</li>
@@ -40,7 +40,6 @@ import org.springframework.context.annotation.Import;
     SentinelAutoConfiguration.class,
     SeataAutoConfiguration.class,
     Resilience4jConfig.class,
-    MinioConfig.class,
     ChaosAutoConfiguration.class,
     FeatureFlagAutoConfiguration.class,
     LlmClientAutoConfiguration.class,
