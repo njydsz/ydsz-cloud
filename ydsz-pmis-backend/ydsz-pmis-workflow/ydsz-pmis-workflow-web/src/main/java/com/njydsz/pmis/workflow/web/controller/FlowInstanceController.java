@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceVariablesDTO;
@@ -55,6 +56,7 @@ public class FlowInstanceController {
      * @param dto 流程启动参数
      * @return 统一响应结果，包含流程实例 ID
      */
+    @RateLimit(key = "flowInstance:start", qps = 5, windowSeconds = 60, message = "流程启动过于频繁，请稍后重试")
     @Idempotent(key = "flowInstance:startProcess", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/start")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_START)

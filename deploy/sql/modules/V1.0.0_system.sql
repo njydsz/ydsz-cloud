@@ -11,8 +11,6 @@
 -- 已全部合并到本文件(2026-07-10 重构)。
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE EXTENSION IF NOT EXISTS vector;
-
 SET client_min_messages = WARNING;
 
 -- Lock down search_path so unqualified table names resolve only
@@ -1229,13 +1227,6 @@ ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS loop_count INTE
 
 ALTER TABLE IF EXISTS pmis_job_dag_node ADD COLUMN IF NOT EXISTS parallel_branches INTEGER;
 
-EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'ivfflat not available, skipping';
-
-END $$;
-EXCEPTION WHEN feature_not_supported THEN
-  RAISE NOTICE 'ivfflat index not available (pgvector not installed), skipping';
-END $$;
 
 -- =====================================================
 -- 2. 人员标签表 pmis_employee_tag (已在 [001] 章节创建, [014_1] 已 ALTER 扩展新字段)
@@ -1284,8 +1275,7 @@ VALUES
     (0, 'business',   '业务管理', 'MENU', '/business',   'Layout',          'briefcase', 3, 1, 'ENABLED', 0),
     (0, 'execution',  '项目执行', 'MENU', '/execution',  'Layout',          'cpu',       4, 1, 'ENABLED', 0),
     (0, 'finance',    '财务收支', 'MENU', '/finance',    'Layout',          'credit-card', 5, 1, 'ENABLED', 0),
-    (0, 'report',     '经营报表', 'MENU', '/report',     'Layout',          'data-analysis', 6, 1, 'ENABLED', 0),
-    (0, 'ai',         '智能助手', 'MENU', '/ai',         'Layout',          'magic-stick',  7, 1, 'ENABLED', 0)
+    (0, 'report',     '经营报表', 'MENU', '/report',     'Layout',          'data-analysis', 6, 1, 'ENABLED', 0)
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
 -- ----------------------------

@@ -34,7 +34,6 @@
 -- Reduce NOTICE/INFO noise; keep WARNING and ERROR visible.
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE EXTENSION IF NOT EXISTS vector;
 
 SET client_min_messages = WARNING;
 -- Lock down search_path so unqualified table names resolve only
@@ -72,11 +71,6 @@ BEGIN;
 -- ====================================================================
 
 -- 启用扩展
-DO $$
-BEGIN
-    EXCEPTION WHEN OTHERS THEN
-    RAISE NOTICE 'pgvector extension not available, skipping.';
-END $$;
 
 -- ====================================================================
 -- Schema 划分
@@ -12081,61 +12075,6 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '4');
 INSERT INTO pmis_flow_quick_comment (id, tenant_id, user_id, content, comment_type, sort_num, use_count, is_system, created_at, updated_at)
 SELECT '5', '1', 'SYSTEM', '建议优化方案后重新审批', 'SUGGEST', 5, 0, 1, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM pmis_flow_quick_comment WHERE id = '5');
-
--- ====================================================================
--- ============================ [071] P3-3 AI 推荐审批人反馈记录表 ============================
--- ====================================================================
--- P3-3: 推荐审批人反馈闭环 — 记录用户对 AI 推荐审批人的反馈行为
--- 用于统计 AI 推荐准确率（接受率/拒绝率），并为后续推荐提供历史反馈数据
--- 反馈动作：
---   ACCEPTED     — 用户接受了 AI 推荐的审批人
---   REJECTED     — 用户拒绝了 AI 推荐的审批人
---   CHOSEN_OTHER — 用户选择了非推荐列表中的其他人
--- ----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS pmis_flow_ai_feedback (
-    id                      VARCHAR(20)       PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    tenant_id               VARCHAR(20)          NOT NULL DEFAULT '1',
-    trace_id                VARCHAR(64)      NOT NULL,               -- 推荐调用追踪 ID（关联一次 recommendApprovers 调用）
-    task_id                 VARCHAR(20),                             -- 任务 ID（可空，草稿态无任务）
-    instance_id             VARCHAR(20),                             -- 流程实例 ID
-    flow_code               VARCHAR(64),                             -- 流程编码
-    node_code               VARCHAR(64),                             -- 节点编码
-    recommended_user_id     VARCHAR(20)      NOT NULL,               -- AI 推荐的审批人 ID
-    recommended_user_name   VARCHAR(128),                             -- AI 推荐的审批人姓名
-    recommended_score       DECIMAL(5,4),                             -- 推荐得分 0.0000~1.0000
-    recommended_rank        SMALLINT,                                 -- 推荐排名（1=第一推荐）
-    action                  VARCHAR(16)      NOT NULL,               -- 反馈动作：ACCEPTED/REJECTED/CHOSEN_OTHER
-    actual_user_id          VARCHAR(20),                             -- 实际选择的审批人 ID（CHOSEN_OTHER 时有值）
-    actual_user_name        VARCHAR(128),                             -- 实际选择的审批人姓名
-    feedback_source         VARCHAR(16)      NOT NULL DEFAULT 'USER_EXPLICIT', -- USER_EXPLICIT/SYSTEM_INFERRED
-    remark                  VARCHAR(512),                             -- 备注
-    provider_trace_id       VARCHAR(64),                             -- 链路追踪 ID
-    created_by              VARCHAR(20)          NOT NULL DEFAULT 'SYSTEM',
-    created_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by              VARCHAR(20)          NOT NULL DEFAULT 'SYSTEM',
-    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                 SMALLINT        NOT NULL DEFAULT 0,
-    -- 数据完整性约束
-    CONSTRAINT ck_pfaf_action          CHECK (action IN ('ACCEPTED','REJECTED','CHOSEN_OTHER')),
-    CONSTRAINT ck_pfaf_source          CHECK (feedback_source IN ('USER_EXPLICIT','SYSTEM_INFERRED')),
-    CONSTRAINT ck_pfaf_deleted         CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_flow_ai_feedback IS 'P3-3: AI 推荐审批人反馈记录表 — 记录用户对 AI 推荐的反馈，形成推荐-反馈闭环';
-COMMENT ON COLUMN pmis_flow_ai_feedback.trace_id IS '推荐调用追踪 ID（关联一次 recommendApprovers 调用，所有推荐项共享）';
-COMMENT ON COLUMN pmis_flow_ai_feedback.recommended_score IS '推荐得分 0.0000~1.0000（来自 Agent 返回）';
-COMMENT ON COLUMN pmis_flow_ai_feedback.recommended_rank IS '推荐排名（1=第一推荐，来自 recommendApprovers 返回）';
-COMMENT ON COLUMN pmis_flow_ai_feedback.action IS '反馈动作: ACCEPTED=接受 / REJECTED=拒绝 / CHOSEN_OTHER=选择其他人';
-COMMENT ON COLUMN pmis_flow_ai_feedback.actual_user_id IS '实际选择的审批人 ID（action=CHOSEN_OTHER 时有值）';
-COMMENT ON COLUMN pmis_flow_ai_feedback.feedback_source IS '反馈来源: USER_EXPLICIT=用户显式反馈 / SYSTEM_INFERRED=系统推断';
-
-CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_trace
-    ON pmis_flow_ai_feedback (tenant_id, trace_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_task_created
-    ON pmis_flow_ai_feedback (tenant_id, task_id, created_at) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pfaf_tenant_user_action
-    ON pmis_flow_ai_feedback (tenant_id, recommended_user_id, action) WHERE deleted = 0;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT

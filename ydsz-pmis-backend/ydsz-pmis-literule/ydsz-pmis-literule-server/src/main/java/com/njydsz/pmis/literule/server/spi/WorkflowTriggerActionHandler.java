@@ -36,9 +36,9 @@ public class WorkflowTriggerActionHandler implements RuleActionHandler {
                     variables.putAll(context.getFacts());
                 }
                 variables.put("ruleCode", result.getRuleCode());
-                variables.put("ruleSeverity", result.getSeverity());
+                variables.put("ruleSeverity", result.getSeverity() != null ? result.getSeverity().name() : null);
                 variables.put("ruleTitle", result.getTitle());
-                workflowClient.startProcess(result.getRuleCode(), variables);
+                workflowClient.startProcess(variables);
                 log.debug("[LiteRule-Action] 工作流已触发: ruleCode={}", result.getRuleCode());
             } catch (Exception e) {
                 log.warn("[LiteRule-Action] 工作流触发失败: ruleCode={}, error={}",

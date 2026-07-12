@@ -34,7 +34,7 @@ public class DefaultAlertActionHandler implements RuleActionHandler {
                 RuleTriggeredEvent event = new RuleTriggeredEvent();
                 event.setRuleCode(result.getRuleCode());
                 event.setRuleName(result.getRuleName());
-                event.setSeverity(result.getSeverity());
+                event.setSeverity(result.getSeverity() != null ? result.getSeverity().name() : null);
                 event.setTitle(result.getTitle());
                 event.setDescription(result.getDescription());
                 event.setFacts(context != null ? context.getFacts() : null);

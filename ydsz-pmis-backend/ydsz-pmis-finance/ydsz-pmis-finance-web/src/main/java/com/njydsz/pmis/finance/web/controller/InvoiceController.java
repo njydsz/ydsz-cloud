@@ -2,6 +2,7 @@ package com.njydsz.pmis.finance.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.YdszLock;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -125,6 +126,7 @@ public class InvoiceController {
     @Operation(summary = "财务开具")
     @AuthApiPermission(apiCodes = "finance:invoice:issue")
     @OperationLog(module = "发票管理", action = "财务开具发票", bizType = "INVOICE")
+    @YdszLock(key = "invoice:issue:#{#id}", waitTime = 3, leaseTime = 20, message = "正在开具发票，请稍后")
     @Idempotent(key = "invoice:issue", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/issue")
     public BaseResponse<Void> issue(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
@@ -143,6 +145,7 @@ public class InvoiceController {
     @Operation(summary = "红冲")
     @AuthApiPermission(apiCodes = "finance:invoice:reverse")
     @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
+    @YdszLock(key = "invoice:redReverse:#{#id}", waitTime = 3, leaseTime = 20, message = "正在红冲发票，请稍后")
     @Idempotent(key = "invoice:redReverse", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
     public BaseResponse<Void> redReverse(@Parameter(description = "发票ID") @PathVariable String id,

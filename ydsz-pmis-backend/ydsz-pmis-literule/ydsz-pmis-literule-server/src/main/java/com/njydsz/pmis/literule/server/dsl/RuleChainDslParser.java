@@ -171,13 +171,6 @@ public class RuleChainDslParser {
                 sb.append(")");
             }
             case BREAK -> sb.append("BREAK()");
-            case AGENT -> {
-                sb.append("AGENT(");
-                if (chain.getNodes() != null && !chain.getNodes().isEmpty()) {
-                    appendNode(sb, chain.getNodes().get(0));
-                }
-                sb.append(")");
-            }
             case CATCH -> {
                 sb.append("CATCH(");
                 if (chain.getPrimaryNode() != null) {

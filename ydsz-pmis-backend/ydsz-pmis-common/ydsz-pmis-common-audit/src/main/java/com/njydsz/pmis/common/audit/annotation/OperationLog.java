@@ -43,4 +43,28 @@ public @interface OperationLog {
      * @return 业务类型
      */
     String bizType() default "";
+
+    /**
+     * 是否将方法返回值记录到审计日志中。
+     * <p>默认 false，仅在需要追踪创建/操作结果 ID 时开启。
+     *
+     * @return 是否保存返回值
+     */
+    boolean saveResult() default false;
+
+    /**
+     * 是否记录修改前后的差异字段。
+     * <p>默认 false，开启后切面会对比更新前后的实体字段差异并记录。
+     *
+     * @return 是否保存差异
+     */
+    boolean saveDiff() default false;
+
+    /**
+     * 是否记录方法入参。
+     * <p>默认 true，记录请求参数到审计日志。对于含敏感信息的接口可设为 false。
+     *
+     * @return 是否保存参数
+     */
+    boolean saveParams() default true;
 }

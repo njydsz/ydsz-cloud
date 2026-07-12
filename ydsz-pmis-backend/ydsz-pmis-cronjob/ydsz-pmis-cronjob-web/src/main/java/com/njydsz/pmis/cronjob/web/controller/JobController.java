@@ -8,6 +8,7 @@ import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.cronjob.domain.dto.job.JobBatchDTO;
 import com.njydsz.pmis.cronjob.domain.dto.job.JobSaveDTO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
@@ -137,6 +138,7 @@ public class JobController {
     @Operation(summary = "立即执行一次")
     @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_TRIGGER)
     @OperationLog(module = "任务调度", action = "手动触发任务", bizType = "CRONJOB_JOB", saveParams = false)
+    @RateLimit(key = "job:trigger", qps = 3, windowSeconds = 60, message = "手动触发过于频繁，请稍后重试")
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/{id}/trigger")
     public BaseResponse<String> trigger(@PathVariable String id,

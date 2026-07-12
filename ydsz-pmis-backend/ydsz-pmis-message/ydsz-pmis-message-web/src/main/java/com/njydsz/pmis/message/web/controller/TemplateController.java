@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.message.domain.dto.template.TemplateAuditDTO;
 import com.njydsz.pmis.message.domain.dto.template.TemplateCreateDTO;
 import com.njydsz.pmis.message.domain.dto.template.TemplateQueryDTO;
@@ -91,6 +92,7 @@ public class TemplateController {
      */
     @Operation(summary = "模板详情")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
+    @RateLimit(key = "template:query", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
     public BaseResponse<MsgTemplateDO> getById(@PathVariable String id) {
         return BaseResponse.ok(templateService.getById(id));
@@ -104,6 +106,7 @@ public class TemplateController {
      */
     @Operation(summary = "模板分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
+    @RateLimit(key = "template:page", qps = 20, windowSeconds = 60)
     @GetMapping("/page")
     public BaseResponse<Page<MsgTemplateDO>> page(TemplateQueryDTO query) {
         return BaseResponse.ok(templateService.page(query));

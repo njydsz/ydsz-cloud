@@ -1511,13 +1511,6 @@ VALUES
     ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:lifecycle', '生命周期台账', 'MENU', '/report/lifecycle', 'report/lifecycle/index', 'connection',   3, 1, 'ENABLED', 0)
 ON CONFLICT (perm_code, deleted) DO NOTHING;
 
--- 步骤 2f：插入 AI 根子菜单
-INSERT INTO pmis_permission
-    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
-VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'ai'), 'ai:agents',  'AI Agents', 'MENU', '/ai/agents', 'ai/agents/index', 'chat-dot-round', 1, 1, 'ENABLED', 0)
-ON CONFLICT (perm_code, deleted) DO NOTHING;
-
 -- 步骤 3：插入按钮级权限（依赖步骤 2 的二级菜单）
 INSERT INTO pmis_permission
     (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
