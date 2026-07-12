@@ -1933,7 +1933,7 @@ public class RuleAdminController {
      * <p>P1-7 函数市场：前端 CodeMirror 编辑器拉取此接口，渲染自动补全 + 悬浮文档。
      * 当前默认返回 18 个内置函数（string/math/convert/datetime/logic/type 六类）。
      *
-     * @param engine 引擎类型（aviator/qlexpress/all），默认 all
+     * @param engine 引擎类型（liteexpr/all），默认 all
      * @return 函数定义列表
      */
     @GetMapping("/expressionFunctions")

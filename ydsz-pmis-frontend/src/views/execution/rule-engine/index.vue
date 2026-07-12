@@ -1859,7 +1859,7 @@ onMounted(() => {
               v-model="diffCandidateCondition"
               type="textarea"
               :rows="3"
-              placeholder="候选版本的条件表达式（Aviator），留空使用原值"
+              placeholder="候选版本的条件表达式（LiteExpr），留空使用原值"
             />
           </el-form-item>
           <el-form-item label="候选严重度表达式">
@@ -1867,7 +1867,7 @@ onMounted(() => {
               v-model="diffCandidateSeverity"
               type="textarea"
               :rows="2"
-              placeholder="候选版本的严重度表达式（Aviator），留空使用原值"
+              placeholder="候选版本的严重度表达式（LiteExpr），留空使用原值"
             />
           </el-form-item>
           <el-form-item label="事实数据">

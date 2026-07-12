@@ -12,7 +12,7 @@ import java.io.Serializable;
  *
  * <p>由嵌套的 {@link DecisionNode} 构成树形条件判断结构：
  * <ul>
- *   <li>内部节点：包含 Aviator 条件表达式，true 走 trueBranch，false 走 falseBranch</li>
+ *   <li>内部节点：包含 LiteExpr 条件表达式，true 走 trueBranch，false 走 falseBranch</li>
  *   <li>叶子节点：包含 severity / title / description 决策结果</li>
  * </ul>
  *
@@ -99,7 +99,7 @@ public class DecisionTreeDefinition implements Serializable {
     @AllArgsConstructor
     public static class DecisionNode implements Serializable {
         private static final long serialVersionUID = 1L;
-        /** 条件表达式（仅条件节点使用，Aviator 返回 boolean） */
+        /** 条件表达式（仅条件节点使用，LiteExpr 返回 boolean） */
         private String conditionExpression;
         /** true 分支子节点 */
         private DecisionNode trueBranch;

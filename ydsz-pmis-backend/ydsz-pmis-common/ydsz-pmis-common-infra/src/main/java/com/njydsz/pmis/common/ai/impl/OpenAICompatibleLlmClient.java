@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.ai.impl;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.njydsz.pmis.common.ai.LlmClient;
 import com.njydsz.pmis.common.ai.LlmClientConfig;
 import com.njydsz.pmis.common.ai.LlmException;
+import com.njydsz.pmis.common.util.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,10 +108,10 @@ public class OpenAICompatibleLlmClient implements LlmClient {
             throw new LlmException(PROVIDER, "LLM API URL 未配置（pmis.common.ai.api-url）");
         }
 
-        JSONObject body = new JSONObject();
+        ObjectNode body = JsonUtils.getObjectMapper().createObjectNode();
         body.put("model", config.getModel());
         body.put("temperature", config.getTemperature());
-        body.put("messages", messages);
+        body.set("messages", JsonUtils.getObjectMapper().valueToTree(messages));
 
         // 透传 options 中可识别的字段
         if (options != null) {
@@ -132,7 +132,7 @@ public class OpenAICompatibleLlmClient implements LlmClient {
                     .timeout(Duration.ofMillis(config.getTimeoutMs()))
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + config.getApiKey())
-                    .POST(HttpRequest.BodyPublishers.ofString(body.toJSONString()))
+                    .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                     .build();
         } catch (IllegalArgumentException e) {
             throw new LlmException(PROVIDER, "无效的 LLM API URL: " + config.getApiUrl(), e);
@@ -181,25 +181,25 @@ public class OpenAICompatibleLlmClient implements LlmClient {
             return "";
         }
         try {
-            JSONObject root = JSON.parseObject(responseBody);
-            JSONArray choices = root.getJSONArray("choices");
-            if (choices == null || choices.isEmpty()) {
+            JsonNode root = JsonUtils.getObjectMapper().readTree(responseBody);
+            JsonNode choices = root.get("choices");
+            if (choices == null || !choices.isArray() || choices.isEmpty()) {
                 log.warn("[LLM] 响应中无 choices: {}", responseBody);
                 return "";
             }
-            JSONObject first = choices.getJSONObject(0);
+            JsonNode first = choices.get(0);
             if (first == null) {
                 return "";
             }
-            JSONObject message = first.getJSONObject("message");
+            JsonNode message = first.get("message");
             if (message == null) {
-                JSONObject delta = first.getJSONObject("delta");
+                JsonNode delta = first.get("delta");
                 if (delta != null) {
-                    return delta.getString("content");
+                    return delta.has("content") ? delta.get("content").asText() : "";
                 }
                 return "";
             }
-            return message.getString("content");
+            return message.has("content") ? message.get("content").asText() : "";
         } catch (Exception e) {
             log.warn("[LLM] 响应解析失败: {}", e.getMessage());
             throw new LlmException(PROVIDER, "LLM 响应解析失败: " + e.getMessage(), e);

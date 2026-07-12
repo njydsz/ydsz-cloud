@@ -88,9 +88,9 @@ let validateTimer: ReturnType<typeof setTimeout> | null = null
 // ==================== Autocomplete source ====================
 
 /**
- * 构建 Aviator 表达式自动补全源
+ * 构建 LiteExpr 表达式自动补全源
  */
-function aviatorCompletions(context: CompletionContext): CompletionResult | null {
+function liteExprCompletions(context: CompletionContext): CompletionResult | null {
   const word = context.matchBefore(/\w*/)
   if (!word || (word.from === word.to && !context.explicit)) return null
 
@@ -136,7 +136,7 @@ function aviatorCompletions(context: CompletionContext): CompletionResult | null
   const keywords = [
     { label: 'true', type: 'keyword', detail: '布尔值' },
     { label: 'false', type: 'keyword', detail: '布尔值' },
-    { label: 'nil', type: 'keyword', detail: '空值' },
+    { label: 'null', type: 'keyword', detail: '空值' },
     { label: '&&', type: 'operator', detail: '逻辑与' },
     { label: '||', type: 'operator', detail: '逻辑或' },
     { label: '!', type: 'operator', detail: '逻辑非' },
@@ -254,11 +254,11 @@ function triggerValidation() {
 /** 构建 CodeMirror 扩展 */
 function buildExtensions(): Extension[] {
   const exts: Extension[] = [
-    // JavaScript 语法高亮（Aviator 语法兼容）
+    // JavaScript 语法高亮（LiteExpr 语法兼容）
     javascript(),
     // 自动补全
     autocompletion({
-      override: [aviatorCompletions],
+      override: [liteExprCompletions],
       defaultKeymap: true,
       activateOnTyping: true,
     }),

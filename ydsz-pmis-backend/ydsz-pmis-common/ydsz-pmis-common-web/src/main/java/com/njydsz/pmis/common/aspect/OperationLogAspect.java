@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.aspect;
 
-import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.event.OperationLogEvent;
@@ -134,7 +134,7 @@ public class OperationLogAspect {
         String params = "";
         if (ann.saveParams()) {
             try {
-                params = JSON.toJSONString(pjp.getArgs());
+                params = JsonUtils.toJson(pjp.getArgs());
                 for (String field : ann.excludeFields()) {
                     params = params.replaceAll("\"" + field + "\"\\s*:\\s*\"[^\"]*\"",
                             "\"" + field + "\":\"******\"");
@@ -147,7 +147,7 @@ public class OperationLogAspect {
         String responseData = "";
         if (ann.saveResult() && result != null) {
             try {
-                responseData = JSON.toJSONString(result);
+                responseData = JsonUtils.toJson(result);
             } catch (Exception e) {
                 responseData = "[serialize-failed]";
             }

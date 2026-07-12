@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 评分卡规则定义（DTO）
  *
- * <p>由若干评分因子组成，每个因子包含 Aviator 条件表达式与命中得分。
+ * <p>由若干评分因子组成，每个因子包含 LiteExpr 条件表达式与命中得分。
  * 总分 = baseScore + Σ(命中因子 score × weight)，按阈值区间或自定义评级映射决定严重度。
  *
  * <p><b>评分方向（scoreDirection）</b>：
@@ -20,7 +20,7 @@ import java.util.List;
  *   <li>{@code ASCENDING}：分数越高风险越高（如负债率评分），redThreshold &gt; yellowThreshold</li>
  * </ul>
  *
- * <p><b>动态分值（scoreExpression）</b>：因子可指定 Aviator 表达式动态计算分值
+ * <p><b>动态分值（scoreExpression）</b>：因子可指定 LiteExpr 表达式动态计算分值
  * （如 {@code contractAmount * 0.01}），与固定 {@code score} 二选一，优先使用 scoreExpression。
  *
  * <p><b>权重（weight）</b>：命中因子的实际得分 = 分值 × 权重，默认 1.0。
@@ -130,12 +130,12 @@ public class ScorecardDefinition implements Serializable {
     @AllArgsConstructor
     public static class ScoreFactor implements Serializable {
         private static final long serialVersionUID = 1L;
-        /** 条件表达式（Aviator，返回 boolean） */
+        /** 条件表达式（LiteExpr，返回 boolean） */
         private String conditionExpression;
         /** 命中时的固定得分（正分加分，负分扣分） */
         @Builder.Default
         private double score = 0;
-        /** 动态分值表达式（Aviator，返回 Number；与 score 二选一，优先使用 scoreExpression） */
+        /** 动态分值表达式（LiteExpr，返回 Number；与 score 二选一，优先使用 scoreExpression） */
         private String scoreExpression;
         /** 权重（实际得分 = 分值 × 权重，默认 1.0） */
         @Builder.Default

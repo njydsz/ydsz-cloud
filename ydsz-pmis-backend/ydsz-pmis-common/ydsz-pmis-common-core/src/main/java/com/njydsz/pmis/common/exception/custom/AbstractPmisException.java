@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.exception.custom;
 import com.njydsz.pmis.common.exception.code.ExceptionCode;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
 import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
+import com.njydsz.pmis.common.exception.i18n.MessageResolverHolder;
 import lombok.Getter;
 
 import java.io.Serial;
@@ -48,6 +49,12 @@ public abstract class AbstractPmisException extends RuntimeException {
 
     /** 直接消息（覆盖 key 对应的 i18n 消息） */
     protected String message;
+
+    /** 懒加载解析后的消息（DCL 双重检查锁） */
+    private volatile String resolvedMessage;
+
+    /** 标记消息是否已解析（避免 null 消息重复解析） */
+    private volatile boolean messageResolved;
 
     protected AbstractPmisException() {
         super();
@@ -172,9 +179,44 @@ public abstract class AbstractPmisException extends RuntimeException {
         return this;
     }
 
+    /**
+     * 获取异常消息（懒加载 i18n 解析 + DCL 双重检查锁）
+     *
+     * <p>解析策略：
+     * <ol>
+     *   <li>若 {@link #message} 已设置（直接消息），直接返回</li>
+     *   <li>若 {@link #key} 是 i18n key（以 "error." 开头），通过
+     *       {@link MessageResolverHolder} 懒加载解析</li>
+     *   <li>DCL 保证多线程下只解析一次</li>
+     *   <li>解析器未注册时回退到 key 本身</li>
+     * </ol>
+     *
+     * @return 异常消息
+     */
     @Override
     public String getMessage() {
-        return message != null ? message : super.getMessage();
+        // 1. 直接消息优先
+        if (message != null) {
+            return message;
+        }
+        // 2. 无 i18n key 时回退到父类消息
+        if (key == null || key.isEmpty()) {
+            return super.getMessage();
+        }
+        // 3. 非 i18n key 直接返回 key
+        if (!key.startsWith("error.")) {
+            return key;
+        }
+        // 4. DCL 懒加载解析 i18n 消息
+        if (!messageResolved) {
+            synchronized (this) {
+                if (!messageResolved) {
+                    resolvedMessage = MessageResolverHolder.resolve(key, params);
+                    messageResolved = true;
+                }
+            }
+        }
+        return resolvedMessage != null ? resolvedMessage : key;
     }
 
     /**

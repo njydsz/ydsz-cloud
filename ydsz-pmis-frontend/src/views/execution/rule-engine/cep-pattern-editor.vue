@@ -1,4 +1,4 @@
-﻿<!--
+﻿﻿<!--
   @file CEP 模式可视化编辑器（P2-7）
   @description 提供复杂事件处理（CEP）模式的可视化编辑能力：
   1. 左侧模式列表：展示已注册的全部 CEP 模式，支持新增 / 选中 / 删除
@@ -509,7 +509,7 @@ onMounted(loadPatterns)
                 v-model="editingPattern.filter"
                 type="textarea"
                 :rows="2"
-                placeholder="Aviator 表达式，可访问 $event.attr('xxx')"
+                placeholder="LiteExpr 表达式，可访问 $event.attr('xxx')"
               />
             </el-form-item>
             <el-form-item label="描述">

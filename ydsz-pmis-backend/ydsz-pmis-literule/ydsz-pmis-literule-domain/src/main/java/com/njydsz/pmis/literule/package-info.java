@@ -2,14 +2,14 @@
  * PMIS 轻量级规则引擎模块（ydsz-pmis-literule）。
  *
  * <p>本模块提供"轻量级规则引擎"能力，用于在 PMIS 平台中支持"可配置的业务规则"。
- * 与重型规则引擎（Drools / Aviator）相比，literule 聚焦于"业务人员可读可改"的简单规则场景，
+ * 与重型规则引擎（Drools）相比，literule 聚焦于"业务人员可读可改"的简单规则场景，
  * 通过 DSL / 表达式 / 决策表等多种形式定义规则。
  *
  * <h3>包结构</h3>
  * <ul>
  *   <li>{@code core}         - 规则引擎核心（{@code RuleContext} / {@code Rule} / {@code RuleSet}）</li>
  *   <li>{@code dsl}          - 规则领域特定语言（DSL）解析</li>
- *   <li>{@code expr}         - 表达式引擎（基于 Aviator / SpEL 增强）</li>
+ *   <li>{@code expr}         - 表达式引擎（基于自研 LiteExpr）</li>
  *   <li>{@code cep}          - 复杂事件处理（Complex Event Processing）</li>
  *   <li>{@code calc}         - 计算引擎（公式 / 财务计算）</li>
  *   <li>{@code ai}           - AI 辅助规则生成（基于 LLM）</li>

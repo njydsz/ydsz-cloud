@@ -94,8 +94,6 @@ function handleInsert(func: FunctionDef) {
 
 function getEngineTag(engine?: string): string {
   if (engine === 'liteexpr') return 'LiteExpr'
-  if (engine === 'aviator') return 'Aviator'
-  if (engine === 'qlexpress') return 'QLExpress'
   return ''
 }
 </script>

@@ -3853,7 +3853,7 @@ resourcePool: 'Resource Pool',
         fieldsPlaceholder: 'Select or enter available fields to assist AI in generating valid expressions',
       },
       abTest: {
-        conditionPlaceholder: 'Enter candidate condition expression (Aviator)',
+        conditionPlaceholder: 'Enter candidate condition expression (LiteExpr)',
         severityPlaceholder: 'Enter candidate severity expression (optional)',
         factsPlaceholder: '{"amount": 1000, "budgetUsedRatio": 0.9}',
       },

@@ -12,7 +12,7 @@ import java.util.List;
  * 规则定义（元数据）
  *
  * <p>描述一条可配置规则的完整元信息，支持从数据库加载或编程式创建。
- * conditionExpression 为 Aviator 表达式，返回 boolean；actionExpression 可选，用于动态生成结果描述。
+ * conditionExpression 为 LiteExpr 表达式，返回 boolean；actionExpression 可选，用于动态生成结果描述。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
@@ -58,13 +58,13 @@ public class RuleDefinition implements Serializable {
     private String description;
 
     /**
-     * 条件表达式（Aviator 语法）
+     * 条件表达式（LiteExpr 语法）
      * <p>示例：{@code evmRedCount >= 3} 或 {@code grossMargin < 0.05 && confirmedRevenue > 0}
      */
     private String conditionExpression;
 
     /**
-     * 严重度表达式（Aviator 语法，可选）
+     * 严重度表达式（LiteExpr 语法，可选）
      * <p>当条件满足时，根据上下文动态决定严重度。
      * 示例：{@code benchIdleCost >= 1000000 ? 'RED' : 'YELLOW'}
      * 为空时使用 {@link #defaultSeverity}
@@ -168,7 +168,7 @@ public class RuleDefinition implements Serializable {
     private double canaryRatio = 0.0;
 
     /**
-     * 灰度条件（Aviator 表达式列表，AND 关系）
+     * 灰度条件（LiteExpr 表达式列表，AND 关系）
      *
      * <p>仅当 canaryRatio > 0 时生效；满足全部条件才进入灰度流量分桶。
      * 示例：{@code ["tenantId == 'T001'", "userRole == 'ADMIN'"]}

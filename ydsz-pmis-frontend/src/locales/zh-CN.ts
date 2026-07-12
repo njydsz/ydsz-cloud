@@ -4291,7 +4291,7 @@ resourcePool: '资源池',
         fieldsPlaceholder: '选择或输入可用字段，辅助 AI 生成合法表达式',
       },
       abTest: {
-        conditionPlaceholder: '输入候选条件表达式（Aviator）',
+        conditionPlaceholder: '输入候选条件表达式（LiteExpr）',
         severityPlaceholder: '输入候选严重度表达式（可选）',
         factsPlaceholder: '{"amount": 1000, "budgetUsedRatio": 0.9}',
       },

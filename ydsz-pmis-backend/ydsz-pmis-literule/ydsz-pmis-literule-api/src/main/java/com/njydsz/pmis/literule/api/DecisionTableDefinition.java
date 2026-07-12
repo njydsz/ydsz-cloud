@@ -125,7 +125,7 @@ public class DecisionTableDefinition implements Serializable {
          *   <li>比较表达式：{@code ">=3"} / {@code "<0.05"} / {@code "!=null"}</li>
          *   <li>区间：{@code "[0.05,0.15)"}（左闭右开）</li>
          *   <li>枚举：{@code "RED|YELLOW"}（OR）</li>
-         *   <li>Aviator 表达式：{@code "expr:>amount*0.1"}（以 {@code expr:} 前缀）</li>
+         *   <li>LiteExpr 表达式：{@code "expr:>amount*0.1"}（以 {@code expr:} 前缀）</li>
          * </ul>
          */
         private Map<String, String> conditions;

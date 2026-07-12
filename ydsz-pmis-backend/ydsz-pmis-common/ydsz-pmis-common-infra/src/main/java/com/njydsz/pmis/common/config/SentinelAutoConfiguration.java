@@ -4,7 +4,7 @@ import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.BlockExceptio
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
-import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -62,7 +62,7 @@ public class SentinelAutoConfiguration {
             }
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            response.getWriter().write(JSON.toJSONString(body));
+            response.getWriter().write(JsonUtils.toJson(body));
         };
     }
 }
