@@ -1,6 +1,6 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.common.alert.UnifiedAlertEvent;
+import com.njydsz.pmis.common.notify.event.UnifiedAlertEvent;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;

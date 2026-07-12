@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.server.service.impl;
 
-import com.njydsz.pmis.common.alert.UnifiedAlertEvent;
+import com.njydsz.pmis.common.notify.event.UnifiedAlertEvent;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;

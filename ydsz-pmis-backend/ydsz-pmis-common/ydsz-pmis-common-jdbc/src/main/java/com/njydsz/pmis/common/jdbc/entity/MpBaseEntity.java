@@ -106,9 +106,9 @@ public class MpBaseEntity<T extends java.io.Serializable> extends BaseEntity<T> 
 
     /**
      * 状态标识
-     * <p>0=禁用，1=正常/启用。
+     * <p>子类可按需覆盖为具体业务状态枚举值，默认值为空。
      */
     @TableField("status")
-    private Integer status;
+    private String status;
 
 }

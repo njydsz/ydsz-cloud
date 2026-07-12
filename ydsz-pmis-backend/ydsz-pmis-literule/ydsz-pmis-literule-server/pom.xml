@@ -38,6 +38,16 @@
         <dependency><groupId>com.alibaba.fastjson2</groupId><artifactId>fastjson2</artifactId></dependency>
         <dependency><groupId>org.yaml</groupId><artifactId>snakeyaml</artifactId></dependency>
         <dependency><groupId>org.apache.poi</groupId><artifactId>poi-ooxml</artifactId><optional>true</optional></dependency>
+        <!-- P2-15 AI 增强：LlmClient / LlmException / LlmClientConfig 接口依赖 agent-api -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-agent-api</artifactId>
+        </dependency>
+        <!-- P1-1 多级缓存 L2 + 分布式注册 / 广播依赖 Redisson（强制） -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+        </dependency>
         <!-- P1-2: 规则与定时任务联动（可选，classpath 存在时自动装配 CronjobTriggerActionHandler）-->
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-api</artifactId><optional>true</optional></dependency>
         <!-- P2-1: 规则与工作流深度联动（可选，classpath 存在时自动装配 WorkflowTriggerActionHandler）-->

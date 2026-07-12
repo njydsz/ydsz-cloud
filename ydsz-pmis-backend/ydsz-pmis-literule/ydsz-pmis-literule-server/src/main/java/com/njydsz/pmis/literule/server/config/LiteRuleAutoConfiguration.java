@@ -4,7 +4,7 @@ import com.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdService;
 import com.njydsz.pmis.literule.server.agent.AgentRuleNode;
 import com.njydsz.pmis.literule.server.agent.AgentRuleNodeFactory;
 import com.njydsz.pmis.literule.server.agent.ReActAgentExecutor;
-import com.njydsz.pmis.common.ai.LlmClient;
+import com.njydsz.pmis.agent.api.llm.LlmClient;
 import com.njydsz.pmis.literule.server.ai.LLMClient;
 import com.njydsz.pmis.literule.server.ai.LlmClientDelegate;
 import com.njydsz.pmis.literule.server.ai.MockLLMClient;
