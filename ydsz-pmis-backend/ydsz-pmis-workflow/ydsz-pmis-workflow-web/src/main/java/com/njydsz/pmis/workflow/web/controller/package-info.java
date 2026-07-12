@@ -30,7 +30,7 @@
  * <h3>设计原则</h3>
  * <ul>
  *   <li>所有接口统一返回 {@code Result<T>}，分页统一使用 {@code PageResult<T>}。</li>
- *   <li>权限校验通过 {@code @PrePermission} + {@code PermissionCodes} 完成，不在控制器内做条件分支。</li>
+ *   <li>权限校验通过 {@code @AuthApiPermission} + {@code PermissionCodes} 完成，不在控制器内做条件分支。</li>
  *   <li>参数校验使用 Jakarta Validation（{@code @Valid} / {@code @Validated}）。</li>
  *   <li>本包接口仅服务 PC 端 Web 审批中心，<strong>不适用于移动端 / 独立 H5</strong>。</li>
  *   <li>绝不含电子签章相关接口（合同签署走独立电子签章服务）。</li>

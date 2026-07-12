@@ -3,7 +3,7 @@ package com.njydsz.pmis.finance.web.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.InvoiceApprovalDTO;
 import com.njydsz.pmis.finance.domain.dto.InvoiceCreateDTO;
@@ -56,7 +56,7 @@ public class InvoiceController {
      * @return 新建发票 ID
      */
     @Operation(summary = "创建发票申请")
-    @PrePermission("finance:invoice:create")
+    @AuthApiPermission(apiCodes = "finance:invoice:create")
     @OperationLog(module = "发票管理", action = "创建发票申请", bizType = "INVOICE", saveResult = true)
     @Idempotent(key = "invoice:create", ttlSeconds = 10, message = "请勿重复提交发票申请")
     @PostMapping
@@ -72,7 +72,7 @@ public class InvoiceController {
      * @return 空结果
      */
     @Operation(summary = "提交审批")
-    @PrePermission("finance:invoice:approve")
+    @AuthApiPermission(apiCodes = "finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "提交发票审批", bizType = "INVOICE")
     @Idempotent(key = "invoice:submit", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
@@ -89,7 +89,7 @@ public class InvoiceController {
      * @return 空结果
      */
     @Operation(summary = "审批通过")
-    @PrePermission("finance:invoice:approve")
+    @AuthApiPermission(apiCodes = "finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批通过", bizType = "INVOICE")
     @Idempotent(key = "invoice:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/approve")
@@ -106,7 +106,7 @@ public class InvoiceController {
      * @return 空结果
      */
     @Operation(summary = "审批驳回")
-    @PrePermission("finance:invoice:approve")
+    @AuthApiPermission(apiCodes = "finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批驳回", bizType = "INVOICE")
     @Idempotent(key = "invoice:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reject")
@@ -123,7 +123,7 @@ public class InvoiceController {
      * @return 空结果
      */
     @Operation(summary = "财务开具")
-    @PrePermission("finance:invoice:issue")
+    @AuthApiPermission(apiCodes = "finance:invoice:issue")
     @OperationLog(module = "发票管理", action = "财务开具发票", bizType = "INVOICE")
     @Idempotent(key = "invoice:issue", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/issue")
@@ -141,7 +141,7 @@ public class InvoiceController {
      * @return 空结果
      */
     @Operation(summary = "红冲")
-    @PrePermission("finance:invoice:reverse")
+    @AuthApiPermission(apiCodes = "finance:invoice:reverse")
     @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
     @Idempotent(key = "invoice:redReverse", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
@@ -161,7 +161,7 @@ public class InvoiceController {
      * @return 空结果
      */
     @Operation(summary = "取消")
-    @PrePermission("finance:invoice:status")
+    @AuthApiPermission(apiCodes = "finance:invoice:status")
     @OperationLog(module = "发票管理", action = "取消发票", bizType = "INVOICE")
     @Idempotent(key = "invoice:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/cancel")
@@ -179,7 +179,7 @@ public class InvoiceController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("finance:invoice:delete")
+    @AuthApiPermission(apiCodes = "finance:invoice:delete")
     @OperationLog(module = "发票管理", action = "删除发票", bizType = "INVOICE")
     @Idempotent(key = "invoice:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -195,7 +195,7 @@ public class InvoiceController {
      * @return 发票实体
      */
     @Operation(summary = "详情")
-    @PrePermission("finance:invoice:list")
+    @AuthApiPermission(apiCodes = "finance:invoice:list")
     @GetMapping("/{id}")
     public BaseResponse<InvoiceDO> get(@Parameter(description = "发票ID") @PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -215,7 +215,7 @@ public class InvoiceController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("finance:invoice:list")
+    @AuthApiPermission(apiCodes = "finance:invoice:list")
     @GetMapping("/page")
     public BaseResponse<Page<InvoiceDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -236,7 +236,7 @@ public class InvoiceController {
      * @return 已开票金额
      */
     @Operation(summary = "按合同汇总开票金额")
-    @PrePermission("finance:invoice:list")
+    @AuthApiPermission(apiCodes = "finance:invoice:list")
     @GetMapping("/sum/byContract")
     public BaseResponse<BigDecimal> sumByContract(@Parameter(description = "合同ID") @RequestParam String contractId) {
         return BaseResponse.ok(service.sumInvoicedByContract(contractId));
@@ -249,7 +249,7 @@ public class InvoiceController {
      * @return 各状态发票汇总列表
      */
     @Operation(summary = "按状态分组台账")
-    @PrePermission("finance:invoice:list")
+    @AuthApiPermission(apiCodes = "finance:invoice:list")
     @GetMapping("/aggregate/byStatus")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "合同ID") @RequestParam String contractId) {
         return BaseResponse.ok(service.aggregateByStatus(contractId));

@@ -3,7 +3,7 @@
  *
  * <p>对外暴露 RESTful 接口，统一遵循 {@code /模块资源} 风格路径（如 {@code /users}、{@code /roles}、
  * {@code /permissions}、{@code /departments}、{@code /dict}、{@code /ranks} 等）。所有写
- * 接口均经 {@code @PrePermission} + {@code @RequireReAuth} + {@code @OperationLog} 三重防护，
+ * 接口均经 {@code @AuthApiPermission} + {@code @RequireReAuth} + {@code @OperationLog} 三重防护，
  * 高频读接口经 {@code @RateLimit} 限流。
  *
  * <h3>核心组件</h3>
@@ -38,7 +38,7 @@
  *
  * <h3>使用规范</h3>
  * <ul>
- *   <li>所有写接口必须使用 {@code @Valid} 校验入参，并通过 {@code @PrePermission} 鉴权。</li>
+ *   <li>所有写接口必须使用 {@code @Valid} 校验入参，并通过 {@code @AuthApiPermission} 鉴权。</li>
  *   <li>删除/重置类高危操作必须附加 {@code @RequireReAuth(code, name)} 触发二次认证。</li>
  *   <li>外部接口统一返回 {@code Result<T>}，不直接返回裸对象。</li>
  * </ul>

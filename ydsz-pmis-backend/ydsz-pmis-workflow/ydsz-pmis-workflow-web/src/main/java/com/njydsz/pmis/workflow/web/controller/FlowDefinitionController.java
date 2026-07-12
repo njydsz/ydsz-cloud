@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.web.controller.definition;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -58,7 +58,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:deploy", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/deploy")
     @Operation(summary = "部署流程定义")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public BaseResponse<String> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
         String id = definitionService.deploy(dto);
         return BaseResponse.ok(id);
@@ -76,7 +76,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:batchDeployFromZip", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping(value = "/definition/batchDeployZip", consumes = "multipart/form-data")
     @Operation(summary = "BPMN 部署包 .zip 批量导入")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public BaseResponse<Map<String, Object>> batchDeployFromZip(
             @RequestParam("file")
             MultipartFile file) {
@@ -99,7 +99,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:publish", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/publish")
     @Operation(summary = "发布流程定义")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> publish(@PathVariable String id) {
         definitionService.publish(id);
         return BaseResponse.ok();
@@ -114,7 +114,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:deprecate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/deprecate")
     @Operation(summary = "废弃流程定义")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> deprecate(@PathVariable String id) {
         definitionService.deprecate(id);
         return BaseResponse.ok();
@@ -191,7 +191,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:switchVersion", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{code}/switchVersion")
     @Operation(summary = "切换流程定义的激活版本")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> switchVersion(@PathVariable String code,
                                       @RequestParam String definitionId,
                                       @RequestParam(required = false) String tenantId) {
@@ -208,7 +208,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:enable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/enable")
     @Operation(summary = "启用流程定义")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> enable(@PathVariable String id) {
         definitionService.enable(id);
         return BaseResponse.ok();
@@ -223,7 +223,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:disable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/disable")
     @Operation(summary = "停用流程定义")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public BaseResponse<Void> disable(@PathVariable String id) {
         definitionService.disable(id);
         return BaseResponse.ok();
@@ -240,7 +240,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:updateNodeCoordinate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
     @Operation(summary = "更新流程节点坐标")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> updateNodeCoordinate(@PathVariable String definitionId,
                                              @PathVariable String nodeCode,
                                              @RequestBody String coordinate) {
@@ -258,7 +258,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:updateDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/definition/{id}")
     @Operation(summary = "编辑未发布的流程定义草稿")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> updateDefinition(@PathVariable String id,
                                          @Valid @RequestBody FlowDeployProcessDTO dto) {
         definitionService.updateDefinition(id, dto);
@@ -287,7 +287,7 @@ public class FlowDefinitionController {
     @Idempotent(key = "flowDefinition:importDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/import")
     @Operation(summary = "从 JSON 导入流程定义")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
     public BaseResponse<String> importDefinition(@RequestBody String json,
                                          @RequestParam(required = false) String tenantId) {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
@@ -333,7 +333,7 @@ public class FlowDefinitionController {
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/definition/simulate")
     @Operation(summary = "流程模拟运行")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public BaseResponse<List<Map<String, Object>>> simulate(@Valid @RequestBody FlowDefinitionSimulateDTO dto) {
         String tid = AuthContext.getTenantIdOrDefault("1");
         return BaseResponse.ok(instanceService.simulate(dto.getFlowCode(),
@@ -359,7 +359,7 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/migrationImpact")
     @Operation(summary = "变更影响分析报告（评估版本升级对在途实例的影响）")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Map<String, Object>> analyzeMigrationImpact(
             @RequestParam String oldDefinitionId,
             @RequestParam String newDefinitionId) {
@@ -377,7 +377,7 @@ public class FlowDefinitionController {
      */
     @PostMapping("/definition/rollback")
     @Operation(summary = "一键回滚流程定义到上一版本")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Map<String, Object>> rollbackDefinition(
             @RequestParam String flowCode) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");

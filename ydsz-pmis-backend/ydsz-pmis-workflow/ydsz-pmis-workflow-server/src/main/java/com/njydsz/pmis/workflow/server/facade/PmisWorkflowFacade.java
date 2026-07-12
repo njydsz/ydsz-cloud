@@ -131,7 +131,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      * GAP-P0-1: 查全部流程实例（管理员视图）
      *
      * <p>复用 {@link FlowInstanceService#page}，不按 initiatorId 过滤，返回当前租户下所有实例。
-     * 上层 Controller 应通过 {@code @PrePermission(PermissionCodes.WORKFLOW_MONITOR)} 拦截非管理员访问。
+     * 上层 Controller 应通过 {@code @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR)} 拦截非管理员访问。
      *
      * <p>P0-2 修复：返回 {@link PageResult}，保留 total / page / size，避免前端假分页。
      */

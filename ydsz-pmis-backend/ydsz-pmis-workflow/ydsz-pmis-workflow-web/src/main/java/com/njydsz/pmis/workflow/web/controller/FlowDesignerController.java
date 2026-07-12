@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.web.controller.definition;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -52,7 +52,7 @@ public class FlowDesignerController {
      * @return 设计器数据（definition / nodes / edges）
      */
     @GetMapping("/definition/{id}/designer")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Map<String, Object>> getDesignerData(@PathVariable String id) {
         return BaseResponse.ok(definitionService.getDesignerData(id));
     }
@@ -69,7 +69,7 @@ public class FlowDesignerController {
      */
     @Idempotent(key = "flowDesigner:saveDesignerData", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/designer")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> saveDesignerData(@PathVariable String id,
                                           @Valid @RequestBody FlowDesignerDataDTO dto) {
         Map<String, Object> designerData = JSON.parseObject(dto.getDesignerData());
@@ -99,7 +99,7 @@ public class FlowDesignerController {
     @Idempotent(key = "flowDesigner:lockDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/lock")
     @Operation(summary = "加锁流程定义（设计器协同编辑）")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Boolean> lockDefinition(@PathVariable String id) {
         String userId = AuthContext.getUserId();
         return BaseResponse.ok(definitionService.lockDefinition(id, userId));
@@ -116,7 +116,7 @@ public class FlowDesignerController {
     @Idempotent(key = "flowDesigner:unlockDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/unlock")
     @Operation(summary = "解锁流程定义（设计器协同编辑）")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Boolean> unlockDefinition(@PathVariable String id) {
         String userId = AuthContext.getUserId();
         return BaseResponse.ok(definitionService.unlockDefinition(id, userId));
@@ -138,7 +138,7 @@ public class FlowDesignerController {
      */
     @GetMapping("/definition/{id}/lockStatus")
     @Operation(summary = "查询流程定义锁定状态")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Map<String, Object>> getLockStatus(@PathVariable String id) {
         return BaseResponse.ok(definitionService.getLockStatus(id));
     }
@@ -153,7 +153,7 @@ public class FlowDesignerController {
      * @return 字段权限 JSON 字符串
      */
     @GetMapping("/definition/{id}/formConfig/{nodeCode}")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<String> getFormConfig(@PathVariable String id,
                                          @PathVariable String nodeCode) {
         return BaseResponse.ok(definitionService.getFormConfig(id, nodeCode));
@@ -169,7 +169,7 @@ public class FlowDesignerController {
      */
     @Idempotent(key = "flowDesigner:saveFormConfig", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/formConfig/{nodeCode}")
-    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> saveFormConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
                                         @RequestBody String formFieldsConfig) {
@@ -187,7 +187,7 @@ public class FlowDesignerController {
      * @return SLA 配置 JSON（未配置返回 null）
      */
     @GetMapping("/definition/{id}/slaConfig/{nodeCode}")
-    @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<String> getSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode) {
         return BaseResponse.ok(definitionService.getSlaConfig(id, nodeCode));
@@ -203,7 +203,7 @@ public class FlowDesignerController {
      */
     @Idempotent(key = "flowDesigner:saveSlaConfig", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/slaConfig/{nodeCode}")
-    @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Void> saveSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
                                         @RequestBody Map<String, Object> slaConfig) {
@@ -235,7 +235,7 @@ public class FlowDesignerController {
      */
     @Idempotent(key = "flowDesigner:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/template/{templateCode}/import")
-    @PrePermission(PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
     public BaseResponse<String> importTemplate(@PathVariable String templateCode,
                                           @RequestParam(required = false) String flowName) {
         return BaseResponse.ok(templateService.importTemplate(templateCode, flowName));

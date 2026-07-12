@@ -2,7 +2,7 @@ package com.njydsz.pmis.finance.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.CreditAssessmentDTO;
 import com.njydsz.pmis.finance.domain.entity.CustomerCreditDO;
@@ -51,7 +51,7 @@ public class CustomerCreditController {
      * @return 客户信用实体
      */
     @Operation(summary = "评估客户信用")
-    @PrePermission("finance:credit:assess")
+    @AuthApiPermission(apiCodes = "finance:credit:assess")
     @Idempotent(key = "customerCredit:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/assess")
     public BaseResponse<CustomerCreditDO> assess(@Valid @RequestBody CreditAssessmentDTO dto) {
@@ -65,7 +65,7 @@ public class CustomerCreditController {
      * @return 客户信用实体
      */
     @Operation(summary = "获取客户信用")
-    @PrePermission("finance:credit:list")
+    @AuthApiPermission(apiCodes = "finance:credit:list")
     @GetMapping("/customer/{customerId}")
     public BaseResponse<CustomerCreditDO> getByCustomer(@PathVariable String customerId) {
         return BaseResponse.ok(service.getByCustomer(customerId));
@@ -78,7 +78,7 @@ public class CustomerCreditController {
      * @return 风险画像数据
      */
     @Operation(summary = "客户风险画像")
-    @PrePermission("finance:credit:list")
+    @AuthApiPermission(apiCodes = "finance:credit:list")
     @GetMapping("/profile/{customerId}")
     public BaseResponse<Map<String, Object>> profile(@PathVariable String customerId) {
         return BaseResponse.ok(service.profile(customerId));
@@ -90,7 +90,7 @@ public class CustomerCreditController {
      * @return 各信用等级数量列表
      */
     @Operation(summary = "信用分布")
-    @PrePermission("finance:credit:list")
+    @AuthApiPermission(apiCodes = "finance:credit:list")
     @GetMapping("/distribution")
     public BaseResponse<List<Map<String, Object>>> distribution() {
         return BaseResponse.ok(service.distribution());
@@ -103,7 +103,7 @@ public class CustomerCreditController {
      * @return 客户信用列表
      */
     @Operation(summary = "按等级列出")
-    @PrePermission("finance:credit:list")
+    @AuthApiPermission(apiCodes = "finance:credit:list")
     @GetMapping("/byLevel")
     public BaseResponse<List<CustomerCreditDO>> listByLevel(@RequestParam CreditLevel level) {
         return BaseResponse.ok(service.listByLevel(level));
@@ -119,7 +119,7 @@ public class CustomerCreditController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("finance:credit:list")
+    @AuthApiPermission(apiCodes = "finance:credit:list")
     @GetMapping("/page")
     public BaseResponse<Page<CustomerCreditDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,

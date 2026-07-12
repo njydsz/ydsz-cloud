@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.system.domain.entity.audit.LoginAuditDO;
 import com.njydsz.pmis.system.infra.mapper.audit.LoginAuditMapper;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +49,7 @@ public class LoginAuditController {
      * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "分页查询")
-    @PrePermission("audit:login:view")
+    @AuthApiPermission(apiCodes = "audit:login:view")
     @GetMapping("/page")
     public BaseResponse<PageResponse<LoginAuditDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -67,7 +67,7 @@ public class LoginAuditController {
     }
 
     @Operation(summary = "按用户名查询登录历史")
-    @PrePermission("audit:login:view")
+    @AuthApiPermission(apiCodes = "audit:login:view")
     @GetMapping("/byUsername")
     /**
      * 按用户名查询登录历史
@@ -83,7 +83,7 @@ public class LoginAuditController {
     }
 
     @Operation(summary = "统计某 IP 短期登录失败次数")
-    @PrePermission("audit:login:view")
+    @AuthApiPermission(apiCodes = "audit:login:view")
     @GetMapping("/countByIp")
     /**
      * 统计某 IP 在指定时间窗口内的登录次数

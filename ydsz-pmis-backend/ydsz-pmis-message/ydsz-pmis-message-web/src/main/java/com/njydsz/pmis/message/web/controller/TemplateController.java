@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.template;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.template.TemplateAuditDTO;
@@ -46,7 +46,7 @@ public class TemplateController {
      * @return 统一响应结果，包含模板详情
      */
     @Operation(summary = "创建模板")
-    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_CREATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_CREATE)
     @Idempotent(key = "template:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgTemplateDO> create(@Valid @RequestBody TemplateCreateDTO dto) {
@@ -61,7 +61,7 @@ public class TemplateController {
      * @return 统一响应结果，包含更新后模板详情
      */
     @Operation(summary = "更新模板")
-    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
     @Idempotent(key = "template:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<MsgTemplateDO> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
@@ -75,7 +75,7 @@ public class TemplateController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除模板")
-    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_DELETE)
     @Idempotent(key = "template:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -90,7 +90,7 @@ public class TemplateController {
      * @return 统一响应结果，包含模板详情
      */
     @Operation(summary = "模板详情")
-    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
     @GetMapping("/{id}")
     public BaseResponse<MsgTemplateDO> getById(@PathVariable String id) {
         return BaseResponse.ok(templateService.getById(id));
@@ -103,7 +103,7 @@ public class TemplateController {
      * @return 统一响应结果，包含模板分页数据
      */
     @Operation(summary = "模板分页")
-    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
     @GetMapping("/page")
     public BaseResponse<Page<MsgTemplateDO>> page(TemplateQueryDTO query) {
         return BaseResponse.ok(templateService.page(query));
@@ -117,7 +117,7 @@ public class TemplateController {
      * @return 统一响应结果
      */
     @Operation(summary = "审核模板")
-    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
     @Idempotent(key = "template:audit", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/audit")
     public BaseResponse<Void> audit(@PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {

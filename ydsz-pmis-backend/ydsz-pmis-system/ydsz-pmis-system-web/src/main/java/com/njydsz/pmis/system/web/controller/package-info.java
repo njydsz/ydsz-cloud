@@ -2,7 +2,7 @@
  * 系统管理 Controller 层：对外暴露消息、文件、通知、审计、配置等 HTTP 接口。
  *
  * <p>本包是 PMIS 系统管理模块的 REST API 入口，所有 Controller 统一使用
- * {@code @RestController} + {@code @RequestMapping} 注解，配合 {@code @PrePermission}
+ * {@code @RestController} + {@code @RequestMapping} 注解，配合 {@code @AuthApiPermission}
  * 注解实现接口级权限控制，通过 {@code swagger-v3}（{@code @Tag}/{@code @Operation}）
  * 自动生成 OpenAPI 文档。
  *
@@ -27,7 +27,7 @@
  *   <li><b>统一响应</b>：所有方法返回 {@code Result<T>}，通过 {@code BizErrorCode} 表达业务错误码</li>
  *   <li><b>参数校验前置</b>：使用 {@code @Valid} + JSR-303 注解在 Controller 层拦截非法入参，
  *       避免脏数据进入 Service</li>
- *   <li><b>权限显式声明</b>：所有接口必须标注 {@code @PrePermission("module:resource:action")}，
+ *   <li><b>权限显式声明</b>：所有接口必须标注 {@code @AuthApiPermission(apiCodes = "module:resource:action")}，
  *       缺失注解视为未授权</li>
  *   <li><b>OpenAPI 完备</b>：每个方法须补充 {@code @Operation} summary/description，
  *       参数添加 {@code @Parameter} 说明</li>

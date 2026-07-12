@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.ai;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -50,7 +50,7 @@ public class FlowCanaryController {
      */
     @Idempotent(key = "flowCanary:publishCanary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/publish")
-    @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> publishCanary(
             @PathVariable String definitionId,
             @RequestParam(defaultValue = "10") int initialPercent,
@@ -73,7 +73,7 @@ public class FlowCanaryController {
      */
     @Idempotent(key = "flowCanary:adjustCanary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/adjust")
-    @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> adjustCanary(
             @PathVariable String definitionId,
             @RequestParam int newPercent,
@@ -94,7 +94,7 @@ public class FlowCanaryController {
      */
     @Idempotent(key = "flowCanary:promoteCanary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/promote")
-    @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> promoteCanary(
             @PathVariable String definitionId,
             @RequestParam(required = false) String note) {
@@ -114,7 +114,7 @@ public class FlowCanaryController {
      */
     @Idempotent(key = "flowCanary:rollbackCanary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/rollback")
-    @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public BaseResponse<Void> rollbackCanary(
             @PathVariable String definitionId,
             @RequestParam(required = false) String note) {

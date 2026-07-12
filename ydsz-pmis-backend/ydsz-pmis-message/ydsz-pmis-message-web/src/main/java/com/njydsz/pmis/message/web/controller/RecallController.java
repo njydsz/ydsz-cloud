@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.web.controller.receipt;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.receipt.RecallRequestDTO;
@@ -41,7 +41,7 @@ public class RecallController {
      * @return 统一响应结果，true 表示撤回成功
      */
     @Operation(summary = "撤回站内通知")
-    @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallNotification", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification")
     public BaseResponse<Boolean> recallNotification(@RequestParam String userId,
@@ -56,7 +56,7 @@ public class RecallController {
      * @return 统一响应结果，true 表示撤回成功
      */
     @Operation(summary = "撤回已发送消息")
-    @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallMessage", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/message/{logId}")
     public BaseResponse<Boolean> recallMessage(@PathVariable String logId) {
@@ -72,7 +72,7 @@ public class RecallController {
      * @return 撤回结果
      */
     @Operation(summary = "按消息 ID 撤回消息")
-    @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallByMsgId", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/msg/{msgId}")
     public BaseResponse<Boolean> recallByMsgId(@PathVariable String msgId) {
@@ -86,7 +86,7 @@ public class RecallController {
      * @return 统一响应结果，包含撤回条数
      */
     @Operation(summary = "按业务类型+单据 ID 批量撤回")
-    @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch")
     public BaseResponse<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {

@@ -14,7 +14,7 @@
  *   <li>所有接口统一返回 {@link com.njydsz.pmis.common.api.Result}</li>
  *   <li>接口粒度按"业务能力"拆分，不与 Agent 一一对应（一个 Controller 可调用多个 Agent）</li>
  *   <li>高风险接口通过 {@code @RequireReAuth} 强制二次认证</li>
- *   <li>通过 {@code @PrePermission} 权限码控制访问</li>
+ *   <li>通过 {@code @AuthApiPermission} 权限码控制访问</li>
  * </ul>
  *
  * @author ydsz-pmis-team

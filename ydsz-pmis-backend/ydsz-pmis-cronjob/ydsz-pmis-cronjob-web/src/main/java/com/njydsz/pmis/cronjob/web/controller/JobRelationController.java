@@ -3,7 +3,7 @@ package com.njydsz.pmis.cronjob.web.controller.job;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.dto.job.JobRelationSaveDTO;
@@ -45,7 +45,7 @@ public class JobRelationController {
      * @return 统一响应结果，包含新增关系 ID
      */
     @Operation(summary = "添加任务依赖关系")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "添加任务依赖", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobRelation:addRelation", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -61,7 +61,7 @@ public class JobRelationController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除任务依赖关系")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "删除任务依赖", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobRelation:removeRelation", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{relationId}")

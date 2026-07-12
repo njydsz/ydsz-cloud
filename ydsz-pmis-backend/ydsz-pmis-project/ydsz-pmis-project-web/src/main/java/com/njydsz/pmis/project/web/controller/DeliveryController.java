@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.execution;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.DeliveryItemCreateDTO;
 import com.njydsz.pmis.project.domain.dto.DeliveryItemStatusDTO;
@@ -54,7 +54,7 @@ public class DeliveryController {
      * @return 新建标准 ID
      */
     @Operation(summary = "创建交付物标准")
-    @PrePermission("execution:delivery:create")
+    @AuthApiPermission(apiCodes = "execution:delivery:create")
     @Idempotent(key = "delivery:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/standard")
     public BaseResponse<String> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
@@ -68,7 +68,7 @@ public class DeliveryController {
      * @return 空结果
      */
     @Operation(summary = "删除交付物标准")
-    @PrePermission("execution:delivery:delete")
+    @AuthApiPermission(apiCodes = "execution:delivery:delete")
     @OperationLog(module = "交付物管理", action = "删除交付物标准", bizType = "DELIVERY_STANDARD")
     @Idempotent(key = "delivery:deleteStandard", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/standard/{id}")
@@ -84,7 +84,7 @@ public class DeliveryController {
      * @return 标准实体
      */
     @Operation(summary = "交付物标准详情")
-    @PrePermission("execution:delivery:list")
+    @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/standard/{id}")
     public BaseResponse<DeliveryStandardDO> getStandard(@PathVariable String id) {
         return BaseResponse.ok(service.getStandardById(id));
@@ -99,7 +99,7 @@ public class DeliveryController {
      * @return 标准列表
      */
     @Operation(summary = "按类型/阶段查询交付物标准")
-    @PrePermission("execution:delivery:list")
+    @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/standard/list")
     public BaseResponse<List<DeliveryStandardDO>> listStandards(
             @RequestParam(required = false) String projectType,
@@ -115,7 +115,7 @@ public class DeliveryController {
      * @return 标准数量
      */
     @Operation(summary = "统计项目类型的标准数")
-    @PrePermission("execution:delivery:list")
+    @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/standard/count")
     public BaseResponse<Integer> countStandardsByType(@RequestParam String projectType) {
         return BaseResponse.ok(service.countStandardsByType(projectType));
@@ -130,7 +130,7 @@ public class DeliveryController {
      * @return 新建实例 ID
      */
     @Operation(summary = "创建项目交付物实例")
-    @PrePermission("execution:delivery:create")
+    @AuthApiPermission(apiCodes = "execution:delivery:create")
     @Idempotent(key = "delivery:createItem", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/item")
     public BaseResponse<String> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
@@ -144,7 +144,7 @@ public class DeliveryController {
      * @return 空结果
      */
     @Operation(summary = "交付物状态迁移")
-    @PrePermission("execution:delivery:status")
+    @AuthApiPermission(apiCodes = "execution:delivery:status")
     @Idempotent(key = "delivery:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/item/status")
     public BaseResponse<Void> changeItemStatus(@Valid @RequestBody DeliveryItemStatusDTO dto) {
@@ -160,7 +160,7 @@ public class DeliveryController {
      * @return 空结果
      */
     @Operation(summary = "标记 TR 完成")
-    @PrePermission("execution:delivery:status")
+    @AuthApiPermission(apiCodes = "execution:delivery:status")
     @Idempotent(key = "delivery:markTrCompleted", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/item/{id}/trCompleted")
     public BaseResponse<Void> markTrCompleted(@PathVariable String id,
@@ -176,7 +176,7 @@ public class DeliveryController {
      * @return 空结果
      */
     @Operation(summary = "删除交付物实例")
-    @PrePermission("execution:delivery:delete")
+    @AuthApiPermission(apiCodes = "execution:delivery:delete")
     @OperationLog(module = "交付物管理", action = "删除交付物实例", bizType = "DELIVERY_ITEM")
     @Idempotent(key = "delivery:deleteItem", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/item/{id}")
@@ -192,7 +192,7 @@ public class DeliveryController {
      * @return 实例实体
      */
     @Operation(summary = "交付物实例详情")
-    @PrePermission("execution:delivery:list")
+    @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/item/{id}")
     public BaseResponse<DeliveryItemDO> getItem(@PathVariable String id) {
         return BaseResponse.ok(service.getItemById(id));
@@ -205,7 +205,7 @@ public class DeliveryController {
      * @return 交付物列表
      */
     @Operation(summary = "按项目查询所有交付物")
-    @PrePermission("execution:delivery:list")
+    @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/item/listByInitiation/{initiationId}")
     public BaseResponse<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable String initiationId) {
         return BaseResponse.ok(service.listItemsByInitiation(initiationId));
@@ -219,7 +219,7 @@ public class DeliveryController {
      * @return 交付物列表
      */
     @Operation(summary = "按项目+阶段查询交付物")
-    @PrePermission("execution:delivery:list")
+    @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/item/listByStage")
     public BaseResponse<List<DeliveryItemDO>> listItemsByStage(@RequestParam String initiationId,
                                                     @RequestParam String stage) {
@@ -233,7 +233,7 @@ public class DeliveryController {
      * @return 各状态数量列表
      */
     @Operation(summary = "按状态聚合交付物")
-    @PrePermission("execution:delivery:list")
+    @AuthApiPermission(apiCodes = "execution:delivery:list")
     @GetMapping("/item/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateItemStatus(@RequestParam String initiationId) {
         return BaseResponse.ok(service.aggregateItemStatus(initiationId));
@@ -250,7 +250,7 @@ public class DeliveryController {
      * @return 门控校验结果
      */
     @Operation(summary = "阶段门控校验")
-    @PrePermission("execution:delivery:status")
+    @AuthApiPermission(apiCodes = "execution:delivery:status")
     @GetMapping("/stageGate/check")
     public BaseResponse<StageGateValidator.GateCheckResult> checkStageGate(
             @RequestParam String initiationId,

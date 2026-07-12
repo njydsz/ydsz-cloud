@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.web.controller.user;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeTagCreateDTO;
@@ -49,7 +49,7 @@ public class EmployeeTagController {
      * @return 统一响应结果，包含新建标签 ID
      */
     @Operation(summary = "添加标签")
-    @PrePermission(PermissionCodes.RESOURCE_TAG_CREATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.RESOURCE_TAG_CREATE)
     @OperationLog(module = "人员标签", action = "添加标签", bizType = "EMPLOYEE_TAG")
     @Idempotent(key = "employeeTag:add", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -64,7 +64,7 @@ public class EmployeeTagController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除标签")
-    @PrePermission(PermissionCodes.RESOURCE_TAG_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.RESOURCE_TAG_DELETE)
     @OperationLog(module = "人员标签", action = "删除标签", bizType = "EMPLOYEE_TAG")
     @Idempotent(key = "employeeTag:remove", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -81,7 +81,7 @@ public class EmployeeTagController {
      * @return 统一响应结果
      */
     @Operation(summary = "覆盖式设置员工标签")
-    @PrePermission(PermissionCodes.RESOURCE_TAG_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.RESOURCE_TAG_UPDATE)
     @OperationLog(module = "人员标签", action = "覆盖员工标签", bizType = "EMPLOYEE_TAG")
     @Idempotent(key = "employeeTag:replaceByEmployee", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/replace/{employeeId}")

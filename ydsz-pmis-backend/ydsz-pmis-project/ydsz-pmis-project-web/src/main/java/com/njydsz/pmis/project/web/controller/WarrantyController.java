@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.web.controller.aftersales;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.WarrantyCreateDTO;
@@ -44,7 +44,7 @@ public class WarrantyController {
     private final WarrantyService service;
 
     @Operation(summary = "创建质保期")
-    @PrePermission("aftersales:warranty:create")
+    @AuthApiPermission(apiCodes = "aftersales:warranty:create")
     @Idempotent(key = "warranty:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody WarrantyCreateDTO dto) {
@@ -52,7 +52,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "手动提前终止质保期")
-    @PrePermission("aftersales:warranty:terminate")
+    @AuthApiPermission(apiCodes = "aftersales:warranty:terminate")
     @Idempotent(key = "warranty:update", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/terminate")
     public BaseResponse<Void> terminate(@Valid @RequestBody WarrantyTerminateDTO dto) {
@@ -61,7 +61,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "扫描即将到期（≤ today + noticeDays 天）")
-    @PrePermission("aftersales:warranty:scan")
+    @AuthApiPermission(apiCodes = "aftersales:warranty:scan")
     @Idempotent(key = "warranty:scanExpiring", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/expiring")
     public BaseResponse<Integer> scanExpiring(
@@ -71,7 +71,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "扫描已过期")
-    @PrePermission("aftersales:warranty:scan")
+    @AuthApiPermission(apiCodes = "aftersales:warranty:scan")
     @Idempotent(key = "warranty:scanOverdue", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/overdue")
     public BaseResponse<Integer> scanOverdue(
@@ -80,7 +80,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "即将到期列表")
-    @PrePermission("aftersales:warranty:list")
+    @AuthApiPermission(apiCodes = "aftersales:warranty:list")
     @GetMapping("/expiring")
     public BaseResponse<List<WarrantyDO>> listExpiring(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate until) {
@@ -88,7 +88,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "质保期分页")
-    @PrePermission("aftersales:warranty:list")
+    @AuthApiPermission(apiCodes = "aftersales:warranty:list")
     @GetMapping("/page")
     public BaseResponse<PageResponse<WarrantyDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -100,7 +100,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "质保期详情")
-    @PrePermission("aftersales:warranty:list")
+    @AuthApiPermission(apiCodes = "aftersales:warranty:list")
     @GetMapping("/{id}")
     public BaseResponse<WarrantyDO> getById(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));

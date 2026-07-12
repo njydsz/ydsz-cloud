@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.web.controller.instance;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -60,7 +60,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "flowAdvanced:sendWeekly", ttlSeconds = 10, message = "请勿重复提交")
     @PostMapping("/report/weekly/send")
     @Operation(summary = "P2-4: 推送周报")
-    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendWeekly() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         return BaseResponse.ok(reportService.sendWeeklyReport(tenantId));
@@ -69,7 +69,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "flowAdvanced:sendMonthly", ttlSeconds = 10, message = "请勿重复提交")
     @PostMapping("/report/monthly/send")
     @Operation(summary = "P2-4: 推送月报")
-    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendMonthly() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         return BaseResponse.ok(reportService.sendMonthlyReport(tenantId));
@@ -80,7 +80,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "flowAdvanced:merge", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/merge")
     @Operation(summary = "P2-5: 合并多个流程实例")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<String> merge(@RequestParam List<String> instanceIds) {
         String userId = AuthContext.getUserId();
         String tenantId = AuthContext.getTenantIdOrDefault("1");
@@ -96,7 +96,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "flowAdvanced:mergePass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/merge/{mergeGroupId}/pass")
     @Operation(summary = "P2-5: 批量通过合并组")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> mergePass(@PathVariable String mergeGroupId,
                                        @RequestParam(required = false) String comment) {
         String userId = AuthContext.getUserId();
@@ -106,7 +106,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "flowAdvanced:mergeReject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/merge/{mergeGroupId}/reject")
     @Operation(summary = "P2-5: 批量驳回合并组")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> mergeReject(@PathVariable String mergeGroupId,
                                           @RequestParam(required = false) String comment) {
         String userId = AuthContext.getUserId();
@@ -126,7 +126,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "flowAdvanced:updateCondition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/countersign/{taskId}/votePassRate")
     @Operation(summary = "P2-6: 动态修改会签通过率阈值")
-    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> updateVotePassRate(@PathVariable String taskId,
                                              @RequestParam BigDecimal votePassRate) {
         String userId = AuthContext.getUserId();
@@ -137,7 +137,7 @@ public class FlowAdvancedController {
     @Idempotent(key = "flowAdvanced:updateApproveCount", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/countersign/{taskId}/approveCount")
     @Operation(summary = "P2-6: 动态修改会签所需通过人数")
-    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> updateApproveCount(@PathVariable String taskId,
                                              @RequestParam Integer approveCount) {
         String userId = AuthContext.getUserId();

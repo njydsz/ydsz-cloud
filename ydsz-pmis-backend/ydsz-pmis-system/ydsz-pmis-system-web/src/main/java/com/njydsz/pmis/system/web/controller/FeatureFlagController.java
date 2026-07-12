@@ -3,7 +3,7 @@ package com.njydsz.pmis.system.web.controller.config;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.featureflag.FeatureFlag;
 import com.njydsz.pmis.common.featureflag.FeatureFlagService;
@@ -52,7 +52,7 @@ public class FeatureFlagController {
      * @return 统一响应结果，包含 flag 快照列表
      */
     @Operation(summary = "获取全量 flag 快照")
-    @PrePermission("sys:featureFlag:view")
+    @AuthApiPermission(apiCodes = "sys:featureFlag:view")
     @GetMapping("/snapshot")
     public BaseResponse<List<FeatureFlagSnapshot>> snapshot() {
         return BaseResponse.ok(featureFlagService.snapshot());
@@ -64,7 +64,7 @@ public class FeatureFlagController {
      * @return 统一响应结果，包含按分类分组的 flag 快照
      */
     @Operation(summary = "按分类聚合快照")
-    @PrePermission("sys:featureFlag:view")
+    @AuthApiPermission(apiCodes = "sys:featureFlag:view")
     @GetMapping("/snapshot/grouped")
     public BaseResponse<Map<String, List<FeatureFlagSnapshot>>> snapshotByCategory() {
         return BaseResponse.ok(featureFlagService.snapshotByCategory());
@@ -99,7 +99,7 @@ public class FeatureFlagController {
      * @return 统一响应结果，包含生效状态
      */
     @Operation(summary = "启停指定 flag")
-    @PrePermission("sys:featureFlag:update")
+    @AuthApiPermission(apiCodes = "sys:featureFlag:update")
     @OperationLog(module = "特性开关", action = "更新开关", bizType = "FEATURE_FLAG")
     @Idempotent(key = "featureFlag:setEnabled", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/enabled")
@@ -119,7 +119,7 @@ public class FeatureFlagController {
      * @return 统一响应结果，包含实际生效的百分比
      */
     @Operation(summary = "设置灰度发布比例 (0-100)")
-    @PrePermission("sys:featureFlag:update")
+    @AuthApiPermission(apiCodes = "sys:featureFlag:update")
     @OperationLog(module = "特性开关", action = "更新灰度", bizType = "FEATURE_FLAG")
     @Idempotent(key = "featureFlag:setRollout", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/rollout")
@@ -137,7 +137,7 @@ public class FeatureFlagController {
      * @return 统一响应结果
      */
     @Operation(summary = "强制刷新本地缓存")
-    @PrePermission("sys:featureFlag:update")
+    @AuthApiPermission(apiCodes = "sys:featureFlag:update")
     @OperationLog(module = "特性开关", action = "刷新缓存", bizType = "FEATURE_FLAG")
     @Idempotent(key = "featureFlag:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")

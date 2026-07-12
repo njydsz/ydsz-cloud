@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
 import com.njydsz.pmis.system.infra.mapper.audit.SensitiveOperationMapper;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +48,7 @@ public class SensitiveOperationController {
      * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "分页查询")
-    @PrePermission("audit:sensitive:view")
+    @AuthApiPermission(apiCodes = "audit:sensitive:view")
     @GetMapping("/page")
     public BaseResponse<PageResponse<SensitiveOperationDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -64,7 +64,7 @@ public class SensitiveOperationController {
     }
 
     @Operation(summary = "按用户查询敏感操作历史")
-    @PrePermission("audit:sensitive:view")
+    @AuthApiPermission(apiCodes = "audit:sensitive:view")
     @GetMapping("/byUser")
     /**
      * 按用户查询敏感操作历史

@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.web.controller.receipt;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.server.service.receipt.ReadStatusSyncService;
@@ -46,7 +46,7 @@ public class ReadStatusController {
      * @return 统一响应结果，true 表示标记成功
      */
     @Operation(summary = "标记消息已读")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/read/{msgId}")
     public BaseResponse<Boolean> markRead(@PathVariable String msgId,
@@ -62,7 +62,7 @@ public class ReadStatusController {
      * @return 统一响应结果，包含已标记条数
      */
     @Operation(summary = "批量标记消息已读")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markReadBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/readBatch")
     public BaseResponse<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
@@ -78,7 +78,7 @@ public class ReadStatusController {
      * @return 统一响应结果，true 表示标记成功
      */
     @Operation(summary = "标记站内通知已读")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markNotificationRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification/{notificationId}")
     public BaseResponse<Boolean> markNotificationRead(@PathVariable String notificationId,
@@ -94,7 +94,7 @@ public class ReadStatusController {
      * @return 统一响应结果，包含已标记条数
      */
     @Operation(summary = "全部通知标记已读")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markAllNotificationsRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification/readAll")
     public BaseResponse<Integer> markAllNotificationsRead(@RequestParam String userId,
@@ -110,7 +110,7 @@ public class ReadStatusController {
      * @return 统一响应结果，包含 total 和 byChannel 两个未读计数
      */
     @Operation(summary = "查询用户未读消息数量")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @GetMapping("/unreadCount")
     public BaseResponse<Map<String, Long>> getUnreadCount(@RequestParam String userId,
                                                      @RequestParam(required = false) String channel) {

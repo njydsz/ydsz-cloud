@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.system.domain.dto.config.ConfigFormDTO;
@@ -46,7 +46,7 @@ public class ConfigController {
      * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "配置分页")
-    @PrePermission("sys:config:list")
+    @AuthApiPermission(apiCodes = "sys:config:list")
     @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping
     public BaseResponse<Page<ConfigDO>> page(@Valid ConfigQueryDTO query) {
@@ -96,7 +96,7 @@ public class ConfigController {
     }
 
     @Operation(summary = "创建配置")
-    @PrePermission("sys:config:create")
+    @AuthApiPermission(apiCodes = "sys:config:create")
     @OperationLog(module = "系统配置", action = "创建配置", bizType = "CONFIG")
     @Idempotent(key = "config:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -111,7 +111,7 @@ public class ConfigController {
     }
 
     @Operation(summary = "更新配置")
-    @PrePermission("sys:config:update")
+    @AuthApiPermission(apiCodes = "sys:config:update")
     @OperationLog(module = "系统配置", action = "更新配置", bizType = "CONFIG")
     @Idempotent(key = "config:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
@@ -127,7 +127,7 @@ public class ConfigController {
     }
 
     @Operation(summary = "删除配置")
-    @PrePermission("sys:config:delete")
+    @AuthApiPermission(apiCodes = "sys:config:delete")
     @OperationLog(module = "系统配置", action = "删除配置", bizType = "CONFIG")
     @Idempotent(key = "config:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -144,7 +144,7 @@ public class ConfigController {
     }
 
     @Operation(summary = "按分组批量删除")
-    @PrePermission("sys:config:delete")
+    @AuthApiPermission(apiCodes = "sys:config:delete")
     @OperationLog(module = "系统配置", action = "按分组删除", bizType = "CONFIG")
     @Idempotent(key = "config:deleteByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/group/{group}")
@@ -160,7 +160,7 @@ public class ConfigController {
     }
 
     @Operation(summary = "按分组批量启停")
-    @PrePermission("sys:config:update")
+    @AuthApiPermission(apiCodes = "sys:config:update")
     @OperationLog(module = "系统配置", action = "按分组启停", bizType = "CONFIG")
     @Idempotent(key = "config:updateStatusByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/group/{group}/status/{status}")
@@ -178,7 +178,7 @@ public class ConfigController {
     }
 
     @Operation(summary = "刷新缓存")
-    @PrePermission("sys:config:refresh")
+    @AuthApiPermission(apiCodes = "sys:config:refresh")
     @OperationLog(module = "系统配置", action = "刷新缓存", bizType = "CONFIG")
     @Idempotent(key = "config:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")

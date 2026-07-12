@@ -11,7 +11,7 @@ import com.njydsz.pmis.agent.server.engine.stream.SseEventListener;
 import com.njydsz.pmis.agent.domain.entity.hitl.AgentPredictionDO;
 import com.njydsz.pmis.agent.infra.mapper.hitl.AgentPredictionMapper;
 import com.njydsz.pmis.agent.server.service.agent.AgentService;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.constant.AsyncExecutorNames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,7 +82,7 @@ public class AgentController {
      * @return 落库后的 Agent 预测记录
      */
     @Operation(summary = "执行 Agent（同步）")
-    @PrePermission("agent:task:run")
+    @AuthApiPermission(apiCodes = "agent:task:run")
     @Idempotent(key = "agent:run", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/run")
     public BaseResponse<AgentPredictionDO> run(@Valid @RequestBody AgentRunRequestDTO req) {
@@ -96,7 +96,7 @@ public class AgentController {
      * @return 空结果
      */
     @Operation(summary = "执行 Agent（异步）")
-    @PrePermission("agent:task:run")
+    @AuthApiPermission(apiCodes = "agent:task:run")
     @Idempotent(key = "agent:runAsync", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/runAsync")
     public BaseResponse<Void> runAsync(@Valid @RequestBody AgentRunRequestDTO req) {
@@ -112,7 +112,7 @@ public class AgentController {
      * @return Agent 执行结果
      */
     @Operation(summary = "内存执行（不落库）")
-    @PrePermission("agent:task:run")
+    @AuthApiPermission(apiCodes = "agent:task:run")
     @Idempotent(key = "agent:inMemory", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/inMemory")
     public BaseResponse<AgentResult> inMemory(@RequestParam String agentType,
@@ -156,7 +156,7 @@ public class AgentController {
      * @return SseEmitter，Spring MVC 会自动处理 SSE 流
      */
     @Operation(summary = "流式执行 Agent（SSE）")
-    @PrePermission("agent:task:run")
+    @AuthApiPermission(apiCodes = "agent:task:run")
     @Idempotent(key = "agent:runStream", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping(value = "/run/stream", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter runStream(@RequestParam String agentType,
@@ -204,7 +204,7 @@ public class AgentController {
      * @return Agent 预测记录
      */
     @Operation(summary = "记录详情")
-    @PrePermission("agent:task:view")
+    @AuthApiPermission(apiCodes = "agent:task:view")
     @GetMapping("/{id}")
     public BaseResponse<AgentPredictionDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -223,7 +223,7 @@ public class AgentController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("agent:task:list")
+    @AuthApiPermission(apiCodes = "agent:task:list")
     @GetMapping("/page")
     public BaseResponse<Page<AgentPredictionDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -245,7 +245,7 @@ public class AgentController {
      * @return 最近记录列表
      */
     @Operation(summary = "最近记录")
-    @PrePermission("agent:task:list")
+    @AuthApiPermission(apiCodes = "agent:task:list")
     @GetMapping("/recent")
     public BaseResponse<List<AgentPredictionDO>> recent(
             @RequestParam(required = false) String agentType,
@@ -261,7 +261,7 @@ public class AgentController {
      * @return 聚合结果列表
      */
     @Operation(summary = "按类型/告警等级聚合")
-    @PrePermission("agent:task:list")
+    @AuthApiPermission(apiCodes = "agent:task:list")
     @GetMapping("/aggregate/type")
     public BaseResponse<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
         return BaseResponse.ok(service.aggregateByType(tenantId));
@@ -276,7 +276,7 @@ public class AgentController {
      * @return 记录数量
      */
     @Operation(summary = "告警计数")
-    @PrePermission("agent:task:list")
+    @AuthApiPermission(apiCodes = "agent:task:list")
     @GetMapping("/count")
     public BaseResponse<String> countByAlertLevel(
             @RequestParam(required = false) String alertLevel,
@@ -290,7 +290,7 @@ public class AgentController {
      * <p>通过 PostgreSQL percentile_cont 聚合 cost_ms, 性能优于 Java 端排序</p>
      */
     @Operation(summary = "AI Agent 执行耗时统计 (P50/P90/P95)")
-    @PrePermission("agent:task:list")
+    @AuthApiPermission(apiCodes = "agent:task:list")
     @GetMapping("/durationStats")
     public BaseResponse<Map<String, Object>> durationStats(
             @RequestParam(required = false) String agentType,
@@ -304,7 +304,7 @@ public class AgentController {
      * 批次 21 / P2: 按 Agent 类型分组的耗时 P50/P95 统计
      */
     @Operation(summary = "按 Agent 类型统计耗时")
-    @PrePermission("agent:task:list")
+    @AuthApiPermission(apiCodes = "agent:task:list")
     @GetMapping("/durationStats/byAgentType")
     public BaseResponse<List<Map<String, Object>>> durationStatsByAgentType(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,

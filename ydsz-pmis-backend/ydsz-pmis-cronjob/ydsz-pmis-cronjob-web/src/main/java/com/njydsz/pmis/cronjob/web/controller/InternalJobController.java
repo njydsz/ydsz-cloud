@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <h3>安全考虑</h3>
  * <ul>
  *   <li>仅限内网调用，生产环境应通过网络策略限制访问来源</li>
- *   <li>不走权限校验（@PrePermission），因为是节点间内部通信</li>
+ *   <li>不走权限校验（@AuthApiPermission），因为是节点间内部通信</li>
  *   <li>请求体由 Leader 构造，信任内网来源</li>
  * </ul>
  *

@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.execution;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
 import com.njydsz.pmis.project.domain.dto.PurchaseCreateDTO;
@@ -50,7 +50,7 @@ public class PurchaseController {
      * @return 新建采购单 ID
      */
     @Operation(summary = "创建采购单")
-    @PrePermission("execution:purchase:create")
+    @AuthApiPermission(apiCodes = "execution:purchase:create")
     @Idempotent(key = "purchase:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody PurchaseCreateDTO dto) {
@@ -64,7 +64,7 @@ public class PurchaseController {
      * @return 空结果
      */
     @Operation(summary = "状态迁移")
-    @PrePermission("execution:purchase:status")
+    @AuthApiPermission(apiCodes = "execution:purchase:status")
     @Idempotent(key = "purchase:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
@@ -79,7 +79,7 @@ public class PurchaseController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:purchase:delete")
+    @AuthApiPermission(apiCodes = "execution:purchase:delete")
     @Idempotent(key = "purchase:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -94,7 +94,7 @@ public class PurchaseController {
      * @return 采购单实体
      */
     @Operation(summary = "详情")
-    @PrePermission("execution:purchase:list")
+    @AuthApiPermission(apiCodes = "execution:purchase:list")
     @GetMapping("/{id}")
     public BaseResponse<PurchaseDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -111,7 +111,7 @@ public class PurchaseController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("execution:purchase:list")
+    @AuthApiPermission(apiCodes = "execution:purchase:list")
     @GetMapping("/page")
     public BaseResponse<Page<PurchaseDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,

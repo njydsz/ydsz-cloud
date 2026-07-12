@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.web.controller.config;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -36,28 +36,28 @@ public class UserChannelBindingController {
     private final UserChannelBindingService userChannelBindingService;
 
     @Operation(summary = "新增或更新通道绑定")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @PostMapping
     public BaseResponse<MsgUserChannelDO> upsert(@Valid @RequestBody UserChannelBindingDTO dto) {
         return BaseResponse.ok(userChannelBindingService.upsert(dto));
     }
 
     @Operation(summary = "查询当前用户所有通道绑定")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/mine")
     public BaseResponse<List<MsgUserChannelDO>> listMine() {
         return BaseResponse.ok(userChannelBindingService.listByUser(AuthContext.getUserId()));
     }
 
     @Operation(summary = "按用户ID查询通道绑定")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/user/{userId}")
     public BaseResponse<List<MsgUserChannelDO>> listByUser(@PathVariable String userId) {
         return BaseResponse.ok(userChannelBindingService.listByUser(userId));
     }
 
     @Operation(summary = "删除通道绑定")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
         userChannelBindingService.delete(id);

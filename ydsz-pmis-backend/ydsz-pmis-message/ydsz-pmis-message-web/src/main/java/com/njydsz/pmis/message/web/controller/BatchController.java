@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.pmis.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.pmis.message.domain.entity.batch.MsgBatchDO;
@@ -52,7 +52,7 @@ public class BatchController {
      * @return 批次实体（含 batchId 与初始状态）
      */
     @Operation(summary = "异步批量发送消息")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "batch:submitBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public BaseResponse<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
@@ -69,7 +69,7 @@ public class BatchController {
      * @return 进度 VO（含 total/success/failed/skipped/progressPercent）
      */
     @Operation(summary = "查询批次发送进度")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/progress/{batchId}")
     public BaseResponse<BatchProgressVO> getProgress(@PathVariable String batchId) {
         return BaseResponse.ok(batchService.getProgress(batchId));

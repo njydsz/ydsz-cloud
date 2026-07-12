@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.initiation;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.ProjectChangeCreateDTO;
 import com.njydsz.pmis.project.domain.dto.ProjectChangeStatusDTO;
@@ -55,7 +55,7 @@ public class ProjectChangeController {
      * @return 变更记录 ID
      */
     @Operation(summary = "创建项目变更")
-    @PrePermission("project:change:create")
+    @AuthApiPermission(apiCodes = "project:change:create")
     @Idempotent(key = "projectChange:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
@@ -69,7 +69,7 @@ public class ProjectChangeController {
      * @return 空结果
      */
     @Operation(summary = "状态迁移")
-    @PrePermission("project:change:status")
+    @AuthApiPermission(apiCodes = "project:change:status")
     @Idempotent(key = "projectChange:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ProjectChangeStatusDTO dto) {
@@ -84,7 +84,7 @@ public class ProjectChangeController {
      * @return 空结果
      */
     @Operation(summary = "删除变更")
-    @PrePermission("project:change:delete")
+    @AuthApiPermission(apiCodes = "project:change:delete")
     @Idempotent(key = "projectChange:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -99,7 +99,7 @@ public class ProjectChangeController {
      * @return 变更实体
      */
     @Operation(summary = "变更详情")
-    @PrePermission("project:change:list")
+    @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/{id}")
     public BaseResponse<ProjectChangeDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -117,7 +117,7 @@ public class ProjectChangeController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("project:change:list")
+    @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/page")
     public BaseResponse<Page<ProjectChangeDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -136,7 +136,7 @@ public class ProjectChangeController {
      * @return 变更记录列表
      */
     @Operation(summary = "按项目查询变更列表")
-    @PrePermission("project:change:list")
+    @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/listByInitiation/{initiationId}")
     public BaseResponse<List<ProjectChangeDO>> listByInitiation(@PathVariable String initiationId) {
         return BaseResponse.ok(service.listByInitiation(initiationId));
@@ -149,7 +149,7 @@ public class ProjectChangeController {
      * @return 每种变更类型对应的数量列表
      */
     @Operation(summary = "按变更类型聚合")
-    @PrePermission("project:change:list")
+    @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/aggregate/type")
     public BaseResponse<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
         return BaseResponse.ok(service.aggregateByType(tenantId));
@@ -162,7 +162,7 @@ public class ProjectChangeController {
      * @return 每种状态对应的数量列表
      */
     @Operation(summary = "按状态聚合")
-    @PrePermission("project:change:list")
+    @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) String tenantId) {
         return BaseResponse.ok(service.aggregateByStatus(tenantId));
@@ -175,7 +175,7 @@ public class ProjectChangeController {
      * @return 重大变更数量
      */
     @Operation(summary = "统计项目重大变更数")
-    @PrePermission("project:change:list")
+    @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/majorCount/{initiationId}")
     public BaseResponse<Integer> countMajor(@PathVariable String initiationId) {
         return BaseResponse.ok(service.countMajorByInitiation(initiationId));
@@ -192,7 +192,7 @@ public class ProjectChangeController {
      * @return 合法目标状态码列表 (e.g. ["SUBMITTED", "CANCELLED"])
      */
     @Operation(summary = "获取合法状态迁移列表")
-    @PrePermission("project:change:list")
+    @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/{id}/allowedTransitions")
     public BaseResponse<List<String>> getAllowedTransitions(@PathVariable String id) {
         ProjectChangeDO change = service.getById(id);
@@ -215,7 +215,7 @@ public class ProjectChangeController {
      * <p>前端使用: 渲染状态下拉 / 字典 / 国际化</p>
      */
     @Operation(summary = "获取所有变更状态字典")
-    @PrePermission("project:change:list")
+    @AuthApiPermission(apiCodes = "project:change:list")
     @GetMapping("/statusDict")
     public BaseResponse<List<Map<String, String>>> getStatusDict() {
         List<Map<String, String>> list = new ArrayList<>();

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.web.controller.report;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.server.service.ReportService;
@@ -42,7 +42,7 @@ public class ReportController {
      * @return 利润报表数据
      */
     @Operation(summary = "项目利润表")
-    @PrePermission("report:profit:view")
+    @AuthApiPermission(apiCodes = "report:profit:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profit")
     public BaseResponse<Map<String, Object>> profit(@RequestParam String initiationId,
@@ -58,7 +58,7 @@ public class ReportController {
      * @return 成本明细报表数据
      */
     @Operation(summary = "项目成本归集明细表")
-    @PrePermission("report:cost:view")
+    @AuthApiPermission(apiCodes = "report:cost:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/cost")
     public BaseResponse<Map<String, Object>> cost(@RequestParam String initiationId,
@@ -73,7 +73,7 @@ public class ReportController {
      * @return 回款台账数据
      */
     @Operation(summary = "项目回款台账")
-    @PrePermission("report:paymentLedger:view")
+    @AuthApiPermission(apiCodes = "report:paymentLedger:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/paymentLedger")
     public BaseResponse<Map<String, Object>> paymentLedger(@RequestParam String initiationId) {
@@ -87,7 +87,7 @@ public class ReportController {
      * @return 生命周期台账数据
      */
     @Operation(summary = "项目全生命周期台账")
-    @PrePermission("report:lifecycle:view")
+    @AuthApiPermission(apiCodes = "report:lifecycle:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/lifecycle")
     public BaseResponse<Map<String, Object>> lifecycle(@RequestParam String initiationId) {
@@ -100,7 +100,7 @@ public class ReportController {
      * @return 利润汇总列表
      */
     @Operation(summary = "跨项目利润汇总")
-    @PrePermission("report:profit:view")
+    @AuthApiPermission(apiCodes = "report:profit:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profitSummary")
     public BaseResponse<List<Map<String, Object>>> profitSummary() {
@@ -116,7 +116,7 @@ public class ReportController {
      * @return 利润排行列表
      */
     @Operation(summary = "项目利润排行榜（P2-1）")
-    @PrePermission("report:profit:view")
+    @AuthApiPermission(apiCodes = "report:profit:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profitRank")
     public BaseResponse<List<Map<String, Object>>> profitRank(

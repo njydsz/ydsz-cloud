@@ -3,7 +3,7 @@ package com.njydsz.pmis.finance.web.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.PaymentAllocationDTO;
 import com.njydsz.pmis.finance.domain.dto.PaymentCreateDTO;
@@ -55,7 +55,7 @@ public class PaymentController {
      * @return 新建回款 ID
      */
     @Operation(summary = "录入回款")
-    @PrePermission("finance:payment:create")
+    @AuthApiPermission(apiCodes = "finance:payment:create")
     @OperationLog(module = "回款管理", action = "录入回款", bizType = "PAYMENT", saveResult = true)
     @Idempotent(key = "payment:record", ttlSeconds = 10, message = "请勿重复录入回款")
     @PostMapping
@@ -71,7 +71,7 @@ public class PaymentController {
      * @return 空结果
      */
     @Operation(summary = "确认到账")
-    @PrePermission("finance:payment:status")
+    @AuthApiPermission(apiCodes = "finance:payment:status")
     @OperationLog(module = "回款管理", action = "确认到账", bizType = "PAYMENT")
     @Idempotent(key = "payment:confirm", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/confirm")
@@ -89,7 +89,7 @@ public class PaymentController {
      * @return 空结果
      */
     @Operation(summary = "取消")
-    @PrePermission("finance:payment:status")
+    @AuthApiPermission(apiCodes = "finance:payment:status")
     @OperationLog(module = "回款管理", action = "取消回款", bizType = "PAYMENT")
     @Idempotent(key = "payment:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/cancel")
@@ -107,7 +107,7 @@ public class PaymentController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("finance:payment:delete")
+    @AuthApiPermission(apiCodes = "finance:payment:delete")
     @OperationLog(module = "回款管理", action = "删除回款", bizType = "PAYMENT")
     @Idempotent(key = "payment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -123,7 +123,7 @@ public class PaymentController {
      * @return 空结果
      */
     @Operation(summary = "核销到发票")
-    @PrePermission("finance:payment:allocate")
+    @AuthApiPermission(apiCodes = "finance:payment:allocate")
     @OperationLog(module = "回款管理", action = "核销到发票", bizType = "PAYMENT")
     @Idempotent(key = "payment:allocate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/allocate")
@@ -140,7 +140,7 @@ public class PaymentController {
      * @return 已核销的回款数量
      */
     @Operation(summary = "自动核销（按客户）")
-    @PrePermission("finance:payment:allocate")
+    @AuthApiPermission(apiCodes = "finance:payment:allocate")
     @OperationLog(module = "回款管理", action = "自动核销（按客户）", bizType = "PAYMENT", saveResult = true)
     @Idempotent(key = "payment:autoAllocate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/autoAllocate")
@@ -157,7 +157,7 @@ public class PaymentController {
      * @return 预测结果列表
      */
     @Operation(summary = "现金流预测")
-    @PrePermission("finance:payment:list")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/forecast")
     public BaseResponse<List<Map<String, Object>>> forecast(@RequestParam String initiationId,
                                                  @RequestParam(defaultValue = "3") int months) {
@@ -171,7 +171,7 @@ public class PaymentController {
      * @return 回款实体
      */
     @Operation(summary = "详情")
-    @PrePermission("finance:payment:list")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/{id}")
     public BaseResponse<PaymentDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -190,7 +190,7 @@ public class PaymentController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("finance:payment:list")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/page")
     public BaseResponse<Page<PaymentDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -210,7 +210,7 @@ public class PaymentController {
      * @return 已回款金额
      */
     @Operation(summary = "按合同汇总回款")
-    @PrePermission("finance:payment:list")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/sum/byContract")
     public BaseResponse<BigDecimal> sumByContract(@RequestParam String contractId) {
         return BaseResponse.ok(service.sumReceivedByContract(contractId));
@@ -223,7 +223,7 @@ public class PaymentController {
      * @return 各月汇总列表
      */
     @Operation(summary = "按月汇总")
-    @PrePermission("finance:payment:list")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/aggregate/byMonth")
     public BaseResponse<List<Map<String, Object>>> aggregateByMonth(@RequestParam String initiationId) {
         return BaseResponse.ok(service.aggregateByMonth(initiationId));

@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.delegate;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -61,7 +61,7 @@ public class FlowDelegateController {
      */
     @Idempotent(key = "flowDelegate:createDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegateAuth/create")
-    @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
         FlowDelegateAuthDO auth = new FlowDelegateAuthDO();
         BeanUtils.copyProperties(dto, auth);
@@ -81,7 +81,7 @@ public class FlowDelegateController {
      */
     @Idempotent(key = "flowDelegate:revokeDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegateAuth/{id}/revoke")
-    @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<Void> revokeDelegateAuth(@PathVariable String id) {
         String ownerId = AuthContext.getUserId();
         delegateAuthService.revoke(id, ownerId);
@@ -97,7 +97,7 @@ public class FlowDelegateController {
      */
     @Idempotent(key = "flowDelegate:updateDelegateAuthStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/delegateAuth/{id}/status")
-    @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public BaseResponse<Void> updateDelegateAuthStatus(@PathVariable String id,
                                                  @RequestParam String status) {
         String operatorId = AuthContext.getUserId();

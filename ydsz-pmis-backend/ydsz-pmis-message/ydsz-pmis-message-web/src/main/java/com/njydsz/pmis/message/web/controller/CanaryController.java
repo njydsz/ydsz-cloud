@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.canary;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -44,7 +44,7 @@ public class CanaryController {
      * @return 统一响应结果，包含灰度桶详情
      */
     @Operation(summary = "新增/更新灰度桶")
-    @PrePermission(PermissionCodes.MESSAGE_CANARY_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_UPDATE)
     @Idempotent(key = "canary:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
@@ -58,7 +58,7 @@ public class CanaryController {
      * @return 统一响应结果，包含灰度桶详情
      */
     @Operation(summary = "按灰度键查询灰度桶")
-    @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/{canaryKey}")
     public BaseResponse<MsgCanaryDO> getByKey(@PathVariable String canaryKey) {
         return BaseResponse.ok(canaryService.getByKey(canaryKey));
@@ -71,7 +71,7 @@ public class CanaryController {
      * @return 统一响应结果，包含灰度桶分页数据
      */
     @Operation(summary = "灰度桶分页")
-    @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
     public BaseResponse<Page<MsgCanaryDO>> page(PageQuery query) {
         return BaseResponse.ok(canaryService.page(query));
@@ -85,7 +85,7 @@ public class CanaryController {
      * @return 统一响应结果，true 表示命中灰度
      */
     @Operation(summary = "判定桶值是否命中灰度")
-    @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/hit")
     public BaseResponse<Boolean> hit(@RequestParam String canaryKey, @RequestParam String bucketValue) {
         return BaseResponse.ok(canaryService.hit(canaryKey, bucketValue));

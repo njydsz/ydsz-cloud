@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.system.domain.entity.audit.DataExportAuditDO;
 import com.njydsz.pmis.system.infra.mapper.audit.DataExportAuditMapper;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +49,7 @@ public class DataExportAuditController {
      * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "分页查询")
-    @PrePermission("audit:export:view")
+    @AuthApiPermission(apiCodes = "audit:export:view")
     @GetMapping("/page")
     public BaseResponse<PageResponse<DataExportAuditDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -74,7 +74,7 @@ public class DataExportAuditController {
      * @return 统一响应结果，包含导出审计列表
      */
     @Operation(summary = "按用户查询导出历史")
-    @PrePermission("audit:export:view")
+    @AuthApiPermission(apiCodes = "audit:export:view")
     @GetMapping("/byUser")
     public BaseResponse<List<DataExportAuditDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,

@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.web.controller.permission;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.permission.PermissionFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.PermissionDO;
@@ -112,7 +112,7 @@ public class PermissionController {
      * @return 统一响应结果，包含新建权限 ID
      */
     @Operation(summary = "创建权限")
-    @PrePermission("auth:perm:create")
+    @AuthApiPermission(apiCodes = "auth:perm:create")
     @OperationLog(module = "权限管理", action = "创建权限", bizType = "PERM")
     @Idempotent(key = "permission:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -127,7 +127,7 @@ public class PermissionController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新权限")
-    @PrePermission("auth:perm:update")
+    @AuthApiPermission(apiCodes = "auth:perm:update")
     @OperationLog(module = "权限管理", action = "更新权限", bizType = "PERM")
     @Idempotent(key = "permission:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
@@ -143,7 +143,7 @@ public class PermissionController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除权限")
-    @PrePermission("auth:perm:delete")
+    @AuthApiPermission(apiCodes = "auth:perm:delete")
     @OperationLog(module = "权限管理", action = "删除权限", bizType = "PERM")
     @Idempotent(key = "permission:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")

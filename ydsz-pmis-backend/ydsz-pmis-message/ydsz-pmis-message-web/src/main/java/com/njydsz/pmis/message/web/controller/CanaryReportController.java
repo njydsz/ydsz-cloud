@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.web.controller.canary;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.canary.CanaryReportVO;
@@ -46,7 +46,7 @@ public class CanaryReportController {
      * @return A/B 报表（含对照组与实验组统计）
      */
     @Operation(summary = "获取灰度A/B实验报表")
-    @PrePermission(PermissionCodes.MESSAGE_CANARY_REPORT)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_CANARY_REPORT)
     @GetMapping
     public BaseResponse<CanaryReportVO> getReport(
             @Parameter(description = "灰度键(原始模板编码)", required = true)

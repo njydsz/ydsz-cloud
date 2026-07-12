@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.batch;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -40,7 +40,7 @@ public class AggregateController {
      * @return 统一响应结果，包含聚合批次分页数据
      */
     @Operation(summary = "聚合批次分页")
-    @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
     @GetMapping("/page")
     public BaseResponse<Page<MsgAggregateDO>> page(PageQuery query) {
         return BaseResponse.ok(aggregateService.page(query));
@@ -54,7 +54,7 @@ public class AggregateController {
      * @return 统一响应结果，包含刷新的消息数量
      */
     @Operation(summary = "按聚合组+接收人强制刷新")
-    @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "aggregate:flushByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/flush")
     public BaseResponse<Integer> flushByGroup(@RequestParam String group, @RequestParam String receiver) {
@@ -67,7 +67,7 @@ public class AggregateController {
      * @return 统一响应结果，包含刷新的消息数量
      */
     @Operation(summary = "刷新到期批次")
-    @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "aggregate:flushDue", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/flushDue")
     public BaseResponse<Integer> flushDue() {

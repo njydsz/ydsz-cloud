@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobWebhookDO;
@@ -41,7 +41,7 @@ public class JobWebhookController {
      * @return 统一响应结果，包含新增 ID
      */
     @Operation(summary = "新增 WebHook 订阅")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "新增WebHook", bizType = "CRONJOB_WEBHOOK")
     @Idempotent(key = "jobWebhook:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -64,7 +64,7 @@ public class JobWebhookController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新 WebHook 订阅")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "更新WebHook", bizType = "CRONJOB_WEBHOOK")
     @Idempotent(key = "jobWebhook:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
@@ -81,7 +81,7 @@ public class JobWebhookController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除 WebHook 订阅")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "删除WebHook", bizType = "CRONJOB_WEBHOOK")
     @Idempotent(key = "jobWebhook:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -139,7 +139,7 @@ public class JobWebhookController {
      * @return 统一响应结果
      */
     @Operation(summary = "测试 WebHook 推送")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "jobWebhook:testWebhook", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/test")
     public BaseResponse<Void> testWebhook(@PathVariable String id) {

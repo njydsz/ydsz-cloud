@@ -22,7 +22,7 @@
  *   <li><b>薄 Controller</b>：Controller 只做参数解析、权限校验、调用 Service、返回结果</li>
  *   <li><b>统一响应</b>：所有方法返回 {@code Result<T>}，禁止直接返回 POJO</li>
  *   <li><b>Swagger 标注</b>：必须标注 {@code @Tag} / {@code @Operation} / {@code @Parameter}</li>
- *   <li><b>权限控制</b>：通过 {@code @PrePermission} 注解统一管控，前端无需关心权限细节</li>
+ *   <li><b>权限控制</b>：通过 {@code @AuthApiPermission} 注解统一管控，前端无需关心权限细节</li>
  *   <li><b>幂等保障</b>：涉及提交的接口必须标注 {@code @Idempotent} 防止重复提交</li>
  * </ul>
  *

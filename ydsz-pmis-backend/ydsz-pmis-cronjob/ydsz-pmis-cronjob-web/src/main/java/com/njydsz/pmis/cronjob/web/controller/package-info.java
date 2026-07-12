@@ -11,7 +11,7 @@
  *
  * <h3>权限</h3>
  * <ul>
- *   <li>所有接口需 {@code @PrePermission("cronjob:*")} 权限码</li>
+ *   <li>所有接口需 {@code @AuthApiPermission(apiCodes = "cronjob:*")} 权限码</li>
  *   <li>手动触发 / 终止任务需 {@code @RequireReAuth} 二次认证</li>
  * </ul>
  *

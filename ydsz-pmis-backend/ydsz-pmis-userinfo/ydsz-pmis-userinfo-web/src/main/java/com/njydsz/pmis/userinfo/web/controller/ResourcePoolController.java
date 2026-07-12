@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.resource.ResourcePoolCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.ResourcePoolDO;
@@ -53,7 +53,7 @@ public class ResourcePoolController {
      * @return 统一响应结果，包含新建资源池 ID
      */
     @Operation(summary = "创建资源池")
-    @PrePermission("resource:pool:create")
+    @AuthApiPermission(apiCodes = "resource:pool:create")
     @OperationLog(module = "资源池", action = "创建资源池", bizType = "RESOURCE_POOL")
     @Idempotent(key = "resourcePool:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -69,7 +69,7 @@ public class ResourcePoolController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新资源池")
-    @PrePermission("resource:pool:update")
+    @AuthApiPermission(apiCodes = "resource:pool:update")
     @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
     @Idempotent(key = "resourcePool:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
@@ -85,7 +85,7 @@ public class ResourcePoolController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除资源池")
-    @PrePermission("resource:pool:delete")
+    @AuthApiPermission(apiCodes = "resource:pool:delete")
     @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
     @Idempotent(key = "resourcePool:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")

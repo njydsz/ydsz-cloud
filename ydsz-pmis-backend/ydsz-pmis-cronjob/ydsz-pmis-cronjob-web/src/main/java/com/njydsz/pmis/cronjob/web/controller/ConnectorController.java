@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.web.controller.connector;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.cronjob.server.core.connector.ConnectorConfig;
 import com.njydsz.pmis.cronjob.server.core.connector.ConnectorExportResult;
 import com.njydsz.pmis.cronjob.server.core.connector.ConnectorManager;
@@ -43,7 +43,7 @@ public class ConnectorController {
      * 获取所有已注册的连接器类型。
      */
     @Operation(summary = "查询已注册连接器类型")
-    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/types")
     public BaseResponse<List<String>> types() {
         return BaseResponse.ok(connectorManager.getRegisteredTypes());
@@ -53,7 +53,7 @@ public class ConnectorController {
      * 测试连接器连接。
      */
     @Operation(summary = "测试连接")
-    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @PostMapping("/test")
     public BaseResponse<Boolean> testConnection(@RequestBody ConnectorConfig config,
                                            @RequestParam String type) {
@@ -68,7 +68,7 @@ public class ConnectorController {
      * 查询外部系统中的任务列表（不导入）。
      */
     @Operation(summary = "查询远程任务列表")
-    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @PostMapping("/remote-tasks")
     public BaseResponse<List<ConnectorTaskInfo>> listRemoteTasks(@RequestBody ConnectorConfig config,
                                                             @RequestParam String type) {
@@ -83,7 +83,7 @@ public class ConnectorController {
      * 从外部系统导入任务。
      */
     @Operation(summary = "导入任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_CREATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_CREATE)
     @PostMapping("/import")
     public BaseResponse<List<ConnectorTaskInfo>> importTasks(@RequestBody ConnectorConfig config,
                                                         @RequestParam String type) {
@@ -98,7 +98,7 @@ public class ConnectorController {
      * 导出任务到外部系统。
      */
     @Operation(summary = "导出任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
     @PostMapping("/export")
     public BaseResponse<ConnectorExportResult> exportTasks(@RequestBody ExportRequest request) {
         JobConnector connector = connectorManager.getConnector(request.getType());

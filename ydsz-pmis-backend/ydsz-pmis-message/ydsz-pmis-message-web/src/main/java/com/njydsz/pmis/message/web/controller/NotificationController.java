@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.core;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -56,7 +56,7 @@ public class NotificationController {
      * @return 统一响应结果，包含发送条数
      */
     @Operation(summary = "发送站内通知")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "notification:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public BaseResponse<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
@@ -70,7 +70,7 @@ public class NotificationController {
      * @return 通知分页结果
      */
     @Operation(summary = "收件箱分页")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/inbox")
     public BaseResponse<Page<MsgNotificationDO>> inbox(NotificationQueryDTO query) {
         return BaseResponse.ok(notificationService.inbox(AuthContext.getUserId(), query));
@@ -82,7 +82,7 @@ public class NotificationController {
      * @return 统一响应结果，包含未读数量
      */
     @Operation(summary = "未读数量")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/unreadCount")
     public BaseResponse<Long> countUnread() {
         return BaseResponse.ok(notificationService.countUnread(AuthContext.getUserId()));
@@ -95,7 +95,7 @@ public class NotificationController {
      * @return 统一响应结果，true 表示标记成功
      */
     @Operation(summary = "标记单条已读")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "notification:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/read")
     public BaseResponse<Boolean> markRead(@PathVariable String id) {
@@ -108,7 +108,7 @@ public class NotificationController {
      * @return 统一响应结果，包含已标记条数
      */
     @Operation(summary = "全部标记已读")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "notification:markAllRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/readAll")
     public BaseResponse<Integer> markAllRead() {
@@ -122,7 +122,7 @@ public class NotificationController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除通知(仅删自己的)")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_DELETE)
     @Idempotent(key = "notification:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping
     public BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
@@ -137,7 +137,7 @@ public class NotificationController {
      * @return 统一响应结果，true 表示撤回成功
      */
     @Operation(summary = "撤回通知")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_RECALL)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_RECALL)
     @Idempotent(key = "notification:recall", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/recall")
     public BaseResponse<Boolean> recall(@PathVariable String id) {
@@ -153,7 +153,7 @@ public class NotificationController {
      * @return 统一响应结果，包含推送结果信息
      */
     @Operation(summary = "单推(实时推送指定用户)")
-    @PrePermission(PermissionCodes.NOTIF_PUSH)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_PUSH)
     @Idempotent(key = "notification:push", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/push")
     public BaseResponse<Map<String, Object>> push(
@@ -173,7 +173,7 @@ public class NotificationController {
      * @return 统一响应结果，包含广播结果信息
      */
     @Operation(summary = "广播(实时推送所有在线用户)")
-    @PrePermission(PermissionCodes.NOTIF_BROADCAST)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_BROADCAST)
     @Idempotent(key = "notification:broadcast", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/broadcast")
     public BaseResponse<Map<String, Object>> broadcast(

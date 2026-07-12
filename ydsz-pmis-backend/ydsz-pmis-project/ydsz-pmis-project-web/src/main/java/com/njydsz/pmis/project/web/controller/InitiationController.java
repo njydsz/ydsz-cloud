@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.initiation;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider;
 import com.njydsz.pmis.project.domain.dto.BudgetItemDTO;
@@ -63,7 +63,7 @@ public class InitiationController {
      * @return 立项 ID
      */
     @Operation(summary = "提交立项")
-    @PrePermission("project:initiation:create")
+    @AuthApiPermission(apiCodes = "project:initiation:create")
     @OperationLog(module = "立项管理", action = "提交立项", bizType = "INITIATION", saveResult = true)
     @Idempotent(key = "initiation:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -78,7 +78,7 @@ public class InitiationController {
      * @return 空结果
      */
     @Operation(summary = "阶段迁移")
-    @PrePermission("project:initiation:update")
+    @AuthApiPermission(apiCodes = "project:initiation:update")
     @OperationLog(module = "立项管理", action = "阶段迁移", bizType = "INITIATION")
     @Idempotent(key = "initiation:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/stage")
@@ -94,7 +94,7 @@ public class InitiationController {
      * @return 空结果
      */
     @Operation(summary = "删除立项")
-    @PrePermission("project:initiation:delete")
+    @AuthApiPermission(apiCodes = "project:initiation:delete")
     @OperationLog(module = "立项管理", action = "删除立项", bizType = "INITIATION")
     @Idempotent(key = "initiation:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -110,7 +110,7 @@ public class InitiationController {
      * @return 立项实体
      */
     @Operation(summary = "立项详情")
-    @PrePermission("project:initiation:list")
+    @AuthApiPermission(apiCodes = "project:initiation:list")
     @GetMapping("/{id}")
     public BaseResponse<InitiationDO> get(@Parameter(description = "立项ID") @PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -128,7 +128,7 @@ public class InitiationController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("project:initiation:list")
+    @AuthApiPermission(apiCodes = "project:initiation:list")
     @GetMapping("/page")
     public BaseResponse<Page<InitiationDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -149,7 +149,7 @@ public class InitiationController {
      * @return 预算明细 ID
      */
     @Operation(summary = "新增预算明细")
-    @PrePermission("project:initiation:budget")
+    @AuthApiPermission(apiCodes = "project:initiation:budget")
     @OperationLog(module = "立项管理", action = "新增预算明细", bizType = "BUDGET", saveResult = true)
     @Idempotent(key = "initiation:addBudget", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/budget")
@@ -164,7 +164,7 @@ public class InitiationController {
      * @return 空结果
      */
     @Operation(summary = "删除预算明细")
-    @PrePermission("project:initiation:budget")
+    @AuthApiPermission(apiCodes = "project:initiation:budget")
     @OperationLog(module = "立项管理", action = "删除预算明细", bizType = "BUDGET")
     @Idempotent(key = "initiation:delBudget", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/budget/{id}")
@@ -180,7 +180,7 @@ public class InitiationController {
      * @return 预算明细列表
      */
     @Operation(summary = "预算明细列表")
-    @PrePermission("project:initiation:budget")
+    @AuthApiPermission(apiCodes = "project:initiation:budget")
     @GetMapping("/{id}/budget")
     public BaseResponse<List<BudgetItemDO>> listBudget(@Parameter(description = "立项ID") @PathVariable String id) {
         return BaseResponse.ok(service.listBudget(id));
@@ -193,7 +193,7 @@ public class InitiationController {
      * @return 每个分类对应的金额汇总列表
      */
     @Operation(summary = "预算按分类汇总")
-    @PrePermission("project:initiation:budget")
+    @AuthApiPermission(apiCodes = "project:initiation:budget")
     @GetMapping("/{id}/budget/summary")
     public BaseResponse<List<Map<String, Object>>> sumBudget(@Parameter(description = "立项ID") @PathVariable String id) {
         return BaseResponse.ok(service.sumBudgetByCategory(id));
@@ -206,7 +206,7 @@ public class InitiationController {
      * @return 汇总后的预算总额
      */
     @Operation(summary = "重新汇总预算总额")
-    @PrePermission("project:initiation:budget")
+    @AuthApiPermission(apiCodes = "project:initiation:budget")
     @OperationLog(module = "立项管理", action = "重新汇总预算总额", bizType = "BUDGET", saveResult = true)
     @Idempotent(key = "initiation:recomputeBudget", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/budget/recompute")
@@ -223,7 +223,7 @@ public class InitiationController {
      * @return 评审记录 ID
      */
     @Operation(summary = "门径评审")
-    @PrePermission("project:initiation:gate")
+    @AuthApiPermission(apiCodes = "project:initiation:gate")
     @OperationLog(module = "立项管理", action = "门径评审", bizType = "GATE", saveResult = true)
     @Idempotent(key = "initiation:reviewGate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/gate/review")
@@ -238,7 +238,7 @@ public class InitiationController {
      * @return 评审记录列表
      */
     @Operation(summary = "门径评审记录")
-    @PrePermission("project:initiation:gate")
+    @AuthApiPermission(apiCodes = "project:initiation:gate")
     @GetMapping("/{id}/gate/reviews")
     public BaseResponse<List<GateReviewDO>> listGateReviews(@Parameter(description = "立项ID") @PathVariable String id) {
         return BaseResponse.ok(service.listGateReviews(id));
@@ -253,7 +253,7 @@ public class InitiationController {
      * @return 每个阶段对应的数量列表
      */
     @Operation(summary = "按阶段聚合")
-    @PrePermission("project:initiation:list")
+    @AuthApiPermission(apiCodes = "project:initiation:list")
     @GetMapping("/aggregate/stage")
     public BaseResponse<List<Map<String, Object>>> aggregateByStage(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return BaseResponse.ok(service.aggregateByStage(tenantId));
@@ -266,7 +266,7 @@ public class InitiationController {
      * @return 预算快照信息
      */
     @Operation(summary = "查询立项预算（供执行模块调用）")
-    @PrePermission("project:initiation:budget")
+    @AuthApiPermission(apiCodes = "project:initiation:budget")
     @GetMapping("/{id}/budget/snapshot")
     public BaseResponse<Map<String, Object>> budgetSnapshot(@Parameter(description = "立项ID") @PathVariable String id) {
         return BaseResponse.ok(service.budgetSnapshot(id));
@@ -282,7 +282,7 @@ public class InitiationController {
      * @return 预算快照列表
      */
     @Operation(summary = "批量查询项目预算快照")
-    @PrePermission("project:initiation:budget")
+    @AuthApiPermission(apiCodes = "project:initiation:budget")
     @GetMapping("/budget/snapshots")
     public BaseResponse<List<BudgetSnapshotVO>> batchBudgetSnapshots() {
         List<BudgetSnapshotVO> vos = budgetSnapshotProvider.getBudgetSnapshots().stream()
@@ -300,7 +300,7 @@ public class InitiationController {
      * @return 空结果
      */
     @Operation(summary = "标记审批中")
-    @PrePermission("project:initiation:update")
+    @AuthApiPermission(apiCodes = "project:initiation:update")
     @OperationLog(module = "立项管理", action = "标记审批中（流程回调）", bizType = "INITIATION")
     @Idempotent(key = "initiation:markProcessing", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/markProcessing")
@@ -316,7 +316,7 @@ public class InitiationController {
      * @return 空结果
      */
     @Operation(summary = "标记已批准")
-    @PrePermission("project:initiation:update")
+    @AuthApiPermission(apiCodes = "project:initiation:update")
     @OperationLog(module = "立项管理", action = "标记已批准（流程回调）", bizType = "INITIATION")
     @Idempotent(key = "initiation:markApproved", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/markApproved")
@@ -333,7 +333,7 @@ public class InitiationController {
      * @return 空结果
      */
     @Operation(summary = "标记已驳回")
-    @PrePermission("project:initiation:update")
+    @AuthApiPermission(apiCodes = "project:initiation:update")
     @OperationLog(module = "立项管理", action = "标记已驳回（流程回调）", bizType = "INITIATION")
     @Idempotent(key = "initiation:markRejected", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/markRejected")

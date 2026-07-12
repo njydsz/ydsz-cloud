@@ -86,8 +86,6 @@
         <module>ydsz-pmis-common-base</module>
         <module>ydsz-pmis-common-web</module>
         <module>ydsz-pmis-common-app</module>
-        <!-- 聚合 -->
-        <module>ydsz-pmis-common-all</module>
     </modules>
 
     <dependencyManagement>
@@ -176,12 +174,6 @@
             <!-- L6 基础设施层（PMIS 特有） -->
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-infra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <!-- L7 -->
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-base</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -195,13 +187,6 @@
                 <artifactId>ydsz-pmis-common-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!-- 聚合 -->
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-all</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <!-- ==================== 第三方依赖（父 POM 未管理部分） ==================== -->
 
             <!-- MyBatis（版本覆盖声明，必须在 Spring Boot BOM 之后声明才能生效） -->

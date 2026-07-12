@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.EvmMeasureCreateDTO;
 import com.njydsz.pmis.project.server.service.EvmMeasureService;
@@ -53,7 +53,7 @@ public class EvmController {
      * @return 测量记录 ID
      */
     @Operation(summary = "录入/更新 EVM 测量（按 initiation+wbs+period 幂等）")
-    @PrePermission("execution:evm:save")
+    @AuthApiPermission(apiCodes = "execution:evm:save")
     @Idempotent(key = "evm:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> save(@Valid @RequestBody EvmMeasureCreateDTO dto) {
@@ -67,7 +67,7 @@ public class EvmController {
      * @return 测量 VO（剥离 tenantId/providerTraceId/deleted）
      */
     @Operation(summary = "详情")
-    @PrePermission("execution:evm:list")
+    @AuthApiPermission(apiCodes = "execution:evm:list")
     @GetMapping("/{id}")
     public BaseResponse<EvmMeasureVO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -80,7 +80,7 @@ public class EvmController {
      * @return 测量 VO 列表
      */
     @Operation(summary = "按项目查询")
-    @PrePermission("execution:evm:list")
+    @AuthApiPermission(apiCodes = "execution:evm:list")
     @GetMapping("/byInitiation")
     public BaseResponse<List<EvmMeasureVO>> listByInitiation(@RequestParam String initiationId) {
         return BaseResponse.ok(service.listByInitiation(initiationId));
@@ -93,7 +93,7 @@ public class EvmController {
      * @return 测量 VO 列表
      */
     @Operation(summary = "按 WBS 查询")
-    @PrePermission("execution:evm:list")
+    @AuthApiPermission(apiCodes = "execution:evm:list")
     @GetMapping("/byWbs")
     public BaseResponse<List<EvmMeasureVO>> listByWbs(@RequestParam String wbsTaskId) {
         return BaseResponse.ok(service.listByWbs(wbsTaskId));
@@ -106,7 +106,7 @@ public class EvmController {
      * @return 趋势数据列表
      */
     @Operation(summary = "项目偏差趋势（按周期）")
-    @PrePermission("execution:evm:list")
+    @AuthApiPermission(apiCodes = "execution:evm:list")
     @GetMapping("/trend")
     public BaseResponse<List<Map<String, Object>>> trend(@RequestParam String initiationId) {
         return BaseResponse.ok(service.trend(initiationId));
@@ -119,7 +119,7 @@ public class EvmController {
      * @return 仪表盘数据
      */
     @Operation(summary = "项目 EVM 健康仪表盘")
-    @PrePermission("execution:evm:dashboard")
+    @AuthApiPermission(apiCodes = "execution:evm:dashboard")
     @GetMapping("/dashboard")
     public BaseResponse<Map<String, Object>> dashboard(@RequestParam String initiationId) {
         return BaseResponse.ok(service.dashboard(initiationId));
@@ -135,7 +135,7 @@ public class EvmController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("execution:evm:list")
+    @AuthApiPermission(apiCodes = "execution:evm:list")
     @GetMapping("/page")
     public BaseResponse<Page<EvmMeasureVO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -152,7 +152,7 @@ public class EvmController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:evm:delete")
+    @AuthApiPermission(apiCodes = "execution:evm:delete")
     @OperationLog(module = "挣值管理", action = "删除EVM测量", bizType = "EVM_MEASURE")
     @Idempotent(key = "evm:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")

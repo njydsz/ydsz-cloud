@@ -7,7 +7,7 @@ import com.njydsz.pmis.agent.domain.dto.hitl.HitlApprovalActionDTO;
 import com.njydsz.pmis.agent.server.engine.react.ReActResult;
 import com.njydsz.pmis.agent.domain.entity.hitl.HitlApprovalRequestDO;
 import com.njydsz.pmis.agent.server.hitl.HitlApprovalService;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -66,7 +66,7 @@ public class HitlApprovalController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询审批请求")
-    @PrePermission("agent:hitl:list")
+    @AuthApiPermission(apiCodes = "agent:hitl:list")
     @GetMapping("/page")
     public BaseResponse<Page<HitlApprovalRequestDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -85,7 +85,7 @@ public class HitlApprovalController {
      * @return 待审批请求列表
      */
     @Operation(summary = "待审批请求列表")
-    @PrePermission("agent:hitl:list")
+    @AuthApiPermission(apiCodes = "agent:hitl:list")
     @GetMapping("/pending")
     public BaseResponse<List<HitlApprovalRequestDO>> pending(
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
@@ -99,7 +99,7 @@ public class HitlApprovalController {
      * @return 审批请求详情
      */
     @Operation(summary = "审批请求详情")
-    @PrePermission("agent:hitl:list")
+    @AuthApiPermission(apiCodes = "agent:hitl:list")
     @GetMapping("/{id}")
     public BaseResponse<HitlApprovalRequestDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -113,7 +113,7 @@ public class HitlApprovalController {
      * @return ReAct 执行结果
      */
     @Operation(summary = "批准审批请求")
-    @PrePermission("agent:hitl:approve")
+    @AuthApiPermission(apiCodes = "agent:hitl:approve")
     @Idempotent(key = "hitlApproval:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/approve")
     public BaseResponse<ReActResult> approve(@PathVariable String id,
@@ -129,7 +129,7 @@ public class HitlApprovalController {
      * @return ReAct 执行结果
      */
     @Operation(summary = "拒绝审批请求")
-    @PrePermission("agent:hitl:approve")
+    @AuthApiPermission(apiCodes = "agent:hitl:approve")
     @Idempotent(key = "hitlApproval:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/reject")
     public BaseResponse<ReActResult> reject(@PathVariable String id,
@@ -145,7 +145,7 @@ public class HitlApprovalController {
      * @return 空结果
      */
     @Operation(summary = "取消审批请求")
-    @PrePermission("agent:hitl:approve")
+    @AuthApiPermission(apiCodes = "agent:hitl:approve")
     @Idempotent(key = "hitlApproval:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/cancel")
     public BaseResponse<Void> cancel(@PathVariable String id,

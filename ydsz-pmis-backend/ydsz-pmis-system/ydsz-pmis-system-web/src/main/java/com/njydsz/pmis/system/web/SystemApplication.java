@@ -20,7 +20,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.njydsz.pmis.common"
 })
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = "com.njydsz.pmis.system.api")
+@EnableFeignClients(basePackages = {"com.njydsz.pmis.system.api", "com.njydsz.pmis.common.feign"})
 @MapperScan("com.njydsz.pmis.system.infra.mapper")
 public class SystemApplication {
 

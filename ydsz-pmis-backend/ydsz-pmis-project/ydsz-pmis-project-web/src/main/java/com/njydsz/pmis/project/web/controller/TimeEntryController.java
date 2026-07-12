@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.execution;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.TimeEntryApprovalDTO;
 import com.njydsz.pmis.project.domain.dto.TimeEntryCreateDTO;
@@ -56,7 +56,7 @@ public class TimeEntryController {
      * @return 新建工时记录 ID
      */
     @Operation(summary = "录入工时")
-    @PrePermission("execution:time:create")
+    @AuthApiPermission(apiCodes = "execution:time:create")
     @Idempotent(key = "timeEntry:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
@@ -70,7 +70,7 @@ public class TimeEntryController {
      * @return 空结果
      */
     @Operation(summary = "提交工时审批")
-    @PrePermission("execution:time:approve")
+    @AuthApiPermission(apiCodes = "execution:time:approve")
     @Idempotent(key = "timeEntry:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
     public BaseResponse<Void> submit(@PathVariable String id) {
@@ -85,7 +85,7 @@ public class TimeEntryController {
      * @return 空结果
      */
     @Operation(summary = "审批工时")
-    @PrePermission("execution:time:approve")
+    @AuthApiPermission(apiCodes = "execution:time:approve")
     @Idempotent(key = "timeEntry:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/approve")
     public BaseResponse<Void> approve(@Valid @RequestBody TimeEntryApprovalDTO dto) {
@@ -100,7 +100,7 @@ public class TimeEntryController {
      * @return 空结果
      */
     @Operation(summary = "删除工时")
-    @PrePermission("execution:time:delete")
+    @AuthApiPermission(apiCodes = "execution:time:delete")
     @Idempotent(key = "timeEntry:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "工时管理", action = "删除工时", bizType = "TIME_ENTRY")
     @DeleteMapping("/{id}")
@@ -116,7 +116,7 @@ public class TimeEntryController {
      * @return 工时实体
      */
     @Operation(summary = "工时详情")
-    @PrePermission("execution:time:list")
+    @AuthApiPermission(apiCodes = "execution:time:list")
     @GetMapping("/{id}")
     public BaseResponse<TimeEntryDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -137,7 +137,7 @@ public class TimeEntryController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("execution:time:list")
+    @AuthApiPermission(apiCodes = "execution:time:list")
     @GetMapping("/page")
     public BaseResponse<Page<TimeEntryDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -161,7 +161,7 @@ public class TimeEntryController {
      * @return 聚合结果列表
      */
     @Operation(summary = "项目工时按人员+职级聚合")
-    @PrePermission("execution:time:list")
+    @AuthApiPermission(apiCodes = "execution:time:list")
     @GetMapping("/aggregate/byEmployeeLevel")
     public BaseResponse<List<Map<String, Object>>> aggregateByEmployeeLevel(
             @RequestParam String initiationId,
@@ -178,7 +178,7 @@ public class TimeEntryController {
      * @return 冲突列表
      */
     @Operation(summary = "跨项目冲突检测")
-    @PrePermission("execution:time:list")
+    @AuthApiPermission(apiCodes = "execution:time:list")
     @GetMapping("/conflict")
     public BaseResponse<List<Map<String, Object>>> detectCrossProject(
             @RequestParam String employeeId,
@@ -196,7 +196,7 @@ public class TimeEntryController {
      * @return 异常统计 Map（overtimeCount/missingCount/abnormalCount/totalHours）
      */
     @Operation(summary = "工时异常统计")
-    @PrePermission("execution:time:list")
+    @AuthApiPermission(apiCodes = "execution:time:list")
     @GetMapping("/abnormalStat")
     public BaseResponse<Map<String, Object>> abnormalStat(
             @RequestParam String initiationId,

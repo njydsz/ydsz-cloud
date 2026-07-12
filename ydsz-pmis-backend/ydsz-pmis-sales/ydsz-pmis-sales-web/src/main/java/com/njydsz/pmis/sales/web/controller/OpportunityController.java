@@ -1,8 +1,10 @@
 package com.njydsz.pmis.sales.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.ApiMetrics;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.OpportunityCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.OpportunityStatusDTO;
@@ -54,8 +56,9 @@ public class OpportunityController {
      * @return 统一响应结果，包含商机 ID
      */
     @Operation(summary = "创建商机")
-    @PrePermission("project:opportunity:create")
+    @AuthApiPermission(apiCodes = "project:opportunity:create")
     @Idempotent(key = "opportunity:create", ttlSeconds = 5, message = "请勿重复提交")
+    @ApiMetrics("opportunity:create")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody OpportunityCreateDTO dto) {
         return BaseResponse.ok(service.create(dto));
@@ -68,7 +71,7 @@ public class OpportunityController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新商机")
-    @PrePermission("project:opportunity:update")
+    @AuthApiPermission(apiCodes = "project:opportunity:update")
     @Idempotent(key = "opportunity:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@Parameter(description = "商机ID") @PathVariable String id,
@@ -85,7 +88,7 @@ public class OpportunityController {
      * @return 统一响应结果
      */
     @Operation(summary = "变更状态")
-    @PrePermission("project:opportunity:update")
+    @AuthApiPermission(apiCodes = "project:opportunity:update")
     @Idempotent(key = "opportunity:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody OpportunityStatusDTO dto) {
@@ -100,7 +103,7 @@ public class OpportunityController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除商机")
-    @PrePermission("project:opportunity:delete")
+    @AuthApiPermission(apiCodes = "project:opportunity:delete")
     @Idempotent(key = "opportunity:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "商机ID") @PathVariable String id) {
@@ -115,7 +118,7 @@ public class OpportunityController {
      * @return 统一响应结果，包含商机详情
      */
     @Operation(summary = "商机详情")
-    @PrePermission("project:opportunity:list")
+    @AuthApiPermission(apiCodes = "project:opportunity:list")
     @GetMapping("/{id}")
     public BaseResponse<OpportunityDO> get(@Parameter(description = "商机ID") @PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -133,7 +136,7 @@ public class OpportunityController {
      * @return 统一响应结果，包含商机分页数据
      */
     @Operation(summary = "分页查询")
-    @PrePermission("project:opportunity:list")
+    @AuthApiPermission(apiCodes = "project:opportunity:list")
     @GetMapping("/page")
     public BaseResponse<Page<OpportunityDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -154,7 +157,7 @@ public class OpportunityController {
      * @return 统一响应结果，包含评估后的赢率
      */
     @Operation(summary = "评估并更新赢率")
-    @PrePermission("project:opportunity:evaluate")
+    @AuthApiPermission(apiCodes = "project:opportunity:evaluate")
     @Idempotent(key = "opportunity:evaluateWinRate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/evaluateWinrate")
     public BaseResponse<BigDecimal> evaluateWinRate(@Parameter(description = "商机ID") @PathVariable String id,
@@ -170,7 +173,7 @@ public class OpportunityController {
      * @return 统一响应结果，包含各状态对应的数量列表
      */
     @Operation(summary = "按状态聚合")
-    @PrePermission("project:opportunity:list")
+    @AuthApiPermission(apiCodes = "project:opportunity:list")
     @GetMapping("/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return BaseResponse.ok(service.aggregateByStatus(tenantId));
@@ -183,7 +186,7 @@ public class OpportunityController {
      * @return 统一响应结果，包含各分级对应的数量列表
      */
     @Operation(summary = "按分级聚合")
-    @PrePermission("project:opportunity:list")
+    @AuthApiPermission(apiCodes = "project:opportunity:list")
     @GetMapping("/aggregate/level")
     public BaseResponse<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return BaseResponse.ok(service.aggregateByLevel(tenantId));
@@ -198,7 +201,7 @@ public class OpportunityController {
      * @return 统一响应结果，包含预立项草稿 ID
      */
     @Operation(summary = "商机转立项自动化(WON -> CONVERTED + 创建预立项草稿)")
-    @PrePermission("project:opportunity:convert")
+    @AuthApiPermission(apiCodes = "project:opportunity:convert")
     @Idempotent(key = "opportunity:convertToInitiation", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/convertToInitiation")
     public BaseResponse<String> convertToInitiation(@Parameter(description = "商机ID") @PathVariable String id,

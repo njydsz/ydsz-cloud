@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.execution;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.RiskCreateDTO;
 import com.njydsz.pmis.project.domain.dto.RiskStatusDTO;
@@ -55,7 +55,7 @@ public class RiskController {
      * @return 新建风险 ID
      */
     @Operation(summary = "登记风险")
-    @PrePermission("execution:risk:create")
+    @AuthApiPermission(apiCodes = "execution:risk:create")
     @Idempotent(key = "risk:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody RiskCreateDTO dto) {
@@ -69,7 +69,7 @@ public class RiskController {
      * @return 空结果
      */
     @Operation(summary = "状态迁移")
-    @PrePermission("execution:risk:status")
+    @AuthApiPermission(apiCodes = "execution:risk:status")
     @Idempotent(key = "risk:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody RiskStatusDTO dto) {
@@ -84,7 +84,7 @@ public class RiskController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:risk:delete")
+    @AuthApiPermission(apiCodes = "execution:risk:delete")
     @Idempotent(key = "risk:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "风险管理", action = "删除风险", bizType = "RISK")
     @DeleteMapping("/{id}")
@@ -100,7 +100,7 @@ public class RiskController {
      * @return 风险 VO（剥离 tenantId/providerTraceId/deleted/version）
      */
     @Operation(summary = "详情")
-    @PrePermission("execution:risk:list")
+    @AuthApiPermission(apiCodes = "execution:risk:list")
     @GetMapping("/{id}")
     public BaseResponse<RiskVO> get(@Parameter(description = "风险ID") @PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -118,7 +118,7 @@ public class RiskController {
      * @return 分页结果（VO）
      */
     @Operation(summary = "分页")
-    @PrePermission("execution:risk:list")
+    @AuthApiPermission(apiCodes = "execution:risk:list")
     @GetMapping("/page")
     public BaseResponse<Page<RiskVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -137,7 +137,7 @@ public class RiskController {
      * @return 各等级风险数量列表
      */
     @Operation(summary = "按等级聚合")
-    @PrePermission("execution:risk:list")
+    @AuthApiPermission(apiCodes = "execution:risk:list")
     @GetMapping("/aggregate/byLevel")
     public BaseResponse<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "立项ID") @RequestParam String initiationId) {
         return BaseResponse.ok(service.aggregateByLevel(initiationId));

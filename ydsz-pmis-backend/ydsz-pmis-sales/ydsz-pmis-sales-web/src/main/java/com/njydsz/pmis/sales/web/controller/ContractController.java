@@ -1,9 +1,10 @@
 package com.njydsz.pmis.sales.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.ApiMetrics;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.ContractCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.ContractStatusDTO;
@@ -54,8 +55,9 @@ public class ContractController {
      * @return 合同 ID
      */
     @Operation(summary = "创建合同")
-    @PrePermission("project:contract:create")
+    @AuthApiPermission(apiCodes = "project:contract:create")
     @Idempotent(key = "contract:create", ttlSeconds = 5, message = "请勿重复提交")
+    @ApiMetrics("contract:create")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ContractCreateDTO dto) {
         return BaseResponse.ok(service.create(dto));
@@ -68,7 +70,7 @@ public class ContractController {
      * @return 空结果
      */
     @Operation(summary = "状态迁移")
-    @PrePermission("project:contract:status")
+    @AuthApiPermission(apiCodes = "project:contract:status")
     @Idempotent(key = "contract:update", ttlSeconds = 5, message = "请勿重复提交")
     @PatchMapping("/{id}/status")
     public BaseResponse<Void> changeStatus(@Parameter(description = "合同ID") @PathVariable String id,
@@ -85,7 +87,7 @@ public class ContractController {
      * @return 空结果
      */
     @Operation(summary = "删除合同")
-    @PrePermission("project:contract:delete")
+    @AuthApiPermission(apiCodes = "project:contract:delete")
     @Idempotent(key = "contract:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "合同管理", action = "删除合同", bizType = "CONTRACT")
     @DeleteMapping("/{id}")
@@ -101,7 +103,7 @@ public class ContractController {
      * @return 合同实体
      */
     @Operation(summary = "合同详情")
-    @PrePermission("project:contract:list")
+    @AuthApiPermission(apiCodes = "project:contract:list")
     @GetMapping("/{id}")
     public BaseResponse<ContractDO> get(@Parameter(description = "合同ID") @PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -119,7 +121,7 @@ public class ContractController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("project:contract:list")
+    @AuthApiPermission(apiCodes = "project:contract:list")
     @GetMapping("/page")
     public BaseResponse<Page<ContractDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -138,7 +140,7 @@ public class ContractController {
      * @return 风险等级码
      */
     @Operation(summary = "重新评估风险等级")
-    @PrePermission("project:contract:evaluate")
+    @AuthApiPermission(apiCodes = "project:contract:evaluate")
     @Idempotent(key = "contract:evaluateRisk", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/evaluateRisk")
     public BaseResponse<String> evaluateRisk(@Parameter(description = "合同ID") @PathVariable String id) {
@@ -152,7 +154,7 @@ public class ContractController {
      * @return 每种状态对应的数量列表
      */
     @Operation(summary = "按状态聚合")
-    @PrePermission("project:contract:list")
+    @AuthApiPermission(apiCodes = "project:contract:list")
     @GetMapping("/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return BaseResponse.ok(service.aggregateByStatus(tenantId));
@@ -165,7 +167,7 @@ public class ContractController {
      * @return 每种风险等级对应的数量列表
      */
     @Operation(summary = "按风险等级聚合")
-    @PrePermission("project:contract:list")
+    @AuthApiPermission(apiCodes = "project:contract:list")
     @GetMapping("/aggregate/risk")
     public BaseResponse<List<Map<String, Object>>> aggregateByRisk(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return BaseResponse.ok(service.aggregateByRisk(tenantId));

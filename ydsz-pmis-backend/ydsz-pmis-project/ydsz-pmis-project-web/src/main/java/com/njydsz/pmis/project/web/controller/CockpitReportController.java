@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.web.controller.report;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
@@ -46,7 +46,7 @@ public class CockpitReportController {
      * @return 总览 KPI 数据
      */
     @Operation(summary = "驾驶舱总览 KPI")
-    @PrePermission("cockpit:overview:view")
+    @AuthApiPermission(apiCodes = "cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/overview")
     public BaseResponse<CockpitKpiVO> overview(@RequestParam(required = false) String period,
@@ -62,7 +62,7 @@ public class CockpitReportController {
      * @return EVM 健康分布（红/黄/绿计数）
      */
     @Operation(summary = "EVM 健康分布")
-    @PrePermission("cockpit:overview:view")
+    @AuthApiPermission(apiCodes = "cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/evmHealth")
     public BaseResponse<Map<String, Integer>> evmHealth(@RequestParam(required = false) String period,
@@ -77,7 +77,7 @@ public class CockpitReportController {
      * @return Bench 闲置成本汇总数据
      */
     @Operation(summary = "Bench 闲置成本汇总")
-    @PrePermission("cockpit:overview:view")
+    @AuthApiPermission(apiCodes = "cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/benchCost")
     public BaseResponse<Map<String, Object>> benchCost(CockpitDrillDownDTO drillDown) {
@@ -91,7 +91,7 @@ public class CockpitReportController {
      * @return 可计费利用率汇总数据
      */
     @Operation(summary = "可计费利用率汇总")
-    @PrePermission("cockpit:overview:view")
+    @AuthApiPermission(apiCodes = "cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/utilization")
     public BaseResponse<Map<String, Object>> utilization(CockpitDrillDownDTO drillDown) {
@@ -105,7 +105,7 @@ public class CockpitReportController {
      * @return 各事业部 KPI 明细列表
      */
     @Operation(summary = "按事业部下钻")
-    @PrePermission("cockpit:drilldown:view")
+    @AuthApiPermission(apiCodes = "cockpit:drilldown:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/drill/dept")
     public BaseResponse<List<Map<String, Object>>> drillDept(@RequestParam(required = false) String period) {
@@ -119,7 +119,7 @@ public class CockpitReportController {
      * @return 各项目类型 KPI 明细列表
      */
     @Operation(summary = "按项目类型下钻")
-    @PrePermission("cockpit:drilldown:view")
+    @AuthApiPermission(apiCodes = "cockpit:drilldown:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/drill/projectType")
     public BaseResponse<List<Map<String, Object>>> drillProjectType(@RequestParam(required = false) String period) {
@@ -133,7 +133,7 @@ public class CockpitReportController {
      * @return 各客户 KPI 明细列表
      */
     @Operation(summary = "按客户下钻")
-    @PrePermission("cockpit:drilldown:view")
+    @AuthApiPermission(apiCodes = "cockpit:drilldown:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/drill/customer")
     public BaseResponse<List<Map<String, Object>>> drillCustomer(@RequestParam(required = false) String period) {
@@ -146,7 +146,7 @@ public class CockpitReportController {
      * @return 合同总额年度趋势数据
      */
     @Operation(summary = "合同总额年度趋势")
-    @PrePermission("cockpit:overview:view")
+    @AuthApiPermission(apiCodes = "cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/contractYearlyTrend")
     public BaseResponse<Map<String, Object>> contractYearlyTrend() {
@@ -163,7 +163,7 @@ public class CockpitReportController {
      * @return 预警事件摘要数据
      */
     @Operation(summary = "预警事件摘要（批次18）")
-    @PrePermission("cockpit:alert:view")
+    @AuthApiPermission(apiCodes = "cockpit:alert:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/alerts")
     public BaseResponse<CockpitAlertSummaryVO> alerts(@RequestParam(required = false) String period,
@@ -179,7 +179,7 @@ public class CockpitReportController {
      * @return 项目群 KPI 列表
      */
     @Operation(summary = "项目群驾驶舱（批次18）")
-    @PrePermission("cockpit:overview:view")
+    @AuthApiPermission(apiCodes = "cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/projectGroup")
     public BaseResponse<List<ProjectGroupKpiDTO>> projectGroup(@RequestParam(required = false) String period,
@@ -195,7 +195,7 @@ public class CockpitReportController {
      * @return 高管看板数据
      */
     @Operation(summary = "高管看板（批次18）")
-    @PrePermission("cockpit:overview:view")
+    @AuthApiPermission(apiCodes = "cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/executive")
     public BaseResponse<ExecutiveOverviewVO> executive(@RequestParam(required = false) String period,
@@ -210,7 +210,7 @@ public class CockpitReportController {
      * @return KPI 趋势数据
      */
     @Operation(summary = "KPI 趋势（最近 N 个月，批次18）")
-    @PrePermission("cockpit:overview:view")
+    @AuthApiPermission(apiCodes = "cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/kpiTrend")
     public BaseResponse<KpiTrendVO> kpiTrend(@RequestParam(required = false, defaultValue = "12") Integer months) {

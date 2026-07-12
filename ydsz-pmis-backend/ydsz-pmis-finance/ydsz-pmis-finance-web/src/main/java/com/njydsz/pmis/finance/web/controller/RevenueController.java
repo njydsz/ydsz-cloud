@@ -2,7 +2,7 @@ package com.njydsz.pmis.finance.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.RevenueCreateDTO;
 import com.njydsz.pmis.finance.domain.entity.RevenueDO;
@@ -52,7 +52,7 @@ public class RevenueController {
      * @return 新建收入记录 ID
      */
     @Operation(summary = "录入收入")
-    @PrePermission("execution:revenue:create")
+    @AuthApiPermission(apiCodes = "execution:revenue:create")
     @Idempotent(key = "revenue:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody RevenueCreateDTO dto) {
@@ -67,7 +67,7 @@ public class RevenueController {
      * @return 空结果
      */
     @Operation(summary = "确认收入")
-    @PrePermission("execution:revenue:update")
+    @AuthApiPermission(apiCodes = "execution:revenue:update")
     @Idempotent(key = "revenue:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/confirm")
     public BaseResponse<Void> confirm(@PathVariable String id, @RequestParam String confirmedBy) {
@@ -82,7 +82,7 @@ public class RevenueController {
      * @return 空结果
      */
     @Operation(summary = "冲销收入")
-    @PrePermission("execution:revenue:update")
+    @AuthApiPermission(apiCodes = "execution:revenue:update")
     @Idempotent(key = "revenue:reverse", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
     public BaseResponse<Void> reverse(@PathVariable String id) {
@@ -97,7 +97,7 @@ public class RevenueController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:revenue:delete")
+    @AuthApiPermission(apiCodes = "execution:revenue:delete")
     @Idempotent(key = "revenue:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -112,7 +112,7 @@ public class RevenueController {
      * @return 收入实体
      */
     @Operation(summary = "详情")
-    @PrePermission("execution:revenue:list")
+    @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/{id}")
     public BaseResponse<RevenueDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -131,7 +131,7 @@ public class RevenueController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("execution:revenue:list")
+    @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/page")
     public BaseResponse<Page<RevenueDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -151,7 +151,7 @@ public class RevenueController {
      * @return 汇总结果列表
      */
     @Operation(summary = "按合同汇总")
-    @PrePermission("execution:revenue:list")
+    @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/aggregate/byContract")
     public BaseResponse<List<Map<String, Object>>> sumByContract(@RequestParam String contractId) {
         return BaseResponse.ok(service.sumByContract(contractId));
@@ -164,7 +164,7 @@ public class RevenueController {
      * @return 汇总结果列表
      */
     @Operation(summary = "按期间汇总")
-    @PrePermission("execution:revenue:list")
+    @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/aggregate/byPeriod")
     public BaseResponse<List<Map<String, Object>>> sumByPeriod(@RequestParam String initiationId) {
         return BaseResponse.ok(service.sumByPeriod(initiationId));

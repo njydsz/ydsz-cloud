@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.web.controller.aftersales;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.SatisfactionCreateDTO;
@@ -41,7 +41,7 @@ public class SatisfactionController {
     private final SatisfactionService service;
 
     @Operation(summary = "提交评价")
-    @PrePermission("aftersales:satisfaction:submit")
+    @AuthApiPermission(apiCodes = "aftersales:satisfaction:submit")
     @Idempotent(key = "satisfaction:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> submit(@Valid @RequestBody SatisfactionCreateDTO dto) {
@@ -49,7 +49,7 @@ public class SatisfactionController {
     }
 
     @Operation(summary = "标记跟进")
-    @PrePermission("aftersales:satisfaction:followUp")
+    @AuthApiPermission(apiCodes = "aftersales:satisfaction:followUp")
     @Idempotent(key = "satisfaction:markFollowUp", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/followUp")
     public BaseResponse<Void> markFollowUp(@RequestParam String id, @RequestParam(required = false) String note) {
@@ -58,7 +58,7 @@ public class SatisfactionController {
     }
 
     @Operation(summary = "关闭跟进")
-    @PrePermission("aftersales:satisfaction:followUp")
+    @AuthApiPermission(apiCodes = "aftersales:satisfaction:followUp")
     @Idempotent(key = "satisfaction:closeFollowUp", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/followUp/close")
     public BaseResponse<Void> closeFollowUp(@RequestParam String id) {
@@ -67,21 +67,21 @@ public class SatisfactionController {
     }
 
     @Operation(summary = "整体满意度均值")
-    @PrePermission("aftersales:satisfaction:list")
+    @AuthApiPermission(apiCodes = "aftersales:satisfaction:list")
     @GetMapping("/overall")
     public BaseResponse<Map<String, Object>> overall() {
         return BaseResponse.ok(service.overall());
     }
 
     @Operation(summary = "等级分布")
-    @PrePermission("aftersales:satisfaction:list")
+    @AuthApiPermission(apiCodes = "aftersales:satisfaction:list")
     @GetMapping("/levelDistribution")
     public BaseResponse<List<Map<String, Object>>> levelDistribution() {
         return BaseResponse.ok(service.levelDistribution());
     }
 
     @Operation(summary = "分页")
-    @PrePermission("aftersales:satisfaction:list")
+    @AuthApiPermission(apiCodes = "aftersales:satisfaction:list")
     @GetMapping("/page")
     public BaseResponse<PageResponse<SatisfactionDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,

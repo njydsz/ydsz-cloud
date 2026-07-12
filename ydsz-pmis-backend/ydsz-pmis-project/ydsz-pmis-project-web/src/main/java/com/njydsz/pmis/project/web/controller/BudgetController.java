@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.web.controller.execution;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.server.engine.BudgetGuard;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,7 +40,7 @@ public class BudgetController {
      * @return 占用率与告警级别数据
      */
     @Operation(summary = "查询项目预算占用率与告警级别")
-    @PrePermission("execution:budget:view")
+    @AuthApiPermission(apiCodes = "execution:budget:view")
     @GetMapping("/occupancy")
     public BaseResponse<Map<String, Object>> occupancy(@RequestParam String initiationId) {
         return BaseResponse.ok(budgetGuard.occupancy(initiationId));

@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.instance;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -69,7 +69,7 @@ public class FlowTaskController {
      * @param taskId 任务 ID
      * @return 统一响应结果，包含任务详情
      */
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_VIEW)
     @GetMapping("/task/{taskId}")
     public BaseResponse<Map<String, Object>> taskDetail(@PathVariable String taskId) {
         return BaseResponse.ok(workflowFacade.getTaskDetail(taskId));
@@ -85,7 +85,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:claim", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/claim")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> claim(@RequestParam String taskId) {
         workflowFacade.claimTask(taskId, AuthContext.getUserId());
         return BaseResponse.ok();
@@ -99,7 +99,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:pass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/pass")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -115,7 +115,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/reject")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -149,7 +149,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:transfer", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/transfer")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -165,7 +165,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:delegate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/delegate")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -181,7 +181,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:countersignBefore", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignBefore")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -197,7 +197,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:countersignAfter", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignAfter")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -214,7 +214,7 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:countersignParallel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignParallel")
     @Operation(summary = "并加签（与原审批人并行审批）")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignParallel(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -230,7 +230,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:jump", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/jump")
-    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -253,7 +253,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:freeJump", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/freeJump")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
     public BaseResponse<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -273,7 +273,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:batchPass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchPass")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> batchPass(@RequestParam List<String> taskIds,
                                   @RequestParam(required = false) String comment) {
         workflowFacade.batchPassTasks(taskIds, AuthContext.getUserId(), comment);
@@ -290,7 +290,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:batchReject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchReject")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> batchReject(@RequestParam List<String> taskIds,
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false) String targetNodeCode) {
@@ -309,7 +309,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:batchTransfer", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchTransfer")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> batchTransfer(@RequestParam List<String> taskIds,
                                       @RequestParam(required = false) String comment,
                                       @RequestParam String targetUserId,
@@ -328,7 +328,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:batchUrge", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/batchUrge")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> batchUrge(@RequestParam List<String> instanceIds,
                                      @RequestParam(required = false) String comment) {
         return BaseResponse.ok(taskService.batchUrge(instanceIds, AuthContext.getUserId(), comment));
@@ -344,7 +344,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:passAll", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/passAll")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Integer> passAll(@RequestParam(required = false) String comment) {
         return BaseResponse.ok(workflowFacade.passAllTodoTasks(AuthContext.getUserId(), comment));
     }
@@ -446,7 +446,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:countersignRemove", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignRemove")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -476,7 +476,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:communicate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/communicate")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -492,7 +492,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:saveDraft", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/saveDraft")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -508,7 +508,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:addApprover", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/addApprover")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
         dto.setUserId(AuthContext.getUserId());
         dto.setUserName(AuthContext.getUsername());
@@ -527,7 +527,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:retract", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{hisTaskId}/retract")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<String> retract(@PathVariable String hisTaskId,
                                   @RequestParam(required = false) String comment) {
         return BaseResponse.ok(taskService.retract(hisTaskId, AuthContext.getUserId(), comment));
@@ -545,7 +545,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:suspendTask", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/suspend")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> suspendTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
         workflowFacade.suspendTask(taskId, AuthContext.getUserId(), reason);
@@ -560,7 +560,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:activateTask", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/activate")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> activateTask(@PathVariable String taskId) {
         workflowFacade.activateTask(taskId, AuthContext.getUserId());
         return BaseResponse.ok();
@@ -618,7 +618,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:recommendApprovers", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/ai/recommendApprovers")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<List<Map<String, Object>>> recommendApprovers(
             @Valid @RequestBody FlowAiRecommendApproversDTO dto) {
         Map<String, Object> ctx = new LinkedHashMap<>();
@@ -642,7 +642,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:draftComment", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/ai/draftComment")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Map<String, Object>> draftComment(@Valid @RequestBody FlowAiDraftCommentDTO dto) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("taskId", dto.getTaskId());
@@ -696,7 +696,7 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:recordApproverFeedback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/ai/approverFeedback")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Map<String, Object>> recordApproverFeedback(@RequestBody Map<String, Object> body) {
         log.info("[FlowTask] 记录推荐反馈: traceId={} userId={} action={}",
                 body.get("traceId"), body.get("recommendedUserId"), body.get("action"));
@@ -714,7 +714,7 @@ public class FlowTaskController {
      * @return 统计结果（total/accepted/rejected/chosenOther/acceptanceRate）
      */
     @GetMapping("/ai/approverFeedback/stats")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Map<String, Object>> approverFeedbackStats(
             @RequestParam(required = false) String recommendedUserId,
             @RequestParam(required = false) String tenantId) {

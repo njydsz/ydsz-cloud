@@ -1,6 +1,6 @@
 package com.njydsz.pmis.finance.web.controller;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.engine.ReconcileReport;
 import com.njydsz.pmis.project.engine.ReconcileResult;
@@ -43,7 +43,7 @@ public class ReconcileController {
      * @return 对账报告
      */
     @Operation(summary = "全量对账报告")
-    @PrePermission("execution:reconcile:view")
+    @AuthApiPermission(apiCodes = "execution:reconcile:view")
     @GetMapping("/report")
     public BaseResponse<ReconcileReport> report(
             @RequestParam(required = false) String initiationId,
@@ -59,7 +59,7 @@ public class ReconcileController {
      * @return 对账差异结果列表
      */
     @Operation(summary = "工时漏算 / 幽灵成本")
-    @PrePermission("execution:reconcile:view")
+    @AuthApiPermission(apiCodes = "execution:reconcile:view")
     @GetMapping("/missingCost")
     public BaseResponse<List<ReconcileResult>> missingCost(@RequestParam(required = false) String initiationId) {
         return BaseResponse.ok(reconcileService.checkMissingCost(initiationId));
@@ -74,7 +74,7 @@ public class ReconcileController {
      * @return 对账差异结果列表
      */
     @Operation(summary = "工时异常(单日/单周/跨项目)")
-    @PrePermission("execution:reconcile:view")
+    @AuthApiPermission(apiCodes = "execution:reconcile:view")
     @GetMapping("/timeAnomaly")
     public BaseResponse<List<ReconcileResult>> timeAnomaly(
             @RequestParam(required = false) String initiationId,

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.web.controller.analytics;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -156,7 +156,7 @@ public class FlowMonitorController {
      * @return 概览统计数据：runningCount/todayNewCount/pendingTaskCount/overdueTaskCount/todayCompletedCount
      */
     @GetMapping("/monitor/overview")
-    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public BaseResponse<Map<String, Object>> monitorOverview() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         Map<String, Object> overview = new LinkedHashMap<>();
@@ -227,7 +227,7 @@ public class FlowMonitorController {
      * @return 分页异常实例列表
      */
     @GetMapping("/monitor/anomaly")
-    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public BaseResponse<PageResponse<Map<String, Object>>> monitorAnomaly(
             @RequestParam(required = false) String anomalyType,
             @RequestParam(required = false) String warnLevel,
@@ -348,7 +348,7 @@ public class FlowMonitorController {
      * @return 趋势列表
      */
     @GetMapping("/monitor/instanceTrend")
-    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public BaseResponse<List<Map<String, Object>>> monitorInstanceTrend(
             @RequestParam(defaultValue = "7") int days) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
@@ -410,7 +410,7 @@ public class FlowMonitorController {
      * @return 审批人排名列表
      */
     @GetMapping("/monitor/approverEfficiency")
-    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public BaseResponse<List<Map<String, Object>>> monitorApproverEfficiency(
             @RequestParam(defaultValue = "10") int topN,
             @RequestParam(required = false) String startTime,
@@ -451,7 +451,7 @@ public class FlowMonitorController {
      * @return 分布列表
      */
     @GetMapping("/monitor/flowTypeDistribution")
-    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public BaseResponse<List<Map<String, Object>>> monitorFlowTypeDistribution(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
@@ -503,7 +503,7 @@ public class FlowMonitorController {
      * @return 仪表盘聚合数据
      */
     @GetMapping("/monitor/dashboard")
-    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     @Operation(summary = "监控仪表盘聚合数据（首屏一次加载）")
     public BaseResponse<Map<String, Object>> monitorDashboard() {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
@@ -574,7 +574,7 @@ public class FlowMonitorController {
      * assigneeId / assigneeName / dueAt / overdueHours / reminderCount
      */
     @GetMapping("/monitor/overdueTasks")
-    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     @Operation(summary = "超期任务 Top N 排行（按超期时长降序）")
     public BaseResponse<List<Map<String, Object>>> monitorOverdueTasks(
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
@@ -593,7 +593,7 @@ public class FlowMonitorController {
      * @return 审批人负载列表，按 totalCount 降序
      */
     @GetMapping("/monitor/approverWorkload")
-    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     @Operation(summary = "审批人负载分布（当前待办数量）")
     public BaseResponse<List<Map<String, Object>>> monitorApproverWorkload(
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
@@ -619,7 +619,7 @@ public class FlowMonitorController {
      * @return 流程效率对比列表，按 totalCount 降序
      */
     @GetMapping("/monitor/flowEfficiencyComparison")
-    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)
     @Operation(summary = "流程效率对比（按流程编码分组）")
     public BaseResponse<List<Map<String, Object>>> monitorFlowEfficiencyComparison(
             @RequestParam(required = false) String startTime,

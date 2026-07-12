@@ -3,7 +3,7 @@
  *
  * <p>定义全平台统一的权限码（{@code permission_code}）常量与校验器。
  * 权限码采用"模块:资源:动作"三级命名（如 {@code project:contract:create}），
- * 与 {@code @PrePermission} 注解配合实现接口级权限控制。
+ * 与 {@code @AuthApiPermission} 注解配合实现接口级权限控制。
  *
  * <h3>核心组件</h3>
  * <ul>

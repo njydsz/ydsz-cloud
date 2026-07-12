@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.web.controller.core;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.core.ChannelStatsVO;
 import com.njydsz.pmis.message.domain.dto.core.CostStatsVO;
@@ -50,7 +50,7 @@ public class MessageStatsController {
      * @return 总览统计
      */
     @Operation(summary = "发送总览统计")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/overview")
     public BaseResponse<MessageStatsVO> overview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
@@ -66,7 +66,7 @@ public class MessageStatsController {
      * @return 各通道统计列表
      */
     @Operation(summary = "通道维度发送统计")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/channel")
     public BaseResponse<List<ChannelStatsVO>> channelStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
@@ -82,7 +82,7 @@ public class MessageStatsController {
      * @return 回执统计
      */
     @Operation(summary = "回执统计")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/receipt")
     public BaseResponse<ReceiptStatsVO> receiptStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
@@ -103,7 +103,7 @@ public class MessageStatsController {
      * @return 漏斗统计
      */
     @Operation(summary = "消息转化漏斗分析")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/funnel")
     public BaseResponse<FunnelStatsVO> funnel(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
@@ -123,7 +123,7 @@ public class MessageStatsController {
      * @return 成本统计
      */
     @Operation(summary = "成本看板")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/cost")
     public BaseResponse<CostStatsVO> cost(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,

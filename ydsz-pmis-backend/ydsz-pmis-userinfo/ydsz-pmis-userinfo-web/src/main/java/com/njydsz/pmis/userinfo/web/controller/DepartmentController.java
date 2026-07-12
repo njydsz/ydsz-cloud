@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.web.controller.org;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
@@ -80,7 +80,7 @@ public class DepartmentController {
      * @return 统一响应结果，包含新建部门 ID
      */
     @Operation(summary = "创建部门")
-    @PrePermission("org:dept:create")
+    @AuthApiPermission(apiCodes = "org:dept:create")
     @OperationLog(module = "组织架构", action = "创建部门", bizType = "DEPARTMENT")
     @Idempotent(key = "department:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -95,7 +95,7 @@ public class DepartmentController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新部门")
-    @PrePermission("org:dept:update")
+    @AuthApiPermission(apiCodes = "org:dept:update")
     @OperationLog(module = "组织架构", action = "更新部门", bizType = "DEPARTMENT")
     @Idempotent(key = "department:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
@@ -111,7 +111,7 @@ public class DepartmentController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除部门")
-    @PrePermission("org:dept:delete")
+    @AuthApiPermission(apiCodes = "org:dept:delete")
     @OperationLog(module = "组织架构", action = "删除部门", bizType = "DEPARTMENT")
     @Idempotent(key = "department:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")

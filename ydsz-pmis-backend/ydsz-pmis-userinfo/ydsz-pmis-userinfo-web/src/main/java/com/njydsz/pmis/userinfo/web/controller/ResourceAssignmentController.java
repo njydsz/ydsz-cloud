@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.resource.ResourceAssignmentCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.ResourceAssignmentDO;
@@ -52,7 +52,7 @@ public class ResourceAssignmentController {
      * @return 统一响应结果，包含分配记录 ID
      */
     @Operation(summary = "分配动作（RESERVE/START/TRANSFER/RELEASE/CANCEL）")
-    @PrePermission("resource:assign:act")
+    @AuthApiPermission(apiCodes = "resource:assign:act")
     @OperationLog(module = "资源分配", action = "分配动作", bizType = "RESOURCE_ASSIGN")
     @Idempotent(key = "resourceAssignment:act", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/act")

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.web.controller.report;
 
+import com.njydsz.pmis.common.annotation.DataExportAudit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.server.service.ReportExportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,6 +69,7 @@ public class ReportExportController {
      * @throws IOException 写入响应流时发生 I/O 异常
      */
     @Operation(summary = "下载报表（XLSX/CSV，P2-6）")
+    @DataExportAudit(module = "项目管理", action = "导出报表", bizType = "REPORT")
     @GetMapping("/download")
     public void download(
             @RequestParam String type,

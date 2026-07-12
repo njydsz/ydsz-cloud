@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.resource.BenchRecordCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.BenchRecordDO;
@@ -55,7 +55,7 @@ public class BenchController {
      * @return 统一响应结果，包含 Bench 记录 ID
      */
     @Operation(summary = "入池 / 出池 业务动作")
-    @PrePermission("resource:bench:act")
+    @AuthApiPermission(apiCodes = "resource:bench:act")
     @OperationLog(module = "Bench 池", action = "入/出池", bizType = "BENCH_RECORD")
     @Idempotent(key = "bench:act", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/act")

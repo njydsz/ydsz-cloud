@@ -13,7 +13,7 @@ import java.util.Set;
 /**
  * 规则细粒度权限校验器（P2-4 按目录授权）
  *
- * <p>扩展现有 {@code @PrePermission} 注解的权限模型，支持按规则分类路径（categoryPath）
+ * <p>扩展现有 {@code @AuthApiPermission} 注解的权限模型，支持按规则分类路径（categoryPath）
  * 授权，实现"仅对 finance 目录下的规则有保存权限"这类细粒度控制。
  *
  * <p><b>权限编码格式</b>：

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.web.controller.core;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
@@ -40,7 +40,7 @@ public class MessageTraceController {
      * @return 统一响应结果，包含轨迹列表
      */
     @Operation(summary = "按消息 ID 查询轨迹")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/msg/{msgId}")
     public BaseResponse<List<MsgTraceDO>> getByMsgId(@PathVariable String msgId) {
         return BaseResponse.ok(messageTraceService.getTraceByMsgId(msgId));
@@ -53,7 +53,7 @@ public class MessageTraceController {
      * @return 统一响应结果，包含轨迹列表
      */
     @Operation(summary = "按链路追踪 ID 查询轨迹")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/trace/{traceId}")
     public BaseResponse<List<MsgTraceDO>> getByTraceId(@PathVariable String traceId) {
         return BaseResponse.ok(messageTraceService.getTraceByTraceId(traceId));
@@ -67,7 +67,7 @@ public class MessageTraceController {
      * @return 统一响应结果，包含轨迹列表
      */
     @Operation(summary = "按业务类型+单据 ID 查询轨迹")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/biz")
     public BaseResponse<List<MsgTraceDO>> getByBiz(@RequestParam String bizType,
                                               @RequestParam String bizId) {

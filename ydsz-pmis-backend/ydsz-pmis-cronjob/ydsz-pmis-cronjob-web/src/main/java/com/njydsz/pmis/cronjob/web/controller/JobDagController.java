@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
@@ -50,7 +50,7 @@ public class JobDagController {
      * @return 统一响应结果，包含新增 DAG ID
      */
     @Operation(summary = "创建 DAG 工作流")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_CREATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_CREATE)
     @OperationLog(module = "任务调度", action = "创建DAG", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDag:createDag", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/")
@@ -66,7 +66,7 @@ public class JobDagController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新 DAG 工作流")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @Idempotent(key = "jobDag:updateDag", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{dagId}")
     public BaseResponse<Void> updateDag(@PathVariable String dagId, @Valid @RequestBody JobDagSaveDTO dto) {
@@ -81,7 +81,7 @@ public class JobDagController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除 DAG 工作流")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_DELETE)
     @OperationLog(module = "任务调度", action = "删除DAG", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDag:deleteDag", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{dagId}")
@@ -97,7 +97,7 @@ public class JobDagController {
      * @return 统一响应结果
      */
     @Operation(summary = "启用 DAG 工作流")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "启用DAG", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDag:enableDag", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{dagId}/enable")
@@ -113,7 +113,7 @@ public class JobDagController {
      * @return 统一响应结果
      */
     @Operation(summary = "禁用 DAG 工作流")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "禁用DAG", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDag:disableDag", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{dagId}/disable")
@@ -129,7 +129,7 @@ public class JobDagController {
      * @return 统一响应结果，包含 DAG 定义
      */
     @Operation(summary = "查询 DAG 工作流详情")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{dagId}")
     public BaseResponse<JobDagDO> getDagById(@PathVariable String dagId) {
         return BaseResponse.ok(jobDagService.getDagById(dagId));
@@ -142,7 +142,7 @@ public class JobDagController {
      * @return 统一响应结果，包含 DAG 定义
      */
     @Operation(summary = "根据 KEY 查询 DAG 工作流")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/key/{dagKey}")
     public BaseResponse<JobDagDO> getDagByKey(@PathVariable String dagKey) {
         return BaseResponse.ok(jobDagService.getDagByKey(dagKey));
@@ -154,7 +154,7 @@ public class JobDagController {
      * @return 统一响应结果，包含 DAG 列表
      */
     @Operation(summary = "查询所有启用的 DAG 工作流")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/enabled")
     public BaseResponse<List<JobDagDO>> listEnabledDags() {
         return BaseResponse.ok(jobDagService.listEnabledDags());
@@ -167,7 +167,7 @@ public class JobDagController {
      * @return 统一响应结果，包含 DAG 实例 ID
      */
     @Operation(summary = "手动触发 DAG 工作流")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_TRIGGER)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_TRIGGER)
     @OperationLog(module = "任务调度", action = "触发DAG", bizType = "CRONJOB_DAG")
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/trigger")
@@ -185,7 +185,7 @@ public class JobDagController {
      * @return 校验结果（true=通过）
      */
     @Operation(summary = "校验 DAG 定义")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @Idempotent(key = "jobDag:validateDag", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/validate")
     public BaseResponse<Boolean> validateDag(@RequestBody String dagDefinitionJson) {

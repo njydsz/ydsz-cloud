@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.agent.server.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.server.orchestration.OrchestrationResult;
 import com.njydsz.pmis.agent.server.service.agent.AgentOrchestrationService;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,7 +41,7 @@ public class AgentOrchestrationController {
      * @return 编排结果
      */
     @Operation(summary = "协调多 Agent 编排执行")
-    @PrePermission("agent:orchestration:run")
+    @AuthApiPermission(apiCodes = "agent:orchestration:run")
     @Idempotent(key = "agentOrchestration:coordinate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/coordinate")
     public BaseResponse<OrchestrationResult> coordinate(@RequestBody OrchestrationRequest req) {

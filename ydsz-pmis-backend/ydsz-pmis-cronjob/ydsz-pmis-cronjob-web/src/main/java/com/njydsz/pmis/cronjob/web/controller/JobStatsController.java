@@ -3,7 +3,7 @@ package com.njydsz.pmis.cronjob.web.controller.job;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobDailyStatsDO;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
@@ -59,7 +59,7 @@ public class JobStatsController {
      * @return 每日统计列表（按日期升序）
      */
     @Operation(summary = "查询每日执行统计趋势")
-    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/daily")
     public BaseResponse<List<JobDailyStatsDO>> daily(
             @RequestParam String jobId,
@@ -79,7 +79,7 @@ public class JobStatsController {
      * @return 汇总统计 Map
      */
     @Operation(summary = "查询执行统计汇总")
-    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/summary")
     public BaseResponse<Map<String, Object>> summary(
             @RequestParam String jobId,
@@ -139,7 +139,7 @@ public class JobStatsController {
      * @return 仪表盘数据
      */
     @Operation(summary = "全局监控仪表盘")
-    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/dashboard")
     public BaseResponse<Map<String, Object>> dashboard() {
         Map<String, Object> dashboard = new HashMap<>();
@@ -184,7 +184,7 @@ public class JobStatsController {
      * @return 失败日志列表
      */
     @Operation(summary = "最近失败任务")
-    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/recent-failures")
     public BaseResponse<List<JobLogDO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
         return BaseResponse.ok(jobLogMapper.selectList(
@@ -203,7 +203,7 @@ public class JobStatsController {
      * @return 24 小时执行分布
      */
     @Operation(summary = "执行热力图（按小时分布）")
-    @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/heatmap")
     public BaseResponse<List<Map<String, Object>>> heatmap(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {

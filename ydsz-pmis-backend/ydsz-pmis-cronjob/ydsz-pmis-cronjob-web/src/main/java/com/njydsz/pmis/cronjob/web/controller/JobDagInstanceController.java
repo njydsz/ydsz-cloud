@@ -3,7 +3,7 @@ package com.njydsz.pmis.cronjob.web.controller.dag;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
@@ -41,7 +41,7 @@ public class JobDagInstanceController {
      * @return 统一响应结果，包含 DAG 实例信息
      */
     @Operation(summary = "查询 DAG 实例详情")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}")
     public BaseResponse<JobDagInstanceDO> getInstanceById(@PathVariable String instanceId) {
         return BaseResponse.ok(jobDagInstanceService.getInstanceById(instanceId));
@@ -55,7 +55,7 @@ public class JobDagInstanceController {
      * @return 统一响应结果，包含 DAG 实例列表
      */
     @Operation(summary = "查询 DAG 的实例列表")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/dag/{dagId}")
     public BaseResponse<List<JobDagInstanceDO>> listByDagId(@PathVariable String dagId,
                                                        @RequestParam(defaultValue = "20") int limit) {
@@ -69,7 +69,7 @@ public class JobDagInstanceController {
      * @return 统一响应结果，包含 DAG 实例列表
      */
     @Operation(summary = "按状态查询 DAG 实例")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/status/{status}")
     public BaseResponse<List<JobDagInstanceDO>> listByStatus(@PathVariable String status) {
         return BaseResponse.ok(jobDagInstanceService.listByStatus(status));
@@ -82,7 +82,7 @@ public class JobDagInstanceController {
      * @return 统一响应结果，包含节点实例列表
      */
     @Operation(summary = "查询 DAG 实例的节点列表")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/nodes")
     public BaseResponse<List<JobDagNodeInstanceDO>> listNodes(@PathVariable String instanceId) {
         return BaseResponse.ok(jobDagInstanceService.listNodes(instanceId));
@@ -95,7 +95,7 @@ public class JobDagInstanceController {
      * @return 统一响应结果，包含可视化数据（节点状态/边/时间线）
      */
     @Operation(summary = "获取 DAG 实例可视化数据（P4-1）")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/visualization")
     public BaseResponse<DagInstanceVisualizationVO> getVisualization(@PathVariable String instanceId) {
         return BaseResponse.ok(jobDagInstanceService.getVisualization(instanceId));
@@ -108,7 +108,7 @@ public class JobDagInstanceController {
      * @return 统一响应结果
      */
     @Operation(summary = "暂停 DAG 实例")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "暂停DAG实例", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:pauseInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/pause")
@@ -124,7 +124,7 @@ public class JobDagInstanceController {
      * @return 统一响应结果
      */
     @Operation(summary = "恢复 DAG 实例")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "恢复DAG实例", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:resumeInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/resume")
@@ -140,7 +140,7 @@ public class JobDagInstanceController {
      * @return 统一响应结果
      */
     @Operation(summary = "取消 DAG 实例")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "取消DAG实例", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:cancelInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/cancel")
@@ -157,7 +157,7 @@ public class JobDagInstanceController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新 DAG 实例上下文")
-    @PrePermission(PermissionCodes.CRONJOB_DAG_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_UPDATE)
     @OperationLog(module = "任务调度", action = "更新DAG实例上下文", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:updateContext", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/context")

@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.core;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.core.OrchestrationFlowDTO;
 import com.njydsz.pmis.message.domain.dto.core.OrchestrationResultVO;
@@ -43,7 +43,7 @@ public class OrchestrationController {
      * @return 统一响应结果，包含编排执行结果
      */
     @Operation(summary = "执行编排流程")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "orchestration:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/execute")
     public BaseResponse<OrchestrationResultVO> execute(@Valid @RequestBody OrchestrationFlowDTO flow) {

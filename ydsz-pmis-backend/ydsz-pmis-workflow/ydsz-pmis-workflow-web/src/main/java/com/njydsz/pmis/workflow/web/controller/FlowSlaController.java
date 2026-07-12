@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.analytics;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -43,7 +43,7 @@ public class FlowSlaController {
      */
     @Idempotent(key = "flowSla:slaScan", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sla/scan")
-    @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Integer> slaScan() {
         int processed = slaService.scanAndProcess();
         return BaseResponse.ok(processed);
@@ -57,7 +57,7 @@ public class FlowSlaController {
      */
     @Idempotent(key = "flowSla:slaProcess", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sla/process/{taskId}")
-    @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
     public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {

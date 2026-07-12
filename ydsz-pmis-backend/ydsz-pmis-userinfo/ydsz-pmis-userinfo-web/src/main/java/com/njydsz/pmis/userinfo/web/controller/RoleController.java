@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.permission.RoleFormDTO;
@@ -44,7 +44,7 @@ public class RoleController {
      * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "角色分页")
-    @PrePermission("auth:role:list")
+    @AuthApiPermission(apiCodes = "auth:role:list")
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping
     public BaseResponse<Page<RoleDO>> page(@Valid RoleQueryDTO query) {
@@ -83,7 +83,7 @@ public class RoleController {
      * @return 统一响应结果，包含新建角色 ID
      */
     @Operation(summary = "创建角色")
-    @PrePermission("auth:role:create")
+    @AuthApiPermission(apiCodes = "auth:role:create")
     @OperationLog(module = "权限管理", action = "创建角色", bizType = "ROLE")
     @Idempotent(key = "role:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -98,7 +98,7 @@ public class RoleController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新角色")
-    @PrePermission("auth:role:update")
+    @AuthApiPermission(apiCodes = "auth:role:update")
     @OperationLog(module = "权限管理", action = "更新角色", bizType = "ROLE")
     @Idempotent(key = "role:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
@@ -114,7 +114,7 @@ public class RoleController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除角色")
-    @PrePermission("auth:role:delete")
+    @AuthApiPermission(apiCodes = "auth:role:delete")
     @OperationLog(module = "权限管理", action = "删除角色", bizType = "ROLE")
     @Idempotent(key = "role:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -131,7 +131,7 @@ public class RoleController {
      * @return 统一响应结果
      */
     @Operation(summary = "为角色分配权限")
-    @PrePermission("auth:role:assign")
+    @AuthApiPermission(apiCodes = "auth:role:assign")
     @OperationLog(module = "权限管理", action = "分配权限", bizType = "ROLE")
     @Idempotent(key = "role:assignPermissions", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/permissions")

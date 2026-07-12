@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.config;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -52,7 +52,7 @@ public class DeadLetterController {
      * @return 死信分页
      */
     @Operation(summary = "分页查询死信列表")
-    @PrePermission(PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
     @GetMapping("/page")
     public BaseResponse<Page<MsgLogDO>> page(MessageLogQueryDTO query) {
         if (query == null) {
@@ -72,7 +72,7 @@ public class DeadLetterController {
      * @return 操作结果
      */
     @Operation(summary = "手动重发死信")
-    @PrePermission(PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
     @Idempotent(key = "deadLetter:resend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{logId}/resend")
     public BaseResponse<Void> resend(@PathVariable String logId) {

@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.web.controller.config;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.config.PreferenceUpsertDTO;
@@ -44,7 +44,7 @@ public class PreferenceController {
      * @return 统一响应结果，包含偏好记录
      */
     @Operation(summary = "新增/更新偏好")
-    @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
     @Idempotent(key = "preference:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
@@ -58,7 +58,7 @@ public class PreferenceController {
      * @return 统一响应结果，包含偏好列表
      */
     @Operation(summary = "查询用户所有偏好")
-    @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}")
     public BaseResponse<List<MsgPreferenceDO>> listByUser(@PathVariable String userId) {
         return BaseResponse.ok(preferenceService.listByUser(userId));
@@ -73,7 +73,7 @@ public class PreferenceController {
      * @return 统一响应结果，包含偏好记录
      */
     @Operation(summary = "按用户+通道+业务类型查询偏好")
-    @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}/{channel}/{bizType}")
     public BaseResponse<MsgPreferenceDO> getByUser(@PathVariable String userId,
                                              @PathVariable String channel,
@@ -88,7 +88,7 @@ public class PreferenceController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除偏好")
-    @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_DELETE)
     @Idempotent(key = "preference:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {

@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.web.controller.config;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -58,7 +58,7 @@ public class UnsubscribeController {
      * @return 退订后的订阅记录
      */
     @Operation(summary = "token 一键退订")
-    @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
     @Idempotent(key = "unsubscribe:oneClick", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/oneClick")
     public BaseResponse<MsgSubscriptionDO> oneClick(@RequestParam String token) {
@@ -78,7 +78,7 @@ public class UnsubscribeController {
      * @return token 载荷
      */
     @Operation(summary = "预览退订 token")
-    @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
     @GetMapping("/preview")
     public BaseResponse<UnsubscribeTokenPayload> preview(@RequestParam String token) {
         if (token == null || token.isBlank()) {
@@ -94,7 +94,7 @@ public class UnsubscribeController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询已退订记录")
-    @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
     @GetMapping("/page")
     public BaseResponse<PageResponse<MsgSubscriptionDO>> page(UnsubscribeQueryDTO query) {
         return BaseResponse.ok(unsubscribeService.pageUnsubscribed(query));
@@ -109,7 +109,7 @@ public class UnsubscribeController {
      * @return 操作结果
      */
     @Operation(summary = "恢复订阅")
-    @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
     @Idempotent(key = "unsubscribe:resubscribe", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/resubscribe")
     public BaseResponse<Void> resubscribe(@RequestParam String userId,

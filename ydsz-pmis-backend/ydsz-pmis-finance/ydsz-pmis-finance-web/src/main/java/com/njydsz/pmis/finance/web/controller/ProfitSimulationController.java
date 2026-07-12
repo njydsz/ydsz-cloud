@@ -2,7 +2,7 @@ package com.njydsz.pmis.finance.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.ProfitSimulationCreateDTO;
 import com.njydsz.pmis.finance.domain.dto.SimulationStatusDTO;
@@ -53,7 +53,7 @@ public class ProfitSimulationController {
      * @return 新建测算版本 ID
      */
     @Operation(summary = "创建测算版本")
-    @PrePermission("execution:simulation:create")
+    @AuthApiPermission(apiCodes = "execution:simulation:create")
     @Idempotent(key = "profitSimulation:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ProfitSimulationCreateDTO dto) {
@@ -67,7 +67,7 @@ public class ProfitSimulationController {
      * @return 空结果
      */
     @Operation(summary = "状态迁移")
-    @PrePermission("execution:simulation:approve")
+    @AuthApiPermission(apiCodes = "execution:simulation:approve")
     @Idempotent(key = "profitSimulation:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody SimulationStatusDTO dto) {
@@ -82,7 +82,7 @@ public class ProfitSimulationController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:simulation:delete")
+    @AuthApiPermission(apiCodes = "execution:simulation:delete")
     @Idempotent(key = "profitSimulation:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -97,7 +97,7 @@ public class ProfitSimulationController {
      * @return 测算版本实体
      */
     @Operation(summary = "详情")
-    @PrePermission("execution:simulation:list")
+    @AuthApiPermission(apiCodes = "execution:simulation:list")
     @GetMapping("/{id}")
     public BaseResponse<ProfitSimulationDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -110,7 +110,7 @@ public class ProfitSimulationController {
      * @return 测算版本列表
      */
     @Operation(summary = "按项目查询所有版本")
-    @PrePermission("execution:simulation:list")
+    @AuthApiPermission(apiCodes = "execution:simulation:list")
     @GetMapping("/byInitiation")
     public BaseResponse<List<ProfitSimulationDO>> listByInitiation(@RequestParam String initiationId) {
         return BaseResponse.ok(service.listByInitiation(initiationId));
@@ -123,7 +123,7 @@ public class ProfitSimulationController {
      * @return 对比结果列表
      */
     @Operation(summary = "多版本对比")
-    @PrePermission("execution:simulation:list")
+    @AuthApiPermission(apiCodes = "execution:simulation:list")
     @GetMapping("/compare")
     public BaseResponse<List<Map<String, Object>>> compare(@RequestParam String initiationId) {
         return BaseResponse.ok(service.compare(initiationId));
@@ -140,7 +140,7 @@ public class ProfitSimulationController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("execution:simulation:list")
+    @AuthApiPermission(apiCodes = "execution:simulation:list")
     @GetMapping("/page")
     public BaseResponse<Page<ProfitSimulationDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,

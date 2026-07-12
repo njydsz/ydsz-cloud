@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.dto.job.JobBatchDTO;
@@ -50,7 +50,7 @@ public class JobController {
      * @return 统一响应结果，包含新增任务 ID
      */
     @Operation(summary = "新增任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_CREATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_CREATE)
     @OperationLog(module = "任务调度", action = "新增任务", bizType = "CRONJOB_JOB", saveResult = true)
     @Idempotent(key = "job:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -67,7 +67,7 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @OperationLog(module = "任务调度", action = "更新任务", bizType = "CRONJOB_JOB", saveDiff = true)
     @Idempotent(key = "job:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
@@ -85,7 +85,7 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_DELETE)
     @OperationLog(module = "任务调度", action = "删除任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -101,7 +101,7 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "暂停任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_PAUSE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_PAUSE)
     @OperationLog(module = "任务调度", action = "暂停任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:pause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/pause")
@@ -117,7 +117,7 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "恢复任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_PAUSE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_PAUSE)
     @OperationLog(module = "任务调度", action = "恢复任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/resume")
@@ -135,7 +135,7 @@ public class JobController {
      * @return 统一响应结果，包含执行日志 ID
      */
     @Operation(summary = "立即执行一次")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_TRIGGER)
     @OperationLog(module = "任务调度", action = "手动触发任务", bizType = "CRONJOB_JOB", saveParams = false)
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/{id}/trigger")
@@ -151,7 +151,7 @@ public class JobController {
      * @return 统一响应结果，包含成功处理的数量
      */
     @Operation(summary = "批量暂停任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "job:batchPause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/pause")
     public BaseResponse<Integer> batchPause(@RequestBody @Valid JobBatchDTO dto) {
@@ -165,7 +165,7 @@ public class JobController {
      * @return 统一响应结果，包含成功处理的数量
      */
     @Operation(summary = "批量恢复任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "job:batchResume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/resume")
     public BaseResponse<Integer> batchResume(@RequestBody @Valid JobBatchDTO dto) {
@@ -179,7 +179,7 @@ public class JobController {
      * @return 统一响应结果，包含成功处理的数量
      */
     @Operation(summary = "批量触发任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_TRIGGER)
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/batch/trigger")
     public BaseResponse<Integer> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
@@ -193,7 +193,7 @@ public class JobController {
      * @return 统一响应结果，包含成功处理的数量
      */
     @Operation(summary = "批量删除任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_DELETE)
     @OperationLog(module = "任务调度", action = "批量删除任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:batchDelete", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/delete")
@@ -259,7 +259,7 @@ public class JobController {
      * @return 统一响应结果，包含操作结果信息
      */
     @Operation(summary = "重新加载所有任务")
-    @PrePermission(PermissionCodes.CRONJOB_JOB_RELOAD)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_RELOAD)
     @Idempotent(key = "job:reload", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reload")
     public BaseResponse<Map<String, Object>> reload() {

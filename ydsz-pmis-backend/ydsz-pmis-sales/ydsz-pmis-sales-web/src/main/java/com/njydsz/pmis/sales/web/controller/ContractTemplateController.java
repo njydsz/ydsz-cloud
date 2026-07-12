@@ -3,7 +3,7 @@ package com.njydsz.pmis.sales.web.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.ContractTemplateCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.ContractTemplateStatusDTO;
@@ -51,7 +51,7 @@ public class ContractTemplateController {
      * @return 模板 ID
      */
     @Operation(summary = "创建合同模板")
-    @PrePermission("project:contractTemplate:create")
+    @AuthApiPermission(apiCodes = "project:contractTemplate:create")
     @Idempotent(key = "contractTemplate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ContractTemplateCreateDTO dto) {
@@ -65,7 +65,7 @@ public class ContractTemplateController {
      * @return 空结果
      */
     @Operation(summary = "状态迁移")
-    @PrePermission("project:contractTemplate:publish")
+    @AuthApiPermission(apiCodes = "project:contractTemplate:publish")
     @Idempotent(key = "contractTemplate:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ContractTemplateStatusDTO dto) {
@@ -80,7 +80,7 @@ public class ContractTemplateController {
      * @return 空结果
      */
     @Operation(summary = "删除模板")
-    @PrePermission("project:contractTemplate:delete")
+    @AuthApiPermission(apiCodes = "project:contractTemplate:delete")
     @Idempotent(key = "contractTemplate:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "合同模板", action = "删除模板", bizType = "CONTRACT_TEMPLATE")
     @DeleteMapping("/{id}")
@@ -96,7 +96,7 @@ public class ContractTemplateController {
      * @return 模板实体
      */
     @Operation(summary = "模板详情")
-    @PrePermission("project:contractTemplate:list")
+    @AuthApiPermission(apiCodes = "project:contractTemplate:list")
     @GetMapping("/{id}")
     public BaseResponse<ContractTemplateDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -113,7 +113,7 @@ public class ContractTemplateController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("project:contractTemplate:list")
+    @AuthApiPermission(apiCodes = "project:contractTemplate:list")
     @GetMapping("/page")
     public BaseResponse<Page<ContractTemplateDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -132,7 +132,7 @@ public class ContractTemplateController {
      * @return 模板列表
      */
     @Operation(summary = "按合同类型查询模板")
-    @PrePermission("project:contractTemplate:list")
+    @AuthApiPermission(apiCodes = "project:contractTemplate:list")
     @GetMapping("/listByType")
     public BaseResponse<List<ContractTemplateDO>> listByType(
             @RequestParam(required = false) String contractType,

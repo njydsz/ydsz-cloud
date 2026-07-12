@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.annotation.RequireReAuth;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -53,7 +53,7 @@ public class UserController {
      * @return 统一响应结果，包含分页数据（H13.1 修复：返回 UserVO 已脱敏）
      */
     @Operation(summary = "用户分页")
-    @PrePermission("auth:user:list")
+    @AuthApiPermission(apiCodes = "auth:user:list")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping
     public BaseResponse<Page<UserVO>> page(@Valid UserQueryDTO query) {
@@ -108,7 +108,7 @@ public class UserController {
      * @throws BizException 当用户名或密码为空时抛出
      */
     @Operation(summary = "创建用户")
-    @PrePermission("auth:user:create")
+    @AuthApiPermission(apiCodes = "auth:user:create")
     @OperationLog(module = "权限管理", action = "创建用户", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_7aa2293e}")
@@ -133,7 +133,7 @@ public class UserController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新用户")
-    @PrePermission("auth:user:update")
+    @AuthApiPermission(apiCodes = "auth:user:update")
     @OperationLog(module = "权限管理", action = "更新用户", bizType = "USER")
     @Idempotent(key = "user:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
@@ -153,7 +153,7 @@ public class UserController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除用户")
-    @PrePermission("auth:user:delete")
+    @AuthApiPermission(apiCodes = "auth:user:delete")
     @RequireReAuth(code = "USER_DELETE", name = "删除用户")
     @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
     @Idempotent(key = "user:delete", ttlSeconds = 5, message = "请勿重复提交")
@@ -171,7 +171,7 @@ public class UserController {
      * @return 统一响应结果
      */
     @Operation(summary = "重置密码")
-    @PrePermission("auth:user:resetPassword")
+    @AuthApiPermission(apiCodes = "auth:user:resetPassword")
     @RequireReAuth(code = "USER_RESET_PASSWORD", name = "重置用户密码")
     @OperationLog(module = "权限管理", action = "重置密码", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
@@ -192,7 +192,7 @@ public class UserController {
      * @return 统一响应结果
      */
     @Operation(summary = "启用/禁用用户")
-    @PrePermission("auth:user:toggle")
+    @AuthApiPermission(apiCodes = "auth:user:toggle")
     @OperationLog(module = "权限管理", action = "切换状态", bizType = "USER")
     @Idempotent(key = "user:toggleStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/status")
@@ -209,7 +209,7 @@ public class UserController {
      * @return 统一响应结果
      */
     @Operation(summary = "为用户分配角色")
-    @PrePermission("auth:user:assign")
+    @AuthApiPermission(apiCodes = "auth:user:assign")
     @OperationLog(module = "权限管理", action = "分配角色", bizType = "USER")
     @Idempotent(key = "user:assignRoles", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/roles")

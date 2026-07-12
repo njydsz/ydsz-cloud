@@ -2,7 +2,7 @@ package com.njydsz.pmis.finance.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
 import com.njydsz.pmis.finance.domain.dto.ExpenseCreateDTO;
@@ -50,7 +50,7 @@ public class ExpenseController {
      * @return 新建费用 ID
      */
     @Operation(summary = "创建费用")
-    @PrePermission("execution:expense:create")
+    @AuthApiPermission(apiCodes = "execution:expense:create")
     @Idempotent(key = "expense:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ExpenseCreateDTO dto) {
@@ -64,7 +64,7 @@ public class ExpenseController {
      * @return 空结果
      */
     @Operation(summary = "状态迁移")
-    @PrePermission("execution:expense:status")
+    @AuthApiPermission(apiCodes = "execution:expense:status")
     @Idempotent(key = "expense:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
@@ -79,7 +79,7 @@ public class ExpenseController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:expense:delete")
+    @AuthApiPermission(apiCodes = "execution:expense:delete")
     @Idempotent(key = "expense:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -94,7 +94,7 @@ public class ExpenseController {
      * @return 费用实体
      */
     @Operation(summary = "详情")
-    @PrePermission("execution:expense:list")
+    @AuthApiPermission(apiCodes = "execution:expense:list")
     @GetMapping("/{id}")
     public BaseResponse<ExpenseDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -113,7 +113,7 @@ public class ExpenseController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("execution:expense:list")
+    @AuthApiPermission(apiCodes = "execution:expense:list")
     @GetMapping("/page")
     public BaseResponse<Page<ExpenseDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,

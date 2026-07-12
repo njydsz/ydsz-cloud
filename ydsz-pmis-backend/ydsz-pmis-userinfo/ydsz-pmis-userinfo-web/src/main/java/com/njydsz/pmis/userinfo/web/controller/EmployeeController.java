@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeePageDTO;
@@ -53,7 +53,7 @@ public class EmployeeController {
      * @return 统一响应结果，包含新建员工 ID
      */
     @Operation(summary = "创建员工")
-    @PrePermission("org:employee:create")
+    @AuthApiPermission(apiCodes = "org:employee:create")
     @OperationLog(module = "员工管理", action = "创建员工", bizType = "EMPLOYEE")
     @Idempotent(key = "employee:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
@@ -69,7 +69,7 @@ public class EmployeeController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新员工")
-    @PrePermission("org:employee:update")
+    @AuthApiPermission(apiCodes = "org:employee:update")
     @OperationLog(module = "员工管理", action = "更新员工", bizType = "EMPLOYEE")
     @Idempotent(key = "employee:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
@@ -86,7 +86,7 @@ public class EmployeeController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除员工")
-    @PrePermission("org:employee:delete")
+    @AuthApiPermission(apiCodes = "org:employee:delete")
     @OperationLog(module = "员工管理", action = "删除员工", bizType = "EMPLOYEE")
     @Idempotent(key = "employee:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")

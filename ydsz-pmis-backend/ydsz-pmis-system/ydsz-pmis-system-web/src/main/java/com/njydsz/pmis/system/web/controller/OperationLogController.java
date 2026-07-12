@@ -6,7 +6,7 @@ import com.njydsz.pmis.system.domain.entity.audit.OperationLogDO;
 import com.njydsz.pmis.system.server.service.audit.OperationLogServiceImpl;
 import com.njydsz.pmis.system.server.util.DiffCalculator;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.entity.CursorPageResult;
@@ -59,7 +59,7 @@ public class OperationLogController {
      * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "分页查询")
-    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/page")
     public BaseResponse<PageResponse<OperationLogDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -94,7 +94,7 @@ public class OperationLogController {
      * @return 游标分页结果
      */
     @Operation(summary = "游标分页查询（深翻优化）")
-    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/cursorPage")
     public BaseResponse<CursorPageResult<OperationLogDO>> cursorPage(
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
@@ -120,7 +120,7 @@ public class OperationLogController {
      * @return 统一响应结果，包含操作日志列表
      */
     @Operation(summary = "按用户查询")
-    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/byUser")
     public BaseResponse<List<OperationLogDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,
@@ -137,7 +137,7 @@ public class OperationLogController {
      * @return 统一响应结果，包含操作日志列表
      */
     @Operation(summary = "按业务查询")
-    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/byBiz")
     public BaseResponse<List<OperationLogDO>> byBiz(
             @Parameter(description = "业务类型") @RequestParam String bizType,
@@ -153,7 +153,7 @@ public class OperationLogController {
      * @return 统一响应结果，包含删除条数
      */
     @Operation(summary = "清理 N 天前日志")
-    @PrePermission(PermissionCodes.AUDIT_LOG_CLEAN)
+    @AuthApiPermission(apiCodes = PermissionCodes.AUDIT_LOG_CLEAN)
     @OperationLog(module = "操作日志", action = "清理历史日志", bizType = "AUDIT_LOG", saveParams = true)
     @IdempotentExempt("审计清理接口，无需幂等")
     @PostMapping("/clean")
@@ -169,7 +169,7 @@ public class OperationLogController {
      * @return 字段差异列表
      */
     @Operation(summary = "查询变更差异")
-    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/{id}/diff")
     public List<DiffCalculator.FieldDiff> getDiff(
             @Parameter(description = "操作日志ID") @PathVariable String id) {

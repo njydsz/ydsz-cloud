@@ -1,7 +1,7 @@
 package com.njydsz.pmis.finance.web.controller;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.ProfitSnapshotDTO;
 import com.njydsz.pmis.finance.domain.entity.ProfitSnapshotDO;
@@ -47,7 +47,7 @@ public class ProfitController {
      * @return 快照 ID
      */
     @Operation(summary = "生成/更新项目月度利润快照")
-    @PrePermission("execution:profit:snapshot")
+    @AuthApiPermission(apiCodes = "execution:profit:snapshot")
     @Idempotent(key = "profit:snapshot", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/snapshot")
     public BaseResponse<String> snapshot(@Valid @RequestBody ProfitSnapshotDTO dto) {
@@ -62,7 +62,7 @@ public class ProfitController {
      * @return 利润快照实体
      */
     @Operation(summary = "查询项目某月快照")
-    @PrePermission("execution:profit:list")
+    @AuthApiPermission(apiCodes = "execution:profit:list")
     @GetMapping("/snapshot")
     public BaseResponse<ProfitSnapshotDO> get(@RequestParam String initiationId, @RequestParam String period) {
         return BaseResponse.ok(service.getByInitiationAndPeriod(initiationId, period));
@@ -75,7 +75,7 @@ public class ProfitController {
      * @return 快照列表
      */
     @Operation(summary = "项目所有快照")
-    @PrePermission("execution:profit:list")
+    @AuthApiPermission(apiCodes = "execution:profit:list")
     @GetMapping("/snapshots/{initiationId}")
     public BaseResponse<List<ProfitSnapshotDO>> list(@PathVariable String initiationId) {
         return BaseResponse.ok(service.listByInitiation(initiationId));
@@ -88,7 +88,7 @@ public class ProfitController {
      * @return 趋势数据列表
      */
     @Operation(summary = "趋势")
-    @PrePermission("execution:profit:list")
+    @AuthApiPermission(apiCodes = "execution:profit:list")
     @GetMapping("/trend/{initiationId}")
     public BaseResponse<List<Map<String, Object>>> trend(@PathVariable String initiationId) {
         return BaseResponse.ok(service.trendByPeriod(initiationId));
@@ -102,7 +102,7 @@ public class ProfitController {
      * @return 健康度评分
      */
     @Operation(summary = "项目健康度评分")
-    @PrePermission("execution:profit:list")
+    @AuthApiPermission(apiCodes = "execution:profit:list")
     @GetMapping("/healthScore")
     public BaseResponse<Integer> healthScore(@RequestParam String initiationId, @RequestParam String period) {
         return BaseResponse.ok(service.healthScore(initiationId, period));

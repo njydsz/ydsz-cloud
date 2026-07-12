@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.template.TemplatePreviewDTO;
@@ -52,7 +52,7 @@ public class TemplateVersionController {
      * @return 统一响应结果，包含版本列表
      */
     @Operation(summary = "查询模板版本历史")
-    @PrePermission(PermissionCodes.NOTIF_TEMPLATE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_VIEW)
     @GetMapping("/list/{templateCode}")
     public BaseResponse<List<MsgTemplateVersionDO>> listVersions(@PathVariable String templateCode) {
         return BaseResponse.ok(templateVersionService.listVersions(templateCode));
@@ -66,7 +66,7 @@ public class TemplateVersionController {
      * @return 统一响应结果，包含新版本 ID
      */
     @Operation(summary = "回滚到指定版本")
-    @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "templateVersion:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
     public BaseResponse<String> rollback(@RequestParam String templateCode, @RequestParam int version) {
@@ -80,7 +80,7 @@ public class TemplateVersionController {
      * @return 统一响应结果，包含渲染后的内容
      */
     @Operation(summary = "预览模板渲染结果")
-    @PrePermission(PermissionCodes.NOTIF_TEMPLATE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_VIEW)
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/preview")
     public BaseResponse<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
@@ -97,7 +97,7 @@ public class TemplateVersionController {
      * @return 统一响应结果，包含发送结果
      */
     @Operation(summary = "试发模板（向测试接收人发送）")
-    @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "templateVersion:testSend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/testSend")
     public BaseResponse<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {

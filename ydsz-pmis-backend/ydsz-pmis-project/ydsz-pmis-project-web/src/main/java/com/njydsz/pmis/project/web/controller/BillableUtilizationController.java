@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.resource;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.server.service.BillableUtilizationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,7 +46,7 @@ public class BillableUtilizationController {
      * @return 员工利用率明细列表
      */
     @Operation(summary = "按月聚合所有员工利用率明细")
-    @PrePermission("execution:utilization:view")
+    @AuthApiPermission(apiCodes = "execution:utilization:view")
     @GetMapping("/aggregate")
     public BaseResponse<List<Map<String, Object>>> aggregate(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -63,7 +63,7 @@ public class BillableUtilizationController {
      * @return 个人利用率汇总数据
      */
     @Operation(summary = "个人利用率（from-to 汇总）")
-    @PrePermission("execution:utilization:view")
+    @AuthApiPermission(apiCodes = "execution:utilization:view")
     @GetMapping("/personal")
     public BaseResponse<Map<String, Object>> personal(
             @RequestParam String employeeId,
@@ -81,7 +81,7 @@ public class BillableUtilizationController {
      * @return 排行榜列表
      */
     @Operation(summary = "排行榜（按 utilizationPct 倒序）")
-    @PrePermission("execution:utilization:view")
+    @AuthApiPermission(apiCodes = "execution:utilization:view")
     @GetMapping("/rank")
     public BaseResponse<List<Map<String, Object>>> rank(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -98,7 +98,7 @@ public class BillableUtilizationController {
      * @return 整体利用率均值数据
      */
     @Operation(summary = "公司/团队整体均值")
-    @PrePermission("execution:utilization:view")
+    @AuthApiPermission(apiCodes = "execution:utilization:view")
     @GetMapping("/overall")
     public BaseResponse<Map<String, Object>> overall(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -114,7 +114,7 @@ public class BillableUtilizationController {
      * @return 预警员工列表
      */
     @Operation(summary = "扫描预警员工（WARN/CRITICAL）")
-    @PrePermission("execution:utilization:view")
+    @AuthApiPermission(apiCodes = "execution:utilization:view")
     @GetMapping("/alerts")
     public BaseResponse<List<Map<String, Object>>> alerts(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -130,7 +130,7 @@ public class BillableUtilizationController {
      * @return 利用率与考核等级数据
      */
     @Operation(summary = "纯计算评估：给 total/billable 小时数返回利用率与考核等级")
-    @PrePermission("execution:utilization:view")
+    @AuthApiPermission(apiCodes = "execution:utilization:view")
     @GetMapping("/evaluate")
     public BaseResponse<Map<String, Object>> evaluate(
             @RequestParam double totalHours,
@@ -146,7 +146,7 @@ public class BillableUtilizationController {
      * @return 重算结果数据
      */
     @Operation(summary = "触发快照重算（Cronjob 调用 / 运维手工）")
-    @PrePermission("execution:utilization:recompute")
+    @AuthApiPermission(apiCodes = "execution:utilization:recompute")
     @Idempotent(key = "billableUtilization:recompute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/recompute")
     public BaseResponse<Map<String, Object>> recompute(
@@ -162,7 +162,7 @@ public class BillableUtilizationController {
      * @return 快照均值数据
      */
     @Operation(summary = "读取最新一期快照均值（驾驶舱取数，快照为空时实时聚合兜底）")
-    @PrePermission("execution:utilization:view")
+    @AuthApiPermission(apiCodes = "execution:utilization:view")
     @GetMapping("/snapshotAverage")
     public BaseResponse<Map<String, Object>> snapshotAverage(
             @RequestParam(required = false) String period) {

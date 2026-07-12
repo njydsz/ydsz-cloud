@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.config;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.entity.PageQuery;
@@ -47,7 +47,7 @@ public class RouteRuleController {
      * @return 统一响应结果，包含路由规则详情
      */
     @Operation(summary = "创建路由规则")
-    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
     @Idempotent(key = "routeRule:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
@@ -62,7 +62,7 @@ public class RouteRuleController {
      * @return 统一响应结果，包含更新后规则详情
      */
     @Operation(summary = "更新路由规则")
-    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
     @Idempotent(key = "routeRule:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
@@ -76,7 +76,7 @@ public class RouteRuleController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除路由规则")
-    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
     @Idempotent(key = "routeRule:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -91,7 +91,7 @@ public class RouteRuleController {
      * @return 统一响应结果，包含路由规则详情
      */
     @Operation(summary = "路由规则详情")
-    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
     @GetMapping("/{id}")
     public BaseResponse<MsgRouteRuleDO> getById(@PathVariable String id) {
         return BaseResponse.ok(routeRuleService.getById(id));
@@ -104,7 +104,7 @@ public class RouteRuleController {
      * @return 统一响应结果，包含路由规则分页数据
      */
     @Operation(summary = "路由规则分页")
-    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
     public BaseResponse<Page<MsgRouteRuleDO>> page(PageQuery query) {
         return BaseResponse.ok(routeRuleService.page(query));
@@ -116,7 +116,7 @@ public class RouteRuleController {
      * @return 统一响应结果，包含启用的路由规则列表
      */
     @Operation(summary = "查询启用的路由规则")
-    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/enabled")
     public BaseResponse<List<MsgRouteRuleDO>> listEnabled() {
         return BaseResponse.ok(routeRuleService.listEnabled());

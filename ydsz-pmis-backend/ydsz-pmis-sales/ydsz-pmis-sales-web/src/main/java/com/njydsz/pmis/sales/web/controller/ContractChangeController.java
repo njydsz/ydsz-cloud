@@ -2,7 +2,7 @@ package com.njydsz.pmis.sales.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.ContractChangeDTO;
 import com.njydsz.pmis.sales.domain.entity.ContractChangeDO;
@@ -48,7 +48,7 @@ public class ContractChangeController {
      * @return 变更记录 ID
      */
     @Operation(summary = "提交变更申请")
-    @PrePermission("project:contractChange:create")
+    @AuthApiPermission(apiCodes = "project:contractChange:create")
     @Idempotent(key = "contractChange:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> apply(@Valid @RequestBody ContractChangeDTO dto) {
@@ -62,7 +62,7 @@ public class ContractChangeController {
      * @return 空结果
      */
     @Operation(summary = "提交审批")
-    @PrePermission("project:contractChange:approve")
+    @AuthApiPermission(apiCodes = "project:contractChange:approve")
     @Idempotent(key = "contractChange:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
     public BaseResponse<Void> submit(@PathVariable String id) {
@@ -79,7 +79,7 @@ public class ContractChangeController {
      * @return 空结果
      */
     @Operation(summary = "审批通过")
-    @PrePermission("project:contractChange:approve")
+    @AuthApiPermission(apiCodes = "project:contractChange:approve")
     @Idempotent(key = "contractChange:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/approve")
     public BaseResponse<Void> approve(@PathVariable String id,
@@ -99,7 +99,7 @@ public class ContractChangeController {
      * @return 空结果
      */
     @Operation(summary = "驳回")
-    @PrePermission("project:contractChange:approve")
+    @AuthApiPermission(apiCodes = "project:contractChange:approve")
     @Idempotent(key = "contractChange:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reject")
     public BaseResponse<Void> reject(@PathVariable String id,
@@ -117,7 +117,7 @@ public class ContractChangeController {
      * @return 变更实体
      */
     @Operation(summary = "变更详情")
-    @PrePermission("project:contractChange:list")
+    @AuthApiPermission(apiCodes = "project:contractChange:list")
     @GetMapping("/{id}")
     public BaseResponse<ContractChangeDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -133,7 +133,7 @@ public class ContractChangeController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("project:contractChange:list")
+    @AuthApiPermission(apiCodes = "project:contractChange:list")
     @GetMapping("/page")
     public BaseResponse<Page<ContractChangeDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -150,7 +150,7 @@ public class ContractChangeController {
      * @return 变更记录列表
      */
     @Operation(summary = "按合同列出")
-    @PrePermission("project:contractChange:list")
+    @AuthApiPermission(apiCodes = "project:contractChange:list")
     @GetMapping("/list")
     public BaseResponse<List<ContractChangeDO>> listByContract(@RequestParam String contractId) {
         return BaseResponse.ok(service.listByContract(contractId));

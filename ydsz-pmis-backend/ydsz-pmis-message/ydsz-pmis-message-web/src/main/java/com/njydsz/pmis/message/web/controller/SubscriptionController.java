@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.web.controller.config;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.config.SubscriptionUpsertDTO;
@@ -44,7 +44,7 @@ public class SubscriptionController {
      * @return 统一响应结果，包含订阅记录
      */
     @Operation(summary = "新增/更新订阅")
-    @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
     @Idempotent(key = "subscription:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgSubscriptionDO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
@@ -58,7 +58,7 @@ public class SubscriptionController {
      * @return 统一响应结果，包含订阅列表
      */
     @Operation(summary = "查询用户所有订阅")
-    @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
     @GetMapping("/user/{userId}")
     public BaseResponse<List<MsgSubscriptionDO>> listByUser(@PathVariable String userId) {
         return BaseResponse.ok(subscriptionService.listByUser(userId));
@@ -72,7 +72,7 @@ public class SubscriptionController {
      * @return 统一响应结果，包含订阅列表
      */
     @Operation(summary = "按主题+通道查询订阅")
-    @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
     @GetMapping("/topic/{topicCode}/{channel}")
     public BaseResponse<List<MsgSubscriptionDO>> listByTopic(@PathVariable String topicCode,
                                                        @PathVariable String channel) {
@@ -88,7 +88,7 @@ public class SubscriptionController {
      * @return 统一响应结果
      */
     @Operation(summary = "退订")
-    @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_DELETE)
     @Idempotent(key = "subscription:unsubscribe", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/unsubscribe")
     public BaseResponse<Void> unsubscribe(@RequestParam String userId,

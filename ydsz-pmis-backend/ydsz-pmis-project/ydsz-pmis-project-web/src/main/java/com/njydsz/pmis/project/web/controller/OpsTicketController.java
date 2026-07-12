@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.web.controller.aftersales;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.OpsTicketAssignDTO;
@@ -44,7 +44,7 @@ public class OpsTicketController {
     private final OpsTicketService service;
 
     @Operation(summary = "创建工单")
-    @PrePermission("aftersales:opsTicket:create")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:create")
     @Idempotent(key = "opsTicket:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody OpsTicketCreateDTO dto) {
@@ -52,7 +52,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "派单")
-    @PrePermission("aftersales:opsTicket:assign")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:assign")
     @Idempotent(key = "opsTicket:update", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/assign")
     public BaseResponse<Void> assign(@Valid @RequestBody OpsTicketAssignDTO dto) {
@@ -61,7 +61,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "状态变更")
-    @PrePermission("aftersales:opsTicket:status")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:status")
     @Idempotent(key = "opsTicket:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody OpsTicketStatusDTO dto) {
@@ -70,7 +70,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "关闭工单并评价")
-    @PrePermission("aftersales:opsTicket:evaluate")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:evaluate")
     @Idempotent(key = "opsTicket:closeAndEvaluate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/closeEvaluate")
     public BaseResponse<Void> closeAndEvaluate(@Valid @RequestBody OpsTicketStatusDTO dto) {
@@ -79,7 +79,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "SLA 扫描")
-    @PrePermission("aftersales:opsTicket:scan")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:scan")
     @Idempotent(key = "opsTicket:scanSla", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/sla")
     public BaseResponse<Integer> scanSla() {
@@ -87,7 +87,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "工单分页")
-    @PrePermission("aftersales:opsTicket:list")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:list")
     @GetMapping("/page")
     public BaseResponse<PageResponse<OpsTicketDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -102,28 +102,28 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "SLA 达成率")
-    @PrePermission("aftersales:opsTicket:list")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:list")
     @GetMapping("/slaSummary")
     public BaseResponse<List<Map<String, Object>>> slaSummary() {
         return BaseResponse.ok(service.slaSummary());
     }
 
     @Operation(summary = "按状态聚合")
-    @PrePermission("aftersales:opsTicket:list")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:list")
     @GetMapping("/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) String initiationId) {
         return BaseResponse.ok(service.aggregateByStatus(initiationId));
     }
 
     @Operation(summary = "工单详情")
-    @PrePermission("aftersales:opsTicket:list")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:list")
     @GetMapping("/{id}")
     public BaseResponse<OpsTicketDO> getById(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
     }
 
     @Operation(summary = "按项目查询工单")
-    @PrePermission("aftersales:opsTicket:list")
+    @AuthApiPermission(apiCodes = "aftersales:opsTicket:list")
     @GetMapping("/byInitiation/{initiationId}")
     public BaseResponse<List<OpsTicketDO>> listByInitiation(@PathVariable String initiationId) {
         return BaseResponse.ok(service.listByInitiation(initiationId));

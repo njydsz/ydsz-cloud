@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.core;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.MessageRequest;
@@ -62,7 +62,7 @@ public class MessageController {
      * @return 发送结果
      */
     @Operation(summary = "发送消息(基于共享请求)")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public BaseResponse<MessageResult> send(@Valid @RequestBody MessageRequest request) {
@@ -76,7 +76,7 @@ public class MessageController {
      * @return 发送结果
      */
     @Operation(summary = "直接发送消息(本模块 DTO)")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendDirect", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendDirect")
     public BaseResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
@@ -91,7 +91,7 @@ public class MessageController {
      * @return 含 messageId 的发送结果
      */
     @Operation(summary = "异步发送消息(投递 RocketMQ)")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendAsync", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendAsync")
     public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
@@ -123,7 +123,7 @@ public class MessageController {
      * @return 日志分页结果
      */
     @Operation(summary = "发送日志分页")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")
     public BaseResponse<Page<MsgLogDO>> pageLog(MessageLogQueryDTO query) {
         return BaseResponse.ok(messageService.pageLog(query));
@@ -139,7 +139,7 @@ public class MessageController {
      * @return 发送结果
      */
     @Operation(summary = "事务消息发送(RocketMQ 半消息)")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendTransactionally", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendTransactional")
     public BaseResponse<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
@@ -154,7 +154,7 @@ public class MessageController {
      * @return 批量发送结果
      */
     @Operation(summary = "批量发送消息(限制 100 条/批)")
-    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:batchSend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batchSend")
     public BaseResponse<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
@@ -174,7 +174,7 @@ public class MessageController {
      * @return 分页日志
      */
     @Operation(summary = "查询批次发送进度")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/batch/{batchId}/progress")
     public BaseResponse<Page<MsgLogDO>> batchProgress(@PathVariable String batchId,
                                                 @RequestParam(defaultValue = "1") long page,

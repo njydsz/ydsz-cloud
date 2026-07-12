@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.notification;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -60,7 +60,7 @@ public class FlowCommentController {
     @Idempotent(key = "flowComment:addComment", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "发表评论/回复")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
         String userId = AuthContext.getUserId();
         String userName = AuthContext.getUsername();
@@ -115,7 +115,7 @@ public class FlowCommentController {
     @Idempotent(key = "flowComment:deleteComment", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{commentId}")
     @Operation(summary = "删除评论（仅本人）")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Boolean> deleteComment(@PathVariable String commentId) {
         String userId = AuthContext.getUserId();
         return BaseResponse.ok(commentService.deleteComment(commentId, userId));

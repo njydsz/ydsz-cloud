@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.web.controller.instance;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -192,7 +192,7 @@ public class FlowMobileController {
      */
     @GetMapping("/task/{taskId}")
     @Operation(summary = "移动端任务详情")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_VIEW)
     public BaseResponse<MobileTaskDetailVO> taskDetail(@PathVariable String taskId) {
         Map<String, Object> detail = workflowFacade.getTaskDetail(taskId);
         if (detail == null || detail.isEmpty()) {
@@ -213,7 +213,7 @@ public class FlowMobileController {
     @Idempotent(key = "flowMobile:quickPass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/quickPass")
     @Operation(summary = "移动端快速通过")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> quickPass(@PathVariable String taskId,
                                     @RequestParam(required = false) String comment) {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -235,7 +235,7 @@ public class FlowMobileController {
     @Idempotent(key = "flowMobile:quickReject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/quickReject")
     @Operation(summary = "移动端快速驳回")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> quickReject(@PathVariable String taskId,
                                       @RequestParam(required = false) String comment) {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -257,7 +257,7 @@ public class FlowMobileController {
     @Idempotent(key = "flowMobile:batchPass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchPass")
     @Operation(summary = "移动端批量通过")
-    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<Void> batchPass(@RequestParam List<String> taskIds,
                                     @RequestParam(required = false) String comment) {
         workflowFacade.batchPassTasks(taskIds, AuthContext.getUserId(), comment);

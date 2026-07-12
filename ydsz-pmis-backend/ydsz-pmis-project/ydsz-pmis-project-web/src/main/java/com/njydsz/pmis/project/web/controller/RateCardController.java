@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.resource;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
 import com.njydsz.pmis.project.domain.entity.RateCardDO;
@@ -53,7 +53,7 @@ public class RateCardController {
      * @return 新建费率 ID
      */
     @Operation(summary = "创建对外报价费率")
-    @PrePermission("execution:rateCard:create")
+    @AuthApiPermission(apiCodes = "execution:rateCard:create")
     @Idempotent(key = "rateCard:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody RateCardCreateDTO dto) {
@@ -68,7 +68,7 @@ public class RateCardController {
      * @return 空结果
      */
     @Operation(summary = "更新")
-    @PrePermission("execution:rateCard:update")
+    @AuthApiPermission(apiCodes = "execution:rateCard:update")
     @Idempotent(key = "rateCard:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody RateCardCreateDTO dto) {
@@ -83,7 +83,7 @@ public class RateCardController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:rateCard:delete")
+    @AuthApiPermission(apiCodes = "execution:rateCard:delete")
     @Idempotent(key = "rateCard:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -98,7 +98,7 @@ public class RateCardController {
      * @return 费率实体
      */
     @Operation(summary = "详情")
-    @PrePermission("execution:rate:list")
+    @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/{id}")
     public BaseResponse<RateCardDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -114,7 +114,7 @@ public class RateCardController {
      * @return 命中的费率实体
      */
     @Operation(summary = "命中有效费率（职级+项目类型+客户等级+日期）")
-    @PrePermission("execution:rate:list")
+    @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/match")
     public BaseResponse<RateCardDO> match(
             @RequestParam String levelCode,
@@ -131,7 +131,7 @@ public class RateCardController {
      * @return 费率列表
      */
     @Operation(summary = "按职级查询")
-    @PrePermission("execution:rate:list")
+    @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/byLevel")
     public BaseResponse<List<RateCardDO>> listByLevel(@RequestParam String levelCode) {
         return BaseResponse.ok(service.listByLevel(levelCode));
@@ -147,7 +147,7 @@ public class RateCardController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("execution:rate:list")
+    @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/page")
     public BaseResponse<Page<RateCardDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,

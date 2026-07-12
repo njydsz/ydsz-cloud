@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.execution;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.WbsTaskCreateDTO;
 import com.njydsz.pmis.project.domain.dto.WbsTaskStatusDTO;
@@ -55,7 +55,7 @@ public class WbsTaskController {
      * @return 新建任务 ID
      */
     @Operation(summary = "创建 WBS 任务")
-    @PrePermission("execution:wbs:create")
+    @AuthApiPermission(apiCodes = "execution:wbs:create")
     @Idempotent(key = "wbsTask:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
@@ -69,7 +69,7 @@ public class WbsTaskController {
      * @return 空结果
      */
     @Operation(summary = "变更任务状态")
-    @PrePermission("execution:wbs:status")
+    @AuthApiPermission(apiCodes = "execution:wbs:status")
     @Idempotent(key = "wbsTask:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
@@ -86,7 +86,7 @@ public class WbsTaskController {
      * @return 空结果
      */
     @Operation(summary = "更新任务进度")
-    @PrePermission("execution:wbs:update")
+    @AuthApiPermission(apiCodes = "execution:wbs:update")
     @Idempotent(key = "wbsTask:updateProgress", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/progress")
     public BaseResponse<Void> updateProgress(@PathVariable String id,
@@ -103,7 +103,7 @@ public class WbsTaskController {
      * @return 空结果
      */
     @Operation(summary = "删除任务")
-    @PrePermission("execution:wbs:delete")
+    @AuthApiPermission(apiCodes = "execution:wbs:delete")
     @Idempotent(key = "wbsTask:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "WBS任务", action = "删除任务", bizType = "WBS_TASK")
     @DeleteMapping("/{id}")
@@ -119,7 +119,7 @@ public class WbsTaskController {
      * @return 任务实体
      */
     @Operation(summary = "任务详情")
-    @PrePermission("execution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/{id}")
     public BaseResponse<WbsTaskDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -138,7 +138,7 @@ public class WbsTaskController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("execution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/page")
     public BaseResponse<Page<WbsTaskDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -158,7 +158,7 @@ public class WbsTaskController {
      * @return 任务列表
      */
     @Operation(summary = "项目下的任务列表")
-    @PrePermission("execution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/initiation/{initiationId}")
     public BaseResponse<List<WbsTaskDO>> listByInitiation(@PathVariable String initiationId) {
         return BaseResponse.ok(service.listByInitiation(initiationId));
@@ -171,7 +171,7 @@ public class WbsTaskController {
      * @return 里程碑任务列表
      */
     @Operation(summary = "项目里程碑")
-    @PrePermission("execution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/milestones")
     public BaseResponse<List<WbsTaskDO>> listMilestones(@PathVariable String initiationId) {
         return BaseResponse.ok(service.listMilestones(initiationId));
@@ -184,7 +184,7 @@ public class WbsTaskController {
      * @return 整体进度百分比（0-100）
      */
     @Operation(summary = "项目整体进度（按工时加权）")
-    @PrePermission("execution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/overallProgress")
     public BaseResponse<BigDecimal> overallProgress(@PathVariable String initiationId) {
         return BaseResponse.ok(service.calcOverallProgress(initiationId));
@@ -197,7 +197,7 @@ public class WbsTaskController {
      * @return 各状态任务数量列表
      */
     @Operation(summary = "状态分布")
-    @PrePermission("execution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/aggregate/status")
     public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@RequestParam String initiationId) {
         return BaseResponse.ok(service.aggregateByStatus(initiationId));
@@ -220,7 +220,7 @@ public class WbsTaskController {
      * @return 甘特图数据结构
      */
     @Operation(summary = "甘特图数据（P0-1）")
-    @PrePermission("execution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/gantt/{initiationId}")
     public BaseResponse<List<Map<String, Object>>> ganttData(@PathVariable String initiationId) {
         return BaseResponse.ok(service.getGanttData(initiationId));

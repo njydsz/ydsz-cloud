@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -55,7 +55,7 @@ public class FileController {
      * @throws Exception 上传过程中发生异常
      */
     @Operation(summary = "上传文件")
-    @PrePermission(PermissionCodes.FILE_STORAGE_UPLOAD)
+    @AuthApiPermission(apiCodes = PermissionCodes.FILE_STORAGE_UPLOAD)
     @OperationLog(module = "文件存储", action = "上传文件", bizType = "FILE")
     @Idempotent(key = "file:upload", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/upload")
@@ -82,7 +82,7 @@ public class FileController {
      * @throws Exception 删除过程中发生异常
      */
     @Operation(summary = "删除文件")
-    @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "删除文件", bizType = "FILE")
     @Idempotent(key = "file:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -100,7 +100,7 @@ public class FileController {
      * @throws Exception 删除过程中发生异常
      */
     @Operation(summary = "批量删除")
-    @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "批量删除文件", bizType = "FILE")
     @Idempotent(key = "file:deleteBatch", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/batch")

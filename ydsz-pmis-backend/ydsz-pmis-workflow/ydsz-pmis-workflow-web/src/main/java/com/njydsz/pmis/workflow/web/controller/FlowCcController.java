@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.web.controller.notification;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -45,7 +45,7 @@ public class FlowCcController {
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/cc/page")
-    @PrePermission(PermissionCodes.WORKFLOW_CC_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
     public BaseResponse<PageResponse<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();

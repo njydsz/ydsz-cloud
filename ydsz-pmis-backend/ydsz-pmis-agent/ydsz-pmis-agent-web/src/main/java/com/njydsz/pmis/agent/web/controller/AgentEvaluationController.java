@@ -9,7 +9,7 @@ import com.njydsz.pmis.agent.server.engine.eval.AgentEvaluationFramework;
 import com.njydsz.pmis.agent.server.engine.eval.EvaluationCase;
 import com.njydsz.pmis.agent.server.engine.eval.EvaluationReport;
 import com.njydsz.pmis.agent.server.engine.eval.EvaluableAgent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,7 +54,7 @@ public class AgentEvaluationController {
      * @return 评测报告
      */
     @Operation(summary = "执行评测")
-    @PrePermission("agent:task:run")
+    @AuthApiPermission(apiCodes = "agent:task:run")
     @Idempotent(key = "agentEvaluation:runEvaluation", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/run")
     public BaseResponse<EvaluationReport> runEvaluation(@RequestBody EvaluationRunRequest req) {
@@ -111,7 +111,7 @@ public class AgentEvaluationController {
      * @return 评估器类型枚举列表
      */
     @Operation(summary = "评估器类型列表")
-    @PrePermission("agent:task:list")
+    @AuthApiPermission(apiCodes = "agent:task:list")
     @GetMapping("/evaluators")
     public BaseResponse<List<Map<String, String>>> listEvaluators() {
         List<Map<String, String>> evaluators = new ArrayList<>();

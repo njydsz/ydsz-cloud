@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.resource;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.RateInternalCreateDTO;
 import com.njydsz.pmis.project.domain.entity.RateInternalDO;
@@ -53,7 +53,7 @@ public class RateInternalController {
      * @return 新建费率 ID
      */
     @Operation(summary = "创建对内成本费率")
-    @PrePermission("execution:rateInternal:create")
+    @AuthApiPermission(apiCodes = "execution:rateInternal:create")
     @Idempotent(key = "rateInternal:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody RateInternalCreateDTO dto) {
@@ -68,7 +68,7 @@ public class RateInternalController {
      * @return 空结果
      */
     @Operation(summary = "更新")
-    @PrePermission("execution:rateInternal:update")
+    @AuthApiPermission(apiCodes = "execution:rateInternal:update")
     @Idempotent(key = "rateInternal:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody RateInternalCreateDTO dto) {
@@ -83,7 +83,7 @@ public class RateInternalController {
      * @return 空结果
      */
     @Operation(summary = "删除")
-    @PrePermission("execution:rateInternal:delete")
+    @AuthApiPermission(apiCodes = "execution:rateInternal:delete")
     @Idempotent(key = "rateInternal:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -98,7 +98,7 @@ public class RateInternalController {
      * @return 费率实体
      */
     @Operation(summary = "详情")
-    @PrePermission("execution:rate:list")
+    @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/{id}")
     public BaseResponse<RateInternalDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -113,7 +113,7 @@ public class RateInternalController {
      * @return 命中的费率实体
      */
     @Operation(summary = "命中有效成本费率（职级+部门+日期）")
-    @PrePermission("execution:rate:list")
+    @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/match")
     public BaseResponse<RateInternalDO> match(
             @RequestParam String levelCode,
@@ -130,7 +130,7 @@ public class RateInternalController {
      * @return 费率列表
      */
     @Operation(summary = "按职级+部门查询")
-    @PrePermission("execution:rate:list")
+    @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/byLevelDept")
     public BaseResponse<List<RateInternalDO>> listByLevelAndDept(
             @RequestParam String levelCode,
@@ -149,7 +149,7 @@ public class RateInternalController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @PrePermission("execution:rate:list")
+    @AuthApiPermission(apiCodes = "execution:rate:list")
     @GetMapping("/page")
     public BaseResponse<Page<RateInternalDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,

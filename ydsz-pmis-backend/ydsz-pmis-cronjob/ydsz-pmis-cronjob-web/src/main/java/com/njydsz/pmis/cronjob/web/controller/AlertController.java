@@ -3,7 +3,7 @@ package com.njydsz.pmis.cronjob.web.controller.alert;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.dto.alert.AlertRuleSaveDTO;
@@ -44,7 +44,7 @@ public class AlertController {
      * @return 统一响应结果，包含新增规则 ID
      */
     @Operation(summary = "创建告警规则")
-    @PrePermission(PermissionCodes.CRONJOB_ALERT_CREATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_CREATE)
     @OperationLog(module = "任务调度", action = "创建告警规则", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:createRule", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rule")
@@ -60,7 +60,7 @@ public class AlertController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新告警规则")
-    @PrePermission(PermissionCodes.CRONJOB_ALERT_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_UPDATE)
     @OperationLog(module = "任务调度", action = "更新告警规则", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:updateRule", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/rule/{id}")
@@ -76,7 +76,7 @@ public class AlertController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除告警规则")
-    @PrePermission(PermissionCodes.CRONJOB_ALERT_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_DELETE)
     @OperationLog(module = "任务调度", action = "删除告警规则", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:deleteRule", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/rule/{id}")
@@ -92,7 +92,7 @@ public class AlertController {
      * @return 统一响应结果，包含告警规则详情
      */
     @Operation(summary = "查询告警规则详情")
-    @PrePermission(PermissionCodes.CRONJOB_ALERT_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rule/{id}")
     public BaseResponse<JobAlertRuleDO> getRuleById(@PathVariable String id) {
         return BaseResponse.ok(alertService.getRuleById(id));
@@ -104,7 +104,7 @@ public class AlertController {
      * @return 统一响应结果，包含告警规则列表
      */
     @Operation(summary = "查询全部告警规则")
-    @PrePermission(PermissionCodes.CRONJOB_ALERT_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rules")
     public BaseResponse<List<JobAlertRuleDO>> listRules() {
         return BaseResponse.ok(alertService.listRules());
@@ -118,7 +118,7 @@ public class AlertController {
      * @return 统一响应结果
      */
     @Operation(summary = "启用/禁用告警规则")
-    @PrePermission(PermissionCodes.CRONJOB_ALERT_UPDATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_UPDATE)
     @OperationLog(module = "任务调度", action = "切换告警规则启用状态", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:toggleRule", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/rule/{id}/toggle")
@@ -135,7 +135,7 @@ public class AlertController {
      * @return 统一响应结果，包含告警日志列表
      */
     @Operation(summary = "查询任务告警历史")
-    @PrePermission(PermissionCodes.CRONJOB_ALERT_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/logs/{jobId}")
     public BaseResponse<List<JobAlertLogDO>> queryAlertLogs(
             @PathVariable String jobId,

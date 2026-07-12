@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdService;
 import com.njydsz.pmis.literule.server.adaptive.ThresholdAnalysis;
@@ -237,7 +237,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    @PrePermission("execution:rule:save")
+    @AuthApiPermission(apiCodes = "execution:rule:save")
     public BaseResponse<RuleDefinition> save(@RequestBody RuleDefinition definition,
                                         @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator,
                                         @RequestParam(value = "changeDesc", defaultValue = "API 更新") String changeDesc) {
@@ -254,7 +254,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/toggle")
-    @PrePermission("execution:rule:toggle")
+    @AuthApiPermission(apiCodes = "execution:rule:toggle")
     public BaseResponse<Void> toggle(@PathVariable String ruleCode,
                                 @RequestParam boolean enabled,
                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -694,7 +694,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/status")
-    @PrePermission("execution:rule:status")
+    @AuthApiPermission(apiCodes = "execution:rule:status")
     public BaseResponse<RuleDefinition> changeStatus(@PathVariable String ruleCode,
                                                @Valid @RequestBody RuleStatusChangeDTO dto,
                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -728,7 +728,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/approve")
-    @PrePermission("execution:rule:approve")
+    @AuthApiPermission(apiCodes = "execution:rule:approve")
     public BaseResponse<RuleDefinition> approve(@PathVariable String ruleCode,
                                            @Valid @RequestBody RuleApproveDTO dto,
                                            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -770,7 +770,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/reject")
-    @PrePermission("execution:rule:approve")
+    @AuthApiPermission(apiCodes = "execution:rule:approve")
     public BaseResponse<RuleDefinition> reject(@PathVariable String ruleCode,
                                           @Valid @RequestBody RuleRejectDTO dto,
                                           @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -824,7 +824,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:submitReview", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/submitReview")
-    @PrePermission("execution:rule:save")
+    @AuthApiPermission(apiCodes = "execution:rule:save")
     @OperationLog(module = "规则引擎", action = "提交审核", bizType = "RULE")
     public BaseResponse<ApprovalRecord> submitReview(@PathVariable String ruleCode,
                                                 @Valid @RequestBody(required = false) RuleSubmitReviewDTO dto,
@@ -850,7 +850,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:approveLevel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/approveLevel")
-    @PrePermission("execution:rule:approve")
+    @AuthApiPermission(apiCodes = "execution:rule:approve")
     @OperationLog(module = "规则引擎", action = "级别审批通过", bizType = "RULE")
     public BaseResponse<ApprovalRecord> approveLevel(@PathVariable String ruleCode,
                                                 @Valid @RequestBody RuleApproveDTO dto,
@@ -875,7 +875,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:rejectLevel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/rejectLevel")
-    @PrePermission("execution:rule:approve")
+    @AuthApiPermission(apiCodes = "execution:rule:approve")
     @OperationLog(module = "规则引擎", action = "级别审批驳回", bizType = "RULE")
     public BaseResponse<ApprovalRecord> rejectLevel(@PathVariable String ruleCode,
                                                @Valid @RequestBody RuleRejectDTO dto,
@@ -899,7 +899,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:delegate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/delegate")
-    @PrePermission("execution:rule:approve")
+    @AuthApiPermission(apiCodes = "execution:rule:approve")
     @OperationLog(module = "规则引擎", action = "委托审批", bizType = "RULE")
     public BaseResponse<ApprovalRecord> delegate(@PathVariable String ruleCode,
                                             @Valid @RequestBody RuleDelegateDTO dto,
@@ -953,7 +953,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:cancelReview", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/cancelReview")
-    @PrePermission("execution:rule:save")
+    @AuthApiPermission(apiCodes = "execution:rule:save")
     @OperationLog(module = "规则引擎", action = "撤回审核", bizType = "RULE")
     public BaseResponse<ApprovalRecord> cancelReview(@PathVariable String ruleCode,
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -1440,7 +1440,7 @@ public class RuleAdminController {
      */
     @OperationLog(module = "规则引擎", action = "导出决策表 Excel", bizType = "DECISION_TABLE")
     @GetMapping("/decisionTables/{tableCode}/exportExcel")
-    @PrePermission("execution:rule:view")
+    @AuthApiPermission(apiCodes = "execution:rule:view")
     public ResponseEntity<byte[]> exportDecisionTableExcel(@PathVariable String tableCode) {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
         if (svc == null) {
@@ -1466,7 +1466,7 @@ public class RuleAdminController {
      */
     @OperationLog(module = "规则引擎", action = "导入决策表 Excel", bizType = "DECISION_TABLE")
     @PostMapping(value = "/decisionTables/importExcel", consumes = "multipart/form-data")
-    @PrePermission("execution:rule:save")
+    @AuthApiPermission(apiCodes = "execution:rule:save")
     public BaseResponse<DecisionTableDefinition> importDecisionTableExcel(
             @RequestParam("file") MultipartFile file,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -1498,7 +1498,7 @@ public class RuleAdminController {
      * @return xlsx 模板文件流
      */
     @GetMapping("/decisionTables/excelTemplate")
-    @PrePermission("execution:rule:view")
+    @AuthApiPermission(apiCodes = "execution:rule:view")
     public ResponseEntity<byte[]> downloadDecisionTableExcelTemplate() {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
         if (svc == null) {
@@ -1661,7 +1661,7 @@ public class RuleAdminController {
     @OperationLog(module = "规则引擎", action = "删除规则", bizType = "RULE")
     @Idempotent(key = "ruleAdmin:deleteRule", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}")
-    @PrePermission("execution:rule:delete")
+    @AuthApiPermission(apiCodes = "execution:rule:delete")
     public BaseResponse<Void> deleteRule(@PathVariable String ruleCode,
                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
@@ -1691,7 +1691,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:batchToggle", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batchToggle")
-    @PrePermission("execution:rule:toggle")
+    @AuthApiPermission(apiCodes = "execution:rule:toggle")
     public BaseResponse<Map<String, Object>> batchToggle(@Valid @RequestBody RuleBatchToggleDTO dto,
                                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> ruleCodes = dto.getRuleCodes();

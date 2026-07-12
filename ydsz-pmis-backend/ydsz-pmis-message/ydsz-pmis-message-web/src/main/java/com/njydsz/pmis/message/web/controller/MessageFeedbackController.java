@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.core;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.core.MessageFeedbackDTO;
@@ -60,7 +60,7 @@ public class MessageFeedbackController {
      * @return 统一响应结果，包含用户评分与通道评分
      */
     @Operation(summary = "查询用户平均评分")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/rating")
     public BaseResponse<Map<String, Double>> getAverageRating(@RequestParam String userId,
                                                          @RequestParam(required = false) String channel) {
@@ -82,7 +82,7 @@ public class MessageFeedbackController {
      * @return 统一响应结果，包含反馈分页数据
      */
     @Operation(summary = "分页查询反馈记录")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/page")
     public BaseResponse<Page<MsgFeedbackDO>> pageFeedback(@RequestParam(defaultValue = "1") int page,
                                                       @RequestParam(defaultValue = "20") int size,
@@ -98,7 +98,7 @@ public class MessageFeedbackController {
      * @return 统一响应结果，包含 shouldReduce 标记
      */
     @Operation(summary = "检查用户是否需要降频")
-    @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/shouldReduceFreq")
     public BaseResponse<Map<String, Boolean>> shouldReduceFrequency(@RequestParam String userId) {
         return BaseResponse.ok(Map.of("shouldReduce", messageFeedbackService.shouldReduceFrequency(userId)));

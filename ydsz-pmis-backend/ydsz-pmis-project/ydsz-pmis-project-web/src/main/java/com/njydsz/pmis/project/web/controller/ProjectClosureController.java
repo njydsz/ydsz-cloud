@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.closure;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.ProjectClosureCreateDTO;
 import com.njydsz.pmis.project.domain.dto.ProjectClosureStatusDTO;
@@ -52,7 +52,7 @@ public class ProjectClosureController {
      * @return 新建结项 ID
      */
     @Operation(summary = "创建项目结项")
-    @PrePermission("closure:project:create")
+    @AuthApiPermission(apiCodes = "closure:project:create")
     @Idempotent(key = "projectClosure:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody ProjectClosureCreateDTO dto) {
@@ -66,7 +66,7 @@ public class ProjectClosureController {
      * @return 空结果
      */
     @Operation(summary = "状态迁移")
-    @PrePermission("closure:project:status")
+    @AuthApiPermission(apiCodes = "closure:project:status")
     @Idempotent(key = "projectClosure:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public BaseResponse<Void> changeStatus(@Valid @RequestBody ProjectClosureStatusDTO dto) {
@@ -81,7 +81,7 @@ public class ProjectClosureController {
      * @return 空结果
      */
     @Operation(summary = "删除结项记录")
-    @PrePermission("closure:project:delete")
+    @AuthApiPermission(apiCodes = "closure:project:delete")
     @Idempotent(key = "projectClosure:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -96,7 +96,7 @@ public class ProjectClosureController {
      * @return 结项实体
      */
     @Operation(summary = "结项详情")
-    @PrePermission("closure:project:list")
+    @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/{id}")
     public BaseResponse<ProjectClosureDO> get(@PathVariable String id) {
         return BaseResponse.ok(service.getById(id));
@@ -109,7 +109,7 @@ public class ProjectClosureController {
      * @return 结项实体
      */
     @Operation(summary = "按项目查询结项")
-    @PrePermission("closure:project:list")
+    @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/byInitiation/{initiationId}")
     public BaseResponse<ProjectClosureDO> getByInitiation(@PathVariable String initiationId) {
         return BaseResponse.ok(service.getByInitiation(initiationId));
@@ -126,7 +126,7 @@ public class ProjectClosureController {
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @PrePermission("closure:project:list")
+    @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/page")
     public BaseResponse<Page<ProjectClosureDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -144,7 +144,7 @@ public class ProjectClosureController {
      * @return 结项列表
      */
     @Operation(summary = "按结项类型查询")
-    @PrePermission("closure:project:list")
+    @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/listByType")
     public BaseResponse<List<ProjectClosureDO>> listByType(@RequestParam(required = false) String closureType) {
         return BaseResponse.ok(service.listByType(closureType));
@@ -157,7 +157,7 @@ public class ProjectClosureController {
      * @return 各类型数量列表
      */
     @Operation(summary = "按结项类型聚合")
-    @PrePermission("closure:project:list")
+    @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/aggregate/type")
     public BaseResponse<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
         return BaseResponse.ok(service.aggregateByType(tenantId));
@@ -170,7 +170,7 @@ public class ProjectClosureController {
      * @return 准入校验结果
      */
     @Operation(summary = "结项准入校验")
-    @PrePermission("closure:project:list")
+    @AuthApiPermission(apiCodes = "closure:project:list")
     @GetMapping("/{id}/admissionCheck")
     public BaseResponse<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable String id) {
         return BaseResponse.ok(service.checkAdmission(id));
