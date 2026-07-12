@@ -1,5 +1,6 @@
 package com.njydsz.pmis.finance.domain.dto;
 
+import com.njydsz.pmis.common.safe.annotation.Xss;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -53,8 +54,10 @@ public class InvoiceCreateDTO {
     private String title;
     private String taxNo;
     private String bankInfo;
+    @Xss(message = "地址包含非法字符")
     private String address;
     private String phone;
+    @Xss(message = "备注包含非法字符")
     private String remark;
 
     /** 红冲时：被红冲的发票 ID */

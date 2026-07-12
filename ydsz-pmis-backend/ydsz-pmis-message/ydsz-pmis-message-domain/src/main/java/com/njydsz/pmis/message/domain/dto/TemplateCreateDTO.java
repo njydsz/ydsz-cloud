@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.domain.dto.template;
 
 
+import com.njydsz.pmis.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -31,9 +32,11 @@ public class TemplateCreateDTO {
     private String sceneCode;
 
     /** 主题(EMAIL 专用) */
+    @Xss(message = "邮件主题包含非法字符")
     private String subject;
 
     /** 模板内容 */
+    @Xss(message = "模板内容包含非法字符")
     private String content;
 
     /** 供应商 */
@@ -46,5 +49,6 @@ public class TemplateCreateDTO {
     private String signName;
 
     /** 描述说明 */
+    @Xss(message = "描述说明包含非法字符")
     private String description;
 }

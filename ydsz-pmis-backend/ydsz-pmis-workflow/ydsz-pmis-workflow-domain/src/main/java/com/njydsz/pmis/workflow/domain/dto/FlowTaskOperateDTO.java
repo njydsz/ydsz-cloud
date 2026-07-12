@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.domain.dto.instance;
 
+import com.njydsz.pmis.common.safe.annotation.Xss;
 import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -36,6 +37,7 @@ public class FlowTaskOperateDTO implements Serializable {
     private String action;
 
     /** 审批意见 */
+    @Xss(message = "审批意见包含非法字符")
     private String comment;
 
     /** P2-42: 审批意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE（可选） */

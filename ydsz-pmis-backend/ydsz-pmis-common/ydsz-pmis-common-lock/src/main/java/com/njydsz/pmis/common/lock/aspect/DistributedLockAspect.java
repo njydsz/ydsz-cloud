@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.lock.aspect;
 
-import com.njydsz.pmis.common.lock.annotation.YdszLock;
+import com.njydsz.pmis.common.lock.annotation.DistributedLock;
 import com.njydsz.pmis.common.lock.annotation.LockType;
 import com.njydsz.pmis.common.lock.core.DistributedLock;
 import com.njydsz.pmis.common.lock.exception.DistributedLockException;
@@ -110,12 +110,12 @@ public class DistributedLockAspect {
      * 环绕通知：处理分布式锁逻辑
      *
      * @param joinPoint 切入点
-     * @param lockAnn   分布式锁注解
+     * @param lockAnn 分布式锁注解
      * @return 方法执行结果
      * @throws Throwable 方法执行异常
      */
     @Around("@annotation(lockAnn)")
-    public Object around(ProceedingJoinPoint joinPoint, YdszLock lockAnn) throws Throwable {
+    public Object around(ProceedingJoinPoint joinPoint, DistributedLock lockAnn) throws Throwable {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         String lockKey = resolveLockKey(lockAnn.key(), method, joinPoint.getArgs());
         LockType lockType = lockAnn.lockType();

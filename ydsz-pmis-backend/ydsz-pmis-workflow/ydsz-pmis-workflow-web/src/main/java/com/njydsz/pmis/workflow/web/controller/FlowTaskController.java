@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
@@ -92,6 +93,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数
      * @return 统一响应结果
      */
+    @RateLimit(key = "flowTask:pass", qps = 10, windowSeconds = 60, message = "审批操作过于频繁，请稍后重试")
     @Idempotent(key = "flowTask:pass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/pass")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
@@ -108,6 +110,7 @@ public class FlowTaskController {
      * @param dto 任务操作参数（可含 targetNodeCode 指定驳回目标；不填则按流程默认）
      * @return 统一响应结果
      */
+    @RateLimit(key = "flowTask:reject", qps = 10, windowSeconds = 60, message = "审批操作过于频繁，请稍后重试")
     @Idempotent(key = "flowTask:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/reject")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)

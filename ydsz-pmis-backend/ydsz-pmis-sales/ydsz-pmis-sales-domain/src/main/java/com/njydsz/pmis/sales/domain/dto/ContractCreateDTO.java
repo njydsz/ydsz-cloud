@@ -1,5 +1,6 @@
 package com.njydsz.pmis.sales.domain.dto;
 
+import com.njydsz.pmis.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
@@ -76,6 +77,7 @@ public class ContractCreateDTO implements Serializable {
 
     /** 付款条款 */
     @Schema(description = "付款条款")
+    @Xss(message = "付款条款包含非法字符")
     private String paymentTerms;
 
     /** 结算周期 */
@@ -101,5 +103,6 @@ public class ContractCreateDTO implements Serializable {
 
     /** 备注 */
     @Schema(description = "备注")
+    @Xss(message = "备注包含非法字符")
     private String remark;
 }

@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.lock.annotation.YdszLock;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.auth.annotation.RequireReAuth;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.InvoiceApprovalDTO;
 import com.njydsz.pmis.finance.domain.dto.InvoiceCreateDTO;
@@ -184,6 +185,7 @@ public class InvoiceController {
     @Operation(summary = "删除")
     @AuthApiPermission(apiCodes = "finance:invoice:delete")
     @OperationLog(module = "发票管理", action = "删除发票", bizType = "INVOICE")
+    @RequireReAuth(code = "INVOICE_DELETE", name = "删除发票")
     @Idempotent(key = "invoice:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "发票ID") @PathVariable String id) {

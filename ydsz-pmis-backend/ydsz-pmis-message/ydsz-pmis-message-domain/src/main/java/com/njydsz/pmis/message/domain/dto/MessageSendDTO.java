@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.domain.dto.core;
 
 
+import com.njydsz.pmis.common.safe.annotation.Xss;
 import lombok.Data;
 
 import java.util.Map;
@@ -27,9 +28,11 @@ public class MessageSendDTO {
     private Map<String, Object> params;
 
     /** 直接发送的内容(不走模板) */
+    @Xss(message = "消息内容包含非法字符")
     private String content;
 
     /** 邮件主题(仅 EMAIL) */
+    @Xss(message = "邮件主题包含非法字符")
     private String subject;
 
     /** 业务类型 */

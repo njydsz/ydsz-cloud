@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.feign.fallback.MessageServiceClientFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,7 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-message", contextId = "messageServiceClient")
+@FeignClient(name = "ydsz-pmis-message", contextId = "messageServiceClient",
+        fallbackFactory = MessageServiceClientFallbackFactory.class)
 public interface MessageServiceClient {
 
     /**

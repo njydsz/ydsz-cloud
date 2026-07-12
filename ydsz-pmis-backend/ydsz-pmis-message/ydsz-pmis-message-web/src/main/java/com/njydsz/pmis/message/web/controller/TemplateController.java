@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.web.controller.template;
 
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -48,6 +49,7 @@ public class TemplateController {
      */
     @Operation(summary = "创建模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_CREATE)
+    @OperationLog(module = "消息模板", action = "创建模板", bizType = "MESSAGE_TEMPLATE", saveResult = true)
     @Idempotent(key = "template:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgTemplateDO> create(@Valid @RequestBody TemplateCreateDTO dto) {
@@ -63,6 +65,7 @@ public class TemplateController {
      */
     @Operation(summary = "更新模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
+    @OperationLog(module = "消息模板", action = "更新模板", bizType = "MESSAGE_TEMPLATE", saveDiff = true)
     @Idempotent(key = "template:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<MsgTemplateDO> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
@@ -77,6 +80,7 @@ public class TemplateController {
      */
     @Operation(summary = "删除模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_DELETE)
+    @OperationLog(module = "消息模板", action = "删除模板", bizType = "MESSAGE_TEMPLATE")
     @Idempotent(key = "template:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -121,6 +125,7 @@ public class TemplateController {
      */
     @Operation(summary = "审核模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
+    @OperationLog(module = "消息模板", action = "审核模板", bizType = "MESSAGE_TEMPLATE")
     @Idempotent(key = "template:audit", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/audit")
     public BaseResponse<Void> audit(@PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {
