@@ -1,12 +1,7 @@
 package com.njydsz.pmis.common.base.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.util.JsonUtils;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -44,19 +39,6 @@ public abstract class BaseMvcConfiguration implements WebMvcConfigurer {
      */
     protected BaseCorsProperties getCorsProperties() {
         return corsProperties;
-    }
-
-    /**
-     * 注册 HTTP 消息转换器
-     *
-     * @param objectMapperProvider ObjectMapper 提供器
-     * @return HttpMessageConverters 实例
-     */
-    @Bean
-    public HttpMessageConverters httpMessageConverters(ObjectProvider<ObjectMapper> objectMapperProvider) {
-        ObjectMapper mapper = objectMapperProvider.getIfAvailable(JsonUtils::getObjectMapper);
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
-        return new HttpMessageConverters(converter);
     }
 
     /**

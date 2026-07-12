@@ -1,0 +1,3 @@
+﻿com.njydsz.pmis.common.notify.email.config.EmailConfiguration
+com.remisoft.comm.notify.config.NotifyConfiguration
+com.remisoft.comm.notify.template.NotifyTemplateAutoConfiguration

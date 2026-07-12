@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.annotation.DistributedLock;
+import com.njydsz.pmis.common.redis.lock.DistributedLock;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.PageResult;
