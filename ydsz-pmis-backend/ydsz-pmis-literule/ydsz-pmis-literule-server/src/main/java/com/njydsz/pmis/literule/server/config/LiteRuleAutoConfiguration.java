@@ -1,6 +1,5 @@
 package com.njydsz.pmis.literule.server.config;
 
-import com.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdService;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.server.approval.ApprovalPermissionChecker;
 import com.njydsz.pmis.literule.server.approval.ApprovalRecordRepository;
@@ -577,47 +576,6 @@ public class LiteRuleAutoConfiguration {
         log.info("[LiteRule-Annotation] 声明式规则注册器已初始化（scanBasePackages={}）",
                 properties.getAnnotationScanBasePackages());
         return registrar;
-    }
-
-    // ------------------------------------------------------------------
-    // P3-4 自适应智能风控（自适应阈值分析）
-    // ------------------------------------------------------------------
-
-    /**
-     * 自适应阈值分析服务（P3-4）
-     *
-     * <p>当存在 {@link RuleConfigProvider} 和
-     * {@link TraceDataProvider} 时自动装配，
-     * 提供基于历史触发数据的规则阈值自适应调整能力。
-     *
-     * <p>对标字节巨量引擎"规则 2.0"的自适应阈值能力：
-     * <ul>
-     *   <li>分析规则历史触发数据，计算最优阈值</li>
-     *   <li>支持 PERCENTILE/FALSE_RATE/MISS_RATE/BALANCED 四种策略</li>
-     *   <li>支持一键应用阈值调整</li>
-     * </ul>
-     *
-     * @param configProvider        规则配置提供者
-     * @param traceDataProvider     轨迹数据提供者（SPI，由消费方提供）
-     * @param ruleAdminServiceProvider 规则管理服务（可选，仅 applyThreshold 需要）
-     * @return AdaptiveThresholdService 实例
-     * @since 1.8.0
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnBean({RuleConfigProvider.class,
-            TraceDataProvider.class})
-    public AdaptiveThresholdService adaptiveThresholdService(
-            RuleConfigProvider configProvider,
-            TraceDataProvider traceDataProvider,
-            ObjectProvider<RuleAdminService> ruleAdminServiceProvider) {
-        RuleAdminService ruleAdminService = ruleAdminServiceProvider.getIfAvailable();
-        AdaptiveThresholdService service =
-                new AdaptiveThresholdService(
-                        configProvider, traceDataProvider, ruleAdminService, null);
-        log.info("[LiteRule-Adaptive] 自适应阈值分析服务已初始化（ruleAdmin={}）",
-                ruleAdminService != null);
-        return service;
     }
 
     // ------------------------------------------------------------------

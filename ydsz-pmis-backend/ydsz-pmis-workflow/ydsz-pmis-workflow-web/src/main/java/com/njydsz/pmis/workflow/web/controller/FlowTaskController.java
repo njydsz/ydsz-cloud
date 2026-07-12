@@ -8,12 +8,9 @@ import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
-import com.njydsz.pmis.workflow.domain.dto.ai.FlowAiDraftCommentDTO;
-import com.njydsz.pmis.workflow.domain.dto.ai.FlowAiRecommendApproversDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.server.service.ai.FlowAiAssistService;
 import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
 import com.njydsz.pmis.workflow.server.service.instance.FlowTodoCountPushService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +33,7 @@ import java.util.Map;
  *
  * <p>任务详情 / 签收 / 通过 / 驳回 / 转办 / 委派 / 加签 / 跳转 / 批量审批 /
  * 待办已办查询 / 减签 / 已阅 / 沟通 / 暂存 / 追加处理人 / 待办数推送 /
- * AI 推荐 / AI 起草意见 / 节点耗时与超期统计
+ * 节点耗时与超期统计
  * （P1-10 从 FlowEngineController 拆分）。
  *
  * @author ydsz-pmis-team
@@ -58,8 +55,6 @@ public class FlowTaskController {
     private final FlowHisTaskMapper hisTaskMapper;
     /** P1-7: WebSocket 待办数实时推送服务 */
     private final FlowTodoCountPushService todoCountPushService;
-    /** P2-1: 智能审批辅助服务（推荐审批人 / 起草意见） */
-    private final FlowAiAssistService aiAssistService;
 
     // ============== 任务操作 ==============
 
@@ -604,128 +599,6 @@ public class FlowTaskController {
         }
         todoCountPushService.pushTodoCount(userId);
         return BaseResponse.ok(true);
-    }
-
-    // ============== P2-1: 智能审批辅助 ==============
-
-    /**
-     * P2-1: 推荐审批人
-     *
-     * <p>P1-10: 由原 Map body 改造为 {@link FlowAiRecommendApproversDTO} 强类型 DTO + JSR-303 校验。
-     *
-     * @param dto 推荐参数（taskId / context）
-     * @return Top N 推荐审批人列表
-     */
-    @Idempotent(key = "flowTask:recommendApprovers", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/ai/recommendApprovers")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<List<Map<String, Object>>> recommendApprovers(
-            @Valid @RequestBody FlowAiRecommendApproversDTO dto) {
-        Map<String, Object> ctx = new LinkedHashMap<>();
-        ctx.put("taskId", dto.getTaskId());
-        if (dto.getContext() != null && !dto.getContext().isBlank()) {
-            ctx.put("context", dto.getContext());
-        }
-        List<Map<String, Object>> candidates = List.of();
-        int topN = 3;
-        List<Map<String, Object>> top = aiAssistService.recommendApprovers(ctx, candidates, topN);
-        return BaseResponse.ok(top);
-    }
-
-    /**
-     * P2-1: 起草审批意见
-     *
-     * <p>P1-10: 由原 Map body 改造为 {@link FlowAiDraftCommentDTO} 强类型 DTO + JSR-303 校验。
-     *
-     * @param dto 起草参数（taskId / approveAction / hint）
-     * @return 起草意见结果
-     */
-    @Idempotent(key = "flowTask:draftComment", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/ai/draftComment")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Map<String, Object>> draftComment(@Valid @RequestBody FlowAiDraftCommentDTO dto) {
-        Map<String, Object> params = new LinkedHashMap<>();
-        params.put("taskId", dto.getTaskId());
-        params.put("action", dto.getApproveAction());
-        if (dto.getHint() != null && !dto.getHint().isBlank()) {
-            params.put("hint", dto.getHint());
-        }
-        Map<String, Object> result = aiAssistService.draftComment(params);
-        return BaseResponse.ok(result);
-    }
-
-    /**
-     * P2-1: 检查 AI Agent 服务是否可用。
-     *
-     * @return AI 可用状态与支持的 Agent 列表
-     */
-    @GetMapping("/ai/status")
-    public BaseResponse<Map<String, Object>> aiStatus() {
-        return BaseResponse.ok(Map.of(
-                "available", aiAssistService.isAiAvailable(),
-                "agents", List.of("APPROVER_RECOMMEND", "COMMENT_DRAFT")
-        ));
-    }
-
-    // ============================== P3-3: 推荐审批人反馈闭环 ==============================
-
-    /**
-     * P3-3: 记录用户对 AI 推荐审批人的反馈。
-     *
-     * <p>用户在前端选择审批人后调用此接口，记录反馈行为（接受/拒绝/选择其他人），
-     * 形成"推荐 → 反馈 → 优化"闭环。
-     *
-     * <p>请求体示例：
-     * <pre>{@code
-     * {
-     *   "traceId": "a1b2c3...",          // 必填，来自 recommendApprovers 返回
-     *   "recommendedUserId": "u001",     // 必填，AI 推荐的审批人 ID
-     *   "action": "ACCEPTED",            // 必填，ACCEPTED/REJECTED/CHOSEN_OTHER
-     *   "taskId": "t001",                // 可选
-     *   "flowCode": "leave_approval",    // 可选
-     *   "nodeCode": "manager_approve",   // 可选
-     *   "actualUserId": "u002",          // action=CHOSEN_OTHER 时必填
-     *   "recommendedScore": 0.85,        // 可选
-     *   "recommendedRank": 1,            // 可选
-     *   "remark": "用户选择了直属领导"     // 可选
-     * }
-     * }</pre>
-     *
-     * @param body 反馈数据
-     * @return 包含反馈 ID 的响应
-     */
-    @Idempotent(key = "flowTask:recordApproverFeedback", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/ai/approverFeedback")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Map<String, Object>> recordApproverFeedback(@RequestBody Map<String, Object> body) {
-        log.info("[FlowTask] 记录推荐反馈: traceId={} userId={} action={}",
-                body.get("traceId"), body.get("recommendedUserId"), body.get("action"));
-        String feedbackId = aiAssistService.recordApproverFeedback(body);
-        return BaseResponse.ok(Map.of("feedbackId", feedbackId));
-    }
-
-    /**
-     * P3-3: 获取 AI 推荐审批人反馈统计。
-     *
-     * <p>统计指定范围（全部或某推荐人）的反馈分布，用于评估 AI 推荐准确率。
-     *
-     * @param recommendedUserId 推荐人 ID（可选，空则统计全部）
-     * @param tenantId 租户 ID（可选，默认 '1'）
-     * @return 统计结果（total/accepted/rejected/chosenOther/acceptanceRate）
-     */
-    @GetMapping("/ai/approverFeedback/stats")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public BaseResponse<Map<String, Object>> approverFeedbackStats(
-            @RequestParam(required = false) String recommendedUserId,
-            @RequestParam(required = false) String tenantId) {
-        Map<String, Object> params = new LinkedHashMap<>();
-        if (recommendedUserId != null && !recommendedUserId.isBlank()) {
-            params.put("recommendedUserId", recommendedUserId);
-        }
-        if (tenantId != null && !tenantId.isBlank()) {
-            params.put("tenantId", tenantId);
-        }
-        return BaseResponse.ok(aiAssistService.getApproverFeedbackStats(params));
     }
 
     // ============== P2-31/32/33: 审计运营统计 ==============

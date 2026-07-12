@@ -12,7 +12,6 @@ import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.domain.enums.instance.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.server.service.ai.FlowAiAssistService;
 import com.njydsz.pmis.workflow.server.service.integration.FlowEmbeddedApprovalService;
 import com.njydsz.pmis.workflow.server.service.instance.FlowInstanceService;
 import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
@@ -45,8 +44,6 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     private final FlowInstanceService instanceService;
     /** 流程任务服务，执行通过/驳回等审批操作 */
     private final FlowTaskService taskService;
-    /** AI 辅助服务，提供推荐审批人/智能评语等能力 */
-    private final FlowAiAssistService aiAssistService;
     /** P2-2: 历史任务 mapper（嵌入式审批面板加载审批轨迹） */
     private final FlowHisTaskMapper hisTaskMapper;
 
@@ -79,7 +76,6 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                     .history(Collections.emptyList())
                     .myRole(ROLE_OBSERVER)
                     .actions(List.of("SUBMIT"))
-                    .aiAvailable(safeCheckAi())
                     .canRecall(false)
                     .finished(false)
                     .message("未发起流程")
@@ -129,7 +125,6 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                 .history(history)
                 .myRole(myRole)
                 .actions(actions)
-                .aiAvailable(safeCheckAi())
                 .canRecall(canRecall)
                 .finished(finished)
                 .message(finished ? "流程已结束" : "流程进行中")
@@ -436,15 +431,4 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         return light;
     }
 
-    /**
-     * 安全检测 AI 服务可用性（不抛异常）
-     */
-    private boolean safeCheckAi() {
-        try {
-            return aiAssistService.isAiAvailable();
-        } catch (Exception e) {
-            log.warn("[FlowEmbeddedApprovalServiceImpl] AI 服务可用性检测异常，按不可用处理: {}", e.getMessage(), e);
-            return false;
-        }
-    }
 }
