@@ -20,6 +20,19 @@ public class InfrastructureException extends AbstractPmisException {
         super(UnifiedExceptionCode.SERVICE_UNAVAILABLE, message);
     }
 
+    /**
+     * 根据提示信息与原始异常构造基础设施异常
+     *
+     * @param message 提示信息
+     * @param cause   原始异常
+     */
+    public InfrastructureException(String message, Throwable cause) {
+        super(UnifiedExceptionCode.SERVICE_UNAVAILABLE, message);
+        if (cause != null) {
+            initCause(cause);
+        }
+    }
+
     public InfrastructureException(ExceptionCode code, String message) {
         super(code, message);
     }

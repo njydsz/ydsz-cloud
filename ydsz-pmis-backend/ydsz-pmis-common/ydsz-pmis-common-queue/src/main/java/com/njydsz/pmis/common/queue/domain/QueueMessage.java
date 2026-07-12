@@ -233,7 +233,7 @@ public class QueueMessage implements Serializable {
             return null;
         }
         try {
-            QueueMessage message = JsonUtils.fromJson(payload, QueueMessage.class);
+            QueueMessage message = JsonUtils.parseObject(payload, QueueMessage.class);
             if (message == null) {
                 return QueueMessage.of(payload);
             }

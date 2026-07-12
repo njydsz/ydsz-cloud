@@ -77,7 +77,7 @@ public class RocketMQPublisher implements IMessagePublisher {
     @Override
     public void publish(String message) {
         if (message == null) {
-            throw new BizException("消息内容不能为空").build();
+            throw new BizException("消息内容不能为空");
         }
         checkNotClosed();
         try {
@@ -273,7 +273,7 @@ public class RocketMQPublisher implements IMessagePublisher {
      */
     private void validateSendStatus(SendResult result, String traceId, String topicName) {
         if (result == null) {
-            throw BizException.builder().key("RocketMQ 发送结果为空，topic=" + topicName + ", traceId=" + traceId);
+            throw new BizException("RocketMQ 发送结果为空，topic=" + topicName + ", traceId=" + traceId);
         }
         SendStatus status = result.getSendStatus();
         if (status != SendStatus.SEND_OK) {
