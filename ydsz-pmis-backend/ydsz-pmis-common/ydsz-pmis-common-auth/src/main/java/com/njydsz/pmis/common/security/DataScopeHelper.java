@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.security;
 
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;

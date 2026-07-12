@@ -94,7 +94,7 @@ public final class DagGraph {
         List<String> result = new ArrayList<>(adj.size());
         while (!queue.isEmpty()) {
             String node = queue.poll();
-            BaseResponse.add(node);
+            result.add(node);
             for (String child : adj.getOrDefault(node, Collections.emptyList())) {
                 int newDegree = inDegree.merge(child, -1, (a, b) -> a + b);
                 if (newDegree == 0) {

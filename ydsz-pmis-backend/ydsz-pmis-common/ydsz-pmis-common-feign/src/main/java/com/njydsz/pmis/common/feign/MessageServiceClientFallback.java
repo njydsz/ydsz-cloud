@@ -32,7 +32,7 @@ public class MessageServiceClientFallback implements FallbackFactory<MessageServ
                         request.getBizType(), request.getBizId(),
                         request.getChannel(), request.getTemplateCode());
                 MessageResult r = MessageResult.fail(request.getChannel(),
-                        StandardResultCode.SERVICE_UNAVAILABLE.getMessage());
+                        StandardResultCode.SERVICE_UNAVAILABLE.getMsg());
                 return BaseResponse.ok(r);
             }
         };
