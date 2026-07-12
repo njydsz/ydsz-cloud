@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.cronjob", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = "com.njydsz.pmis.common.feign")
+@EnableFeignClients(basePackages = {"com.njydsz.pmis.cronjob.api", "com.njydsz.pmis.common.feign"})
 @EnableScheduling
 @MapperScan("com.njydsz.pmis.cronjob.infra.mapper")
 public class CronjobApplication {

@@ -16,8 +16,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  */
 @SpringBootApplication(scanBasePackages = {
         "com.njydsz.pmis.agent",
-        "com.njydsz.pmis.common",
-        "com.njydsz.pmis.project"
+        "com.njydsz.pmis.common"
 })
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = {"com.njydsz.pmis.agent.api", "com.njydsz.pmis.common.feign"})

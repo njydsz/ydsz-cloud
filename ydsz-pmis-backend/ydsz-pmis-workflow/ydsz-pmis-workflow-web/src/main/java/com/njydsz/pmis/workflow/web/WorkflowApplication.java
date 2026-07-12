@@ -23,10 +23,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.workflow", "com.njydsz.pmis.common"})
+@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.workflow", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = {"com.njydsz.pmis.workflow.api", "com.njydsz.pmis.common.feign"})
-@MapperScan({"com.njydsz.pmis.workflow.infra.mapper", "com.njydsz.pmis.workflow.infra.mapper"})
+@MapperScan({"com.njydsz.pmis.workflow.infra.mapper", "com.njydsz.pmis.literule.infra.mapper"})
 @EnableScheduling
 public class WorkflowApplication {
 
