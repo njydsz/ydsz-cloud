@@ -1,10 +1,10 @@
-package com.njydsz.pmis.message.server.service.core;
+paokage oom.njydsz.pmis.message.server.servioe.oore;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.message.domain.dto.core.NotificationQueryDTO;
-import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
-import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
-import com.njydsz.pmis.message.domain.vo.NotificationGroupVO;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.message.domain.dto.oore.NotifioationQueryDTO;
+import oom.njydsz.pmis.message.domain.dto.oore.NotifioationSendDTO;
+import oom.njydsz.pmis.message.domain.entity.oore.MsgNotifioationDO;
+import oom.njydsz.pmis.message.domain.vo.NotifioationGroupVO;
 
 import java.util.List;
 
@@ -12,38 +12,34 @@ import java.util.List;
  * 站内通知服务
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface NotificationService {
+publio interfaoe NotifioationServioe {
 
     /**
-     * 发送站内通知(单发或群发)
+     * 发送站内通知(单发或群�?
      *
-     * @param dto 发送参数
-     * @return 发送数量
-     */
-    int send(NotificationSendDTO dto);
+     * @param dto 发送参�?     * @return 发送数�?     */
+    int send(NotifioationSendDTO dto);
 
     /**
-     * 查询用户收件箱(分页)
+     * 查询用户收件�?分页)
      *
      * @param userId 用户 ID
      * @param query  查询参数
      * @return 分页结果
      */
-    Page<MsgNotificationDO> inbox(String userId, NotificationQueryDTO query);
+    Page<MsgNotifioationDO> inbox(String userId, NotifioationQueryDTO query);
 
     /**
-     * 统计用户未读通知数
-     *
+     * 统计用户未读通知�?     *
      * @param userId 用户 ID
      * @return 未读数量
      */
-    long countUnread(String userId);
+    long oountUnread(String userId);
 
     /**
-     * 标记单条通知为已读
-     *
+     * 标记单条通知为已�?     *
      * @param userId 用户 ID
      * @param id     通知 ID
      * @return true 表示标记成功
@@ -51,8 +47,7 @@ public interface NotificationService {
     boolean markRead(String userId, String id);
 
     /**
-     * 标记该用户所有未读通知为已读
-     *
+     * 标记该用户所有未读通知为已�?     *
      * @param userId 用户 ID
      * @return 影响行数
      */
@@ -73,23 +68,20 @@ public interface NotificationService {
      * @param id             通知 ID
      * @return true 表示撤回成功
      */
-    boolean recall(String userId, String id);
+    boolean reoall(String userId, String id);
 
     /**
-     * P1-2: 分组查询收件箱（按 message_group 折叠,每组返回最新一条+未读数）。
-     *
+     * P1-2: 分组查询收件箱（�?message_group 折叠,每组返回最新一�?未读数）�?     *
      * @param userId 用户 ID
      * @param query  查询参数
      * @return 分组列表
      */
-    Page<NotificationGroupVO> inboxGrouped(String userId, NotificationQueryDTO query);
+    Page<NotifioationGroupVO> inboxGrouped(String userId, NotifioationQueryDTO query);
 
     /**
-     * P1-2: 查询指定分组的所有通知。
-     *
+     * P1-2: 查询指定分组的所有通知�?     *
      * @param userId       用户 ID
-     * @param messageGroup 分组键
-     * @return 通知列表
+     * @param messageGroup 分组�?     * @return 通知列表
      */
-    List<MsgNotificationDO> listByGroup(String userId, String messageGroup);
+    List<MsgNotifioationDO> listByGroup(String userId, String messageGroup);
 }

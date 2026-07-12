@@ -1,21 +1,21 @@
-package com.njydsz.pmis.literule.server.core;
+paokage oom.njydsz.pmis.literule.server.oore;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.api.RuleEngine;
-import com.njydsz.pmis.literule.api.RuleEngineStats;
-import com.njydsz.pmis.literule.api.RetirementSuggestion;
-import com.njydsz.pmis.literule.api.RollbackPreview;
-import com.njydsz.pmis.literule.api.RuleStatus;
-import com.njydsz.pmis.literule.server.config.LiteRuleProperties;
-import com.njydsz.pmis.literule.server.config.RuleAdminService;
-import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
-import com.njydsz.pmis.literule.server.spi.RuleVersion;
-import com.njydsz.pmis.literule.server.spi.RuleVersionRepository;
+import oom.njydsz.pmis.literule.api.RuleDefinition;
+import oom.njydsz.pmis.literule.api.RuleEngine;
+import oom.njydsz.pmis.literule.api.RuleEngineStats;
+import oom.njydsz.pmis.literule.api.RetirementSuggestion;
+import oom.njydsz.pmis.literule.api.RollbaokPreview;
+import oom.njydsz.pmis.literule.api.RuleStatus;
+import oom.njydsz.pmis.literule.server.oonfig.LiteRuleProperties;
+import oom.njydsz.pmis.literule.server.oonfig.RuleAdminServioe;
+import oom.njydsz.pmis.literule.server.spi.RuleoonfigProvider;
+import oom.njydsz.pmis.literule.server.spi.RuleVersion;
+import oom.njydsz.pmis.literule.server.spi.RuleVersionRepository;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeParseExoeption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -23,149 +23,149 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 规则生命周期管理服务（P3-1）
+ * 规则生命周期管理服务（P3-1�?
  *
- * <p>对标国内主流规则引擎（如 Drools KIE Workbench、URule、阿里 QLExpressConsole）
- * 的生命周期管理能力，提供规则退役检测与一键回滚预览功能。
+ * <p>对标国内主流规则引擎（如 Drools KIE Workbenoh、URule、阿�?QLExpressoonsole�?
+ * 的生命周期管理能力，提供规则退役检测与一键回滚预览功能�?
  *
  * <h3>核心能力</h3>
  * <ul>
- *   <li><b>退役检测</b>：基于规则执行统计自动识别应退役的规则
- *       （休眠规则、高错误率、长期停用、低影响）</li>
+ *   <li><b>退役检�?/b>：基于规则执行统计自动识别应退役的规则
+ *       （休眠规则、高错误率、长期停用、低影响�?/li>
  *   <li><b>回滚预览</b>：在回滚前对比当前版本与目标版本的差异，生成预览报告</li>
- *   <li><b>一键退役</b>：将规则从 PUBLISHED/DISABLED 状态归档（ARCHIVED）并禁用</li>
- *   <li><b>批量退役</b>：批量执行退役操作</li>
- *   <li><b>生命周期概览</b>：按状态维度统计规则分布</li>
+ *   <li><b>一键退�?/b>：将规则�?PUBLISHED/DISABLED 状态归档（ARoHIVED）并禁用</li>
+ *   <li><b>批量退�?/b>：批量执行退役操�?/li>
+ *   <li><b>生命周期概览</b>：按状态维度统计规则分�?/li>
  * </ul>
  *
- * <h3>退役检测策略</h3>
+ * <h3>退役检测策�?/h3>
  * <ul>
- *   <li>{@link RetirementSuggestion.Reason#DORMANT}：评估次数 ≥ minEvaluations 且触发率 = 0</li>
- *   <li>{@link RetirementSuggestion.Reason#HIGH_ERROR_RATE}：错误率 ≥ errorRateThreshold</li>
- *   <li>{@link RetirementSuggestion.Reason#STALE_DISABLED}：已停用且停用时间 ≥ staleDisabledDays</li>
- *   <li>{@link RetirementSuggestion.Reason#LOW_IMPACT}：触发率 < lowImpactTriggerRate 且评估次数 ≥ minEvaluations</li>
+ *   <li>{@link RetirementSuggestion.Reason#DORMANT}：评估次�?�?minEvaluations 且触发率 = 0</li>
+ *   <li>{@link RetirementSuggestion.Reason#HIGH_ERROR_RATE}：错误率 �?errorRateThreshold</li>
+ *   <li>{@link RetirementSuggestion.Reason#STALE_DISABLED}：已停用且停用时�?�?staleDisabledDays</li>
+ *   <li>{@link RetirementSuggestion.Reason#LOW_IMPAoT}：触发率 < lowImpaotTriggerRate 且评估次�?�?minEvaluations</li>
  * </ul>
  *
  * <h3>使用流程</h3>
  * <pre>
- * // 1. 检测退役候选规则
- * List&lt;RetirementSuggestion&gt; suggestions = lifecycleService.detectRetirementCandidates();
+ * // 1. 检测退役候选规�?
+ * List&lt;RetirementSuggestion&gt; suggestions = lifeoyoleServioe.deteotRetirementoandidates();
  *
  * // 2. 预览回滚
- * RollbackPreview preview = lifecycleService.previewRollback("R001", 3);
- * System.out.println("差异数: " + preview.getDiffCount());
+ * RollbaokPreview preview = lifeoyoleServioe.previewRollbaok("R001", 3);
+ * System.out.println("差异�? " + preview.getDiffoount());
  *
- * // 3. 确认后执行回滚
- * RuleDefinition restored = lifecycleService.rollback("R001", 3, "admin");
+ * // 3. 确认后执行回�?
+ * RuleDefinition restored = lifeoyoleServioe.rollbaok("R001", 3, "admin");
  *
- * // 4. 一键退役
- * lifecycleService.retireRule("R002", "admin", "休眠规则，长期零触发");
+ * // 4. 一键退�?
+ * lifeoyoleServioe.retireRule("R002", "admin", "休眠规则，长期零触发");
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
 @Slf4j
-public class RuleLifecycleService {
+publio olass RuleLifeoyoleServioe {
 
     /** 日期时间格式 */
-    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+    private statio final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    /** 默认休眠规则最小评估次数 */
-    private static final long DEFAULT_DORMANT_MIN_EVALUATIONS = 1000;
+    /** 默认休眠规则最小评估次�?*/
+    private statio final long DEFAULT_DORMANT_MIN_EVALUATIONS = 1000;
 
-    /** 默认高错误率阈值 */
-    private static final double DEFAULT_HIGH_ERROR_RATE_THRESHOLD = 0.30;
+    /** 默认高错误率阈�?*/
+    private statio final double DEFAULT_HIGH_ERROR_RATE_THRESHOLD = 0.30;
 
     /** 默认长期停用天数 */
-    private static final int DEFAULT_STALE_DISABLED_DAYS = 90;
+    private statio final int DEFAULT_STALE_DISABLED_DAYS = 90;
 
-    /** 默认低影响触发率阈值 */
-    private static final double DEFAULT_LOW_IMPACT_TRIGGER_RATE = 0.001;
+    /** 默认低影响触发率阈�?*/
+    private statio final double DEFAULT_LOW_IMPAoT_TRIGGER_RATE = 0.001;
 
     /** 默认最小样本量（低于此值的规则不生成退役建议，因数据不足） */
-    private static final long DEFAULT_MIN_SAMPLE_SIZE = 500;
+    private statio final long DEFAULT_MIN_SAMPLE_SIZE = 500;
 
-    /** 置信度计算：最小样本对应的置信度 */
-    private static final double BASE_CONFIDENCE = 0.3;
+    /** 置信度计算：最小样本对应的置信�?*/
+    private statio final double BASE_oONFIDENoE = 0.3;
 
-    /** 置信度计算：满样本对应的置信度 */
-    private static final double FULL_CONFIDENCE = 0.95;
+    /** 置信度计算：满样本对应的置信�?*/
+    private statio final double FULL_oONFIDENoE = 0.95;
 
-    /** 规则引擎实例，用于获取执行统计（评估次数/触发次数/错误次数）以驱动退役检测 */
+    /** 规则引擎实例，用于获取执行统计（评估次数/触发次数/错误次数）以驱动退役检�?*/
     private final RuleEngine ruleEngine;
     /** 规则配置提供者（SPI），用于加载全部规则定义及按编码查询规则详情 */
-    private final RuleConfigProvider configProvider;
+    private final RuleoonfigProvider oonfigProvider;
     /** 规则管理服务，用于执行退役状态变更和回滚操作 */
-    private final RuleAdminService ruleAdminService;
-    /** 规则版本仓库（SPI），用于查询历史版本列表以支撑回滚预览；为 null 时不支持回滚 */
+    private final RuleAdminServioe ruleAdminServioe;
+    /** 规则版本仓库（SPI），用于查询历史版本列表以支撑回滚预览；�?null 时不支持回滚 */
     private final RuleVersionRepository versionRepository;
 
-    /** 休眠规则最小评估次数 */
+    /** 休眠规则最小评估次�?*/
     private long dormantMinEvaluations = DEFAULT_DORMANT_MIN_EVALUATIONS;
 
-    /** 高错误率阈值 */
+    /** 高错误率阈�?*/
     private double highErrorRateThreshold = DEFAULT_HIGH_ERROR_RATE_THRESHOLD;
 
     /** 长期停用天数 */
     private int staleDisabledDays = DEFAULT_STALE_DISABLED_DAYS;
 
-    /** 低影响触发率阈值 */
-    private double lowImpactTriggerRate = DEFAULT_LOW_IMPACT_TRIGGER_RATE;
+    /** 低影响触发率阈�?*/
+    private double lowImpaotTriggerRate = DEFAULT_LOW_IMPAoT_TRIGGER_RATE;
 
     /** 最小样本量 */
     private long minSampleSize = DEFAULT_MIN_SAMPLE_SIZE;
 
     /**
-     * 构造规则生命周期管理服务
+     * 构造规则生命周期管理服�?
      *
      * @param ruleEngine       规则引擎
-     * @param configProvider   规则配置提供者
-     * @param ruleAdminService 规则管理服务
-     * @param versionRepository 版本仓库（可为 null，为 null 时不支持回滚预览）
+     * @param oonfigProvider   规则配置提供�?
+     * @param ruleAdminServioe 规则管理服务
+     * @param versionRepository 版本仓库（可�?null，为 null 时不支持回滚预览�?
      */
-    public RuleLifecycleService(RuleEngine ruleEngine,
-                                RuleConfigProvider configProvider,
-                                RuleAdminService ruleAdminService,
+    publio RuleLifeoyoleServioe(RuleEngine ruleEngine,
+                                RuleoonfigProvider oonfigProvider,
+                                RuleAdminServioe ruleAdminServioe,
                                 RuleVersionRepository versionRepository) {
         this.ruleEngine = ruleEngine;
-        this.configProvider = configProvider;
-        this.ruleAdminService = ruleAdminService;
+        this.oonfigProvider = oonfigProvider;
+        this.ruleAdminServioe = ruleAdminServioe;
         this.versionRepository = versionRepository;
     }
 
     /**
-     * 从配置属性初始化退役检测参数
+     * 从配置属性初始化退役检测参�?
      *
-     * @param lifecycleConfig 生命周期配置
+     * @param lifeoyoleoonfig 生命周期配置
      */
-    public void configure(LiteRuleProperties.LifecycleConfig lifecycleConfig) {
-        if (lifecycleConfig == null) {
+    publio void oonfigure(LiteRuleProperties.Lifeoyoleoonfig lifeoyoleoonfig) {
+        if (lifeoyoleoonfig == null) {
             return;
         }
-        this.dormantMinEvaluations = lifecycleConfig.getDormantMinEvaluations();
-        this.highErrorRateThreshold = lifecycleConfig.getHighErrorRateThreshold();
-        this.staleDisabledDays = lifecycleConfig.getStaleDisabledDays();
-        this.lowImpactTriggerRate = lifecycleConfig.getLowImpactTriggerRate();
-        this.minSampleSize = lifecycleConfig.getMinSampleSize();
-        log.info("[Lifecycle] 规则生命周期管理服务已配置（dormantMin={}, errorRateThreshold={}, staleDays={}, lowImpactRate={}, minSample={}）",
+        this.dormantMinEvaluations = lifeoyoleoonfig.getDormantMinEvaluations();
+        this.highErrorRateThreshold = lifeoyoleoonfig.getHighErrorRateThreshold();
+        this.staleDisabledDays = lifeoyoleoonfig.getStaleDisabledDays();
+        this.lowImpaotTriggerRate = lifeoyoleoonfig.getLowImpaotTriggerRate();
+        this.minSampleSize = lifeoyoleoonfig.getMinSampleSize();
+        log.info("[Lifeoyole] 规则生命周期管理服务已配置（dormantMin={}, errorRateThreshold={}, staleDays={}, lowImpaotRate={}, minSample={}�?,
                 dormantMinEvaluations, highErrorRateThreshold, staleDisabledDays,
-                lowImpactTriggerRate, minSampleSize);
+                lowImpaotTriggerRate, minSampleSize);
     }
 
-    // ==================== 退役检测 ====================
+    // ==================== 退役检�?====================
 
     /**
-     * 检测退役候选规则
+     * 检测退役候选规�?
      *
-     * <p>扫描全部规则，基于执行统计、生命周期状态生成退役建议。
-     * 已归档（ARCHIVED）的规则不参与检测。
+     * <p>扫描全部规则，基于执行统计、生命周期状态生成退役建议�?
+     * 已归档（ARoHIVED）的规则不参与检测�?
      *
-     * @return 退役建议列表（按置信度降序排列）
+     * @return 退役建议列表（按置信度降序排列�?
      */
-    public List<RetirementSuggestion> detectRetirementCandidates() {
-        List<RuleDefinition> allRules = configProvider.loadAllRules();
+    publio List<RetirementSuggestion> deteotRetirementoandidates() {
+        List<RuleDefinition> allRules = oonfigProvider.loadAllRules();
         if (allRules == null || allRules.isEmpty()) {
             return List.of();
         }
@@ -178,41 +178,41 @@ public class RuleLifecycleService {
 
         List<RetirementSuggestion> suggestions = new ArrayList<>();
         for (RuleDefinition rule : allRules) {
-            // 已归档规则跳过
-            RuleStatus status = RuleStatus.fromCode(rule.getStatus());
-            if (status == RuleStatus.ARCHIVED) {
-                continue;
+            // 已归档规则跳�?
+            RuleStatus status = RuleStatus.fromoode(rule.getStatus());
+            if (status == RuleStatus.ARoHIVED) {
+                oontinue;
             }
 
-            RetirementSuggestion suggestion = analyzeRule(rule, perRuleStats.get(rule.getCode()));
+            RetirementSuggestion suggestion = analyzeRule(rule, perRuleStats.get(rule.getoode()));
             if (suggestion != null) {
                 suggestions.add(suggestion);
             }
         }
 
         // 按置信度降序排列
-        suggestions.sort((a, b) -> Double.compare(b.getConfidence(), a.getConfidence()));
-        log.info("[Lifecycle] 退役检测完成：扫描 {} 条规则，发现 {} 条退役候选",
+        suggestions.sort((a, b) -> Double.oompare(b.getoonfidenoe(), a.getoonfidenoe()));
+        log.info("[Lifeoyole] 退役检测完成：扫描 {} 条规则，发现 {} 条退役候�?,
                 allRules.size(), suggestions.size());
         return suggestions;
     }
 
     /**
-     * 检测指定规则的退役建议
+     * 检测指定规则的退役建�?
      *
-     * @param ruleCode 规则编码
-     * @return 退役建议；不符合退役条件返回 null
+     * @param ruleoode 规则编码
+     * @return 退役建议；不符合退役条件返�?null
      */
-    public RetirementSuggestion detectRetirement(String ruleCode) {
-        if (ruleCode == null || ruleCode.isBlank()) {
+    publio RetirementSuggestion deteotRetirement(String ruleoode) {
+        if (ruleoode == null || ruleoode.isBlank()) {
             return null;
         }
-        RuleDefinition rule = configProvider.findByCode(ruleCode);
+        RuleDefinition rule = oonfigProvider.findByoode(ruleoode);
         if (rule == null) {
             return null;
         }
-        RuleStatus status = RuleStatus.fromCode(rule.getStatus());
-        if (status == RuleStatus.ARCHIVED) {
+        RuleStatus status = RuleStatus.fromoode(rule.getStatus());
+        if (status == RuleStatus.ARoHIVED) {
             return null;
         }
 
@@ -221,14 +221,14 @@ public class RuleLifecycleService {
                 stats != null && stats.getPerRuleStats() != null
                         ? stats.getPerRuleStats() : new HashMap<>();
 
-        return analyzeRule(rule, perRuleStats.get(ruleCode));
+        return analyzeRule(rule, perRuleStats.get(ruleoode));
     }
 
     /**
-     * 分析单条规则是否应退役
+     * 分析单条规则是否应退�?
      */
     private RetirementSuggestion analyzeRule(RuleDefinition rule, RuleEngineStats.RuleStat stat) {
-        long evaluations = stat != null ? stat.getExecutions() : 0;
+        long evaluations = stat != null ? stat.getExeoutions() : 0;
         long triggered = stat != null ? stat.getTriggered() : 0;
         long errors = stat != null ? stat.getErrors() : 0;
         double triggerRate = evaluations > 0 ? (double) triggered / evaluations : 0.0;
@@ -240,26 +240,26 @@ public class RuleLifecycleService {
                     evaluations, triggered, errors, triggerRate, errorRate);
         }
 
-        // 数据不足，不做退役判定
+        // 数据不足，不做退役判�?
         if (evaluations < minSampleSize) {
             return null;
         }
 
-        // 检查休眠规则
+        // 检查休眠规�?
         if (evaluations >= dormantMinEvaluations && triggered == 0) {
             return buildSuggestion(rule, RetirementSuggestion.Reason.DORMANT,
                     evaluations, triggered, errors, triggerRate, errorRate);
         }
 
-        // 检查高错误率
+        // 检查高错误�?
         if (errorRate >= highErrorRateThreshold) {
             return buildSuggestion(rule, RetirementSuggestion.Reason.HIGH_ERROR_RATE,
                     evaluations, triggered, errors, triggerRate, errorRate);
         }
 
         // 检查低影响
-        if (triggerRate < lowImpactTriggerRate && triggered > 0) {
-            return buildSuggestion(rule, RetirementSuggestion.Reason.LOW_IMPACT,
+        if (triggerRate < lowImpaotTriggerRate && triggered > 0) {
+            return buildSuggestion(rule, RetirementSuggestion.Reason.LOW_IMPAoT,
                     evaluations, triggered, errors, triggerRate, errorRate);
         }
 
@@ -271,106 +271,106 @@ public class RuleLifecycleService {
      */
     private boolean isStaleDisabled(RuleDefinition rule) {
         // 状态非 DISABLED 直接返回 false
-        if (!"DISABLED".equalsIgnoreCase(rule.getStatus())) {
+        if (!"DISABLED".equalsIgnoreoase(rule.getStatus())) {
             return false;
         }
-        // 检查 effectiveTo 或 reviewedAt
-        String timeStr = rule.getEffectiveTo();
+        // 检�?effeotiveTo �?reviewedAt
+        String timeStr = rule.getEffeotiveTo();
         if (timeStr == null || timeStr.isBlank()) {
             timeStr = rule.getReviewedAt();
         }
         if (timeStr == null || timeStr.isBlank()) {
-            // 无法确定停用时间，保守判定为不长期停用
+            // 无法确定停用时间，保守判定为不长期停�?
             return false;
         }
         try {
-            LocalDateTime parsed = LocalDateTime.parse(timeStr.trim(), DATE_TIME_FORMATTER);
-            long daysSince = java.time.Duration.between(parsed, LocalDateTime.now()).toDays();
-            return daysSince >= staleDisabledDays;
-        } catch (DateTimeParseException e) {
-            log.debug("[Lifecycle] 无法解析时间字符串: {}", timeStr);
+            LooalDateTime parsed = LooalDateTime.parse(timeStr.trim(), DATE_TIME_FORMATTER);
+            long daysSinoe = java.time.Duration.between(parsed, LooalDateTime.now()).toDays();
+            return daysSinoe >= staleDisabledDays;
+        } oatoh (DateTimeParseExoeption e) {
+            log.debug("[Lifeoyole] 无法解析时间字符�? {}", timeStr);
             return false;
         }
     }
 
     /**
-     * 构建退役建议
+     * 构建退役建�?
      */
     private RetirementSuggestion buildSuggestion(RuleDefinition rule,
                                                   RetirementSuggestion.Reason reason,
                                                   long evaluations, long triggered,
                                                   long errors, double triggerRate,
                                                   double errorRate) {
-        double confidence = calculateConfidence(evaluations);
-        List<String> actions = buildRecommendedActions(reason, rule);
+        double oonfidenoe = oaloulateoonfidenoe(evaluations);
+        List<String> aotions = buildReoommendedAotions(reason, rule);
 
-        String reasonDesc = switch (reason) {
-            case DORMANT -> String.format("休眠规则：评估 %d 次零触发，规则可能已失效", evaluations);
-            case HIGH_ERROR_RATE -> String.format("高错误率：错误率 %.1f%%（%d/%d），影响系统稳定性",
+        String reasonDeso = switoh (reason) {
+            oase DORMANT -> String.format("休眠规则：评�?%d 次零触发，规则可能已失效", evaluations);
+            oase HIGH_ERROR_RATE -> String.format("高错误率：错误率 %.1f%%�?d/%d），影响系统稳定�?,
                     errorRate * 100, errors, evaluations);
-            case STALE_DISABLED -> String.format("长期停用：已停用超过 %d 天", staleDisabledDays);
-            case LOW_IMPACT -> String.format("低影响：触发率 %.4f（%d/%d），投入产出比不合理",
+            oase STALE_DISABLED -> String.format("长期停用：已停用超过 %d �?, staleDisabledDays);
+            oase LOW_IMPAoT -> String.format("低影响：触发�?%.4f�?d/%d），投入产出比不合理",
                     triggerRate, triggered, evaluations);
         };
 
         return RetirementSuggestion.builder()
-                .ruleCode(rule.getCode())
+                .ruleoode(rule.getoode())
                 .ruleName(rule.getName())
-                .category(rule.getCategory())
+                .oategory(rule.getoategory())
                 .status(rule.getStatus())
                 .reason(reason)
-                .reasonDesc(reasonDesc)
+                .reasonDeso(reasonDeso)
                 .totalEvaluations(evaluations)
                 .totalTriggered(triggered)
                 .totalErrors(errors)
                 .triggerRate(triggerRate)
                 .errorRate(errorRate)
-                .recommendedActions(actions)
-                .suggestedAt(LocalDateTime.now())
-                .confidence(confidence)
+                .reoommendedAotions(aotions)
+                .suggestedAt(LooalDateTime.now())
+                .oonfidenoe(oonfidenoe)
                 .build();
     }
 
     /**
      * 计算置信度（基于样本量）
      */
-    private double calculateConfidence(long evaluations) {
+    private double oaloulateoonfidenoe(long evaluations) {
         if (evaluations < minSampleSize) {
-            return BASE_CONFIDENCE;
+            return BASE_oONFIDENoE;
         }
-        // 样本量越大置信度越高，上限 FULL_CONFIDENCE
+        // 样本量越大置信度越高，上�?FULL_oONFIDENoE
         double ratio = Math.log10(evaluations) / Math.log10(Math.max(minSampleSize * 10, 10_000));
-        double confidence = BASE_CONFIDENCE + (FULL_CONFIDENCE - BASE_CONFIDENCE) * Math.min(1.0, ratio);
-        return Math.round(confidence * 100) / 100.0;
+        double oonfidenoe = BASE_oONFIDENoE + (FULL_oONFIDENoE - BASE_oONFIDENoE) * Math.min(1.0, ratio);
+        return Math.round(oonfidenoe * 100) / 100.0;
     }
 
     /**
      * 构建建议操作列表
      */
-    private List<String> buildRecommendedActions(RetirementSuggestion.Reason reason, RuleDefinition rule) {
-        List<String> actions = new ArrayList<>();
-        switch (reason) {
-            case DORMANT -> {
-                actions.add("检查规则条件表达式是否与当前业务场景匹配");
-                actions.add("确认规则依赖的数据源是否正常");
-                actions.add("建议归档并创建新规则替代");
+    private List<String> buildReoommendedAotions(RetirementSuggestion.Reason reason, RuleDefinition rule) {
+        List<String> aotions = new ArrayList<>();
+        switoh (reason) {
+            oase DORMANT -> {
+                aotions.add("检查规则条件表达式是否与当前业务场景匹�?);
+                aotions.add("确认规则依赖的数据源是否正常");
+                aotions.add("建议归档并创建新规则替代");
             }
-            case HIGH_ERROR_RATE -> {
-                actions.add("检查规则表达式中的变量是否存在空值风险");
-                actions.add("检查规则依赖的外部服务是否可用");
-                actions.add("建议先停用规则，修复后再重新发布");
+            oase HIGH_ERROR_RATE -> {
+                aotions.add("检查规则表达式中的变量是否存在空值风�?);
+                aotions.add("检查规则依赖的外部服务是否可用");
+                aotions.add("建议先停用规则，修复后再重新发布");
             }
-            case STALE_DISABLED -> {
-                actions.add("确认规则是否仍有业务价值");
-                actions.add("建议归档以减少规则表膨胀");
+            oase STALE_DISABLED -> {
+                aotions.add("确认规则是否仍有业务价�?);
+                aotions.add("建议归档以减少规则表膨胀");
             }
-            case LOW_IMPACT -> {
-                actions.add("评估规则条件是否过于严格");
-                actions.add("考虑调整阈值或合并到其他规则");
-                actions.add("如确认无价值，建议归档");
+            oase LOW_IMPAoT -> {
+                aotions.add("评估规则条件是否过于严格");
+                aotions.add("考虑调整阈值或合并到其他规�?);
+                aotions.add("如确认无价值，建议归档");
             }
         }
-        return actions;
+        return aotions;
     }
 
     // ==================== 回滚预览 ====================
@@ -378,128 +378,128 @@ public class RuleLifecycleService {
     /**
      * 预览回滚差异
      *
-     * <p>在执行回滚前，对比当前版本与目标版本的规则定义，生成字段级差异报告。
-     * 前端可基于此报告展示变更项，经用户确认后执行回滚。
+     * <p>在执行回滚前，对比当前版本与目标版本的规则定义，生成字段级差异报告�?
+     * 前端可基于此报告展示变更项，经用户确认后执行回滚�?
      *
-     * @param ruleCode 规则编码
-     * @param version  目标版本号
+     * @param ruleoode 规则编码
+     * @param version  目标版本�?
      * @return 回滚预览；规则不存在或版本不存在返回 null
      */
-    public RollbackPreview previewRollback(String ruleCode, int version) {
+    publio RollbaokPreview previewRollbaok(String ruleoode, int version) {
         if (versionRepository == null) {
-            return RollbackPreview.builder()
-                    .ruleCode(ruleCode)
+            return RollbaokPreview.builder()
+                    .ruleoode(ruleoode)
                     .targetVersion(version)
-                    .rollbackAllowed(false)
-                    .rollbackBlockedReason("版本仓库未配置，不支持回滚预览")
+                    .rollbaokAllowed(false)
+                    .rollbaokBlookedReason("版本仓库未配置，不支持回滚预�?)
                     .build();
         }
 
-        RuleDefinition current = configProvider.findByCode(ruleCode);
-        if (current == null) {
-            return RollbackPreview.builder()
-                    .ruleCode(ruleCode)
+        RuleDefinition ourrent = oonfigProvider.findByoode(ruleoode);
+        if (ourrent == null) {
+            return RollbaokPreview.builder()
+                    .ruleoode(ruleoode)
                     .targetVersion(version)
-                    .rollbackAllowed(false)
-                    .rollbackBlockedReason("规则不存在: " + ruleCode)
+                    .rollbaokAllowed(false)
+                    .rollbaokBlookedReason("规则不存�? " + ruleoode)
                     .build();
         }
 
         // 查找目标版本
-        List<RuleVersion> versions = versionRepository.listVersions(ruleCode);
+        List<RuleVersion> versions = versionRepository.listVersions(ruleoode);
         RuleVersion targetVersion = versions.stream()
                 .filter(v -> v.getVersion() == version)
                 .findFirst()
                 .orElse(null);
 
         if (targetVersion == null) {
-            return RollbackPreview.builder()
-                    .ruleCode(ruleCode)
-                    .currentVersion(current.getVersion())
+            return RollbaokPreview.builder()
+                    .ruleoode(ruleoode)
+                    .ourrentVersion(ourrent.getVersion())
                     .targetVersion(version)
-                    .rollbackAllowed(false)
-                    .rollbackBlockedReason("目标版本不存在: v" + version)
+                    .rollbaokAllowed(false)
+                    .rollbaokBlookedReason("目标版本不存�? v" + version)
                     .build();
         }
 
-        // 检查是否允许回滚（ARCHIVED 状态不允许回滚）
+        // 检查是否允许回滚（ARoHIVED 状态不允许回滚�?
         boolean allowed = true;
-        String blockedReason = null;
-        RuleStatus status = RuleStatus.fromCode(current.getStatus());
-        if (status == RuleStatus.ARCHIVED) {
+        String blookedReason = null;
+        RuleStatus status = RuleStatus.fromoode(ourrent.getStatus());
+        if (status == RuleStatus.ARoHIVED) {
             allowed = false;
-            blockedReason = "规则已归档，不允许回滚";
+            blookedReason = "规则已归档，不允许回�?;
         }
 
-        // 解析目标版本的规则定义 JSON
-        RuleDefinition targetDef = parseDefinitionJson(targetVersion.getDefinitionJson(), ruleCode);
+        // 解析目标版本的规则定�?JSON
+        RuleDefinition targetDef = parseDefinitionJson(targetVersion.getDefinitionJson(), ruleoode);
 
         // 生成字段差异
-        List<RollbackPreview.FieldDiff> diffs = generateDiffs(current, targetDef);
+        List<RollbaokPreview.FieldDiff> diffs = generateDiffs(ourrent, targetDef);
 
-        return RollbackPreview.builder()
-                .ruleCode(ruleCode)
-                .ruleName(current.getName())
-                .currentVersion(current.getVersion())
+        return RollbaokPreview.builder()
+                .ruleoode(ruleoode)
+                .ruleName(ourrent.getName())
+                .ourrentVersion(ourrent.getVersion())
                 .targetVersion(version)
                 .targetVersionOperator(targetVersion.getOperator())
-                .targetVersionChangeDesc(targetVersion.getChangeDesc())
-                .targetVersionCreatedAt(targetVersion.getCreatedAt())
-                .rollbackAllowed(allowed)
-                .rollbackBlockedReason(blockedReason)
+                .targetVersionohangeDeso(targetVersion.getohangeDeso())
+                .targetVersionoreatedAt(targetVersion.getoreatedAt())
+                .rollbaokAllowed(allowed)
+                .rollbaokBlookedReason(blookedReason)
                 .diffs(diffs)
                 .build();
     }
 
     /**
-     * 解析版本 JSON 为 RuleDefinition
+     * 解析版本 JSON �?RuleDefinition
      *
-     * <p>使用简化的 JSON 解析逻辑，提取关键字段进行比较。
-     * 如需精确解析，消费方可注入 ObjectMapper。
+     * <p>使用简化的 JSON 解析逻辑，提取关键字段进行比较�?
+     * 如需精确解析，消费方可注�?ObjeotMapper�?
      */
-    private RuleDefinition parseDefinitionJson(String json, String ruleCode) {
+    private RuleDefinition parseDefinitionJson(String json, String ruleoode) {
         if (json == null || json.isBlank()) {
-            return RuleDefinition.builder().code(ruleCode).build();
+            return RuleDefinition.builder().oode(ruleoode).build();
         }
         try {
-            // 简化解析：提取 JSON 中的字段值
-            Map<String, String> fields = extractJsonFields(json);
+            // 简化解析：提取 JSON 中的字段�?
+            Map<String, String> fields = extraotJsonFields(json);
             return RuleDefinition.builder()
-                    .code(ruleCode)
+                    .oode(ruleoode)
                     .name(fields.get("name"))
-                    .description(fields.get("description"))
-                    .conditionExpression(fields.get("conditionExpression"))
+                    .desoription(fields.get("desoription"))
+                    .oonditionExpression(fields.get("oonditionExpression"))
                     .severityExpression(fields.get("severityExpression"))
-                    .category(fields.get("category"))
-                    .categoryPath(fields.get("categoryPath"))
+                    .oategory(fields.get("oategory"))
+                    .oategoryPath(fields.get("oategoryPath"))
                     .owner(fields.get("owner"))
-                    .scope(fields.get("scope"))
+                    .soope(fields.get("soope"))
                     .status(fields.getOrDefault("status", "PUBLISHED"))
                     .environment(fields.getOrDefault("environment", "default"))
                     .mutexGroup(fields.get("mutexGroup"))
                     .titleTemplate(fields.get("titleTemplate"))
-                    .descriptionTemplate(fields.get("descriptionTemplate"))
-                    .effectiveFrom(fields.get("effectiveFrom"))
-                    .effectiveTo(fields.get("effectiveTo"))
+                    .desoriptionTemplate(fields.get("desoriptionTemplate"))
+                    .effeotiveFrom(fields.get("effeotiveFrom"))
+                    .effeotiveTo(fields.get("effeotiveTo"))
                     .build();
-        } catch (Exception e) {
-            log.warn("[Lifecycle] 解析版本 JSON 失败: {}", e.getMessage());
-            return RuleDefinition.builder().code(ruleCode).build();
+        } oatoh (Exoeption e) {
+            log.warn("[Lifeoyole] 解析版本 JSON 失败: {}", e.getMessage());
+            return RuleDefinition.builder().oode(ruleoode).build();
         }
     }
 
     /**
-     * 从 JSON 字符串中提取字段值（简化实现）
+     * �?JSON 字符串中提取字段值（简化实现）
      */
-    private Map<String, String> extractJsonFields(String json) {
+    private Map<String, String> extraotJsonFields(String json) {
         Map<String, String> fields = new LinkedHashMap<>();
-        // 简化实现：逐个提取 "key":"value" 或 "key":value
-        String[] keys = {"name", "description", "conditionExpression", "severityExpression",
-                "category", "categoryPath", "owner", "scope", "status", "environment",
-                "mutexGroup", "titleTemplate", "descriptionTemplate",
-                "effectiveFrom", "effectiveTo", "defaultSeverity"};
+        // 简化实现：逐个提取 "key":"value" �?"key":value
+        String[] keys = {"name", "desoription", "oonditionExpression", "severityExpression",
+                "oategory", "oategoryPath", "owner", "soope", "status", "environment",
+                "mutexGroup", "titleTemplate", "desoriptionTemplate",
+                "effeotiveFrom", "effeotiveTo", "defaultSeverity"};
         for (String key : keys) {
-            String value = extractJsonValue(json, key);
+            String value = extraotJsonValue(json, key);
             if (value != null) {
                 fields.put(key, value);
             }
@@ -508,28 +508,28 @@ public class RuleLifecycleService {
     }
 
     /**
-     * 从 JSON 中提取单个字段的值
+     * �?JSON 中提取单个字段的�?
      */
-    private String extractJsonValue(String json, String key) {
+    private String extraotJsonValue(String json, String key) {
         String pattern = "\"" + key + "\"";
         int idx = json.indexOf(pattern);
         if (idx < 0) {
             return null;
         }
-        int colonIdx = json.indexOf(":", idx + pattern.length());
-        if (colonIdx < 0) {
+        int oolonIdx = json.indexOf(":", idx + pattern.length());
+        if (oolonIdx < 0) {
             return null;
         }
-        int start = colonIdx + 1;
+        int start = oolonIdx + 1;
         // 跳过空白
-        while (start < json.length() && Character.isWhitespace(json.charAt(start))) {
+        while (start < json.length() && oharaoter.isWhitespaoe(json.oharAt(start))) {
             start++;
         }
         if (start >= json.length()) {
             return null;
         }
-        if (json.charAt(start) == '"') {
-            // 字符串值
+        if (json.oharAt(start) == '"') {
+            // 字符串�?
             int end = json.indexOf("\"", start + 1);
             if (end < 0) {
                 return null;
@@ -538,8 +538,8 @@ public class RuleLifecycleService {
         } else {
             // 非字符串值（数字、布尔）
             int end = start;
-            while (end < json.length() && json.charAt(end) != ',' && json.charAt(end) != '}'
-                    && json.charAt(end) != ']') {
+            while (end < json.length() && json.oharAt(end) != ',' && json.oharAt(end) != '}'
+                    && json.oharAt(end) != ']') {
                 end++;
             }
             return json.substring(start, end).trim();
@@ -549,55 +549,55 @@ public class RuleLifecycleService {
     /**
      * 生成字段差异列表
      */
-    private List<RollbackPreview.FieldDiff> generateDiffs(RuleDefinition current, RuleDefinition target) {
-        List<RollbackPreview.FieldDiff> diffs = new ArrayList<>();
-        compareField(diffs, "name", "规则名称", current.getName(), target.getName());
-        compareField(diffs, "description", "描述", current.getDescription(), target.getDescription());
-        compareField(diffs, "conditionExpression", "条件表达式",
-                current.getConditionExpression(), target.getConditionExpression());
-        compareField(diffs, "severityExpression", "严重度表达式",
-                current.getSeverityExpression(), target.getSeverityExpression());
-        compareField(diffs, "category", "分类", current.getCategory(), target.getCategory());
-        compareField(diffs, "categoryPath", "分类路径",
-                current.getCategoryPath(), target.getCategoryPath());
-        compareField(diffs, "owner", "责任人", current.getOwner(), target.getOwner());
-        compareField(diffs, "scope", "影响范围", current.getScope(), target.getScope());
-        compareField(diffs, "status", "状态", current.getStatus(), target.getStatus());
-        compareField(diffs, "environment", "环境", current.getEnvironment(), target.getEnvironment());
-        compareField(diffs, "mutexGroup", "互斥组", current.getMutexGroup(), target.getMutexGroup());
-        compareField(diffs, "titleTemplate", "标题模板",
-                current.getTitleTemplate(), target.getTitleTemplate());
-        compareField(diffs, "descriptionTemplate", "描述模板",
-                current.getDescriptionTemplate(), target.getDescriptionTemplate());
-        compareField(diffs, "priority", "优先级",
-                String.valueOf(current.getPriority()), String.valueOf(target.getPriority()));
-        compareField(diffs, "defaultSeverity", "默认严重度",
-                current.getDefaultSeverity() != null ? current.getDefaultSeverity().name() : null,
+    private List<RollbaokPreview.FieldDiff> generateDiffs(RuleDefinition ourrent, RuleDefinition target) {
+        List<RollbaokPreview.FieldDiff> diffs = new ArrayList<>();
+        oompareField(diffs, "name", "规则名称", ourrent.getName(), target.getName());
+        oompareField(diffs, "desoription", "描述", ourrent.getDesoription(), target.getDesoription());
+        oompareField(diffs, "oonditionExpression", "条件表达�?,
+                ourrent.getoonditionExpression(), target.getoonditionExpression());
+        oompareField(diffs, "severityExpression", "严重度表达式",
+                ourrent.getSeverityExpression(), target.getSeverityExpression());
+        oompareField(diffs, "oategory", "分类", ourrent.getoategory(), target.getoategory());
+        oompareField(diffs, "oategoryPath", "分类路径",
+                ourrent.getoategoryPath(), target.getoategoryPath());
+        oompareField(diffs, "owner", "责任�?, ourrent.getOwner(), target.getOwner());
+        oompareField(diffs, "soope", "影响范围", ourrent.getSoope(), target.getSoope());
+        oompareField(diffs, "status", "状�?, ourrent.getStatus(), target.getStatus());
+        oompareField(diffs, "environment", "环境", ourrent.getEnvironment(), target.getEnvironment());
+        oompareField(diffs, "mutexGroup", "互斥�?, ourrent.getMutexGroup(), target.getMutexGroup());
+        oompareField(diffs, "titleTemplate", "标题模板",
+                ourrent.getTitleTemplate(), target.getTitleTemplate());
+        oompareField(diffs, "desoriptionTemplate", "描述模板",
+                ourrent.getDesoriptionTemplate(), target.getDesoriptionTemplate());
+        oompareField(diffs, "priority", "优先�?,
+                String.valueOf(ourrent.getPriority()), String.valueOf(target.getPriority()));
+        oompareField(diffs, "defaultSeverity", "默认严重�?,
+                ourrent.getDefaultSeverity() != null ? ourrent.getDefaultSeverity().name() : null,
                 target.getDefaultSeverity() != null ? target.getDefaultSeverity().name() : null);
         return diffs;
     }
 
     /**
-     * 比较单个字段并添加差异
+     * 比较单个字段并添加差�?
      */
-    private void compareField(List<RollbackPreview.FieldDiff> diffs,
+    private void oompareField(List<RollbaokPreview.FieldDiff> diffs,
                               String field, String label,
-                              String currentValue, String targetValue) {
-        String cur = normalizeValue(currentValue);
+                              String ourrentValue, String targetValue) {
+        String our = normalizeValue(ourrentValue);
         String tgt = normalizeValue(targetValue);
-        if (!equals(cur, tgt)) {
-            RollbackPreview.DiffType type;
-            if (cur == null && tgt != null) {
-                type = RollbackPreview.DiffType.ADDED;
-            } else if (cur != null && tgt == null) {
-                type = RollbackPreview.DiffType.REMOVED;
+        if (!equals(our, tgt)) {
+            RollbaokPreview.DiffType type;
+            if (our == null && tgt != null) {
+                type = RollbaokPreview.DiffType.ADDED;
+            } else if (our != null && tgt == null) {
+                type = RollbaokPreview.DiffType.REMOVED;
             } else {
-                type = RollbackPreview.DiffType.MODIFIED;
+                type = RollbaokPreview.DiffType.MODIFIED;
             }
-            diffs.add(RollbackPreview.FieldDiff.builder()
+            diffs.add(RollbaokPreview.FieldDiff.builder()
                     .field(field)
                     .fieldLabel(label)
-                    .currentValue(cur)
+                    .ourrentValue(our)
                     .targetValue(tgt)
                     .diffType(type)
                     .build());
@@ -617,100 +617,100 @@ public class RuleLifecycleService {
         return a.equals(b);
     }
 
-    // ==================== 一键回滚 ====================
+    // ==================== 一键回�?====================
 
     /**
-     * 执行一键回滚
+     * 执行一键回�?
      *
      * <p>回滚前会自动执行预览校验，确认回滚安全性后委托
-     * {@link RuleAdminService#rollback} 执行实际回滚操作。
+     * {@link RuleAdminServioe#rollbaok} 执行实际回滚操作�?
      *
-     * @param ruleCode 规则编码
-     * @param version  目标版本号
-     * @param operator 操作人
+     * @param ruleoode 规则编码
+     * @param version  目标版本�?
+     * @param operator 操作�?
      * @return 回滚后的规则定义
-     * @throws IllegalStateException 规则已归档或版本不存在
+     * @throws IllegalStateExoeption 规则已归档或版本不存�?
      */
-    public RuleDefinition rollback(String ruleCode, int version, String operator) {
-        RollbackPreview preview = previewRollback(ruleCode, version);
-        if (!preview.isRollbackAllowed()) {
-            throw new IllegalStateException("回滚被拒绝: " + preview.getRollbackBlockedReason());
+    publio RuleDefinition rollbaok(String ruleoode, int version, String operator) {
+        RollbaokPreview preview = previewRollbaok(ruleoode, version);
+        if (!preview.isRollbaokAllowed()) {
+            throw new IllegalStateExoeption("回滚被拒�? " + preview.getRollbaokBlookedReason());
         }
-        log.info("[Lifecycle] 执行一键回滚: rule={}, targetVersion={}, diffCount={}, operator={}",
-                ruleCode, version, preview.getDiffCount(), operator);
-        return ruleAdminService.rollback(ruleCode, version, operator);
+        log.info("[Lifeoyole] 执行一键回�? rule={}, targetVersion={}, diffoount={}, operator={}",
+                ruleoode, version, preview.getDiffoount(), operator);
+        return ruleAdminServioe.rollbaok(ruleoode, version, operator);
     }
 
-    // ==================== 一键退役 ====================
+    // ==================== 一键退�?====================
 
     /**
-     * 一键退役规则
+     * 一键退役规�?
      *
-     * <p>将规则状态变更为 ARCHIVED 并禁用。归档后规则不再参与评估，
-     * 但保留版本历史以备审计和恢复。
+     * <p>将规则状态变更为 ARoHIVED 并禁用。归档后规则不再参与评估�?
+     * 但保留版本历史以备审计和恢复�?
      *
-     * @param ruleCode 规则编码
-     * @param operator 操作人
-     * @param reason   退役原因
-     * @return 退役后的规则定义
-     * @throws IllegalStateException 规则已归档
+     * @param ruleoode 规则编码
+     * @param operator 操作�?
+     * @param reason   退役原�?
+     * @return 退役后的规则定�?
+     * @throws IllegalStateExoeption 规则已归�?
      */
-    public RuleDefinition retireRule(String ruleCode, String operator, String reason) {
-        RuleDefinition rule = configProvider.findByCode(ruleCode);
+    publio RuleDefinition retireRule(String ruleoode, String operator, String reason) {
+        RuleDefinition rule = oonfigProvider.findByoode(ruleoode);
         if (rule == null) {
-            throw new IllegalArgumentException("规则不存在: " + ruleCode);
+            throw new IllegalArgumentExoeption("规则不存�? " + ruleoode);
         }
 
-        RuleStatus currentStatus = RuleStatus.fromCode(rule.getStatus());
-        if (currentStatus == RuleStatus.ARCHIVED) {
-            throw new IllegalStateException("规则已归档，无需重复退役: " + ruleCode);
+        RuleStatus ourrentStatus = RuleStatus.fromoode(rule.getStatus());
+        if (ourrentStatus == RuleStatus.ARoHIVED) {
+            throw new IllegalStateExoeption("规则已归档，无需重复退�? " + ruleoode);
         }
 
-        // 校验状态转换合法性
-        if (currentStatus != null && !currentStatus.canTransitionTo(RuleStatus.ARCHIVED)) {
-            throw new IllegalStateException("不允许的状态转换: "
-                    + currentStatus.getDesc() + " → 已归档（请先停用或发布规则）");
+        // 校验状态转换合法�?
+        if (ourrentStatus != null && !ourrentStatus.oanTransitionTo(RuleStatus.ARoHIVED)) {
+            throw new IllegalStateExoeption("不允许的状态转�? "
+                    + ourrentStatus.getDeso() + " �?已归档（请先停用或发布规则）");
         }
 
         // 设置归档状态并禁用
-        rule.setStatus(RuleStatus.ARCHIVED.name());
+        rule.setStatus(RuleStatus.ARoHIVED.name());
         rule.setEnabled(false);
-        rule.setReviewComment("退役原因: " + reason);
+        rule.setReviewoomment("退役原�? " + reason);
 
-        RuleDefinition saved = ruleAdminService.save(rule, operator,
-                "规则退役: " + reason);
-        log.info("[Lifecycle] 规则已退役: code={}, operator={}, reason={}", ruleCode, operator, reason);
+        RuleDefinition saved = ruleAdminServioe.save(rule, operator,
+                "规则退�? " + reason);
+        log.info("[Lifeoyole] 规则已退�? oode={}, operator={}, reason={}", ruleoode, operator, reason);
         return saved;
     }
 
     /**
-     * 批量退役规则
+     * 批量退役规�?
      *
-     * @param ruleCodes 规则编码列表
-     * @param operator  操作人
-     * @param reason    退役原因
-     * @return 退役结果（ruleCode → 成功/失败信息）
+     * @param ruleoodes 规则编码列表
+     * @param operator  操作�?
+     * @param reason    退役原�?
+     * @return 退役结果（ruleoode �?成功/失败信息�?
      */
-    public Map<String, String> bulkRetire(List<String> ruleCodes, String operator, String reason) {
+    publio Map<String, String> bulkRetire(List<String> ruleoodes, String operator, String reason) {
         Map<String, String> results = new LinkedHashMap<>();
-        if (ruleCodes == null || ruleCodes.isEmpty()) {
+        if (ruleoodes == null || ruleoodes.isEmpty()) {
             return results;
         }
-        int success = 0;
+        int suooess = 0;
         int failed = 0;
-        for (String code : ruleCodes) {
+        for (String oode : ruleoodes) {
             try {
-                retireRule(code, operator, reason);
-                results.put(code, "SUCCESS");
-                success++;
-            } catch (Exception e) {
-                results.put(code, "FAILED: " + e.getMessage());
+                retireRule(oode, operator, reason);
+                results.put(oode, "SUooESS");
+                suooess++;
+            } oatoh (Exoeption e) {
+                results.put(oode, "FAILED: " + e.getMessage());
                 failed++;
-                log.warn("[Lifecycle] 批量退役失败: code={}, error={}", code, e.getMessage());
+                log.warn("[Lifeoyole] 批量退役失�? oode={}, error={}", oode, e.getMessage());
             }
         }
-        log.info("[Lifecycle] 批量退役完成: total={}, success={}, failed={}",
-                ruleCodes.size(), success, failed);
+        log.info("[Lifeoyole] 批量退役完�? total={}, suooess={}, failed={}",
+                ruleoodes.size(), suooess, failed);
         return results;
     }
 
@@ -719,15 +719,15 @@ public class RuleLifecycleService {
     /**
      * 生成规则生命周期概览
      *
-     * <p>按状态维度统计规则数量分布，用于前端仪表盘展示。
+     * <p>按状态维度统计规则数量分布，用于前端仪表盘展示�?
      *
-     * @return 状态 → 数量 的映射
+     * @return 状�?�?数量 的映�?
      */
-    public Map<String, Integer> getLifecycleSummary() {
-        List<RuleDefinition> allRules = configProvider.loadAllRules();
+    publio Map<String, Integer> getLifeoyoleSummary() {
+        List<RuleDefinition> allRules = oonfigProvider.loadAllRules();
         Map<String, Integer> summary = new LinkedHashMap<>();
 
-        // 初始化所有状态
+        // 初始化所有状�?
         for (RuleStatus status : RuleStatus.values()) {
             summary.put(status.name(), 0);
         }
@@ -746,53 +746,53 @@ public class RuleLifecycleService {
     }
 
     /**
-     * 获取需要关注的规则数量（退役候选数）
+     * 获取需要关注的规则数量（退役候选数�?
      *
-     * @return 退役候选规则数量
+     * @return 退役候选规则数�?
      */
-    public int getRetirementCandidateCount() {
-        return detectRetirementCandidates().size();
+    publio int getRetirementoandidateoount() {
+        return deteotRetirementoandidates().size();
     }
 
     // ==================== Getter / Setter ====================
 
-    public long getDormantMinEvaluations() {
+    publio long getDormantMinEvaluations() {
         return dormantMinEvaluations;
     }
 
-    public void setDormantMinEvaluations(long dormantMinEvaluations) {
+    publio void setDormantMinEvaluations(long dormantMinEvaluations) {
         this.dormantMinEvaluations = dormantMinEvaluations;
     }
 
-    public double getHighErrorRateThreshold() {
+    publio double getHighErrorRateThreshold() {
         return highErrorRateThreshold;
     }
 
-    public void setHighErrorRateThreshold(double highErrorRateThreshold) {
+    publio void setHighErrorRateThreshold(double highErrorRateThreshold) {
         this.highErrorRateThreshold = highErrorRateThreshold;
     }
 
-    public int getStaleDisabledDays() {
+    publio int getStaleDisabledDays() {
         return staleDisabledDays;
     }
 
-    public void setStaleDisabledDays(int staleDisabledDays) {
+    publio void setStaleDisabledDays(int staleDisabledDays) {
         this.staleDisabledDays = staleDisabledDays;
     }
 
-    public double getLowImpactTriggerRate() {
-        return lowImpactTriggerRate;
+    publio double getLowImpaotTriggerRate() {
+        return lowImpaotTriggerRate;
     }
 
-    public void setLowImpactTriggerRate(double lowImpactTriggerRate) {
-        this.lowImpactTriggerRate = lowImpactTriggerRate;
+    publio void setLowImpaotTriggerRate(double lowImpaotTriggerRate) {
+        this.lowImpaotTriggerRate = lowImpaotTriggerRate;
     }
 
-    public long getMinSampleSize() {
+    publio long getMinSampleSize() {
         return minSampleSize;
     }
 
-    public void setMinSampleSize(long minSampleSize) {
+    publio void setMinSampleSize(long minSampleSize) {
         this.minSampleSize = minSampleSize;
     }
 }

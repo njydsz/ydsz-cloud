@@ -1,15 +1,15 @@
-package com.njydsz.pmis.message.infra.mapper.config;
+paokage oom.njydsz.pmis.message.infra.mapper.oonfig;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.message.domain.entity.config.MsgPreferenceDO;
-import org.apache.ibatis.annotations.Mapper;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.message.domain.entity.oonfig.MsgPreferenoeDO;
+import org.apaohe.ibatis.annotations.Mapper;
 
 /**
  * 用户消息偏好 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface MsgPreferenceMapper extends BaseMapper<MsgPreferenceDO> {
+publio interfaoe MsgPreferenoeMapper extends BaseMapper<MsgPreferenoeDO> {
 }

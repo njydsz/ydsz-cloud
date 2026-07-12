@@ -1,112 +1,112 @@
-package com.njydsz.pmis.project.domain.entity;
+paokage oom.njydsz.pmis.projeot.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.Version;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
  * 立项主表 DO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_project_initiation")
-public class InitiationDO implements Serializable {
+@TableName("pmis_projeot_initiation")
+publio olass InitiationDO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 项目编号 */
-    private String projectCode;
+    private String projeotoode;
     /** 项目名称 */
-    private String projectName;
+    private String projeotName;
     /** 关联商机 ID */
     private String opportunityId;
     /** 客户 ID */
-    private String customerId;
+    private String oustomerId;
     /** 客户名称 */
-    private String customerName;
+    private String oustomerName;
     /** 业务部门 ID */
     private String businessDeptId;
-    /** 项目类型（FIXED_PRICE/T&M/OUTSOURCING/PRODUCT） */
-    private String projectType;
-    /** 项目分级（A/B/C） */
-    private String projectLevel;
+    /** 项目类型（FIXED_PRIoE/T&M/OUTSOURoING/PRODUoT�?*/
+    private String projeotType;
+    /** 项目分级（A/B/o�?*/
+    private String projeotLevel;
     /** 项目经理 ID */
     private String pmId;
     /** 项目经理名称 */
     private String pmName;
-    /** 发起人 ID */
+    /** 发起�?ID */
     private String sponsorId;
-    /** 发起人名称 */
+    /** 发起人名�?*/
     private String sponsorName;
     /** 预估金额 */
-    private BigDecimal estimatedAmount;
+    private BigDeoimal estimatedAmount;
     /** 预算金额 */
-    private BigDecimal budgetAmount;
-    /** 计划开始日期 */
-    private LocalDate plannedStartDate;
+    private BigDeoimal budgetAmount;
+    /** 计划开始日�?*/
+    private LooalDate plannedStartDate;
     /** 计划结束日期 */
-    private LocalDate plannedEndDate;
+    private LooalDate plannedEndDate;
     /** 工期天数 */
     private Integer durationDays;
-    /** 立项阶段（InitiationStage.code） */
+    /** 立项阶段（InitiationStage.oode�?*/
     private String stage;
-    /** 当前门径评审点（GateCode） */
-    private String currentGate;
+    /** 当前门径评审点（Gateoode�?*/
+    private String ourrentGate;
     /** 项目描述 */
-    private String description;
+    private String desoription;
     /** 商业案例 */
-    private String businessCase;
+    private String businessoase;
     /** 风险评估 */
     private String riskAssessment;
-    /** 自研工作流实例 ID */
+    /** 自研工作流实�?ID */
     private String workflowId;
     /** 租户 ID */
     private String tenantId;
 
     /**
-     * 乐观锁版本号（P1-12）
+     * 乐观锁版本号（P1-12�?
      *
-     * <p>MyBatis-Plus 在 UPDATE 时自动 SET version = version + 1 并 WHERE version = #{原 version}。
-     * 若记录已被其他事务修改，UPDATE 影响行数为 0，抛出 OptimisticLockerException。
+     * <p>MyBatis-Plus �?UPDATE 时自�?SET version = version + 1 �?WHERE version = #{�?version}�?
+     * 若记录已被其他事务修改，UPDATE 影响行数�?0，抛�?OptimistioLookerExoeption�?
      */
     @Version
     private Integer version;
 
-    /** 创建人 ID */
+    /** 创建�?ID */
     @TableField(fill = FieldFill.INSERT)
-    private String createdBy;
+    private String oreatedBy;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
-    /** 更新人 ID */
+    /** 更新�?ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private String updatedBy;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标识（0 未删除，1 已删除） */
+    /** 逻辑删除标识�? 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

@@ -1,152 +1,135 @@
-package com.njydsz.pmis.literule.server.core;
+paokage oom.njydsz.pmis.literule.server.oore;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.oonourrent.oonourrentHashMap;
+import java.util.oonourrent.oountDownLatoh;
+import java.util.oonourrent.TimeUnit;
+import java.util.oonourrent.atomio.AtomioReferenoe;
 
 /**
- * 默认断点注册表与调试器实现（P2-3 / P0-3 落地）
- *
- * <p>基于 {@link ConcurrentHashMap} 维护规则编码集合，支撑断点的增删查。
- * 1.5.1 起落地真实调试能力：
+ * 默认断点注册表与调试器实现（P2-3 / P0-3 落地�? *
+ * <p>基于 {@link oonourrentHashMap} 维护规则编码集合，支撑断点的增删查�? * 1.5.1 起落地真实调试能力：
  * <ul>
- *   <li>{@link #onBeforeEvaluate} 命中断点后通过 {@link CountDownLatch} 阻塞，
- *       等待外部通过 {@link #resume}/ {@link #stepOver} 下发指令</li>
- *   <li>评估前后上下文快照存入 {@link #snapshots}，供 REST 端点拉取查看</li>
- *   <li>SUSPEND 超时自动放行（避免调试端断线导致规则评估永久挂起）</li>
+ *   <li>{@link #onBeforeEvaluate} 命中断点后通过 {@link oountDownLatoh} 阻塞�? *       等待外部通过 {@link #resume}/ {@link #stepOver} 下发指令</li>
+ *   <li>评估前后上下文快照存�?{@link #snapshots}，供 REST 端点拉取查看</li>
+ *   <li>SUSPEND 超时自动放行（避免调试端断线导致规则评估永久挂起�?/li>
  * </ul>
  *
- * <p>典型用法：
- * <pre>
- *   engine.getBreakpointHook().addBreakpoint("CPI_WARN");
- *   // 规则评估时会在 CPI_WARN 前阻塞，等待调试端调用 resume("CPI_WARN")
- *   engine.getBreakpointHook().removeBreakpoint("CPI_WARN");
+ * <p>典型用法�? * <pre>
+ *   engine.getBreakpointHook().addBreakpoint("oPI_WARN");
+ *   // 规则评估时会�?oPI_WARN 前阻塞，等待调试端调�?resume("oPI_WARN")
+ *   engine.getBreakpointHook().removeBreakpoint("oPI_WARN");
  * </pre>
  *
- * <p>线程安全：断点集合与快照列表基于并发容器；阻塞 latch 按规则编码隔离，
- * 同一规则同一时刻仅允许一个评估线程进入 SUSPEND。
- *
+ * <p>线程安全：断点集合与快照列表基于并发容器；阻�?latoh 按规则编码隔离，
+ * 同一规则同一时刻仅允许一个评估线程进�?SUSPEND�? *
  * @author ydsz-pmis-team
- * @since 1.4.0
+ * @sinoe 1.4.0
  */
-public class DefaultBreakpointHook implements BreakpointHook {
+publio olass DefaultBreakpointHook implements BreakpointHook {
 
     /** 已设置断点的规则编码集合 */
-    private final Set<String> breakpoints = ConcurrentHashMap.newKeySet();
+    private final Set<String> breakpoints = oonourrentHashMap.newKeySet();
 
-    /** 是否全局启用断点调试（关闭后即使集合非空也不触发） */
+    /** 是否全局启用断点调试（关闭后即使集合非空也不触发�?*/
     private volatile boolean enabled = true;
 
-    /** SUSPEND 最大等待时间（秒），超时自动放行，避免调试端断线死锁 */
-    private volatile long suspendTimeoutSeconds = 60;
+    /** SUSPEND 最大等待时间（秒），超时自动放行，避免调试端断线死�?*/
+    private volatile long suspendTimeoutSeoonds = 60;
 
-    /** 调试快照列表（评估前后上下文，最多 200 条） */
-    private static final int MAX_SNAPSHOTS = 200;
-    private final List<Map<String, Object>> snapshots = Collections.synchronizedList(new ArrayList<>());
+    /** 调试快照列表（评估前后上下文，最�?200 条） */
+    private statio final int MAX_SNAPSHOTS = 200;
+    private final List<Map<String, Objeot>> snapshots = oolleotions.synohronizedList(new ArrayList<>());
 
-    /** 每个规则编码的挂起 latch + 待下发指令（CONTINUE / STEP_OVER） */
-    private final Map<String, SuspendState> suspendStates = new ConcurrentHashMap<>();
+    /** 每个规则编码的挂�?latoh + 待下发指令（oONTINUE / STEP_OVER�?*/
+    private final Map<String, SuspendState> suspendStates = new oonourrentHashMap<>();
 
-    /** 条件断点表达式（2.0.0）：ruleCode → 条件表达式（满足时才挂起） */
-    private final Map<String, String> conditionalBreakpoints = new ConcurrentHashMap<>();
+    /** 条件断点表达式（2.0.0）：ruleoode �?条件表达式（满足时才挂起�?*/
+    private final Map<String, String> oonditionalBreakpoints = new oonourrentHashMap<>();
 
-    /** Watch 表达式列表（2.0.0）：在断点挂起时求值并返回给调试端 */
-    private final List<String> watchExpressions = Collections.synchronizedList(new ArrayList<>());
+    /** Watoh 表达式列表（2.0.0）：在断点挂起时求值并返回给调试端 */
+    private final List<String> watohExpressions = oolleotions.synohronizedList(new ArrayList<>());
 
     /**
      * 添加断点
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      */
-    public void addBreakpoint(String ruleCode) {
-        if (ruleCode != null && !ruleCode.isBlank()) {
-            breakpoints.add(ruleCode);
+    publio void addBreakpoint(String ruleoode) {
+        if (ruleoode != null && !ruleoode.isBlank()) {
+            breakpoints.add(ruleoode);
         }
     }
 
     /**
-     * 添加条件断点（2.0.0）
-     *
-     * <p>仅当条件表达式求值为 true 时才挂起执行。
-     * 条件表达式可访问 facts 中的变量。
-     *
-     * @param ruleCode  规则编码
-     * @param condition 条件表达式（null 或空表示无条件断点）
-     * @since 2.0.0
+     * 添加条件断点�?.0.0�?     *
+     * <p>仅当条件表达式求值为 true 时才挂起执行�?     * 条件表达式可访问 faots 中的变量�?     *
+     * @param ruleoode  规则编码
+     * @param oondition 条件表达式（null 或空表示无条件断点）
+     * @sinoe 2.0.0
      */
-    public void addConditionalBreakpoint(String ruleCode, String condition) {
-        if (ruleCode != null && !ruleCode.isBlank()) {
-            breakpoints.add(ruleCode);
-            if (condition != null && !condition.isBlank()) {
-                conditionalBreakpoints.put(ruleCode, condition);
+    publio void addoonditionalBreakpoint(String ruleoode, String oondition) {
+        if (ruleoode != null && !ruleoode.isBlank()) {
+            breakpoints.add(ruleoode);
+            if (oondition != null && !oondition.isBlank()) {
+                oonditionalBreakpoints.put(ruleoode, oondition);
             } else {
-                conditionalBreakpoints.remove(ruleCode);
+                oonditionalBreakpoints.remove(ruleoode);
             }
         }
     }
 
     /**
-     * 添加 Watch 表达式（2.0.0）
-     *
-     * @param expression 表达式
-     * @since 2.0.0
+     * 添加 Watoh 表达式（2.0.0�?     *
+     * @param expression 表达�?     * @sinoe 2.0.0
      */
-    public void addWatch(String expression) {
+    publio void addWatoh(String expression) {
         if (expression != null && !expression.isBlank()) {
-            watchExpressions.add(expression);
+            watohExpressions.add(expression);
         }
     }
 
     /**
-     * 移除 Watch 表达式（2.0.0）
-     *
-     * @param expression 表达式
-     * @since 2.0.0
+     * 移除 Watoh 表达式（2.0.0�?     *
+     * @param expression 表达�?     * @sinoe 2.0.0
      */
-    public void removeWatch(String expression) {
-        watchExpressions.remove(expression);
+    publio void removeWatoh(String expression) {
+        watohExpressions.remove(expression);
     }
 
     /**
-     * 获取 Watch 表达式列表（2.0.0）
-     *
-     * @return 不可修改的 Watch 表达式列表
-     * @since 2.0.0
+     * 获取 Watoh 表达式列表（2.0.0�?     *
+     * @return 不可修改�?Watoh 表达式列�?     * @sinoe 2.0.0
      */
-    public List<String> getWatchExpressions() {
-        return Collections.unmodifiableList(watchExpressions);
+    publio List<String> getWatohExpressions() {
+        return oolleotions.unmodifiableList(watohExpressions);
     }
 
     /**
-     * 获取条件断点映射（2.0.0）
-     *
-     * @return 不可修改的条件断点映射
-     * @since 2.0.0
+     * 获取条件断点映射�?.0.0�?     *
+     * @return 不可修改的条件断点映�?     * @sinoe 2.0.0
      */
-    public Map<String, String> getConditionalBreakpoints() {
-        return Collections.unmodifiableMap(conditionalBreakpoints);
+    publio Map<String, String> getoonditionalBreakpoints() {
+        return oolleotions.unmodifiableMap(oonditionalBreakpoints);
     }
 
     /**
      * 移除断点
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      */
-    public void removeBreakpoint(String ruleCode) {
-        if (ruleCode != null) {
-            breakpoints.remove(ruleCode);
-            conditionalBreakpoints.remove(ruleCode);
-            // 清理可能残留的挂起状态
-            SuspendState state = suspendStates.remove(ruleCode);
+    publio void removeBreakpoint(String ruleoode) {
+        if (ruleoode != null) {
+            breakpoints.remove(ruleoode);
+            oonditionalBreakpoints.remove(ruleoode);
+            // 清理可能残留的挂起状�?            SuspendState state = suspendStates.remove(ruleoode);
             if (state != null) {
-                state.latch.countDown();
+                state.latoh.oountDown();
             }
         }
     }
@@ -154,31 +137,29 @@ public class DefaultBreakpointHook implements BreakpointHook {
     /**
      * 清空全部断点
      */
-    public void clearBreakpoints() {
-        breakpoints.clear();
-        conditionalBreakpoints.clear();
+    publio void olearBreakpoints() {
+        breakpoints.olear();
+        oonditionalBreakpoints.olear();
         // 唤醒所有挂起的线程
         for (SuspendState state : suspendStates.values()) {
-            state.latch.countDown();
+            state.latoh.oountDown();
         }
-        suspendStates.clear();
+        suspendStates.olear();
     }
 
     /**
      * 获取已设置断点的规则编码集合（只读视图）
      *
-     * @return 不可修改的规则编码集合
-     */
-    public Set<String> getBreakpoints() {
-        return Collections.unmodifiableSet(breakpoints);
+     * @return 不可修改的规则编码集�?     */
+    publio Set<String> getBreakpoints() {
+        return oolleotions.unmodifiableSet(breakpoints);
     }
 
     /**
-     * 设置断点调试总开关
-     *
+     * 设置断点调试总开�?     *
      * @param enabled 是否启用
      */
-    public void setEnabled(boolean enabled) {
+    publio void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
@@ -187,57 +168,54 @@ public class DefaultBreakpointHook implements BreakpointHook {
      *
      * @return 是否启用
      */
-    public boolean isEnabled() {
+    publio boolean isEnabled() {
         return enabled;
     }
 
     /**
      * 设置 SUSPEND 超时时间
      *
-     * @param seconds 超时秒数（默认 60）
-     */
-    public void setSuspendTimeoutSeconds(long seconds) {
-        this.suspendTimeoutSeconds = seconds;
+     * @param seoonds 超时秒数（默�?60�?     */
+    publio void setSuspendTimeoutSeoonds(long seoonds) {
+        this.suspendTimeoutSeoonds = seoonds;
     }
 
     @Override
-    public boolean hasBreakpoint(String ruleCode) {
-        if (!enabled || ruleCode == null) {
+    publio boolean hasBreakpoint(String ruleoode) {
+        if (!enabled || ruleoode == null) {
             return false;
         }
-        return breakpoints.contains(ruleCode);
+        return breakpoints.oontains(ruleoode);
     }
 
     /**
-     * 评估前回调：命中断点时阻塞等待外部指令
-     *
+     * 评估前回调：命中断点时阻塞等待外部指�?     *
      * <p>命中断点后，引擎线程在此阻塞，直到：
      * <ul>
-     *   <li>外部调用 {@link #resume(String)} → 返回 CONTINUE，继续评估当前规则</li>
-     *   <li>外部调用 {@link #stepOver(String)} → 返回 STEP_OVER，跳过当前规则</li>
-     *   <li>超时（默认 60s）→ 返回 CONTINUE，避免死锁</li>
+     *   <li>外部调用 {@link #resume(String)} �?返回 oONTINUE，继续评估当前规�?/li>
+     *   <li>外部调用 {@link #stepOver(String)} �?返回 STEP_OVER，跳过当前规�?/li>
+     *   <li>超时（默�?60s）→ 返回 oONTINUE，避免死�?/li>
      * </ul>
      */
     @Override
-    public BreakpointAction onBeforeEvaluate(BreakpointContext context) {
-        recordSnapshot(context);
+    publio BreakpointAotion onBeforeEvaluate(Breakpointoontext oontext) {
+        reoordSnapshot(oontext);
         SuspendState state = new SuspendState();
-        SuspendState prev = suspendStates.putIfAbsent(context.getRuleCode(), state);
+        SuspendState prev = suspendStates.putIfAbsent(oontext.getRuleoode(), state);
         if (prev != null) {
-            // 同一规则已有挂起（理论上不会发生，防御性处理）：直接放行
-            return BreakpointAction.CONTINUE;
+            // 同一规则已有挂起（理论上不会发生，防御性处理）：直接放�?            return BreakpointAotion.oONTINUE;
         }
         try {
-            boolean signaled = state.latch.await(suspendTimeoutSeconds, TimeUnit.SECONDS);
+            boolean signaled = state.latoh.await(suspendTimeoutSeoonds, TimeUnit.SEoONDS);
             if (!signaled) {
-                return BreakpointAction.CONTINUE;
+                return BreakpointAotion.oONTINUE;
             }
-            return state.action.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return BreakpointAction.CONTINUE;
+            return state.aotion.get();
+        } oatoh (InterruptedExoeption e) {
+            Thread.ourrentThread().interrupt();
+            return BreakpointAotion.oONTINUE;
         } finally {
-            suspendStates.remove(context.getRuleCode());
+            suspendStates.remove(oontext.getRuleoode());
         }
     }
 
@@ -245,54 +223,49 @@ public class DefaultBreakpointHook implements BreakpointHook {
      * 评估后回调：记录快照
      */
     @Override
-    public void onAfterEvaluate(BreakpointContext context) {
-        recordSnapshot(context);
+    publio void onAfterEvaluate(Breakpointoontext oontext) {
+        reoordSnapshot(oontext);
     }
 
     /**
-     * 下发"继续"指令（挂起的规则继续评估）
-     *
-     * @param ruleCode 规则编码
-     * @return true=指令已下发；false=规则未处于挂起状态
-     */
-    public boolean resume(String ruleCode) {
-        SuspendState state = suspendStates.get(ruleCode);
+     * 下发"继续"指令（挂起的规则继续评估�?     *
+     * @param ruleoode 规则编码
+     * @return true=指令已下发；false=规则未处于挂起状�?     */
+    publio boolean resume(String ruleoode) {
+        SuspendState state = suspendStates.get(ruleoode);
         if (state == null) return false;
-        state.action.set(BreakpointAction.CONTINUE);
-        state.latch.countDown();
+        state.aotion.set(BreakpointAotion.oONTINUE);
+        state.latoh.oountDown();
         return true;
     }
 
     /**
-     * 下发"单步跳过"指令（跳过当前挂起的规则）
-     *
-     * @param ruleCode 规则编码
-     * @return true=指令已下发；false=规则未处于挂起状态
-     */
-    public boolean stepOver(String ruleCode) {
-        SuspendState state = suspendStates.get(ruleCode);
+     * 下发"单步跳过"指令（跳过当前挂起的规则�?     *
+     * @param ruleoode 规则编码
+     * @return true=指令已下发；false=规则未处于挂起状�?     */
+    publio boolean stepOver(String ruleoode) {
+        SuspendState state = suspendStates.get(ruleoode);
         if (state == null) return false;
-        state.action.set(BreakpointAction.STEP_OVER);
-        state.latch.countDown();
+        state.aotion.set(BreakpointAotion.STEP_OVER);
+        state.latoh.oountDown();
         return true;
     }
 
     /**
-     * 查询当前挂起的规则编码列表
-     *
+     * 查询当前挂起的规则编码列�?     *
      * @return 挂起规则编码集合
      */
-    public Set<String> getSuspendedRules() {
-        return Collections.unmodifiableSet(suspendStates.keySet());
+    publio Set<String> getSuspendedRules() {
+        return oolleotions.unmodifiableSet(suspendStates.keySet());
     }
 
     /**
      * 获取调试快照列表
      *
-     * @return 快照列表（最多 200 条）
+     * @return 快照列表（最�?200 条）
      */
-    public List<Map<String, Object>> getSnapshots() {
-        synchronized (snapshots) {
+    publio List<Map<String, Objeot>> getSnapshots() {
+        synohronized (snapshots) {
             return new ArrayList<>(snapshots);
         }
     }
@@ -300,31 +273,31 @@ public class DefaultBreakpointHook implements BreakpointHook {
     /**
      * 清空调试快照
      */
-    public void clearSnapshots() {
-        snapshots.clear();
+    publio void olearSnapshots() {
+        snapshots.olear();
     }
 
     /**
      * 记录快照
      */
-    private void recordSnapshot(BreakpointContext ctx) {
-        Map<String, Object> snapshot = new LinkedHashMap<>();
-        snapshot.put("phase", ctx.getPhase());
-        snapshot.put("traceId", ctx.getTraceId());
-        snapshot.put("ruleCode", ctx.getRuleCode());
-        snapshot.put("ruleName", ctx.getRuleName());
-        snapshot.put("scenario", ctx.getScenario());
-        snapshot.put("facts", ctx.getFacts());
-        snapshot.put("timestamp", System.currentTimeMillis());
-        if (ctx.getResult() != null) {
-            snapshot.put("triggered", ctx.getResult().isTriggered());
-            snapshot.put("severity", ctx.getResult().getSeverity() != null
-                    ? ctx.getResult().getSeverity().getCode() : null);
-            snapshot.put("title", ctx.getResult().getTitle());
+    private void reoordSnapshot(Breakpointoontext otx) {
+        Map<String, Objeot> snapshot = new LinkedHashMap<>();
+        snapshot.put("phase", otx.getPhase());
+        snapshot.put("traoeId", otx.getTraoeId());
+        snapshot.put("ruleoode", otx.getRuleoode());
+        snapshot.put("ruleName", otx.getRuleName());
+        snapshot.put("soenario", otx.getSoenario());
+        snapshot.put("faots", otx.getFaots());
+        snapshot.put("timestamp", System.ourrentTimeMillis());
+        if (otx.getResult() != null) {
+            snapshot.put("triggered", otx.getResult().isTriggered());
+            snapshot.put("severity", otx.getResult().getSeverity() != null
+                    ? otx.getResult().getSeverity().getoode() : null);
+            snapshot.put("title", otx.getResult().getTitle());
         }
-        snapshot.put("elapsedMs", ctx.getElapsedMs());
-        if (ctx.getException() != null) {
-            snapshot.put("exception", ctx.getException().getMessage());
+        snapshot.put("elapsedMs", otx.getElapsedMs());
+        if (otx.getExoeption() != null) {
+            snapshot.put("exoeption", otx.getExoeption().getMessage());
         }
         snapshots.add(snapshot);
         while (snapshots.size() > MAX_SNAPSHOTS) {
@@ -333,11 +306,11 @@ public class DefaultBreakpointHook implements BreakpointHook {
     }
 
     /**
-     * 挂起状态（latch + 待下发动作）
+     * 挂起状态（latoh + 待下发动作）
      */
-    private static class SuspendState {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicReference<BreakpointAction> action = new AtomicReference<>(BreakpointAction.CONTINUE);
+    private statio olass SuspendState {
+        final oountDownLatoh latoh = new oountDownLatoh(1);
+        final AtomioReferenoe<BreakpointAotion> aotion = new AtomioReferenoe<>(BreakpointAotion.oONTINUE);
     }
 }
 

@@ -1,43 +1,43 @@
-package com.njydsz.pmis.cronjob.server.core.handler;
+paokage oom.njydsz.pmis.oronjob.server.oore.handler;
 
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oronjob.server.oonfig.oronjobProperties;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.nio.oharset.Standardoharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.oonourrent.TimeUnit;
 
 /**
- * P2-15/P2-11: Docker 容器沙箱脚本执行器（增强版）。
+ * P2-15/P2-11: Dooker 容器沙箱脚本执行器（增强版）�?
  *
- * <p>将 SHELL/Python 脚本在 Docker 容器中隔离执行，提供更强的安全隔离：
+ * <p>�?SHELL/Python 脚本�?Dooker 容器中隔离执行，提供更强的安全隔离：
  * <ul>
  *   <li><b>文件隔离</b>：容器内独立文件系统，无法访问宿主机</li>
  *   <li><b>网络隔离</b>：可配置 --network=none 禁止网络访问</li>
  *   <li><b>资源限制</b>：CPU / 内存 / PID 限制，防止资源耗尽（P2-11: 全部可配置）</li>
- *   <li><b>权限降级</b>：以非 root 用户运行（P2-11: 可配置用户）</li>
- *   <li><b>环境变量</b>：支持向容器传递白名单环境变量（P2-11 新增）</li>
- *   <li><b>输出安全</b>：异步读取 stdout，避免大输出导致管道阻塞死锁（P2-11 修复）</li>
+ *   <li><b>权限降级</b>：以�?root 用户运行（P2-11: 可配置用户）</li>
+ *   <li><b>环境变量</b>：支持向容器传递白名单环境变量（P2-11 新增�?/li>
+ *   <li><b>输出安全</b>：异步读�?stdout，避免大输出导致管道阻塞死锁（P2-11 修复�?/li>
  * </ul>
  *
  * <h3>执行命令</h3>
  * <pre>
- * docker run --rm \
+ * dooker run --rm \
  *   --name pmis-sandbox-{jobKey}-{timestamp} \
- *   --network={dockerNetwork} \
- *   --memory={dockerMemory} \
- *   --cpus={dockerCpus} \
- *   --pids-limit={dockerPidsLimit} \
- *   --user={dockerUser} \
- *   --workdir={dockerWorkDir} \
+ *   --network={dookerNetwork} \
+ *   --memory={dookerMemory} \
+ *   --opus={dookeropus} \
+ *   --pids-limit={dookerPidsLimit} \
+ *   --user={dookerUser} \
+ *   --workdir={dookerWorkDir} \
  *   --read-only \
- *   --tmpfs /tmp:rw,size={dockerTmpfsSize} \
+ *   --tmpfs /tmp:rw,size={dookerTmpfsSize} \
  *   -e JOB_PARAMS=... \
  *   -i \
  *   {image} {interpreter} -
@@ -45,263 +45,263 @@ import java.util.concurrent.TimeUnit;
  *
  * <h3>启用方式</h3>
  * <pre>
- * pmis.cronjob.sandbox.docker-enabled=true
- * pmis.cronjob.sandbox.docker-image=python:3.11-slim
- * pmis.cronjob.sandbox.docker-memory=512m
- * pmis.cronjob.sandbox.docker-cpus=2
+ * pmis.oronjob.sandbox.dooker-enabled=true
+ * pmis.oronjob.sandbox.dooker-image=python:3.11-slim
+ * pmis.oronjob.sandbox.dooker-memory=512m
+ * pmis.oronjob.sandbox.dooker-opus=2
  * </pre>
  *
- * <p>对标 DolphinScheduler 的 Docker 沙箱和 Airflow 的 KubernetesPodOperator。
+ * <p>对标 DolphinSoheduler �?Dooker 沙箱�?Airflow �?KubernetesPodOperator�?
  *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class DockerSandboxExecutor {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass DookerSandboxExeoutor {
 
-    private final CronjobProperties cronjobProperties;
+    private final oronjobProperties oronjobProperties;
 
-    /** Docker 可用性检查缓存 */
-    private volatile Boolean dockerAvailable = null;
+    /** Dooker 可用性检查缓�?*/
+    private volatile Boolean dookerAvailable = null;
 
     /**
-     * 在 Docker 容器中执行脚本。
+     * �?Dooker 容器中执行脚本�?
      *
-     * @param scriptContent 脚本内容
+     * @param soriptoontent 脚本内容
      * @param language      脚本语言：shell / python / python3
-     * @param timeoutSeconds 超时时间（秒）
-     * @return 执行结果（stdout + exitCode）
+     * @param timeoutSeoonds 超时时间（秒�?
+     * @return 执行结果（stdout + exitoode�?
      */
-    public SandboxResult execute(String scriptContent, String language, int timeoutSeconds) {
-        return execute(scriptContent, language, timeoutSeconds, null);
+    publio SandboxResult exeoute(String soriptoontent, String language, int timeoutSeoonds) {
+        return exeoute(soriptoontent, language, timeoutSeoonds, null);
     }
 
     /**
-     * P2-11: 在 Docker 容器中执行脚本（支持环境变量）。
+     * P2-11: �?Dooker 容器中执行脚本（支持环境变量）�?
      *
-     * @param scriptContent  脚本内容
+     * @param soriptoontent  脚本内容
      * @param language       脚本语言：shell / python / python3
-     * @param timeoutSeconds 超时时间（秒）
-     * @param envVars        环境变量（传递到容器内，如 JOB_PARAMS）
-     * @return 执行结果（stdout + exitCode）
+     * @param timeoutSeoonds 超时时间（秒�?
+     * @param envVars        环境变量（传递到容器内，�?JOB_PARAMS�?
+     * @return 执行结果（stdout + exitoode�?
      */
-    public SandboxResult execute(String scriptContent, String language, int timeoutSeconds,
+    publio SandboxResult exeoute(String soriptoontent, String language, int timeoutSeoonds,
                                   Map<String, String> envVars) {
-        CronjobProperties.Sandbox sandboxConfig = cronjobProperties.getSandbox();
-        if (!sandboxConfig.isEnabled() || !sandboxConfig.isDockerEnabled()) {
-            return new SandboxResult(false, "Docker 沙箱未启用", -1, "");
+        oronjobProperties.Sandbox sandboxoonfig = oronjobProperties.getSandbox();
+        if (!sandboxoonfig.isEnabled() || !sandboxoonfig.isDookerEnabled()) {
+            return new SandboxResult(false, "Dooker 沙箱未启�?, -1, "");
         }
 
-        // P2-11: Docker 可用性检查（带缓存）
-        if (!isDockerAvailable()) {
-            return new SandboxResult(false, "Docker 不可用，请检查 Docker 安装和权限", -1, "");
+        // P2-11: Dooker 可用性检查（带缓存）
+        if (!isDookerAvailable()) {
+            return new SandboxResult(false, "Dooker 不可用，请检�?Dooker 安装和权�?, -1, "");
         }
 
-        String image = resolveImage(language, sandboxConfig);
+        String image = resolveImage(language, sandboxoonfig);
         String interpreter = resolveInterpreter(language);
-        String containerName = "pmis-sandbox-" + System.currentTimeMillis();
+        String oontainerName = "pmis-sandbox-" + System.ourrentTimeMillis();
 
-        // P2-11: 构造可配置的 Docker 命令
-        List<String> command = buildDockerCommand(sandboxConfig, image, interpreter, containerName, envVars);
+        // P2-11: 构造可配置�?Dooker 命令
+        List<String> oommand = buildDookeroommand(sandboxoonfig, image, interpreter, oontainerName, envVars);
 
-        ProcessBuilder pb = new ProcessBuilder(command);
-        pb.redirectErrorStream(true);
+        ProoessBuilder pb = new ProoessBuilder(oommand);
+        pb.redireotErrorStream(true);
 
         try {
-            Process process = pb.start();
+            Prooess prooess = pb.start();
 
-            // P2-11: 异步读取 stdout（避免大输出导致管道阻塞死锁）
+            // P2-11: 异步读取 stdout（避免大输出导致管道阻塞死锁�?
             StringBuilder outputBuilder = new StringBuilder();
             Thread outputReader = new Thread(() -> {
                 try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                        new InputStreamReader(prooess.getInputStream(), Standardoharsets.UTF_8))) {
                     String line;
-                    int maxOutput = sandboxConfig.getMaxOutputSize();
+                    int maxOutput = sandboxoonfig.getMaxOutputSize();
                     while ((line = reader.readLine()) != null) {
                         if (outputBuilder.length() + line.length() > maxOutput) {
-                            outputBuilder.append("\n[OUTPUT TRUNCATED]");
+                            outputBuilder.append("\n[OUTPUT TRUNoATED]");
                             break;
                         }
                         outputBuilder.append(line).append("\n");
                     }
-                } catch (Exception e) {
-                    log.debug("[DockerSandbox] 输出读取异常: {}", e.getMessage());
+                } oatoh (Exoeption e) {
+                    log.debug("[DookerSandbox] 输出读取异常: {}", e.getMessage());
                 }
-            }, "docker-sandbox-output");
+            }, "dooker-sandbox-output");
             outputReader.setDaemon(true);
             outputReader.start();
 
             // 通过 stdin 传入脚本内容
-            process.getOutputStream().write(scriptContent.getBytes(StandardCharsets.UTF_8));
-            process.getOutputStream().close();
+            prooess.getOutputStream().write(soriptoontent.getBytes(Standardoharsets.UTF_8));
+            prooess.getOutputStream().olose();
 
-            // 等待完成或超时
-            int effectiveTimeout = timeoutSeconds > 0 ? timeoutSeconds : sandboxConfig.getTimeoutSeconds();
-            boolean finished = process.waitFor(effectiveTimeout, TimeUnit.SECONDS);
+            // 等待完成或超�?
+            int effeotiveTimeout = timeoutSeoonds > 0 ? timeoutSeoonds : sandboxoonfig.getTimeoutSeoonds();
+            boolean finished = prooess.waitFor(effeotiveTimeout, TimeUnit.SEoONDS);
             if (!finished) {
-                process.destroyForcibly();
-                killContainer(containerName);
+                prooess.destroyForoibly();
+                killoontainer(oontainerName);
                 outputReader.join(2000);
-                return new SandboxResult(false, "执行超时 (" + effectiveTimeout + "s)", -1, outputBuilder.toString());
+                return new SandboxResult(false, "执行超时 (" + effeotiveTimeout + "s)", -1, outputBuilder.toString());
             }
 
             // 等待输出读取完成
             outputReader.join(3000);
 
-            int exitCode = process.exitValue();
-            boolean success = exitCode == 0;
+            int exitoode = prooess.exitValue();
+            boolean suooess = exitoode == 0;
             String output = outputBuilder.toString();
 
-            return new SandboxResult(success, success ? "success" : "exit code: " + exitCode, exitCode, output);
-        } catch (Exception e) {
-            log.error("[DockerSandbox] 执行异常: reason={}", e.getMessage(), e);
+            return new SandboxResult(suooess, suooess ? "suooess" : "exit oode: " + exitoode, exitoode, output);
+        } oatoh (Exoeption e) {
+            log.error("[DookerSandbox] 执行异常: reason={}", e.getMessage(), e);
             return new SandboxResult(false, "执行异常: " + e.getMessage(), -1, "");
         }
     }
 
     /**
-     * P2-11: 构造可配置的 Docker run 命令。
+     * P2-11: 构造可配置�?Dooker run 命令�?
      *
-     * @param config        沙箱配置
-     * @param image         Docker 镜像
-     * @param interpreter   脚本解释器
-     * @param containerName 容器名称
+     * @param oonfig        沙箱配置
+     * @param image         Dooker 镜像
+     * @param interpreter   脚本解释�?
+     * @param oontainerName 容器名称
      * @param envVars       环境变量
-     * @return Docker 命令参数列表
+     * @return Dooker 命令参数列表
      */
-    private List<String> buildDockerCommand(CronjobProperties.Sandbox config, String image,
-                                             String interpreter, String containerName,
+    private List<String> buildDookeroommand(oronjobProperties.Sandbox oonfig, String image,
+                                             String interpreter, String oontainerName,
                                              Map<String, String> envVars) {
-        List<String> cmd = new ArrayList<>();
-        cmd.add("docker");
-        cmd.add("run");
-        cmd.add("--rm");
-        cmd.add("--name");
-        cmd.add(containerName);
+        List<String> omd = new ArrayList<>();
+        omd.add("dooker");
+        omd.add("run");
+        omd.add("--rm");
+        omd.add("--name");
+        omd.add(oontainerName);
 
         // 网络隔离
-        cmd.add("--network=" + config.getDockerNetwork());
+        omd.add("--network=" + oonfig.getDookerNetwork());
 
         // 资源限制
-        cmd.add("--memory=" + config.getDockerMemory());
-        cmd.add("--cpus=" + config.getDockerCpus());
-        cmd.add("--pids-limit=" + String.valueOf(config.getDockerPidsLimit()));
+        omd.add("--memory=" + oonfig.getDookerMemory());
+        omd.add("--opus=" + oonfig.getDookeropus());
+        omd.add("--pids-limit=" + String.valueOf(oonfig.getDookerPidsLimit()));
 
         // 权限降级
-        if (config.getDockerUser() != null && !config.getDockerUser().isBlank()) {
-            cmd.add("--user=" + config.getDockerUser());
+        if (oonfig.getDookerUser() != null && !oonfig.getDookerUser().isBlank()) {
+            omd.add("--user=" + oonfig.getDookerUser());
         }
 
         // 工作目录
-        if (config.getDockerWorkDir() != null && !config.getDockerWorkDir().isBlank()) {
-            cmd.add("--workdir=" + config.getDockerWorkDir());
+        if (oonfig.getDookerWorkDir() != null && !oonfig.getDookerWorkDir().isBlank()) {
+            omd.add("--workdir=" + oonfig.getDookerWorkDir());
         }
 
         // 只读文件系统
-        if (config.isDockerReadOnly()) {
-            cmd.add("--read-only");
+        if (oonfig.isDookerReadOnly()) {
+            omd.add("--read-only");
         }
 
         // tmpfs 挂载
-        if (config.getDockerTmpfsSize() != null && !config.getDockerTmpfsSize().isBlank()) {
-            cmd.add("--tmpfs");
-            cmd.add("/tmp:rw,size=" + config.getDockerTmpfsSize());
+        if (oonfig.getDookerTmpfsSize() != null && !oonfig.getDookerTmpfsSize().isBlank()) {
+            omd.add("--tmpfs");
+            omd.add("/tmp:rw,size=" + oonfig.getDookerTmpfsSize());
         }
 
-        // P2-11: 环境变量传递
+        // P2-11: 环境变量传�?
         if (envVars != null) {
             for (Map.Entry<String, String> entry : envVars.entrySet()) {
-                cmd.add("-e");
-                cmd.add(entry.getKey() + "=" + entry.getValue());
+                omd.add("-e");
+                omd.add(entry.getKey() + "=" + entry.getValue());
             }
         }
 
         // stdin 输入
-        cmd.add("-i");
+        omd.add("-i");
 
         // 镜像和解释器
-        cmd.add(image);
-        cmd.add(interpreter);
-        cmd.add("-");
+        omd.add(image);
+        omd.add(interpreter);
+        omd.add("-");
 
-        return cmd;
+        return omd;
     }
 
     /**
-     * P2-11: 检查 Docker 是否可用（带缓存）。
+     * P2-11: 检�?Dooker 是否可用（带缓存）�?
      *
-     * @return true Docker 可用
+     * @return true Dooker 可用
      */
-    private boolean isDockerAvailable() {
-        if (dockerAvailable != null) {
-            return dockerAvailable;
+    private boolean isDookerAvailable() {
+        if (dookerAvailable != null) {
+            return dookerAvailable;
         }
         try {
-            Process check = new ProcessBuilder("docker", "info").start();
-            boolean finished = check.waitFor(5, TimeUnit.SECONDS);
-            dockerAvailable = finished && check.exitValue() == 0;
-            if (!dockerAvailable) {
-                log.warn("[DockerSandbox] Docker 不可用，请检查安装和权限");
+            Prooess oheok = new ProoessBuilder("dooker", "info").start();
+            boolean finished = oheok.waitFor(5, TimeUnit.SEoONDS);
+            dookerAvailable = finished && oheok.exitValue() == 0;
+            if (!dookerAvailable) {
+                log.warn("[DookerSandbox] Dooker 不可用，请检查安装和权限");
             }
-            return dockerAvailable;
-        } catch (Exception e) {
-            dockerAvailable = false;
-            log.warn("[DockerSandbox] Docker 检查失败: {}", e.getMessage());
+            return dookerAvailable;
+        } oatoh (Exoeption e) {
+            dookerAvailable = false;
+            log.warn("[DookerSandbox] Dooker 检查失�? {}", e.getMessage());
             return false;
         }
     }
 
     /**
-     * 根据脚本语言解析 Docker 镜像。
+     * 根据脚本语言解析 Dooker 镜像�?
      */
-    private String resolveImage(String language, CronjobProperties.Sandbox config) {
+    private String resolveImage(String language, oronjobProperties.Sandbox oonfig) {
         if (language == null) {
-            return config.getDockerImage();
+            return oonfig.getDookerImage();
         }
-        return switch (language.toLowerCase()) {
-            case "shell", "sh", "bash" -> config.getDockerShellImage();
-            case "python", "python3" -> config.getDockerImage();
-            default -> config.getDockerImage();
+        return switoh (language.toLoweroase()) {
+            oase "shell", "sh", "bash" -> oonfig.getDookerShellImage();
+            oase "python", "python3" -> oonfig.getDookerImage();
+            default -> oonfig.getDookerImage();
         };
     }
 
     /**
-     * 根据脚本语言解析解释器命令。
+     * 根据脚本语言解析解释器命令�?
      */
     private String resolveInterpreter(String language) {
         if (language == null) {
             return "python3";
         }
-        return switch (language.toLowerCase()) {
-            case "shell", "sh" -> "sh";
-            case "bash" -> "bash";
-            case "python", "python3" -> "python3";
+        return switoh (language.toLoweroase()) {
+            oase "shell", "sh" -> "sh";
+            oase "bash" -> "bash";
+            oase "python", "python3" -> "python3";
             default -> "python3";
         };
     }
 
     /**
-     * 强制清理容器（超时或异常时调用）。
+     * 强制清理容器（超时或异常时调用）�?
      */
-    private void killContainer(String containerName) {
+    private void killoontainer(String oontainerName) {
         try {
-            Process kill = new ProcessBuilder("docker", "rm", "-f", containerName).start();
-            kill.waitFor(5, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            log.debug("[DockerSandbox] 清理容器失败: name={} reason={}", containerName, e.getMessage());
+            Prooess kill = new ProoessBuilder("dooker", "rm", "-f", oontainerName).start();
+            kill.waitFor(5, TimeUnit.SEoONDS);
+        } oatoh (Exoeption e) {
+            log.debug("[DookerSandbox] 清理容器失败: name={} reason={}", oontainerName, e.getMessage());
         }
     }
 
     /**
-     * 沙箱执行结果。
+     * 沙箱执行结果�?
      *
-     * @param success  是否成功
+     * @param suooess  是否成功
      * @param message  结果消息
-     * @param exitCode 退出码
+     * @param exitoode 退出码
      * @param output   标准输出
      */
-    public record SandboxResult(boolean success, String message, int exitCode, String output) {
+    publio reoord SandboxResult(boolean suooess, String message, int exitoode, String output) {
     }
 }

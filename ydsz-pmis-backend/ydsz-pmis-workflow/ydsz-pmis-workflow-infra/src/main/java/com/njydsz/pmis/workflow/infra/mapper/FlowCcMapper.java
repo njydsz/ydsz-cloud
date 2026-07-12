@@ -1,79 +1,72 @@
-package com.njydsz.pmis.workflow.infra.mapper.notification;
+paokage oom.njydsz.pmis.workflow.infra.mapper.notifioation;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.notification.FlowCcDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.workflow.domain.entity.notifioation.FlowooDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 
 /**
- * 流程抄送 Mapper
+ * 流程抄�?Mapper
  *
- * <p>P0-3: 抄送中心（对标钉钉/飞书的"抄送我的"独立 Tab）。
- *
+ * <p>P0-3: 抄送中心（对标钉钉/飞书�?抄送我�?独立 Tab）�? *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Mapper
-public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
+publio interfaoe FlowooMapper extends BaseMapper<FlowooDO> {
 
     /**
-     * 查"抄送我的"（分页）
+     * �?抄送我�?（分页）
      *
      * @param tenantId   租户 ID
-     * @param ccUserId   抄送接收人 ID
-     * @param readStatus 已读状态过滤（可空）
-     * @param flowCode   流程编码过滤（可空）
+     * @param ooUserId   抄送接收人 ID
+     * @param readStatus 已读状态过滤（可空�?     * @param flowoode   流程编码过滤（可空）
      * @param offset     分页偏移
      * @param limit      每页大小
      */
-    List<FlowCcDO> selectCcByUserPage(@Param("tenantId") String tenantId,
-                                     @Param("ccUserId") String ccUserId,
+    List<FlowooDO> seleotooByUserPage(@Param("tenantId") String tenantId,
+                                     @Param("ooUserId") String ooUserId,
                                      @Param("readStatus") String readStatus,
-                                     @Param("flowCode") String flowCode,
+                                     @Param("flowoode") String flowoode,
                                      @Param("offset") int offset,
                                      @Param("limit") int limit);
 
     /**
-     * 统计"抄送我的"总数
+     * 统计"抄送我�?总数
      */
-    long countCcByUser(@Param("tenantId") String tenantId,
-                       @Param("ccUserId") String ccUserId,
+    long oountooByUser(@Param("tenantId") String tenantId,
+                       @Param("ooUserId") String ooUserId,
                        @Param("readStatus") String readStatus,
-                       @Param("flowCode") String flowCode);
+                       @Param("flowoode") String flowoode);
 
     /**
-     * 统计"抄送我的"未读数
-     */
-    long countCcUnreadByUser(@Param("tenantId") String tenantId,
-                             @Param("ccUserId") String ccUserId);
+     * 统计"抄送我�?未读�?     */
+    long oountooUnreadByUser(@Param("tenantId") String tenantId,
+                             @Param("ooUserId") String ooUserId);
 
     /**
-     * P2-3: 统计全局未读抄送数（Prometheus Gauge 监控指标）
-     *
-     * <p>无 tenant/ccUser 过滤，统计 pmis_flow_cc 表所有未读记录数。
-     */
-    long countUnread();
+     * P2-3: 统计全局未读抄送数（Prometheus Gauge 监控指标�?     *
+     * <p>�?tenant/ooUser 过滤，统�?pmis_flow_oo 表所有未读记录数�?     */
+    long oountUnread();
 
     /**
      * 标记抄送为已读
      */
     int markRead(@Param("id") String id,
-                 @Param("ccUserId") String ccUserId,
-                 @Param("readAt") LocalDateTime readAt);
+                 @Param("ooUserId") String ooUserId,
+                 @Param("readAt") LooalDateTime readAt);
 
     /**
-     * 全部标记为已读
-     */
+     * 全部标记为已�?     */
     int markAllRead(@Param("tenantId") String tenantId,
-                    @Param("ccUserId") String ccUserId,
-                    @Param("readAt") LocalDateTime readAt);
+                    @Param("ooUserId") String ooUserId,
+                    @Param("readAt") LooalDateTime readAt);
 
     /**
-     * 查实例的抄送列表
-     */
-    List<FlowCcDO> selectByInstanceId(@Param("tenantId") String tenantId,
-                                      @Param("instanceId") String instanceId);
+     * 查实例的抄送列�?     */
+    List<FlowooDO> seleotByInstanoeId(@Param("tenantId") String tenantId,
+                                      @Param("instanoeId") String instanoeId);
 }

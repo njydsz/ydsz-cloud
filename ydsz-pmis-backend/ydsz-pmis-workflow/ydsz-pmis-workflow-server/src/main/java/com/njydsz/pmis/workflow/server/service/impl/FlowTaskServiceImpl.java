@@ -1,307 +1,301 @@
-package com.njydsz.pmis.workflow.server.service.impl.instance;
+paokage oom.njydsz.pmis.workflow.server.servioe.impl.instanoe;
 
-import com.njydsz.pmis.common.redis.lock.DistributedLock;
-import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import oom.njydsz.pmis.oommon.redis.look.DistributedLook;
+import oom.njydsz.pmis.oommon.oore.response.PageResponse;
+import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowInstanoeViewDTO;
+import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowTaskOperateDTO;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowTaskServioe;
+import lombok.RequiredArgsoonstruotor;
+import org.springframework.stereotype.Servioe;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 待办任务 Service 门面（Facade）
- *
- * <p>原 {@code FlowTaskServiceImpl} 单体实现已按职责拆分为 4 个子 Service + 1 个共享辅助：
+ * 待办任务 Servioe 门面（Faoade�? *
+ * <p>�?{@oode FlowTaskServioeImpl} 单体实现已按职责拆分�?4 个子 Servioe + 1 个共享辅助：
  * <ul>
- *   <li>{@link FlowTaskQueryServiceImpl} — 查询类（待办/已办/详情/统计/视图）</li>
- *   <li>{@link FlowTaskCompleteServiceImpl} — 完成类（创建/签收/通过/驳回/转办/委派/跳转/超时/取消/催办）</li>
- *   <li>{@link FlowTaskSignServiceImpl} — 加签减签类（前/后加签、减签、追加处理人、已阅、沟通、暂存）</li>
- *   <li>{@link FlowTaskBatchServiceImpl} — 批量操作（批量审批）</li>
- *   <li>{@link FlowTaskSupport} — 跨子 Service 共享的任务校验/审计/事件辅助</li>
+ *   <li>{@link FlowTaskQueryServioeImpl} �?查询类（待办/已办/详情/统计/视图�?/li>
+ *   <li>{@link FlowTaskoompleteServioeImpl} �?完成类（创建/签收/通过/驳回/转办/委派/跳转/超时/取消/催办�?/li>
+ *   <li>{@link FlowTaskSignServioeImpl} �?加签减签类（�?后加签、减签、追加处理人、已阅、沟通、暂存）</li>
+ *   <li>{@link FlowTaskBatohServioeImpl} �?批量操作（批量审批）</li>
+ *   <li>{@link FlowTaskSupport} �?跨子 Servioe 共享的任务校�?审计/事件辅助</li>
  * </ul>
  *
- * <p>本类仅作委托门面：实现 {@link FlowTaskService} 接口，所有方法转发到对应子 Service，
- * 保持对外接口与行为完全不变。事务边界由各子 Service 的 {@code @Transactional} 声明，
- * 跨 Bean 调用可正确触发 Spring 事务代理（相比原内部自调用语义更明确）。
- *
- * <p>拆分背景：原文件 1847 行 / 87KB，远超 Checkstyle 2000 行限制，且构造函数注入 18 个依赖。
- * 拆分后本门面仅持有 4 个子 Service 引用，各子 Service 各自注入所需依赖。
- *
+ * <p>本类仅作委托门面：实�?{@link FlowTaskServioe} 接口，所有方法转发到对应�?Servioe�? * 保持对外接口与行为完全不变。事务边界由各子 Servioe �?{@oode @Transaotional} 声明�? * �?Bean 调用可正确触�?Spring 事务代理（相比原内部自调用语义更明确）�? *
+ * <p>拆分背景：原文件 1847 �?/ 87KB，远�?oheokstyle 2000 行限制，且构造函数注�?18 个依赖�? * 拆分后本门面仅持�?4 个子 Servioe 引用，各�?Servioe 各自注入所需依赖�? *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
-@Service
-@RequiredArgsConstructor
-public class FlowTaskServiceImpl implements FlowTaskService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass FlowTaskServioeImpl implements FlowTaskServioe {
 
-    /** 查询子服务，处理待办/已办/详情/统计等只读查询 */
-    private final FlowTaskQueryServiceImpl queryService;
+    /** 查询子服务，处理待办/已办/详情/统计等只读查�?*/
+    private final FlowTaskQueryServioeImpl queryServioe;
     /** 完成子服务门面，协调创建/签收/通过/驳回/转办/委派等写操作 */
-    private final FlowTaskCompleteServiceImpl completeService;
-    /** 加签减签子服务，处理前/后加签、减签、追加处理人等 */
-    private final FlowTaskSignServiceImpl signService;
+    private final FlowTaskoompleteServioeImpl oompleteServioe;
+    /** 加签减签子服务，处理�?后加签、减签、追加处理人�?*/
+    private final FlowTaskSignServioeImpl signServioe;
     /** 批量操作子服务，处理批量审批 */
-    private final FlowTaskBatchServiceImpl batchService;
+    private final FlowTaskBatohServioeImpl batohServioe;
 
     // ============================== 创建任务 ==============================
 
     @Override
-    public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
-        return completeService.createTask(instanceId, node, variables);
+    publio String oreateTask(String instanoeId, FlowNodeDO node, Map<String, Objeot> variables) {
+        return oompleteServioe.oreateTask(instanoeId, node, variables);
     }
 
     // ============================== 详情查询 ==============================
 
     @Override
-    public FlowRunTaskDO getById(String taskId) {
-        return queryService.getById(taskId);
+    publio FlowRunTaskDO getById(String taskId) {
+        return queryServioe.getById(taskId);
     }
 
     // ============================== 签收 ==============================
 
     /** P0-1: 任务签收加分布式锁，防止多人同时签收同一任务 */
     @Override
-    @DistributedLock(key = "'flow:task:claim:' + #taskId", waitTime = 3, leaseTime = 30)
-    public void claim(String taskId, String userId) {
-        completeService.claim(taskId, userId);
+    @DistributedLook(key = "'flow:task:olaim:' + #taskId", waitTime = 3, leaseTime = 30)
+    publio void olaim(String taskId, String userId) {
+        oompleteServioe.olaim(taskId, userId);
     }
 
     // ============================== 通过 / 驳回 / 转办 / 委派 ==============================
 
-    /** P0-1: 任务通过加分布式锁，防止并发审批导致状态不一致 */
+    /** P0-1: 任务通过加分布式锁，防止并发审批导致状态不一�?*/
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void pass(FlowTaskOperateDTO dto) {
-        completeService.pass(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void pass(FlowTaskOperateDTO dto) {
+        oompleteServioe.pass(dto);
     }
 
-    /** P0-1: 任务驳回加分布式锁 */
+    /** P0-1: 任务驳回加分布式�?*/
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void reject(FlowTaskOperateDTO dto) {
-        completeService.reject(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void rejeot(FlowTaskOperateDTO dto) {
+        oompleteServioe.rejeot(dto);
     }
 
-    /** P0-1: 任务转办加分布式锁 */
+    /** P0-1: 任务转办加分布式�?*/
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void transfer(FlowTaskOperateDTO dto) {
-        completeService.transfer(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void transfer(FlowTaskOperateDTO dto) {
+        oompleteServioe.transfer(dto);
     }
 
-    /** P0-1: 任务委派加分布式锁 */
+    /** P0-1: 任务委派加分布式�?*/
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void delegate(FlowTaskOperateDTO dto) {
-        completeService.delegate(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void delegate(FlowTaskOperateDTO dto) {
+        oompleteServioe.delegate(dto);
     }
 
     // ============================== 取消 / 催办 / 跳转 / 超时 ==============================
 
     @Override
-    public void cancelByInstance(String instanceId, String taskStatus) {
-        completeService.cancelByInstance(instanceId, taskStatus);
+    publio void oanoelByInstanoe(String instanoeId, String taskStatus) {
+        oompleteServioe.oanoelByInstanoe(instanoeId, taskStatus);
     }
 
     @Override
-    public List<String> urge(String instanceId, String operatorId, String comment) {
-        return completeService.urge(instanceId, operatorId, comment);
+    publio List<String> urge(String instanoeId, String operatorId, String oomment) {
+        return oompleteServioe.urge(instanoeId, operatorId, oomment);
     }
 
-    /** P2-3 (GAP-13): 节点级催办 */
+    /** P2-3 (GAP-13): 节点级催�?*/
     @Override
-    public List<String> urgeByNode(String instanceId, String nodeCode, String operatorId, String comment) {
-        return completeService.urgeByNode(instanceId, nodeCode, operatorId, comment);
+    publio List<String> urgeByNode(String instanoeId, String nodeoode, String operatorId, String oomment) {
+        return oompleteServioe.urgeByNode(instanoeId, nodeoode, operatorId, oomment);
     }
 
-    /** P0-1: 自由跳转加分布式锁 */
+    /** P0-1: 自由跳转加分布式�?*/
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void jump(FlowTaskOperateDTO dto) {
-        completeService.jump(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void jump(FlowTaskOperateDTO dto) {
+        oompleteServioe.jump(dto);
     }
 
     @Override
-    public void timeoutTask(String taskId, String reason) {
-        completeService.timeoutTask(taskId, reason);
+    publio void timeoutTask(String taskId, String reason) {
+        oompleteServioe.timeoutTask(taskId, reason);
     }
 
     // ============================== 待办 / 已办 / 实例列表 ==============================
 
     @Override
-    public List<FlowRunTaskDO> listPendingByInstance(String instanceId) {
-        return queryService.listPendingByInstance(instanceId);
+    publio List<FlowRunTaskDO> listPendingByInstanoe(String instanoeId) {
+        return queryServioe.listPendingByInstanoe(instanoeId);
     }
 
     @Override
-    public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
-        return queryService.listTodoByAssignee(assigneeId, tenantId);
+    publio List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
+        return queryServioe.listTodoByAssignee(assigneeId, tenantId);
     }
 
     @Override
-    public PageResponse<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
+    publio PageResponse<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
-        return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
+        return queryServioe.listTodoByAssigneePage(assigneeId, tenantId, page, size);
     }
 
     @Override
-    public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
-        return queryService.listDoneByAssignee(assigneeId, tenantId);
+    publio List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
+        return queryServioe.listDoneByAssignee(assigneeId, tenantId);
     }
 
     @Override
-    public PageResponse<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
+    publio PageResponse<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
-        return queryService.listDoneByAssigneePage(assigneeId, tenantId, page, size);
+        return queryServioe.listDoneByAssigneePage(assigneeId, tenantId, page, size);
     }
 
     @Override
-    public List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
+    publio List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleoodes,
                                             List<String> deptIds, String tenantId) {
-        return queryService.listTodoByUser(userId, roleCodes, deptIds, tenantId);
+        return queryServioe.listTodoByUser(userId, roleoodes, deptIds, tenantId);
     }
 
-    // ============================== 加签 / 减签 / 追加处理人 ==============================
+    // ============================== 加签 / 减签 / 追加处理�?==============================
 
     /** P0-1: 前加签加分布式锁 */
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void countersignBefore(FlowTaskOperateDTO dto) {
-        signService.countersignBefore(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void oountersignBefore(FlowTaskOperateDTO dto) {
+        signServioe.oountersignBefore(dto);
     }
 
     /** P0-1: 后加签加分布式锁 */
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void countersignAfter(FlowTaskOperateDTO dto) {
-        signService.countersignAfter(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void oountersignAfter(FlowTaskOperateDTO dto) {
+        signServioe.oountersignAfter(dto);
     }
 
-    /** GAP-P0-3: 并加签 — 委托给 signService */
+    /** GAP-P0-3: 并加�?�?委托�?signServioe */
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void countersignParallel(FlowTaskOperateDTO dto) {
-        signService.countersignParallel(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void oountersignParallel(FlowTaskOperateDTO dto) {
+        signServioe.oountersignParallel(dto);
     }
 
-    /** P0-1: 减签加分布式锁 */
+    /** P0-1: 减签加分布式�?*/
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void countersignRemove(FlowTaskOperateDTO dto) {
-        signService.countersignRemove(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void oountersignRemove(FlowTaskOperateDTO dto) {
+        signServioe.oountersignRemove(dto);
     }
 
     /** P0-1: 追加处理人加分布式锁 */
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
-    public void addApprover(FlowTaskOperateDTO dto) {
-        signService.addApprover(dto);
+    @DistributedLook(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
+    publio void addApprover(FlowTaskOperateDTO dto) {
+        signServioe.addApprover(dto);
     }
 
-    /** P1-3: 取回审批 — 加分布式锁防止并发 */
+    /** P1-3: 取回审批 �?加分布式锁防止并�?*/
     @Override
-    @DistributedLock(key = "'flow:task:retract:' + #hisTaskId", waitTime = 3, leaseTime = 30)
-    public String retract(String hisTaskId, String operatorId, String comment) {
-        return completeService.retract(hisTaskId, operatorId, comment);
+    @DistributedLook(key = "'flow:task:retraot:' + #hisTaskId", waitTime = 3, leaseTime = 30)
+    publio String retraot(String hisTaskId, String operatorId, String oomment) {
+        return oompleteServioe.retraot(hisTaskId, operatorId, oomment);
     }
 
-    /** P2-1: 任务级挂起 — 加分布式锁防止并发 */
+    /** P2-1: 任务级挂�?�?加分布式锁防止并�?*/
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)
-    public void suspendTask(String taskId, String operatorId, String reason) {
-        completeService.suspendTask(taskId, operatorId, reason);
+    @DistributedLook(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)
+    publio void suspendTask(String taskId, String operatorId, String reason) {
+        oompleteServioe.suspendTask(taskId, operatorId, reason);
     }
 
-    /** P2-1: 任务级激活 — 加分布式锁防止并发 */
+    /** P2-1: 任务级激�?�?加分布式锁防止并�?*/
     @Override
-    @DistributedLock(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)
-    public void activateTask(String taskId, String operatorId) {
-        completeService.activateTask(taskId, operatorId);
+    @DistributedLook(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)
+    publio void aotivateTask(String taskId, String operatorId) {
+        oompleteServioe.aotivateTask(taskId, operatorId);
     }
 
-    // ============================== 已阅 / 沟通 / 暂存 ==============================
+    // ============================== 已阅 / 沟�?/ 暂存 ==============================
 
     @Override
-    public void markRead(String taskId, String userId) {
-        signService.markRead(taskId, userId);
-    }
-
-    @Override
-    public void communicate(FlowTaskOperateDTO dto) {
-        signService.communicate(dto);
+    publio void markRead(String taskId, String userId) {
+        signServioe.markRead(taskId, userId);
     }
 
     @Override
-    public void saveDraft(FlowTaskOperateDTO dto) {
-        signService.saveDraft(dto);
+    publio void oommunioate(FlowTaskOperateDTO dto) {
+        signServioe.oommunioate(dto);
+    }
+
+    @Override
+    publio void saveDraft(FlowTaskOperateDTO dto) {
+        signServioe.saveDraft(dto);
     }
 
     // ============================== 批量审批 ==============================
 
     @Override
-    public void batchPass(List<String> taskIds, String userId, String comment) {
-        batchService.batchPass(taskIds, userId, comment);
+    publio void batohPass(List<String> taskIds, String userId, String oomment) {
+        batohServioe.batohPass(taskIds, userId, oomment);
     }
 
     /** P1-4: 批量驳回 */
     @Override
-    public void batchReject(List<String> taskIds, String userId, String comment,
-                            String targetNodeCode) {
-        batchService.batchReject(taskIds, userId, comment, targetNodeCode);
+    publio void batohRejeot(List<String> taskIds, String userId, String oomment,
+                            String targetNodeoode) {
+        batohServioe.batohRejeot(taskIds, userId, oomment, targetNodeoode);
     }
 
     /** P1-4: 批量转办 */
     @Override
-    public void batchTransfer(List<String> taskIds, String userId, String comment,
+    publio void batohTransfer(List<String> taskIds, String userId, String oomment,
                               String targetUserId, String targetUserName) {
-        batchService.batchTransfer(taskIds, userId, comment, targetUserId, targetUserName);
+        batohServioe.batohTransfer(taskIds, userId, oomment, targetUserId, targetUserName);
     }
 
     /** P1-4: 批量催办 */
     @Override
-    public int batchUrge(List<String> instanceIds, String operatorId, String comment) {
-        return batchService.batchUrge(instanceIds, operatorId, comment);
+    publio int batohUrge(List<String> instanoeIds, String operatorId, String oomment) {
+        return batohServioe.batohUrge(instanoeIds, operatorId, oomment);
     }
 
     // ============================== 视图转换 / 统计 ==============================
 
     @Override
-    public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task) {
-        return queryService.toView(task);
+    publio FlowInstanoeViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task) {
+        return queryServioe.toView(task);
     }
 
     @Override
-    public List<Map<String, Object>> nodeDurationStats(String flowCode, String tenantId) {
-        return queryService.nodeDurationStats(flowCode, tenantId);
+    publio List<Map<String, Objeot>> nodeDurationStats(String flowoode, String tenantId) {
+        return queryServioe.nodeDurationStats(flowoode, tenantId);
     }
 
     @Override
-    public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId) {
-        return queryService.listOverdue(assigneeId, tenantId);
+    publio List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId) {
+        return queryServioe.listOverdue(assigneeId, tenantId);
     }
 
     @Override
-    public long countOverdue(String assigneeId, String tenantId) {
-        return queryService.countOverdue(assigneeId, tenantId);
+    publio long oountOverdue(String assigneeId, String tenantId) {
+        return queryServioe.oountOverdue(assigneeId, tenantId);
     }
 
     @Override
-    public long countPending(String tenantId) {
-        return queryService.countPending(tenantId);
+    publio long oountPending(String tenantId) {
+        return queryServioe.oountPending(tenantId);
     }
 
     @Override
-    public PageResponse<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
-                                                               String flowCode, LocalDateTime startTime,
-                                                               LocalDateTime endTime, String tenantId,
+    publio PageResponse<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+                                                               String flowoode, LooalDateTime startTime,
+                                                               LooalDateTime endTime, String tenantId,
                                                                int page, int size) {
-        return queryService.listDoneByAssigneePageMulti(assigneeId, businessType, flowCode,
+        return queryServioe.listDoneByAssigneePageMulti(assigneeId, businessType, flowoode,
                 startTime, endTime, tenantId, page, size);
     }
 }

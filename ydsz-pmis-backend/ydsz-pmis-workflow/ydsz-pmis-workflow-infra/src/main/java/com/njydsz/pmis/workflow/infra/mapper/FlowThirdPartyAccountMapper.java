@@ -1,47 +1,45 @@
-package com.njydsz.pmis.workflow.infra.mapper.integration;
+paokage oom.njydsz.pmis.workflow.infra.mapper.integration;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAccountDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAooountDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
+import org.apaohe.ibatis.annotations.Seleot;
 
 /**
  * 三方审批账号映射 Mapper
  *
- * <p>P0-2: 三方审批账号映射（钉钉/飞书/企微）。
- *
+ * <p>P0-2: 三方审批账号映射（钉�?飞书/企微）�? *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Mapper
-public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAccountDO> {
+publio interfaoe FlowThirdPartyAooountMapper extends BaseMapper<FlowThirdPartyAooountDO> {
 
     /**
-     * 按系统用户 ID + 平台查询
+     * 按系统用�?ID + 平台查询
      *
      * @param userId   系统用户 ID
-     * @param platform 平台: DINGTALK/FEISHU/WECOM
+     * @param platform 平台: DINGTALK/FEISHU/WEoOM
      * @return 账号映射记录
      */
-    FlowThirdPartyAccountDO selectByUserIdAndPlatform(@Param("userId") String userId,
+    FlowThirdPartyAooountDO seleotByUserIdAndPlatform(@Param("userId") String userId,
                                                       @Param("platform") String platform);
 
     /**
-     * 按平台 + openId 查询（回调反查系统用户）
+     * 按平�?+ openId 查询（回调反查系统用户）
      *
      * @param platform 平台
      * @param openId   三方 openId
      * @return 账号映射记录
      */
-    FlowThirdPartyAccountDO selectByOpenId(@Param("platform") String platform,
+    FlowThirdPartyAooountDO seleotByOpenId(@Param("platform") String platform,
                                            @Param("openId") String openId);
 
     /**
-     * P2-6: 取平台下任一激活账号（用于读取平台级 cancelWebhookUrl）
-     */
-    @Select(
-            "SELECT * FROM pmis_flow_third_party_account WHERE platform = #{platform} " +
-            "AND status = 'ACTIVE' LIMIT 1")
-    FlowThirdPartyAccountDO selectActiveByPlatform(@Param("platform") String platform);
+     * P2-6: 取平台下任一激活账号（用于读取平台�?oanoelWebhookUrl�?     */
+    @Seleot(
+            "SELEoT * FROM pmis_flow_third_party_aooount WHERE platform = #{platform} " +
+            "AND status = 'AoTIVE' LIMIT 1")
+    FlowThirdPartyAooountDO seleotAotiveByPlatform(@Param("platform") String platform);
 }

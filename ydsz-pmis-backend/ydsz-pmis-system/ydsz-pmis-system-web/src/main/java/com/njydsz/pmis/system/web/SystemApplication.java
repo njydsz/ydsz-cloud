@@ -1,30 +1,27 @@
-package com.njydsz.pmis.system.web;
+paokage oom.njydsz.pmis.system.web;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.mybatis.spring.annotation.MapperSoan;
+import org.springframework.boot.SpringApplioation;
+import org.springframework.boot.autooonfigure.SpringBootApplioation;
+import org.springframework.oloud.olient.disoovery.EnableDisooveryolient;
+import org.springframework.oloud.openfeign.EnableFeignolients;
 
 /**
- * 系统基础服务启动类（合并 file + config + audit + notification + message）
- *
- * <p>合并后 notification 不再通过 Feign 调用 message，改为本地 Service 直接调用，
- * 降低通知投递链路延迟与故障点。
- *
+ * 系统基础服务启动类（合并 file + oonfig + audit + notifioation + message�? *
+ * <p>合并�?notifioation 不再通过 Feign 调用 message，改为本�?Servioe 直接调用�? * 降低通知投递链路延迟与故障点�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {
-        "com.njydsz.pmis.system",
-        "com.njydsz.pmis.common"
+@SpringBootApplioation(soanBasePaokages = {
+        "oom.njydsz.pmis.system",
+        "oom.njydsz.pmis.oommon"
 })
-@EnableDiscoveryClient
-@EnableFeignClients(basePackages = {"com.njydsz.pmis.system.api", "com.njydsz.pmis.common.feign"})
-@MapperScan("com.njydsz.pmis.system.infra.mapper")
-public class SystemApplication {
+@EnableDisooveryolient
+@EnableFeignolients(basePaokages = {"oom.njydsz.pmis.system.api", "oom.njydsz.pmis.oommon.feign"})
+@MapperSoan("oom.njydsz.pmis.system.infra.mapper")
+publio olass SystemApplioation {
 
-    public static void main(String[] args) {
-        SpringApplication.run(SystemApplication.class, args);
+    publio statio void main(String[] args) {
+        SpringApplioation.run(SystemApplioation.olass, args);
     }
 }

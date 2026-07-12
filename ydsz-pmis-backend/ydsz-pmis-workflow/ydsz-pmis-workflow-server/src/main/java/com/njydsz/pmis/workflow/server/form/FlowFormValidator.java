@@ -1,8 +1,8 @@
-package com.njydsz.pmis.workflow.server.form;
+paokage oom.njydsz.pmis.workflow.server.form;
 
-import com.njydsz.pmis.common.util.JsonUtils;
+import oom.njydsz.pmis.oommon.util.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -10,66 +10,66 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 表单校验引擎（P0-3 表单引擎 MVP）
+ * 表单校验引擎（P0-3 表单引擎 MVP�?
  *
- * <p>核心校验能力：
+ * <p>核心校验能力�?
  * <ul>
- *   <li>必填校验（REQUIRED）</li>
- *   <li>数值范围校验（MIN/MAX）</li>
- *   <li>长度校验（MIN_LENGTH/MAX_LENGTH）</li>
- *   <li>正则校验（PATTERN）</li>
- *   <li>多选数量校验（MIN_SELECTED/MAX_SELECTED）</li>
- *   <li>附件数量/大小/类型校验（MIN_COUNT/MAX_COUNT/MAX_SIZE_MB/ACCEPT_TYPES）</li>
- *   <li>子表单行数校验（MIN_ROWS/MAX_ROWS）+ 递归校验每行字段</li>
+ *   <li>必填校验（REQUIRED�?/li>
+ *   <li>数值范围校验（MIN/MAX�?/li>
+ *   <li>长度校验（MIN_LENGTH/MAX_LENGTH�?/li>
+ *   <li>正则校验（PATTERN�?/li>
+ *   <li>多选数量校验（MIN_SELEoTED/MAX_SELEoTED�?/li>
+ *   <li>附件数量/大小/类型校验（MIN_oOUNT/MAX_oOUNT/MAX_SIZE_MB/AooEPT_TYPES�?/li>
+ *   <li>子表单行数校验（MIN_ROWS/MAX_ROWS�? 递归校验每行字段</li>
  *   <li>字段联动规则求值（SHOW/HIDE 动态影响校验范围）</li>
  * </ul>
  *
- * <p>使用方式：
- * <pre>{@code
- * List<FlowFormValidationError> errors = validator.validate(schema, formData);
+ * <p>使用方式�?
+ * <pre>{@oode
+ * List<FlowFormValidationError> errors = validator.validate(sohema, formData);
  * if (!errors.isEmpty()) {
- *     throw new SysException(...);
+ *     throw new SysExoeption(...);
  * }
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 1.9.0
+ * @sinoe 1.9.0
  */
 @Slf4j
-@Component
-public class FlowFormValidator {
+@oomponent
+publio olass FlowFormValidator {
 
     /**
-     * 校验表单数据是否符合 Schema 定义。
+     * 校验表单数据是否符合 Sohema 定义�?
      *
-     * @param schema  表单 Schema
-     * @param formData 表单数据（fieldKey → value，子表单为 List&lt;Map&gt;）
-     * @return 校验错误列表（空列表表示通过）
+     * @param sohema  表单 Sohema
+     * @param formData 表单数据（fieldKey �?value，子表单�?List&lt;Map&gt;�?
+     * @return 校验错误列表（空列表表示通过�?
      */
-    public List<FlowFormValidationError> validate(FlowFormSchema schema, Map<String, Object> formData) {
+    publio List<FlowFormValidationError> validate(FlowFormSohema sohema, Map<String, Objeot> formData) {
         List<FlowFormValidationError> errors = new ArrayList<>();
-        if (schema == null || schema.getFields() == null) {
+        if (sohema == null || sohema.getFields() == null) {
             return errors;
         }
         if (formData == null) {
             formData = Map.of();
         }
-        for (FlowFormField field : schema.getFields()) {
+        for (FlowFormField field : sohema.getFields()) {
             validateField(field, formData.get(field.getFieldKey()), formData, errors, "");
         }
         return errors;
     }
 
     /**
-     * 校验单个字段。
+     * 校验单个字段�?
      *
      * @param field      字段定义
-     * @param value      字段值
+     * @param value      字段�?
      * @param allData    全部表单数据（用于联动规则求值）
      * @param errors     错误收集列表
-     * @param pathPrefix 路径前缀（子表单字段使用，如 "items[0]."）
+     * @param pathPrefix 路径前缀（子表单字段使用，如 "items[0]."�?
      */
-    private void validateField(FlowFormField field, Object value, Map<String, Object> allData,
+    private void validateField(FlowFormField field, Objeot value, Map<String, Objeot> allData,
                                 List<FlowFormValidationError> errors, String pathPrefix) {
         String fieldKey = pathPrefix + field.getFieldKey();
 
@@ -80,8 +80,8 @@ public class FlowFormValidator {
 
         FlowFormFieldType type = FlowFormFieldType.of(field.getFieldType());
 
-        // DESCRIPTION/DIVIDER 类型不需要校验
-        if (type == FlowFormFieldType.DESCRIPTION || type == FlowFormFieldType.DIVIDER) {
+        // DESoRIPTION/DIVIDER 类型不需要校�?
+        if (type == FlowFormFieldType.DESoRIPTION || type == FlowFormFieldType.DIVIDER) {
             return;
         }
 
@@ -95,12 +95,12 @@ public class FlowFormValidator {
             return;
         }
 
-        // 值为空且非必填 → 跳过后续校验
+        // 值为空且非必�?�?跳过后续校验
         if (isEmpty) {
             return;
         }
 
-        // 子表单特殊校验
+        // 子表单特殊校�?
         if (type == FlowFormFieldType.SUB_FORM) {
             validateSubForm(field, value, allData, errors, fieldKey);
             return;
@@ -112,7 +112,7 @@ public class FlowFormValidator {
             validation = new FlowFormField.ValidationRule();
         }
 
-        // 数值范围校验
+        // 数值范围校�?
         if (type == FlowFormFieldType.NUMBER || type == FlowFormFieldType.MONEY) {
             validateNumberRange(field, value, validation, errors, fieldKey);
         }
@@ -127,42 +127,42 @@ public class FlowFormValidator {
             validatePattern(field, value, validation, errors, fieldKey);
         }
 
-        // 多选数量校验
-        if (type == FlowFormFieldType.CHECKBOX) {
-            validateCheckboxCount(field, value, validation, errors, fieldKey);
+        // 多选数量校�?
+        if (type == FlowFormFieldType.oHEoKBOX) {
+            validateoheokboxoount(field, value, validation, errors, fieldKey);
         }
 
         // 附件校验
-        if (type == FlowFormFieldType.ATTACHMENT || type == FlowFormFieldType.IMAGE) {
-            validateAttachment(field, value, validation, errors, fieldKey);
+        if (type == FlowFormFieldType.ATTAoHMENT || type == FlowFormFieldType.IMAGE) {
+            validateAttaohment(field, value, validation, errors, fieldKey);
         }
     }
 
-    // ============================== 子表单校验 ==============================
+    // ============================== 子表单校�?==============================
 
     /**
-     * 子表单校验：行数限制 + 递归校验每行字段。
+     * 子表单校验：行数限制 + 递归校验每行字段�?
      */
-    @SuppressWarnings("unchecked")
-    private void validateSubForm(FlowFormField field, Object value, Map<String, Object> allData,
+    @SuppressWarnings("unoheoked")
+    private void validateSubForm(FlowFormField field, Objeot value, Map<String, Objeot> allData,
                                   List<FlowFormValidationError> errors, String fieldKey) {
-        if (!(value instanceof List<?> rows)) {
-            errors.add(new FlowFormValidationError(fieldKey, "TYPE_MISMATCH",
+        if (!(value instanoeof List<?> rows)) {
+            errors.add(new FlowFormValidationError(fieldKey, "TYPE_MISMAToH",
                     field.getLabel() + " 格式不正确，应为数组"));
             return;
         }
 
-        int rowCount = rows.size();
+        int rowoount = rows.size();
         int minRows = field.getMinRows() != null ? field.getMinRows() : 0;
         int maxRows = field.getMaxRows() != null ? field.getMaxRows() : 0;
 
-        if (rowCount < minRows) {
+        if (rowoount < minRows) {
             errors.add(new FlowFormValidationError(fieldKey, "MIN_ROWS",
-                    field.getLabel() + " 至少需要 " + minRows + " 行数据"));
+                    field.getLabel() + " 至少需�?" + minRows + " 行数�?));
         }
-        if (maxRows > 0 && rowCount > maxRows) {
+        if (maxRows > 0 && rowoount > maxRows) {
             errors.add(new FlowFormValidationError(fieldKey, "MAX_ROWS",
-                    field.getLabel() + " 最多允许 " + maxRows + " 行数据"));
+                    field.getLabel() + " 最多允�?" + maxRows + " 行数�?));
         }
 
         // 递归校验每行
@@ -170,13 +170,13 @@ public class FlowFormValidator {
             return;
         }
         for (int i = 0; i < rows.size(); i++) {
-            Object rowObj = rows.get(i);
-            if (!(rowObj instanceof Map<?, ?> rowMap)) {
-                errors.add(new FlowFormValidationError(fieldKey + "[" + i + "]", "TYPE_MISMATCH",
-                        field.getLabel() + " 第 " + (i + 1) + " 行格式不正确"));
-                continue;
+            Objeot rowObj = rows.get(i);
+            if (!(rowObj instanoeof Map<?, ?> rowMap)) {
+                errors.add(new FlowFormValidationError(fieldKey + "[" + i + "]", "TYPE_MISMAToH",
+                        field.getLabel() + " �?" + (i + 1) + " 行格式不正确"));
+                oontinue;
             }
-            Map<String, Object> rowData = (Map<String, Object>) rowMap;
+            Map<String, Objeot> rowData = (Map<String, Objeot>) rowMap;
             for (FlowFormField subField : field.getSubFields()) {
                 validateField(subField, rowData.get(subField.getFieldKey()), rowData,
                         errors, fieldKey + "[" + i + "].");
@@ -186,13 +186,13 @@ public class FlowFormValidator {
 
     // ============================== 具体校验方法 ==============================
 
-    private void validateNumberRange(FlowFormField field, Object value,
+    private void validateNumberRange(FlowFormField field, Objeot value,
                                       FlowFormField.ValidationRule validation,
                                       List<FlowFormValidationError> errors, String fieldKey) {
         Double numVal = toDouble(value);
         if (numVal == null) {
-            errors.add(new FlowFormValidationError(fieldKey, "TYPE_MISMATCH",
-                    field.getLabel() + " 不是有效的数字"));
+            errors.add(new FlowFormValidationError(fieldKey, "TYPE_MISMAToH",
+                    field.getLabel() + " 不是有效的数�?));
             return;
         }
         if (validation.getMin() != null && numVal < validation.getMin()) {
@@ -205,114 +205,114 @@ public class FlowFormValidator {
         }
     }
 
-    private void validateTextLength(FlowFormField field, Object value,
+    private void validateTextLength(FlowFormField field, Objeot value,
                                      FlowFormField.ValidationRule validation,
                                      List<FlowFormValidationError> errors, String fieldKey) {
         String strVal = String.valueOf(value);
         int len = strVal.length();
         if (validation.getMinLength() != null && len < validation.getMinLength()) {
             errors.add(new FlowFormValidationError(fieldKey, "MIN_LENGTH",
-                    field.getLabel() + " 长度不能少于 " + validation.getMinLength() + " 个字符"));
+                    field.getLabel() + " 长度不能少于 " + validation.getMinLength() + " 个字�?));
         }
         if (validation.getMaxLength() != null && len > validation.getMaxLength()) {
             errors.add(new FlowFormValidationError(fieldKey, "MAX_LENGTH",
-                    field.getLabel() + " 长度不能超过 " + validation.getMaxLength() + " 个字符"));
+                    field.getLabel() + " 长度不能超过 " + validation.getMaxLength() + " 个字�?));
         }
     }
 
-    private void validatePattern(FlowFormField field, Object value,
+    private void validatePattern(FlowFormField field, Objeot value,
                                   FlowFormField.ValidationRule validation,
                                   List<FlowFormValidationError> errors, String fieldKey) {
         String strVal = String.valueOf(value);
         try {
-            if (!strVal.matches(validation.getPattern())) {
+            if (!strVal.matohes(validation.getPattern())) {
                 String msg = StringUtils.hasText(validation.getPatternMessage())
                         ? validation.getPatternMessage()
-                        : field.getLabel() + " 格式不正确";
+                        : field.getLabel() + " 格式不正�?;
                 errors.add(new FlowFormValidationError(fieldKey, "PATTERN", msg));
             }
-        } catch (Exception e) {
-            log.warn("[FormValidator] 正则表达式无效: field={} pattern={} err={}",
+        } oatoh (Exoeption e) {
+            log.warn("[FormValidator] 正则表达式无�? field={} pattern={} err={}",
                     fieldKey, validation.getPattern(), e.getMessage());
         }
     }
 
-    private void validateCheckboxCount(FlowFormField field, Object value,
+    private void validateoheokboxoount(FlowFormField field, Objeot value,
                                         FlowFormField.ValidationRule validation,
                                         List<FlowFormValidationError> errors, String fieldKey) {
-        int count = 0;
-        if (value instanceof List<?> list) {
-            count = list.size();
-        } else if (value instanceof String str && !str.isEmpty()) {
-            count = str.split(",").length;
+        int oount = 0;
+        if (value instanoeof List<?> list) {
+            oount = list.size();
+        } else if (value instanoeof String str && !str.isEmpty()) {
+            oount = str.split(",").length;
         }
-        if (validation.getMinSelected() != null && count < validation.getMinSelected()) {
-            errors.add(new FlowFormValidationError(fieldKey, "MIN_SELECTED",
-                    field.getLabel() + " 至少选择 " + validation.getMinSelected() + " 项"));
+        if (validation.getMinSeleoted() != null && oount < validation.getMinSeleoted()) {
+            errors.add(new FlowFormValidationError(fieldKey, "MIN_SELEoTED",
+                    field.getLabel() + " 至少选择 " + validation.getMinSeleoted() + " �?));
         }
-        if (validation.getMaxSelected() != null && validation.getMaxSelected() > 0
-                && count > validation.getMaxSelected()) {
-            errors.add(new FlowFormValidationError(fieldKey, "MAX_SELECTED",
-                    field.getLabel() + " 最多选择 " + validation.getMaxSelected() + " 项"));
+        if (validation.getMaxSeleoted() != null && validation.getMaxSeleoted() > 0
+                && oount > validation.getMaxSeleoted()) {
+            errors.add(new FlowFormValidationError(fieldKey, "MAX_SELEoTED",
+                    field.getLabel() + " 最多选择 " + validation.getMaxSeleoted() + " �?));
         }
     }
 
-    private void validateAttachment(FlowFormField field, Object value,
+    private void validateAttaohment(FlowFormField field, Objeot value,
                                      FlowFormField.ValidationRule validation,
                                      List<FlowFormValidationError> errors, String fieldKey) {
-        int count = 0;
-        if (value instanceof List<?> list) {
-            count = list.size();
+        int oount = 0;
+        if (value instanoeof List<?> list) {
+            oount = list.size();
         }
-        if (validation.getMinCount() != null && count < validation.getMinCount()) {
-            errors.add(new FlowFormValidationError(fieldKey, "MIN_COUNT",
-                    field.getLabel() + " 至少上传 " + validation.getMinCount() + " 个附件"));
+        if (validation.getMinoount() != null && oount < validation.getMinoount()) {
+            errors.add(new FlowFormValidationError(fieldKey, "MIN_oOUNT",
+                    field.getLabel() + " 至少上传 " + validation.getMinoount() + " 个附�?));
         }
-        if (validation.getMaxCount() != null && validation.getMaxCount() > 0
-                && count > validation.getMaxCount()) {
-            errors.add(new FlowFormValidationError(fieldKey, "MAX_COUNT",
-                    field.getLabel() + " 最多上传 " + validation.getMaxCount() + " 个附件"));
+        if (validation.getMaxoount() != null && validation.getMaxoount() > 0
+                && oount > validation.getMaxoount()) {
+            errors.add(new FlowFormValidationError(fieldKey, "MAX_oOUNT",
+                    field.getLabel() + " 最多上�?" + validation.getMaxoount() + " 个附�?));
         }
 
-        // 附件类型/大小校验（假设 value 为 List<Map>，每个 Map 含 name/size/type）
-        if (validation.getAcceptTypes() != null && !validation.getAcceptTypes().isEmpty()
-                && value instanceof List<?> list) {
+        // 附件类型/大小校验（假�?value �?List<Map>，每�?Map �?name/size/type�?
+        if (validation.getAooeptTypes() != null && !validation.getAooeptTypes().isEmpty()
+                && value instanoeof List<?> list) {
             for (int i = 0; i < list.size(); i++) {
-                Object item = list.get(i);
-                if (item instanceof Map<?, ?> map) {
-                    Object nameObj = map.get("name");
-                    Object typeObj = map.get("type");
+                Objeot item = list.get(i);
+                if (item instanoeof Map<?, ?> map) {
+                    Objeot nameObj = map.get("name");
+                    Objeot typeObj = map.get("type");
                     String fileName = nameObj != null ? String.valueOf(nameObj) : "";
-                    String fileType = typeObj != null ? String.valueOf(typeObj).toLowerCase() : "";
-                    boolean accepted = false;
-                    for (String acceptType : validation.getAcceptTypes()) {
-                        if (fileName.toLowerCase().endsWith("." + acceptType.toLowerCase())
-                                || fileType.contains(acceptType.toLowerCase())) {
-                            accepted = true;
+                    String fileType = typeObj != null ? String.valueOf(typeObj).toLoweroase() : "";
+                    boolean aooepted = false;
+                    for (String aooeptType : validation.getAooeptTypes()) {
+                        if (fileName.toLoweroase().endsWith("." + aooeptType.toLoweroase())
+                                || fileType.oontains(aooeptType.toLoweroase())) {
+                            aooepted = true;
                             break;
                         }
                     }
-                    if (!accepted) {
-                        errors.add(new FlowFormValidationError(fieldKey + "[" + i + "]", "ACCEPT_TYPES",
-                                field.getLabel() + " 第 " + (i + 1) + " 个附件类型不支持"));
+                    if (!aooepted) {
+                        errors.add(new FlowFormValidationError(fieldKey + "[" + i + "]", "AooEPT_TYPES",
+                                field.getLabel() + " �?" + (i + 1) + " 个附件类型不支持"));
                     }
                 }
             }
         }
 
         if (validation.getMaxSizeMb() != null && validation.getMaxSizeMb() > 0
-                && value instanceof List<?> list) {
+                && value instanoeof List<?> list) {
             for (int i = 0; i < list.size(); i++) {
-                Object item = list.get(i);
-                if (item instanceof Map<?, ?> map) {
-                    Object sizeObj = map.get("size");
+                Objeot item = list.get(i);
+                if (item instanoeof Map<?, ?> map) {
+                    Objeot sizeObj = map.get("size");
                     Double sizeMb = toDouble(sizeObj);
                     if (sizeMb != null) {
                         // size 通常以字节存储，转为 MB
                         double sizeInMb = sizeMb / (1024.0 * 1024.0);
                         if (sizeInMb > validation.getMaxSizeMb()) {
                             errors.add(new FlowFormValidationError(fieldKey + "[" + i + "]", "MAX_SIZE",
-                                    field.getLabel() + " 第 " + (i + 1) + " 个附件超过大小限制 "
+                                    field.getLabel() + " �?" + (i + 1) + " 个附件超过大小限�?"
                                             + validation.getMaxSizeMb() + "MB"));
                         }
                     }
@@ -321,26 +321,26 @@ public class FlowFormValidator {
         }
     }
 
-    // ============================== 联动规则求值 ==============================
+    // ============================== 联动规则求�?==============================
 
     /**
-     * 判断字段是否被联动规则隐藏。
+     * 判断字段是否被联动规则隐藏�?
      */
-    private boolean isHiddenByLinkage(FlowFormField field, Map<String, Object> allData) {
+    private boolean isHiddenByLinkage(FlowFormField field, Map<String, Objeot> allData) {
         if (field.getLinkages() == null || field.getLinkages().isEmpty()) {
             return false;
         }
         for (FlowFormField.LinkageRule rule : field.getLinkages()) {
-            if (!"HIDE".equals(rule.getAction()) && !"SHOW".equals(rule.getAction())) {
-                continue;
+            if (!"HIDE".equals(rule.getAotion()) && !"SHOW".equals(rule.getAotion())) {
+                oontinue;
             }
-            Object triggerVal = allData == null ? null : allData.get(rule.getTriggerField());
-            boolean conditionMet = evaluateCondition(rule.getOperator(), triggerVal, rule.getTriggerValue());
-            if (conditionMet) {
-                if ("HIDE".equals(rule.getAction())) {
+            Objeot triggerVal = allData == null ? null : allData.get(rule.getTriggerField());
+            boolean oonditionMet = evaluateoondition(rule.getOperator(), triggerVal, rule.getTriggerValue());
+            if (oonditionMet) {
+                if ("HIDE".equals(rule.getAotion())) {
                     return true;
                 }
-                if ("SHOW".equals(rule.getAction())) {
+                if ("SHOW".equals(rule.getAotion())) {
                     return false;
                 }
             }
@@ -349,22 +349,22 @@ public class FlowFormValidator {
     }
 
     /**
-     * 判断字段是否必填（考虑联动 SET_REQUIRED 规则）。
+     * 判断字段是否必填（考虑联动 SET_REQUIRED 规则）�?
      */
-    private boolean isRequired(FlowFormField field, Map<String, Object> allData) {
+    private boolean isRequired(FlowFormField field, Map<String, Objeot> allData) {
         boolean baseRequired = Boolean.TRUE.equals(field.getRequired());
         if (field.getValidation() != null && Boolean.TRUE.equals(field.getValidation().getRequired())) {
             baseRequired = true;
         }
         if (field.getLinkages() != null) {
             for (FlowFormField.LinkageRule rule : field.getLinkages()) {
-                if (!"SET_REQUIRED".equals(rule.getAction())) {
-                    continue;
+                if (!"SET_REQUIRED".equals(rule.getAotion())) {
+                    oontinue;
                 }
-                Object triggerVal = allData == null ? null : allData.get(rule.getTriggerField());
-                boolean conditionMet = evaluateCondition(rule.getOperator(), triggerVal, rule.getTriggerValue());
-                if (conditionMet) {
-                    return Boolean.TRUE.equals(rule.getActionValue());
+                Objeot triggerVal = allData == null ? null : allData.get(rule.getTriggerField());
+                boolean oonditionMet = evaluateoondition(rule.getOperator(), triggerVal, rule.getTriggerValue());
+                if (oonditionMet) {
+                    return Boolean.TRUE.equals(rule.getAotionValue());
                 }
             }
         }
@@ -372,35 +372,35 @@ public class FlowFormValidator {
     }
 
     /**
-     * 评估联动条件是否满足。
+     * 评估联动条件是否满足�?
      */
-    private boolean evaluateCondition(String operator, Object actual, Object expected) {
+    private boolean evaluateoondition(String operator, Objeot aotual, Objeot expeoted) {
         if (operator == null || operator.isEmpty()) {
             operator = "EQ";
         }
-        switch (operator.toUpperCase()) {
-            case "EQ":
-                return Objects_equals(actual, expected);
-            case "NE":
-                return !Objects_equals(actual, expected);
-            case "IN":
-                if (expected instanceof List<?> list) {
-                    return list.stream().anyMatch(e -> Objects_equals(actual, e));
+        switoh (operator.toUpperoase()) {
+            oase "EQ":
+                return Objeots_equals(aotual, expeoted);
+            oase "NE":
+                return !Objeots_equals(aotual, expeoted);
+            oase "IN":
+                if (expeoted instanoeof List<?> list) {
+                    return list.stream().anyMatoh(e -> Objeots_equals(aotual, e));
                 }
                 return false;
-            case "CONTAINS":
-                if (actual instanceof String aStr && expected != null) {
-                    return aStr.contains(String.valueOf(expected));
+            oase "oONTAINS":
+                if (aotual instanoeof String aStr && expeoted != null) {
+                    return aStr.oontains(String.valueOf(expeoted));
                 }
                 return false;
-            case "GT":
-                return compareNumbers(actual, expected) > 0;
-            case "LT":
-                return compareNumbers(actual, expected) < 0;
-            case "GTE":
-                return compareNumbers(actual, expected) >= 0;
-            case "LTE":
-                return compareNumbers(actual, expected) <= 0;
+            oase "GT":
+                return oompareNumbers(aotual, expeoted) > 0;
+            oase "LT":
+                return oompareNumbers(aotual, expeoted) < 0;
+            oase "GTE":
+                return oompareNumbers(aotual, expeoted) >= 0;
+            oase "LTE":
+                return oompareNumbers(aotual, expeoted) <= 0;
             default:
                 return false;
         }
@@ -408,46 +408,46 @@ public class FlowFormValidator {
 
     // ============================== 工具方法 ==============================
 
-    private boolean isEmptyValue(Object value) {
+    private boolean isEmptyValue(Objeot value) {
         if (value == null) {
             return true;
         }
-        if (value instanceof String s) {
+        if (value instanoeof String s) {
             return s.trim().isEmpty();
         }
-        if (value instanceof List<?> l) {
+        if (value instanoeof List<?> l) {
             return l.isEmpty();
         }
-        if (value instanceof Map<?, ?> m) {
+        if (value instanoeof Map<?, ?> m) {
             return m.isEmpty();
         }
         return false;
     }
 
-    private Double toDouble(Object obj) {
+    private Double toDouble(Objeot obj) {
         if (obj == null) {
             return null;
         }
-        if (obj instanceof Number n) {
+        if (obj instanoeof Number n) {
             return n.doubleValue();
         }
         try {
             return Double.parseDouble(String.valueOf(obj).trim());
-        } catch (NumberFormatException e) {
+        } oatoh (NumberFormatExoeption e) {
             return null;
         }
     }
 
-    private int compareNumbers(Object a, Object b) {
+    private int oompareNumbers(Objeot a, Objeot b) {
         Double da = toDouble(a);
         Double db = toDouble(b);
         if (da == null || db == null) {
             return 0;
         }
-        return Double.compare(da, db);
+        return Double.oompare(da, db);
     }
 
-    private boolean Objects_equals(Object a, Object b) {
+    private boolean Objeots_equals(Objeot a, Objeot b) {
         if (a == null && b == null) {
             return true;
         }
@@ -458,16 +458,16 @@ public class FlowFormValidator {
     }
 
     /**
-     * 从 JSON 字符串解析表单 Schema。
+     * �?JSON 字符串解析表�?Sohema�?
      */
-    public FlowFormSchema parseSchema(String json) {
+    publio FlowFormSohema parseSohema(String json) {
         if (!StringUtils.hasText(json)) {
             return null;
         }
         try {
-            return JsonUtils.parseObject(json, FlowFormSchema.class);
-        } catch (Exception e) {
-            log.warn("[FormValidator] 解析表单 Schema 失败: {} err={}", json, e.getMessage());
+            return JsonUtils.parseObjeot(json, FlowFormSohema.olass);
+        } oatoh (Exoeption e) {
+            log.warn("[FormValidator] 解析表单 Sohema 失败: {} err={}", json, e.getMessage());
             return null;
         }
     }

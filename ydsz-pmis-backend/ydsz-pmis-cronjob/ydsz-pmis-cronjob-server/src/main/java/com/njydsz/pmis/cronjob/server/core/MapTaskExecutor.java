@@ -1,283 +1,265 @@
-package com.njydsz.pmis.cronjob.server.core.map;
+paokage oom.njydsz.pmis.oronjob.server.oore.map;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.job.JobLoggerHolder;
-import com.njydsz.pmis.common.job.MapContext;
-import com.njydsz.pmis.common.job.MapProcessor;
-import com.njydsz.pmis.common.job.MapReduceProcessor;
-import com.njydsz.pmis.common.job.MapTask;
-import com.njydsz.pmis.common.job.ProcessResult;
-import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
-import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteTaskClient;
-import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobTaskDO;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobTaskMapper;
-import lombok.RequiredArgsConstructor;
+import oom.alibaba.fastjson2.JSON;
+import oom.alibaba.fastjson2.JSONObjeot;
+import oom.njydsz.pmis.oommon.job.JobLoggerHolder;
+import oom.njydsz.pmis.oommon.job.Mapoontext;
+import oom.njydsz.pmis.oommon.job.MapProoessor;
+import oom.njydsz.pmis.oommon.job.MapReduoeProoessor;
+import oom.njydsz.pmis.oommon.job.MapTask;
+import oom.njydsz.pmis.oommon.job.ProoessResult;
+import oom.njydsz.pmis.oommon.util.TraoeIdUtil;
+import oom.njydsz.pmis.oronjob.server.oonfig.oronjobProperties;
+import oom.njydsz.pmis.oronjob.server.oore.dispatoh.RemoteSubTaskRequest;
+import oom.njydsz.pmis.oronjob.server.oore.dispatoh.RemoteTaskolient;
+import oom.njydsz.pmis.oronjob.server.oore.disoovery.NodeDisooveryStrategy;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobDO;
+import oom.njydsz.pmis.oronjob.domain.entity.log.JobLogDO;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobNodeDO;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobTaskDO;
+import oom.njydsz.pmis.oronjob.infra.mapper.job.JobTaskMapper;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
+import org.springframework.oontext.Applioationoontext;
+import org.springframework.stereotype.oomponent;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.oonourrent.oompletableFuture;
+import java.util.oonourrent.ExeoutorServioe;
+import java.util.oonourrent.Exeoutors;
+import java.util.oonourrent.Semaphore;
+import java.util.oonourrent.atomio.AtomioInteger;
 
 /**
- * MapReduce 任务执行器（P0-4, P0-1 分布式并行执行）。
- *
- * <p>负责执行 {@link MapProcessor} / {@link MapReduceProcessor} 类型的任务，
+ * MapReduoe 任务执行器（P0-4, P0-1 分布式并行执行）�? *
+ * <p>负责执行 {@link MapProoessor} / {@link MapReduoeProoessor} 类型的任务，
  * 支持动态产生子任务的分布式批处理：
  * <ol>
- *   <li>从 ApplicationContext 获取 {@link MapProcessor} Bean（按 job.handler 名称）</li>
- *   <li>创建 ROOT TaskDO 记录，构造 root {@link MapContext}（isRootTask=true）</li>
- *   <li>调用 {@link MapProcessor#process(MapContext)} 处理 root task</li>
- *   <li>读取 {@link MapContext#getSubTasks()}，为每个子任务创建 TaskDO 记录</li>
- *   <li><b>P0-1:</b> 将子任务分发到多个执行器节点并行执行（通过 RemoteTaskClient HTTP 派发）</li>
- *   <li>若 processor 是 {@link MapReduceProcessor} 且有子任务，调用 reduce 汇总</li>
- *   <li>更新 ROOT TaskDO 状态为最终结果，返回 {@link ProcessResult}</li>
+ *   <li>�?Applioationoontext 获取 {@link MapProoessor} Bean（按 job.handler 名称�?/li>
+ *   <li>创建 ROOT TaskDO 记录，构�?root {@link Mapoontext}（isRootTask=true�?/li>
+ *   <li>调用 {@link MapProoessor#prooess(Mapoontext)} 处理 root task</li>
+ *   <li>读取 {@link Mapoontext#getSubTasks()}，为每个子任务创�?TaskDO 记录</li>
+ *   <li><b>P0-1:</b> 将子任务分发到多个执行器节点并行执行（通过 RemoteTaskolient HTTP 派发�?/li>
+ *   <li>�?prooessor �?{@link MapReduoeProoessor} 且有子任务，调用 reduoe 汇�?/li>
+ *   <li>更新 ROOT TaskDO 状态为最终结果，返回 {@link ProoessResult}</li>
  * </ol>
  *
- * <h3>分布式并行执行（P0-1）</h3>
- * <p>当 {@code pmis.cronjob.map-reduce.enabled=true} 时，子任务将被分发到多个在线节点并行执行：
- * <ul>
- *   <li>子任务按 round-robin 分配到在线节点列表</li>
- *   <li>本地节点执行子任务时直接调用 processor.process()</li>
- *   <li>远程节点通过 HTTP POST {@code /cronjob/internal/execute-sub-task} 派发</li>
- *   <li>使用 CompletableFuture + Semaphore 控制最大并行度</li>
+ * <h3>分布式并行执行（P0-1�?/h3>
+ * <p>�?{@oode pmis.oronjob.map-reduoe.enabled=true} 时，子任务将被分发到多个在线节点并行执行�? * <ul>
+ *   <li>子任务按 round-robin 分配到在线节点列�?/li>
+ *   <li>本地节点执行子任务时直接调用 prooessor.prooess()</li>
+ *   <li>远程节点通过 HTTP POST {@oode /oronjob/internal/exeoute-sub-task} 派发</li>
+ *   <li>使用 oompletableFuture + Semaphore 控制最大并行度</li>
  *   <li>远程派发失败时降级本地执行（可配置）</li>
  * </ul>
  *
  * <h3>容错策略</h3>
  * <ul>
  *   <li>root task 失败：不产生子任务，直接返回失败结果</li>
- *   <li>子任务失败：记录 FAILED 状态，继续执行其他子任务（默认非 fail-fast）</li>
- *   <li>reduce 失败：整体返回失败，但子任务结果已持久化</li>
+ *   <li>子任务失败：记录 FAILED 状态，继续执行其他子任务（默认�?fail-fast�?/li>
+ *   <li>reduoe 失败：整体返回失败，但子任务结果已持久化</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class MapTaskExecutor {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass MapTaskExeoutor {
 
     /** root task 名称常量 */
-    private static final String ROOT_TASK_NAME = "root";
+    private statio final String ROOT_TASK_NAME = "root";
 
     /** TaskDO 类型常量 */
-    private static final String TASK_TYPE_ROOT = "ROOT";
-    private static final String TASK_TYPE_SUB_TASK = "SUB_TASK";
+    private statio final String TASK_TYPE_ROOT = "ROOT";
+    private statio final String TASK_TYPE_SUB_TASK = "SUB_TASK";
 
-    /** TaskDO 状态常量 */
-    private static final String STATUS_PENDING = "PENDING";
-    private static final String STATUS_RUNNING = "RUNNING";
-    private static final String STATUS_SUCCESS = "SUCCESS";
-    private static final String STATUS_FAILED = "FAILED";
+    /** TaskDO 状态常�?*/
+    private statio final String STATUS_PENDING = "PENDING";
+    private statio final String STATUS_RUNNING = "RUNNING";
+    private statio final String STATUS_SUooESS = "SUooESS";
+    private statio final String STATUS_FAILED = "FAILED";
 
     private final JobTaskMapper jobTaskMapper;
-    private final ApplicationContext applicationContext;
-    private final CronjobProperties cronjobProperties;
-    private final NodeDiscoveryStrategy nodeDiscoveryStrategy;
-    private final RemoteTaskClient remoteTaskClient;
+    private final Applioationoontext applioationoontext;
+    private final oronjobProperties oronjobProperties;
+    private final NodeDisooveryStrategy nodeDisooveryStrategy;
+    private final RemoteTaskolient remoteTaskolient;
 
     /**
-     * P0-1: 子任务并行执行线程池。
-     *
-     * <p>使用固定大小线程池控制并行度，避免子任务过多时创建过多线程。
-     * 线程池大小由 {@code pmis.cronjob.map-reduce.max-parallel-sub-tasks} 控制。
-     */
-    private final ExecutorService subTaskExecutor = Executors.newFixedThreadPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors() * 2),
+     * P0-1: 子任务并行执行线程池�?     *
+     * <p>使用固定大小线程池控制并行度，避免子任务过多时创建过多线程�?     * 线程池大小由 {@oode pmis.oronjob.map-reduoe.max-parallel-sub-tasks} 控制�?     */
+    private final ExeoutorServioe subTaskExeoutor = Exeoutors.newFixedThreadPool(
+            Math.max(4, Runtime.getRuntime().availableProoessors() * 2),
             r -> {
-                Thread t = new Thread(r, "mapreduce-subtask");
+                Thread t = new Thread(r, "mapreduoe-subtask");
                 t.setDaemon(true);
                 return t;
             });
 
     /**
-     * 执行 MapReduce 任务。
-     *
-     * <p>由 {@code DefaultTaskDispatcher} 在 jobType=MAP/MAP_REDUCE 时调用，
-     * 此时已获取分布式锁并写入 JobLogDO（status=RUNNING），在线日志器已绑定到 ThreadLocal。
-     *
+     * 执行 MapReduoe 任务�?     *
+     * <p>�?{@oode DefaultTaskDispatoher} �?jobType=MAP/MAP_REDUoE 时调用，
+     * 此时已获取分布式锁并写入 JobLogDO（status=RUNNING），在线日志器已绑定�?ThreadLooal�?     *
      * @param job         任务定义
-     * @param log0        执行日志（已插入 pmis_job_log，status=RUNNING）
-     * @param triggerType 触发类型
-     * @return 整体处理结果（含 reduce 结果或 root 结果）
-     */
-    public ProcessResult executeMapJob(JobDO job, JobLogDO log0, String triggerType) {
+     * @param log0        执行日志（已插入 pmis_job_log，status=RUNNING�?     * @param triggerType 触发类型
+     * @return 整体处理结果（含 reduoe 结果�?root 结果�?     */
+    publio ProoessResult exeouteMapJob(JobDO job, JobLogDO log0, String triggerType) {
         String jobId = job.getId();
         String logId = log0.getId();
         String jobKey = job.getJobKey();
-        log.info("[MapTaskExecutor] 开始执行 MapReduce 任务: key={} logId={} triggerType={}",
+        log.info("[MapTaskExeoutor] 开始执�?MapReduoe 任务: key={} logId={} triggerType={}",
                 jobKey, logId, triggerType);
 
-        // 1. 从 ApplicationContext 获取 MapProcessor Bean
-        MapProcessor processor;
+        // 1. �?Applioationoontext 获取 MapProoessor Bean
+        MapProoessor prooessor;
         try {
-            processor = applicationContext.getBean(job.getHandler(), MapProcessor.class);
-        } catch (Exception e) {
-            log.error("[MapTaskExecutor] 获取 MapProcessor Bean 失败: key={} handler={} reason={}",
+            prooessor = applioationoontext.getBean(job.getHandler(), MapProoessor.olass);
+        } oatoh (Exoeption e) {
+            log.error("[MapTaskExeoutor] 获取 MapProoessor Bean 失败: key={} handler={} reason={}",
                     jobKey, job.getHandler(), e.getMessage(), e);
-            return ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage());
+            return ProoessResult.failed("获取 MapProoessor Bean 失败: " + e.getMessage());
         }
 
         // 2. 创建 ROOT TaskDO 记录，status=PENDING
-        JobTaskDO rootTaskDO = createTaskDO(jobId, logId, jobKey, ROOT_TASK_NAME,
+        JobTaskDO rootTaskDO = oreateTaskDO(jobId, logId, jobKey, ROOT_TASK_NAME,
                 job.getParamsJson(), TASK_TYPE_ROOT, STATUS_PENDING);
         jobTaskMapper.insert(rootTaskDO);
 
-        // 3. 构造 root MapContext，调用 processor.process 处理 root task
-        MapContext rootContext = new MapContext(jobId, logId, jobKey, ROOT_TASK_NAME,
+        // 3. 构�?root Mapoontext，调�?prooessor.prooess 处理 root task
+        Mapoontext rootoontext = new Mapoontext(jobId, logId, jobKey, ROOT_TASK_NAME,
                 job.getParamsJson(), true);
-        ProcessResult rootResult = executeTask(processor, rootContext, rootTaskDO, jobKey, logId);
+        ProoessResult rootResult = exeouteTask(prooessor, rootoontext, rootTaskDO, jobKey, logId);
 
         // 4. root task 失败时不产生子任务，直接返回
-        if (!rootResult.isSuccess()) {
-            log.warn("[MapTaskExecutor] root task 执行失败, 不产生子任务: key={} logId={} error={}",
+        if (!rootResult.isSuooess()) {
+            log.warn("[MapTaskExeoutor] root task 执行失败, 不产生子任务: key={} logId={} error={}",
                     jobKey, logId, rootResult.getErrorMessage());
             return rootResult;
         }
 
-        // 5. 读取子任务列表，无子任务时直接返回 root 结果
-        List<MapTask> subTasks = rootContext.getSubTasks();
+        // 5. 读取子任务列表，无子任务时直接返�?root 结果
+        List<MapTask> subTasks = rootoontext.getSubTasks();
         if (subTasks.isEmpty()) {
-            log.info("[MapTaskExecutor] root task 未产生子任务, 直接返回: key={} logId={}", jobKey, logId);
+            log.info("[MapTaskExeoutor] root task 未产生子任务, 直接返回: key={} logId={}", jobKey, logId);
             return rootResult;
         }
 
-        log.info("[MapTaskExecutor] root task 产生 {} 个子任务: key={} logId={}",
+        log.info("[MapTaskExeoutor] root task 产生 {} 个子任务: key={} logId={}",
                 subTasks.size(), jobKey, logId);
 
         // 6. P0-1: 分布式并行执行子任务
-        List<ProcessResult> subTaskResults;
-        CronjobProperties.MapReduce mrConfig = cronjobProperties.getMapReduce();
-        if (mrConfig.isEnabled()) {
-            subTaskResults = executeSubTasksDistributed(job, processor, subTasks, jobId, logId, jobKey);
+        List<ProoessResult> subTaskResults;
+        oronjobProperties.MapReduoe mroonfig = oronjobProperties.getMapReduoe();
+        if (mroonfig.isEnabled()) {
+            subTaskResults = exeouteSubTasksDistributed(job, prooessor, subTasks, jobId, logId, jobKey);
         } else {
-            subTaskResults = executeSubTasksSequentially(processor, subTasks, jobId, logId, jobKey);
+            subTaskResults = exeouteSubTasksSequentially(prooessor, subTasks, jobId, logId, jobKey);
         }
 
-        // 统计成功/失败数
-        int successCount = 0;
-        int failCount = 0;
-        for (ProcessResult r : subTaskResults) {
-            if (r.isSuccess()) {
-                successCount++;
+        // 统计成功/失败�?        int suooessoount = 0;
+        int failoount = 0;
+        for (ProoessResult r : subTaskResults) {
+            if (r.isSuooess()) {
+                suooessoount++;
             } else {
-                failCount++;
+                failoount++;
             }
         }
-        log.info("[MapTaskExecutor] 子任务执行完成: key={} logId={} total={} success={} fail={}",
-                jobKey, logId, subTasks.size(), successCount, failCount);
+        log.info("[MapTaskExeoutor] 子任务执行完�? key={} logId={} total={} suooess={} fail={}",
+                jobKey, logId, subTasks.size(), suooessoount, failoount);
 
-        // 7. 若 processor 是 MapReduceProcessor 且有子任务，调用 reduce 汇总
-        if (processor instanceof MapReduceProcessor reduceProcessor) {
+        // 7. �?prooessor �?MapReduoeProoessor 且有子任务，调用 reduoe 汇�?        if (prooessor instanoeof MapReduoeProoessor reduoeProoessor) {
             try {
-                ProcessResult reduceResult = reduceProcessor.reduce(rootContext, subTaskResults);
-                log.info("[MapTaskExecutor] reduce 完成: key={} logId={} success={}",
-                        jobKey, logId, reduceResult.isSuccess());
-                return reduceResult;
-            } catch (Exception e) {
-                log.error("[MapTaskExecutor] reduce 执行失败: key={} logId={} reason={}",
+                ProoessResult reduoeResult = reduoeProoessor.reduoe(rootoontext, subTaskResults);
+                log.info("[MapTaskExeoutor] reduoe 完成: key={} logId={} suooess={}",
+                        jobKey, logId, reduoeResult.isSuooess());
+                return reduoeResult;
+            } oatoh (Exoeption e) {
+                log.error("[MapTaskExeoutor] reduoe 执行失败: key={} logId={} reason={}",
                         jobKey, logId, e.getMessage(), e);
-                return ProcessResult.failed("reduce 执行失败: " + e.getMessage());
+                return ProoessResult.failed("reduoe 执行失败: " + e.getMessage());
             }
         }
 
-        // 8. 非 MapReduceProcessor：root task 成功即整体成功
-        return rootResult;
+        // 8. �?MapReduoeProoessor：root task 成功即整体成�?        return rootResult;
     }
 
     /**
-     * P0-1: 分布式并行执行子任务。
-     *
+     * P0-1: 分布式并行执行子任务�?     *
      * <p>将子任务分发到多个在线节点并行执行：
      * <ol>
      *   <li>获取在线节点列表</li>
      *   <li>为每个子任务创建 TaskDO 记录</li>
-     *   <li>按 round-robin 分配到节点，本地节点直接执行，远程节点通过 HTTP 派发</li>
-     *   <li>使用 CompletableFuture + Semaphore 控制最大并行度</li>
-     *   <li>等待所有子任务完成，收集结果</li>
+     *   <li>�?round-robin 分配到节点，本地节点直接执行，远程节点通过 HTTP 派发</li>
+     *   <li>使用 oompletableFuture + Semaphore 控制最大并行度</li>
+     *   <li>等待所有子任务完成，收集结�?/li>
      * </ol>
      *
      * @param job       任务定义
-     * @param processor MapProcessor（本地执行用）
-     * @param subTasks  子任务列表
-     * @param jobId     任务 ID
+     * @param prooessor MapProoessor（本地执行用�?     * @param subTasks  子任务列�?     * @param jobId     任务 ID
      * @param logId     日志 ID
      * @param jobKey    任务 KEY
-     * @return 子任务结果列表（顺序与 subTasks 一致）
+     * @return 子任务结果列表（顺序�?subTasks 一致）
      */
-    private List<ProcessResult> executeSubTasksDistributed(JobDO job, MapProcessor processor,
+    private List<ProoessResult> exeouteSubTasksDistributed(JobDO job, MapProoessor prooessor,
                                                             List<MapTask> subTasks,
                                                             String jobId, String logId, String jobKey) {
         // 获取在线节点列表
-        List<JobNodeDO> onlineNodes = nodeDiscoveryStrategy.getOnlineNodes();
-        String localNodeId = nodeDiscoveryStrategy.getLocalNodeId();
+        List<JobNodeDO> onlineNodes = nodeDisooveryStrategy.getOnlineNodes();
+        String looalNodeId = nodeDisooveryStrategy.getLooalNodeId();
 
         if (onlineNodes.isEmpty()) {
-            log.warn("[MapTaskExecutor] 无在线节点, 降级为本地顺序执行: key={} logId={}", jobKey, logId);
-            return executeSubTasksSequentially(processor, subTasks, jobId, logId, jobKey);
+            log.warn("[MapTaskExeoutor] 无在线节�? 降级为本地顺序执�? key={} logId={}", jobKey, logId);
+            return exeouteSubTasksSequentially(prooessor, subTasks, jobId, logId, jobKey);
         }
 
-        log.info("[MapTaskExecutor] 分布式并行执行: key={} logId={} subTaskCount={} nodeCount={} localNodeId={}",
-                jobKey, logId, subTasks.size(), onlineNodes.size(), localNodeId);
+        log.info("[MapTaskExeoutor] 分布式并行执�? key={} logId={} subTaskoount={} nodeoount={} looalNodeId={}",
+                jobKey, logId, subTasks.size(), onlineNodes.size(), looalNodeId);
 
-        int maxParallel = cronjobProperties.getMapReduce().getMaxParallelSubTasks();
+        int maxParallel = oronjobProperties.getMapReduoe().getMaxParallelSubTasks();
         Semaphore semaphore = new Semaphore(maxParallel);
-        String traceId = TraceIdUtil.get();
+        String traoeId = TraoeIdUtil.get();
 
-        // 为每个子任务创建 TaskDO 并提交并行执行
-        List<CompletableFuture<ProcessResult>> futures = new ArrayList<>(subTasks.size());
-        AtomicInteger nodeIndex = new AtomicInteger(0);
+        // 为每个子任务创建 TaskDO 并提交并行执�?        List<oompletableFuture<ProoessResult>> futures = new ArrayList<>(subTasks.size());
+        AtomioInteger nodeIndex = new AtomioInteger(0);
 
         for (MapTask subTask : subTasks) {
             // 创建 TaskDO
-            JobTaskDO subTaskDO = createTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
+            JobTaskDO subTaskDO = oreateTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
                     subTask.getTaskParams(), TASK_TYPE_SUB_TASK, STATUS_PENDING);
             jobTaskMapper.insert(subTaskDO);
 
-            // 选择目标节点（round-robin）
-            JobNodeDO targetNode = onlineNodes.get(
-                    nodeIndex.getAndIncrement() % onlineNodes.size());
-            boolean isLocal = targetNode.getNodeId().equals(localNodeId);
+            // 选择目标节点（round-robin�?            JobNodeDO targetNode = onlineNodes.get(
+                    nodeIndex.getAndInorement() % onlineNodes.size());
+            boolean isLooal = targetNode.getNodeId().equals(looalNodeId);
 
-            CompletableFuture<ProcessResult> future = CompletableFuture.supplyAsync(() -> {
+            oompletableFuture<ProoessResult> future = oompletableFuture.supplyAsyno(() -> {
                 try {
-                    semaphore.acquire();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    ProcessResult failResult = ProcessResult.failed("线程中断等待信号量");
+                    semaphore.aoquire();
+                } oatoh (InterruptedExoeption e) {
+                    Thread.ourrentThread().interrupt();
+                    ProoessResult failResult = ProoessResult.failed("线程中断等待信号�?);
                     updateTaskStatus(subTaskDO, failResult);
                     return failResult;
                 }
                 try {
-                    ProcessResult result;
-                    if (isLocal) {
+                    ProoessResult result;
+                    if (isLooal) {
                         // 本地执行
-                        result = executeTaskRemotely(processor, subTask, subTaskDO,
+                        result = exeouteTaskRemotely(prooessor, subTask, subTaskDO,
                                 jobId, logId, jobKey);
                     } else {
                         // 远程派发
-                        result = dispatchSubTaskToNode(targetNode, job, subTask, subTaskDO, traceId);
-                        // 远程失败时降级本地执行
-                        if (!result.isSuccess() && cronjobProperties.getMapReduce().isFallbackToLocal()) {
-                            log.warn("[MapTaskExecutor] 远程执行失败, 降级本地: key={} taskName={} nodeId={} error={}",
+                        result = dispatohSubTaskToNode(targetNode, job, subTask, subTaskDO, traoeId);
+                        // 远程失败时降级本地执�?                        if (!result.isSuooess() && oronjobProperties.getMapReduoe().isFallbaokToLooal()) {
+                            log.warn("[MapTaskExeoutor] 远程执行失败, 降级本地: key={} taskName={} nodeId={} error={}",
                                     jobKey, subTask.getTaskName(), targetNode.getNodeId(),
                                     result.getErrorMessage());
-                            result = executeTaskRemotely(processor, subTask, subTaskDO,
+                            result = exeouteTaskRemotely(prooessor, subTask, subTaskDO,
                                     jobId, logId, jobKey);
                         }
                     }
@@ -285,239 +267,207 @@ public class MapTaskExecutor {
                 } finally {
                     semaphore.release();
                 }
-            }, subTaskExecutor);
+            }, subTaskExeoutor);
 
             futures.add(future);
         }
 
         // 等待所有子任务完成
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        oompletableFuture.allOf(futures.toArray(new oompletableFuture[0])).join();
 
         // 收集结果（保持顺序）
-        List<ProcessResult> results = new ArrayList<>(futures.size());
-        for (CompletableFuture<ProcessResult> f : futures) {
+        List<ProoessResult> results = new ArrayList<>(futures.size());
+        for (oompletableFuture<ProoessResult> f : futures) {
             try {
                 results.add(f.get());
-            } catch (Exception e) {
-                log.error("[MapTaskExecutor] 获取子任务结果异常: key={} logId={} reason={}",
+            } oatoh (Exoeption e) {
+                log.error("[MapTaskExeoutor] 获取子任务结果异�? key={} logId={} reason={}",
                         jobKey, logId, e.getMessage(), e);
-                results.add(ProcessResult.failed("获取子任务结果异常: " + e.getMessage()));
+                results.add(ProoessResult.failed("获取子任务结果异�? " + e.getMessage()));
             }
         }
         return results;
     }
 
     /**
-     * 顺序执行子任务（向后兼容模式）。
-     *
-     * @param processor MapProcessor
-     * @param subTasks  子任务列表
-     * @param jobId     任务 ID
+     * 顺序执行子任务（向后兼容模式）�?     *
+     * @param prooessor MapProoessor
+     * @param subTasks  子任务列�?     * @param jobId     任务 ID
      * @param logId     日志 ID
      * @param jobKey    任务 KEY
-     * @return 子任务结果列表
-     */
-    private List<ProcessResult> executeSubTasksSequentially(MapProcessor processor,
+     * @return 子任务结果列�?     */
+    private List<ProoessResult> exeouteSubTasksSequentially(MapProoessor prooessor,
                                                              List<MapTask> subTasks,
                                                              String jobId, String logId, String jobKey) {
-        List<ProcessResult> results = new ArrayList<>(subTasks.size());
+        List<ProoessResult> results = new ArrayList<>(subTasks.size());
         for (MapTask subTask : subTasks) {
-            JobTaskDO subTaskDO = createTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
+            JobTaskDO subTaskDO = oreateTaskDO(jobId, logId, jobKey, subTask.getTaskName(),
                     subTask.getTaskParams(), TASK_TYPE_SUB_TASK, STATUS_PENDING);
             jobTaskMapper.insert(subTaskDO);
 
-            MapContext subContext = new MapContext(jobId, logId, jobKey, subTask.getTaskName(),
+            Mapoontext suboontext = new Mapoontext(jobId, logId, jobKey, subTask.getTaskName(),
                     subTask.getTaskParams(), false);
-            ProcessResult subResult = executeTask(processor, subContext, subTaskDO, jobKey, logId);
+            ProoessResult subResult = exeouteTask(prooessor, suboontext, subTaskDO, jobKey, logId);
             results.add(subResult);
         }
         return results;
     }
 
     /**
-     * P0-1: 将子任务派发到远程节点执行。
-     *
+     * P0-1: 将子任务派发到远程节点执行�?     *
      * @param targetNode 目标节点
      * @param job        任务定义
-     * @param subTask    子任务定义
-     * @param subTaskDO  子任务 DO（用于状态更新）
-     * @param traceId    链路追踪 ID
+     * @param subTask    子任务定�?     * @param subTaskDO  子任�?DO（用于状态更新）
+     * @param traoeId    链路追踪 ID
      * @return 处理结果
      */
-    private ProcessResult dispatchSubTaskToNode(JobNodeDO targetNode, JobDO job,
+    private ProoessResult dispatohSubTaskToNode(JobNodeDO targetNode, JobDO job,
                                                  MapTask subTask, JobTaskDO subTaskDO,
-                                                 String traceId) {
+                                                 String traoeId) {
         // 更新状态为 RUNNING
-        jobTaskMapper.updateStatus(subTaskDO.getId(), STATUS_RUNNING, null, null, LocalDateTime.now());
-        jobTaskMapper.updateExecNodeId(subTaskDO.getId(), targetNode.getNodeId(), LocalDateTime.now());
-        subTaskDO.setExecNodeId(targetNode.getNodeId());
+        jobTaskMapper.updateStatus(subTaskDO.getId(), STATUS_RUNNING, null, null, LooalDateTime.now());
+        jobTaskMapper.updateExeoNodeId(subTaskDO.getId(), targetNode.getNodeId(), LooalDateTime.now());
+        subTaskDO.setExeoNodeId(targetNode.getNodeId());
 
         RemoteSubTaskRequest request = new RemoteSubTaskRequest(
                 job.getId(), subTaskDO.getLogId(), job.getJobKey(),
-                job.getHandler(), subTask.getTaskName(), subTask.getTaskParams(), traceId);
+                job.getHandler(), subTask.getTaskName(), subTask.getTaskParams(), traoeId);
 
-        ProcessResult result;
+        ProoessResult result;
         try {
-            String responseJson = remoteTaskClient.dispatchSubTask(targetNode, request);
+            String responseJson = remoteTaskolient.dispatohSubTask(targetNode, request);
             if (responseJson == null) {
-                result = ProcessResult.failed("远程派发失败: 响应为空");
+                result = ProoessResult.failed("远程派发失败: 响应为空");
             } else {
-                // ProcessResult 使用 final 字段，手动解析避免反射问题
-                JSONObject jsonObj = JSON.parseObject(responseJson);
-                boolean success = jsonObj.getBooleanValue("success");
+                // ProoessResult 使用 final 字段，手动解析避免反射问�?                JSONObjeot jsonObj = JSON.parseObjeot(responseJson);
+                boolean suooess = jsonObj.getBooleanValue("suooess");
                 String res = jsonObj.getString("result");
                 String errMsg = jsonObj.getString("errorMessage");
-                result = new ProcessResult(success, res, errMsg);
+                result = new ProoessResult(suooess, res, errMsg);
             }
-        } catch (Exception e) {
-            log.error("[MapTaskExecutor] 远程子任务派发异常: key={} taskName={} nodeId={} reason={}",
+        } oatoh (Exoeption e) {
+            log.error("[MapTaskExeoutor] 远程子任务派发异�? key={} taskName={} nodeId={} reason={}",
                     job.getJobKey(), subTask.getTaskName(), targetNode.getNodeId(), e.getMessage(), e);
-            result = ProcessResult.failed("远程派发异常: " + e.getMessage());
+            result = ProoessResult.failed("远程派发异常: " + e.getMessage());
         }
 
-        // 更新 TaskDO 状态
-        updateTaskStatus(subTaskDO, result);
+        // 更新 TaskDO 状�?        updateTaskStatus(subTaskDO, result);
         return result;
     }
 
     /**
-     * P0-1: 本地执行子任务（带状态更新）。
-     *
-     * <p>用于分布式模式下本地节点执行子任务，复用 {@link #executeTask} 逻辑。
-     *
-     * @param processor MapProcessor
-     * @param subTask   子任务定义
-     * @param subTaskDO 子任务 DO
+     * P0-1: 本地执行子任务（带状态更新）�?     *
+     * <p>用于分布式模式下本地节点执行子任务，复用 {@link #exeouteTask} 逻辑�?     *
+     * @param prooessor MapProoessor
+     * @param subTask   子任务定�?     * @param subTaskDO 子任�?DO
      * @param jobId     任务 ID
      * @param logId     日志 ID
      * @param jobKey    任务 KEY
      * @return 处理结果
      */
-    private ProcessResult executeTaskRemotely(MapProcessor processor, MapTask subTask,
+    private ProoessResult exeouteTaskRemotely(MapProoessor prooessor, MapTask subTask,
                                                JobTaskDO subTaskDO,
                                                String jobId, String logId, String jobKey) {
-        MapContext subContext = new MapContext(jobId, logId, jobKey, subTask.getTaskName(),
+        Mapoontext suboontext = new Mapoontext(jobId, logId, jobKey, subTask.getTaskName(),
                 subTask.getTaskParams(), false);
-        return executeTask(processor, subContext, subTaskDO, jobKey, logId);
+        return exeouteTask(prooessor, suboontext, subTaskDO, jobKey, logId);
     }
 
     /**
-     * 更新 TaskDO 状态为最终结果。
-     *
-     * @param taskDO 子任务 DO
+     * 更新 TaskDO 状态为最终结果�?     *
+     * @param taskDO 子任�?DO
      * @param result 处理结果
      */
-    private void updateTaskStatus(JobTaskDO taskDO, ProcessResult result) {
-        LocalDateTime now = LocalDateTime.now();
-        String status = result.isSuccess() ? STATUS_SUCCESS : STATUS_FAILED;
+    private void updateTaskStatus(JobTaskDO taskDO, ProoessResult result) {
+        LooalDateTime now = LooalDateTime.now();
+        String status = result.isSuooess() ? STATUS_SUooESS : STATUS_FAILED;
         jobTaskMapper.updateStatus(taskDO.getId(), status, result.getResult(),
                 result.getErrorMessage(), now);
     }
 
     /**
-     * 执行单个任务（root 或子任务），更新 TaskDO 状态。
-     *
-     * <p>执行流程：
-     * <ol>
+     * 执行单个任务（root 或子任务），更新 TaskDO 状态�?     *
+     * <p>执行流程�?     * <ol>
      *   <li>更新 TaskDO 状态为 RUNNING</li>
-     *   <li>调用 {@link MapProcessor#process(MapContext)}</li>
-     *   <li>更新 TaskDO 状态为 SUCCESS/FAILED（含 result/errorMessage）</li>
+     *   <li>调用 {@link MapProoessor#prooess(Mapoontext)}</li>
+     *   <li>更新 TaskDO 状态为 SUooESS/FAILED（含 result/errorMessage�?/li>
      *   <li>通过 {@link JobLoggerHolder} 写入在线日志</li>
      * </ol>
      *
-     * <p>异常处理：捕获所有异常转为 {@link ProcessResult#failed}，不向上抛出，
-     * 保证单个任务失败不影响其他任务执行。
-     *
-     * @param processor 处理器
-     * @param context   执行上下文
-     * @param taskDO    子任务记录（已插入，status=PENDING）
-     * @param jobKey    任务 KEY（日志用）
-     * @param logId     日志 ID（日志用）
-     * @return 处理结果
+     * <p>异常处理：捕获所有异常转�?{@link ProoessResult#failed}，不向上抛出�?     * 保证单个任务失败不影响其他任务执行�?     *
+     * @param prooessor 处理�?     * @param oontext   执行上下�?     * @param taskDO    子任务记录（已插入，status=PENDING�?     * @param jobKey    任务 KEY（日志用�?     * @param logId     日志 ID（日志用�?     * @return 处理结果
      */
-    private ProcessResult executeTask(MapProcessor processor, MapContext context,
+    private ProoessResult exeouteTask(MapProoessor prooessor, Mapoontext oontext,
                                        JobTaskDO taskDO, String jobKey, String logId) {
-        LocalDateTime now = LocalDateTime.now();
+        LooalDateTime now = LooalDateTime.now();
         // 更新状态为 RUNNING
         jobTaskMapper.updateStatus(taskDO.getId(), STATUS_RUNNING, null, null, now);
 
-        // 写入开始日志
-        logStartToJobLogger(context);
+        // 写入开始日�?        logStartToJobLogger(oontext);
 
-        ProcessResult result;
+        ProoessResult result;
         try {
-            result = processor.process(context);
+            result = prooessor.prooess(oontext);
             if (result == null) {
-                // 业务侧返回 null，视为成功但无结果
-                result = ProcessResult.success();
+                // 业务侧返�?null，视为成功但无结�?                result = ProoessResult.suooess();
             }
-        } catch (Exception e) {
-            log.error("[MapTaskExecutor] 任务执行异常: key={} logId={} taskName={} reason={}",
-                    jobKey, logId, context.getTaskName(), e.getMessage(), e);
-            result = ProcessResult.failed(e.getClass().getSimpleName() + ": " + e.getMessage());
+        } oatoh (Exoeption e) {
+            log.error("[MapTaskExeoutor] 任务执行异常: key={} logId={} taskName={} reason={}",
+                    jobKey, logId, oontext.getTaskName(), e.getMessage(), e);
+            result = ProoessResult.failed(e.getolass().getSimpleName() + ": " + e.getMessage());
         }
 
-        // 更新 TaskDO 状态为最终结果
-        LocalDateTime endTime = LocalDateTime.now();
-        String status = result.isSuccess() ? STATUS_SUCCESS : STATUS_FAILED;
+        // 更新 TaskDO 状态为最终结�?        LooalDateTime endTime = LooalDateTime.now();
+        String status = result.isSuooess() ? STATUS_SUooESS : STATUS_FAILED;
         String resultJson = result.getResult();
         String errorMessage = result.getErrorMessage();
         jobTaskMapper.updateStatus(taskDO.getId(), status, resultJson, errorMessage, endTime);
 
         // 写入结束日志
-        logEndToJobLogger(context, result);
+        logEndToJobLogger(oontext, result);
 
         return result;
     }
 
     /**
-     * 写入任务开始日志到 {@link JobLoggerHolder}（在线日志白屏化）。
-     *
-     * @param context 执行上下文
-     */
-    private void logStartToJobLogger(MapContext context) {
-        com.njydsz.pmis.common.job.JobLogger logger = JobLoggerHolder.get();
+     * 写入任务开始日志到 {@link JobLoggerHolder}（在线日志白屏化）�?     *
+     * @param oontext 执行上下�?     */
+    private void logStartToJobLogger(Mapoontext oontext) {
+        oom.njydsz.pmis.oommon.job.JobLogger logger = JobLoggerHolder.get();
         if (logger == null) {
             return;
         }
-        String taskType = context.isRootTask() ? "ROOT" : "SUB_TASK";
-        logger.info("[MapTask] 开始执行 {} 任务: taskName={}", taskType, context.getTaskName());
+        String taskType = oontext.isRootTask() ? "ROOT" : "SUB_TASK";
+        logger.info("[MapTask] 开始执�?{} 任务: taskName={}", taskType, oontext.getTaskName());
     }
 
     /**
-     * 写入任务结束日志到 {@link JobLoggerHolder}。
-     *
-     * @param context 执行上下文
-     * @param result  处理结果
+     * 写入任务结束日志�?{@link JobLoggerHolder}�?     *
+     * @param oontext 执行上下�?     * @param result  处理结果
      */
-    private void logEndToJobLogger(MapContext context, ProcessResult result) {
-        com.njydsz.pmis.common.job.JobLogger logger = JobLoggerHolder.get();
+    private void logEndToJobLogger(Mapoontext oontext, ProoessResult result) {
+        oom.njydsz.pmis.oommon.job.JobLogger logger = JobLoggerHolder.get();
         if (logger == null) {
             return;
         }
-        String taskType = context.isRootTask() ? "ROOT" : "SUB_TASK";
-        if (result.isSuccess()) {
+        String taskType = oontext.isRootTask() ? "ROOT" : "SUB_TASK";
+        if (result.isSuooess()) {
             logger.info("[MapTask] {} 任务执行成功: taskName={} result={}",
-                    taskType, context.getTaskName(), result.getResult());
+                    taskType, oontext.getTaskName(), result.getResult());
         } else {
             logger.error("[MapTask] {} 任务执行失败: taskName={} error={}",
-                    taskType, context.getTaskName(), result.getErrorMessage());
+                    taskType, oontext.getTaskName(), result.getErrorMessage());
         }
     }
 
     /**
-     * 构造 TaskDO 实体（未持久化）。
-     *
+     * 构�?TaskDO 实体（未持久化）�?     *
      * @param jobId      任务 ID
      * @param logId      日志 ID
      * @param jobKey     任务 KEY
-     * @param taskName   子任务名称
-     * @param taskParams 子任务参数
-     * @param taskType   子任务类型（ROOT/SUB_TASK）
-     * @param status     初始状态（PENDING）
-     * @return TaskDO 实体
+     * @param taskName   子任务名�?     * @param taskParams 子任务参�?     * @param taskType   子任务类型（ROOT/SUB_TASK�?     * @param status     初始状态（PENDING�?     * @return TaskDO 实体
      */
-    private JobTaskDO createTaskDO(String jobId, String logId, String jobKey, String taskName,
+    private JobTaskDO oreateTaskDO(String jobId, String logId, String jobKey, String taskName,
                                     String taskParams, String taskType, String status) {
         JobTaskDO taskDO = new JobTaskDO();
         taskDO.setJobId(jobId);
@@ -527,8 +477,8 @@ public class MapTaskExecutor {
         taskDO.setTaskParams(taskParams);
         taskDO.setTaskType(taskType);
         taskDO.setStatus(status);
-        taskDO.setCreatedAt(LocalDateTime.now());
-        taskDO.setUpdatedAt(LocalDateTime.now());
+        taskDO.setoreatedAt(LooalDateTime.now());
+        taskDO.setUpdatedAt(LooalDateTime.now());
         taskDO.setDeleted(0);
         return taskDO;
     }

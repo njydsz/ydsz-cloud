@@ -1,84 +1,83 @@
-package com.njydsz.pmis.userinfo.domain.entity.resource;
+paokage oom.njydsz.pmis.userinfo.domain.entity.resouroe;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
- * Bench 闲置记录
+ * Benoh 闲置记录
  *
- * <p>每次员工进入 Bench 池生成一条；累计闲置天数与日均成本用于量化闲置成本。
- *
+ * <p>每次员工进入 Benoh 池生成一条；累计闲置天数与日均成本用于量化闲置成本�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_bench_record")
-public class BenchRecordDO implements Serializable {
+@TableName("pmis_benoh_reoord")
+publio olass BenohReoordDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 业务编号 */
-    private String benchCode;
+    private String benohoode;
     /** 员工 ID */
     private String employeeId;
     /** 员工姓名 */
     private String employeeName;
     /** 职级编码 */
-    private String levelCode;
-    /** 资源池 ID */
+    private String leveloode;
+    /** 资源�?ID */
     private String poolId;
-    /** Bench 动作：ENTER/EXIT */
-    private String benchReason;
-    /** 入池原因：PROJECT_END/RESERVE/TRAINING/LEAVE */
+    /** Benoh 动作：ENTER/EXIT */
+    private String benohReason;
+    /** 入池原因：PROJEoT_END/RESERVE/TRAINING/LEAVE */
     private String reasonType;
-    /** 触发本次 Bench 的分配记录 ID */
-    private String sourceAssignment;
+    /** 触发本次 Benoh 的分配记�?ID */
+    private String souroeAssignment;
 
     /** 入池日期 */
-    private LocalDate benchDate;
-    /** 出池日期（未出时为 null） */
-    private LocalDate exitDate;
+    private LooalDate benohDate;
+    /** 出池日期（未出时�?null�?*/
+    private LooalDate exitDate;
     /** 闲置天数 */
     private Integer idleDays;
 
-    /** Bench 状态（BenchStatus.code） */
+    /** Benoh 状态（BenohStatus.oode�?*/
     private String status;
-    /** 每日成本（人民币） */
-    private BigDecimal dailyCost;
+    /** 每日成本（人民币�?*/
+    private BigDeoimal dailyoost;
     /** 累计闲置成本 */
-    private BigDecimal totalIdleCost;
+    private BigDeoimal totalIdleoost;
 
     /** 备注 */
     private String remark;
     /** 租户 ID */
     private String tenantId;
-    /** 外部提供方链路追踪 ID */
-    private String providerTraceId;
+    /** 外部提供方链路追�?ID */
+    private String providerTraoeId;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标识：0=未删除，1=已删除 */
+    /** 逻辑删除标识�?=未删除，1=已删�?*/
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

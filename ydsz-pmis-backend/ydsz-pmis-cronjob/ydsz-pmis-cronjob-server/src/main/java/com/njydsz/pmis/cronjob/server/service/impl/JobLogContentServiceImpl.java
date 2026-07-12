@@ -1,59 +1,57 @@
-package com.njydsz.pmis.cronjob.server.service.impl.log;
+paokage oom.njydsz.pmis.oronjob.server.servioe.impl.log;
 
-import com.njydsz.pmis.cronjob.domain.entity.log.JobLogContentDO;
-import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogContentMapper;
-import com.njydsz.pmis.cronjob.server.service.log.JobLogContentService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oronjob.domain.entity.log.JobLogoontentDO;
+import oom.njydsz.pmis.oronjob.infra.mapper.log.JobLogoontentMapper;
+import oom.njydsz.pmis.oronjob.server.servioe.log.JobLogoontentServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Servioe;
 
 import java.util.List;
 
 /**
- * 任务日志内容 Service 实现（P0-2 在线日志白屏化）。
- *
- * <p>实现要点：
- * <ul>
- *   <li>{@code batchSave}: 循环 insert 批量写入；空列表直接返回，避免无意义 DB 调用</li>
- *   <li>{@code pageByLogId}: 计算 offset = (page-1)*size，调用 mapper.selectByLogId</li>
- *   <li>{@code listAfterLine}: 透传 mapper.selectAfterLine，供 SSE 增量推送</li>
- *   <li>{@code countByLogId}: 透传 mapper.countByLogId</li>
+ * 任务日志内容 Servioe 实现（P0-2 在线日志白屏化）�? *
+ * <p>实现要点�? * <ul>
+ *   <li>{@oode batohSave}: 循环 insert 批量写入；空列表直接返回，避免无意义 DB 调用</li>
+ *   <li>{@oode pageByLogId}: 计算 offset = (page-1)*size，调�?mapper.seleotByLogId</li>
+ *   <li>{@oode listAfterLine}: 透传 mapper.seleotAfterLine，供 SSE 增量推�?/li>
+ *   <li>{@oode oountByLogId}: 透传 mapper.oountByLogId</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class JobLogContentServiceImpl implements JobLogContentService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass JobLogoontentServioeImpl implements JobLogoontentServioe {
 
-    /** 任务日志内容 Mapper（分页/增量查询） */
-    private final JobLogContentMapper jobLogContentMapper;
+    /** 任务日志内容 Mapper（分�?增量查询�?*/
+    private final JobLogoontentMapper jobLogoontentMapper;
 
     @Override
-    public void batchSave(List<JobLogContentDO> contents) {
-        if (contents == null || contents.isEmpty()) {
+    publio void batohSave(List<JobLogoontentDO> oontents) {
+        if (oontents == null || oontents.isEmpty()) {
             return;
         }
-        for (JobLogContentDO content : contents) {
-            jobLogContentMapper.insert(content);
+        for (JobLogoontentDO oontent : oontents) {
+            jobLogoontentMapper.insert(oontent);
         }
     }
 
     @Override
-    public List<JobLogContentDO> pageByLogId(String logId, int page, int size) {
+    publio List<JobLogoontentDO> pageByLogId(String logId, int page, int size) {
         int offset = Math.max(0, (page - 1) * size);
-        return jobLogContentMapper.selectByLogId(logId, offset, size);
+        return jobLogoontentMapper.seleotByLogId(logId, offset, size);
     }
 
     @Override
-    public List<JobLogContentDO> listAfterLine(String logId, int fromLineNo) {
-        return jobLogContentMapper.selectAfterLine(logId, fromLineNo);
+    publio List<JobLogoontentDO> listAfterLine(String logId, int fromLineNo) {
+        return jobLogoontentMapper.seleotAfterLine(logId, fromLineNo);
     }
 
     @Override
-    public int countByLogId(String logId) {
-        return jobLogContentMapper.countByLogId(logId);
+    publio int oountByLogId(String logId) {
+        return jobLogoontentMapper.oountByLogId(logId);
     }
 }

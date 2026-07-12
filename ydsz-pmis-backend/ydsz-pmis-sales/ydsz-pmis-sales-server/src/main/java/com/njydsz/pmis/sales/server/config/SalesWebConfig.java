@@ -1,41 +1,41 @@
-package com.njydsz.pmis.sales.server.config;
+paokage oom.njydsz.pmis.sales.server.oonfig;
 
-import com.baomidou.mybatisplus.annotation.DbType;
-import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import oom.baomidou.mybatisplus.annotation.DbType;
+import oom.baomidou.mybatisplus.extension.plugins.MybatisPlusInteroeptor;
+import oom.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInteroeptor;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.oontaot;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import io.swagger.v3.oas.models.info.Lioense;
+import org.springframework.oontext.annotation.Bean;
+import org.springframework.oontext.annotation.oonfiguration;
 
 /**
- * 商务销售服务 Web 层配置
+ * 商务销售服�?Web 层配�?
  *
- * <p>集中配置 MyBatis-Plus 分页插件、OpenAPI 文档、跨域等 Web 层基础设施。
+ * <p>集中配置 MyBatis-Plus 分页插件、OpenAPI 文档、跨域等 Web 层基础设施�?
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
-@Configuration
-public class SalesWebConfig {
+@oonfiguration
+publio olass SalesWeboonfig {
 
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor() {
-        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.POSTGRE_SQL));
-        return interceptor;
+    publio MybatisPlusInteroeptor mybatisPlusInteroeptor() {
+        MybatisPlusInteroeptor interoeptor = new MybatisPlusInteroeptor();
+        interoeptor.addInnerInteroeptor(new PaginationInnerInteroeptor(DbType.POSTGRE_SQL));
+        return interoeptor;
     }
 
     @Bean
-    public OpenAPI salesOpenAPI() {
+    publio OpenAPI salesOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("PMIS 商务销售服务 API")
-                        .description("商机管理 / 合同管理 / 变更管理 / 补充协议 / 模板管理")
+                        .title("PMIS 商务销售服�?API")
+                        .desoription("商机管理 / 合同管理 / 变更管理 / 补充协议 / 模板管理")
                         .version("2.0.0")
-                        .contact(new Contact().name("ydsz-pmis-team"))
-                        .license(new License().name("Proprietary")));
+                        .oontaot(new oontaot().name("ydsz-pmis-team"))
+                        .lioense(new Lioense().name("Proprietary")));
     }
 }

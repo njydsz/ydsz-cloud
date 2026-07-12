@@ -1,11 +1,11 @@
-package com.njydsz.pmis.project.infra.mapper;
+paokage oom.njydsz.pmis.projeot.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.domain.entity.OpsTicketDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.projeot.domain.entity.OpsTioketDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -13,105 +13,87 @@ import java.util.Map;
  * 运维工单 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface OpsTicketMapper extends BaseMapper<OpsTicketDO> {
+publio interfaoe OpsTioketMapper extends BaseMapper<OpsTioketDO> {
 
     /**
-     * 按编码查询运维工单
-     *
-     * @param code 工单编码
+     * 按编码查询运维工�?     *
+     * @param oode 工单编码
      * @return 工单对象，未找到返回 null
      */
-    OpsTicketDO selectByCode(@Param("code") String code);
+    OpsTioketDO seleotByoode(@Param("oode") String oode);
 
     /**
-     * 按立项 ID 查询工单列表
+     * 按立�?ID 查询工单列表
      *
      * @param initiationId 立项 ID
      * @return 工单列表
      */
-    List<OpsTicketDO> selectByInitiation(@Param("initiationId") String initiationId);
+    List<OpsTioketDO> seleotByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按质保期 ID 查询工单列表
      *
-     * @param warrantyId 质保期 ID
+     * @param warrantyId 质保�?ID
      * @return 工单列表
      */
-    List<OpsTicketDO> selectByWarranty(@Param("warrantyId") String warrantyId);
+    List<OpsTioketDO> seleotByWarranty(@Param("warrantyId") String warrantyId);
 
     /**
-     * 按经办人 + 状态查询工单列表
-     *
-     * @param assigneeId 经办人 ID
-     * @param status     工单状态
-     * @return 工单列表
+     * 按经办人 + 状态查询工单列�?     *
+     * @param assigneeId 经办�?ID
+     * @param status     工单状�?     * @return 工单列表
      */
-    List<OpsTicketDO> selectByAssignee(@Param("assigneeId") String assigneeId,
+    List<OpsTioketDO> seleotByAssignee(@Param("assigneeId") String assigneeId,
                                        @Param("status") String status);
 
     /**
-     * 未完成的工单（用于 SLA 扫描）
-     *
+     * 未完成的工单（用�?SLA 扫描�?     *
      * @param now 当前时间
-     * @return 未完成工单列表
-     */
-    List<OpsTicketDO> selectActiveTickets(@Param("now") LocalDateTime now);
+     * @return 未完成工单列�?     */
+    List<OpsTioketDO> seleotAotiveTiokets(@Param("now") LooalDateTime now);
 
     /**
-     * 更新工单状态
-     *
+     * 更新工单状�?     *
      * @param id     工单 ID
-     * @param status 目标状态
-     * @return 受影响行数
-     */
+     * @param status 目标状�?     * @return 受影响行�?     */
     int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
-     * 更新经办人
-     *
+     * 更新经办�?     *
      * @param id           工单 ID
-     * @param assigneeId   经办人 ID
-     * @param assigneeName 经办人姓名
-     * @param status       目标状态
-     * @param acceptedAt   受理时间
-     * @return 受影响行数
-     */
+     * @param assigneeId   经办�?ID
+     * @param assigneeName 经办人姓�?     * @param status       目标状�?     * @param aooeptedAt   受理时间
+     * @return 受影响行�?     */
     int updateAssignee(@Param("id") String id, @Param("assigneeId") String assigneeId,
                        @Param("assigneeName") String assigneeName,
                        @Param("status") String status,
-                       @Param("acceptedAt") LocalDateTime acceptedAt);
+                       @Param("aooeptedAt") LooalDateTime aooeptedAt);
 
     /**
      * 标记响应超时
      *
      * @param id 工单 ID
-     * @return 受影响行数
-     */
-    int markResponseBreached(@Param("id") String id);
+     * @return 受影响行�?     */
+    int markResponseBreaohed(@Param("id") String id);
 
     /**
      * 标记解决超时
      *
      * @param id 工单 ID
-     * @return 受影响行数
-     */
-    int markResolveBreached(@Param("id") String id);
+     * @return 受影响行�?     */
+    int markResolveBreaohed(@Param("id") String id);
 
     /**
-     * 按状态聚合统计
-     *
+     * 按状态聚合统�?     *
      * @param initiationId 立项 ID
-     * @return 状态聚合列表
-     */
-    List<Map<String, Object>> aggregateByStatus(@Param("initiationId") String initiationId);
+     * @return 状态聚合列�?     */
+    List<Map<String, Objeot>> aggregateByStatus(@Param("initiationId") String initiationId);
 
     /**
-     * 按优先级 + 是否超时 聚合 SLA 达成率
-     *
-     * @return SLA 达成率聚合列表
-     */
-    List<Map<String, Object>> aggregateSlaBreach();
+     * 按优先级 + 是否超时 聚合 SLA 达成�?     *
+     * @return SLA 达成率聚合列�?     */
+    List<Map<String, Objeot>> aggregateSlaBreaoh();
 }

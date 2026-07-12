@@ -1,31 +1,31 @@
-package com.njydsz.pmis.literule.domain.entity;
+paokage oom.njydsz.pmis.literule.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 
 /**
- * 规则评分卡实体
+ * 规则评分卡实�?
  *
- * <p>评分卡规则：基于 factors 列表（条件表达式 + 扣分）逐项评估。
- * 基础分 base_score，低于 red_threshold 为红灯、低于 yellow_threshold 为黄灯。
+ * <p>评分卡规则：基于 faotors 列表（条件表达式 + 扣分）逐项评估�?
+ * 基础�?base_soore，低�?red_threshold 为红灯、低�?yellow_threshold 为黄灯�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName(value = "pmis_rule_scorecard", autoResultMap = true)
-public class RuleScorecardDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName(value = "pmis_rule_sooreoard", autoResultMap = true)
+publio olass RuleSooreoardDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -35,28 +35,28 @@ public class RuleScorecardDO extends BaseDO {
     private String tenantId;
 
     /** 规则编码 */
-    private String ruleCode;
+    private String ruleoode;
 
     /** 规则名称 */
     private String ruleName;
 
     /** 规则分类（RISK / QUALITY / PROFIT 等） */
-    private String category;
+    private String oategory;
 
     /** 规则描述 */
-    private String description;
+    private String desoription;
 
-    /** 基础分（满分，默认 100） */
-    private BigDecimal baseScore;
+    /** 基础分（满分，默�?100�?*/
+    private BigDeoimal baseSoore;
 
-    /** 红灯阈值（≤ 触发红灯） */
-    private BigDecimal redThreshold;
+    /** 红灯阈值（�?触发红灯�?*/
+    private BigDeoimal redThreshold;
 
-    /** 黄灯阈值（≤ 触发黄灯） */
-    private BigDecimal yellowThreshold;
+    /** 黄灯阈值（�?触发黄灯�?*/
+    private BigDeoimal yellowThreshold;
 
-    /** 评分因子 JSON：[{conditionExpression, score, description}] */
-    private String factors;
+    /** 评分因子 JSON：[{oonditionExpression, soore, desoription}] */
+    private String faotors;
 
     /** 优先级（数字越小越优先） */
     private Integer priority;
@@ -64,12 +64,12 @@ public class RuleScorecardDO extends BaseDO {
     /** 是否启用 */
     private Boolean enabled;
 
-    /** 适用范围（如 ALL / PROJECT_TYPE:CONSTRUCTION 表示限定项目类型） */
-    private String scope;
+    /** 适用范围（如 ALL / PROJEoT_TYPE:oONSTRUoTION 表示限定项目类型�?*/
+    private String soope;
 
-    /** 版本号 */
+    /** 版本�?*/
     private Integer version;
 
     /** 供应商侧追踪 ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 }

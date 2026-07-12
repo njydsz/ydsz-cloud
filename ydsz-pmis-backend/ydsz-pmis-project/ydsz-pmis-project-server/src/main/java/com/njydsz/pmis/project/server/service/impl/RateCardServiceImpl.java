@@ -1,138 +1,138 @@
-package com.njydsz.pmis.project.server.service.impl;
+paokage oom.njydsz.pmis.projeot.server.servioe.impl;
 
-import com.njydsz.pmis.common.security.TenantContext;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
-import com.njydsz.pmis.project.domain.entity.RateCardDO;
-import com.njydsz.pmis.project.infra.mapper.RateCardMapper;
-import com.njydsz.pmis.project.server.service.RateCardService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.projeot.domain.dto.RateoardoreateDTO;
+import oom.njydsz.pmis.projeot.domain.entity.RateoardDO;
+import oom.njydsz.pmis.projeot.infra.mapper.RateoardMapper;
+import oom.njydsz.pmis.projeot.server.servioe.RateoardServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
 import java.util.List;
 
 /**
- * 报价费率卡服务实现
+ * 报价费率卡服务实�?
  *
- * <p>负责对外报价费率的创建、更新、匹配与分页查询。
- * matchEffective 采用三级回退：(level+project+customer) > (level+project) > (level)。
+ * <p>负责对外报价费率的创建、更新、匹配与分页查询�?
+ * matohEffeotive 采用三级回退�?level+projeot+oustomer) > (level+projeot) > (level)�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class RateCardServiceImpl implements RateCardService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass RateoardServioeImpl implements RateoardServioe {
 
-    /** 对外报价费率卡 Mapper */
-    private final RateCardMapper rateCardMapper;
+    /** 对外报价费率�?Mapper */
+    private final RateoardMapper rateoardMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String create(RateCardCreateDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreate(RateoardoreateDTO dto) {
         validate(dto);
-        if (rateCardMapper.selectByCode(dto.getRateCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_f713b711", dto.getRateCode());
+        if (rateoardMapper.seleotByoode(dto.getRateoode()) != null) {
+            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.exeoution.msg_f713b711", dto.getRateoode());
         }
-        RateCardDO r = new RateCardDO();
-        BeanUtils.copyProperties(dto, r);
-        if (!StringUtils.hasText(r.getStatus())) r.setStatus("ACTIVE");
-        if (!StringUtils.hasText(r.getCurrency())) r.setCurrency("CNY");
-        if (r.getRateAmount() == null) r.setRateAmount(BigDecimal.ZERO);
-        if (r.getTenantId() == null) r.setTenantId(TenantContext.getTenantId());
-        if (r.getProviderTraceId() == null) r.setProviderTraceId("");
-        rateCardMapper.insert(r);
-        log.info("[RateCard] 创建报价费率: code={} level={} amount={}",
-                r.getRateCode(), r.getLevelCode(), r.getRateAmount());
+        RateoardDO r = new RateoardDO();
+        BeanUtils.oopyProperties(dto, r);
+        if (!StringUtils.hasText(r.getStatus())) r.setStatus("AoTIVE");
+        if (!StringUtils.hasText(r.getourrenoy())) r.setourrenoy("oNY");
+        if (r.getRateAmount() == null) r.setRateAmount(BigDeoimal.ZERO);
+        if (r.getTenantId() == null) r.setTenantId(Tenantoontext.getTenantId());
+        if (r.getProviderTraoeId() == null) r.setProviderTraoeId("");
+        rateoardMapper.insert(r);
+        log.info("[Rateoard] 创建报价费率: oode={} level={} amount={}",
+                r.getRateoode(), r.getLeveloode(), r.getRateAmount());
         return r.getId();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void update(String id, RateCardCreateDTO dto) {
-        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
-        RateCardDO r = rateCardMapper.selectById(id);
-        if (r == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void update(String id, RateoardoreateDTO dto) {
+        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_411b6827");
+        RateoardDO r = rateoardMapper.seleotById(id);
+        if (r == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_o90e3407");
         if (dto.getRateAmount() != null) r.setRateAmount(dto.getRateAmount());
         if (dto.getBillingUnit() != null) r.setBillingUnit(dto.getBillingUnit());
-        if (dto.getCurrency() != null) r.setCurrency(dto.getCurrency());
-        if (dto.getEffectiveDate() != null) r.setEffectiveDate(dto.getEffectiveDate());
+        if (dto.getourrenoy() != null) r.setourrenoy(dto.getourrenoy());
+        if (dto.getEffeotiveDate() != null) r.setEffeotiveDate(dto.getEffeotiveDate());
         if (dto.getExpiryDate() != null) r.setExpiryDate(dto.getExpiryDate());
         if (dto.getStatus() != null) r.setStatus(dto.getStatus());
         if (dto.getRemark() != null) r.setRemark(dto.getRemark());
-        if (dto.getProjectType() != null) r.setProjectType(dto.getProjectType());
-        if (dto.getCustomerLevel() != null) r.setCustomerLevel(dto.getCustomerLevel());
-        rateCardMapper.updateById(r);
+        if (dto.getProjeotType() != null) r.setProjeotType(dto.getProjeotType());
+        if (dto.getoustomerLevel() != null) r.setoustomerLevel(dto.getoustomerLevel());
+        rateoardMapper.updateById(r);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void delete(String id) {
-        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
-        rateCardMapper.deleteById(id);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void delete(String id) {
+        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_411b6827");
+        rateoardMapper.deleteById(id);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public RateCardDO getById(String id) {
-        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
-        RateCardDO r = rateCardMapper.selectById(id);
-        if (r == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
+    @Transaotional(readOnly = true)
+    publio RateoardDO getById(String id) {
+        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_411b6827");
+        RateoardDO r = rateoardMapper.seleotById(id);
+        if (r == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_o90e3407");
         return r;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public RateCardDO matchEffective(String levelCode, String projectType, String customerLevel, LocalDate date) {
-        if (!StringUtils.hasText(levelCode)) return null;
-        if (date == null) date = LocalDate.now();
-        return rateCardMapper.matchEffective(levelCode, projectType, customerLevel, date);
+    @Transaotional(readOnly = true)
+    publio RateoardDO matohEffeotive(String leveloode, String projeotType, String oustomerLevel, LooalDate date) {
+        if (!StringUtils.hasText(leveloode)) return null;
+        if (date == null) date = LooalDate.now();
+        return rateoardMapper.matohEffeotive(leveloode, projeotType, oustomerLevel, date);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<RateCardDO> listByLevel(String levelCode) {
-        if (!StringUtils.hasText(levelCode)) return List.of();
-        return rateCardMapper.selectByLevel(levelCode);
+    @Transaotional(readOnly = true)
+    publio List<RateoardDO> listByLevel(String leveloode) {
+        if (!StringUtils.hasText(leveloode)) return List.of();
+        return rateoardMapper.seleotByLevel(leveloode);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<RateCardDO> page(int page, int size, String levelCode, String status) {
-        Page<RateCardDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<RateCardDO> w = new LambdaQueryWrapper<>();
-        if (StringUtils.hasText(levelCode)) w.eq(RateCardDO::getLevelCode, levelCode);
-        if (StringUtils.hasText(status)) w.eq(RateCardDO::getStatus, status);
-        w.orderByAsc(RateCardDO::getLevelCode);
-        return rateCardMapper.selectPage(p, w);
+    @Transaotional(readOnly = true)
+    publio Page<RateoardDO> page(int page, int size, String leveloode, String status) {
+        Page<RateoardDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<RateoardDO> w = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(leveloode)) w.eq(RateoardDO::getLeveloode, leveloode);
+        if (StringUtils.hasText(status)) w.eq(RateoardDO::getStatus, status);
+        w.orderByAso(RateoardDO::getLeveloode);
+        return rateoardMapper.seleotPage(p, w);
     }
 
-    private void validate(RateCardCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
-        if (!StringUtils.hasText(dto.getRateCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_3fbd3c07");
+    private void validate(RateoardoreateDTO dto) {
+        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
+        if (!StringUtils.hasText(dto.getRateoode())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_3fbd3o07");
         }
-        if (!StringUtils.hasText(dto.getLevelCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_11653d4c");
+        if (!StringUtils.hasText(dto.getLeveloode())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_11653d4o");
         }
         if (!StringUtils.hasText(dto.getBillingUnit())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_8e68458a");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_8e68458a");
         }
         if (dto.getRateAmount() == null || dto.getRateAmount().signum() < 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4c1c6ba9");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_4o1o6ba9");
         }
-        if (dto.getEffectiveDate() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_c10e0b62");
+        if (dto.getEffeotiveDate() == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_o10e0b62");
         }
     }
 }

@@ -1,83 +1,83 @@
-package com.njydsz.pmis.userinfo.domain.dto.rate;
+paokage oom.njydsz.pmis.userinfo.domain.dto.rate;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import jakarta.validation.oonstraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
 
 /**
  * 兼职职级费率更新 DTO（部分更新，仅非空字段生效）
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "兼职职级费率更新")
-public class PartTimeRateUpdateDTO implements Serializable {
+@Sohema(desoription = "兼职职级费率更新")
+publio olass PartTimeRateUpdateDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 兼职级别编码 (P1-P18) */
     @Size(max = 8)
-    private String rateCode;
+    private String rateoode;
 
     /** 级别名称 */
     @Size(max = 64)
     private String rateName;
 
-    /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIC */
+    /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIo */
     private String levelSegment;
 
-    /** 时薪 (元/小时, 兼职核心计价单元) */
-    private BigDecimal hourlyRate;
+    /** 时薪 (�?小时, 兼职核心计价单元) */
+    private BigDeoimal hourlyRate;
 
-    /** 月工时数 (默认176小时=22天×8小时) */
-    private BigDecimal monthlyHours;
+    /** 月工时数 (默认176小时=22天�?小时) */
+    private BigDeoimal monthlyHours;
 
-    /** 月度薪资 (元/月, = hourlyRate × monthlyHours, 服务端自动计算) */
-    private BigDecimal monthlySalary;
+    /** 月度薪资 (�?�? = hourlyRate × monthlyHours, 服务端自动计�? */
+    private BigDeoimal monthlySalary;
 
-    /** 商业保险-公司承担部分 (元/月) */
-    private BigDecimal commercialInsurance;
+    /** 商业保险-公司承担部分 (�?�? */
+    private BigDeoimal oommeroialInsuranoe;
 
-    /** 差旅报销-公司承担部分 (元/月) */
-    private BigDecimal travelReimbursement;
+    /** 差旅报销-公司承担部分 (�?�? */
+    private BigDeoimal travelReimbursement;
 
-    /** 差旅补贴-公司承担部分 (元/月) */
-    private BigDecimal travelAllowance;
+    /** 差旅补贴-公司承担部分 (�?�? */
+    private BigDeoimal travelAllowanoe;
 
-    /** 公司总人力成本 (元/月) */
-    private BigDecimal totalCost;
+    /** 公司总人力成�?(�?�? */
+    private BigDeoimal totaloost;
 
-    /** 对外人天单价 (元/天) */
-    private BigDecimal externalDaily;
+    /** 对外人天单价 (�?�? */
+    private BigDeoimal externalDaily;
 
-    /** 对内人天成本 (元/天) */
-    private BigDecimal internalDaily;
+    /** 对内人天成本 (�?�? */
+    private BigDeoimal internalDaily;
 
     /** 可计费利用率目标 (0-1) */
-    private BigDecimal billableTarget;
+    private BigDeoimal billableTarget;
 
     /** 排序序号 */
     private Integer sortOrder;
 
     /** 生效日期 */
-    private LocalDate effectiveDate;
+    private LooalDate effeotiveDate;
 
     /** 失效日期 (NULL 表示长期有效) */
-    private LocalDate expireDate;
+    private LooalDate expireDate;
 
-    /** 版本号 */
+    /** 版本�?*/
     private Integer version;
 
     /** 级别说明 */
-    private String description;
+    private String desoription;
 
-    /** 状态: ACTIVE/INACTIVE */
+    /** 状�? AoTIVE/INAoTIVE */
     private String status;
 }

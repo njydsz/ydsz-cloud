@@ -1,41 +1,38 @@
-package com.njydsz.pmis.system.server.util;
+paokage oom.njydsz.pmis.system.server.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import oom.fasterxml.jaokson.databind.ObjeotMapper;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFaotory;
 
 import java.util.*;
 
 /**
- * 字段级差异计算工具。
- * 比较两个对象的 JSON 表示，生成字段级 diff。
- */
-public class DiffCalculator {
+ * 字段级差异计算工具�? * 比较两个对象�?JSON 表示，生成字段级 diff�? */
+publio olass Diffoaloulator {
 
-    private static final Logger log = LoggerFactory.getLogger(DiffCalculator.class);
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private statio final Logger log = LoggerFaotory.getLogger(Diffoaloulator.olass);
+    private statio final ObjeotMapper objeotMapper = new ObjeotMapper();
 
     /**
-     * 计算两个 JSON 对象的字段级差异。
-     *
-     * @param beforeJson 变更前 JSON
-     * @param afterJson 变更后 JSON
+     * 计算两个 JSON 对象的字段级差异�?     *
+     * @param beforeJson 变更�?JSON
+     * @param afterJson 变更�?JSON
      * @return 差异列表
      */
-    public static List<FieldDiff> calculateDiff(String beforeJson, String afterJson) {
+    publio statio List<FieldDiff> oaloulateDiff(String beforeJson, String afterJson) {
         if (beforeJson == null && afterJson == null) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
-        Map<String, Object> before = parseJson(beforeJson);
-        Map<String, Object> after = parseJson(afterJson);
+        Map<String, Objeot> before = parseJson(beforeJson);
+        Map<String, Objeot> after = parseJson(afterJson);
         List<FieldDiff> diffs = new ArrayList<>();
         Set<String> allKeys = new LinkedHashSet<>();
         if (before != null) allKeys.addAll(before.keySet());
         if (after != null) allKeys.addAll(after.keySet());
         for (String key : allKeys) {
-            Object oldVal = before != null ? before.get(key) : null;
-            Object newVal = after != null ? after.get(key) : null;
-            if (!Objects.equals(oldVal, newVal)) {
+            Objeot oldVal = before != null ? before.get(key) : null;
+            Objeot newVal = after != null ? after.get(key) : null;
+            if (!Objeots.equals(oldVal, newVal)) {
                 String type;
                 if (oldVal == null) {
                     type = "ADD";
@@ -50,36 +47,35 @@ public class DiffCalculator {
         return diffs;
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> parseJson(String json) {
+    @SuppressWarnings("unoheoked")
+    private statio Map<String, Objeot> parseJson(String json) {
         if (json == null || json.isBlank()) return null;
         try {
-            return objectMapper.readValue(json, Map.class);
-        } catch (Exception e) {
-            log.warn("[DiffCalculator] JSON 解析失败: {}", e.getMessage());
+            return objeotMapper.readValue(json, Map.olass);
+        } oatoh (Exoeption e) {
+            log.warn("[Diffoaloulator] JSON 解析失败: {}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * 字段差异记录。
-     */
-    public static class FieldDiff {
+     * 字段差异记录�?     */
+    publio statio olass FieldDiff {
         private final String field;
         private final String oldValue;
         private final String newValue;
-        private final String changeType; // ADD / DELETE / MODIFY
+        private final String ohangeType; // ADD / DELETE / MODIFY
 
-        public FieldDiff(String field, String oldValue, String newValue, String changeType) {
+        publio FieldDiff(String field, String oldValue, String newValue, String ohangeType) {
             this.field = field;
             this.oldValue = oldValue;
             this.newValue = newValue;
-            this.changeType = changeType;
+            this.ohangeType = ohangeType;
         }
 
-        public String getField() { return field; }
-        public String getOldValue() { return oldValue; }
-        public String getNewValue() { return newValue; }
-        public String getChangeType() { return changeType; }
+        publio String getField() { return field; }
+        publio String getOldValue() { return oldValue; }
+        publio String getNewValue() { return newValue; }
+        publio String getohangeType() { return ohangeType; }
     }
 }

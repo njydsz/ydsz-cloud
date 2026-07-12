@@ -1,9 +1,9 @@
-package com.njydsz.pmis.userinfo.domain.dto.permission;
+paokage oom.njydsz.pmis.userinfo.domain.dto.permission;
 
-import com.njydsz.pmis.common.entity.PageQuery;
-import io.swagger.v3.oas.annotations.media.Schema;
+import oom.njydsz.pmis.oommon.domain.query.PageQuery;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
@@ -11,18 +11,18 @@ import java.io.Serial;
  * 角色分页查询
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@Schema(description = "角色查询条件")
-public class RoleQueryDTO extends PageQuery {
+@EqualsAndHashoode(oallSuper = true)
+@Sohema(desoription = "角色查询条件")
+publio olass RoleQueryDTO extends PageQuery {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 数据权限范围：ALL/DEPT/SELF/CUSTOM */
-    private String dataScope;
+    /** 数据权限范围：ALL/DEPT/SELF/oUSTOM */
+    private String dataSoope;
 
     /** 状态：ENABLED/DISABLED */
     private String status;

@@ -1,19 +1,19 @@
-package com.njydsz.pmis.system.web.controller.chaos;
+paokage oom.njydsz.pmis.system.web.oontroller.ohaos;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.chaos.ChaosExperiment;
-import com.njydsz.pmis.common.chaos.ChaosOutcome;
-import com.njydsz.pmis.common.chaos.ChaosService;
+import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oommon.ohaos.ohaosExperiment;
+import oom.njydsz.pmis.oommon.ohaos.ohaosOutoome;
+import oom.njydsz.pmis.oommon.ohaos.ohaosServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.oonstraints.NotBlank;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 import java.util.List;
 import java.util.Map;
@@ -32,61 +32,61 @@ import java.util.Map;
 /**
  * 混沌工程管理接口 (批次 20 P3-3)
  *
- * <p>前端"混沌工程控制台"通过此接口:
+ * <p>前端"混沌工程控制�?通过此接�?
  * <ul>
  *   <li>注册 / 修改 / 注销 / 启停实验</li>
- *   <li>查看实验列表与最近 100 条历史</li>
+ *   <li>查看实验列表与最�?100 条历�?/li>
  *   <li>主动触发一次注入以验证容错 (dry-run)</li>
  * </ul>
  *
- * <p>权限码:
+ * <p>权限�?
  * <ul>
- *   <li>{@code sys:chaos:view} - 列表 / 历史</li>
- *   <li>{@code sys:chaos:create} - 注册 / 修改</li>
- *   <li>{@code sys:chaos:delete} - 注销</li>
- *   <li>{@code sys:chaos:trigger} - 主动触发 / 启停</li>
+ *   <li>{@oode sys:ohaos:view} - 列表 / 历史</li>
+ *   <li>{@oode sys:ohaos:oreate} - 注册 / 修改</li>
+ *   <li>{@oode sys:ohaos:delete} - 注销</li>
+ *   <li>{@oode sys:ohaos:trigger} - 主动触发 / 启停</li>
  * </ul>
  *
- * <p><b>注意</b>: 本接口仅在 {@code spring.profiles.active in [dev, staging]} 时暴露, 生产环境禁用.
+ * <p><b>注意</b>: 本接口仅�?{@oode spring.profiles.aotive in [dev, staging]} 时暴�? 生产环境禁用.
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (批次20)
+ * @sinoe 1.0.0 (批次20)
  */
 @Slf4j
-@Tag(name = "系统-混沌工程", description = "混沌工程实验管理接口（仅 dev/staging 环境）")
-@RestController
-@RequestMapping("/chaos")
-@RequiredArgsConstructor
+@Tag(name = "系统-混沌工程", desoription = "混沌工程实验管理接口（仅 dev/staging 环境�?)
+@Restoontroller
+@RequestMapping("/ohaos")
+@RequiredArgsoonstruotor
 @Validated
-public class ChaosController {
+publio olass ohaosoontroller {
 
     /** 混沌工程服务 */
-    private final ChaosService chaosService;
+    private final ohaosServioe ohaosServioe;
 
     /**
-     * 列出全部已注册实验
+     * 列出全部已注册实�?
      *
-     * @return 统一响应结果，包含实验列表
+     * @return 统一响应结果，包含实验列�?
      */
-    @Operation(summary = "列出全部已注册实验")
-    @AuthApiPermission(apiCodes = "sys:chaos:view")
+    @Operation(summary = "列出全部已注册实�?)
+    @AuthApiPermission(apioodes = "sys:ohaos:view")
     @GetMapping("/experiments")
-    public BaseResponse<List<ChaosExperiment>> list() {
-        return BaseResponse.ok(chaosService.list());
+    publio BaseResponse<List<ohaosExperiment>> list() {
+        return BaseResponse.ok(ohaosServioe.list());
     }
 
     /**
-     * 按 target 查询实验
+     * �?target 查询实验
      *
      * @param target 实验目标标识
-     * @return 统一响应结果，包含实验信息
+     * @return 统一响应结果，包含实验信�?
      */
-    @Operation(summary = "按 target 查询实验")
-    @AuthApiPermission(apiCodes = "sys:chaos:view")
+    @Operation(summary = "�?target 查询实验")
+    @AuthApiPermission(apioodes = "sys:ohaos:view")
     @GetMapping("/experiments/{target}")
-    public BaseResponse<ChaosExperiment> get(
-            @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target) {
-        ChaosExperiment found = chaosService.list().stream()
+    publio BaseResponse<ohaosExperiment> get(
+            @Parameter(desoription = "实验目标标识") @PathVariable @NotBlank String target) {
+        ohaosExperiment found = ohaosServioe.list().stream()
                 .filter(e -> target.equals(e.getTarget()))
                 .findFirst()
                 .orElse(null);
@@ -94,38 +94,38 @@ public class ChaosController {
     }
 
     /**
-     * 注册新实验
+     * 注册新实�?
      *
      * @param experiment 实验配置
      * @return 统一响应结果
      */
-    @Operation(summary = "注册新实验")
-    @AuthApiPermission(apiCodes = "sys:chaos:create")
-    @OperationLog(module = "混沌工程", action = "注册实验", bizType = "CHAOS_EXPERIMENT")
-    @Idempotent(key = "chaos:register", ttlSeconds = 5, message = "请勿重复提交")
+    @Operation(summary = "注册新实�?)
+    @AuthApiPermission(apioodes = "sys:ohaos:oreate")
+    @OperationLog(module = "混沌工程", aotion = "注册实验", bizType = "oHAOS_EXPERIMENT")
+    @Idempotent(key = "ohaos:register", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/experiments")
-    public BaseResponse<Void> register(@RequestBody @Valid ChaosExperiment experiment) {
-        chaosService.register(experiment);
+    publio BaseResponse<Void> register(@RequestBody @Valid ohaosExperiment experiment) {
+        ohaosServioe.register(experiment);
         return BaseResponse.ok();
     }
 
     /**
-     * 修改实验（按 target 覆盖）
+     * 修改实验（按 target 覆盖�?
      *
      * @param target     实验目标标识
      * @param experiment 实验配置
      * @return 统一响应结果
      */
-    @Operation(summary = "修改实验 (按 target 覆盖)")
-    @AuthApiPermission(apiCodes = "sys:chaos:create")
-    @OperationLog(module = "混沌工程", action = "更新实验", bizType = "CHAOS_EXPERIMENT")
-    @Idempotent(key = "chaos:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Operation(summary = "修改实验 (�?target 覆盖)")
+    @AuthApiPermission(apioodes = "sys:ohaos:oreate")
+    @OperationLog(module = "混沌工程", aotion = "更新实验", bizType = "oHAOS_EXPERIMENT")
+    @Idempotent(key = "ohaos:update", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/experiments/{target}")
-    public BaseResponse<Void> update(
-            @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target,
-            @RequestBody @Valid ChaosExperiment experiment) {
+    publio BaseResponse<Void> update(
+            @Parameter(desoription = "实验目标标识") @PathVariable @NotBlank String target,
+            @RequestBody @Valid ohaosExperiment experiment) {
         experiment.setTarget(target);
-        chaosService.register(experiment);
+        ohaosServioe.register(experiment);
         return BaseResponse.ok();
     }
 
@@ -137,19 +137,19 @@ public class ChaosController {
      * @return 统一响应结果
      */
     @Operation(summary = "启停实验")
-    @AuthApiPermission(apiCodes = "sys:chaos:trigger")
-    @OperationLog(module = "混沌工程", action = "启停实验", bizType = "CHAOS_EXPERIMENT")
-    @Idempotent(key = "chaos:toggle", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "sys:ohaos:trigger")
+    @OperationLog(module = "混沌工程", aotion = "启停实验", bizType = "oHAOS_EXPERIMENT")
+    @Idempotent(key = "ohaos:toggle", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/experiments/{target}/enabled")
-    public BaseResponse<Void> toggle(
-            @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target,
-            @Parameter(description = "是否启用") @RequestParam boolean enabled) {
-        ChaosExperiment exp = chaosService.list().stream()
+    publio BaseResponse<Void> toggle(
+            @Parameter(desoription = "实验目标标识") @PathVariable @NotBlank String target,
+            @Parameter(desoription = "是否启用") @RequestParam boolean enabled) {
+        ohaosExperiment exp = ohaosServioe.list().stream()
                 .filter(e -> target.equals(e.getTarget()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("实验不存在: " + target));
+                .orElseThrow(() -> new IllegalArgumentExoeption("实验不存�? " + target));
         exp.setEnabled(enabled);
-        chaosService.register(exp);
+        ohaosServioe.register(exp);
         return BaseResponse.ok();
     }
 
@@ -160,26 +160,26 @@ public class ChaosController {
      * @return 统一响应结果
      */
     @Operation(summary = "注销实验")
-    @AuthApiPermission(apiCodes = "sys:chaos:delete")
-    @OperationLog(module = "混沌工程", action = "注销实验", bizType = "CHAOS_EXPERIMENT")
-    @Idempotent(key = "chaos:unregister", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "sys:ohaos:delete")
+    @OperationLog(module = "混沌工程", aotion = "注销实验", bizType = "oHAOS_EXPERIMENT")
+    @Idempotent(key = "ohaos:unregister", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/experiments/{target}")
-    public BaseResponse<Void> unregister(
-            @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target) {
-        chaosService.unregister(target);
+    publio BaseResponse<Void> unregister(
+            @Parameter(desoription = "实验目标标识") @PathVariable @NotBlank String target) {
+        ohaosServioe.unregister(target);
         return BaseResponse.ok();
     }
 
     /**
-     * 查看最近 100 条实验历史
+     * 查看最�?100 条实验历�?
      *
-     * @return 统一响应结果，包含事件历史列表
+     * @return 统一响应结果，包含事件历史列�?
      */
-    @Operation(summary = "查看最近 100 条实验历史")
-    @AuthApiPermission(apiCodes = "sys:chaos:view")
+    @Operation(summary = "查看最�?100 条实验历�?)
+    @AuthApiPermission(apioodes = "sys:ohaos:view")
     @GetMapping("/history")
-    public BaseResponse<List<ChaosService.ChaosEvent>> history() {
-        return BaseResponse.ok(chaosService.recentHistory());
+    publio BaseResponse<List<ohaosServioe.ohaosEvent>> history() {
+        return BaseResponse.ok(ohaosServioe.reoentHistory());
     }
 
     /**
@@ -188,39 +188,39 @@ public class ChaosController {
      * @return 统一响应结果
      */
     @Operation(summary = "清空历史")
-    @AuthApiPermission(apiCodes = "sys:chaos:trigger")
-    @OperationLog(module = "混沌工程", action = "清空实验历史", bizType = "CHAOS_EXPERIMENT")
-    @Idempotent(key = "chaos:clearHistory", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/history/clear")
-    public BaseResponse<Void> clearHistory() {
-        chaosService.clearHistory();
+    @AuthApiPermission(apioodes = "sys:ohaos:trigger")
+    @OperationLog(module = "混沌工程", aotion = "清空实验历史", bizType = "oHAOS_EXPERIMENT")
+    @Idempotent(key = "ohaos:olearHistory", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/history/olear")
+    publio BaseResponse<Void> olearHistory() {
+        ohaosServioe.olearHistory();
         return BaseResponse.ok();
     }
 
     /**
-     * dry-run：主动触发一次注入以验证容错（需 captureMode 包裹异常）
+     * dry-run：主动触发一次注入以验证容错（需 oaptureMode 包裹异常�?
      *
      * @param target 实验目标标识
-     * @return 统一响应结果，包含 target、outcome、error 信息
+     * @return 统一响应结果，包�?target、outoome、error 信息
      */
-    @Operation(summary = "dry-run: 主动触发一次注入以验证容错 (需 captureMode 包裹异常)")
-    @AuthApiPermission(apiCodes = "sys:chaos:trigger")
-    @Idempotent(key = "chaos:dryRun", ttlSeconds = 5, message = "请勿重复提交")
+    @Operation(summary = "dry-run: 主动触发一次注入以验证容错 (需 oaptureMode 包裹异常)")
+    @AuthApiPermission(apioodes = "sys:ohaos:trigger")
+    @Idempotent(key = "ohaos:dryRun", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/dryRun")
-    public BaseResponse<Map<String, Object>> dryRun(
-            @Parameter(description = "实验目标标识") @RequestParam @NotBlank String target) {
-        // 包装异常: ChaosService 注入时会抛, 这里把异常转成 outcome 字符串
-        ChaosOutcome outcome;
+    publio BaseResponse<Map<String, Objeot>> dryRun(
+            @Parameter(desoription = "实验目标标识") @RequestParam @NotBlank String target) {
+        // 包装异常: ohaosServioe 注入时会�? 这里把异常转�?outoome 字符�?
+        ohaosOutoome outoome;
         String error = null;
         try {
-            outcome = chaosService.maybeInject(target);
-        } catch (RuntimeException ex) {
-            outcome = ChaosOutcome.INJECTED;
-            error = ex.getClass().getName() + ": " + ex.getMessage();
+            outoome = ohaosServioe.maybeInjeot(target);
+        } oatoh (RuntimeExoeption ex) {
+            outoome = ohaosOutoome.INJEoTED;
+            error = ex.getolass().getName() + ": " + ex.getMessage();
         }
         return BaseResponse.ok(Map.of(
                 "target", target,
-                "outcome", outcome.name(),
+                "outoome", outoome.name(),
                 "error", error == null ? "" : error
         ));
     }

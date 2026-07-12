@@ -1,170 +1,170 @@
-package com.njydsz.pmis.project.server.service.impl;
+paokage oom.njydsz.pmis.projeot.server.servioe.impl;
 
-import com.njydsz.pmis.common.security.TenantContext;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.project.domain.dto.WarrantyCreateDTO;
-import com.njydsz.pmis.project.domain.dto.WarrantyTerminateDTO;
-import com.njydsz.pmis.project.server.engine.AfterSalesCodeGen;
-import com.njydsz.pmis.project.domain.entity.WarrantyDO;
-import com.njydsz.pmis.project.domain.enums.WarrantyStatus;
-import com.njydsz.pmis.project.infra.mapper.WarrantyMapper;
-import com.njydsz.pmis.project.server.service.WarrantyService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.projeot.domain.dto.WarrantyoreateDTO;
+import oom.njydsz.pmis.projeot.domain.dto.WarrantyTerminateDTO;
+import oom.njydsz.pmis.projeot.server.engine.AfterSalesoodeGen;
+import oom.njydsz.pmis.projeot.domain.entity.WarrantyDO;
+import oom.njydsz.pmis.projeot.domain.enums.WarrantyStatus;
+import oom.njydsz.pmis.projeot.infra.mapper.WarrantyMapper;
+import oom.njydsz.pmis.projeot.server.servioe.WarrantyServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 
 /**
- * 质保期服务实现
+ * 质保期服务实�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class WarrantyServiceImpl implements WarrantyService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass WarrantyServioeImpl implements WarrantyServioe {
 
-    /** 质保期 Mapper */
+    /** 质保�?Mapper */
     private final WarrantyMapper warrantyMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String create(WarrantyCreateDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreate(WarrantyoreateDTO dto) {
         validate(dto);
-        // 同一项目不允许存在多个 ACTIVE 质保期
-        List<WarrantyDO> active = warrantyMapper.selectByInitiation(dto.getInitiationId());
-        if (active != null) {
-            for (WarrantyDO w : active) {
-                WarrantyStatus s = WarrantyStatus.fromCode(w.getStatus());
+        // 同一项目不允许存在多�?AoTIVE 质保�?
+        List<WarrantyDO> aotive = warrantyMapper.seleotByInitiation(dto.getInitiationId());
+        if (aotive != null) {
+            for (WarrantyDO w : aotive) {
+                WarrantyStatus s = WarrantyStatus.fromoode(w.getStatus());
                 if (s != null && !s.isTerminal()) {
-                    throw new SysException(StandardResultCode.BAD_REQUEST,
-                            "error.execution.msg_a3d34659", w.getWarrantyCode());
+                    throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                            "error.exeoution.msg_a3d34659", w.getWarrantyoode());
                 }
             }
         }
         WarrantyDO w = new WarrantyDO();
-        BeanUtils.copyProperties(dto, w);
-        // 默认值
-        if (!StringUtils.hasText(w.getWarrantyCode())) {
-            w.setWarrantyCode(AfterSalesCodeGen.warrantyCode(LocalDate.now()));
+        BeanUtils.oopyProperties(dto, w);
+        // 默认�?
+        if (!StringUtils.hasText(w.getWarrantyoode())) {
+            w.setWarrantyoode(AfterSalesoodeGen.warrantyoode(LooalDate.now()));
         }
-        if (w.getStartDate() == null) w.setStartDate(LocalDate.now());
+        if (w.getStartDate() == null) w.setStartDate(LooalDate.now());
         if (w.getDurationMonths() == null) w.setDurationMonths(12);
         if (w.getDurationMonths() <= 0 || w.getDurationMonths() > 120) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_75b5c555");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_75b5o555");
         }
         w.setEndDate(w.getStartDate().plusMonths(w.getDurationMonths()));
-        if (w.getNoticeDays() == null) w.setNoticeDays(30);
-        if (w.getNoticeDays() < 0 || w.getNoticeDays() > 180) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f4127654");
+        if (w.getNotioeDays() == null) w.setNotioeDays(30);
+        if (w.getNotioeDays() < 0 || w.getNotioeDays() > 180) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_f4127654");
         }
-        w.setStatus(WarrantyStatus.ACTIVE.getCode());
-        if (w.getTenantId() == null) w.setTenantId(TenantContext.getTenantId());
+        w.setStatus(WarrantyStatus.AoTIVE.getoode());
+        if (w.getTenantId() == null) w.setTenantId(Tenantoontext.getTenantId());
         warrantyMapper.insert(w);
-        log.info("[Warranty] 创建质保期: code={} project={} endDate={}",
-                w.getWarrantyCode(), w.getInitiationId(), w.getEndDate());
+        log.info("[Warranty] 创建质保�? oode={} projeot={} endDate={}",
+                w.getWarrantyoode(), w.getInitiationId(), w.getEndDate());
         return w.getId();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void terminate(WarrantyTerminateDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void terminate(WarrantyTerminateDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_40437174");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_40437174");
         }
-        WarrantyDO w = warrantyMapper.selectById(dto.getId());
-        if (w == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_6457af8b");
-        WarrantyStatus st = WarrantyStatus.fromCode(w.getStatus());
+        WarrantyDO w = warrantyMapper.seleotById(dto.getId());
+        if (w == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_6457af8b");
+        WarrantyStatus st = WarrantyStatus.fromoode(w.getStatus());
         if (st == null || st.isTerminal()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_b9835ff3", w.getStatus());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_b9835ff3", w.getStatus());
         }
-        if (!st.canTransitTo(WarrantyStatus.TERMINATED)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_5b3f83db", st.getDesc());
+        if (!st.oanTransitTo(WarrantyStatus.TERMINATED)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_5b3f83db", st.getDeso());
         }
-        warrantyMapper.markStatus(dto.getId(), WarrantyStatus.TERMINATED.getCode(), dto.getReason());
-        log.info("[Warranty] 终止质保期: id={} reason={}", dto.getId(), dto.getReason());
+        warrantyMapper.markStatus(dto.getId(), WarrantyStatus.TERMINATED.getoode(), dto.getReason());
+        log.info("[Warranty] 终止质保�? id={} reason={}", dto.getId(), dto.getReason());
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int scanExpiring(LocalDate today, int noticeDays) {
-        if (today == null) today = LocalDate.now();
-        LocalDate until = today.plusDays(Math.max(0, noticeDays));
-        List<WarrantyDO> list = warrantyMapper.selectExpiringBefore(until);
-        int count = 0;
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio int soanExpiring(LooalDate today, int notioeDays) {
+        if (today == null) today = LooalDate.now();
+        LooalDate until = today.plusDays(Math.max(0, notioeDays));
+        List<WarrantyDO> list = warrantyMapper.seleotExpiringBefore(until);
+        int oount = 0;
         for (WarrantyDO w : list) {
-            WarrantyStatus st = WarrantyStatus.fromCode(w.getStatus());
-            if (st == WarrantyStatus.ACTIVE) {
-                warrantyMapper.markStatus(w.getId(), WarrantyStatus.EXPIRING_SOON.getCode(), null);
-                count++;
+            WarrantyStatus st = WarrantyStatus.fromoode(w.getStatus());
+            if (st == WarrantyStatus.AoTIVE) {
+                warrantyMapper.markStatus(w.getId(), WarrantyStatus.EXPIRING_SOON.getoode(), null);
+                oount++;
             }
         }
-        if (count > 0) {
-            log.info("[Warranty] 扫描即将到期: today={} until={} 标记 {} 条", today, until, count);
+        if (oount > 0) {
+            log.info("[Warranty] 扫描即将到期: today={} until={} 标记 {} �?, today, until, oount);
         }
-        return count;
+        return oount;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int scanOverdue(LocalDate today) {
-        if (today == null) today = LocalDate.now();
-        List<WarrantyDO> list = warrantyMapper.selectOverdue(today);
-        int count = 0;
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio int soanOverdue(LooalDate today) {
+        if (today == null) today = LooalDate.now();
+        List<WarrantyDO> list = warrantyMapper.seleotOverdue(today);
+        int oount = 0;
         for (WarrantyDO w : list) {
-            warrantyMapper.markStatus(w.getId(), WarrantyStatus.EXPIRED.getCode(), null);
-            count++;
+            warrantyMapper.markStatus(w.getId(), WarrantyStatus.EXPIRED.getoode(), null);
+            oount++;
         }
-        if (count > 0) {
-            log.info("[Warranty] 扫描已过期: today={} 标记 {} 条", today, count);
+        if (oount > 0) {
+            log.info("[Warranty] 扫描已过�? today={} 标记 {} �?, today, oount);
         }
-        return count;
+        return oount;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<WarrantyDO> listExpiring(LocalDate until) {
-        return warrantyMapper.selectExpiringBefore(until);
+    @Transaotional(readOnly = true)
+    publio List<WarrantyDO> listExpiring(LooalDate until) {
+        return warrantyMapper.seleotExpiringBefore(until);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<WarrantyDO> page(int page, int size, String status, String initiationId, String keyword) {
+    @Transaotional(readOnly = true)
+    publio Page<WarrantyDO> page(int page, int size, String status, String initiationId, String keyword) {
         Page<WarrantyDO> p = new Page<>(page, size);
         LambdaQueryWrapper<WarrantyDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(status)) w.eq(WarrantyDO::getStatus, status);
         if (initiationId != null) w.eq(WarrantyDO::getInitiationId, initiationId);
         if (StringUtils.hasText(keyword)) {
-            w.and(q -> q.like(WarrantyDO::getWarrantyCode, keyword)
-                    .or().like(WarrantyDO::getContactName, keyword));
+            w.and(q -> q.like(WarrantyDO::getWarrantyoode, keyword)
+                    .or().like(WarrantyDO::getoontaotName, keyword));
         }
-        w.orderByDesc(WarrantyDO::getCreatedAt);
-        return warrantyMapper.selectPage(p, w);
+        w.orderByDeso(WarrantyDO::getoreatedAt);
+        return warrantyMapper.seleotPage(p, w);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public WarrantyDO getById(String id) {
-        WarrantyDO w = warrantyMapper.selectById(id);
-        if (w == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_6457af8b");
+    @Transaotional(readOnly = true)
+    publio WarrantyDO getById(String id) {
+        WarrantyDO w = warrantyMapper.seleotById(id);
+        if (w == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_6457af8b");
         return w;
     }
 
-    private void validate(WarrantyCreateDTO dto) {
+    private void validate(WarrantyoreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_576o2b5e");
         }
     }
 }

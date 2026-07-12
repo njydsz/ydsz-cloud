@@ -1,22 +1,22 @@
-package com.njydsz.pmis.userinfo.domain.dto.resource;
+paokage oom.njydsz.pmis.userinfo.domain.dto.resouroe;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.oonstraints.NotBlank;
 import lombok.Data;
 
 /**
- * 资源池创建/更新 DTO
+ * 资源池创�?更新 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class ResourcePoolCreateDTO {
+publio olass ResouroePooloreateDTO {
 
-    /** 池编号 */
-    @NotBlank(message = "{validation.user.msg_27b42dc0}")
-    private String poolCode;
+    /** 池编�?*/
+    @NotBlank(message = "{validation.user.msg_27b42do0}")
+    private String pooloode;
 
-    /** 池名称 */
+    /** 池名�?*/
     @NotBlank(message = "{validation.user.msg_04617d5a}")
     private String poolName;
 
@@ -30,12 +30,12 @@ public class ResourcePoolCreateDTO {
     private String departmentName;
     /** 职级范围 */
     private String levelRange;
-    /** 池人数 */
-    private Integer headcount;
+    /** 池人�?*/
+    private Integer headoount;
     /** 目标计费人数 */
     private Integer billableTarget;
     /** 描述 */
-    private String description;
-    /** 状态：ACTIVE/INACTIVE */
+    private String desoription;
+    /** 状态：AoTIVE/INAoTIVE */
     private String status;
 }

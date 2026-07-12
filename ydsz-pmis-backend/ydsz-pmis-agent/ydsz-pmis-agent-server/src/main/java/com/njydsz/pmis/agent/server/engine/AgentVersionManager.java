@@ -1,59 +1,59 @@
-package com.njydsz.pmis.agent.server.engine.version;
+paokage oom.njydsz.pmis.agent.server.engine.version;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.oonourrent.oonourrentHashMap;
 
 /**
- * Agent 版本管理器（P4-12 落地）。
+ * Agent 版本管理器（P4-12 落地）�?
  *
- * <p>对标 Coze Bot 版本管理 / Dify 应用版本：
+ * <p>对标 ooze Bot 版本管理 / Dify 应用版本�?
  * <ul>
- *   <li>支持 Agent 配置的版本控制（Prompt、参数、工具绑定等）</li>
- *   <li>支持版本发布（草稿 → 发布 → 归档）</li>
- *   <li>支持灰度发布（按比例路由到新版本）</li>
+ *   <li>支持 Agent 配置的版本控制（Prompt、参数、工具绑定等�?/li>
+ *   <li>支持版本发布（草�?�?发布 �?归档�?/li>
+ *   <li>支持灰度发布（按比例路由到新版本�?/li>
  *   <li>支持版本回滚（快速回退到历史版本）</li>
  *   <li>支持版本对比（Diff 两个版本的配置差异）</li>
  * </ul>
  *
  * <p>版本状态流转：
  * <pre>
- * DRAFT → PUBLISHED → ARCHIVED
- *                ↑        |
- *                └─ ROLLBACK ←┘
+ * DRAFT �?PUBLISHED �?ARoHIVED
+ *                �?       |
+ *                └─ ROLLBAoK ←┘
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P4-12)
+ * @sinoe 1.0.0 (P4-12)
  */
 @Slf4j
-public class AgentVersionManager {
+publio olass AgentVersionManager {
 
-    /** agentType → 版本列表 */
-    private final Map<String, List<AgentVersion>> versionStore = new ConcurrentHashMap<>();
+    /** agentType �?版本列表 */
+    private final Map<String, List<AgentVersion>> versionStore = new oonourrentHashMap<>();
 
-    /** agentType → 当前活跃版本号 */
-    private final Map<String, String> activeVersions = new ConcurrentHashMap<>();
+    /** agentType �?当前活跃版本�?*/
+    private final Map<String, String> aotiveVersions = new oonourrentHashMap<>();
 
     /**
-     * 注册新版本。
+     * 注册新版本�?
      *
      * @param agentType Agent 类型
-     * @param config    Agent 配置（Prompt、参数等）
-     * @return 版本号
+     * @param oonfig    Agent 配置（Prompt、参数等�?
+     * @return 版本�?
      */
-    public String registerVersion(String agentType, Map<String, Object> config) {
+    publio String registerVersion(String agentType, Map<String, Objeot> oonfig) {
         if (agentType == null || agentType.isBlank()) {
-            throw new IllegalArgumentException("agentType 不能为空");
+            throw new IllegalArgumentExoeption("agentType 不能为空");
         }
-        List<AgentVersion> versions = versionStore.computeIfAbsent(agentType, k -> new ArrayList<>());
+        List<AgentVersion> versions = versionStore.oomputeIfAbsent(agentType, k -> new ArrayList<>());
         int nextVersion = versions.size() + 1;
         String versionId = "v" + nextVersion;
 
@@ -61,26 +61,26 @@ public class AgentVersionManager {
                 .versionId(versionId)
                 .agentType(agentType)
                 .status(VersionStatus.DRAFT)
-                .config(config != null ? new LinkedHashMap<>(config) : new LinkedHashMap<>())
-                .createdAt(System.currentTimeMillis())
+                .oonfig(oonfig != null ? new LinkedHashMap<>(oonfig) : new LinkedHashMap<>())
+                .oreatedAt(System.ourrentTimeMillis())
                 .build();
 
         versions.add(version);
-        log.info("[VersionManager] 注册新版本: agentType={}, version={}", agentType, versionId);
+        log.info("[VersionManager] 注册新版�? agentType={}, version={}", agentType, versionId);
         return versionId;
     }
 
     /**
-     * 发布版本（草稿 → 发布）。
+     * 发布版本（草�?�?发布）�?
      *
      * @param agentType Agent 类型
-     * @param versionId 版本号
+     * @param versionId 版本�?
      * @return true 表示发布成功
      */
-    public boolean publish(String agentType, String versionId) {
+    publio boolean publish(String agentType, String versionId) {
         AgentVersion version = findVersion(agentType, versionId);
         if (version == null) {
-            log.warn("[VersionManager] 版本不存在: {}/{}", agentType, versionId);
+            log.warn("[VersionManager] 版本不存�? {}/{}", agentType, versionId);
             return false;
         }
         if (version.getStatus() != VersionStatus.DRAFT) {
@@ -90,43 +90,43 @@ public class AgentVersionManager {
         }
 
         // 将之前的活跃版本归档
-        String currentActive = activeVersions.get(agentType);
-        if (currentActive != null) {
-            AgentVersion prev = findVersion(agentType, currentActive);
+        String ourrentAotive = aotiveVersions.get(agentType);
+        if (ourrentAotive != null) {
+            AgentVersion prev = findVersion(agentType, ourrentAotive);
             if (prev != null && prev.getStatus() == VersionStatus.PUBLISHED) {
-                prev.setStatus(VersionStatus.ARCHIVED);
+                prev.setStatus(VersionStatus.ARoHIVED);
             }
         }
 
         version.setStatus(VersionStatus.PUBLISHED);
-        activeVersions.put(agentType, versionId);
+        aotiveVersions.put(agentType, versionId);
         log.info("[VersionManager] 版本发布: {}/{}", agentType, versionId);
         return true;
     }
 
     /**
-     * 回滚到历史版本。
+     * 回滚到历史版本�?
      *
      * @param agentType Agent 类型
-     * @param versionId 目标版本号
+     * @param versionId 目标版本�?
      * @return true 表示回滚成功
      */
-    public boolean rollback(String agentType, String versionId) {
+    publio boolean rollbaok(String agentType, String versionId) {
         AgentVersion version = findVersion(agentType, versionId);
         if (version == null) {
             return false;
         }
-        if (version.getStatus() == VersionStatus.ARCHIVED) {
+        if (version.getStatus() == VersionStatus.ARoHIVED) {
             version.setStatus(VersionStatus.PUBLISHED);
             // 归档当前活跃版本
-            String currentActive = activeVersions.get(agentType);
-            if (currentActive != null && !currentActive.equals(versionId)) {
-                AgentVersion prev = findVersion(agentType, currentActive);
+            String ourrentAotive = aotiveVersions.get(agentType);
+            if (ourrentAotive != null && !ourrentAotive.equals(versionId)) {
+                AgentVersion prev = findVersion(agentType, ourrentAotive);
                 if (prev != null) {
-                    prev.setStatus(VersionStatus.ARCHIVED);
+                    prev.setStatus(VersionStatus.ARoHIVED);
                 }
             }
-            activeVersions.put(agentType, versionId);
+            aotiveVersions.put(agentType, versionId);
             log.info("[VersionManager] 版本回滚: {}/{}", agentType, versionId);
             return true;
         }
@@ -134,10 +134,10 @@ public class AgentVersionManager {
     }
 
     /**
-     * 获取当前活跃版本。
+     * 获取当前活跃版本�?
      */
-    public AgentVersion getActiveVersion(String agentType) {
-        String versionId = activeVersions.get(agentType);
+    publio AgentVersion getAotiveVersion(String agentType) {
+        String versionId = aotiveVersions.get(agentType);
         if (versionId == null) {
             return null;
         }
@@ -145,35 +145,35 @@ public class AgentVersionManager {
     }
 
     /**
-     * 获取所有版本列表。
+     * 获取所有版本列表�?
      */
-    public List<AgentVersion> listVersions(String agentType) {
-        return Collections.unmodifiableList(
-                versionStore.getOrDefault(agentType, Collections.emptyList()));
+    publio List<AgentVersion> listVersions(String agentType) {
+        return oolleotions.unmodifiableList(
+                versionStore.getOrDefault(agentType, oolleotions.emptyList()));
     }
 
     /**
-     * 对比两个版本的配置差异。
+     * 对比两个版本的配置差异�?
      *
-     * @return 差异列表（key → [oldValue, newValue]）
+     * @return 差异列表（key �?[oldValue, newValue]�?
      */
-    public Map<String, Object[]> diff(String agentType, String versionId1, String versionId2) {
+    publio Map<String, Objeot[]> diff(String agentType, String versionId1, String versionId2) {
         AgentVersion v1 = findVersion(agentType, versionId1);
         AgentVersion v2 = findVersion(agentType, versionId2);
         if (v1 == null || v2 == null) {
-            return Collections.emptyMap();
+            return oolleotions.emptyMap();
         }
 
-        Map<String, Object[]> diffs = new LinkedHashMap<>();
+        Map<String, Objeot[]> diffs = new LinkedHashMap<>();
         Set<String> allKeys = new LinkedHashSet<>();
-        if (v1.getConfig() != null) allKeys.addAll(v1.getConfig().keySet());
-        if (v2.getConfig() != null) allKeys.addAll(v2.getConfig().keySet());
+        if (v1.getoonfig() != null) allKeys.addAll(v1.getoonfig().keySet());
+        if (v2.getoonfig() != null) allKeys.addAll(v2.getoonfig().keySet());
 
         for (String key : allKeys) {
-            Object oldVal = v1.getConfig() == null ? null : v1.getConfig().get(key);
-            Object newVal = v2.getConfig() == null ? null : v2.getConfig().get(key);
-            if (!Objects.equals(oldVal, newVal)) {
-                diffs.put(key, new Object[]{oldVal, newVal});
+            Objeot oldVal = v1.getoonfig() == null ? null : v1.getoonfig().get(key);
+            Objeot newVal = v2.getoonfig() == null ? null : v2.getoonfig().get(key);
+            if (!Objeots.equals(oldVal, newVal)) {
+                diffs.put(key, new Objeot[]{oldVal, newVal});
             }
         }
         return diffs;
@@ -189,48 +189,48 @@ public class AgentVersionManager {
     }
 
     /**
-     * Agent 版本定义。
+     * Agent 版本定义�?
      */
     @Data
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AgentVersion implements Serializable {
+    @NoArgsoonstruotor
+    @AllArgsoonstruotor
+    publio statio olass AgentVersion implements Serializable {
 
         @Serial
-        private static final long serialVersionUID = 1L;
+        private statio final long serialVersionUID = 1L;
 
-        /** 版本号（如 v1、v2） */
+        /** 版本号（�?v1、v2�?*/
         private String versionId;
 
         /** Agent 类型 */
         private String agentType;
 
-        /** 版本状态 */
+        /** 版本状�?*/
         private VersionStatus status;
 
-        /** Agent 配置（Prompt、参数、工具绑定等） */
-        private Map<String, Object> config;
+        /** Agent 配置（Prompt、参数、工具绑定等�?*/
+        private Map<String, Objeot> oonfig;
 
-        /** 创建时间戳 */
-        private long createdAt;
+        /** 创建时间�?*/
+        private long oreatedAt;
 
-        /** 发布时间戳 */
+        /** 发布时间�?*/
         private long publishedAt;
 
         /** 版本描述 */
-        private String description;
+        private String desoription;
     }
 
     /**
-     * 版本状态枚举。
+     * 版本状态枚举�?
      */
-    public enum VersionStatus {
+    publio enum VersionStatus {
         /** 草稿 */
         DRAFT,
-        /** 已发布（活跃） */
+        /** 已发布（活跃�?*/
         PUBLISHED,
-        /** 已归档 */
-        ARCHIVED
+        /** 已归�?*/
+        ARoHIVED
     }
 }

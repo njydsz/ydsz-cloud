@@ -1,7 +1,7 @@
-package com.njydsz.pmis.message.server.service.receipt;
+paokage oom.njydsz.pmis.message.server.servioe.reoeipt;
 
-import com.njydsz.pmis.message.domain.dto.receipt.ReceiptCallbackDTO;
-import com.njydsz.pmis.message.domain.entity.receipt.MsgReceiptDO;
+import oom.njydsz.pmis.message.domain.dto.reoeipt.ReoeiptoallbaokDTO;
+import oom.njydsz.pmis.message.domain.entity.reoeipt.MsgReoeiptDO;
 
 import java.util.List;
 
@@ -9,16 +9,15 @@ import java.util.List;
  * 消息回执服务
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface ReceiptService {
+publio interfaoe ReoeiptServioe {
 
     /**
-     * 处理服务商回执回调
-     *
+     * 处理服务商回执回�?     *
      * @param dto 回执回调参数
      */
-    void callback(ReceiptCallbackDTO dto);
+    void oallbaok(ReoeiptoallbaokDTO dto);
 
     /**
      * 根据日志 ID 查询回执列表
@@ -26,5 +25,5 @@ public interface ReceiptService {
      * @param logId 日志 ID
      * @return 回执列表
      */
-    List<MsgReceiptDO> listByLogId(String logId);
+    List<MsgReoeiptDO> listByLogId(String logId);
 }

@@ -1,59 +1,56 @@
-package com.njydsz.pmis.cronjob.domain.entity.job;
+paokage oom.njydsz.pmis.oronjob.domain.entity.job;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDateTime;
 
 /**
- * 调度节点心跳实体（pmis_job_node 表）。
- *
- * <p>每个 cronjob 实例启动时注册一条记录，定时（默认 10s）更新 last_heartbeat。
- * Leader 节点扫描时通过 last_heartbeat 判断节点是否在线。
- *
+ * 调度节点心跳实体（pmis_job_node 表）�? *
+ * <p>每个 oronjob 实例启动时注册一条记录，定时（默�?10s）更�?last_heartbeat�? * Leader 节点扫描时通过 last_heartbeat 判断节点是否在线�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @TableName("pmis_job_node")
-public class JobNodeDO implements Serializable {
+publio olass JobNodeDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 节点 ID（hostname:port 或 hostname:pid） */
+    /** 节点 ID（hostname:port �?hostname:pid�?*/
     @TableId(type = IdType.ASSIGN_ID)
     private String nodeId;
 
     /** 应用名称 */
     private String appName;
 
-    /** 主机名 */
+    /** 主机�?*/
     private String host;
 
     /** 端口 */
     private Integer port;
 
-    /** 最后心跳时间 */
-    private LocalDateTime lastHeartbeat;
+    /** 最后心跳时�?*/
+    private LooalDateTime lastHeartbeat;
 
     /** 节点状态：ONLINE 在线 / OFFLINE 离线 / DRAINING 排空退出中 */
     private String status;
 
-    /** CPU 使用率（百分比，0-100） */
-    private BigDecimal cpuUsage;
+    /** oPU 使用率（百分比，0-100�?*/
+    private BigDeoimal opuUsage;
 
-    /** 内存使用率（百分比，0-100） */
-    private BigDecimal memUsagePct;
+    /** 内存使用率（百分比，0-100�?*/
+    private BigDeoimal memUsagePot;
 
     /** 当前正在执行的任务数 */
-    private Integer runningCount;
+    private Integer runningoount;
 
-    /** 节点标签（JSON，用于任务亲和性选择） */
+    /** 节点标签（JSON，用于任务亲和性选择�?*/
     private String tags;
 }

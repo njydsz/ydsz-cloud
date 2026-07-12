@@ -1,66 +1,62 @@
-package com.njydsz.pmis.agent.server.service.knowledge;
+paokage oom.njydsz.pmis.agent.server.servioe.knowledge;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.agent.domain.entity.agent.AgentDocumentDO;
-import com.njydsz.pmis.agent.domain.entity.knowledge.KnowledgeBaseDO;
-import com.njydsz.pmis.agent.infra.mapper.agent.AgentDocumentMapper;
-import com.njydsz.pmis.agent.infra.mapper.knowledge.KnowledgeBaseMapper;
-import com.njydsz.pmis.agent.server.rag.RAGService;
-import com.njydsz.pmis.common.core.response.PageResponse;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.agent.domain.entity.agent.AgentDooumentDO;
+import oom.njydsz.pmis.agent.domain.entity.knowledge.KnowledgeBaseDO;
+import oom.njydsz.pmis.agent.infra.mapper.agent.AgentDooumentMapper;
+import oom.njydsz.pmis.agent.infra.mapper.knowledge.KnowledgeBaseMapper;
+import oom.njydsz.pmis.agent.server.rag.RAGServioe;
+import oom.njydsz.pmis.oommon.oore.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Service;
+import org.springframework.beans.faotory.ObjeotProvider;
+import org.springframework.stereotype.Servioe;
 
 import java.util.List;
 
 /**
- * 知识库管理服务（P3-1 落地）。
- *
- * <p>封装知识库 CRUD + 文档入库链路，对外提供统一 API。
- * 使用 {@link ObjectProvider} 注入 Mapper，避免无 DB 环境启动失败。
- *
+ * 知识库管理服务（P3-1 落地）�? *
+ * <p>封装知识�?oRUD + 文档入库链路，对外提供统一 API�? * 使用 {@link ObjeotProvider} 注入 Mapper，避免无 DB 环境启动失败�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-1)
+ * @sinoe 1.0.0 (P3-1)
  */
 @Slf4j
-@Service
-public class KnowledgeBaseService {
+@Servioe
+publio olass KnowledgeBaseServioe {
 
-    private final ObjectProvider<KnowledgeBaseMapper> kbMapperProvider;
-    private final ObjectProvider<AgentDocumentMapper> docMapperProvider;
-    private final ObjectProvider<RAGService> ragServiceProvider;
+    private final ObjeotProvider<KnowledgeBaseMapper> kbMapperProvider;
+    private final ObjeotProvider<AgentDooumentMapper> dooMapperProvider;
+    private final ObjeotProvider<RAGServioe> ragServioeProvider;
 
-    public KnowledgeBaseService(ObjectProvider<KnowledgeBaseMapper> kbMapperProvider,
-                                ObjectProvider<AgentDocumentMapper> docMapperProvider,
-                                ObjectProvider<RAGService> ragServiceProvider) {
+    publio KnowledgeBaseServioe(ObjeotProvider<KnowledgeBaseMapper> kbMapperProvider,
+                                ObjeotProvider<AgentDooumentMapper> dooMapperProvider,
+                                ObjeotProvider<RAGServioe> ragServioeProvider) {
         this.kbMapperProvider = kbMapperProvider;
-        this.docMapperProvider = docMapperProvider;
-        this.ragServiceProvider = ragServiceProvider;
+        this.dooMapperProvider = dooMapperProvider;
+        this.ragServioeProvider = ragServioeProvider;
     }
 
     /**
-     * 创建知识库。
-     */
-    public KnowledgeBaseDO create(KnowledgeBaseDO kb) {
+     * 创建知识库�?     */
+    publio KnowledgeBaseDO oreate(KnowledgeBaseDO kb) {
         KnowledgeBaseMapper mapper = kbMapperProvider.getIfAvailable();
         if (mapper == null) {
-            throw new IllegalStateException("KnowledgeBaseMapper 不可用");
+            throw new IllegalStateExoeption("KnowledgeBaseMapper 不可�?);
         }
         if (kb.getTenantId() == null) {
             kb.setTenantId("1");
         }
         if (kb.getStatus() == null) {
-            kb.setStatus("ACTIVE");
+            kb.setStatus("AoTIVE");
         }
-        if (kb.getDocCount() == null) {
-            kb.setDocCount(0);
+        if (kb.getDoooount() == null) {
+            kb.setDoooount(0);
         }
-        if (kb.getChunkCount() == null) {
-            kb.setChunkCount(0);
+        if (kb.getohunkoount() == null) {
+            kb.setohunkoount(0);
         }
         if (kb.getEmbeddingModel() == null) {
-            kb.setEmbeddingModel("mock");
+            kb.setEmbeddingModel("mook");
         }
         if (kb.getEmbeddingDim() == null) {
             kb.setEmbeddingDim(1536);
@@ -70,20 +66,18 @@ public class KnowledgeBaseService {
     }
 
     /**
-     * 按 ID 查询知识库。
-     */
-    public KnowledgeBaseDO getById(String id) {
+     * �?ID 查询知识库�?     */
+    publio KnowledgeBaseDO getById(String id) {
         KnowledgeBaseMapper mapper = kbMapperProvider.getIfAvailable();
         if (mapper == null) {
             return null;
         }
-        return mapper.selectById(id);
+        return mapper.seleotById(id);
     }
 
     /**
-     * 分页查询知识库。
-     */
-    public PageResponse<KnowledgeBaseDO> page(int pageNum, int pageSize, String tenantId) {
+     * 分页查询知识库�?     */
+    publio PageResponse<KnowledgeBaseDO> page(int pageNum, int pageSize, String tenantId) {
         KnowledgeBaseMapper mapper = kbMapperProvider.getIfAvailable();
         if (mapper == null) {
             return PageResponse.empty();
@@ -92,91 +86,86 @@ public class KnowledgeBaseService {
         if (tenantId != null && !tenantId.isBlank()) {
             wrapper.eq(KnowledgeBaseDO::getTenantId, tenantId);
         }
-        wrapper.orderByDesc(KnowledgeBaseDO::getCreatedAt);
-        Page<KnowledgeBaseDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        return PageResponse.of(page.getRecords(), page.getTotal(), pageNum, pageSize);
+        wrapper.orderByDeso(KnowledgeBaseDO::getoreatedAt);
+        Page<KnowledgeBaseDO> page = mapper.seleotPage(new Page<>(pageNum, pageSize), wrapper);
+        return PageResponse.of(page.getReoords(), page.getTotal(), pageNum, pageSize);
     }
 
     /**
-     * 上传文档到知识库：保存文档元数据 + 触发入库。
-     */
-    public AgentDocumentDO uploadDocument(String knowledgeBaseId, String name,
-                                           String sourceType, String content) {
-        AgentDocumentMapper docMapper = docMapperProvider.getIfAvailable();
+     * 上传文档到知识库：保存文档元数据 + 触发入库�?     */
+    publio AgentDooumentDO uploadDooument(String knowledgeBaseId, String name,
+                                           String souroeType, String oontent) {
+        AgentDooumentMapper dooMapper = dooMapperProvider.getIfAvailable();
         KnowledgeBaseMapper kbMapper = kbMapperProvider.getIfAvailable();
-        if (docMapper == null || kbMapper == null) {
-            throw new IllegalStateException("Mapper 不可用");
+        if (dooMapper == null || kbMapper == null) {
+            throw new IllegalStateExoeption("Mapper 不可�?);
         }
 
-        // 1. 保存文档元数据
-        AgentDocumentDO doc = new AgentDocumentDO();
-        doc.setTenantId("1");
-        doc.setKnowledgeBaseId(knowledgeBaseId);
-        doc.setName(name);
-        doc.setSourceType(sourceType == null ? "TEXT" : sourceType);
-        doc.setContent(content);
-        doc.setChunkCount(0);
-        doc.setTotalTokens(0);
-        doc.setStatus("PENDING");
-        docMapper.insert(doc);
+        // 1. 保存文档元数�?        AgentDooumentDO doo = new AgentDooumentDO();
+        doo.setTenantId("1");
+        doo.setKnowledgeBaseId(knowledgeBaseId);
+        doo.setName(name);
+        doo.setSouroeType(souroeType == null ? "TEXT" : souroeType);
+        doo.setoontent(oontent);
+        doo.setohunkoount(0);
+        doo.setTotalTokens(0);
+        doo.setStatus("PENDING");
+        dooMapper.insert(doo);
 
         // 2. 触发入库
         try {
-            RAGService ragService = ragServiceProvider.getIfAvailable();
-            if (ragService != null) {
-                int chunks = ragService.ingest(knowledgeBaseId, doc.getId(), content);
-                doc.setChunkCount(chunks);
-                doc.setStatus("INGESTED");
+            RAGServioe ragServioe = ragServioeProvider.getIfAvailable();
+            if (ragServioe != null) {
+                int ohunks = ragServioe.ingest(knowledgeBaseId, doo.getId(), oontent);
+                doo.setohunkoount(ohunks);
+                doo.setStatus("INGESTED");
             } else {
-                doc.setStatus("FAILED");
+                doo.setStatus("FAILED");
             }
-        } catch (Exception e) {
-            log.error("[KB] 文档入库失败: kb={} doc={}", knowledgeBaseId, doc.getId(), e);
-            doc.setStatus("FAILED");
+        } oatoh (Exoeption e) {
+            log.error("[KB] 文档入库失败: kb={} doo={}", knowledgeBaseId, doo.getId(), e);
+            doo.setStatus("FAILED");
         }
-        docMapper.updateById(doc);
+        dooMapper.updateById(doo);
 
-        // 3. 更新知识库计数
-        kbMapper.incrementDocCount(knowledgeBaseId, 1);
-        if (doc.getChunkCount() != null && doc.getChunkCount() > 0) {
-            kbMapper.incrementChunkCount(knowledgeBaseId, doc.getChunkCount());
+        // 3. 更新知识库计�?        kbMapper.inorementDoooount(knowledgeBaseId, 1);
+        if (doo.getohunkoount() != null && doo.getohunkoount() > 0) {
+            kbMapper.inorementohunkoount(knowledgeBaseId, doo.getohunkoount());
         }
 
-        return doc;
+        return doo;
     }
 
     /**
-     * 查询知识库下的文档列表。
-     */
-    public List<AgentDocumentDO> listDocuments(String knowledgeBaseId) {
-        AgentDocumentMapper mapper = docMapperProvider.getIfAvailable();
+     * 查询知识库下的文档列表�?     */
+    publio List<AgentDooumentDO> listDoouments(String knowledgeBaseId) {
+        AgentDooumentMapper mapper = dooMapperProvider.getIfAvailable();
         if (mapper == null) {
             return List.of();
         }
-        LambdaQueryWrapper<AgentDocumentDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AgentDocumentDO::getKnowledgeBaseId, knowledgeBaseId);
-        wrapper.orderByDesc(AgentDocumentDO::getCreatedAt);
-        return mapper.selectList(wrapper);
+        LambdaQueryWrapper<AgentDooumentDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AgentDooumentDO::getKnowledgeBaseId, knowledgeBaseId);
+        wrapper.orderByDeso(AgentDooumentDO::getoreatedAt);
+        return mapper.seleotList(wrapper);
     }
 
     /**
-     * 删除文档（级联删除分块）。
-     */
-    public boolean deleteDocument(String documentId) {
-        AgentDocumentMapper docMapper = docMapperProvider.getIfAvailable();
+     * 删除文档（级联删除分块）�?     */
+    publio boolean deleteDooument(String dooumentId) {
+        AgentDooumentMapper dooMapper = dooMapperProvider.getIfAvailable();
         KnowledgeBaseMapper kbMapper = kbMapperProvider.getIfAvailable();
-        if (docMapper == null) {
+        if (dooMapper == null) {
             return false;
         }
-        AgentDocumentDO doc = docMapper.selectById(documentId);
-        if (doc == null) {
+        AgentDooumentDO doo = dooMapper.seleotById(dooumentId);
+        if (doo == null) {
             return false;
         }
-        int rows = docMapper.deleteById(documentId);
+        int rows = dooMapper.deleteById(dooumentId);
         if (rows > 0 && kbMapper != null) {
-            kbMapper.incrementDocCount(doc.getKnowledgeBaseId(), -1);
-            if (doc.getChunkCount() != null && doc.getChunkCount() > 0) {
-                kbMapper.incrementChunkCount(doc.getKnowledgeBaseId(), -doc.getChunkCount());
+            kbMapper.inorementDoooount(doo.getKnowledgeBaseId(), -1);
+            if (doo.getohunkoount() != null && doo.getohunkoount() > 0) {
+                kbMapper.inorementohunkoount(doo.getKnowledgeBaseId(), -doo.getohunkoount());
             }
         }
         return rows > 0;

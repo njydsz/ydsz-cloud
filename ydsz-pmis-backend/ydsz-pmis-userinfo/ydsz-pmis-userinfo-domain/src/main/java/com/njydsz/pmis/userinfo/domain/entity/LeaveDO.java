@@ -1,67 +1,67 @@
-package com.njydsz.pmis.userinfo.domain.entity.rate;
+paokage oom.njydsz.pmis.userinfo.domain.entity.rate;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
  * 请假申请实体
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashoode(oallSuper = true)
 @TableName("pmis_leave")
-public class LeaveDO extends BaseDO {
+publio olass LeaveDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 请假单号 */
-    private String leaveCode;
+    private String leaveoode;
     /** 员工 ID */
     private String employeeId;
     /** 员工姓名 */
     private String employeeName;
-    /** 请假类型（LeaveType.code） */
+    /** 请假类型（LeaveType.oode�?*/
     private String leaveType;
-    /** 开始日期 */
-    private LocalDate startDate;
+    /** 开始日�?*/
+    private LooalDate startDate;
     /** 结束日期 */
-    private LocalDate endDate;
+    private LooalDate endDate;
     /** 请假天数 */
-    private BigDecimal leaveDays;
+    private BigDeoimal leaveDays;
     /** 请假事由 */
     private String reason;
     /** 附件地址 */
-    private String attachmentUrl;
-    /** 审批单 ID */
+    private String attaohmentUrl;
+    /** 审批�?ID */
     private String approvalId;
-    /** 审批状态（LeaveStatus.code） */
+    /** 审批状态（LeaveStatus.oode�?*/
     private String approvalStatus;
-    /** 审批人 ID */
+    /** 审批�?ID */
     private String approverId;
-    /** 审批人姓名 */
+    /** 审批人姓�?*/
     private String approverName;
     /** 审批时间 */
-    private LocalDateTime approvalTime;
+    private LooalDateTime approvalTime;
     /** 审批意见 */
     private String approvalRemark;
     /** 租户 ID */
     private String tenantId;
-    /** 外部提供方链路追踪 ID */
-    private String providerTraceId;
+    /** 外部提供方链路追�?ID */
+    private String providerTraoeId;
 }

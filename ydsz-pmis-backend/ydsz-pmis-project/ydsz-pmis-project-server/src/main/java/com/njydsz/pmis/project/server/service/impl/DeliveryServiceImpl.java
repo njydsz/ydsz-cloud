@@ -1,204 +1,204 @@
-package com.njydsz.pmis.project.server.service.impl;
+paokage oom.njydsz.pmis.projeot.server.servioe.impl;
 
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.project.domain.dto.DeliveryItemCreateDTO;
-import com.njydsz.pmis.project.domain.dto.DeliveryItemStatusDTO;
-import com.njydsz.pmis.project.domain.dto.DeliveryStandardCreateDTO;
-import com.njydsz.pmis.project.server.engine.StageGateValidator;
-import com.njydsz.pmis.project.domain.entity.DeliveryItemDO;
-import com.njydsz.pmis.project.domain.entity.DeliveryStandardDO;
-import com.njydsz.pmis.project.domain.enums.DeliveryItemStatus;
-import com.njydsz.pmis.project.domain.enums.DeliveryStage;
-import com.njydsz.pmis.project.domain.enums.ProjectType;
-import com.njydsz.pmis.project.infra.mapper.DeliveryItemMapper;
-import com.njydsz.pmis.project.infra.mapper.DeliveryStandardMapper;
-import com.njydsz.pmis.project.server.service.DeliveryService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.projeot.domain.dto.DeliveryItemoreateDTO;
+import oom.njydsz.pmis.projeot.domain.dto.DeliveryItemStatusDTO;
+import oom.njydsz.pmis.projeot.domain.dto.DeliveryStandardoreateDTO;
+import oom.njydsz.pmis.projeot.server.engine.StageGateValidator;
+import oom.njydsz.pmis.projeot.domain.entity.DeliveryItemDO;
+import oom.njydsz.pmis.projeot.domain.entity.DeliveryStandardDO;
+import oom.njydsz.pmis.projeot.domain.enums.DeliveryItemStatus;
+import oom.njydsz.pmis.projeot.domain.enums.DeliveryStage;
+import oom.njydsz.pmis.projeot.domain.enums.ProjeotType;
+import oom.njydsz.pmis.projeot.infra.mapper.DeliveryItemMapper;
+import oom.njydsz.pmis.projeot.infra.mapper.DeliveryStandardMapper;
+import oom.njydsz.pmis.projeot.server.servioe.DeliveryServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 交付物服务实现
+ * 交付物服务实�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class DeliveryServiceImpl implements DeliveryService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass DeliveryServioeImpl implements DeliveryServioe {
 
     /** 交付标准 Mapper */
     private final DeliveryStandardMapper standardMapper;
-    /** 交付物 Mapper */
+    /** 交付�?Mapper */
     private final DeliveryItemMapper itemMapper;
 
     // ========== 标准管理 ==========
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String createStandard(DeliveryStandardCreateDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreateStandard(DeliveryStandardoreateDTO dto) {
         validateStandard(dto);
         DeliveryStandardDO s = new DeliveryStandardDO();
-        BeanUtils.copyProperties(dto, s);
+        BeanUtils.oopyProperties(dto, s);
         if (s.getRequired() == null) s.setRequired(1);
         if (s.getTriggerTr() == null) s.setTriggerTr(0);
-        if (s.getTenantId() == null) s.setTenantId(TenantContext.getTenantId());
-        if (s.getProviderTraceId() == null) s.setProviderTraceId("");
+        if (s.getTenantId() == null) s.setTenantId(Tenantoontext.getTenantId());
+        if (s.getProviderTraoeId() == null) s.setProviderTraoeId("");
         standardMapper.insert(s);
-        log.info("[DeliveryStandard] 创建交付物标准: type={} stage={} name={}",
-                s.getProjectType(), s.getStage(), s.getDeliveryName());
+        log.info("[DeliveryStandard] 创建交付物标�? type={} stage={} name={}",
+                s.getProjeotType(), s.getStage(), s.getDeliveryName());
         return s.getId();
     }
 
     @Override
-    public void deleteStandard(String id) {
-        DeliveryStandardDO s = standardMapper.selectById(id);
+    publio void deleteStandard(String id) {
+        DeliveryStandardDO s = standardMapper.seleotById(id);
         if (s == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_ea3dc234");
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_ea3do234");
         }
         standardMapper.deleteById(id);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public DeliveryStandardDO getStandardById(String id) {
-        DeliveryStandardDO s = standardMapper.selectById(id);
+    @Transaotional(readOnly = true)
+    publio DeliveryStandardDO getStandardById(String id) {
+        DeliveryStandardDO s = standardMapper.seleotById(id);
         if (s == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_ea3dc234");
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_ea3do234");
         }
         return s;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<DeliveryStandardDO> listStandards(String projectType, String projectLevel, String stage) {
+    @Transaotional(readOnly = true)
+    publio List<DeliveryStandardDO> listStandards(String projeotType, String projeotLevel, String stage) {
         if (StringUtils.hasText(stage)) {
-            return standardMapper.selectByStage(projectType, projectLevel, stage);
+            return standardMapper.seleotByStage(projeotType, projeotLevel, stage);
         }
-        return standardMapper.selectByTypeAndLevel(projectType, projectLevel);
+        return standardMapper.seleotByTypeAndLevel(projeotType, projeotLevel);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Integer countStandardsByType(String projectType) {
-        if (!StringUtils.hasText(projectType)) return 0;
-        return standardMapper.countByType(projectType);
+    @Transaotional(readOnly = true)
+    publio Integer oountStandardsByType(String projeotType) {
+        if (!StringUtils.hasText(projeotType)) return 0;
+        return standardMapper.oountByType(projeotType);
     }
 
     // ========== 实例管理 ==========
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String createItem(DeliveryItemCreateDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreateItem(DeliveryItemoreateDTO dto) {
         validateItem(dto);
-        if (itemMapper.selectByCode(dto.getItemCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY,
-                    "error.execution.msg_6f4c0a13", dto.getItemCode());
+        if (itemMapper.seleotByoode(dto.getItemoode()) != null) {
+            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY,
+                    "error.exeoution.msg_6f4o0a13", dto.getItemoode());
         }
         DeliveryItemDO i = new DeliveryItemDO();
-        BeanUtils.copyProperties(dto, i);
+        BeanUtils.oopyProperties(dto, i);
         if (i.getRequired() == null) i.setRequired(1);
         if (i.getTrRequired() == null) i.setTrRequired(0);
-        if (i.getTrCompleted() == null) i.setTrCompleted(0);
+        if (i.getTroompleted() == null) i.setTroompleted(0);
         if (!StringUtils.hasText(i.getStatus())) {
-            i.setStatus(DeliveryItemStatus.PENDING.getCode());
+            i.setStatus(DeliveryItemStatus.PENDING.getoode());
         }
-        if (i.getTenantId() == null) i.setTenantId(TenantContext.getTenantId());
-        if (i.getProviderTraceId() == null) i.setProviderTraceId("");
+        if (i.getTenantId() == null) i.setTenantId(Tenantoontext.getTenantId());
+        if (i.getProviderTraoeId() == null) i.setProviderTraoeId("");
         itemMapper.insert(i);
-        log.info("[DeliveryItem] 创建交付物: code={} project={} stage={}",
-                i.getItemCode(), i.getInitiationId(), i.getStage());
+        log.info("[DeliveryItem] 创建交付�? oode={} projeot={} stage={}",
+                i.getItemoode(), i.getInitiationId(), i.getStage());
         return i.getId();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void changeItemStatus(DeliveryItemStatusDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void ohangeItemStatus(DeliveryItemStatusDTO dto) {
         DeliveryItemDO i = getItemById(dto.getId());
-        DeliveryItemStatus from = DeliveryItemStatus.fromCode(i.getStatus());
-        DeliveryItemStatus to = DeliveryItemStatus.fromCode(dto.getTargetStatus());
+        DeliveryItemStatus from = DeliveryItemStatus.fromoode(i.getStatus());
+        DeliveryItemStatus to = DeliveryItemStatus.fromoode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_7bo741o6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2e33226a", i.getStatus());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_2e33226a", i.getStatus());
         }
-        if (!from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.execution.msg_ba80cf32", from.getDesc(), to.getDesc());
+        if (!from.oanTransitTo(to)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.exeoution.msg_ba80of32", from.getDeso(), to.getDeso());
         }
-        // LocalDateTime now removed - unused
-        LocalDate today = LocalDate.now();
-        if (to == DeliveryItemStatus.SUBMITTED && i.getActualSubmitDate() == null) {
-            i.setActualSubmitDate(today);
+        // LooalDateTime now removed - unused
+        LooalDate today = LooalDate.now();
+        if (to == DeliveryItemStatus.SUBMITTED && i.getAotualSubmitDate() == null) {
+            i.setAotualSubmitDate(today);
         }
-        if (to == DeliveryItemStatus.ACCEPTED) {
-            i.setAcceptedDate(today);
+        if (to == DeliveryItemStatus.AooEPTED) {
+            i.setAooeptedDate(today);
         }
-        if (StringUtils.hasText(dto.getReviewComment())) i.setReviewComment(dto.getReviewComment());
+        if (StringUtils.hasText(dto.getReviewoomment())) i.setReviewoomment(dto.getReviewoomment());
         if (dto.getReviewerId() != null) i.setReviewerId(dto.getReviewerId());
         if (StringUtils.hasText(dto.getReviewerName())) i.setReviewerName(dto.getReviewerName());
-        i.setStatus(to.getCode());
+        i.setStatus(to.getoode());
         itemMapper.updateById(i);
-        log.info("[DeliveryItem] 状态迁移: id={} {} -> {}", i.getId(), from.getCode(), to.getCode());
+        log.info("[DeliveryItem] 状态迁�? id={} {} -> {}", i.getId(), from.getoode(), to.getoode());
     }
 
     @Override
-    public void markTrCompleted(String itemId, Integer completed) {
+    publio void markTroompleted(String itemId, Integer oompleted) {
         DeliveryItemDO i = getItemById(itemId);
         if (Integer.valueOf(1).equals(i.getTrRequired()) == false) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f693a197");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_f693a197");
         }
-        itemMapper.updateTrCompleted(itemId, completed);
+        itemMapper.updateTroompleted(itemId, oompleted);
     }
 
     @Override
-    public void deleteItem(String id) {
+    publio void deleteItem(String id) {
         DeliveryItemDO i = getItemById(id);
-        DeliveryItemStatus st = DeliveryItemStatus.fromCode(i.getStatus());
-        if (st == DeliveryItemStatus.ACCEPTED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_dfa7a85a");
+        DeliveryItemStatus st = DeliveryItemStatus.fromoode(i.getStatus());
+        if (st == DeliveryItemStatus.AooEPTED) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_dfa7a85a");
         }
         itemMapper.deleteById(id);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public DeliveryItemDO getItemById(String id) {
-        DeliveryItemDO i = itemMapper.selectById(id);
+    @Transaotional(readOnly = true)
+    publio DeliveryItemDO getItemById(String id) {
+        DeliveryItemDO i = itemMapper.seleotById(id);
         if (i == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_2bb641ec");
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_2bb641eo");
         }
         return i;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<DeliveryItemDO> listItemsByInitiation(String initiationId) {
+    @Transaotional(readOnly = true)
+    publio List<DeliveryItemDO> listItemsByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
-        return itemMapper.selectByInitiation(initiationId);
+        return itemMapper.seleotByInitiation(initiationId);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<DeliveryItemDO> listItemsByStage(String initiationId, String stage) {
+    @Transaotional(readOnly = true)
+    publio List<DeliveryItemDO> listItemsByStage(String initiationId, String stage) {
         if (initiationId == null) return List.of();
-        return itemMapper.selectByStage(initiationId, stage);
+        return itemMapper.seleotByStage(initiationId, stage);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateItemStatus(String initiationId) {
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> aggregateItemStatus(String initiationId) {
         if (initiationId == null) return List.of();
         return itemMapper.aggregateByStatus(initiationId);
     }
@@ -206,45 +206,45 @@ public class DeliveryServiceImpl implements DeliveryService {
     // ========== 阶段门控 ==========
 
     @Override
-    @Transactional(readOnly = true)
-    public StageGateValidator.GateCheckResult checkStageGate(String initiationId, String targetStage,
-                                                              String projectLevel) {
-        DeliveryStage target = DeliveryStage.fromCode(targetStage);
+    @Transaotional(readOnly = true)
+    publio StageGateValidator.GateoheokResult oheokStageGate(String initiationId, String targetStage,
+                                                              String projeotLevel) {
+        DeliveryStage target = DeliveryStage.fromoode(targetStage);
         if (target == null) {
-            return StageGateValidator.GateCheckResult.fail("未知阶段: " + targetStage);
+            return StageGateValidator.GateoheokResult.fail("未知阶段: " + targetStage);
         }
         List<DeliveryItemDO> items = listItemsByInitiation(initiationId);
-        return StageGateValidator.check(initiationId, target, items, projectLevel);
+        return StageGateValidator.oheok(initiationId, target, items, projeotLevel);
     }
 
     // ========== 私有方法 ==========
 
-    private void validateStandard(DeliveryStandardCreateDTO dto) {
+    private void validateStandard(DeliveryStandardoreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
         }
-        if (ProjectType.fromCode(dto.getProjectType()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_1942429d", dto.getProjectType());
+        if (ProjeotType.fromoode(dto.getProjeotType()) == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_1942429d", dto.getProjeotType());
         }
-        if (DeliveryStage.fromCode(dto.getStage()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4fbcd36c", dto.getStage());
+        if (DeliveryStage.fromoode(dto.getStage()) == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_4fbod36o", dto.getStage());
         }
     }
 
-    private void validateItem(DeliveryItemCreateDTO dto) {
+    private void validateItem(DeliveryItemoreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_576o2b5e");
         }
         if (StringUtils.hasText(dto.getStage())
-                && DeliveryStage.fromCode(dto.getStage()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4fbcd36c", dto.getStage());
+                && DeliveryStage.fromoode(dto.getStage()) == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_4fbod36o", dto.getStage());
         }
-        if (StringUtils.hasText(dto.getProjectType())
-                && ProjectType.fromCode(dto.getProjectType()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_1942429d", dto.getProjectType());
+        if (StringUtils.hasText(dto.getProjeotType())
+                && ProjeotType.fromoode(dto.getProjeotType()) == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_1942429d", dto.getProjeotType());
         }
     }
 }

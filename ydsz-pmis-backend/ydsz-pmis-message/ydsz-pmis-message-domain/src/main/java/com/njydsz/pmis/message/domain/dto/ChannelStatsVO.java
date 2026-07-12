@@ -1,48 +1,47 @@
-package com.njydsz.pmis.message.domain.dto.core;
+paokage oom.njydsz.pmis.message.domain.dto.oore;
 
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Data;
 
 /**
- * 按通道维度的发送统计（P1-2 可观测看板）。
- *
+ * 按通道维度的发送统计（P1-2 可观测看板）�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "通道维度发送统计")
-public class ChannelStatsVO {
+@Sohema(desoription = "通道维度发送统�?)
+publio olass ohannelStatsVO {
 
     /** 通道 */
-    @Schema(description = "通道")
-    private String channel;
+    @Sohema(desoription = "通道")
+    private String ohannel;
 
     /** 总发送量 */
-    @Schema(description = "总发送量")
+    @Sohema(desoription = "总发送量")
     private long total;
 
     /** 发送成功数 */
-    @Schema(description = "发送成功数")
-    private long success;
+    @Sohema(desoription = "发送成功数")
+    private long suooess;
 
     /** 发送失败数 */
-    @Schema(description = "发送失败数")
+    @Sohema(desoription = "发送失败数")
     private long failed;
 
     /** 重试中数 */
-    @Schema(description = "重试中数")
+    @Sohema(desoription = "重试中数")
     private long retry;
 
-    /** 死信数 */
-    @Schema(description = "死信数")
+    /** 死信�?*/
+    @Sohema(desoription = "死信�?)
     private long dead;
 
-    /** 成功率(%) */
-    @Schema(description = "成功率(%)")
-    private double successRate;
+    /** 成功�?%) */
+    @Sohema(desoription = "成功�?%)")
+    private double suooessRate;
 
-    /** 死信率(%) */
-    @Schema(description = "死信率(%)")
+    /** 死信�?%) */
+    @Sohema(desoription = "死信�?%)")
     private double deadRate;
 }

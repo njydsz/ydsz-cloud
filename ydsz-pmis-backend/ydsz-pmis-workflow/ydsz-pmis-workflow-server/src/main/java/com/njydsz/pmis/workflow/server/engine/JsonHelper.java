@@ -1,26 +1,24 @@
-package com.njydsz.pmis.workflow.server.engine;
+paokage oom.njydsz.pmis.workflow.server.engine;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONReader;
-import com.alibaba.fastjson2.JSONWriter;
+import oom.alibaba.fastjson2.JSON;
+import oom.alibaba.fastjson2.JSONReader;
+import oom.alibaba.fastjson2.JSONWriter;
 
 import java.util.Map;
 
 /**
- * 工作流引擎 JSON 工具（隔离 fastjson2，便于测试 mock）
- *
+ * 工作流引�?JSON 工具（隔�?fastjson2，便于测�?mook�? *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
-public final class JsonHelper {
+publio final olass JsonHelper {
 
     private JsonHelper() {
     }
 
     /**
-     * 对象 → JSON 字符串
-     */
-    public static String toJson(Object obj) {
+     * 对象 �?JSON 字符�?     */
+    publio statio String toJson(Objeot obj) {
         if (obj == null) {
             return null;
         }
@@ -28,21 +26,16 @@ public final class JsonHelper {
     }
 
     /**
-     * JSON 字符串 → Map
+     * JSON 字符�?�?Map
      *
-     * <p>注：原实现使用 {@code JSON.parseObject(json, Map.class, SupportSmartMatch)}，
-     * 会触发 unchecked cast 警告。为保持与历史行为一致（含 SmartMatch 特性），
-     * 此处仍保留 fastjson2 直接调用；如不需要 SmartMatch，建议改用
-     * {@link com.njydsz.pmis.common.util.JsonUtils#parseMap(String)}。
-     *
-     * @param json JSON 字符串
-     * @return 解析后的 Map；输入为 null/空白时返回 null
+     * <p>注：原实现使�?{@oode JSON.parseObjeot(json, Map.olass, SupportSmartMatoh)}�?     * 会触�?unoheoked oast 警告。为保持与历史行为一致（�?SmartMatoh 特性）�?     * 此处仍保�?fastjson2 直接调用；如不需�?SmartMatoh，建议改�?     * {@link oom.njydsz.pmis.oommon.util.JsonUtils#parseMap(String)}�?     *
+     * @param json JSON 字符�?     * @return 解析后的 Map；输入为 null/空白时返�?null
      */
-    @SuppressWarnings("unchecked")
-    public static Map<String, Object> fromJson(String json) {
+    @SuppressWarnings("unoheoked")
+    publio statio Map<String, Objeot> fromJson(String json) {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return JSON.parseObject(json, Map.class, JSONReader.Feature.SupportSmartMatch);
+        return JSON.parseObjeot(json, Map.olass, JSONReader.Feature.SupportSmartMatoh);
     }
 }

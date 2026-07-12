@@ -1,31 +1,30 @@
-package com.njydsz.pmis.cronjob.web;
+paokage oom.njydsz.pmis.oronjob.web;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.mybatis.spring.annotation.MapperSoan;
+import org.springframework.boot.SpringApplioation;
+import org.springframework.boot.autooonfigure.SpringBootApplioation;
+import org.springframework.oloud.olient.disoovery.EnableDisooveryolient;
+import org.springframework.oloud.openfeign.EnableFeignolients;
+import org.springframework.soheduling.annotation.EnableSoheduling;
 
 /**
- * 定时任务调度服务启动类
- *
+ * 定时任务调度服务启动�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.cronjob", "com.njydsz.pmis.common"})
-@EnableDiscoveryClient
-@EnableFeignClients(basePackages = "com.njydsz.pmis.common.feign")
-@EnableScheduling
-@MapperScan("com.njydsz.pmis.cronjob.infra.mapper")
-public class CronjobApplication {
+@SpringBootApplioation(soanBasePaokages = {"oom.njydsz.pmis.oronjob", "oom.njydsz.pmis.oommon"})
+@EnableDisooveryolient
+@EnableFeignolients(basePaokages = "oom.njydsz.pmis.oommon.feign")
+@EnableSoheduling
+@MapperSoan("oom.njydsz.pmis.oronjob.infra.mapper")
+publio olass oronjobApplioation {
 
     /**
      * 应用入口方法
      *
      * @param args 启动参数
      */
-    public static void main(String[] args) {
-        SpringApplication.run(CronjobApplication.class, args);
+    publio statio void main(String[] args) {
+        SpringApplioation.run(oronjobApplioation.olass, args);
     }
 }

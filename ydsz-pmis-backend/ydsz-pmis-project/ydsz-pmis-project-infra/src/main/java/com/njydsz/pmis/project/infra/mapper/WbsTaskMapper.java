@@ -1,80 +1,70 @@
-package com.njydsz.pmis.project.infra.mapper;
+paokage oom.njydsz.pmis.projeot.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.domain.entity.WbsTaskDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.projeot.domain.entity.WbsTaskDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
 import java.util.List;
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.util.Map;
 
 /**
  * WBS 任务 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
+publio interfaoe WbsTaskMapper extends BaseMapper<WbsTaskDO> {
 
     /**
-     * 按任务编码查询 WBS 任务
+     * 按任务编码查�?WBS 任务
      *
-     * @param code 任务编码
+     * @param oode 任务编码
      * @return WBS 任务对象，未找到返回 null
      */
-    WbsTaskDO selectByCode(@Param("code") String code);
+    WbsTaskDO seleotByoode(@Param("oode") String oode);
 
     /**
-     * 更新任务状态
-     *
+     * 更新任务状�?     *
      * @param id     任务 ID
-     * @param status 目标状态
-     * @return 受影响行数
-     */
+     * @param status 目标状�?     * @return 受影响行�?     */
     int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
      * 更新任务进度
      *
      * @param id            任务 ID
-     * @param progressPct   进度百分比
-     * @param actualEffort  实际工时
-     * @return 受影响行数
-     */
-    int updateProgress(@Param("id") String id, @Param("progressPct") BigDecimal progressPct,
-                       @Param("actualEffort") BigDecimal actualEffort);
+     * @param progressPot   进度百分�?     * @param aotualEffort  实际工时
+     * @return 受影响行�?     */
+    int updateProgress(@Param("id") String id, @Param("progressPot") BigDeoimal progressPot,
+                       @Param("aotualEffort") BigDeoimal aotualEffort);
 
     /**
-     * 按立项 ID 查询 WBS 任务列表
+     * 按立�?ID 查询 WBS 任务列表
      *
      * @param initiationId 立项 ID
      * @return WBS 任务列表
      */
-    List<WbsTaskDO> selectByInitiation(@Param("initiationId") String initiationId);
+    List<WbsTaskDO> seleotByInitiation(@Param("initiationId") String initiationId);
 
     /**
-     * 查询子任务列表
-     *
-     * @param parentId 父任务 ID
-     * @return 子任务列表
-     */
-    List<WbsTaskDO> selectChildren(@Param("parentId") String parentId);
+     * 查询子任务列�?     *
+     * @param parentId 父任�?ID
+     * @return 子任务列�?     */
+    List<WbsTaskDO> seleotohildren(@Param("parentId") String parentId);
 
     /**
-     * 查询里程碑任务列表
-     *
+     * 查询里程碑任务列�?     *
      * @param initiationId 立项 ID
-     * @return 里程碑任务列表
-     */
-    List<WbsTaskDO> selectMilestones(@Param("initiationId") String initiationId);
+     * @return 里程碑任务列�?     */
+    List<WbsTaskDO> seleotMilestones(@Param("initiationId") String initiationId);
 
     /**
      * 按状态聚合同一立项下的任务计数
      *
      * @param initiationId 立项 ID
-     * @return 状态聚合结果列表
-     */
-    List<Map<String, Object>> aggregateByStatus(@Param("initiationId") String initiationId);
+     * @return 状态聚合结果列�?     */
+    List<Map<String, Objeot>> aggregateByStatus(@Param("initiationId") String initiationId);
 }

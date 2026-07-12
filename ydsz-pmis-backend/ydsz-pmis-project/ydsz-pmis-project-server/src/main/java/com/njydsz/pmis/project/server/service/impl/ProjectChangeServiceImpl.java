@@ -1,28 +1,28 @@
-package com.njydsz.pmis.project.server.service.impl;
+paokage oom.njydsz.pmis.projeot.server.servioe.impl;
 
-import com.njydsz.pmis.common.security.TenantContext;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.event.ProjectChangeExecutedEvent;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.project.domain.dto.ProjectChangeCreateDTO;
-import com.njydsz.pmis.project.domain.dto.ProjectChangeStatusDTO;
-import com.njydsz.pmis.project.server.engine.ChangeImpactEvaluator;
-import com.njydsz.pmis.project.domain.entity.ProjectChangeDO;
-import com.njydsz.pmis.project.domain.enums.ChangeStatus;
-import com.njydsz.pmis.project.domain.enums.ChangeType;
-import com.njydsz.pmis.project.infra.mapper.ProjectChangeMapper;
-import com.njydsz.pmis.project.server.service.ProjectChangeService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.event.ProjeotohangeExeoutedEvent;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.projeot.domain.dto.ProjeotohangeoreateDTO;
+import oom.njydsz.pmis.projeot.domain.dto.ProjeotohangeStatusDTO;
+import oom.njydsz.pmis.projeot.server.engine.ohangeImpaotEvaluator;
+import oom.njydsz.pmis.projeot.domain.entity.ProjeotohangeDO;
+import oom.njydsz.pmis.projeot.domain.enums.ohangeStatus;
+import oom.njydsz.pmis.projeot.domain.enums.ohangeType;
+import oom.njydsz.pmis.projeot.infra.mapper.ProjeotohangeMapper;
+import oom.njydsz.pmis.projeot.server.servioe.ProjeotohangeServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.oontext.ApplioationEventPublisher;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -30,268 +30,268 @@ import java.util.Map;
  * 项目变更服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class ProjectChangeServiceImpl implements ProjectChangeService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass ProjeotohangeServioeImpl implements ProjeotohangeServioe {
 
     /** 项目变更 Mapper */
-    private final ProjectChangeMapper changeMapper;
+    private final ProjeotohangeMapper ohangeMapper;
     /**
-     * Spring 事件发布器, 用于变更执行后发布 ProjectChangeExecutedEvent
-     * 通知 EVM 基线重算 / 资源重调度 / 通知中心等监听器
+     * Spring 事件发布�? 用于变更执行后发�?ProjeotohangeExeoutedEvent
+     * 通知 EVM 基线重算 / 资源重调�?/ 通知中心等监听器
      */
-    private final ApplicationEventPublisher eventPublisher;
+    private final ApplioationEventPublisher eventPublisher;
 
     /**
-     * 创建项目变更申请。
-     * <p>处理流程：参数校验 → 变更编号唯一性预检 → 属性拷贝 →
-     * 自动调用 {@link ChangeImpactEvaluator} 评估影响（风险等级/是否重大/利润影响） →
-     * 按重大/非重大自动装配审批角色 → 默认状态 DRAFT → 持久化。</p>
+     * 创建项目变更申请�?
+     * <p>处理流程：参数校�?�?变更编号唯一性预检 �?属性拷�?�?
+     * 自动调用 {@link ohangeImpaotEvaluator} 评估影响（风险等�?是否重大/利润影响�?�?
+     * 按重�?非重大自动装配审批角�?�?默认状�?DRAFT �?持久化�?/p>
      *
      * @param dto 变更创建参数
      * @return 变更记录 ID
-     * @throws SysException 编号重复或参数非法时抛出
+     * @throws SysExoeption 编号重复或参数非法时抛出
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String create(ProjectChangeCreateDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreate(ProjeotohangeoreateDTO dto) {
         validate(dto);
-        if (changeMapper.selectByCode(dto.getChangeCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY,
-                    "error.project.msg_f3637e40", dto.getChangeCode());
+        if (ohangeMapper.seleotByoode(dto.getohangeoode()) != null) {
+            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY,
+                    "error.projeot.msg_f3637e40", dto.getohangeoode());
         }
-        ProjectChangeDO c = new ProjectChangeDO();
-        BeanUtils.copyProperties(dto, c);
+        ProjeotohangeDO o = new ProjeotohangeDO();
+        BeanUtils.oopyProperties(dto, o);
         // 自动影响评估
-        ChangeImpactEvaluator.ImpactResult impact = ChangeImpactEvaluator.evaluate(dto);
-        c.setRiskLevelAfter(impact.level().getCode());
-        c.setMajorFlag(impact.major() ? 1 : 0);
-        c.setProfitImpactPct(impact.profitImpactPct());
-        if (impact.major()) {
-            c.setApproverRoles("[\"GM\",\"CFO\"]");
+        ohangeImpaotEvaluator.ImpaotResult impaot = ohangeImpaotEvaluator.evaluate(dto);
+        o.setRiskLevelAfter(impaot.level().getoode());
+        o.setMajorFlag(impaot.major() ? 1 : 0);
+        o.setProfitImpaotPot(impaot.profitImpaotPot());
+        if (impaot.major()) {
+            o.setApproverRoles("[\"GM\",\"oFO\"]");
         } else {
-            c.setApproverRoles("[\"PMO\"]");
+            o.setApproverRoles("[\"PMO\"]");
         }
-        if (!StringUtils.hasText(c.getStatus())) c.setStatus(ChangeStatus.DRAFT.getCode());
-        if (c.getTenantId() == null) c.setTenantId(TenantContext.getTenantId());
-        if (c.getProviderTraceId() == null) c.setProviderTraceId("");
-        changeMapper.insert(c);
-        log.info("[ProjectChange] 创建变更: code={} type={} major={} level={}",
-                c.getChangeCode(), c.getChangeType(), c.getMajorFlag(), c.getRiskLevelAfter());
-        return c.getId();
+        if (!StringUtils.hasText(o.getStatus())) o.setStatus(ohangeStatus.DRAFT.getoode());
+        if (o.getTenantId() == null) o.setTenantId(Tenantoontext.getTenantId());
+        if (o.getProviderTraoeId() == null) o.setProviderTraoeId("");
+        ohangeMapper.insert(o);
+        log.info("[Projeotohange] 创建变更: oode={} type={} major={} level={}",
+                o.getohangeoode(), o.getohangeType(), o.getMajorFlag(), o.getRiskLevelAfter());
+        return o.getId();
     }
 
     /**
-     * 项目变更状态迁移。
-     * <p>校验 {@link ChangeStatus#canTransitTo}，按目标状态自动填充提交/审批/执行时间戳；
-     * 迁移至 EXECUTING 或 EXECUTED 时发布 {@link ProjectChangeExecutedEvent}
-     * 触发 EVM 基线重算等下游联动（事件发布失败不影响主流程）。</p>
+     * 项目变更状态迁移�?
+     * <p>校验 {@link ohangeStatus#oanTransitTo}，按目标状态自动填充提�?审批/执行时间戳；
+     * 迁移�?EXEoUTING �?EXEoUTED 时发�?{@link ProjeotohangeExeoutedEvent}
+     * 触发 EVM 基线重算等下游联动（事件发布失败不影响主流程）�?/p>
      *
-     * @param dto 状态迁移参数
-     * @throws SysException 状态非法或迁移路径不允许时抛出
+     * @param dto 状态迁移参�?
+     * @throws SysExoeption 状态非法或迁移路径不允许时抛出
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void changeStatus(ProjectChangeStatusDTO dto) {
-        ProjectChangeDO c = getById(dto.getId());
-        ChangeStatus from = ChangeStatus.fromCode(c.getStatus());
-        ChangeStatus to = ChangeStatus.fromCode(dto.getTargetStatus());
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void ohangeStatus(ProjeotohangeStatusDTO dto) {
+        ProjeotohangeDO o = getById(dto.getId());
+        ohangeStatus from = ohangeStatus.fromoode(o.getStatus());
+        ohangeStatus to = ohangeStatus.fromoode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_7bo741o6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_2e33226a", o.getStatus());
         }
-        if (!from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.project.msg_0c941160", from.getDesc(), to.getDesc());
+        if (!from.oanTransitTo(to)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.projeot.msg_0o941160", from.getDeso(), to.getDeso());
         }
-        LocalDateTime now = LocalDateTime.now();
-        if (to == ChangeStatus.SUBMITTED) c.setSubmittedAt(now);
-        if (to == ChangeStatus.APPROVED) c.setApprovedAt(now);
-        if (to == ChangeStatus.EXECUTED) c.setExecutedAt(now);
-        changeMapper.updateStatus(c.getId(), to.getCode());
-        changeMapper.updateById(c);
-        log.info("[ProjectChange] 状态迁移: id={} {} -> {}", c.getId(), from.getCode(), to.getCode());
+        LooalDateTime now = LooalDateTime.now();
+        if (to == ohangeStatus.SUBMITTED) o.setSubmittedAt(now);
+        if (to == ohangeStatus.APPROVED) o.setApprovedAt(now);
+        if (to == ohangeStatus.EXEoUTED) o.setExeoutedAt(now);
+        ohangeMapper.updateStatus(o.getId(), to.getoode());
+        ohangeMapper.updateById(o);
+        log.info("[Projeotohange] 状态迁�? id={} {} -> {}", o.getId(), from.getoode(), to.getoode());
 
-        // 变更执行/闭环: 触发 EVM 基线重算 等下游联动
-        // EXECUTING 触发表明变更已落地, 旧基线需要刷新
-        // EXECUTED 为终态闭环, 进一步触发收尾
-        if (to == ChangeStatus.EXECUTING || to == ChangeStatus.EXECUTED) {
-            publishExecutedEvent(c, to);
+        // 变更执行/闭环: 触发 EVM 基线重算 等下游联�?
+        // EXEoUTING 触发表明变更已落�? 旧基线需要刷�?
+        // EXEoUTED 为终态闭�? 进一步触发收�?
+        if (to == ohangeStatus.EXEoUTING || to == ohangeStatus.EXEoUTED) {
+            publishExeoutedEvent(o, to);
         }
     }
 
     /**
-     * 删除变更申请，仅 DRAFT/REJECTED/CANCELLED 状态允许删除。
+     * 删除变更申请，仅 DRAFT/REJEoTED/oANoELLED 状态允许删除�?
      *
      * @param id 变更 ID
-     * @throws SysException 变更不存在或当前状态不允许删除时抛出
+     * @throws SysExoeption 变更不存在或当前状态不允许删除时抛�?
      */
     @Override
-    public void delete(String id) {
-        ProjectChangeDO c = getById(id);
-        ChangeStatus st = ChangeStatus.fromCode(c.getStatus());
-        if (st != ChangeStatus.DRAFT && st != ChangeStatus.REJECTED && st != ChangeStatus.CANCELLED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_3a1a0d4b", st.getDesc());
+    publio void delete(String id) {
+        ProjeotohangeDO o = getById(id);
+        ohangeStatus st = ohangeStatus.fromoode(o.getStatus());
+        if (st != ohangeStatus.DRAFT && st != ohangeStatus.REJEoTED && st != ohangeStatus.oANoELLED) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_3a1a0d4b", st.getDeso());
         }
-        changeMapper.deleteById(id);
-        log.info("[ProjectChange] 删除变更: id={}", id);
+        ohangeMapper.deleteById(id);
+        log.info("[Projeotohange] 删除变更: id={}", id);
     }
 
     /**
-     * 根据主键查询变更详情。
+     * 根据主键查询变更详情�?
      *
      * @param id 变更 ID
      * @return 变更实体
-     * @throws SysException 变更不存在时抛出
+     * @throws SysExoeption 变更不存在时抛出
      */
     @Override
-    @Transactional(readOnly = true)
-    public ProjectChangeDO getById(String id) {
-        ProjectChangeDO c = changeMapper.selectById(id);
-        if (c == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_2cfba1ec");
+    @Transaotional(readOnly = true)
+    publio ProjeotohangeDO getById(String id) {
+        ProjeotohangeDO o = ohangeMapper.seleotById(id);
+        if (o == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.projeot.msg_2ofba1eo");
         }
-        return c;
+        return o;
     }
 
     /**
-     * 分页查询项目变更，支持关键词、变更类型、状态、立项 ID 过滤。
+     * 分页查询项目变更，支持关键词、变更类型、状态、立�?ID 过滤�?
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
      * @param keyword      关键词（编号/标题/原因），可空
-     * @param changeType   变更类型，可空
-     * @param status       状态码，可空
-     * @param initiationId 立项 ID，可空
+     * @param ohangeType   变更类型，可�?
+     * @param status       状态码，可�?
+     * @param initiationId 立项 ID，可�?
      * @return 分页结果
      */
     @Override
-    @Transactional(readOnly = true)
-    public Page<ProjectChangeDO> page(int page, int size, String keyword,
-                                      String changeType, String status, String initiationId) {
-        Page<ProjectChangeDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<ProjectChangeDO> w = new LambdaQueryWrapper<>();
+    @Transaotional(readOnly = true)
+    publio Page<ProjeotohangeDO> page(int page, int size, String keyword,
+                                      String ohangeType, String status, String initiationId) {
+        Page<ProjeotohangeDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<ProjeotohangeDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            w.and(qw -> qw.like(ProjectChangeDO::getChangeCode, keyword)
-                    .or().like(ProjectChangeDO::getChangeTitle, keyword)
-                    .or().like(ProjectChangeDO::getChangeReason, keyword));
+            w.and(qw -> qw.like(ProjeotohangeDO::getohangeoode, keyword)
+                    .or().like(ProjeotohangeDO::getohangeTitle, keyword)
+                    .or().like(ProjeotohangeDO::getohangeReason, keyword));
         }
-        if (StringUtils.hasText(changeType)) w.eq(ProjectChangeDO::getChangeType, changeType);
-        if (StringUtils.hasText(status)) w.eq(ProjectChangeDO::getStatus, status);
-        if (initiationId != null) w.eq(ProjectChangeDO::getInitiationId, initiationId);
-        w.orderByDesc(ProjectChangeDO::getCreatedAt);
-        return changeMapper.selectPage(p, w);
+        if (StringUtils.hasText(ohangeType)) w.eq(ProjeotohangeDO::getohangeType, ohangeType);
+        if (StringUtils.hasText(status)) w.eq(ProjeotohangeDO::getStatus, status);
+        if (initiationId != null) w.eq(ProjeotohangeDO::getInitiationId, initiationId);
+        w.orderByDeso(ProjeotohangeDO::getoreatedAt);
+        return ohangeMapper.seleotPage(p, w);
     }
 
     /**
-     * 按立项查询变更记录列表。
+     * 按立项查询变更记录列表�?
      *
      * @param initiationId 立项 ID
-     * @return 变更记录列表，立项 ID 为空时返回空列表
+     * @return 变更记录列表，立�?ID 为空时返回空列表
      */
     @Override
-    @Transactional(readOnly = true)
-    public List<ProjectChangeDO> listByInitiation(String initiationId) {
+    @Transaotional(readOnly = true)
+    publio List<ProjeotohangeDO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
-        return changeMapper.selectByInitiation(initiationId);
+        return ohangeMapper.seleotByInitiation(initiationId);
     }
 
     /**
-     * 按变更类型聚合计数（租户维度）。
+     * 按变更类型聚合计数（租户维度）�?
      *
-     * @param tenantId 租户 ID，可空（默认 "1"）
-     * @return 每种变更类型对应的数量列表
+     * @param tenantId 租户 ID，可空（默认 "1"�?
+     * @return 每种变更类型对应的数量列�?
      */
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByType(String tenantId) {
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> aggregateByType(String tenantId) {
         if (tenantId == null) tenantId = "1";
-        return changeMapper.aggregateByType(tenantId);
+        return ohangeMapper.aggregateByType(tenantId);
     }
 
     /**
-     * 按状态聚合计数（租户维度）。
+     * 按状态聚合计数（租户维度）�?
      *
-     * @param tenantId 租户 ID，可空（默认 "1"）
+     * @param tenantId 租户 ID，可空（默认 "1"�?
      * @return 每种状态对应的数量列表
      */
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByStatus(String tenantId) {
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> aggregateByStatus(String tenantId) {
         if (tenantId == null) tenantId = "1";
-        return changeMapper.aggregateByStatus(tenantId);
+        return ohangeMapper.aggregateByStatus(tenantId);
     }
 
     /**
-     * 统计某立项下的重大变更数量。
+     * 统计某立项下的重大变更数量�?
      *
      * @param initiationId 立项 ID
-     * @return 重大变更数量，立项 ID 为空时返回 0
+     * @return 重大变更数量，立�?ID 为空时返�?0
      */
     @Override
-    @Transactional(readOnly = true)
-    public Integer countMajorByInitiation(String initiationId) {
+    @Transaotional(readOnly = true)
+    publio Integer oountMajorByInitiation(String initiationId) {
         if (initiationId == null) return 0;
-        return changeMapper.countMajorByInitiation(initiationId);
+        return ohangeMapper.oountMajorByInitiation(initiationId);
     }
 
     /**
-     * 校验变更创建参数：变更类型合法、申请人必填、进度影响天数合理。
+     * 校验变更创建参数：变更类型合法、申请人必填、进度影响天数合理�?
      *
      * @param dto 变更创建参数
-     * @throws SysException 参数非法时抛出
+     * @throws SysExoeption 参数非法时抛�?
      */
-    private void validate(ProjectChangeCreateDTO dto) {
+    private void validate(ProjeotohangeoreateDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_d9712a58");
         }
-        if (ChangeType.fromCode(dto.getChangeType()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7d505699", dto.getChangeType());
+        if (ohangeType.fromoode(dto.getohangeType()) == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_7d505699", dto.getohangeType());
         }
-        if (dto.getApplicantId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_98bc5a1a");
+        if (dto.getApplioantId() == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_98bo5a1a");
         }
-        if (dto.getScheduleImpactDays() != null && dto.getScheduleImpactDays() < -3650) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_40763f49");
+        if (dto.getSoheduleImpaotDays() != null && dto.getSoheduleImpaotDays() < -3650) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_40763f49");
         }
     }
 
     /**
-     * 发布变更执行事件。
-     * <p>事件发布失败会被捕获并降级为 warn 日志，不影响主业务流；
-     * eventPublisher 为 null 时跳过（单测场景）。</p>
+     * 发布变更执行事件�?
+     * <p>事件发布失败会被捕获并降级为 warn 日志，不影响主业务流�?
+     * eventPublisher �?null 时跳过（单测场景）�?/p>
      *
-     * @param c           变更实体
+     * @param o           变更实体
      * @param finalStatus 最终状态码
      */
-    private void publishExecutedEvent(ProjectChangeDO c, ChangeStatus finalStatus) {
+    private void publishExeoutedEvent(ProjeotohangeDO o, ohangeStatus finalStatus) {
         if (eventPublisher == null) {
             return; // 单测场景
         }
         try {
-            ProjectChangeExecutedEvent event = ProjectChangeExecutedEvent.builder()
-                    .changeId(c.getId())
-                    .changeCode(c.getChangeCode())
-                    .changeTitle(c.getChangeTitle())
-                    .initiationId(c.getInitiationId())
-                    .changeType(c.getChangeType())
-                    .majorFlag(c.getMajorFlag() != null && c.getMajorFlag() == 1)
-                    .finalStatusCode(finalStatus == null ? null : finalStatus.getCode())
-                    .profitImpactPct(c.getProfitImpactPct())
-                    .scheduleImpactDays(c.getScheduleImpactDays())
-                    .timestamp(System.currentTimeMillis())
+            ProjeotohangeExeoutedEvent event = ProjeotohangeExeoutedEvent.builder()
+                    .ohangeId(o.getId())
+                    .ohangeoode(o.getohangeoode())
+                    .ohangeTitle(o.getohangeTitle())
+                    .initiationId(o.getInitiationId())
+                    .ohangeType(o.getohangeType())
+                    .majorFlag(o.getMajorFlag() != null && o.getMajorFlag() == 1)
+                    .finalStatusoode(finalStatus == null ? null : finalStatus.getoode())
+                    .profitImpaotPot(o.getProfitImpaotPot())
+                    .soheduleImpaotDays(o.getSoheduleImpaotDays())
+                    .timestamp(System.ourrentTimeMillis())
                     .build();
             eventPublisher.publishEvent(event);
-            log.info("[ProjectChange] 发布执行事件: change={} status={} initiation={}",
-                    c.getChangeCode(), finalStatus, c.getInitiationId());
-        } catch (Exception e) {
-            // 事件发布失败不影响主业务流
-            log.warn("[ProjectChange] 事件发布失败: {}", e.getMessage());
+            log.info("[Projeotohange] 发布执行事件: ohange={} status={} initiation={}",
+                    o.getohangeoode(), finalStatus, o.getInitiationId());
+        } oatoh (Exoeption e) {
+            // 事件发布失败不影响主业务�?
+            log.warn("[Projeotohange] 事件发布失败: {}", e.getMessage());
         }
     }
 }

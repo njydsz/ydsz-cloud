@@ -1,165 +1,159 @@
-package com.njydsz.pmis.literule.server.distributed;
+paokage oom.njydsz.pmis.literule.server.distributed;
 
-import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.literule.domain.event.RuleConfigRefreshEvent;
-import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
-import org.redisson.api.RTopic;
-import org.redisson.api.RedissonClient;
+import oom.alibaba.fastjson2.JSON;
+import oom.njydsz.pmis.literule.domain.event.RuleoonfigRefreshEvent;
+import oom.njydsz.pmis.literule.server.spi.RuleoonfigBroadoaster;
+import org.redisson.api.RTopio;
+import org.redisson.api.Redissonolient;
 import org.redisson.api.listener.MessageListener;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
+import org.slf4j.LoggerFaotory;
+import org.springframework.oontext.ApplioationEventPublisher;
 
 /**
  * 基于 Redis Pub/Sub 的规则配置广播器（生产环境实现）
  *
- * <p>利用 Redisson 的 {@code RTopic} 实现跨实例的规则变更事件广播，
- * 确保所有节点的规则缓存一致。
- *
- * <p>广播流程：
- * <pre>
- *   节点A: RuleAdminService.save() → broadcaster.broadcast(event, sourceId)
- *                                       ↓ (Redis Pub/Sub)
- *   节点B: onMessage(event) → 校验 sourceId → publishEvent(local) → RuleHotReloader
+ * <p>利用 Redisson �?{@oode RTopio} 实现跨实例的规则变更事件广播�? * 确保所有节点的规则缓存一致�? *
+ * <p>广播流程�? * <pre>
+ *   节点A: RuleAdminServioe.save() �?broadoaster.broadoast(event, souroeId)
+ *                                       �?(Redis Pub/Sub)
+ *   节点B: onMessage(event) �?校验 souroeId �?publishEvent(looal) �?RuleHotReloader
  * </pre>
  *
- * <p>防广播风暴：消息携带 {@code sourceNodeId}，接收方忽略本节点发出的消息。
- *
+ * <p>防广播风暴：消息携带 {@oode souroeNodeId}，接收方忽略本节点发出的消息�? *
  * <p>消息格式（JSON）：
  * <pre>
- *   {"sourceNodeId":"hostA:1234","event":{"ruleCode":"R001","changeType":"UPDATE","operator":"admin"}}
+ *   {"souroeNodeId":"hostA:1234","event":{"ruleoode":"R001","ohangeType":"UPDATE","operator":"admin"}}
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
-public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
+publio olass RedisRuleoonfigBroadoaster implements RuleoonfigBroadoaster {
 
-    private static final Logger log = LoggerFactory.getLogger(RedisRuleConfigBroadcaster.class);
+    private statio final Logger log = LoggerFaotory.getLogger(RedisRuleoonfigBroadoaster.olass);
 
-    /** Redis Topic 名称 */
-    private static final String TOPIC_NAME = "literule:config:refresh";
+    /** Redis Topio 名称 */
+    private statio final String TOPIo_NAME = "literule:oonfig:refresh";
 
-    /** Redisson 客户端，用于获取 RTopic 实现跨实例 Pub/Sub 通信 */
-    private final RedissonClient redissonClient;
+    /** Redisson 客户端，用于获取 RTopio 实现跨实�?Pub/Sub 通信 */
+    private final Redissonolient redissonolient;
     /** 当前节点唯一标识（如 host:port），用于过滤本节点发出的广播消息防止广播风暴 */
     private final String selfNodeId;
-    /** Spring 事件发布器，收到远端广播后转换为本地 ApplicationEvent 以驱动热加载 */
-    private final ApplicationEventPublisher eventPublisher;
+    /** Spring 事件发布器，收到远端广播后转换为本地 ApplioationEvent 以驱动热加载 */
+    private final ApplioationEventPublisher eventPublisher;
 
-    /** 是否已订阅 */
-    private volatile boolean subscribed = false;
+    /** 是否已订�?*/
+    private volatile boolean subsoribed = false;
 
-    public RedisRuleConfigBroadcaster(RedissonClient redissonClient,
+    publio RedisRuleoonfigBroadoaster(Redissonolient redissonolient,
                                        String selfNodeId,
-                                       ApplicationEventPublisher eventPublisher) {
-        this.redissonClient = redissonClient;
+                                       ApplioationEventPublisher eventPublisher) {
+        this.redissonolient = redissonolient;
         this.selfNodeId = selfNodeId;
         this.eventPublisher = eventPublisher;
     }
 
     @Override
-    public void broadcast(RuleConfigRefreshEvent event, String sourceId) {
+    publio void broadoast(RuleoonfigRefreshEvent event, String souroeId) {
         if (event == null) return;
         try {
-            BroadcastMessage message = new BroadcastMessage(sourceId, event);
+            BroadoastMessage message = new BroadoastMessage(souroeId, event);
             String json = JSON.toJSONString(message);
-            RTopic topic = redissonClient.getTopic(TOPIC_NAME);
-            topic.publish(json);
-            log.info("[Distributed-Redis] 规则变更事件已广播: ruleCode={}, changeType={}, source={}",
-                    event.getRuleCode(), event.getChangeType(), sourceId);
-        } catch (Exception e) {
+            RTopio topio = redissonolient.getTopio(TOPIo_NAME);
+            topio.publish(json);
+            log.info("[Distributed-Redis] 规则变更事件已广�? ruleoode={}, ohangeType={}, souroe={}",
+                    event.getRuleoode(), event.getohangeType(), souroeId);
+        } oatoh (Exoeption e) {
             log.warn("[Distributed-Redis] 规则变更事件广播失败: {}", e.getMessage());
         }
     }
 
     @Override
-    public boolean isAvailable() {
+    publio boolean isAvailable() {
         try {
-            redissonClient.getTopic(TOPIC_NAME).countListeners();
+            redissonolient.getTopio(TOPIo_NAME).oountListeners();
             return true;
-        } catch (Exception e) {
-            log.warn("[RedisRuleConfigBroadcaster] Redis 广播器不可用: {}", e.getMessage(), e);
+        } oatoh (Exoeption e) {
+            log.warn("[RedisRuleoonfigBroadoaster] Redis 广播器不可用: {}", e.getMessage(), e);
             return false;
         }
     }
 
     /**
-     * 订阅 Redis Topic，接收其他节点的广播消息
+     * 订阅 Redis Topio，接收其他节点的广播消息
      *
      * <p>收到消息后：
      * <ol>
-     *   <li>反序列化为 {@link BroadcastMessage}</li>
-     *   <li>校验 {@code sourceNodeId}，忽略本节点发出的消息</li>
-     *   <li>通过 {@link ApplicationEventPublisher} 在本地发布 {@link RuleConfigRefreshEvent}</li>
+     *   <li>反序列化�?{@link BroadoastMessage}</li>
+     *   <li>校验 {@oode souroeNodeId}，忽略本节点发出的消�?/li>
+     *   <li>通过 {@link ApplioationEventPublisher} 在本地发�?{@link RuleoonfigRefreshEvent}</li>
      * </ol>
      */
-    public void subscribe() {
-        if (subscribed) {
+    publio void subsoribe() {
+        if (subsoribed) {
             return;
         }
         try {
-            RTopic topic = redissonClient.getTopic(TOPIC_NAME);
-            topic.addListener(String.class, new MessageListener<String>() {
+            RTopio topio = redissonolient.getTopio(TOPIo_NAME);
+            topio.addListener(String.olass, new MessageListener<String>() {
                 @Override
-                public void onMessage(CharSequence channel, String msg) {
-                    handleReceivedMessage(msg);
+                publio void onMessage(oharSequenoe ohannel, String msg) {
+                    handleReoeivedMessage(msg);
                 }
             });
-            subscribed = true;
-            log.info("[Distributed-Redis] 已订阅规则变更广播 Topic: {}", TOPIC_NAME);
-        } catch (Exception e) {
-            log.warn("[Distributed-Redis] 订阅广播 Topic 失败: {}", e.getMessage());
+            subsoribed = true;
+            log.info("[Distributed-Redis] 已订阅规则变更广�?Topio: {}", TOPIo_NAME);
+        } oatoh (Exoeption e) {
+            log.warn("[Distributed-Redis] 订阅广播 Topio 失败: {}", e.getMessage());
         }
     }
 
     /**
      * 处理接收到的广播消息
      */
-    private void handleReceivedMessage(String msg) {
+    private void handleReoeivedMessage(String msg) {
         if (msg == null || msg.isEmpty()) return;
         try {
-            BroadcastMessage message = JSON.parseObject(msg, BroadcastMessage.class);
+            BroadoastMessage message = JSON.parseObjeot(msg, BroadoastMessage.olass);
             if (message == null || message.getEvent() == null) {
                 return;
             }
-            // 忽略本节点发出的消息，防止循环
-            if (selfNodeId.equals(message.getSourceNodeId())) {
+            // 忽略本节点发出的消息，防止循�?            if (selfNodeId.equals(message.getSouroeNodeId())) {
                 return;
             }
-            log.info("[Distributed-Redis] 收到规则变更广播: ruleCode={}, changeType={}, source={}",
-                    message.getEvent().getRuleCode(),
-                    message.getEvent().getChangeType(),
-                    message.getSourceNodeId());
-            // 在本地发布事件，触发 RuleHotReloader 热加载
-            if (eventPublisher != null) {
+            log.info("[Distributed-Redis] 收到规则变更广播: ruleoode={}, ohangeType={}, souroe={}",
+                    message.getEvent().getRuleoode(),
+                    message.getEvent().getohangeType(),
+                    message.getSouroeNodeId());
+            // 在本地发布事件，触发 RuleHotReloader 热加�?            if (eventPublisher != null) {
                 eventPublisher.publishEvent(message.getEvent());
             }
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.warn("[Distributed-Redis] 广播消息处理失败: {}", e.getMessage());
         }
     }
 
     /**
-     * 广播消息包装（携带 sourceNodeId 用于接收方忽略自身消息）
+     * 广播消息包装（携�?souroeNodeId 用于接收方忽略自身消息）
      */
-    public static class BroadcastMessage {
-        /** 发送节点 ID */
-        private String sourceNodeId;
+    publio statio olass BroadoastMessage {
+        /** 发送节�?ID */
+        private String souroeNodeId;
         /** 规则变更事件 */
-        private RuleConfigRefreshEvent event;
+        private RuleoonfigRefreshEvent event;
 
-        public BroadcastMessage() {
+        publio BroadoastMessage() {
         }
 
-        public BroadcastMessage(String sourceNodeId, RuleConfigRefreshEvent event) {
-            this.sourceNodeId = sourceNodeId;
+        publio BroadoastMessage(String souroeNodeId, RuleoonfigRefreshEvent event) {
+            this.souroeNodeId = souroeNodeId;
             this.event = event;
         }
 
-        public String getSourceNodeId() { return sourceNodeId; }
-        public void setSourceNodeId(String sourceNodeId) { this.sourceNodeId = sourceNodeId; }
-        public RuleConfigRefreshEvent getEvent() { return event; }
-        public void setEvent(RuleConfigRefreshEvent event) { this.event = event; }
+        publio String getSouroeNodeId() { return souroeNodeId; }
+        publio void setSouroeNodeId(String souroeNodeId) { this.souroeNodeId = souroeNodeId; }
+        publio RuleoonfigRefreshEvent getEvent() { return event; }
+        publio void setEvent(RuleoonfigRefreshEvent event) { this.event = event; }
     }
 }

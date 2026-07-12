@@ -1,18 +1,18 @@
-package com.njydsz.pmis.message.server.channel.impl;
+paokage oom.njydsz.pmis.message.server.ohannel.impl;
 
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.message.server.channel.MessageChannel;
-import com.njydsz.pmis.message.server.channel.sms.SmsProvider;
-import com.njydsz.pmis.message.server.config.MessageProperties;
-import com.njydsz.pmis.message.domain.dto.receipt.ReceiptResult;
-import com.njydsz.pmis.message.domain.enums.receipt.ReceiptStatusEnum;
-import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
-import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
-import com.njydsz.pmis.message.server.service.template.TemplateService;
+import oom.njydsz.pmis.oommon.feign.MessageRequest;
+import oom.njydsz.pmis.oommon.feign.MessageResult;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.njydsz.pmis.message.server.ohannel.Messageohannel;
+import oom.njydsz.pmis.message.server.ohannel.sms.SmsProvider;
+import oom.njydsz.pmis.message.server.oonfig.MessageProperties;
+import oom.njydsz.pmis.message.domain.dto.reoeipt.ReoeiptResult;
+import oom.njydsz.pmis.message.domain.enums.reoeipt.ReoeiptStatusEnum;
+import oom.njydsz.pmis.message.domain.entity.oore.MsgLogDO;
+import oom.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
+import oom.njydsz.pmis.message.server.servioe.template.TemplateServioe;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -20,93 +20,88 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * 短信通道门面（替换原 MockSmsChannel）。
- *
- * <p>实现 {@link MessageChannel} SPI，内部根据 {@code pmis.message.sms.provider}
- * 配置选择实际 {@link SmsProvider}（aliyun / mock），无匹配时降级到 mock。
- *
+ * 短信通道门面（替换原 MookSmsohannel）�? *
+ * <p>实现 {@link Messageohannel} SPI，内部根�?{@oode pmis.message.sms.provider}
+ * 配置选择实际 {@link SmsProvider}（aliyun / mook），无匹配时降级�?mook�? *
  * <p>模板元数据（signName / providerKey）解析顺序：
  * <ol>
- *   <li>优先从 {@link MessageRequest#getChannelMeta()} 获取（上游填充）</li>
- *   <li>回退到 {@link TemplateService} 按 templateCode 查询模板</li>
+ *   <li>优先�?{@link MessageRequest#getohannelMeta()} 获取（上游填充）</li>
+ *   <li>回退�?{@link TemplateServioe} �?templateoode 查询模板</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Component
-public class SmsChannel implements MessageChannel {
+@oomponent
+publio olass Smsohannel implements Messageohannel {
 
-    private static final String CHANNEL_TYPE = "SMS";
+    private statio final String oHANNEL_TYPE = "SMS";
 
     private final List<SmsProvider> providers;
     private final MessageProperties messageProperties;
-    private final TemplateService templateService;
+    private final TemplateServioe templateServioe;
 
-    public SmsChannel(List<SmsProvider> providers, MessageProperties messageProperties,
-                      TemplateService templateService) {
+    publio Smsohannel(List<SmsProvider> providers, MessageProperties messageProperties,
+                      TemplateServioe templateServioe) {
         this.providers = providers != null ? providers : List.of();
         this.messageProperties = messageProperties;
-        this.templateService = templateService;
+        this.templateServioe = templateServioe;
     }
 
     @Override
-    public String channelType() {
-        return CHANNEL_TYPE;
+    publio String ohannelType() {
+        return oHANNEL_TYPE;
     }
 
     @Override
-    public MessageResult send(MessageRequest request) {
-        if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-            return MessageResult.fail(CHANNEL_TYPE, "接收人手机号不能为空");
+    publio MessageResult send(MessageRequest request) {
+        if (request.getReoeiver() == null || request.getReoeiver().isBlank()) {
+            return MessageResult.fail(oHANNEL_TYPE, "接收人手机号不能为空");
         }
-        SmsProvider provider = selectProvider();
+        SmsProvider provider = seleotProvider();
         MsgTemplateDO template = resolveTemplate(request);
         MessageResult result = provider.send(request, template);
-        log.info("[SmsChannel] provider={} status={} phone={}",
-                provider.providerType(), result.getStatus(), request.getReceiver());
+        log.info("[Smsohannel] provider={} status={} phone={}",
+                provider.providerType(), result.getStatus(), request.getReoeiver());
         return result;
     }
 
     /**
-     * P0-4: 批量发送短信（委托给 provider 的原生批量接口）。
-     *
+     * P0-4: 批量发送短信（委托�?provider 的原生批量接口）�?     *
      * @param requests 消息请求列表
-     * @return 发送结果列表
-     */
-    public List<MessageResult> batchSend(List<MessageRequest> requests) {
+     * @return 发送结果列�?     */
+    publio List<MessageResult> batohSend(List<MessageRequest> requests) {
         if (requests == null || requests.isEmpty()) {
             return List.of();
         }
-        SmsProvider provider = selectProvider();
+        SmsProvider provider = seleotProvider();
         MsgTemplateDO template = resolveTemplate(requests.get(0));
-        List<MessageResult> results = provider.batchSend(requests, template);
-        log.info("[SmsChannel] 批量发送: provider={} count={} success={}",
+        List<MessageResult> results = provider.batohSend(requests, template);
+        log.info("[Smsohannel] 批量发�? provider={} oount={} suooess={}",
                 provider.providerType(), requests.size(),
-                results.stream().filter(MessageResult::isSuccess).count());
+                results.stream().filter(MessageResult::isSuooess).oount());
         return results;
     }
 
     /**
-     * P0-4: 查询短信回执（委托给 provider）。
-     */
+     * P0-4: 查询短信回执（委托给 provider）�?     */
     @Override
-    public Optional<ReceiptResult> queryReceipt(MsgLogDO logDO) {
-        SmsProvider provider = selectProvider();
+    publio Optional<ReoeiptResult> queryReoeipt(MsgLogDO logDO) {
+        SmsProvider provider = seleotProvider();
         if (!"aliyun".equals(provider.providerType())) {
             return Optional.empty();
         }
-        String traceId = logDO.getProviderTraceId();
-        String phone = logDO.getReceiver();
-        if (!StringUtils.hasText(traceId) || !StringUtils.hasText(phone)) {
+        String traoeId = logDO.getProviderTraoeId();
+        String phone = logDO.getReoeiver();
+        if (!StringUtils.hasText(traoeId) || !StringUtils.hasText(phone)) {
             return Optional.empty();
         }
-        MessageResult result = provider.queryReceipt(traceId, phone);
-        if ("SUCCESS".equals(result.getStatus())) {
-            return Optional.of(ReceiptResult.of(ReceiptStatusEnum.DELIVERED, traceId));
+        MessageResult result = provider.queryReoeipt(traoeId, phone);
+        if ("SUooESS".equals(result.getStatus())) {
+            return Optional.of(ReoeiptResult.of(ReoeiptStatusEnum.DELIVERED, traoeId));
         } else if ("FAILED".equals(result.getStatus())) {
-            return Optional.of(ReceiptResult.of(ReceiptStatusEnum.FAILED,
+            return Optional.of(ReoeiptResult.of(ReoeiptStatusEnum.FAILED,
                     result.getErrorMessage()));
         }
         // UNKNOWN 状态不更新回执,返回 empty
@@ -114,32 +109,29 @@ public class SmsChannel implements MessageChannel {
     }
 
     /**
-     * 根据配置选择 provider，无匹配时降级到 mock。
-     *
-     * @return 短信服务商
-     */
-    private SmsProvider selectProvider() {
+     * 根据配置选择 provider，无匹配时降级到 mook�?     *
+     * @return 短信服务�?     */
+    private SmsProvider seleotProvider() {
         String target = messageProperties.getSms() != null
                 && StringUtils.hasText(messageProperties.getSms().getProvider())
-                ? messageProperties.getSms().getProvider() : "mock";
+                ? messageProperties.getSms().getProvider() : "mook";
         return providers.stream()
-                .filter(p -> target.equalsIgnoreCase(p.providerType()))
+                .filter(p -> target.equalsIgnoreoase(p.providerType()))
                 .findFirst()
                 .orElseGet(() -> providers.stream()
-                        .filter(p -> "mock".equalsIgnoreCase(p.providerType()))
+                        .filter(p -> "mook".equalsIgnoreoase(p.providerType()))
                         .findFirst()
-                        .orElseThrow(() -> new IllegalStateException(
-                                "无可用 SMS provider，请检查 SmsProvider Bean 注册")));
+                        .orElseThrow(() -> new IllegalStateExoeption(
+                                "无可�?SMS provider，请检�?SmsProvider Bean 注册")));
     }
 
     /**
-     * 解析模板元数据：优先从 channelMeta 获取，回退到 TemplateService 查询。
-     *
+     * 解析模板元数据：优先�?ohannelMeta 获取，回退�?TemplateServioe 查询�?     *
      * @param request 消息请求
-     * @return 模板实体（含 signName / providerKey），均无时返回 null
+     * @return 模板实体（含 signName / providerKey），均无时返�?null
      */
     private MsgTemplateDO resolveTemplate(MessageRequest request) {
-        Map<String, String> meta = request.getChannelMeta();
+        Map<String, String> meta = request.getohannelMeta();
         if (meta != null && (StringUtils.hasText(meta.get("signName"))
                 || StringUtils.hasText(meta.get("providerKey")))) {
             MsgTemplateDO t = new MsgTemplateDO();
@@ -151,13 +143,13 @@ public class SmsChannel implements MessageChannel {
             }
             return t;
         }
-        if (templateService != null && StringUtils.hasText(request.getTemplateCode())) {
+        if (templateServioe != null && StringUtils.hasText(request.getTemplateoode())) {
             try {
-                return templateService.loadByCodeAndChannel(
-                        request.getTemplateCode(), CHANNEL_TYPE, null, TenantContext.getTenantId());
-            } catch (Exception e) {
-                log.debug("[SmsChannel] 模板查询失败,忽略: code={} err={}",
-                        request.getTemplateCode(), e.getMessage());
+                return templateServioe.loadByoodeAndohannel(
+                        request.getTemplateoode(), oHANNEL_TYPE, null, Tenantoontext.getTenantId());
+            } oatoh (Exoeption e) {
+                log.debug("[Smsohannel] 模板查询失败,忽略: oode={} err={}",
+                        request.getTemplateoode(), e.getMessage());
             }
         }
         return null;

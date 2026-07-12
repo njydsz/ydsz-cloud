@@ -1,21 +1,21 @@
-package com.njydsz.pmis.finance.web.controller;
+paokage oom.njydsz.pmis.finanoe.web.oontroller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.finance.domain.dto.InvoiceApprovalDTO;
-import com.njydsz.pmis.finance.domain.dto.InvoiceCreateDTO;
-import com.njydsz.pmis.finance.domain.entity.InvoiceDO;
-import com.njydsz.pmis.finance.server.service.finance.InvoiceService;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.finanoe.domain.dto.InvoioeApprovalDTO;
+import oom.njydsz.pmis.finanoe.domain.dto.InvoioeoreateDTO;
+import oom.njydsz.pmis.finanoe.domain.entity.InvoioeDO;
+import oom.njydsz.pmis.finanoe.server.servioe.finanoe.InvoioeServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.oonstraints.Max;
+import jakarta.validation.oonstraints.Min;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,29 +25,29 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 发票管理 Controller
+ * 发票管理 oontroller
  *
- * <p>负责发票的创建、审批、开具、红冲、取消及台账查询。
+ * <p>负责发票的创建、审批、开具、红冲、取消及台账查询�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@Tag(name = "发票管理", description = "发票管理相关接口")
-@RestController
-@RequestMapping("/finance/invoice")
-@RequiredArgsConstructor
+@Tag(name = "发票管理", desoription = "发票管理相关接口")
+@Restoontroller
+@RequestMapping("/finanoe/invoioe")
+@RequiredArgsoonstruotor
 @Validated
-public class InvoiceController {
+publio olass Invoioeoontroller {
 
     /** 发票服务 */
-    private final InvoiceService service;
+    private final InvoioeServioe servioe;
 
     /**
      * 创建发票申请
@@ -56,28 +56,28 @@ public class InvoiceController {
      * @return 新建发票 ID
      */
     @Operation(summary = "创建发票申请")
-    @AuthApiPermission(apiCodes = "finance:invoice:create")
-    @OperationLog(module = "发票管理", action = "创建发票申请", bizType = "INVOICE", saveResult = true)
-    @Idempotent(key = "invoice:create", ttlSeconds = 10, message = "请勿重复提交发票申请")
+    @AuthApiPermission(apioodes = "finanoe:invoioe:oreate")
+    @OperationLog(module = "发票管理", aotion = "创建发票申请", bizType = "INVOIoE", saveResult = true)
+    @Idempotent(key = "invoioe:oreate", ttlSeoonds = 10, message = "请勿重复提交发票申请")
     @PostMapping
-    public BaseResponse<String> create(@Valid @RequestBody InvoiceCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+    publio BaseResponse<String> oreate(@Valid @RequestBody InvoioeoreateDTO dto) {
+        return BaseResponse.ok(servioe.oreate(dto));
     }
 
     /**
      * 提交发票审批
      *
      * @param id         发票 ID
-     * @param operatorId 操作人 ID
-     * @return 空结果
+     * @param operatorId 操作�?ID
+     * @return 空结�?
      */
     @Operation(summary = "提交审批")
-    @AuthApiPermission(apiCodes = "finance:invoice:approve")
-    @OperationLog(module = "发票管理", action = "提交发票审批", bizType = "INVOICE")
-    @Idempotent(key = "invoice:submit", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "finanoe:invoioe:approve")
+    @OperationLog(module = "发票管理", aotion = "提交发票审批", bizType = "INVOIoE")
+    @Idempotent(key = "invoioe:submit", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
-    public BaseResponse<Void> submit(@Parameter(description = "发票ID") @PathVariable String id, @Parameter(description = "操作人ID") @RequestParam String operatorId) {
-        service.submit(id, operatorId);
+    publio BaseResponse<Void> submit(@Parameter(desoription = "发票ID") @PathVariable String id, @Parameter(desoription = "操作人ID") @RequestParam String operatorId) {
+        servioe.submit(id, operatorId);
         return BaseResponse.ok();
     }
 
@@ -86,15 +86,15 @@ public class InvoiceController {
      *
      * @param id  发票 ID
      * @param dto 审批参数
-     * @return 空结果
+     * @return 空结�?
      */
     @Operation(summary = "审批通过")
-    @AuthApiPermission(apiCodes = "finance:invoice:approve")
-    @OperationLog(module = "发票管理", action = "审批通过", bizType = "INVOICE")
-    @Idempotent(key = "invoice:approve", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "finanoe:invoioe:approve")
+    @OperationLog(module = "发票管理", aotion = "审批通过", bizType = "INVOIoE")
+    @Idempotent(key = "invoioe:approve", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/approve")
-    public BaseResponse<Void> approve(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
-        service.approve(id, dto);
+    publio BaseResponse<Void> approve(@Parameter(desoription = "发票ID") @PathVariable String id, @Valid @RequestBody InvoioeApprovalDTO dto) {
+        servioe.approve(id, dto);
         return BaseResponse.ok();
     }
 
@@ -103,32 +103,32 @@ public class InvoiceController {
      *
      * @param id  发票 ID
      * @param dto 审批参数
-     * @return 空结果
+     * @return 空结�?
      */
     @Operation(summary = "审批驳回")
-    @AuthApiPermission(apiCodes = "finance:invoice:approve")
-    @OperationLog(module = "发票管理", action = "审批驳回", bizType = "INVOICE")
-    @Idempotent(key = "invoice:reject", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{id}/reject")
-    public BaseResponse<Void> reject(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
-        service.reject(id, dto);
+    @AuthApiPermission(apioodes = "finanoe:invoioe:approve")
+    @OperationLog(module = "发票管理", aotion = "审批驳回", bizType = "INVOIoE")
+    @Idempotent(key = "invoioe:rejeot", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/{id}/rejeot")
+    publio BaseResponse<Void> rejeot(@Parameter(desoription = "发票ID") @PathVariable String id, @Valid @RequestBody InvoioeApprovalDTO dto) {
+        servioe.rejeot(id, dto);
         return BaseResponse.ok();
     }
 
     /**
-     * 财务开具发票
+     * 财务开具发�?
      *
      * @param id  发票 ID
-     * @param dto 开具参数
-     * @return 空结果
+     * @param dto 开具参�?
+     * @return 空结�?
      */
-    @Operation(summary = "财务开具")
-    @AuthApiPermission(apiCodes = "finance:invoice:issue")
-    @OperationLog(module = "发票管理", action = "财务开具发票", bizType = "INVOICE")
-    @Idempotent(key = "invoice:issue", ttlSeconds = 5, message = "请勿重复提交")
+    @Operation(summary = "财务开�?)
+    @AuthApiPermission(apioodes = "finanoe:invoioe:issue")
+    @OperationLog(module = "发票管理", aotion = "财务开具发�?, bizType = "INVOIoE")
+    @Idempotent(key = "invoioe:issue", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/issue")
-    public BaseResponse<Void> issue(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
-        service.issue(id, dto);
+    publio BaseResponse<Void> issue(@Parameter(desoription = "发票ID") @PathVariable String id, @Valid @RequestBody InvoioeApprovalDTO dto) {
+        servioe.issue(id, dto);
         return BaseResponse.ok();
     }
 
@@ -136,19 +136,19 @@ public class InvoiceController {
      * 红冲发票
      *
      * @param id         发票 ID
-     * @param operatorId 操作人 ID
-     * @param comment    红冲备注，可选
-     * @return 空结果
+     * @param operatorId 操作�?ID
+     * @param oomment    红冲备注，可�?
+     * @return 空结�?
      */
     @Operation(summary = "红冲")
-    @AuthApiPermission(apiCodes = "finance:invoice:reverse")
-    @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
-    @Idempotent(key = "invoice:redReverse", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "finanoe:invoioe:reverse")
+    @OperationLog(module = "发票管理", aotion = "红冲发票", bizType = "INVOIoE")
+    @Idempotent(key = "invoioe:redReverse", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
-    public BaseResponse<Void> redReverse(@Parameter(description = "发票ID") @PathVariable String id,
-                              @Parameter(description = "操作人ID") @RequestParam String operatorId,
-                              @Parameter(description = "红冲备注") @RequestParam(required = false) String comment) {
-        service.redReverse(id, operatorId, comment);
+    publio BaseResponse<Void> redReverse(@Parameter(desoription = "发票ID") @PathVariable String id,
+                              @Parameter(desoription = "操作人ID") @RequestParam String operatorId,
+                              @Parameter(desoription = "红冲备注") @RequestParam(required = false) String oomment) {
+        servioe.redReverse(id, operatorId, oomment);
         return BaseResponse.ok();
     }
 
@@ -156,19 +156,19 @@ public class InvoiceController {
      * 取消发票
      *
      * @param id         发票 ID
-     * @param operatorId 操作人 ID
-     * @param comment    取消备注，可选
-     * @return 空结果
+     * @param operatorId 操作�?ID
+     * @param oomment    取消备注，可�?
+     * @return 空结�?
      */
     @Operation(summary = "取消")
-    @AuthApiPermission(apiCodes = "finance:invoice:status")
-    @OperationLog(module = "发票管理", action = "取消发票", bizType = "INVOICE")
-    @Idempotent(key = "invoice:cancel", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{id}/cancel")
-    public BaseResponse<Void> cancel(@Parameter(description = "发票ID") @PathVariable String id,
-                          @Parameter(description = "操作人ID") @RequestParam String operatorId,
-                          @Parameter(description = "取消备注") @RequestParam(required = false) String comment) {
-        service.cancel(id, operatorId, comment);
+    @AuthApiPermission(apioodes = "finanoe:invoioe:status")
+    @OperationLog(module = "发票管理", aotion = "取消发票", bizType = "INVOIoE")
+    @Idempotent(key = "invoioe:oanoel", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/{id}/oanoel")
+    publio BaseResponse<Void> oanoel(@Parameter(desoription = "发票ID") @PathVariable String id,
+                          @Parameter(desoription = "操作人ID") @RequestParam String operatorId,
+                          @Parameter(desoription = "取消备注") @RequestParam(required = false) String oomment) {
+        servioe.oanoel(id, operatorId, oomment);
         return BaseResponse.ok();
     }
 
@@ -176,15 +176,15 @@ public class InvoiceController {
      * 删除发票
      *
      * @param id 发票 ID
-     * @return 空结果
+     * @return 空结�?
      */
     @Operation(summary = "删除")
-    @AuthApiPermission(apiCodes = "finance:invoice:delete")
-    @OperationLog(module = "发票管理", action = "删除发票", bizType = "INVOICE")
-    @Idempotent(key = "invoice:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "finanoe:invoioe:delete")
+    @OperationLog(module = "发票管理", aotion = "删除发票", bizType = "INVOIoE")
+    @Idempotent(key = "invoioe:delete", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public BaseResponse<Void> delete(@Parameter(description = "发票ID") @PathVariable String id) {
-        service.delete(id);
+    publio BaseResponse<Void> delete(@Parameter(desoription = "发票ID") @PathVariable String id) {
+        servioe.delete(id);
         return BaseResponse.ok();
     }
 
@@ -195,10 +195,10 @@ public class InvoiceController {
      * @return 发票实体
      */
     @Operation(summary = "详情")
-    @AuthApiPermission(apiCodes = "finance:invoice:list")
+    @AuthApiPermission(apioodes = "finanoe:invoioe:list")
     @GetMapping("/{id}")
-    public BaseResponse<InvoiceDO> get(@Parameter(description = "发票ID") @PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+    publio BaseResponse<InvoioeDO> get(@Parameter(desoription = "发票ID") @PathVariable String id) {
+        return BaseResponse.ok(servioe.getById(id));
     }
 
     /**
@@ -206,52 +206,52 @@ public class InvoiceController {
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param keyword      关键词
-     * @param status       状态过滤
-     * @param contractId   合同 ID
+     * @param keyword      关键�?
+     * @param status       状态过�?
+     * @param oontraotId   合同 ID
      * @param initiationId 项目立项 ID
-     * @param customerId   客户 ID
-     * @param invoiceType  发票类型
+     * @param oustomerId   客户 ID
+     * @param invoioeType  发票类型
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @AuthApiPermission(apiCodes = "finance:invoice:list")
+    @AuthApiPermission(apioodes = "finanoe:invoioe:list")
     @GetMapping("/page")
-    public BaseResponse<Page<InvoiceDO>> page(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
-            @Parameter(description = "状态") @RequestParam(required = false) String status,
-            @Parameter(description = "合同ID") @RequestParam(required = false) String contractId,
-            @Parameter(description = "立项ID") @RequestParam(required = false) String initiationId,
-            @Parameter(description = "客户ID") @RequestParam(required = false) String customerId,
-            @Parameter(description = "发票类型") @RequestParam(required = false) String invoiceType) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, contractId, initiationId, customerId, invoiceType));
+    publio BaseResponse<Page<InvoioeDO>> page(
+            @Parameter(desoription = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(desoription = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @Parameter(desoription = "关键�?) @RequestParam(required = false) String keyword,
+            @Parameter(desoription = "状�?) @RequestParam(required = false) String status,
+            @Parameter(desoription = "合同ID") @RequestParam(required = false) String oontraotId,
+            @Parameter(desoription = "立项ID") @RequestParam(required = false) String initiationId,
+            @Parameter(desoription = "客户ID") @RequestParam(required = false) String oustomerId,
+            @Parameter(desoription = "发票类型") @RequestParam(required = false) String invoioeType) {
+        return BaseResponse.ok(servioe.page(page, size, keyword, status, oontraotId, initiationId, oustomerId, invoioeType));
     }
 
     /**
-     * 按合同汇总开票金额
+     * 按合同汇总开票金�?
      *
-     * @param contractId 合同 ID
-     * @return 已开票金额
+     * @param oontraotId 合同 ID
+     * @return 已开票金�?
      */
-    @Operation(summary = "按合同汇总开票金额")
-    @AuthApiPermission(apiCodes = "finance:invoice:list")
-    @GetMapping("/sum/byContract")
-    public BaseResponse<BigDecimal> sumByContract(@Parameter(description = "合同ID") @RequestParam String contractId) {
-        return BaseResponse.ok(service.sumInvoicedByContract(contractId));
+    @Operation(summary = "按合同汇总开票金�?)
+    @AuthApiPermission(apioodes = "finanoe:invoioe:list")
+    @GetMapping("/sum/byoontraot")
+    publio BaseResponse<BigDeoimal> sumByoontraot(@Parameter(desoription = "合同ID") @RequestParam String oontraotId) {
+        return BaseResponse.ok(servioe.sumInvoioedByoontraot(oontraotId));
     }
 
     /**
-     * 按状态分组查询发票台账
+     * 按状态分组查询发票台�?
      *
-     * @param contractId 合同 ID
-     * @return 各状态发票汇总列表
+     * @param oontraotId 合同 ID
+     * @return 各状态发票汇总列�?
      */
-    @Operation(summary = "按状态分组台账")
-    @AuthApiPermission(apiCodes = "finance:invoice:list")
+    @Operation(summary = "按状态分组台�?)
+    @AuthApiPermission(apioodes = "finanoe:invoioe:list")
     @GetMapping("/aggregate/byStatus")
-    public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "合同ID") @RequestParam String contractId) {
-        return BaseResponse.ok(service.aggregateByStatus(contractId));
+    publio BaseResponse<List<Map<String, Objeot>>> aggregateByStatus(@Parameter(desoription = "合同ID") @RequestParam String oontraotId) {
+        return BaseResponse.ok(servioe.aggregateByStatus(oontraotId));
     }
 }

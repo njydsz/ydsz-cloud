@@ -1,57 +1,57 @@
-package com.njydsz.pmis.message.server.service.receipt;
+paokage oom.njydsz.pmis.message.server.servioe.reoeipt;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
-import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.update.LambdaUpdateWrapper;
+import oom.njydsz.pmis.message.domain.entity.oore.MsgLogDO;
+import oom.njydsz.pmis.message.infra.mapper.oore.MsgLogMapper;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 邮件退信处理器（P1-5）。
+ * 邮件退信处理器（P1-5）�?
  *
  * <p>接收邮件服务商的退信回调，将对应消息日志标记为失败,
- * 并记录退信原因（硬退信/软退信），后续可用于清理无效邮箱。
+ * 并记录退信原因（硬退�?软退信），后续可用于清理无效邮箱�?
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class EmailBounceHandler {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass EmailBounoeHandler {
 
     private final MsgLogMapper msgLogMapper;
 
     /**
-     * 处理邮件退信回调。
+     * 处理邮件退信回调�?
      *
      * @param logId       消息日志 ID
-     * @param bounceType  退信类型: HARD(硬退信,邮箱不存在) / SOFT(软退信,临时失败)
-     * @param reason      退信原因
-     * @param recipient   退信收件人
+     * @param bounoeType  退信类�? HARD(硬退�?邮箱不存�? / SOFT(软退�?临时失败)
+     * @param reason      退信原�?
+     * @param reoipient   退信收件人
      */
-    public void handleBounce(String logId, String bounceType, String reason, String recipient) {
+    publio void handleBounoe(String logId, String bounoeType, String reason, String reoipient) {
         if (!StringUtils.hasText(logId)) {
-            log.warn("[EmailBounce] logId 为空,跳过处理");
+            log.warn("[EmailBounoe] logId 为空,跳过处理");
             return;
         }
-        String fullReason = (StringUtils.hasText(bounceType) ? "[" + bounceType + "] " : "") + reason;
+        String fullReason = (StringUtils.hasText(bounoeType) ? "[" + bounoeType + "] " : "") + reason;
         msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getId, logId)
                 .set(MsgLogDO::getStatus, "FAILED")
-                .set(MsgLogDO::getReceiptStatus, "FAILED")
-                .set(MsgLogDO::getReceiptAt, LocalDateTime.now())
+                .set(MsgLogDO::getReoeiptStatus, "FAILED")
+                .set(MsgLogDO::getReoeiptAt, LooalDateTime.now())
                 .set(MsgLogDO::getErrorMessage, fullReason));
-        log.info("[EmailBounce] 退信处理: logId={} type={} recipient={} reason={}",
-                logId, bounceType, recipient, reason);
+        log.info("[EmailBounoe] 退信处�? logId={} type={} reoipient={} reason={}",
+                logId, bounoeType, reoipient, reason);
 
         // 硬退信时记录无效邮箱（后续可用于用户通道绑定状态更新）
-        if ("HARD".equalsIgnoreCase(bounceType)) {
-            log.warn("[EmailBounce] 硬退信,建议标记邮箱无效: recipient={}", recipient);
+        if ("HARD".equalsIgnoreoase(bounoeType)) {
+            log.warn("[EmailBounoe] 硬退�?建议标记邮箱无效: reoipient={}", reoipient);
         }
     }
 }

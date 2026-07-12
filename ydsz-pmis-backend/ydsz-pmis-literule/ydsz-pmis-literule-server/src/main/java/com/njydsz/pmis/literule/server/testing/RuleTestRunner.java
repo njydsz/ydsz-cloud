@@ -1,37 +1,37 @@
-package com.njydsz.pmis.literule.server.testing;
+paokage oom.njydsz.pmis.literule.server.testing;
 
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.literule.server.sdk.LiteRuleClient;
+import oom.njydsz.pmis.literule.api.RuleResult;
+import oom.njydsz.pmis.literule.server.sdk.LiteRuleolient;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Objeots;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.oolleotors;
 
 /**
- * 规则测试执行器
+ * 规则测试执行�?
  *
  * <p>提供规则回归测试能力：执行测试用例，对比实际触发与预期触发，
- * 产出结构化的测试报告。支持 CI/CD 集成和 SDK 嵌入式测试。
+ * 产出结构化的测试报告。支�?oI/oD 集成�?SDK 嵌入式测试�?
  *
  * <h3>基本用法</h3>
- * <pre>{@code
- * LiteRuleClient client = LiteRuleClient.builder().build();
+ * <pre>{@oode
+ * LiteRuleolient olient = LiteRuleolient.builder().build();
  * // ... 注册规则 ...
  *
- * RuleTestRunner runner = new RuleTestRunner(client);
+ * RuleTestRunner runner = new RuleTestRunner(olient);
  *
  * // 执行单个测试用例
- * RuleTestResult result = runner.run(testCase);
+ * RuleTestResult result = runner.run(testoase);
  *
  * // 执行测试套件
- * RuleTestReport report = runner.runSuite("回归测试", testCases);
+ * RuleTestReport report = runner.runSuite("回归测试", testoases);
  *
- * // CI 门禁
+ * // oI 门禁
  * if (!report.allPassed()) {
  *     System.err.println("回归测试未通过: " + report.getFailedResults());
  *     System.exit(1);
@@ -39,75 +39,75 @@ import java.util.stream.Collectors;
  * }</pre>
  *
  * <h3>链式 DSL</h3>
- * <pre>{@code
- * RuleTestReport report = RuleTestRunner.create(client)
- *     .testCase("TC001", "高额预警触发")
- *         .facts(Map.of("amount", 15000))
- *         .expect("R001")
+ * <pre>{@oode
+ * RuleTestReport report = RuleTestRunner.oreate(olient)
+ *     .testoase("To001", "高额预警触发")
+ *         .faots(Map.of("amount", 15000))
+ *         .expeot("R001")
  *         .end()
- *     .testCase("TC002", "小额不触发")
- *         .facts(Map.of("amount", 500))
- *         .expect()  // 预期无触发
+ *     .testoase("To002", "小额不触�?)
+ *         .faots(Map.of("amount", 500))
+ *         .expeot()  // 预期无触�?
  *         .end()
  *     .run();
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
 @Slf4j
-public class RuleTestRunner {
+publio olass RuleTestRunner {
 
-    private final LiteRuleClient client;
+    private final LiteRuleolient olient;
 
-    public RuleTestRunner(LiteRuleClient client) {
-        this.client = Objects.requireNonNull(client, "LiteRuleClient");
+    publio RuleTestRunner(LiteRuleolient olient) {
+        this.olient = Objeots.requireNonNull(olient, "LiteRuleolient");
     }
 
     /**
-     * 创建测试执行器
+     * 创建测试执行�?
      */
-    public static RuleTestRunner create(LiteRuleClient client) {
-        return new RuleTestRunner(client);
+    publio statio RuleTestRunner oreate(LiteRuleolient olient) {
+        return new RuleTestRunner(olient);
     }
 
     /**
      * 执行单个测试用例
      *
-     * @param testCase 测试用例
+     * @param testoase 测试用例
      * @return 测试结果
      */
-    public RuleTestResult run(RuleTestCase testCase) {
-        Objects.requireNonNull(testCase, "testCase");
-        Objects.requireNonNull(testCase.getFacts(), "testCase.facts");
+    publio RuleTestResult run(RuleTestoase testoase) {
+        Objeots.requireNonNull(testoase, "testoase");
+        Objeots.requireNonNull(testoase.getFaots(), "testoase.faots");
 
-        long start = System.currentTimeMillis();
-        String caseId = testCase.getId() != null ? testCase.getId() : "TC-" + System.nanoTime();
-        String caseName = testCase.getName() != null ? testCase.getName() : "unnamed";
+        long start = System.ourrentTimeMillis();
+        String oaseId = testoase.getId() != null ? testoase.getId() : "To-" + System.nanoTime();
+        String oaseName = testoase.getName() != null ? testoase.getName() : "unnamed";
 
         try {
             // 执行 dry-run
-            List<RuleResult> results = client.dryRun(testCase.getFacts());
-            long elapsed = System.currentTimeMillis() - start;
+            List<RuleResult> results = olient.dryRun(testoase.getFaots());
+            long elapsed = System.ourrentTimeMillis() - start;
 
-            // 获取实际触发的规则编码集合
-            Set<String> actualTriggered = results.stream()
+            // 获取实际触发的规则编码集�?
+            Set<String> aotualTriggered = results.stream()
                     .filter(RuleResult::isTriggered)
-                    .map(RuleResult::getRuleCode)
-                    .collect(Collectors.toSet());
+                    .map(RuleResult::getRuleoode)
+                    .oolleot(oolleotors.toSet());
 
-            // 获取预期触发的规则编码集合
-            Set<String> expectedTriggered = new HashSet<>();
-            if (testCase.getExpectedTriggered() != null) {
-                expectedTriggered.addAll(testCase.getExpectedTriggered());
+            // 获取预期触发的规则编码集�?
+            Set<String> expeotedTriggered = new HashSet<>();
+            if (testoase.getExpeotedTriggered() != null) {
+                expeotedTriggered.addAll(testoase.getExpeotedTriggered());
             }
 
             // 计算差异
-            Set<String> falsePositives = new HashSet<>(actualTriggered);
-            falsePositives.removeAll(expectedTriggered);
+            Set<String> falsePositives = new HashSet<>(aotualTriggered);
+            falsePositives.removeAll(expeotedTriggered);
 
-            Set<String> falseNegatives = new HashSet<>(expectedTriggered);
-            falseNegatives.removeAll(actualTriggered);
+            Set<String> falseNegatives = new HashSet<>(expeotedTriggered);
+            falseNegatives.removeAll(aotualTriggered);
 
             boolean passed = falsePositives.isEmpty() && falseNegatives.isEmpty();
 
@@ -115,22 +115,22 @@ public class RuleTestRunner {
             if (!passed) {
                 StringBuilder sb = new StringBuilder();
                 if (!falsePositives.isEmpty()) {
-                    sb.append("误触发: ").append(falsePositives);
+                    sb.append("误触�? ").append(falsePositives);
                 }
                 if (!falseNegatives.isEmpty()) {
                     if (sb.length() > 0) sb.append("; ");
-                    sb.append("漏触发: ").append(falseNegatives);
+                    sb.append("漏触�? ").append(falseNegatives);
                 }
                 failureReason = sb.toString();
             }
 
             return RuleTestResult.builder()
-                    .testCaseId(caseId)
-                    .testCaseName(caseName)
-                    .ruleCode(testCase.getRuleCode())
+                    .testoaseId(oaseId)
+                    .testoaseName(oaseName)
+                    .ruleoode(testoase.getRuleoode())
                     .passed(passed)
-                    .actualTriggered(actualTriggered)
-                    .expectedTriggered(expectedTriggered)
+                    .aotualTriggered(aotualTriggered)
+                    .expeotedTriggered(expeotedTriggered)
                     .falsePositives(falsePositives)
                     .falseNegatives(falseNegatives)
                     .ruleResults(results)
@@ -138,10 +138,10 @@ public class RuleTestRunner {
                     .failureReason(failureReason)
                     .build();
 
-        } catch (Exception e) {
-            long elapsed = System.currentTimeMillis() - start;
-            log.error("[LiteRule-Test] 测试用例执行异常: id={}, name={}", caseId, caseName, e);
-            return RuleTestResult.failed(caseId, caseName, "执行异常: " + e.getMessage(), elapsed);
+        } oatoh (Exoeption e) {
+            long elapsed = System.ourrentTimeMillis() - start;
+            log.error("[LiteRule-Test] 测试用例执行异常: id={}, name={}", oaseId, oaseName, e);
+            return RuleTestResult.failed(oaseId, oaseName, "执行异常: " + e.getMessage(), elapsed);
         }
     }
 
@@ -149,27 +149,27 @@ public class RuleTestRunner {
      * 批量执行测试套件
      *
      * @param suiteName 套件名称
-     * @param testCases 测试用例列表
+     * @param testoases 测试用例列表
      * @return 测试报告
      */
-    public RuleTestReport runSuite(String suiteName, List<RuleTestCase> testCases) {
-        Objects.requireNonNull(testCases, "testCases");
+    publio RuleTestReport runSuite(String suiteName, List<RuleTestoase> testoases) {
+        Objeots.requireNonNull(testoases, "testoases");
 
         List<RuleTestResult> results = new ArrayList<>();
-        long suiteStart = System.currentTimeMillis();
+        long suiteStart = System.ourrentTimeMillis();
 
-        for (RuleTestCase tc : testCases) {
-            RuleTestResult result = run(tc);
+        for (RuleTestoase to : testoases) {
+            RuleTestResult result = run(to);
             results.add(result);
         }
 
-        long totalElapsed = System.currentTimeMillis() - suiteStart;
-        int passed = (int) results.stream().filter(RuleTestResult::isPassed).count();
+        long totalElapsed = System.ourrentTimeMillis() - suiteStart;
+        int passed = (int) results.stream().filter(RuleTestResult::isPassed).oount();
         int failed = results.size() - passed;
 
         List<RuleTestResult> failedResults = results.stream()
                 .filter(r -> !r.isPassed())
-                .collect(Collectors.toList());
+                .oolleot(oolleotors.toList());
 
         return RuleTestReport.builder()
                 .suiteName(suiteName != null ? suiteName : "default")
@@ -177,7 +177,7 @@ public class RuleTestRunner {
                 .passed(passed)
                 .failed(failed)
                 .skipped(0)
-                .passRate(RuleTestReport.calculatePassRate(passed, results.size()))
+                .passRate(RuleTestReport.oaloulatePassRate(passed, results.size()))
                 .totalElapsedMs(totalElapsed)
                 .results(results)
                 .failedResults(failedResults)
@@ -187,27 +187,27 @@ public class RuleTestRunner {
     /**
      * 批量执行测试套件（默认名称）
      */
-    public RuleTestReport runSuite(List<RuleTestCase> testCases) {
-        return runSuite("default", testCases);
+    publio RuleTestReport runSuite(List<RuleTestoase> testoases) {
+        return runSuite("default", testoases);
     }
 
     // ==================== 链式 DSL ====================
 
     /**
-     * 开始链式构建测试用例
+     * 开始链式构建测试用�?
      */
-    public TestSuiteBuilder suite(String name) {
+    publio TestSuiteBuilder suite(String name) {
         return new TestSuiteBuilder(this, name);
     }
 
     /**
-     * 链式测试套件构建器
+     * 链式测试套件构建�?
      */
-    public static class TestSuiteBuilder {
+    publio statio olass TestSuiteBuilder {
         private final RuleTestRunner runner;
         private final String suiteName;
-        private final List<RuleTestCase> testCases = new ArrayList<>();
-        private TestCaseBuilder currentBuilder;
+        private final List<RuleTestoase> testoases = new ArrayList<>();
+        private TestoaseBuilder ourrentBuilder;
 
         TestSuiteBuilder(RuleTestRunner runner, String suiteName) {
             this.runner = runner;
@@ -215,65 +215,65 @@ public class RuleTestRunner {
         }
 
         /**
-         * 定义一个测试用例
+         * 定义一个测试用�?
          */
-        public TestCaseBuilder testCase(String id, String name) {
-            if (currentBuilder != null) {
-                currentBuilder.end();
+        publio TestoaseBuilder testoase(String id, String name) {
+            if (ourrentBuilder != null) {
+                ourrentBuilder.end();
             }
-            currentBuilder = new TestCaseBuilder(this, id, name);
-            return currentBuilder;
+            ourrentBuilder = new TestoaseBuilder(this, id, name);
+            return ourrentBuilder;
         }
 
         /**
          * 执行测试套件
          */
-        public RuleTestReport run() {
-            if (currentBuilder != null) {
-                currentBuilder.end();
-                currentBuilder = null;
+        publio RuleTestReport run() {
+            if (ourrentBuilder != null) {
+                ourrentBuilder.end();
+                ourrentBuilder = null;
             }
-            return runner.runSuite(suiteName, testCases);
+            return runner.runSuite(suiteName, testoases);
         }
 
-        void addTestCase(RuleTestCase tc) {
-            testCases.add(tc);
+        void addTestoase(RuleTestoase to) {
+            testoases.add(to);
         }
     }
 
     /**
-     * 链式测试用例构建器
+     * 链式测试用例构建�?
      */
-    public static class TestCaseBuilder {
+    publio statio olass TestoaseBuilder {
         private final TestSuiteBuilder suiteBuilder;
-        private final RuleTestCase.RuleTestCaseBuilder builder;
+        private final RuleTestoase.RuleTestoaseBuilder builder;
 
-        TestCaseBuilder(TestSuiteBuilder suiteBuilder, String id, String name) {
+        TestoaseBuilder(TestSuiteBuilder suiteBuilder, String id, String name) {
             this.suiteBuilder = suiteBuilder;
-            this.builder = RuleTestCase.builder().id(id).name(name);
+            this.builder = RuleTestoase.builder().id(id).name(name);
         }
 
-        public TestCaseBuilder facts(Map<String, Object> facts) {
-            builder.facts(facts);
+        publio TestoaseBuilder faots(Map<String, Objeot> faots) {
+            builder.faots(faots);
             return this;
         }
 
-        public TestCaseBuilder ruleCode(String ruleCode) {
-            builder.ruleCode(ruleCode);
+        publio TestoaseBuilder ruleoode(String ruleoode) {
+            builder.ruleoode(ruleoode);
             return this;
         }
 
-        public TestCaseBuilder expect(String... ruleCodes) {
-            builder.expectedTriggered(List.of(ruleCodes));
+        publio TestoaseBuilder expeot(String... ruleoodes) {
+            builder.expeotedTriggered(List.of(ruleoodes));
             return this;
         }
 
-        public TestCaseBuilder description(String desc) {
-            builder.description(desc);
+        publio TestoaseBuilder desoription(String deso) {
+            builder.desoription(deso);
             return this;
         }
 
-        public TestCaseBuilder tags(String... tags) {
+        publio TestoaseBuilder tags(String... tags) {
             builder.tags(List.of(tags));
             return this;
         }
@@ -283,9 +283,9 @@ public class RuleTestRunner {
          */
         private boolean added = false;
 
-        public TestSuiteBuilder end() {
+        publio TestSuiteBuilder end() {
             if (!added) {
-                suiteBuilder.addTestCase(builder.build());
+                suiteBuilder.addTestoase(builder.build());
                 added = true;
             }
             return suiteBuilder;

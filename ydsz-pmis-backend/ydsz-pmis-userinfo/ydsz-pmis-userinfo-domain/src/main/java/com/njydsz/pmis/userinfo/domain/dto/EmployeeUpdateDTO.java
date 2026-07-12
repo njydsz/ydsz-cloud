@@ -1,25 +1,25 @@
-package com.njydsz.pmis.userinfo.domain.dto.user;
+paokage oom.njydsz.pmis.userinfo.domain.dto.user;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import jakarta.validation.oonstraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LooalDate;
 
 /**
  * 员工更新 DTO（部分更新，仅非空字段生效）
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "员工更新")
-public class EmployeeUpdateDTO implements Serializable {
+@Sohema(desoription = "员工更新")
+publio olass EmployeeUpdateDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 关联登录账号 ID */
     @Size(max = 20)
@@ -27,7 +27,7 @@ public class EmployeeUpdateDTO implements Serializable {
 
     /** 员工编码（工号） */
     @Size(max = 64)
-    private String empCode;
+    private String empoode;
 
     /** 员工姓名 */
     @Size(max = 64)
@@ -35,15 +35,15 @@ public class EmployeeUpdateDTO implements Serializable {
 
     /** 身份证号 */
     @Size(max = 32)
-    private String idCard;
+    private String idoard;
 
     /** 性别 */
     private String gender;
 
     /** 出生日期 */
-    private LocalDate birthDate;
+    private LooalDate birthDate;
 
-    /** 手机号 */
+    /** 手机�?*/
     @Size(max = 32)
     private String phone;
 
@@ -61,7 +61,7 @@ public class EmployeeUpdateDTO implements Serializable {
 
     /** 职级编码 */
     @Size(max = 8)
-    private String levelCode;
+    private String leveloode;
 
     /** 雇佣类型 */
     private String employeeType;
@@ -72,22 +72,22 @@ public class EmployeeUpdateDTO implements Serializable {
 
     /** 外包费率 ID */
     @Size(max = 20)
-    private String outsourceRateId;
+    private String outsouroeRateId;
 
     /** 入职日期 */
-    private LocalDate hireDate;
+    private LooalDate hireDate;
 
     /** 离职日期 */
-    private LocalDate leaveDate;
+    private LooalDate leaveDate;
 
-    /** 在职状态 */
+    /** 在职状�?*/
     private String workStatus;
 
-    /** Bench 状态 */
-    private String benchStatus;
+    /** Benoh 状�?*/
+    private String benohStatus;
 
-    /** Bench 起始日期 */
-    private LocalDate benchStart;
+    /** Benoh 起始日期 */
+    private LooalDate benohStart;
 
     /** 头像 URL */
     @Size(max = 255)
@@ -99,12 +99,12 @@ public class EmployeeUpdateDTO implements Serializable {
 
     /** 紧急联系人 */
     @Size(max = 64)
-    private String emergencyContact;
+    private String emergenoyoontaot;
 
     /** 紧急联系人电话 */
     @Size(max = 32)
-    private String emergencyPhone;
+    private String emergenoyPhone;
 
     /** 备注 */
-    private String description;
+    private String desoription;
 }

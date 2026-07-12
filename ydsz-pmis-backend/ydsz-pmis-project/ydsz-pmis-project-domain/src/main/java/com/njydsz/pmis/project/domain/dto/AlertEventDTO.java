@@ -1,65 +1,65 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
-import com.njydsz.pmis.project.domain.enums.AlertSeverity;
-import lombok.AllArgsConstructor;
+import oom.njydsz.pmis.projeot.domain.enums.AlertSeverity;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 驾驶舱预警事件 DTO
+ * 驾驶舱预警事�?DTO
  *
- * <p>由预警规则引擎触发，输出到前端预警面板。
+ * <p>由预警规则引擎触发，输出到前端预警面板�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class AlertEventDTO implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass AlertEventDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 事件 ID（UUID） */
+    /** 事件 ID（UUID�?*/
     private String eventId;
 
     /** 规则编码 */
-    private String ruleCode;
+    private String ruleoode;
 
-    /** 规则名 */
+    /** 规则�?*/
     private String ruleName;
 
-    /** 类别：EVM / COST / BENCH / CREDIT / RISK / UTILIZATION */
-    private String category;
+    /** 类别：EVM / oOST / BENoH / oREDIT / RISK / UTILIZATION */
+    private String oategory;
 
-    /** 严重度 */
+    /** 严重�?*/
     private AlertSeverity severity;
 
     /** 标题 */
     private String title;
 
     /** 详细描述 */
-    private String description;
+    private String desoription;
 
-    /** 当前值 */
-    private String currentValue;
+    /** 当前�?*/
+    private String ourrentValue;
 
     /** 阈值（参考） */
     private String threshold;
 
-    /** 影响范围：项目 ID / 部门 / 客户 等 */
-    private String scope;
+    /** 影响范围：项�?ID / 部门 / 客户 �?*/
+    private String soope;
 
     /** 触发时间 */
-    private LocalDateTime triggeredAt;
+    private LooalDateTime triggeredAt;
 
-    /** 是否可点击查看（true 表示有 drill-down 链接） */
+    /** 是否可点击查看（true 表示�?drill-down 链接�?*/
     private Boolean drilldownAvailable;
 }

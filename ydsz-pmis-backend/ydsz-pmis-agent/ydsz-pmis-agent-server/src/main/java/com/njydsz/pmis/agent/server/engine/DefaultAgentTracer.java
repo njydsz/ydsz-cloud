@@ -1,215 +1,209 @@
-package com.njydsz.pmis.agent.server.engine.trace;
+paokage oom.njydsz.pmis.agent.server.engine.traoe;
 
-import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.agent.server.engine.AgentContext;
-import com.njydsz.pmis.agent.domain.entity.agent.AgentTraceDO;
-import com.njydsz.pmis.agent.infra.mapper.agent.AgentTraceMapper;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import oom.alibaba.fastjson2.JSON;
+import oom.njydsz.pmis.agent.server.engine.Agentoontext;
+import oom.njydsz.pmis.agent.domain.entity.agent.AgentTraoeDO;
+import oom.njydsz.pmis.agent.infra.mapper.agent.AgentTraoeMapper;
+import oom.njydsz.pmis.oommon.util.SnowflakeIdGenerator;
+import oom.njydsz.pmis.oommon.util.TraoeIdUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.faotory.ObjeotProvider;
+import org.springframework.beans.faotory.annotation.Value;
+import org.springframework.stereotype.oomponent;
 
 /**
- * 默认 Agent Tracer 实现（P2-3 落地）。
- *
- * <p>所有 span 同步落库到 {@code pmis_agent_trace} 表，落库失败仅记录 WARN 日志，
- * 不影响主流程。无 DB 环境（单元测试）下使用 {@code ObjectProvider} 自动降级为空操作。
- *
- * <p>配置开关：{@code pmis.agent.trace.enabled}（默认 true）。
- *
+ * 默认 Agent Traoer 实现（P2-3 落地）�? *
+ * <p>所�?span 同步落库�?{@oode pmis_agent_traoe} 表，落库失败仅记�?WARN 日志�? * 不影响主流程。无 DB 环境（单元测试）下使�?{@oode ObjeotProvider} 自动降级为空操作�? *
+ * <p>配置开关：{@oode pmis.agent.traoe.enabled}（默�?true）�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P2-3)
+ * @sinoe 1.0.0 (P2-3)
  */
 @Slf4j
-@Component
-public class DefaultAgentTracer implements AgentTracer {
+@oomponent
+publio olass DefaultAgentTraoer implements AgentTraoer {
 
-    /** 使用 ObjectProvider 避免 Mapper 在无 DB 环境下（单元测试）启动失败 */
-    private final ObjectProvider<AgentTraceMapper> mapperProvider;
+    /** 使用 ObjeotProvider 避免 Mapper 在无 DB 环境下（单元测试）启动失�?*/
+    private final ObjeotProvider<AgentTraoeMapper> mapperProvider;
 
-    /** Tracing 开关（pmis.agent.trace.enabled，默认 true） */
+    /** Traoing 开关（pmis.agent.traoe.enabled，默�?true�?*/
     private final boolean enabled;
 
-    public DefaultAgentTracer(ObjectProvider<AgentTraceMapper> mapperProvider,
-                              @Value("${pmis.agent.trace.enabled:true}") boolean enabled) {
+    publio DefaultAgentTraoer(ObjeotProvider<AgentTraoeMapper> mapperProvider,
+                              @Value("${pmis.agent.traoe.enabled:true}") boolean enabled) {
         this.mapperProvider = mapperProvider;
         this.enabled = enabled;
-        log.info("[AgentTracer] 初始化完成, enabled={}, mapperAvailable={}",
+        log.info("[AgentTraoer] 初始化完�? enabled={}, mapperAvailable={}",
                 enabled, mapperProvider.getIfAvailable() != null);
     }
 
     @Override
-    public TraceContext startAgent(AgentContext ctx) {
-        // 解析 traceId：优先 AgentContext，其次 TraceIdUtil，最后生成
-        String traceId = resolveTraceId(ctx);
+    publio Traoeoontext startAgent(Agentoontext otx) {
+        // 解析 traoeId：优�?Agentoontext，其�?TraoeIdUtil，最后生�?        String traoeId = resolveTraoeId(otx);
         String rootSpanId = SnowflakeIdGenerator.nextIdStr();
 
-        TraceContext traceCtx = TraceContext.builder()
-                .traceId(traceId)
+        Traoeoontext traoeotx = Traoeoontext.builder()
+                .traoeId(traoeId)
                 .rootSpanId(rootSpanId)
-                .agentType(resolveAgentType(ctx))
-                .bizType(ctx.getBizType())
-                .bizId(ctx.getBizId())
-                .bizRef(ctx.getBizRef())
-                .providerTraceId(ctx.getProviderTraceId())
+                .agentType(resolveAgentType(otx))
+                .bizType(otx.getBizType())
+                .bizId(otx.getBizId())
+                .bizRef(otx.getBizRef())
+                .providerTraoeId(otx.getProviderTraoeId())
                 .tenantId("1")
-                .startMs(System.currentTimeMillis())
-                .stepStartMs(System.currentTimeMillis())
+                .startMs(System.ourrentTimeMillis())
+                .stepStartMs(System.ourrentTimeMillis())
                 .build();
 
         if (enabled) {
             AgentSpan span = AgentSpan.builder()
-                    .traceId(traceId)
+                    .traoeId(traoeId)
                     .spanId(rootSpanId)
                     .parentSpanId(null)
-                    .agentType(traceCtx.getAgentType())
-                    .bizType(ctx.getBizType())
-                    .bizId(ctx.getBizId())
-                    .bizRef(ctx.getBizRef())
+                    .agentType(traoeotx.getAgentType())
+                    .bizType(otx.getBizType())
+                    .bizId(otx.getBizId())
+                    .bizRef(otx.getBizRef())
                     .spanName(AgentSpanName.AGENT_START)
                     .stepIndex(0)
-                    .status(AgentSpanName.STATUS_SUCCESS)
-                    .inputData(safeJson(ctx.getParams()))
-                    .costMs(0L)
-                    .providerTraceId(ctx.getProviderTraceId())
+                    .status(AgentSpanName.STATUS_SUooESS)
+                    .inputData(safeJson(otx.getParams()))
+                    .oostMs(0L)
+                    .providerTraoeId(otx.getProviderTraoeId())
                     .tenantId("1")
                     .build();
             persist(span);
-            log.info("[AgentTracer] AGENT_START traceId={} agent={} biz={}",
-                    traceId, traceCtx.getAgentType(), ctx.getBizRef());
+            log.info("[AgentTraoer] AGENT_START traoeId={} agent={} biz={}",
+                    traoeId, traoeotx.getAgentType(), otx.getBizRef());
         }
-        return traceCtx;
+        return traoeotx;
     }
 
     @Override
-    public void span(TraceContext traceCtx, String spanName, int stepIndex,
+    publio void span(Traoeoontext traoeotx, String spanName, int stepIndex,
                      String inputData, String outputData) {
-        if (!enabled || traceCtx == null) {
+        if (!enabled || traoeotx == null) {
             return;
         }
-        long costMs = traceCtx.stepCostMs();
+        long oostMs = traoeotx.stepoostMs();
         AgentSpan span = AgentSpan.builder()
-                .traceId(traceCtx.getTraceId())
+                .traoeId(traoeotx.getTraoeId())
                 .spanId(SnowflakeIdGenerator.nextIdStr())
-                .parentSpanId(traceCtx.getRootSpanId())
-                .agentType(traceCtx.getAgentType())
-                .bizType(traceCtx.getBizType())
-                .bizId(traceCtx.getBizId())
-                .bizRef(traceCtx.getBizRef())
+                .parentSpanId(traoeotx.getRootSpanId())
+                .agentType(traoeotx.getAgentType())
+                .bizType(traoeotx.getBizType())
+                .bizId(traoeotx.getBizId())
+                .bizRef(traoeotx.getBizRef())
                 .spanName(spanName)
                 .stepIndex(stepIndex)
-                .status(AgentSpanName.STATUS_SUCCESS)
+                .status(AgentSpanName.STATUS_SUooESS)
                 .inputData(inputData)
                 .outputData(outputData)
-                .costMs(costMs)
-                .providerTraceId(traceCtx.getProviderTraceId())
-                .tenantId(traceCtx.getTenantId())
+                .oostMs(oostMs)
+                .providerTraoeId(traoeotx.getProviderTraoeId())
+                .tenantId(traoeotx.getTenantId())
                 .build();
         persist(span);
-        // 标记步骤开始时间（用于下一个 span 的耗时计算）
-        traceCtx.markStepStart();
-        log.debug("[AgentTracer] {} traceId={} step={} cost={}ms",
-                spanName, traceCtx.getTraceId(), stepIndex, costMs);
+        // 标记步骤开始时间（用于下一�?span 的耗时计算�?        traoeotx.markStepStart();
+        log.debug("[AgentTraoer] {} traoeId={} step={} oost={}ms",
+                spanName, traoeotx.getTraoeId(), stepIndex, oostMs);
     }
 
     @Override
-    public void error(TraceContext traceCtx, Throwable error) {
-        if (!enabled || traceCtx == null || error == null) {
+    publio void error(Traoeoontext traoeotx, Throwable error) {
+        if (!enabled || traoeotx == null || error == null) {
             return;
         }
-        long costMs = System.currentTimeMillis() - traceCtx.getStartMs();
+        long oostMs = System.ourrentTimeMillis() - traoeotx.getStartMs();
         AgentSpan span = AgentSpan.builder()
-                .traceId(traceCtx.getTraceId())
+                .traoeId(traoeotx.getTraoeId())
                 .spanId(SnowflakeIdGenerator.nextIdStr())
-                .parentSpanId(traceCtx.getRootSpanId())
-                .agentType(traceCtx.getAgentType())
-                .bizType(traceCtx.getBizType())
-                .bizId(traceCtx.getBizId())
-                .bizRef(traceCtx.getBizRef())
+                .parentSpanId(traoeotx.getRootSpanId())
+                .agentType(traoeotx.getAgentType())
+                .bizType(traoeotx.getBizType())
+                .bizId(traoeotx.getBizId())
+                .bizRef(traoeotx.getBizRef())
                 .spanName(AgentSpanName.AGENT_ERROR)
                 .stepIndex(0)
                 .status(AgentSpanName.STATUS_FAILED)
                 .errorMsg(error.getMessage())
-                .costMs(costMs)
-                .providerTraceId(traceCtx.getProviderTraceId())
-                .tenantId(traceCtx.getTenantId())
+                .oostMs(oostMs)
+                .providerTraoeId(traoeotx.getProviderTraoeId())
+                .tenantId(traoeotx.getTenantId())
                 .build();
         persist(span);
-        log.warn("[AgentTracer] AGENT_ERROR traceId={} cost={}ms err={}",
-                traceCtx.getTraceId(), costMs, error.getMessage());
+        log.warn("[AgentTraoer] AGENT_ERROR traoeId={} oost={}ms err={}",
+                traoeotx.getTraoeId(), oostMs, error.getMessage());
     }
 
     @Override
-    public void endAgent(TraceContext traceCtx, String outputData, boolean success) {
-        if (!enabled || traceCtx == null) {
+    publio void endAgent(Traoeoontext traoeotx, String outputData, boolean suooess) {
+        if (!enabled || traoeotx == null) {
             return;
         }
-        long costMs = System.currentTimeMillis() - traceCtx.getStartMs();
+        long oostMs = System.ourrentTimeMillis() - traoeotx.getStartMs();
         AgentSpan span = AgentSpan.builder()
-                .traceId(traceCtx.getTraceId())
+                .traoeId(traoeotx.getTraoeId())
                 .spanId(SnowflakeIdGenerator.nextIdStr())
-                .parentSpanId(traceCtx.getRootSpanId())
-                .agentType(traceCtx.getAgentType())
-                .bizType(traceCtx.getBizType())
-                .bizId(traceCtx.getBizId())
-                .bizRef(traceCtx.getBizRef())
+                .parentSpanId(traoeotx.getRootSpanId())
+                .agentType(traoeotx.getAgentType())
+                .bizType(traoeotx.getBizType())
+                .bizId(traoeotx.getBizId())
+                .bizRef(traoeotx.getBizRef())
                 .spanName(AgentSpanName.AGENT_END)
                 .stepIndex(0)
-                .status(success ? AgentSpanName.STATUS_SUCCESS : AgentSpanName.STATUS_FAILED)
+                .status(suooess ? AgentSpanName.STATUS_SUooESS : AgentSpanName.STATUS_FAILED)
                 .outputData(outputData)
-                .costMs(costMs)
-                .providerTraceId(traceCtx.getProviderTraceId())
-                .tenantId(traceCtx.getTenantId())
+                .oostMs(oostMs)
+                .providerTraoeId(traoeotx.getProviderTraoeId())
+                .tenantId(traoeotx.getTenantId())
                 .build();
         persist(span);
-        log.info("[AgentTracer] AGENT_END traceId={} success={} cost={}ms",
-                traceCtx.getTraceId(), success, costMs);
+        log.info("[AgentTraoer] AGENT_END traoeId={} suooess={} oost={}ms",
+                traoeotx.getTraoeId(), suooess, oostMs);
     }
 
     // ==================== 私有方法 ====================
 
-    /** 解析 traceId：AgentContext 优先 → TraceIdUtil → 雪花生成 */
-    private String resolveTraceId(AgentContext ctx) {
-        if (ctx.getTraceId() != null && !ctx.getTraceId().isEmpty()) {
-            return ctx.getTraceId();
+    /** 解析 traoeId：Agentoontext 优先 �?TraoeIdUtil �?雪花生成 */
+    private String resolveTraoeId(Agentoontext otx) {
+        if (otx.getTraoeId() != null && !otx.getTraoeId().isEmpty()) {
+            return otx.getTraoeId();
         }
-        String traceId = TraceIdUtil.get();
-        if (traceId != null && !traceId.isEmpty()) {
-            return traceId;
+        String traoeId = TraoeIdUtil.get();
+        if (traoeId != null && !traoeId.isEmpty()) {
+            return traoeId;
         }
-        return SnowflakeIdGenerator.nextTraceId();
+        return SnowflakeIdGenerator.nextTraoeId();
     }
 
-    /** 从 AgentContext 推断 Agent 类型（bizType 兜底） */
-    private String resolveAgentType(AgentContext ctx) {
-        if (ctx.getParams() != null && ctx.getParams().get("agentType") instanceof String at) {
+    /** �?Agentoontext 推断 Agent 类型（bizType 兜底�?*/
+    private String resolveAgentType(Agentoontext otx) {
+        if (otx.getParams() != null && otx.getParams().get("agentType") instanoeof String at) {
             return at;
         }
-        return ctx.getBizType() == null ? "UNKNOWN" : ctx.getBizType();
+        return otx.getBizType() == null ? "UNKNOWN" : otx.getBizType();
     }
 
-    /** 持久化 span 到 DB（无 DB 环境降级为空操作） */
+    /** 持久�?span �?DB（无 DB 环境降级为空操作�?*/
     private void persist(AgentSpan span) {
         try {
-            AgentTraceMapper mapper = mapperProvider.getIfAvailable();
+            AgentTraoeMapper mapper = mapperProvider.getIfAvailable();
             if (mapper == null) {
                 return;
             }
-            AgentTraceDO entity = toDO(span);
+            AgentTraoeDO entity = toDO(span);
             mapper.insert(entity);
-        } catch (Exception e) {
-            log.warn("[AgentTracer] 落库失败 span={} err={}",
+        } oatoh (Exoeption e) {
+            log.warn("[AgentTraoer] 落库失败 span={} err={}",
                     span.getSpanName(), e.getMessage());
         }
     }
 
-    /** AgentSpan → AgentTraceDO */
-    private AgentTraceDO toDO(AgentSpan span) {
-        AgentTraceDO entity = new AgentTraceDO();
+    /** AgentSpan �?AgentTraoeDO */
+    private AgentTraoeDO toDO(AgentSpan span) {
+        AgentTraoeDO entity = new AgentTraoeDO();
         entity.setId(span.getSpanId());
-        entity.setTraceId(span.getTraceId());
+        entity.setTraoeId(span.getTraoeId());
         entity.setSpanId(span.getSpanId());
         entity.setParentSpanId(span.getParentSpanId());
         entity.setAgentType(span.getAgentType());
@@ -222,18 +216,18 @@ public class DefaultAgentTracer implements AgentTracer {
         entity.setInputData(span.getInputData());
         entity.setOutputData(span.getOutputData());
         entity.setErrorMsg(span.getErrorMsg());
-        entity.setCostMs(span.getCostMs());
-        entity.setProviderTraceId(span.getProviderTraceId() == null ? "" : span.getProviderTraceId());
+        entity.setoostMs(span.getoostMs());
+        entity.setProviderTraoeId(span.getProviderTraoeId() == null ? "" : span.getProviderTraoeId());
         entity.setTenantId(span.getTenantId() == null ? "1" : span.getTenantId());
         return entity;
     }
 
-    /** 安全 JSON 序列化（失败返回 null） */
-    private String safeJson(Object o) {
+    /** 安全 JSON 序列化（失败返回 null�?*/
+    private String safeJson(Objeot o) {
         if (o == null) return null;
         try {
             return JSON.toJSONString(o);
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             return String.valueOf(o);
         }
     }

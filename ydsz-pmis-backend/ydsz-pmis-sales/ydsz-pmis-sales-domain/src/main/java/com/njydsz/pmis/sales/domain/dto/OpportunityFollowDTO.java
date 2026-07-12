@@ -1,49 +1,49 @@
-package com.njydsz.pmis.sales.domain.dto;
+paokage oom.njydsz.pmis.sales.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LooalDate;
 
 /**
  * 商机跟进记录 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "商机跟进记录")
-public class OpportunityFollowDTO implements Serializable {
+@Sohema(desoription = "商机跟进记录")
+publio olass OpportunityFollowDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 商机 ID */
     @NotNull
-    @Schema(description = "商机 ID", requiredMode = RequiredMode.REQUIRED)
+    @Sohema(desoription = "商机 ID", requiredMode = RequiredMode.REQUIRED)
     private String opportunityId;
 
-    /** 跟进类型（VISIT/CALL/QUOTE/NEGOTIATE/OTHER） */
+    /** 跟进类型（VISIT/oALL/QUOTE/NEGOTIATE/OTHER�?*/
     @NotBlank
-    @Schema(description = "跟进类型", requiredMode = RequiredMode.REQUIRED,
-            allowableValues = {"VISIT", "CALL", "QUOTE", "NEGOTIATE", "OTHER"})
+    @Sohema(desoription = "跟进类型", requiredMode = RequiredMode.REQUIRED,
+            allowableValues = {"VISIT", "oALL", "QUOTE", "NEGOTIATE", "OTHER"})
     private String followType;
 
     /** 跟进内容 */
-    @Schema(description = "跟进内容")
-    private String content;
+    @Sohema(desoription = "跟进内容")
+    private String oontent;
 
-    /** 下一步计划 */
-    @Schema(description = "下一步计划")
+    /** 下一步计�?*/
+    @Sohema(desoription = "下一步计�?)
     private String nextStep;
 
     /** 下次跟进日期 */
-    @Schema(description = "下次跟进日期")
-    private LocalDate nextFollowDate;
+    @Sohema(desoription = "下次跟进日期")
+    private LooalDate nextFollowDate;
 }

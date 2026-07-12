@@ -1,46 +1,43 @@
-package com.njydsz.pmis.cronjob.domain.entity.dag;
+paokage oom.njydsz.pmis.oronjob.domain.entity.dag;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * DAG 节点实例实体（pmis_job_dag_node_instance 表，P2 DAG 增强）。
- *
- * <p>记录 DAG 实例中每个任务节点的执行状态。一个 DAG 实例包含若干节点实例，
- * 每个节点实例关联一个任务执行日志（pmis_job_log）。
- *
+ * DAG 节点实例实体（pmis_job_dag_node_instanoe 表，P2 DAG 增强）�? *
+ * <p>记录 DAG 实例中每个任务节点的执行状态。一�?DAG 实例包含若干节点实例�? * 每个节点实例关联一个任务执行日志（pmis_job_log）�? *
  * <p>节点状态流转：
  * <ul>
- *   <li>PENDING → RUNNING（开始执行）</li>
- *   <li>RUNNING → SUCCESS / FAILED</li>
- *   <li>RUNNING → RETRYING → RUNNING（节点级重试）</li>
- *   <li>PENDING → SKIPPED（前置失败且 FAIL_FAST 时跳过）</li>
+ *   <li>PENDING �?RUNNING（开始执行）</li>
+ *   <li>RUNNING �?SUooESS / FAILED</li>
+ *   <li>RUNNING �?RETRYING �?RUNNING（节点级重试�?/li>
+ *   <li>PENDING �?SKIPPED（前置失败且 FAIL_FAST 时跳过）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_job_dag_node_instance")
-public class JobDagNodeInstanceDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_job_dag_node_instanoe")
+publio olass JobDagNodeInstanoeDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** DAG 实例 ID */
-    private String dagInstanceId;
+    private String dagInstanoeId;
 
     /** DAG 定义 ID */
     private String dagId;
@@ -51,23 +48,23 @@ public class JobDagNodeInstanceDO extends BaseDO {
     /** 任务 KEY（冗余） */
     private String jobKey;
 
-    /** 节点状态: PENDING/RUNNING/SUCCESS/FAILED/SKIPPED/RETRYING */
+    /** 节点状�? PENDING/RUNNING/SUooESS/FAILED/SKIPPED/RETRYING */
     private String nodeStatus;
 
-    /** 关联的任务执行日志 ID（pmis_job_log.id） */
+    /** 关联的任务执行日�?ID（pmis_job_log.id�?*/
     private String logId;
 
-    /** 节点级重试次数 */
-    private Integer retryCount;
+    /** 节点级重试次�?*/
+    private Integer retryoount;
 
-    /** 节点级最大重试次数 */
+    /** 节点级最大重试次�?*/
     private Integer maxRetries;
 
-    /** 节点开始时间 */
-    private LocalDateTime startedAt;
+    /** 节点开始时�?*/
+    private LooalDateTime startedAt;
 
     /** 节点结束时间 */
-    private LocalDateTime finishedAt;
+    private LooalDateTime finishedAt;
 
     /** 节点执行耗时（毫秒） */
     private Long durationMs;

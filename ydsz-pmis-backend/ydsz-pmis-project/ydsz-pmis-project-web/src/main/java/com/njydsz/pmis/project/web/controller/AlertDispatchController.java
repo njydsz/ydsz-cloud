@@ -1,15 +1,15 @@
-package com.njydsz.pmis.project.web.controller.common;
+paokage oom.njydsz.pmis.projeot.web.oontroller.oommon;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.project.domain.dto.AlertDispatchDTO;
-import com.njydsz.pmis.project.domain.entity.AlertDispatchDO;
-import com.njydsz.pmis.project.server.service.AlertDispatchService;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.projeot.domain.dto.AlertDispatohDTO;
+import oom.njydsz.pmis.projeot.domain.entity.AlertDispatohDO;
+import oom.njydsz.pmis.projeot.server.servioe.AlertDispatohServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,40 +18,40 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 预警分级推送 Controller（P4-2）
+ * 预警分级推�?oontroller（P4-2�?
  *
- * <p>黄色预警 → PM + PMO；红色预警 → PMO + GM + CFO
+ * <p>黄色预警 �?PM + PMO；红色预�?�?PMO + GM + oFO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@Tag(name = "预警分级推送")
-@RestController
-@RequestMapping("/alertDispatch")
-@RequiredArgsConstructor
+@Tag(name = "预警分级推�?)
+@Restoontroller
+@RequestMapping("/alertDispatoh")
+@RequiredArgsoonstruotor
 @Validated
-public class AlertDispatchController {
+publio olass AlertDispatohoontroller {
 
-    /** 预警分级推送服务 */
-    private final AlertDispatchService service;
+    /** 预警分级推送服�?*/
+    private final AlertDispatohServioe servioe;
 
     /**
-     * 提交预警（自动按 level 解析目标角色）
+     * 提交预警（自动按 level 解析目标角色�?
      *
      * @param dto 预警提交参数
      * @return 预警记录 ID
      */
-    @Operation(summary = "提交预警（自动按 level 解析目标角色）")
-    @Idempotent(key = "alertDispatch:submit", ttlSeconds = 5, message = "请勿重复提交")
+    @Operation(summary = "提交预警（自动按 level 解析目标角色�?)
+    @Idempotent(key = "alertDispatoh:submit", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping
-    public BaseResponse<String> submit(@Valid @RequestBody AlertDispatchDTO dto) {
-        return BaseResponse.ok(service.submit(dto));
+    publio BaseResponse<String> submit(@Valid @RequestBody AlertDispatohDTO dto) {
+        return BaseResponse.ok(servioe.submit(dto));
     }
 
     /**
@@ -61,75 +61,75 @@ public class AlertDispatchController {
      * @return 分发是否成功
      */
     @Operation(summary = "立即分发")
-    @Idempotent(key = "alertDispatch:dispatchNow", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{id}/dispatch")
-    public BaseResponse<Boolean> dispatchNow(@PathVariable String id) {
-        return BaseResponse.ok(service.dispatchNow(id));
+    @Idempotent(key = "alertDispatoh:dispatohNow", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/{id}/dispatoh")
+    publio BaseResponse<Boolean> dispatohNow(@PathVariable String id) {
+        return BaseResponse.ok(servioe.dispatohNow(id));
     }
 
     /**
      * 重试失败预警
      *
      * @param maxRetry 最大重试次数，默认 3
-     * @return 重试成功的预警数量
+     * @return 重试成功的预警数�?
      */
     @Operation(summary = "重试失败预警")
-    @Idempotent(key = "alertDispatch:retryFailed", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "alertDispatoh:retryFailed", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/retry")
-    public BaseResponse<Integer> retryFailed(@RequestParam(defaultValue = "3") int maxRetry) {
-        return BaseResponse.ok(service.retryFailed(maxRetry));
+    publio BaseResponse<Integer> retryFailed(@RequestParam(defaultValue = "3") int maxRetry) {
+        return BaseResponse.ok(servioe.retryFailed(maxRetry));
     }
 
     /**
      * 取消预警
      *
      * @param id     预警记录 ID
-     * @param reason 取消原因，可选
-     * @return 空结果
+     * @param reason 取消原因，可�?
+     * @return 空结�?
      */
     @Operation(summary = "取消预警")
-    @Idempotent(key = "alertDispatch:cancel", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{id}/cancel")
-    public BaseResponse<Void> cancel(@PathVariable String id, @RequestParam(required = false) String reason) {
-        service.cancel(id, reason);
+    @Idempotent(key = "alertDispatoh:oanoel", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/{id}/oanoel")
+    publio BaseResponse<Void> oanoel(@PathVariable String id, @RequestParam(required = false) String reason) {
+        servioe.oanoel(id, reason);
         return BaseResponse.ok();
     }
 
     /**
-     * 按等级+状态查询
+     * 按等�?状态查�?
      *
-     * @param level  预警等级，可选
-     * @param status 预警状态，可选
+     * @param level  预警等级，可�?
+     * @param status 预警状态，可�?
      * @return 预警记录列表
      */
-    @Operation(summary = "按等级+状态查询")
+    @Operation(summary = "按等�?状态查�?)
     @GetMapping("/list")
-    public BaseResponse<List<AlertDispatchDO>> list(@RequestParam(required = false) String level,
+    publio BaseResponse<List<AlertDispatohDO>> list(@RequestParam(required = false) String level,
                                          @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.listByLevelAndStatus(level, status));
+        return BaseResponse.ok(servioe.listByLevelAndStatus(level, status));
     }
 
     /**
-     * 按类型 × 等级 聚合统计
+     * 按类�?× 等级 聚合统计
      *
-     * @param tenantId 租户 ID，可选
+     * @param tenantId 租户 ID，可�?
      * @return 聚合统计列表
      */
-    @Operation(summary = "按类型 × 等级 聚合统计")
+    @Operation(summary = "按类�?× 等级 聚合统计")
     @GetMapping("/aggregate")
-    public BaseResponse<List<Map<String, Object>>> aggregate(@RequestParam(required = false) String tenantId) {
-        return BaseResponse.ok(service.aggregateByTypeAndLevel(tenantId));
+    publio BaseResponse<List<Map<String, Objeot>>> aggregate(@RequestParam(required = false) String tenantId) {
+        return BaseResponse.ok(servioe.aggregateByTypeAndLevel(tenantId));
     }
 
     /**
-     * 解析等级对应目标角色（黄 → PM/PMO；红 → PMO/GM/CFO）
+     * 解析等级对应目标角色（黄 �?PM/PMO；红 �?PMO/GM/oFO�?
      *
      * @param level 预警等级
      * @return 目标角色列表
      */
-    @Operation(summary = "解析等级对应目标角色（黄 → PM/PMO；红 → PMO/GM/CFO）")
+    @Operation(summary = "解析等级对应目标角色（黄 �?PM/PMO；红 �?PMO/GM/oFO�?)
     @GetMapping("/resolveRoles")
-    public BaseResponse<List<String>> resolveRoles(@RequestParam String level) {
-        return BaseResponse.ok(service.resolveTargetRoles(level));
+    publio BaseResponse<List<String>> resolveRoles(@RequestParam String level) {
+        return BaseResponse.ok(servioe.resolveTargetRoles(level));
     }
 }

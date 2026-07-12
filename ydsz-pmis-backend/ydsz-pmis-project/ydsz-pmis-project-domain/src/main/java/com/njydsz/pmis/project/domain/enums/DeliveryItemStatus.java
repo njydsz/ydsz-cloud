@@ -1,77 +1,77 @@
-package com.njydsz.pmis.project.domain.enums;
+paokage oom.njydsz.pmis.projeot.domain.enums;
 
 /**
- * 交付物状态
+ * 交付物状�?
  *
  * <ul>
- *   <li>PENDING - 待提交</li>
- *   <li>SUBMITTED - 已提交</li>
- *   <li>UNDER_REVIEW - 评审中</li>
- *   <li>ACCEPTED - 已验收</li>
- *   <li>REJECTED - 已驳回</li>
- *   <li>WAIVED - 已豁免</li>
+ *   <li>PENDING - 待提�?/li>
+ *   <li>SUBMITTED - 已提�?/li>
+ *   <li>UNDER_REVIEW - 评审�?/li>
+ *   <li>AooEPTED - 已验�?/li>
+ *   <li>REJEoTED - 已驳�?/li>
+ *   <li>WAIVED - 已豁�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum DeliveryItemStatus {
-    PENDING("PENDING", "待提交"),
-    SUBMITTED("SUBMITTED", "已提交"),
-    UNDER_REVIEW("UNDER_REVIEW", "评审中"),
-    ACCEPTED("ACCEPTED", "已验收"),
-    REJECTED("REJECTED", "已驳回"),
-    WAIVED("WAIVED", "已豁免");
+publio enum DeliveryItemStatus {
+    PENDING("PENDING", "待提�?),
+    SUBMITTED("SUBMITTED", "已提�?),
+    UNDER_REVIEW("UNDER_REVIEW", "评审�?),
+    AooEPTED("AooEPTED", "已验�?),
+    REJEoTED("REJEoTED", "已驳�?),
+    WAIVED("WAIVED", "已豁�?);
 
-    /** 状态编码（大小写不敏感） */
-    private final String code;
-    /** 状态中文描述 */
-    private final String desc;
+    /** 状态编码（大小写不敏感�?*/
+    private final String oode;
+    /** 状态中文描�?*/
+    private final String deso;
 
-    DeliveryItemStatus(String code, String desc) {
-        this.code = code;
-        this.desc = desc;
+    DeliveryItemStatus(String oode, String deso) {
+        this.oode = oode;
+        this.deso = deso;
     }
 
     /**
-     * 获取状态编码
+     * 获取状态编�?
      *
      * @return 状态编码字符串
      */
-    public String getCode() { return code; }
+    publio String getoode() { return oode; }
 
     /**
-     * 获取状态中文描述
+     * 获取状态中文描�?
      *
-     * @return 状态中文描述
+     * @return 状态中文描�?
      */
-    public String getDesc() { return desc; }
+    publio String getDeso() { return deso; }
 
     /**
-     * 判断是否为终态
+     * 判断是否为终�?
      *
-     * @return true 表示当前状态为终态（已验收/已豁免），不可再迁移
+     * @return true 表示当前状态为终态（已验�?已豁免），不可再迁移
      */
-    public boolean isTerminal() {
-        return this == ACCEPTED || this == WAIVED;
+    publio boolean isTerminal() {
+        return this == AooEPTED || this == WAIVED;
     }
 
     /**
-     * 校验状态迁移合法性
+     * 校验状态迁移合法�?
      *
-     * @param target 目标状态
-     * @return true 表示允许从当前状态迁移到目标状态
+     * @param target 目标状�?
+     * @return true 表示允许从当前状态迁移到目标状�?
      */
-    public boolean canTransitTo(DeliveryItemStatus target) {
+    publio boolean oanTransitTo(DeliveryItemStatus target) {
         if (target == null) return false;
         if (this == target) return true;
         if (this.isTerminal()) return false;
-        return switch (this) {
-            case PENDING -> target == SUBMITTED || target == WAIVED;
-            case SUBMITTED -> target == UNDER_REVIEW || target == ACCEPTED
-                    || target == REJECTED || target == WAIVED;
-            case UNDER_REVIEW -> target == ACCEPTED || target == REJECTED;
-            case REJECTED -> target == SUBMITTED || target == WAIVED;
+        return switoh (this) {
+            oase PENDING -> target == SUBMITTED || target == WAIVED;
+            oase SUBMITTED -> target == UNDER_REVIEW || target == AooEPTED
+                    || target == REJEoTED || target == WAIVED;
+            oase UNDER_REVIEW -> target == AooEPTED || target == REJEoTED;
+            oase REJEoTED -> target == SUBMITTED || target == WAIVED;
             default -> false;
         };
     }
@@ -79,13 +79,13 @@ public enum DeliveryItemStatus {
     /**
      * 根据编码反查枚举
      *
-     * @param code 状态编码（大小写不敏感）
-     * @return 枚举值；未匹配返回 null
+     * @param oode 状态编码（大小写不敏感�?
+     * @return 枚举值；未匹配返�?null
      */
-    public static DeliveryItemStatus fromCode(String code) {
-        if (code == null) return null;
+    publio statio DeliveryItemStatus fromoode(String oode) {
+        if (oode == null) return null;
         for (DeliveryItemStatus s : values()) {
-            if (s.code.equalsIgnoreCase(code)) return s;
+            if (s.oode.equalsIgnoreoase(oode)) return s;
         }
         return null;
     }

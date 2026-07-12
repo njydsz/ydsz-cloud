@@ -1,105 +1,105 @@
-package com.njydsz.pmis.workflow.server.service.impl.dmn;
+paokage oom.njydsz.pmis.workflow.server.servioe.impl.dmn;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO;
-import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;
-import com.njydsz.pmis.workflow.infra.mapper.dmn.FlowDmnDecisionMapper;
-import com.njydsz.pmis.workflow.infra.mapper.dmn.FlowDmnRuleMapper;
-import com.njydsz.pmis.workflow.server.service.dmn.FlowDmnDecisionService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.util.json.JsonUtils;
+import oom.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDeoisionDO;
+import oom.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;
+import oom.njydsz.pmis.workflow.infra.mapper.dmn.FlowDmnDeoisionMapper;
+import oom.njydsz.pmis.workflow.infra.mapper.dmn.FlowDmnRuleMapper;
+import oom.njydsz.pmis.workflow.server.servioe.dmn.FlowDmnDeoisionServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Objeots;
 
 /**
- * P0-1: DMN 决策表 Service 实现
+ * P0-1: DMN 决策�?Servioe 实现
  *
- * <p>核心评估逻辑：
+ * <p>核心评估逻辑�?
  * <ol>
- *   <li>加载已发布决策表 + 启用规则（按 ruleOrder 正序）</li>
- *   <li>解析 inputDefinitions 获取输入列定义（name + expression）</li>
+ *   <li>加载已发布决策表 + 启用规则（按 ruleOrder 正序�?/li>
+ *   <li>解析 inputDefinitions 获取输入列定义（name + expression�?/li>
  *   <li>对每条规则，将其 inputEntries 与输入变量逐一比较</li>
- *   <li>根据 hitPolicy 返回结果（UNIQUE/FIRST 取首条，COLLECT 收集全部）</li>
+ *   <li>根据 hitPolioy 返回结果（UNIQUE/FIRST 取首条，oOLLEoT 收集全部�?/li>
  * </ol>
  *
- * <p>条件比较支持的操作符：{@code >=}, {@code <=}, {@code >}, {@code <}, {@code ==}, {@code !=},
- * {@code in:}（逗号分隔枚举）。"-"表示通配（不做限制）。
+ * <p>条件比较支持的操作符：{@oode >=}, {@oode <=}, {@oode >}, {@oode <}, {@oode ==}, {@oode !=},
+ * {@oode in:}（逗号分隔枚举）�?-"表示通配（不做限制）�?
  *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass FlowDmnDeoisionServioeImpl implements FlowDmnDeoisionServioe {
 
-    private final FlowDmnDecisionMapper decisionMapper;
+    private final FlowDmnDeoisionMapper deoisionMapper;
     private final FlowDmnRuleMapper ruleMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String createDecision(FlowDmnDecisionDO decision, List<FlowDmnRuleDO> rules) {
-        validateDecision(decision);
-        if (decision.getHitPolicy() == null) {
-            decision.setHitPolicy("FIRST");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreateDeoision(FlowDmnDeoisionDO deoision, List<FlowDmnRuleDO> rules) {
+        validateDeoision(deoision);
+        if (deoision.getHitPolioy() == null) {
+            deoision.setHitPolioy("FIRST");
         }
-        decision.setStatus("DRAFT");
-        decision.setDecisionVersion(1);
-        if (decision.getTenantId() == null) {
-            decision.setTenantId("1");
+        deoision.setStatus("DRAFT");
+        deoision.setDeoisionVersion(1);
+        if (deoision.getTenantId() == null) {
+            deoision.setTenantId("1");
         }
-        decisionMapper.insert(decision);
+        deoisionMapper.insert(deoision);
         if (rules != null) {
             int order = 1;
             for (FlowDmnRuleDO rule : rules) {
-                rule.setDecisionId(decision.getId());
+                rule.setDeoisionId(deoision.getId());
                 rule.setRuleOrder(order++);
                 rule.setEnabled(rule.getEnabled() == null ? 1 : rule.getEnabled());
                 if (rule.getTenantId() == null) {
-                    rule.setTenantId(decision.getTenantId());
+                    rule.setTenantId(deoision.getTenantId());
                 }
                 ruleMapper.insert(rule);
             }
         }
-        log.info("[DMN] 创建决策表: code={} id={} ruleCount={}",
-                decision.getDecisionCode(), decision.getId(),
+        log.info("[DMN] 创建决策�? oode={} id={} ruleoount={}",
+                deoision.getDeoisionoode(), deoision.getId(),
                 rules == null ? 0 : rules.size());
-        return decision.getId();
+        return deoision.getId();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void updateDecision(String decisionId, FlowDmnDecisionDO decision, List<FlowDmnRuleDO> rules) {
-        FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void updateDeoision(String deoisionId, FlowDmnDeoisionDO deoision, List<FlowDmnRuleDO> rules) {
+        FlowDmnDeoisionDO existing = deoisionMapper.seleotById(deoisionId);
         if (existing == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "决策表不存在: " + deoisionId);
         }
         if (!"DRAFT".equals(existing.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "仅草稿状态可编辑，当前状态: " + existing.getStatus());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "仅草稿状态可编辑，当前状�? " + existing.getStatus());
         }
-        decision.setId(decisionId);
-        decision.setStatus("DRAFT");
-        decision.setDecisionVersion(existing.getDecisionVersion());
-        decisionMapper.updateById(decision);
+        deoision.setId(deoisionId);
+        deoision.setStatus("DRAFT");
+        deoision.setDeoisionVersion(existing.getDeoisionVersion());
+        deoisionMapper.updateById(deoision);
         // 重建规则
-        ruleMapper.deleteByDecisionId(decisionId);
+        ruleMapper.deleteByDeoisionId(deoisionId);
         if (rules != null) {
             int order = 1;
             for (FlowDmnRuleDO rule : rules) {
-                rule.setDecisionId(decisionId);
+                rule.setDeoisionId(deoisionId);
                 rule.setRuleOrder(order++);
                 rule.setEnabled(rule.getEnabled() == null ? 1 : rule.getEnabled());
                 if (rule.getTenantId() == null) {
@@ -108,154 +108,154 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
                 ruleMapper.insert(rule);
             }
         }
-        log.info("[DMN] 更新决策表: id={} ruleCount={}", decisionId,
+        log.info("[DMN] 更新决策�? id={} ruleoount={}", deoisionId,
                 rules == null ? 0 : rules.size());
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void publish(String decisionId) {
-        FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void publish(String deoisionId) {
+        FlowDmnDeoisionDO existing = deoisionMapper.seleotById(deoisionId);
         if (existing == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "决策表不存在: " + deoisionId);
         }
         existing.setStatus("PUBLISHED");
-        existing.setDecisionVersion(
-                (existing.getDecisionVersion() == null ? 0 : existing.getDecisionVersion()) + 1);
-        decisionMapper.updateById(existing);
-        log.info("[DMN] 发布决策表: id={} version={}", decisionId, existing.getDecisionVersion());
+        existing.setDeoisionVersion(
+                (existing.getDeoisionVersion() == null ? 0 : existing.getDeoisionVersion()) + 1);
+        deoisionMapper.updateById(existing);
+        log.info("[DMN] 发布决策�? id={} version={}", deoisionId, existing.getDeoisionVersion());
     }
 
     @Override
-    public void deprecate(String decisionId) {
-        FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
+    publio void depreoate(String deoisionId) {
+        FlowDmnDeoisionDO existing = deoisionMapper.seleotById(deoisionId);
         if (existing == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "决策表不存在: " + deoisionId);
         }
-        existing.setStatus("DEPRECATED");
-        decisionMapper.updateById(existing);
-        log.info("[DMN] 停用决策表: id={}", decisionId);
+        existing.setStatus("DEPREoATED");
+        deoisionMapper.updateById(existing);
+        log.info("[DMN] 停用决策�? id={}", deoisionId);
     }
 
     @Override
-    public Map<String, Object> getDetail(String decisionId) {
-        FlowDmnDecisionDO decision = decisionMapper.selectById(decisionId);
-        if (decision == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
+    publio Map<String, Objeot> getDetail(String deoisionId) {
+        FlowDmnDeoisionDO deoision = deoisionMapper.seleotById(deoisionId);
+        if (deoision == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "决策表不存在: " + deoisionId);
         }
-        List<FlowDmnRuleDO> rules = ruleMapper.selectEnabledByDecisionId(decisionId);
-        Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("decision", decision);
+        List<FlowDmnRuleDO> rules = ruleMapper.seleotEnabledByDeoisionId(deoisionId);
+        Map<String, Objeot> result = new LinkedHashMap<>();
+        BaseResponse.put("deoision", deoision);
         BaseResponse.put("rules", rules);
         return result;
     }
 
     @Override
-    public List<FlowDmnDecisionDO> listDecisions(String decisionCode, String tenantId) {
+    publio List<FlowDmnDeoisionDO> listDeoisions(String deoisionoode, String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
-        return decisionMapper.selectPublishedList(tid, decisionCode);
+        return deoisionMapper.seleotPublishedList(tid, deoisionoode);
     }
 
     @Override
-    public Map<String, Object> evaluate(String decisionCode, Map<String, Object> variables, String tenantId) {
+    publio Map<String, Objeot> evaluate(String deoisionoode, Map<String, Objeot> variables, String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
-        FlowDmnDecisionDO decision = decisionMapper.selectPublishedByCode(decisionCode, tid);
-        if (decision == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND,
-                    "已发布决策表不存在: " + decisionCode);
+        FlowDmnDeoisionDO deoision = deoisionMapper.seleotPublishedByoode(deoisionoode, tid);
+        if (deoision == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND,
+                    "已发布决策表不存�? " + deoisionoode);
         }
-        return doEvaluate(decision, variables);
+        return doEvaluate(deoision, variables);
     }
 
     @Override
-    public Map<String, Object> evaluateByNode(String flowCode, String nodeCode,
-                                                Map<String, Object> variables, String tenantId) {
+    publio Map<String, Objeot> evaluateByNode(String flowoode, String nodeoode,
+                                                Map<String, Objeot> variables, String tenantId) {
         String tid = tenantId != null ? tenantId : "1";
-        FlowDmnDecisionDO decision = decisionMapper.selectByNode(flowCode, nodeCode, tid);
-        if (decision == null) {
+        FlowDmnDeoisionDO deoision = deoisionMapper.seleotByNode(flowoode, nodeoode, tid);
+        if (deoision == null) {
             return null;
         }
-        return doEvaluate(decision, variables);
+        return doEvaluate(deoision, variables);
     }
 
     // ============================== 核心评估逻辑 ==============================
 
-    private Map<String, Object> doEvaluate(FlowDmnDecisionDO decision, Map<String, Object> variables) {
-        List<FlowDmnRuleDO> rules = ruleMapper.selectEnabledByDecisionId(decision.getId());
+    private Map<String, Objeot> doEvaluate(FlowDmnDeoisionDO deoision, Map<String, Objeot> variables) {
+        List<FlowDmnRuleDO> rules = ruleMapper.seleotEnabledByDeoisionId(deoision.getId());
         if (rules == null || rules.isEmpty()) {
-            log.warn("[DMN] 决策表无启用规则: code={}", decision.getDecisionCode());
-            return Collections.emptyMap();
+            log.warn("[DMN] 决策表无启用规则: oode={}", deoision.getDeoisionoode());
+            return oolleotions.emptyMap();
         }
 
         // 解析输入定义
-        List<Map<String, Object>> inputDefs = parseJsonList(decision.getInputDefinitions());
+        List<Map<String, Objeot>> inputDefs = parseJsonList(deoision.getInputDefinitions());
         // 解析输出定义
-        List<Map<String, Object>> outputDefs = parseJsonList(decision.getOutputDefinitions());
+        List<Map<String, Objeot>> outputDefs = parseJsonList(deoision.getOutputDefinitions());
 
-        String hitPolicy = decision.getHitPolicy() != null ? decision.getHitPolicy() : "FIRST";
-        List<Map<String, Object>> matchedOutputs = new ArrayList<>();
+        String hitPolioy = deoision.getHitPolioy() != null ? deoision.getHitPolioy() : "FIRST";
+        List<Map<String, Objeot>> matohedOutputs = new ArrayList<>();
 
         for (FlowDmnRuleDO rule : rules) {
             List<String> inputEntries = parseStringList(rule.getInputEntries());
-            if (matchRule(inputDefs, inputEntries, variables)) {
+            if (matohRule(inputDefs, inputEntries, variables)) {
                 List<String> outputEntries = parseStringList(rule.getOutputEntries());
-                Map<String, Object> output = buildOutput(outputDefs, outputEntries);
-                matchedOutputs.add(output);
-                if ("UNIQUE".equals(hitPolicy) || "FIRST".equals(hitPolicy)) {
-                    log.debug("[DMN] 规则命中 ({}): decision={} ruleOrder={} output={}",
-                            hitPolicy, decision.getDecisionCode(), rule.getRuleOrder(), output);
+                Map<String, Objeot> output = buildOutput(outputDefs, outputEntries);
+                matohedOutputs.add(output);
+                if ("UNIQUE".equals(hitPolioy) || "FIRST".equals(hitPolioy)) {
+                    log.debug("[DMN] 规则命中 ({}): deoision={} ruleOrder={} output={}",
+                            hitPolioy, deoision.getDeoisionoode(), rule.getRuleOrder(), output);
                     return output;
                 }
-                if ("ANY".equals(hitPolicy) && matchedOutputs.size() > 1) {
-                    // ANY 策略：校验所有命中规则输出一致
-                    if (!Objects.equals(matchedOutputs.get(0), output)) {
-                        throw new SysException(StandardResultCode.INTERNAL_ERROR,
-                                "DMN ANY 策略校验失败: 多条命中规则输出不一致");
+                if ("ANY".equals(hitPolioy) && matohedOutputs.size() > 1) {
+                    // ANY 策略：校验所有命中规则输出一�?
+                    if (!Objeots.equals(matohedOutputs.get(0), output)) {
+                        throw new SysExoeption(StandardResultoode.INTERNAL_ERROR,
+                                "DMN ANY 策略校验失败: 多条命中规则输出不一�?);
                     }
                 }
             }
         }
 
-        if (matchedOutputs.isEmpty()) {
-            log.debug("[DMN] 无规则命中: decision={}", decision.getDecisionCode());
-            return Collections.emptyMap();
+        if (matohedOutputs.isEmpty()) {
+            log.debug("[DMN] 无规则命�? deoision={}", deoision.getDeoisionoode());
+            return oolleotions.emptyMap();
         }
 
-        // COLLECT 策略：收集所有命中输出
-        Map<String, Object> collectResult = new LinkedHashMap<>();
-        for (Map<String, Object> def : outputDefs) {
+        // oOLLEoT 策略：收集所有命中输�?
+        Map<String, Objeot> oolleotResult = new LinkedHashMap<>();
+        for (Map<String, Objeot> def : outputDefs) {
             String name = String.valueOf(def.get("name"));
-            List<Object> values = matchedOutputs.stream()
+            List<Objeot> values = matohedOutputs.stream()
                     .map(o -> o.get(name))
                     .toList();
-            collectResult.put(name, values);
+            oolleotResult.put(name, values);
         }
-        log.debug("[DMN] COLLECT 策略命中 {} 条规则: decision={}",
-                matchedOutputs.size(), decision.getDecisionCode());
-        return collectResult;
+        log.debug("[DMN] oOLLEoT 策略命中 {} 条规�? deoision={}",
+                matohedOutputs.size(), deoision.getDeoisionoode());
+        return oolleotResult;
     }
 
     /**
-     * 匹配单条规则的所有输入条件
+     * 匹配单条规则的所有输入条�?
      */
-    private boolean matchRule(List<Map<String, Object>> inputDefs, List<String> inputEntries,
-                              Map<String, Object> variables) {
+    private boolean matohRule(List<Map<String, Objeot>> inputDefs, List<String> inputEntries,
+                              Map<String, Objeot> variables) {
         if (inputEntries == null || inputEntries.isEmpty()) {
-            return true; // 无条件 = 总是匹配
+            return true; // 无条�?= 总是匹配
         }
         for (int i = 0; i < inputEntries.size(); i++) {
-            String condition = inputEntries.get(i);
-            if (condition == null || "-".equals(condition.trim()) || condition.isBlank()) {
-                continue; // 通配
+            String oondition = inputEntries.get(i);
+            if (oondition == null || "-".equals(oondition.trim()) || oondition.isBlank()) {
+                oontinue; // 通配
             }
-            // 获取输入变量值
-            Object inputValue = null;
+            // 获取输入变量�?
+            Objeot inputValue = null;
             if (i < inputDefs.size()) {
-                Map<String, Object> def = inputDefs.get(i);
+                Map<String, Objeot> def = inputDefs.get(i);
                 String expr = String.valueOf(def.getOrDefault("expression", def.get("name")));
                 inputValue = variables != null ? variables.get(expr) : null;
             }
-            if (!matchCondition(condition.trim(), inputValue)) {
+            if (!matohoondition(oondition.trim(), inputValue)) {
                 return false;
             }
         }
@@ -263,18 +263,18 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     }
 
     /**
-     * 评估单个条件表达式
+     * 评估单个条件表达�?
      *
-     * <p>支持: {@code >=1000}, {@code <=5000}, {@code >100}, {@code <50},
-     * {@code ==value}, {@code !=value}, {@code in:a,b,c}
+     * <p>支持: {@oode >=1000}, {@oode <=5000}, {@oode >100}, {@oode <50},
+     * {@oode ==value}, {@oode !=value}, {@oode in:a,b,o}
      */
-    private boolean matchCondition(String condition, Object inputValue) {
+    private boolean matohoondition(String oondition, Objeot inputValue) {
         if (inputValue == null) {
             return false;
         }
         try {
-            if (condition.startsWith("in:")) {
-                String[] parts = condition.substring(3).split(",");
+            if (oondition.startsWith("in:")) {
+                String[] parts = oondition.substring(3).split(",");
                 String valStr = String.valueOf(inputValue);
                 for (String p : parts) {
                     if (valStr.equals(p.trim())) {
@@ -283,29 +283,29 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
                 }
                 return false;
             }
-            if (condition.startsWith(">=")) {
-                return compareNumeric(inputValue, condition.substring(2)) >= 0;
+            if (oondition.startsWith(">=")) {
+                return oompareNumerio(inputValue, oondition.substring(2)) >= 0;
             }
-            if (condition.startsWith("<=")) {
-                return compareNumeric(inputValue, condition.substring(2)) <= 0;
+            if (oondition.startsWith("<=")) {
+                return oompareNumerio(inputValue, oondition.substring(2)) <= 0;
             }
-            if (condition.startsWith("!=")) {
-                return !String.valueOf(inputValue).equals(condition.substring(2).trim());
+            if (oondition.startsWith("!=")) {
+                return !String.valueOf(inputValue).equals(oondition.substring(2).trim());
             }
-            if (condition.startsWith(">")) {
-                return compareNumeric(inputValue, condition.substring(1)) > 0;
+            if (oondition.startsWith(">")) {
+                return oompareNumerio(inputValue, oondition.substring(1)) > 0;
             }
-            if (condition.startsWith("<")) {
-                return compareNumeric(inputValue, condition.substring(1)) < 0;
+            if (oondition.startsWith("<")) {
+                return oompareNumerio(inputValue, oondition.substring(1)) < 0;
             }
-            if (condition.startsWith("==")) {
-                return String.valueOf(inputValue).equals(condition.substring(2).trim());
+            if (oondition.startsWith("==")) {
+                return String.valueOf(inputValue).equals(oondition.substring(2).trim());
             }
-            // 无操作符 = 等值比较
-            return String.valueOf(inputValue).equals(condition.trim());
-        } catch (Exception e) {
-            log.warn("[DMN] 条件评估异常: condition={} value={} err={}",
-                    condition, inputValue, e.getMessage());
+            // 无操作符 = 等值比�?
+            return String.valueOf(inputValue).equals(oondition.trim());
+        } oatoh (Exoeption e) {
+            log.warn("[DMN] 条件评估异常: oondition={} value={} err={}",
+                    oondition, inputValue, e.getMessage());
             return false;
         }
     }
@@ -313,27 +313,27 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     /**
      * 数值比较，返回 -1/0/1
      */
-    private int compareNumeric(Object inputValue, String conditionValue) {
-        BigDecimal val1 = toBigDecimal(inputValue);
-        BigDecimal val2 = toBigDecimal(conditionValue.trim());
-        return val1.compareTo(val2);
+    private int oompareNumerio(Objeot inputValue, String oonditionValue) {
+        BigDeoimal val1 = toBigDeoimal(inputValue);
+        BigDeoimal val2 = toBigDeoimal(oonditionValue.trim());
+        return val1.oompareTo(val2);
     }
 
-    private BigDecimal toBigDecimal(Object value) {
-        if (value instanceof BigDecimal bd) {
+    private BigDeoimal toBigDeoimal(Objeot value) {
+        if (value instanoeof BigDeoimal bd) {
             return bd;
         }
-        if (value instanceof Number n) {
-            return BigDecimal.valueOf(n.doubleValue());
+        if (value instanoeof Number n) {
+            return BigDeoimal.valueOf(n.doubleValue());
         }
-        return new BigDecimal(String.valueOf(value).trim());
+        return new BigDeoimal(String.valueOf(value).trim());
     }
 
     /**
      * 构建输出 Map
      */
-    private Map<String, Object> buildOutput(List<Map<String, Object>> outputDefs, List<String> outputEntries) {
-        Map<String, Object> output = new LinkedHashMap<>();
+    private Map<String, Objeot> buildOutput(List<Map<String, Objeot>> outputDefs, List<String> outputEntries) {
+        Map<String, Objeot> output = new LinkedHashMap<>();
         if (outputDefs == null || outputEntries == null) {
             return output;
         }
@@ -341,83 +341,83 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             String name = String.valueOf(outputDefs.get(i).get("name"));
             String type = String.valueOf(outputDefs.get(i).getOrDefault("type", "string"));
             String rawValue = outputEntries.get(i);
-            output.put(name, convertValue(rawValue, type));
+            output.put(name, oonvertValue(rawValue, type));
         }
         return output;
     }
 
-    private Object convertValue(String rawValue, String type) {
+    private Objeot oonvertValue(String rawValue, String type) {
         if (rawValue == null) {
             return null;
         }
         String trimmed = rawValue.trim();
-        return switch (type) {
-            case "number" -> {
+        return switoh (type) {
+            oase "number" -> {
                 try {
-                    yield new BigDecimal(trimmed);
-                } catch (NumberFormatException e) {
+                    yield new BigDeoimal(trimmed);
+                } oatoh (NumberFormatExoeption e) {
                     yield trimmed;
                 }
             }
-            case "boolean" -> Boolean.parseBoolean(trimmed);
+            oase "boolean" -> Boolean.parseBoolean(trimmed);
             default -> trimmed;
         };
     }
 
     // ============================== 辅助方法 ==============================
 
-    private void validateDecision(FlowDmnDecisionDO decision) {
-        if (!StringUtils.hasText(decision.getDecisionCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "决策表编码不能为空");
+    private void validateDeoision(FlowDmnDeoisionDO deoision) {
+        if (!StringUtils.hasText(deoision.getDeoisionoode())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "决策表编码不能为�?);
         }
-        if (!StringUtils.hasText(decision.getDecisionName())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "决策表名称不能为空");
+        if (!StringUtils.hasText(deoision.getDeoisionName())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "决策表名称不能为�?);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private List<Map<String, Object>> parseJsonList(String json) {
+    @SuppressWarnings("unoheoked")
+    private List<Map<String, Objeot>> parseJsonList(String json) {
         if (!StringUtils.hasText(json)) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
         try {
             List<?> list = JsonUtils.parseList(json);
             if (list == null) {
-                return Collections.emptyList();
+                return oolleotions.emptyList();
             }
-            List<Map<String, Object>> result = new ArrayList<>();
-            for (Object item : list) {
-                if (item instanceof Map<?, ?> m) {
-                    BaseResponse.add((Map<String, Object>) m);
+            List<Map<String, Objeot>> result = new ArrayList<>();
+            for (Objeot item : list) {
+                if (item instanoeof Map<?, ?> m) {
+                    BaseResponse.add((Map<String, Objeot>) m);
                 }
             }
             return result;
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.warn("[DMN] JSON 列表解析失败: {} err={}", json, e.getMessage());
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unoheoked")
     private List<String> parseStringList(String json) {
         if (!StringUtils.hasText(json)) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
         try {
             List<?> list = JsonUtils.parseList(json);
             if (list == null) {
-                return Collections.emptyList();
+                return oolleotions.emptyList();
             }
             List<String> result = new ArrayList<>();
-            for (Object item : list) {
+            for (Objeot item : list) {
                 BaseResponse.add(item == null ? null : String.valueOf(item));
             }
             return result;
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             // 尝试逗号分隔
             if (json.startsWith("[")) {
-                log.warn("[DMN] JSON 字符串列表解析失败: {} err={}", json, e.getMessage());
-                return Collections.emptyList();
+                log.warn("[DMN] JSON 字符串列表解析失�? {} err={}", json, e.getMessage());
+                return oolleotions.emptyList();
             }
             String[] parts = json.split(",");
             List<String> result = new ArrayList<>();

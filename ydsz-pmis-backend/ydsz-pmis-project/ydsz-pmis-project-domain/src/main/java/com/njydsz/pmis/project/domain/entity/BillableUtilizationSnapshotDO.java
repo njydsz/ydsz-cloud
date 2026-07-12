@@ -1,35 +1,35 @@
-package com.njydsz.pmis.project.domain.entity;
+paokage oom.njydsz.pmis.projeot.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
  * 可计费利用率快照
  *
- * <p>由 BillableUtilizationJobHandler 定时（每日凌晨）计算并写入；
- * Cockpit 驾驶舱 / 排行榜 / 趋势分析 均直接读本表，避免每次实时聚合 pmis_execution_time_entry 大表。
+ * <p>�?BillableUtilizationJobHandler 定时（每日凌晨）计算并写入；
+ * oookpit 驾驶�?/ 排行�?/ 趋势分析 均直接读本表，避免每次实时聚�?pmis_exeoution_time_entry 大表�?
  *
- * <p>键设计：(period, employee_id) 唯一，由 UPSERT 保证幂等。
+ * <p>键设计：(period, employee_id) 唯一，由 UPSERT 保证幂等�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @TableName("pmis_billable_utilization_snapshot")
-public class BillableUtilizationSnapshotDO implements Serializable {
+publio olass BillableUtilizationSnapshotDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -45,51 +45,51 @@ public class BillableUtilizationSnapshotDO implements Serializable {
     private String employeeName;
 
     /** 职级 */
-    private String levelCode;
+    private String leveloode;
 
-    /** 部门（来自 RateInternal） */
+    /** 部门（来�?RateInternal�?*/
     private String department;
 
-    /** 全部工时（含加班 / 请假 / 培训） */
-    private BigDecimal totalHours;
+    /** 全部工时（含加班 / 请假 / 培训�?*/
+    private BigDeoimal totalHours;
 
-    /** 可计费工时 */
-    private BigDecimal billableHours;
+    /** 可计费工�?*/
+    private BigDeoimal billableHours;
 
     /** 加班工时 */
-    private BigDecimal overtimeHours;
+    private BigDeoimal overtimeHours;
 
     /** 请假工时 */
-    private BigDecimal leaveHours;
+    private BigDeoimal leaveHours;
 
     /** 培训工时 */
-    private BigDecimal trainingHours;
+    private BigDeoimal trainingHours;
 
-    /** 闲置（bench）工时 = total - billable - leave - training */
-    private BigDecimal benchHours;
+    /** 闲置（benoh）工�?= total - billable - leave - training */
+    private BigDeoimal benohHours;
 
-    /** 利用率 0-1 */
-    private BigDecimal utilizationPct;
+    /** 利用�?0-1 */
+    private BigDeoimal utilizationPot;
 
-    /** 考核等级：EXCELLENT/GOOD/NORMAL/WARN/CRITICAL */
+    /** 考核等级：EXoELLENT/GOOD/NORMAL/WARN/oRITIoAL */
     private String grade;
 
     /** 区间起始 */
-    private LocalDate rangeFrom;
+    private LooalDate rangeFrom;
 
     /** 区间截止 */
-    private LocalDate rangeTo;
+    private LooalDate rangeTo;
 
     /** 快照生成时间 */
-    private LocalDateTime snapshotAt;
+    private LooalDateTime snapshotAt;
 
     /** 触发来源：CRONJOB / MANUAL / RETRO */
-    private String source;
+    private String souroe;
 
     /** 租户ID */
     private String tenantId;
 
-    /** 逻辑删除标志：1 已删除 / 0 未删除 */
+    /** 逻辑删除标志�? 已删�?/ 0 未删�?*/
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

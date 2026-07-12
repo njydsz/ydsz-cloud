@@ -1,69 +1,67 @@
-package com.njydsz.pmis.userinfo.domain.entity.resource;
+paokage oom.njydsz.pmis.userinfo.domain.entity.resouroe;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 资源池
- *
- * <p>按 PoolType（HQ/DIVISION/RESERVE）三级管理资源。
- *
+ * 资源�? *
+ * <p>�?PoolType（HQ/DIVISION/RESERVE）三级管理资源�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_resource_pool")
-public class ResourcePoolDO implements Serializable {
+@TableName("pmis_resouroe_pool")
+publio olass ResouroePoolDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 业务编号 */
-    private String poolCode;
-    /** 池名称 */
+    private String pooloode;
+    /** 池名�?*/
     private String poolName;
-    /** 池类型（PoolType.code） */
+    /** 池类型（PoolType.oode�?*/
     private String poolType;
-    /** 事业部/部门 ID */
+    /** 事业�?部门 ID */
     private String departmentId;
     /** 部门名称 */
     private String departmentName;
     /** 职级范围 e.g. "L1-L3" "L4-L12" "L13+" */
     private String levelRange;
-    /** 池人数 */
-    private Integer headcount;
+    /** 池人�?*/
+    private Integer headoount;
     /** 目标计费人数 */
     private Integer billableTarget;
     /** 描述 */
-    private String description;
-    /** 状态：ACTIVE/INACTIVE */
+    private String desoription;
+    /** 状态：AoTIVE/INAoTIVE */
     private String status;
     /** 租户 ID */
     private String tenantId;
-    /** 外部提供方链路追踪 ID */
-    private String providerTraceId;
+    /** 外部提供方链路追�?ID */
+    private String providerTraoeId;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标识：0=未删除，1=已删除 */
+    /** 逻辑删除标识�?=未删除，1=已删�?*/
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

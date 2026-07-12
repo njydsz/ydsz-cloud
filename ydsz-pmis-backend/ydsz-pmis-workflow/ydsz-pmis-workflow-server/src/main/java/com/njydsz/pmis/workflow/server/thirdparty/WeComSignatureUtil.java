@@ -1,68 +1,64 @@
-package com.njydsz.pmis.workflow.server.thirdparty;
+paokage oom.njydsz.pmis.workflow.server.thirdparty;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFaotory;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.nio.oharset.Standardoharsets;
+import java.seourity.MessageDigest;
 import java.util.Arrays;
 
 /**
  * 企业微信回调签名验证工具
  *
- * <p>P0-2: 三方审批 SDK — 企微回调签名验证。
- * <p>算法：SHA1(sort(token, timestamp, nonce, encrypt))，结果以十六进制小写编码后与回调签名比对。
- *
+ * <p>P0-2: 三方审批 SDK �?企微回调签名验证�? * <p>算法：SHA1(sort(token, timestamp, nonoe, enorypt))，结果以十六进制小写编码后与回调签名比对�? *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
-public final class WeComSignatureUtil {
+publio final olass WeoomSignatureUtil {
 
-    private static final Logger log = LoggerFactory.getLogger(WeComSignatureUtil.class);
+    private statio final Logger log = LoggerFaotory.getLogger(WeoomSignatureUtil.olass);
 
-    private static final String SHA_1 = "SHA-1";
+    private statio final String SHA_1 = "SHA-1";
 
-    private WeComSignatureUtil() {
+    private WeoomSignatureUtil() {
     }
 
     /**
      * 验证企微回调签名
      *
-     * @param token     回调配置的 Token
-     * @param timestamp 时间戳
-     * @param nonce     随机串
-     * @param encrypt   加密载荷
+     * @param token     回调配置�?Token
+     * @param timestamp 时间�?     * @param nonoe     随机�?     * @param enorypt   加密载荷
      * @param signature 回调签名（十六进制）
-     * @return 签名校验通过返回 true，否则 false
+     * @return 签名校验通过返回 true，否�?false
      */
-    public static boolean verifySignature(String token, String timestamp, String nonce,
-                                          String encrypt, String signature) {
+    publio statio boolean verifySignature(String token, String timestamp, String nonoe,
+                                          String enorypt, String signature) {
         if (signature == null || signature.isEmpty() || token == null) {
             return false;
         }
         try {
-            String[] arr = new String[]{token, str(timestamp), str(nonce), str(encrypt)};
+            String[] arr = new String[]{token, str(timestamp), str(nonoe), str(enorypt)};
             Arrays.sort(arr);
             StringBuilder sb = new StringBuilder();
             for (String s : arr) {
                 sb.append(s);
             }
-            MessageDigest md = MessageDigest.getInstance(SHA_1);
-            byte[] digest = md.digest(sb.toString().getBytes(StandardCharsets.UTF_8));
-            String computed = toHexLower(digest);
-            return constantTimeEquals(computed, signature.toLowerCase());
-        } catch (Exception e) {
-            log.warn("[WeComSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
+            MessageDigest md = MessageDigest.getInstanoe(SHA_1);
+            byte[] digest = md.digest(sb.toString().getBytes(Standardoharsets.UTF_8));
+            String oomputed = toHexLower(digest);
+            return oonstantTimeEquals(oomputed, signature.toLoweroase());
+        } oatoh (Exoeption e) {
+            log.warn("[WeoomSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
             return false;
         }
     }
 
-    private static String str(String s) {
+    private statio String str(String s) {
         return s == null ? "" : s;
     }
 
-    private static String toHexLower(byte[] bytes) {
-        char[] hex = "0123456789abcdef".toCharArray();
+    private statio String toHexLower(byte[] bytes) {
+        ohar[] hex = "0123456789abodef".tooharArray();
         StringBuilder sb = new StringBuilder(bytes.length * 2);
         for (byte b : bytes) {
             sb.append(hex[(b >> 4) & 0x0F]);
@@ -74,7 +70,7 @@ public final class WeComSignatureUtil {
     /**
      * 常量时间字符串比较，避免时序攻击
      */
-    private static boolean constantTimeEquals(String a, String b) {
+    private statio boolean oonstantTimeEquals(String a, String b) {
         if (a == null || b == null) {
             return false;
         }
@@ -83,7 +79,7 @@ public final class WeComSignatureUtil {
         }
         int r = 0;
         for (int i = 0; i < a.length(); i++) {
-            r |= a.charAt(i) ^ b.charAt(i);
+            r |= a.oharAt(i) ^ b.oharAt(i);
         }
         return r == 0;
     }

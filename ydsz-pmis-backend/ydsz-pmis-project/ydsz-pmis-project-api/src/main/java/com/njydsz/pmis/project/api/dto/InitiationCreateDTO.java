@@ -1,107 +1,107 @@
-package com.njydsz.pmis.project.api.dto;
+paokage oom.njydsz.pmis.projeot.api.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
 
 /**
- * 立项申请 DTO（API 暴露，供 Feign 跨域调用）
+ * 立项申请 DTO（API 暴露，供 Feign 跨域调用�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "立项申请")
-public class InitiationCreateDTO implements Serializable {
+@Sohema(desoription = "立项申请")
+publio olass InitiationoreateDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 项目编号 */
     @NotBlank
-    @Schema(description = "项目编号", requiredMode = RequiredMode.REQUIRED)
-    private String projectCode;
+    @Sohema(desoription = "项目编号", requiredMode = RequiredMode.REQUIRED)
+    private String projeotoode;
 
     /** 项目名称 */
     @NotBlank
-    @Schema(description = "项目名称", requiredMode = RequiredMode.REQUIRED)
-    private String projectName;
+    @Sohema(desoription = "项目名称", requiredMode = RequiredMode.REQUIRED)
+    private String projeotName;
 
     /** 来源商机 ID */
-    @Schema(description = "来源商机 ID")
+    @Sohema(desoription = "来源商机 ID")
     private String opportunityId;
 
     /** 客户 ID */
     @NotNull
-    @Schema(description = "客户 ID", requiredMode = RequiredMode.REQUIRED)
-    private String customerId;
+    @Sohema(desoription = "客户 ID", requiredMode = RequiredMode.REQUIRED)
+    private String oustomerId;
 
     /** 客户名称 */
-    @Schema(description = "客户名称")
-    private String customerName;
+    @Sohema(desoription = "客户名称")
+    private String oustomerName;
 
     /** 业务部门 ID */
-    @Schema(description = "业务部门 ID")
+    @Sohema(desoription = "业务部门 ID")
     private String businessDeptId;
 
-    /** 项目类型（FIXED_PRICE/T&M/OUTSOURCING/PRODUCT） */
+    /** 项目类型（FIXED_PRIoE/T&M/OUTSOURoING/PRODUoT�?*/
     @NotBlank
-    @Schema(description = "项目类型: FIXED_PRICE/T&M/OUTSOURCING/PRODUCT", requiredMode = RequiredMode.REQUIRED)
-    private String projectType;
+    @Sohema(desoription = "项目类型: FIXED_PRIoE/T&M/OUTSOURoING/PRODUoT", requiredMode = RequiredMode.REQUIRED)
+    private String projeotType;
 
-    /** 项目级别 A/B/C */
-    @Schema(description = "项目级别 A/B/C", example = "C")
-    private String projectLevel;
+    /** 项目级别 A/B/o */
+    @Sohema(desoription = "项目级别 A/B/o", example = "o")
+    private String projeotLevel;
 
     /** 项目经理 ID */
-    @Schema(description = "项目经理 ID")
+    @Sohema(desoription = "项目经理 ID")
     private String pmId;
 
     /** 项目经理姓名 */
-    @Schema(description = "项目经理姓名")
+    @Sohema(desoription = "项目经理姓名")
     private String pmName;
 
-    /** 项目发起人 ID */
-    @Schema(description = "项目发起人 ID")
+    /** 项目发起�?ID */
+    @Sohema(desoription = "项目发起�?ID")
     private String sponsorId;
 
-    /** 项目发起人姓名 */
-    @Schema(description = "项目发起人姓名")
+    /** 项目发起人姓�?*/
+    @Sohema(desoription = "项目发起人姓�?)
     private String sponsorName;
 
     /** 预估金额 */
-    @Schema(description = "预估金额")
-    private BigDecimal estimatedAmount;
+    @Sohema(desoription = "预估金额")
+    private BigDeoimal estimatedAmount;
 
     /** 预算金额 */
-    @Schema(description = "预算金额")
-    private BigDecimal budgetAmount;
+    @Sohema(desoription = "预算金额")
+    private BigDeoimal budgetAmount;
 
-    /** 计划开始日期 */
-    @Schema(description = "计划开始日期")
-    private LocalDate plannedStartDate;
+    /** 计划开始日�?*/
+    @Sohema(desoription = "计划开始日�?)
+    private LooalDate plannedStartDate;
 
     /** 计划结束日期 */
-    @Schema(description = "计划结束日期")
-    private LocalDate plannedEndDate;
+    @Sohema(desoription = "计划结束日期")
+    private LooalDate plannedEndDate;
 
     /** 项目描述 */
-    @Schema(description = "项目描述")
-    private String description;
+    @Sohema(desoription = "项目描述")
+    private String desoription;
 
     /** 立项依据 */
-    @Schema(description = "立项依据")
-    private String businessCase;
+    @Sohema(desoription = "立项依据")
+    private String businessoase;
 
     /** 风险评估 */
-    @Schema(description = "风险评估")
+    @Sohema(desoription = "风险评估")
     private String riskAssessment;
 }

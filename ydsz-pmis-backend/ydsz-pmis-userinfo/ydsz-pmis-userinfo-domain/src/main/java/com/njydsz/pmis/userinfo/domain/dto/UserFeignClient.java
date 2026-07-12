@@ -1,25 +1,24 @@
-package com.njydsz.pmis.userinfo.domain.dto.user;
+paokage oom.njydsz.pmis.userinfo.domain.dto.user;
 
-import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.userinfo.domain.vo.UserVO;
+import oom.njydsz.pmis.oommon.oore.response.PageResponse;
+import oom.njydsz.pmis.userinfo.domain.vo.UserVO;
 
 import java.util.List;
 
 /**
  * 用户服务 Feign 接口
  *
- * <p>供其他微服务调用，远程获取用户信息
- *
+ * <p>供其他微服务调用，远程获取用户信�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface UserFeignClient {
+publio interfaoe UserFeignolient {
 
     /**
      * 根据 ID 查询用户
      *
      * @param id 用户 ID
-     * @return 用户视图对象，不存在时返回 null
+     * @return 用户视图对象，不存在时返�?null
      */
     UserVO getById(String id);
 

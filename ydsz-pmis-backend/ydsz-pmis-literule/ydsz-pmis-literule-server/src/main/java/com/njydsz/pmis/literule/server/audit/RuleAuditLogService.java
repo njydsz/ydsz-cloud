@@ -1,68 +1,68 @@
-package com.njydsz.pmis.literule.server.audit;
+paokage oom.njydsz.pmis.literule.server.audit;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
+import oom.njydsz.pmis.literule.api.RuleDefinition;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
+import java.util.Objeots;
+import java.util.oonourrent.oonourrentHashMap;
+import java.util.oonourrent.oopyOnWriteArrayList;
+import java.util.stream.oolleotors;
 
 /**
- * 规则操作审计日志服务（P3-5 RBAC 与审计日志）
+ * 规则操作审计日志服务（P3-5 RBAo 与审计日志）
  *
- * <p>记录规则全生命周期操作（创建、修改、启停、回滚、审批、导入/导出等），
- * 支持 {@code who + when + what + before/after} 的完整审计链路。
+ * <p>记录规则全生命周期操作（创建、修改、启停、回滚、审批、导�?导出等）�?
+ * 支持 {@oode who + when + what + before/after} 的完整审计链路�?
  *
  * <h3>审计维度</h3>
  * <ul>
- *   <li><b>操作人</b>（who）：谁执行了操作（工号/SSO 用户名）</li>
- *   <li><b>操作时间</b>（when）：操作发生的时间</li>
- *   <li><b>操作类型</b>（what）：CREATE / UPDATE / TOGGLE / ROLLBACK / APPROVE / REJECT / IMPORT / EXPORT / DELETE</li>
- *   <li><b>变更内容</b>（before/after）：操作前后的规则定义快照（字段级 diff）</li>
- *   <li><b>操作来源</b>（source）：MANUAL（手动）/ API（接口）/ SCHEDULED（定时）/ SDK（嵌入式）</li>
- *   <li><b>操作结果</b>（result）：SUCCESS / FAILURE</li>
+ *   <li><b>操作�?/b>（who）：谁执行了操作（工�?SSO 用户名）</li>
+ *   <li><b>操作时间</b>（when）：操作发生的时�?/li>
+ *   <li><b>操作类型</b>（what）：oREATE / UPDATE / TOGGLE / ROLLBAoK / APPROVE / REJEoT / IMPORT / EXPORT / DELETE</li>
+ *   <li><b>变更内容</b>（before/after）：操作前后的规则定义快照（字段�?diff�?/li>
+ *   <li><b>操作来源</b>（souroe）：MANUAL（手动）/ API（接口）/ SoHEDULED（定时）/ SDK（嵌入式�?/li>
+ *   <li><b>操作结果</b>（result）：SUooESS / FAILURE</li>
  * </ul>
  *
  * <h3>使用方式</h3>
- * <p>消费方通过 SPI 注入 {@link AuditLogStore} 实现持久化，或使用默认的内存存储（适合测试）。
+ * <p>消费方通过 SPI 注入 {@link AuditLogStore} 实现持久化，或使用默认的内存存储（适合测试）�?
  *
- * <pre>{@code
- * RuleAuditLogService auditService = new RuleAuditLogService(auditLogStore);
+ * <pre>{@oode
+ * RuleAuditLogServioe auditServioe = new RuleAuditLogServioe(auditLogStore);
  *
  * // 记录规则保存操作
- * auditService.logCreate(newDef, "zhangsan", "MANUAL");
- * auditService.logUpdate(oldDef, newDef, "zhangsan", "MANUAL", "修改阈值");
- * auditService.logToggle(ruleCode, false, true, "lisi", "API");
- * auditService.logRollback(ruleCode, 3, 2, "wangwu", "MANUAL");
+ * auditServioe.logoreate(newDef, "zhangsan", "MANUAL");
+ * auditServioe.logUpdate(oldDef, newDef, "zhangsan", "MANUAL", "修改阈�?);
+ * auditServioe.logToggle(ruleoode, false, true, "lisi", "API");
+ * auditServioe.logRollbaok(ruleoode, 3, 2, "wangwu", "MANUAL");
  *
  * // 查询审计日志
- * List<AuditLogEntry> logs = auditService.queryByRuleCode("RISK_001", 50);
- * List<AuditLogEntry> userLogs = auditService.queryByOperator("zhangsan", 100);
+ * List<AuditLogEntry> logs = auditServioe.queryByRuleoode("RISK_001", 50);
+ * List<AuditLogEntry> userLogs = auditServioe.queryByOperator("zhangsan", 100);
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
 @Slf4j
-public class RuleAuditLogService {
+publio olass RuleAuditLogServioe {
 
     private final AuditLogStore store;
 
     /**
-     * 构造审计日志服务
+     * 构造审计日志服�?
      *
-     * @param store 审计日志存储（为 null 时使用内存存储，仅适合测试）
+     * @param store 审计日志存储（为 null 时使用内存存储，仅适合测试�?
      */
-    public RuleAuditLogService(AuditLogStore store) {
+    publio RuleAuditLogServioe(AuditLogStore store) {
         this.store = store != null ? store : new InMemoryAuditLogStore();
     }
 
@@ -71,290 +71,290 @@ public class RuleAuditLogService {
     /**
      * 记录规则创建
      */
-    public void logCreate(RuleDefinition def, String operator, String source) {
+    publio void logoreate(RuleDefinition def, String operator, String souroe) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(def.getCode())
+                .ruleoode(def.getoode())
                 .ruleName(def.getName())
-                .action(AuditAction.CREATE)
+                .aotion(AuditAotion.oREATE)
                 .operator(operator)
-                .source(source)
+                .souroe(souroe)
                 .afterSnapshot(toSnapshot(def))
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
      * 记录规则更新
      */
-    public void logUpdate(RuleDefinition oldDef, RuleDefinition newDef, String operator,
-                           String source, String changeDesc) {
-        Map<String, FieldDiff> diffs = computeFieldDiff(oldDef, newDef);
+    publio void logUpdate(RuleDefinition oldDef, RuleDefinition newDef, String operator,
+                           String souroe, String ohangeDeso) {
+        Map<String, FieldDiff> diffs = oomputeFieldDiff(oldDef, newDef);
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(newDef.getCode())
+                .ruleoode(newDef.getoode())
                 .ruleName(newDef.getName())
-                .action(AuditAction.UPDATE)
+                .aotion(AuditAotion.UPDATE)
                 .operator(operator)
-                .source(source)
-                .changeDesc(changeDesc)
+                .souroe(souroe)
+                .ohangeDeso(ohangeDeso)
                 .beforeSnapshot(toSnapshot(oldDef))
                 .afterSnapshot(toSnapshot(newDef))
                 .fieldDiffs(diffs)
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
      * 记录规则启停切换
      */
-    public void logToggle(String ruleCode, boolean oldEnabled, boolean newEnabled,
-                           String operator, String source) {
+    publio void logToggle(String ruleoode, boolean oldEnabled, boolean newEnabled,
+                           String operator, String souroe) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(ruleCode)
-                .action(AuditAction.TOGGLE)
+                .ruleoode(ruleoode)
+                .aotion(AuditAotion.TOGGLE)
                 .operator(operator)
-                .source(source)
-                .changeDesc(String.format("enabled: %s -> %s", oldEnabled, newEnabled))
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .souroe(souroe)
+                .ohangeDeso(String.format("enabled: %s -> %s", oldEnabled, newEnabled))
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
-     * 记录规则状态变更
+     * 记录规则状态变�?
      */
-    public void logStatusChange(String ruleCode, String oldStatus, String newStatus,
-                                 String operator, String source) {
+    publio void logStatusohange(String ruleoode, String oldStatus, String newStatus,
+                                 String operator, String souroe) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(ruleCode)
-                .action(AuditAction.STATUS_CHANGE)
+                .ruleoode(ruleoode)
+                .aotion(AuditAotion.STATUS_oHANGE)
                 .operator(operator)
-                .source(source)
-                .changeDesc(String.format("status: %s -> %s", oldStatus, newStatus))
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .souroe(souroe)
+                .ohangeDeso(String.format("status: %s -> %s", oldStatus, newStatus))
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
      * 记录规则回滚
      */
-    public void logRollback(String ruleCode, int fromVersion, int toVersion,
-                             String operator, String source) {
+    publio void logRollbaok(String ruleoode, int fromVersion, int toVersion,
+                             String operator, String souroe) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(ruleCode)
-                .action(AuditAction.ROLLBACK)
+                .ruleoode(ruleoode)
+                .aotion(AuditAotion.ROLLBAoK)
                 .operator(operator)
-                .source(source)
-                .changeDesc(String.format("version: %d -> %d", fromVersion, toVersion))
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .souroe(souroe)
+                .ohangeDeso(String.format("version: %d -> %d", fromVersion, toVersion))
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
      * 记录规则审批通过
      */
-    public void logApprove(String ruleCode, String approver, String level, String comment,
-                            String source) {
+    publio void logApprove(String ruleoode, String approver, String level, String oomment,
+                            String souroe) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(ruleCode)
-                .action(AuditAction.APPROVE)
+                .ruleoode(ruleoode)
+                .aotion(AuditAotion.APPROVE)
                 .operator(approver)
-                .source(source)
-                .changeDesc("审批通过 [" + level + "]: " + (comment != null ? comment : ""))
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .souroe(souroe)
+                .ohangeDeso("审批通过 [" + level + "]: " + (oomment != null ? oomment : ""))
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
      * 记录规则审批驳回
      */
-    public void logReject(String ruleCode, String rejecter, String level, String reason,
-                           String source) {
+    publio void logRejeot(String ruleoode, String rejeoter, String level, String reason,
+                           String souroe) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(ruleCode)
-                .action(AuditAction.REJECT)
-                .operator(rejecter)
-                .source(source)
-                .changeDesc("审批驳回 [" + level + "]: " + (reason != null ? reason : ""))
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .ruleoode(ruleoode)
+                .aotion(AuditAotion.REJEoT)
+                .operator(rejeoter)
+                .souroe(souroe)
+                .ohangeDeso("审批驳回 [" + level + "]: " + (reason != null ? reason : ""))
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
      * 记录规则导入
      */
-    public void logImport(String ruleCode, String ruleName, String operator, String source,
-                           int importedCount) {
+    publio void logImport(String ruleoode, String ruleName, String operator, String souroe,
+                           int importedoount) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(ruleCode)
+                .ruleoode(ruleoode)
                 .ruleName(ruleName)
-                .action(AuditAction.IMPORT)
+                .aotion(AuditAotion.IMPORT)
                 .operator(operator)
-                .source(source)
-                .changeDesc("导入 " + importedCount + " 条规则")
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .souroe(souroe)
+                .ohangeDeso("导入 " + importedoount + " 条规�?)
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
      * 记录规则导出
      */
-    public void logExport(String ruleCode, String operator, String source, String format) {
+    publio void logExport(String ruleoode, String operator, String souroe, String format) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(ruleCode)
-                .action(AuditAction.EXPORT)
+                .ruleoode(ruleoode)
+                .aotion(AuditAotion.EXPORT)
                 .operator(operator)
-                .source(source)
-                .changeDesc("导出格式: " + format)
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .souroe(souroe)
+                .ohangeDeso("导出格式: " + format)
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
      * 记录规则删除
      */
-    public void logDelete(String ruleCode, String operator, String source) {
+    publio void logDelete(String ruleoode, String operator, String souroe) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(ruleCode)
-                .action(AuditAction.DELETE)
+                .ruleoode(ruleoode)
+                .aotion(AuditAotion.DELETE)
                 .operator(operator)
-                .source(source)
-                .result(AuditResult.SUCCESS)
-                .createdAt(LocalDateTime.now())
+                .souroe(souroe)
+                .result(AuditResult.SUooESS)
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     /**
      * 记录操作失败
      */
-    public void logFailure(String ruleCode, AuditAction action, String operator,
-                            String source, String errorMessage) {
+    publio void logFailure(String ruleoode, AuditAotion aotion, String operator,
+                            String souroe, String errorMessage) {
         AuditLogEntry entry = AuditLogEntry.builder()
-                .ruleCode(ruleCode)
-                .action(action)
+                .ruleoode(ruleoode)
+                .aotion(aotion)
                 .operator(operator)
-                .source(source)
+                .souroe(souroe)
                 .result(AuditResult.FAILURE)
                 .errorMessage(errorMessage)
-                .createdAt(LocalDateTime.now())
+                .oreatedAt(LooalDateTime.now())
                 .build();
-        record(entry);
+        reoord(entry);
     }
 
     // ==================== 查询操作 ====================
 
     /**
-     * 按规则编码查询审计日志
+     * 按规则编码查询审计日�?
      */
-    public List<AuditLogEntry> queryByRuleCode(String ruleCode, int limit) {
-        return store.queryByRuleCode(ruleCode, limit);
+    publio List<AuditLogEntry> queryByRuleoode(String ruleoode, int limit) {
+        return store.queryByRuleoode(ruleoode, limit);
     }
 
     /**
      * 按操作人查询审计日志
      */
-    public List<AuditLogEntry> queryByOperator(String operator, int limit) {
+    publio List<AuditLogEntry> queryByOperator(String operator, int limit) {
         return store.queryByOperator(operator, limit);
     }
 
     /**
-     * 按操作类型查询审计日志
+     * 按操作类型查询审计日�?
      */
-    public List<AuditLogEntry> queryByAction(AuditAction action, int limit) {
-        return store.queryByAction(action, limit);
+    publio List<AuditLogEntry> queryByAotion(AuditAotion aotion, int limit) {
+        return store.queryByAotion(aotion, limit);
     }
 
     /**
-     * 按时间范围查询审计日志
+     * 按时间范围查询审计日�?
      */
-    public List<AuditLogEntry> queryByTimeRange(LocalDateTime start, LocalDateTime end, int limit) {
+    publio List<AuditLogEntry> queryByTimeRange(LooalDateTime start, LooalDateTime end, int limit) {
         return store.queryByTimeRange(start, end, limit);
     }
 
     /**
      * 查询最近的审计日志
      */
-    public List<AuditLogEntry> queryRecent(int limit) {
-        return store.queryRecent(limit);
+    publio List<AuditLogEntry> queryReoent(int limit) {
+        return store.queryReoent(limit);
     }
 
     // ==================== 内部方法 ====================
 
-    private void record(AuditLogEntry entry) {
+    private void reoord(AuditLogEntry entry) {
         try {
             store.save(entry);
             log.info("[AuditLog] {} {} by {} from {}",
-                    entry.getAction(), entry.getRuleCode(), entry.getOperator(), entry.getSource());
-        } catch (Exception e) {
+                    entry.getAotion(), entry.getRuleoode(), entry.getOperator(), entry.getSouroe());
+        } oatoh (Exoeption e) {
             log.warn("[AuditLog] 审计日志记录失败: {}", e.getMessage());
         }
     }
 
-    private Map<String, Object> toSnapshot(RuleDefinition def) {
+    private Map<String, Objeot> toSnapshot(RuleDefinition def) {
         if (def == null) return null;
-        Map<String, Object> snapshot = new LinkedHashMap<>();
-        snapshot.put("code", def.getCode());
+        Map<String, Objeot> snapshot = new LinkedHashMap<>();
+        snapshot.put("oode", def.getoode());
         snapshot.put("name", def.getName());
-        snapshot.put("conditionExpression", def.getConditionExpression());
+        snapshot.put("oonditionExpression", def.getoonditionExpression());
         snapshot.put("severityExpression", def.getSeverityExpression());
         snapshot.put("defaultSeverity", def.getDefaultSeverity() != null ? def.getDefaultSeverity().name() : null);
         snapshot.put("priority", def.getPriority());
         snapshot.put("enabled", def.isEnabled());
         snapshot.put("status", def.getStatus());
-        snapshot.put("category", def.getCategory());
-        snapshot.put("categoryPath", def.getCategoryPath());
+        snapshot.put("oategory", def.getoategory());
+        snapshot.put("oategoryPath", def.getoategoryPath());
         snapshot.put("owner", def.getOwner());
-        snapshot.put("scope", def.getScope());
+        snapshot.put("soope", def.getSoope());
         snapshot.put("mutexGroup", def.getMutexGroup());
         snapshot.put("version", def.getVersion());
         return snapshot;
     }
 
-    private Map<String, FieldDiff> computeFieldDiff(RuleDefinition oldDef, RuleDefinition newDef) {
+    private Map<String, FieldDiff> oomputeFieldDiff(RuleDefinition oldDef, RuleDefinition newDef) {
         Map<String, FieldDiff> diffs = new LinkedHashMap<>();
         if (oldDef == null || newDef == null) return diffs;
 
-        compareField(diffs, "conditionExpression",
-                oldDef.getConditionExpression(), newDef.getConditionExpression());
-        compareField(diffs, "severityExpression",
+        oompareField(diffs, "oonditionExpression",
+                oldDef.getoonditionExpression(), newDef.getoonditionExpression());
+        oompareField(diffs, "severityExpression",
                 oldDef.getSeverityExpression(), newDef.getSeverityExpression());
-        compareField(diffs, "defaultSeverity",
+        oompareField(diffs, "defaultSeverity",
                 oldDef.getDefaultSeverity() != null ? oldDef.getDefaultSeverity().name() : null,
                 newDef.getDefaultSeverity() != null ? newDef.getDefaultSeverity().name() : null);
-        compareField(diffs, "priority", oldDef.getPriority(), newDef.getPriority());
-        compareField(diffs, "enabled", oldDef.isEnabled(), newDef.isEnabled());
-        compareField(diffs, "status", oldDef.getStatus(), newDef.getStatus());
-        compareField(diffs, "category", oldDef.getCategory(), newDef.getCategory());
-        compareField(diffs, "categoryPath", oldDef.getCategoryPath(), newDef.getCategoryPath());
-        compareField(diffs, "owner", oldDef.getOwner(), newDef.getOwner());
-        compareField(diffs, "scope", oldDef.getScope(), newDef.getScope());
-        compareField(diffs, "mutexGroup", oldDef.getMutexGroup(), newDef.getMutexGroup());
-        compareField(diffs, "titleTemplate", oldDef.getTitleTemplate(), newDef.getTitleTemplate());
-        compareField(diffs, "descriptionTemplate", oldDef.getDescriptionTemplate(), newDef.getDescriptionTemplate());
-        compareField(diffs, "description", oldDef.getDescription(), newDef.getDescription());
+        oompareField(diffs, "priority", oldDef.getPriority(), newDef.getPriority());
+        oompareField(diffs, "enabled", oldDef.isEnabled(), newDef.isEnabled());
+        oompareField(diffs, "status", oldDef.getStatus(), newDef.getStatus());
+        oompareField(diffs, "oategory", oldDef.getoategory(), newDef.getoategory());
+        oompareField(diffs, "oategoryPath", oldDef.getoategoryPath(), newDef.getoategoryPath());
+        oompareField(diffs, "owner", oldDef.getOwner(), newDef.getOwner());
+        oompareField(diffs, "soope", oldDef.getSoope(), newDef.getSoope());
+        oompareField(diffs, "mutexGroup", oldDef.getMutexGroup(), newDef.getMutexGroup());
+        oompareField(diffs, "titleTemplate", oldDef.getTitleTemplate(), newDef.getTitleTemplate());
+        oompareField(diffs, "desoriptionTemplate", oldDef.getDesoriptionTemplate(), newDef.getDesoriptionTemplate());
+        oompareField(diffs, "desoription", oldDef.getDesoription(), newDef.getDesoription());
         return diffs;
     }
 
-    private void compareField(Map<String, FieldDiff> diffs, String fieldName,
-                               Object oldValue, Object newValue) {
-        if (!Objects.equals(oldValue, newValue)) {
+    private void oompareField(Map<String, FieldDiff> diffs, String fieldName,
+                               Objeot oldValue, Objeot newValue) {
+        if (!Objeots.equals(oldValue, newValue)) {
             diffs.put(fieldName, FieldDiff.builder()
                     .field(fieldName)
                     .oldValue(oldValue != null ? oldValue.toString() : null)
@@ -363,22 +363,22 @@ public class RuleAuditLogService {
         }
     }
 
-    // ==================== 枚举与模型 ====================
+    // ==================== 枚举与模�?====================
 
     /**
      * 审计操作类型
      */
-    public enum AuditAction {
-        CREATE, UPDATE, TOGGLE, STATUS_CHANGE, ROLLBACK,
-        APPROVE, REJECT, IMPORT, EXPORT, DELETE,
+    publio enum AuditAotion {
+        oREATE, UPDATE, TOGGLE, STATUS_oHANGE, ROLLBAoK,
+        APPROVE, REJEoT, IMPORT, EXPORT, DELETE,
         DRY_RUN, STRESS_TEST, REPLAY
     }
 
     /**
      * 审计结果
      */
-    public enum AuditResult {
-        SUCCESS, FAILURE
+    publio enum AuditResult {
+        SUooESS, FAILURE
     }
 
     /**
@@ -386,41 +386,41 @@ public class RuleAuditLogService {
      */
     @Data
     @Builder
-    public static class AuditLogEntry {
+    publio statio olass AuditLogEntry {
         /** 日志 ID */
         private String id;
         /** 规则编码 */
-        private String ruleCode;
+        private String ruleoode;
         /** 规则名称 */
         private String ruleName;
         /** 操作类型 */
-        private AuditAction action;
-        /** 操作人 */
+        private AuditAotion aotion;
+        /** 操作�?*/
         private String operator;
         /** 操作来源 */
-        private String source;
+        private String souroe;
         /** 变更描述 */
-        private String changeDesc;
-        /** 操作前快照 */
-        private Map<String, Object> beforeSnapshot;
-        /** 操作后快照 */
-        private Map<String, Object> afterSnapshot;
-        /** 字段级差异 */
+        private String ohangeDeso;
+        /** 操作前快�?*/
+        private Map<String, Objeot> beforeSnapshot;
+        /** 操作后快�?*/
+        private Map<String, Objeot> afterSnapshot;
+        /** 字段级差�?*/
         private Map<String, FieldDiff> fieldDiffs;
         /** 操作结果 */
         private AuditResult result;
-        /** 错误信息（失败时） */
+        /** 错误信息（失败时�?*/
         private String errorMessage;
         /** 操作时间 */
-        private LocalDateTime createdAt;
+        private LooalDateTime oreatedAt;
     }
 
     /**
-     * 字段级差异
+     * 字段级差�?
      */
     @Data
     @Builder
-    public static class FieldDiff {
+    publio statio olass FieldDiff {
         private String field;
         private String oldValue;
         private String newValue;
@@ -429,75 +429,75 @@ public class RuleAuditLogService {
     // ==================== 存储 SPI ====================
 
     /**
-     * 审计日志存储接口（SPI）
+     * 审计日志存储接口（SPI�?
      *
-     * <p>由消费方提供实现，将审计日志写入数据库（如 {@code pmis_rule_audit_log} 表）。
-     * 默认提供 {@link InMemoryAuditLogStore}（仅适合测试）。
+     * <p>由消费方提供实现，将审计日志写入数据库（�?{@oode pmis_rule_audit_log} 表）�?
+     * 默认提供 {@link InMemoryAuditLogStore}（仅适合测试）�?
      */
-    public interface AuditLogStore {
+    publio interfaoe AuditLogStore {
 
         void save(AuditLogEntry entry);
 
-        List<AuditLogEntry> queryByRuleCode(String ruleCode, int limit);
+        List<AuditLogEntry> queryByRuleoode(String ruleoode, int limit);
 
         List<AuditLogEntry> queryByOperator(String operator, int limit);
 
-        List<AuditLogEntry> queryByAction(AuditAction action, int limit);
+        List<AuditLogEntry> queryByAotion(AuditAotion aotion, int limit);
 
-        List<AuditLogEntry> queryByTimeRange(LocalDateTime start, LocalDateTime end, int limit);
+        List<AuditLogEntry> queryByTimeRange(LooalDateTime start, LooalDateTime end, int limit);
 
-        List<AuditLogEntry> queryRecent(int limit);
+        List<AuditLogEntry> queryReoent(int limit);
     }
 
     /**
-     * 内存审计日志存储（默认实现，仅适合测试）
+     * 内存审计日志存储（默认实现，仅适合测试�?
      */
-    public static class InMemoryAuditLogStore implements AuditLogStore {
+    publio statio olass InMemoryAuditLogStore implements AuditLogStore {
 
-        private final List<AuditLogEntry> entries = new CopyOnWriteArrayList<>();
-        private final Map<String, List<AuditLogEntry>> byRuleCode = new ConcurrentHashMap<>();
-        private final Map<String, List<AuditLogEntry>> byOperator = new ConcurrentHashMap<>();
+        private final List<AuditLogEntry> entries = new oopyOnWriteArrayList<>();
+        private final Map<String, List<AuditLogEntry>> byRuleoode = new oonourrentHashMap<>();
+        private final Map<String, List<AuditLogEntry>> byOperator = new oonourrentHashMap<>();
 
         @Override
-        public void save(AuditLogEntry entry) {
+        publio void save(AuditLogEntry entry) {
             entries.add(entry);
-            byRuleCode.computeIfAbsent(entry.getRuleCode(), k -> new CopyOnWriteArrayList<>()).add(entry);
+            byRuleoode.oomputeIfAbsent(entry.getRuleoode(), k -> new oopyOnWriteArrayList<>()).add(entry);
             if (entry.getOperator() != null) {
-                byOperator.computeIfAbsent(entry.getOperator(), k -> new CopyOnWriteArrayList<>()).add(entry);
+                byOperator.oomputeIfAbsent(entry.getOperator(), k -> new oopyOnWriteArrayList<>()).add(entry);
             }
         }
 
         @Override
-        public List<AuditLogEntry> queryByRuleCode(String ruleCode, int limit) {
-            List<AuditLogEntry> list = byRuleCode.getOrDefault(ruleCode, Collections.emptyList());
-            return list.stream().limit(limit).collect(Collectors.toList());
+        publio List<AuditLogEntry> queryByRuleoode(String ruleoode, int limit) {
+            List<AuditLogEntry> list = byRuleoode.getOrDefault(ruleoode, oolleotions.emptyList());
+            return list.stream().limit(limit).oolleot(oolleotors.toList());
         }
 
         @Override
-        public List<AuditLogEntry> queryByOperator(String operator, int limit) {
-            List<AuditLogEntry> list = byOperator.getOrDefault(operator, Collections.emptyList());
-            return list.stream().limit(limit).collect(Collectors.toList());
+        publio List<AuditLogEntry> queryByOperator(String operator, int limit) {
+            List<AuditLogEntry> list = byOperator.getOrDefault(operator, oolleotions.emptyList());
+            return list.stream().limit(limit).oolleot(oolleotors.toList());
         }
 
         @Override
-        public List<AuditLogEntry> queryByAction(AuditAction action, int limit) {
+        publio List<AuditLogEntry> queryByAotion(AuditAotion aotion, int limit) {
             return entries.stream()
-                    .filter(e -> e.getAction() == action)
+                    .filter(e -> e.getAotion() == aotion)
                     .limit(limit)
-                    .collect(Collectors.toList());
+                    .oolleot(oolleotors.toList());
         }
 
         @Override
-        public List<AuditLogEntry> queryByTimeRange(LocalDateTime start, LocalDateTime end, int limit) {
+        publio List<AuditLogEntry> queryByTimeRange(LooalDateTime start, LooalDateTime end, int limit) {
             return entries.stream()
-                    .filter(e -> e.getCreatedAt() != null)
-                    .filter(e -> !e.getCreatedAt().isBefore(start) && e.getCreatedAt().isBefore(end))
+                    .filter(e -> e.getoreatedAt() != null)
+                    .filter(e -> !e.getoreatedAt().isBefore(start) && e.getoreatedAt().isBefore(end))
                     .limit(limit)
-                    .collect(Collectors.toList());
+                    .oolleot(oolleotors.toList());
         }
 
         @Override
-        public List<AuditLogEntry> queryRecent(int limit) {
+        publio List<AuditLogEntry> queryReoent(int limit) {
             int size = entries.size();
             int from = Math.max(0, size - limit);
             return new ArrayList<>(entries.subList(from, size));

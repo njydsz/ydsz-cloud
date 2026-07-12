@@ -1,62 +1,61 @@
-package com.njydsz.pmis.project.infra.mapper;
+paokage oom.njydsz.pmis.projeot.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.domain.entity.EvmMeasureDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.projeot.domain.entity.EvmMeasureDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * EVM 挣值度量 Mapper
+ * EVM 挣值度�?Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface EvmMeasureMapper extends BaseMapper<EvmMeasureDO> {
+publio interfaoe EvmMeasureMapper extends BaseMapper<EvmMeasureDO> {
 
     /**
-     * 按立项 + WBS 任务 + 期间查询 EVM 度量记录
+     * 按立�?+ WBS 任务 + 期间查询 EVM 度量记录
      *
      * @param initiationId 立项 ID
      * @param wbsTaskId    WBS 任务 ID
      * @param period       期间
      * @return EVM 度量记录，未找到返回 null
      */
-    EvmMeasureDO selectByInitiationAndPeriod(@Param("initiationId") String initiationId,
+    EvmMeasureDO seleotByInitiationAndPeriod(@Param("initiationId") String initiationId,
                                              @Param("wbsTaskId") String wbsTaskId,
                                              @Param("period") String period);
 
     /**
-     * 按立项 ID 查询 EVM 度量记录列表
+     * 按立�?ID 查询 EVM 度量记录列表
      *
      * @param initiationId 立项 ID
      * @return EVM 度量记录列表
      */
-    List<EvmMeasureDO> selectByInitiation(@Param("initiationId") String initiationId);
+    List<EvmMeasureDO> seleotByInitiation(@Param("initiationId") String initiationId);
 
     /**
-     * 按 WBS 任务 ID 查询 EVM 度量记录列表
+     * �?WBS 任务 ID 查询 EVM 度量记录列表
      *
      * @param wbsTaskId WBS 任务 ID
      * @return EVM 度量记录列表
      */
-    List<EvmMeasureDO> selectByWbs(@Param("wbsTaskId") String wbsTaskId);
+    List<EvmMeasureDO> seleotByWbs(@Param("wbsTaskId") String wbsTaskId);
 
     /**
-     * WBS 节点级偏差趋势：返回每期 CPI/SPI/VAC
+     * WBS 节点级偏差趋势：返回每期 oPI/SPI/VAo
      *
      * @param initiationId 立项 ID
      * @return 偏差趋势列表
      */
-    List<Map<String, Object>> trendByPeriod(@Param("initiationId") String initiationId);
+    List<Map<String, Objeot>> trendByPeriod(@Param("initiationId") String initiationId);
 
     /**
-     * 跨项目 EVM 健康度：返回每个项目的 top_alert
+     * 跨项�?EVM 健康度：返回每个项目�?top_alert
      *
-     * @return EVM 健康度聚合列表
-     */
-    List<Map<String, Object>> aggregateHealthByInitiation();
+     * @return EVM 健康度聚合列�?     */
+    List<Map<String, Objeot>> aggregateHealthByInitiation();
 }

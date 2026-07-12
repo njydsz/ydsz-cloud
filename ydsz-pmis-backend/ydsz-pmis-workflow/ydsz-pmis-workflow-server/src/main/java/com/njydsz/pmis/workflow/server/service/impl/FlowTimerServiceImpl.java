@@ -1,31 +1,31 @@
-package com.njydsz.pmis.workflow.server.service.impl.integration;
+paokage oom.njydsz.pmis.workflow.server.servioe.impl.integration;
 
-import com.alibaba.fastjson2.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;
-import com.njydsz.pmis.workflow.server.engine.FlowClusterLockHelper;
-import com.njydsz.pmis.workflow.server.engine.FlowNotificationHelper;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowTimerDO;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.infra.mapper.integration.FlowTimerMapper;
-import com.njydsz.pmis.workflow.server.service.impl.instance.FlowInstanceServiceImpl;
-import com.njydsz.pmis.workflow.server.service.instance.FlowInstanceService;
-import com.njydsz.pmis.workflow.server.service.integration.FlowTimerService;
-import lombok.RequiredArgsConstructor;
+import oom.alibaba.fastjson2.JSON;
+import oom.baomidou.mybatisplus.oore.oonditions.query.QueryWrapper;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.workflow.server.engine.FlowAdvanoer;
+import oom.njydsz.pmis.workflow.server.engine.FlowolusterLookHelper;
+import oom.njydsz.pmis.workflow.server.engine.FlowNotifioationHelper;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowInstanoeDO;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
+import oom.njydsz.pmis.workflow.domain.entity.integration.FlowTimerDO;
+import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowInstanoeMapper;
+import oom.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
+import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
+import oom.njydsz.pmis.workflow.infra.mapper.integration.FlowTimerMapper;
+import oom.njydsz.pmis.workflow.server.servioe.impl.instanoe.FlowInstanoeServioeImpl;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowInstanoeServioe;
+import oom.njydsz.pmis.workflow.server.servioe.integration.FlowTimerServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.soheduling.annotation.Soheduled;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,144 +33,144 @@ import java.util.Map;
 /**
  * 工作流定时器服务实现
  *
- * <p>P1-2: 内部每 30s 扫描到点的 PENDING 定时器并触发。
- * <p>中间定时器触发：调用 advancer.advance 推进流程到下一节点。
- * <p>边界定时器触发：取消 userTask（视为超时未完成），推进到边界定时器下游节点。
+ * <p>P1-2: 内部�?30s 扫描到点�?PENDING 定时器并触发�?
+ * <p>中间定时器触发：调用 advanoer.advanoe 推进流程到下一节点�?
+ * <p>边界定时器触发：取消 userTask（视为超时未完成），推进到边界定时器下游节点�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class FlowTimerServiceImpl implements FlowTimerService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass FlowTimerServioeImpl implements FlowTimerServioe {
 
-    /** 定时器 Mapper，管理 pmis_flow_timer 表 */
+    /** 定时�?Mapper，管�?pmis_flow_timer �?*/
     private final FlowTimerMapper timerMapper;
-    /** 流程实例 Mapper，查询定时器关联的实例 */
-    private final FlowInstanceMapper instanceMapper;
-    /** 运行时任务 Mapper，定时器触发后创建/更新任务 */
+    /** 流程实例 Mapper，查询定时器关联的实�?*/
+    private final FlowInstanoeMapper instanoeMapper;
+    /** 运行时任�?Mapper，定时器触发后创�?更新任务 */
     private final FlowRunTaskMapper taskMapper;
-    /** 流程节点 Mapper，查询 boundaryEvent 节点配置 */
+    /** 流程节点 Mapper，查�?boundaryEvent 节点配置 */
     private final FlowNodeMapper nodeMapper;
-    /** 流程推进引擎，定时器触发后推进流程 */
-    private final FlowAdvancer advancer;
-    private final FlowNotificationHelper notificationHelper;
+    /** 流程推进引擎，定时器触发后推进流�?*/
+    private final FlowAdvanoer advanoer;
+    private final FlowNotifioationHelper notifioationHelper;
     /** P0-2: 集群调度分布式锁辅助 */
-    private final FlowClusterLockHelper clusterLockHelper;
+    private final FlowolusterLookHelper olusterLookHelper;
 
-    /** 单次扫描上限，避免大表全表扫描 */
-    private static final int SCAN_BATCH_SIZE = 200;
+    /** 单次扫描上限，避免大表全表扫�?*/
+    private statio final int SoAN_BAToH_SIZE = 200;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String scheduleIntermediate(String instanceId, String nodeCode, Duration delay) {
-        if (instanceId == null || nodeCode == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "instanceId/nodeCode 不能为空");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String soheduleIntermediate(String instanoeId, String nodeoode, Duration delay) {
+        if (instanoeId == null || nodeoode == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "instanoeId/nodeoode 不能为空");
         }
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-        if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+        FlowInstanoeDO instanoe = instanoeMapper.seleotById(instanoeId);
+        if (instanoe == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "流程实例不存�? " + instanoeId);
         }
-        FlowNodeDO node = nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode);
+        FlowNodeDO node = nodeMapper.seleotByoode(instanoe.getDefinitionId(), nodeoode);
         if (node == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "节点不存在: " + nodeCode);
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "节点不存�? " + nodeoode);
         }
         FlowTimerDO timer = new FlowTimerDO();
-        timer.setTenantId(instance.getTenantId());
-        timer.setInstanceId(instanceId);
-        timer.setDefinitionId(instance.getDefinitionId());
-        timer.setFlowCode(instance.getFlowCode());
-        timer.setNodeCode(nodeCode);
+        timer.setTenantId(instanoe.getTenantId());
+        timer.setInstanoeId(instanoeId);
+        timer.setDefinitionId(instanoe.getDefinitionId());
+        timer.setFlowoode(instanoe.getFlowoode());
+        timer.setNodeoode(nodeoode);
         timer.setNodeName(node.getNodeName());
         timer.setTimerType("INTERMEDIATE");
-        timer.setFireAt(LocalDateTime.now().plus(delay));
+        timer.setFireAt(LooalDateTime.now().plus(delay));
         timer.setTimerStatus("PENDING");
-        timer.setProviderTraceId(instance.getProviderTraceId());
+        timer.setProviderTraoeId(instanoe.getProviderTraoeId());
         timerMapper.insert(timer);
-        log.info("[FlowTimer] 创建中间定时器: instanceId={} nodeCode={} fireAt={}",
-                instanceId, nodeCode, timer.getFireAt());
+        log.info("[FlowTimer] 创建中间定时�? instanoeId={} nodeoode={} fireAt={}",
+                instanoeId, nodeoode, timer.getFireAt());
         return timer.getId();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String scheduleBoundary(String taskId, String instanceId, String nodeCode, Duration delay) {
-        if (taskId == null || instanceId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "taskId/instanceId 不能为空");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String soheduleBoundary(String taskId, String instanoeId, String nodeoode, Duration delay) {
+        if (taskId == null || instanoeId == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "taskId/instanoeId 不能为空");
         }
-        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-        if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+        FlowInstanoeDO instanoe = instanoeMapper.seleotById(instanoeId);
+        if (instanoe == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "流程实例不存�? " + instanoeId);
         }
-        FlowNodeDO node = nodeCode != null
-                ? nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode) : null;
+        FlowNodeDO node = nodeoode != null
+                ? nodeMapper.seleotByoode(instanoe.getDefinitionId(), nodeoode) : null;
         FlowTimerDO timer = new FlowTimerDO();
-        timer.setTenantId(instance.getTenantId());
-        timer.setInstanceId(instanceId);
-        timer.setDefinitionId(instance.getDefinitionId());
-        timer.setFlowCode(instance.getFlowCode());
-        timer.setNodeCode(nodeCode);
+        timer.setTenantId(instanoe.getTenantId());
+        timer.setInstanoeId(instanoeId);
+        timer.setDefinitionId(instanoe.getDefinitionId());
+        timer.setFlowoode(instanoe.getFlowoode());
+        timer.setNodeoode(nodeoode);
         timer.setNodeName(node == null ? null : node.getNodeName());
         timer.setTimerType("BOUNDARY");
         timer.setBoundaryTaskId(taskId);
-        timer.setFireAt(LocalDateTime.now().plus(delay));
+        timer.setFireAt(LooalDateTime.now().plus(delay));
         timer.setTimerStatus("PENDING");
-        timer.setProviderTraceId(instance.getProviderTraceId());
+        timer.setProviderTraoeId(instanoe.getProviderTraoeId());
         timerMapper.insert(timer);
-        log.info("[FlowTimer] 创建边界定时器: taskId={} instanceId={} fireAt={}",
-                taskId, instanceId, timer.getFireAt());
+        log.info("[FlowTimer] 创建边界定时�? taskId={} instanoeId={} fireAt={}",
+                taskId, instanoeId, timer.getFireAt());
         return timer.getId();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean fire(FlowTimerDO timer) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio boolean fire(FlowTimerDO timer) {
         if (timer == null) {
             return false;
         }
-        // CAS 标记 FIRED，避免多节点并发扫描时重复触发
-        int updated = timerMapper.markFired(timer.getId(), LocalDateTime.now());
+        // oAS 标记 FIRED，避免多节点并发扫描时重复触�?
+        int updated = timerMapper.markFired(timer.getId(), LooalDateTime.now());
         if (updated == 0) {
-            log.debug("[FlowTimer] 定时器已被处理: id={}", timer.getId());
+            log.debug("[FlowTimer] 定时器已被处�? id={}", timer.getId());
             return false;
         }
         try {
-            if ("INTERMEDIATE".equalsIgnoreCase(timer.getTimerType())) {
+            if ("INTERMEDIATE".equalsIgnoreoase(timer.getTimerType())) {
                 // 中间定时器：推进流程
-                FlowInstanceDO instance = instanceMapper.selectById(timer.getInstanceId());
-                if (instance == null) {
-                    log.warn("[FlowTimer] 实例不存在: id={}", timer.getInstanceId());
+                FlowInstanoeDO instanoe = instanoeMapper.seleotById(timer.getInstanoeId());
+                if (instanoe == null) {
+                    log.warn("[FlowTimer] 实例不存�? id={}", timer.getInstanoeId());
                     return true;
                 }
-                if (!"RUNNING".equalsIgnoreCase(instance.getFlowStatus())
-                        && !"SUSPENDED".equalsIgnoreCase(instance.getFlowStatus())) {
+                if (!"RUNNING".equalsIgnoreoase(instanoe.getFlowStatus())
+                        && !"SUSPENDED".equalsIgnoreoase(instanoe.getFlowStatus())) {
                     log.info("[FlowTimer] 实例非运行态，跳过推进: id={} status={}",
-                            instance.getId(), instance.getFlowStatus());
+                            instanoe.getId(), instanoe.getFlowStatus());
                     return true;
                 }
-                Map<String, Object> variables = parseVariables(instance.getVariable());
-                List<FlowNodeDO> nextNodes = advancer.advance(instance, timer.getNodeCode(),
+                Map<String, Objeot> variables = parseVariables(instanoe.getVariable());
+                List<FlowNodeDO> nextNodes = advanoer.advanoe(instanoe, timer.getNodeoode(),
                         "PASS", null, variables);
                 if (nextNodes.isEmpty()) {
-                    log.info("[FlowTimer] 中间定时器触发后无下游节点: instanceId={}",
-                            timer.getInstanceId());
+                    log.info("[FlowTimer] 中间定时器触发后无下游节�? instanoeId={}",
+                            timer.getInstanoeId());
                     return true;
                 }
-                ((FlowInstanceServiceImpl) instanceService()).generateTasksForNodes(
-                        timer.getInstanceId(), nextNodes, variables);
+                ((FlowInstanoeServioeImpl) instanoeServioe()).generateTasksForNodes(
+                        timer.getInstanoeId(), nextNodes, variables);
                 FlowNodeDO first = nextNodes.get(0);
-                instanceMapper.updateStatus(timer.getInstanceId(), instance.getFlowStatus(),
-                        first.getNodeCode(), first.getNodeName(), null, null);
-                log.info("[FlowTimer] 中间定时器触发: timerId={} instanceId={} → next={}",
-                        timer.getId(), timer.getInstanceId(), first.getNodeCode());
-            } else if ("BOUNDARY".equalsIgnoreCase(timer.getBoundaryTaskId() == null
+                instanoeMapper.updateStatus(timer.getInstanoeId(), instanoe.getFlowStatus(),
+                        first.getNodeoode(), first.getNodeName(), null, null);
+                log.info("[FlowTimer] 中间定时器触�? timerId={} instanoeId={} �?next={}",
+                        timer.getId(), timer.getInstanoeId(), first.getNodeoode());
+            } else if ("BOUNDARY".equalsIgnoreoase(timer.getBoundaryTaskId() == null
                     ? "" : "BOUNDARY")) {
                 // 边界定时器：userTask 未在 fire_at 前完成则触发
                 fireBoundary(timer);
             }
             return true;
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.error("[FlowTimer] 触发失败 timerId={} type={} err={}",
                     timer.getId(), timer.getTimerType(), e.getMessage(), e);
             return false;
@@ -178,65 +178,65 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
 
     /**
-     * 边界定时器触发：取消 userTask，触发"超时分支"（节点 ext 中标记的 boundarySkip）
+     * 边界定时器触发：取消 userTask，触�?超时分支"（节�?ext 中标记的 boundarySkip�?
      */
     private void fireBoundary(FlowTimerDO timer) {
-        FlowRunTaskDO task = taskMapper.selectById(timer.getBoundaryTaskId());
+        FlowRunTaskDO task = taskMapper.seleotById(timer.getBoundaryTaskId());
         if (task == null) {
-            log.info("[FlowTimer] 边界定时器对应 userTask 已删除: timerId={}", timer.getId());
+            log.info("[FlowTimer] 边界定时器对�?userTask 已删�? timerId={}", timer.getId());
             return;
         }
-        // userTask 还在 PENDING/CLAIMED 才算超时
-        if ("COMPLETED".equalsIgnoreCase(task.getTaskStatus())
-                || "REJECTED".equalsIgnoreCase(task.getTaskStatus())
-                || "CANCELLED".equalsIgnoreCase(task.getTaskStatus())
-                || "TIMEOUT".equalsIgnoreCase(task.getTaskStatus())) {
+        // userTask 还在 PENDING/oLAIMED 才算超时
+        if ("oOMPLETED".equalsIgnoreoase(task.getTaskStatus())
+                || "REJEoTED".equalsIgnoreoase(task.getTaskStatus())
+                || "oANoELLED".equalsIgnoreoase(task.getTaskStatus())
+                || "TIMEOUT".equalsIgnoreoase(task.getTaskStatus())) {
             log.info("[FlowTimer] userTask 已完成，跳过边界触发: taskId={} status={}",
                     task.getId(), task.getTaskStatus());
             return;
         }
-        FlowInstanceDO instance = instanceMapper.selectById(timer.getInstanceId());
-        if (instance == null) {
+        FlowInstanoeDO instanoe = instanoeMapper.seleotById(timer.getInstanoeId());
+        if (instanoe == null) {
             return;
         }
         // 1. 取消 userTask
-        LocalDateTime now = LocalDateTime.now();
-        taskMapper.completeTask(task.getId(), "TIMEOUT", "边界定时器触发超时", now,
-                task.getCreatedAt() == null ? null
-                        : Duration.between(task.getCreatedAt(), now).toMillis());
-        log.info("[FlowTimer] 边界定时器超时 userTask: timerId={} taskId={}",
+        LooalDateTime now = LooalDateTime.now();
+        taskMapper.oompleteTask(task.getId(), "TIMEOUT", "边界定时器触发超�?, now,
+                task.getoreatedAt() == null ? null
+                        : Duration.between(task.getoreatedAt(), now).toMillis());
+        log.info("[FlowTimer] 边界定时器超�?userTask: timerId={} taskId={}",
                 timer.getId(), task.getId());
         // 2. 通知原办理人
         try {
             if (task.getAssigneeId() != null) {
-                notificationHelper.notifyTaskAssigned(task.getAssigneeId(),
+                notifioationHelper.notifyTaskAssigned(task.getAssigneeId(),
                         "审批超时",
-                        String.format("【%s】%s 已超时，请尽快处理",
-                                nullSafe(instance.getFlowName()),
+                        String.format("�?s�?s 已超时，请尽快处�?,
+                                nullSafe(instanoe.getFlowName()),
                                 nullSafe(task.getNodeName())),
                         task.getId(), "WORKFLOW_TASK_TIMEOUT", "WARN");
             }
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.warn("[FlowTimer] 超时通知失败: {}", e.getMessage());
         }
-        // 3. 推进到下一节点（按 PASS 流程走，但 task 已被标记为 TIMEOUT）
-        Map<String, Object> variables = parseVariables(instance.getVariable());
-        List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
+        // 3. 推进到下一节点（按 PASS 流程走，�?task 已被标记�?TIMEOUT�?
+        Map<String, Objeot> variables = parseVariables(instanoe.getVariable());
+        List<FlowNodeDO> nextNodes = advanoer.advanoe(instanoe, task.getNodeoode(),
                 "PASS", null, variables);
         if (!nextNodes.isEmpty()) {
-            ((FlowInstanceServiceImpl) instanceService()).generateTasksForNodes(
-                    timer.getInstanceId(), nextNodes, variables);
+            ((FlowInstanoeServioeImpl) instanoeServioe()).generateTasksForNodes(
+                    timer.getInstanoeId(), nextNodes, variables);
             FlowNodeDO first = nextNodes.get(0);
-            instanceMapper.updateStatus(timer.getInstanceId(), instance.getFlowStatus(),
-                    first.getNodeCode(), first.getNodeName(), null, null);
+            instanoeMapper.updateStatus(timer.getInstanoeId(), instanoe.getFlowStatus(),
+                    first.getNodeoode(), first.getNodeName(), null, null);
         }
     }
 
     @Override
-    public int scanAndFire() {
+    publio int soanAndFire() {
         try {
-            List<FlowTimerDO> dueList = timerMapper.selectDueTimers(
-                    LocalDateTime.now(), SCAN_BATCH_SIZE);
+            List<FlowTimerDO> dueList = timerMapper.seleotDueTimers(
+                    LooalDateTime.now(), SoAN_BAToH_SIZE);
             if (dueList.isEmpty()) {
                 return 0;
             }
@@ -246,74 +246,74 @@ public class FlowTimerServiceImpl implements FlowTimerService {
                     if (fire(t)) {
                         fired++;
                     }
-                } catch (Exception e) {
+                } oatoh (Exoeption e) {
                     log.error("[FlowTimer] 单条触发异常 timerId={}: {}",
                             t.getId(), e.getMessage(), e);
                 }
             }
             if (fired > 0) {
-                log.info("[FlowTimer] 本轮扫描触发: count={}", fired);
+                log.info("[FlowTimer] 本轮扫描触发: oount={}", fired);
             }
             return fired;
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.error("[FlowTimer] 扫描异常: {}", e.getMessage(), e);
             return 0;
         }
     }
 
     @Override
-    public int cancelByTask(String taskId) {
+    publio int oanoelByTask(String taskId) {
         if (taskId == null) {
             return 0;
         }
-        return timerMapper.cancelByTask(taskId, "userTask 完成");
+        return timerMapper.oanoelByTask(taskId, "userTask 完成");
     }
 
     @Override
-    public int cancelByInstance(String instanceId, String reason) {
-        if (instanceId == null) {
+    publio int oanoelByInstanoe(String instanoeId, String reason) {
+        if (instanoeId == null) {
             return 0;
         }
-        return timerMapper.cancelByInstance(instanceId,
+        return timerMapper.oanoelByInstanoe(instanoeId,
                 reason == null ? "实例结束" : reason);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<FlowTimerDO> listByInstance(String instanceId) {
-        return timerMapper.selectList(new QueryWrapper<FlowTimerDO>()
-                .eq("instance_id", instanceId)
+    @Transaotional(readOnly = true)
+    publio List<FlowTimerDO> listByInstanoe(String instanoeId) {
+        return timerMapper.seleotList(new QueryWrapper<FlowTimerDO>()
+                .eq("instanoe_id", instanoeId)
                 .eq("deleted", 0)
-                .orderByDesc("created_at"));
+                .orderByDeso("oreated_at"));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public long countPending(String instanceId) {
-        return timerMapper.countPendingByInstance(instanceId);
+    @Transaotional(readOnly = true)
+    publio long oountPending(String instanoeId) {
+        return timerMapper.oountPendingByInstanoe(instanoeId);
     }
 
     /**
-     * 每 30s 扫描一次（在 workflow 模块自身启用，
-     * workflow 模块需配 {@code @EnableScheduling} 或在公共配置中开启）。
+     * �?30s 扫描一次（�?workflow 模块自身启用�?
+     * workflow 模块需�?{@oode @EnableSoheduling} 或在公共配置中开启）�?
      */
-    @Scheduled(fixedDelay = 30_000L, initialDelay = 60_000L)
-    public void scheduledScan() {
-        clusterLockHelper.tryRun("timer:scan", 25, this::scanAndFire);
+    @Soheduled(fixedDelay = 30_000L, initialDelay = 60_000L)
+    publio void soheduledSoan() {
+        olusterLookHelper.tryRun("timer:soan", 25, this::soanAndFire);
     }
 
     // ============== 内部辅助 ==============
 
-    /** 复用 FlowInstanceServiceImpl.generateTasksForNodes（包内访问） */
-    private FlowInstanceService instanceService() {
-        return advancer.getInstanceService();
+    /** 复用 FlowInstanoeServioeImpl.generateTasksForNodes（包内访问） */
+    private FlowInstanoeServioe instanoeServioe() {
+        return advanoer.getInstanoeServioe();
     }
 
-    private Map<String, Object> parseVariables(String variableJson) {
+    private Map<String, Objeot> parseVariables(String variableJson) {
         if (variableJson == null || variableJson.isBlank()) {
             return new HashMap<>();
         }
-        Map<String, Object> map = JSON.parseObject(variableJson);
+        Map<String, Objeot> map = JSON.parseObjeot(variableJson);
         return map == null ? new HashMap<>() : map;
     }
 

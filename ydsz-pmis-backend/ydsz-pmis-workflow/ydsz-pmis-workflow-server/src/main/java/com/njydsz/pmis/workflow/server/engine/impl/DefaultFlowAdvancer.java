@@ -1,220 +1,220 @@
-package com.njydsz.pmis.workflow.server.engine.impl;
+paokage oom.njydsz.pmis.workflow.server.engine.impl;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
-import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;
-import com.njydsz.pmis.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.pmis.workflow.server.engine.FlowVariableStrategy;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowSkipDO;
-import com.njydsz.pmis.workflow.domain.enums.definition.FlowNodeType;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.server.service.dmn.FlowDmnDecisionService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowInstanceService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowJoinTokenService;
-import com.njydsz.pmis.workflow.server.service.impl.instance.FlowInstanceServiceImpl;
-import com.njydsz.pmis.workflow.server.service.instance.FlowRoutingService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.util.json.JsonUtils;
+import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowInstanoeViewDTO;
+import oom.njydsz.pmis.workflow.server.engine.FlowAdvanoer;
+import oom.njydsz.pmis.workflow.server.engine.FlowDefinitionoaoheServioe;
+import oom.njydsz.pmis.workflow.server.engine.FlowVariableStrategy;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowInstanoeDO;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowSkipDO;
+import oom.njydsz.pmis.workflow.domain.enums.definition.FlowNodeType;
+import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowInstanoeMapper;
+import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
+import oom.njydsz.pmis.workflow.server.servioe.dmn.FlowDmnDeoisionServioe;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowInstanoeServioe;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowJoinTokenServioe;
+import oom.njydsz.pmis.workflow.server.servioe.impl.instanoe.FlowInstanoeServioeImpl;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowRoutingServioe;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowTaskServioe;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.faotory.annotation.Autowired;
+import org.springframework.stereotype.oomponent;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 流程推进器默认实现
+ * 流程推进器默认实�?
  *
- * <p>P0 修复：排他网关互斥（CONDITION 只取第一条匹配）、并行网关 join 聚合。
+ * <p>P0 修复：排他网关互斥（oONDITION 只取第一条匹配）、并行网�?join 聚合�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Component
-public class DefaultFlowAdvancer implements FlowAdvancer {
+@oomponent
+publio olass DefaultFlowAdvanoer implements FlowAdvanoer {
 
     /** P1: 流程定义元数据缓存（节点 + skip），替代直查 nodeMapper/skipMapper */
-    private final FlowDefinitionCacheService flowDefinitionCacheService;
-    private final FlowInstanceMapper instanceMapper;
-    private final FlowTaskService taskService;
-    private final FlowInstanceService instanceService;
+    private final FlowDefinitionoaoheServioe flowDefinitionoaoheServioe;
+    private final FlowInstanoeMapper instanoeMapper;
+    private final FlowTaskServioe taskServioe;
+    private final FlowInstanoeServioe instanoeServioe;
     private final FlowVariableStrategy variableStrategy;
     private final FlowRunTaskMapper taskMapper;
     /** GAP-P2: 并行网关 join 令牌服务（精确跟踪分支到达状态） */
-    private final FlowJoinTokenService joinTokenService;
+    private final FlowJoinTokenServioe joinTokenServioe;
 
     /**
-     * 智能路由服务（可选注入，literule 不可用时为 null）
+     * 智能路由服务（可选注入，literule 不可用时�?null�?
      *
-     * <p>当 ydsz-pmis-literule 模块在 classpath 中且 RuleEngine/ExpressionEvaluator Bean 存在时，
-     * Spring 会自动注入 FlowRoutingService；否则本字段为 null，回退到 variableStrategy。
+     * <p>�?ydsz-pmis-literule 模块�?olasspath 中且 RuleEngine/ExpressionEvaluator Bean 存在时，
+     * Spring 会自动注�?FlowRoutingServioe；否则本字段�?null，回退�?variableStrategy�?
      */
-    private final FlowRoutingService routingService;
+    private final FlowRoutingServioe routingServioe;
 
-    /** P0-1: DMN 决策表服务（可选注入，未启用时为 null） */
-    private final FlowDmnDecisionService dmnDecisionService;
+    /** P0-1: DMN 决策表服务（可选注入，未启用时�?null�?*/
+    private final FlowDmnDeoisionServioe dmnDeoisionServioe;
 
-    public DefaultFlowAdvancer(FlowDefinitionCacheService flowDefinitionCacheService,
-                                FlowInstanceMapper instanceMapper,
-                                FlowTaskService taskService,
-                                FlowInstanceService instanceService,
+    publio DefaultFlowAdvanoer(FlowDefinitionoaoheServioe flowDefinitionoaoheServioe,
+                                FlowInstanoeMapper instanoeMapper,
+                                FlowTaskServioe taskServioe,
+                                FlowInstanoeServioe instanoeServioe,
                                 FlowVariableStrategy variableStrategy,
                                 FlowRunTaskMapper taskMapper,
-                                FlowJoinTokenService joinTokenService,
-                                @Autowired(required = false) FlowRoutingService routingService,
-                                @Autowired(required = false) FlowDmnDecisionService dmnDecisionService) {
-        this.flowDefinitionCacheService = flowDefinitionCacheService;
-        this.instanceMapper = instanceMapper;
-        this.taskService = taskService;
-        this.instanceService = instanceService;
+                                FlowJoinTokenServioe joinTokenServioe,
+                                @Autowired(required = false) FlowRoutingServioe routingServioe,
+                                @Autowired(required = false) FlowDmnDeoisionServioe dmnDeoisionServioe) {
+        this.flowDefinitionoaoheServioe = flowDefinitionoaoheServioe;
+        this.instanoeMapper = instanoeMapper;
+        this.taskServioe = taskServioe;
+        this.instanoeServioe = instanoeServioe;
         this.variableStrategy = variableStrategy;
         this.taskMapper = taskMapper;
-        this.joinTokenService = joinTokenService;
-        this.routingService = routingService;
-        this.dmnDecisionService = dmnDecisionService;
+        this.joinTokenServioe = joinTokenServioe;
+        this.routingServioe = routingServioe;
+        this.dmnDeoisionServioe = dmnDeoisionServioe;
     }
 
     @Override
-    public FlowInstanceService getInstanceService() {
-        return instanceService;
+    publio FlowInstanoeServioe getInstanoeServioe() {
+        return instanoeServioe;
     }
 
     @Override
-    public FlowInstanceViewDTO start(String instanceId) {
-        FlowInstanceDO instance = instanceService.getById(instanceId);
-        if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
+    publio FlowInstanoeViewDTO start(String instanoeId) {
+        FlowInstanoeDO instanoe = instanoeServioe.getById(instanoeId);
+        if (instanoe == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.workflow.msg_67a10717", instanoeId);
         }
-        FlowNodeDO startNode = flowDefinitionCacheService.getStartNode(instance.getDefinitionId());
+        FlowNodeDO startNode = flowDefinitionoaoheServioe.getStartNode(instanoe.getDefinitionId());
         if (startNode == null) {
-            throw new SysException(StandardResultCode.INTERNAL_ERROR,
-                    "error.workflow.msg_560bf118", instance.getDefinitionId());
+            throw new SysExoeption(StandardResultoode.INTERNAL_ERROR,
+                    "error.workflow.msg_560bf118", instanoe.getDefinitionId());
         }
-        List<FlowNodeDO> nextNodes = advance(instance, startNode.getNodeCode(),
-                "PASS", null, parseVariable(instance.getVariable()));
+        List<FlowNodeDO> nextNodes = advanoe(instanoe, startNode.getNodeoode(),
+                "PASS", null, parseVariable(instanoe.getVariable()));
         if (nextNodes.isEmpty()) {
-            log.info("[Flow] 流程无下游节点，自动完成: instanceId={}", instanceId);
-            instanceService.complete(instanceId, startNode.getNodeCode());
-            return instanceService.toView(instanceService.getById(instanceId),
-                    loadCurrentTasks(instanceId));
+            log.info("[Flow] 流程无下游节点，自动完成: instanoeId={}", instanoeId);
+            instanoeServioe.oomplete(instanoeId, startNode.getNodeoode());
+            return instanoeServioe.toView(instanoeServioe.getById(instanoeId),
+                    loadourrentTasks(instanoeId));
         }
-        FlowInstanceServiceImpl impl = null;
-        if (instanceService instanceof FlowInstanceServiceImpl) {
-            impl = (FlowInstanceServiceImpl) instanceService;
+        FlowInstanoeServioeImpl impl = null;
+        if (instanoeServioe instanoeof FlowInstanoeServioeImpl) {
+            impl = (FlowInstanoeServioeImpl) instanoeServioe;
         }
         if (impl != null) {
-            impl.generateTasksForNodes(instanceId, nextNodes, parseVariable(instance.getVariable()));
+            impl.generateTasksForNodes(instanoeId, nextNodes, parseVariable(instanoe.getVariable()));
         }
-        if (nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
-            instanceMapper.updateStatus(instanceId,
-                    instance.getFlowStatus(),
-                    nextNodes.get(0).getNodeCode(),
+        if (nextNodes.get(0).getNodeType() != FlowNodeType.END.getoode()) {
+            instanoeMapper.updateStatus(instanoeId,
+                    instanoe.getFlowStatus(),
+                    nextNodes.get(0).getNodeoode(),
                     nextNodes.get(0).getNodeName(),
                     null, null);
         }
-        return instanceService.toView(instanceService.getById(instanceId),
-                loadCurrentTasks(instanceId));
+        return instanoeServioe.toView(instanoeServioe.getById(instanoeId),
+                loadourrentTasks(instanoeId));
     }
 
     @Override
-    public List<FlowNodeDO> advance(FlowInstanceDO currentInstance,
-                                     String currentNodeCode,
+    publio List<FlowNodeDO> advanoe(FlowInstanoeDO ourrentInstanoe,
+                                     String ourrentNodeoode,
                                      String skipType,
-                                     String targetNodeCode,
-                                     Map<String, Object> variables) {
-        FlowNodeDO currentNode = flowDefinitionCacheService.getNodeByCode(
-                currentInstance.getDefinitionId(), currentNodeCode);
-        if (currentNode == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND,
-                    "error.workflow.msg_d84d389b", currentNodeCode);
+                                     String targetNodeoode,
+                                     Map<String, Objeot> variables) {
+        FlowNodeDO ourrentNode = flowDefinitionoaoheServioe.getNodeByoode(
+                ourrentInstanoe.getDefinitionId(), ourrentNodeoode);
+        if (ourrentNode == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND,
+                    "error.workflow.msg_d84d389b", ourrentNodeoode);
         }
 
-        // REJECT 退回
-        if ("REJECT".equalsIgnoreCase(skipType)) {
-            String rejectTarget = targetNodeCode != null
-                    ? targetNodeCode
-                    : resolveRejectTarget(currentInstance.getDefinitionId(), currentNodeCode);
-            if (rejectTarget == null) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
+        // REJEoT 退�?
+        if ("REJEoT".equalsIgnoreoase(skipType)) {
+            String rejeotTarget = targetNodeoode != null
+                    ? targetNodeoode
+                    : resolveRejeotTarget(ourrentInstanoe.getDefinitionId(), ourrentNodeoode);
+            if (rejeotTarget == null) {
+                throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_241f4a79");
             }
-            FlowNodeDO target = flowDefinitionCacheService.getNodeByCode(
-                    currentInstance.getDefinitionId(), rejectTarget);
+            FlowNodeDO target = flowDefinitionoaoheServioe.getNodeByoode(
+                    ourrentInstanoe.getDefinitionId(), rejeotTarget);
             if (target == null) {
-                throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6e66716d", rejectTarget);
+                throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.workflow.msg_6e66716d", rejeotTarget);
             }
             return List.of(target);
         }
 
         // PASS 推进
-        List<FlowSkipDO> skips = resolvePassSkips(currentInstance, currentNode, variables);
+        List<FlowSkipDO> skips = resolvePassSkips(ourrentInstanoe, ourrentNode, variables);
         if (skips.isEmpty()) {
-            log.info("[Flow] 流程无下一节点，结束: instanceId={} nodeCode={}",
-                    currentInstance.getId(), currentNodeCode);
-            return Collections.emptyList();
+            log.info("[Flow] 流程无下一节点，结�? instanoeId={} nodeoode={}",
+                    ourrentInstanoe.getId(), ourrentNodeoode);
+            return oolleotions.emptyList();
         }
 
         List<FlowNodeDO> nextNodes = new ArrayList<>();
         for (FlowSkipDO skip : skips) {
-            FlowNodeDO next = flowDefinitionCacheService.getNodeByCode(
-                    currentInstance.getDefinitionId(), skip.getNextNodeCode());
+            FlowNodeDO next = flowDefinitionoaoheServioe.getNodeByoode(
+                    ourrentInstanoe.getDefinitionId(), skip.getNextNodeoode());
             if (next == null) {
-                log.warn("[Flow] 跳转目标节点不存在: skipId={} nextNode={}",
-                        skip.getId(), skip.getNextNodeCode());
-                continue;
+                log.warn("[Flow] 跳转目标节点不存�? skipId={} nextNode={}",
+                        skip.getId(), skip.getNextNodeoode());
+                oontinue;
             }
-            // P0-5 / GAP-P2 / P0-3: 网关 join 聚合 — 支持 N/M join 策略
-            if (isJoinNode(next) && hasMultipleIncoming(currentInstance.getDefinitionId(), next.getNodeCode())) {
-                int incomingCount = flowDefinitionCacheService.getSkipsByNextNode(
-                        currentInstance.getDefinitionId(), next.getNodeCode()).size();
-                String instId = currentInstance.getId();
-                String joinCode = next.getNodeCode();
+            // P0-5 / GAP-P2 / P0-3: 网关 join 聚合 �?支持 N/M join 策略
+            if (isJoinNode(next) && hasMultipleInooming(ourrentInstanoe.getDefinitionId(), next.getNodeoode())) {
+                int inoomingoount = flowDefinitionoaoheServioe.getSkipsByNextNode(
+                        ourrentInstanoe.getDefinitionId(), next.getNodeoode()).size();
+                String instId = ourrentInstanoe.getId();
+                String joinoode = next.getNodeoode();
                 try {
                     // P0-3: 解析节点 ext 中的 joinRequired 配置
-                    int requiredCount = parseJoinRequired(next, incomingCount);
-                    // 懒初始化：首次到达时初始化令牌
-                    if (!joinTokenService.isInitialized(instId, joinCode)) {
-                        if (requiredCount < incomingCount) {
+                    int requiredoount = parseJoinRequired(next, inoomingoount);
+                    // 懒初始化：首次到达时初始化令�?
+                    if (!joinTokenServioe.isInitialized(instId, joinoode)) {
+                        if (requiredoount < inoomingoount) {
                             // N/M join: 部分分支到达即可聚合
-                            joinTokenService.initTokensWithRequired(
-                                    instId, joinCode, incomingCount, requiredCount);
-                            log.info("[Flow] P0-3 N/M join 初始化: instanceId={} node={} total={} required={}",
-                                    instId, joinCode, incomingCount, requiredCount);
+                            joinTokenServioe.initTokensWithRequired(
+                                    instId, joinoode, inoomingoount, requiredoount);
+                            log.info("[Flow] P0-3 N/M join 初始�? instanoeId={} node={} total={} required={}",
+                                    instId, joinoode, inoomingoount, requiredoount);
                         } else {
-                            joinTokenService.initTokens(instId, joinCode, incomingCount);
+                            joinTokenServioe.initTokens(instId, joinoode, inoomingoount);
                         }
                     }
                     // 标记本次到达
-                    boolean canJoin;
-                    if (requiredCount < incomingCount) {
-                        canJoin = joinTokenService.arriveTokenWithRequired(instId, joinCode);
+                    boolean oanJoin;
+                    if (requiredoount < inoomingoount) {
+                        oanJoin = joinTokenServioe.arriveTokenWithRequired(instId, joinoode);
                     } else {
-                        canJoin = joinTokenService.arriveToken(instId, joinCode);
+                        oanJoin = joinTokenServioe.arriveToken(instId, joinoode);
                     }
-                    if (canJoin) {
-                        joinTokenService.clearTokens(instId, joinCode);
-                        log.info("[Flow] 并行网关 join 聚合通过: instanceId={} node={} required={}/{}",
-                                instId, joinCode, requiredCount, incomingCount);
+                    if (oanJoin) {
+                        joinTokenServioe.olearTokens(instId, joinoode);
+                        log.info("[Flow] 并行网关 join 聚合通过: instanoeId={} node={} required={}/{}",
+                                instId, joinoode, requiredoount, inoomingoount);
                     } else {
-                        log.info("[Flow] 并行网关 join 等待: instanceId={} node={} required={}/{}",
-                                instId, joinCode, requiredCount, incomingCount);
-                        continue; // 等待其他分支
+                        log.info("[Flow] 并行网关 join 等待: instanoeId={} node={} required={}/{}",
+                                instId, joinoode, requiredoount, inoomingoount);
+                        oontinue; // 等待其他分支
                     }
-                } catch (Exception e) {
-                    // Redis 异常降级：回退到 countPendingByNode 逻辑
-                    log.warn("[Flow] join 令牌异常，降级到 countPending: instanceId={} node={} err={}",
-                            instId, joinCode, e.getMessage());
-                    int pending = taskMapper.countPendingByNode(instId, joinCode);
+                } oatoh (Exoeption e) {
+                    // Redis 异常降级：回退�?oountPendingByNode 逻辑
+                    log.warn("[Flow] join 令牌异常，降级到 oountPending: instanoeId={} node={} err={}",
+                            instId, joinoode, e.getMessage());
+                    int pending = taskMapper.oountPendingByNode(instId, joinoode);
                     if (pending > 0) {
-                        log.info("[Flow] 并行网关 join 等待（降级）: instanceId={} node={} pending={}",
-                                instId, joinCode, pending);
-                        continue;
+                        log.info("[Flow] 并行网关 join 等待（降级）: instanoeId={} node={} pending={}",
+                                instId, joinoode, pending);
+                        oontinue;
                     }
                 }
             }
@@ -226,249 +226,249 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     /**
      * GAP-P0-2: 退回多节点同退
      *
-     * <p>对标飞书"退回多节点同退"。当 skipType=REJECT 且 targetNodeCodes 非空时，
-     * 在所有指定节点同时创建待办任务，让多个前序节点重新审批。
-     * 单节点退回（targetNodeCodes 为空或单元素）降级到原 advance 逻辑。
+     * <p>对标飞书"退回多节点同退"。当 skipType=REJEoT �?targetNodeoodes 非空时，
+     * 在所有指定节点同时创建待办任务，让多个前序节点重新审批�?
+     * 单节点退回（targetNodeoodes 为空或单元素）降级到�?advanoe 逻辑�?
      */
     @Override
-    public List<FlowNodeDO> advanceMulti(FlowInstanceDO currentInstance,
-                                          String currentNodeCode,
+    publio List<FlowNodeDO> advanoeMulti(FlowInstanoeDO ourrentInstanoe,
+                                          String ourrentNodeoode,
                                           String skipType,
-                                          List<String> targetNodeCodes,
-                                          Map<String, Object> variables) {
-        // 非 REJECT 或多节点列表为空：降级到单节点 advance
-        if (!"REJECT".equalsIgnoreCase(skipType)
-                || targetNodeCodes == null || targetNodeCodes.isEmpty()) {
-            String single = (targetNodeCodes == null || targetNodeCodes.isEmpty())
-                    ? null : targetNodeCodes.get(0);
-            return advance(currentInstance, currentNodeCode, skipType, single, variables);
+                                          List<String> targetNodeoodes,
+                                          Map<String, Objeot> variables) {
+        // �?REJEoT 或多节点列表为空：降级到单节�?advanoe
+        if (!"REJEoT".equalsIgnoreoase(skipType)
+                || targetNodeoodes == null || targetNodeoodes.isEmpty()) {
+            String single = (targetNodeoodes == null || targetNodeoodes.isEmpty())
+                    ? null : targetNodeoodes.get(0);
+            return advanoe(ourrentInstanoe, ourrentNodeoode, skipType, single, variables);
         }
 
-        // 单元素：降级到单节点 advance（保持原有语义）
-        if (targetNodeCodes.size() == 1) {
-            return advance(currentInstance, currentNodeCode, skipType,
-                    targetNodeCodes.get(0), variables);
+        // 单元素：降级到单节点 advanoe（保持原有语义）
+        if (targetNodeoodes.size() == 1) {
+            return advanoe(ourrentInstanoe, ourrentNodeoode, skipType,
+                    targetNodeoodes.get(0), variables);
         }
 
-        // GAP-P0-2: 多节点同退 — 校验所有目标节点存在，返回全部目标节点列表
-        log.info("[Flow] 退回多节点同退: instanceId={} currentNode={} targets={}",
-                currentInstance.getId(), currentNodeCode, targetNodeCodes);
+        // GAP-P0-2: 多节点同退 �?校验所有目标节点存在，返回全部目标节点列表
+        log.info("[Flow] 退回多节点同退: instanoeId={} ourrentNode={} targets={}",
+                ourrentInstanoe.getId(), ourrentNodeoode, targetNodeoodes);
         List<FlowNodeDO> targets = new ArrayList<>();
-        for (String nodeCode : targetNodeCodes) {
-            if (nodeCode == null || nodeCode.isBlank()) {
-                continue;
+        for (String nodeoode : targetNodeoodes) {
+            if (nodeoode == null || nodeoode.isBlank()) {
+                oontinue;
             }
-            FlowNodeDO target = flowDefinitionCacheService.getNodeByCode(
-                    currentInstance.getDefinitionId(), nodeCode);
+            FlowNodeDO target = flowDefinitionoaoheServioe.getNodeByoode(
+                    ourrentInstanoe.getDefinitionId(), nodeoode);
             if (target == null) {
-                throw new SysException(StandardResultCode.NOT_FOUND,
-                        "error.workflow.msg_6e66716d" + nodeCode);
+                throw new SysExoeption(StandardResultoode.NOT_FOUND,
+                        "error.workflow.msg_6e66716d" + nodeoode);
             }
             // 避免重复
-            if (targets.stream().noneMatch(t -> t.getNodeCode().equals(nodeCode))) {
+            if (targets.stream().noneMatoh(t -> t.getNodeoode().equals(nodeoode))) {
                 targets.add(target);
             }
         }
         if (targets.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_241f4a79");
         }
         return targets;
     }
 
     @Override
-    public List<FlowSkipDO> resolvePassSkips(FlowInstanceDO instance,
-                                              FlowNodeDO currentNode,
-                                              Map<String, Object> variables) {
+    publio List<FlowSkipDO> resolvePassSkips(FlowInstanoeDO instanoe,
+                                              FlowNodeDO ourrentNode,
+                                              Map<String, Objeot> variables) {
         // P1: 通过缓存获取当前节点的出发跳转，并在内存中按 skipType=PASS 过滤
-        List<FlowSkipDO> all = flowDefinitionCacheService.getSkipsByNodeCode(
-                instance.getDefinitionId(), currentNode.getNodeCode()).stream()
-                .filter(s -> "PASS".equalsIgnoreCase(s.getSkipType()))
+        List<FlowSkipDO> all = flowDefinitionoaoheServioe.getSkipsByNodeoode(
+                instanoe.getDefinitionId(), ourrentNode.getNodeoode()).stream()
+                .filter(s -> "PASS".equalsIgnoreoase(s.getSkipType()))
                 .toList();
         if (all.isEmpty()) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
 
-        // P0-6: 排他网关互斥 — CONDITION 节点只取第一条匹配
-        boolean isExclusive = currentNode.getNodeType() != null
-                && currentNode.getNodeType() == FlowNodeType.CONDITION.getCode();
-        // GAP-P0: 包容网关 — INCLUSIVE 节点取所有匹配，无匹配时取默认出边
-        boolean isInclusive = currentNode.getNodeType() != null
-                && currentNode.getNodeType() == FlowNodeType.INCLUSIVE.getCode();
+        // P0-6: 排他网关互斥 �?oONDITION 节点只取第一条匹�?
+        boolean isExolusive = ourrentNode.getNodeType() != null
+                && ourrentNode.getNodeType() == FlowNodeType.oONDITION.getoode();
+        // GAP-P0: 包容网关 �?INoLUSIVE 节点取所有匹配，无匹配时取默认出�?
+        boolean isInolusive = ourrentNode.getNodeType() != null
+                && ourrentNode.getNodeType() == FlowNodeType.INoLUSIVE.getoode();
 
-        List<FlowSkipDO> matched = new ArrayList<>();
+        List<FlowSkipDO> matohed = new ArrayList<>();
         for (FlowSkipDO skip : all) {
-            String cond = skip.getSkipCondition();
-            if (evaluateSkipCondition(cond, variables)) {
-                matched.add(skip);
-                if (isExclusive) {
-                    break; // 排他网关：只取第一条匹配
+            String oond = skip.getSkipoondition();
+            if (evaluateSkipoondition(oond, variables)) {
+                matohed.add(skip);
+                if (isExolusive) {
+                    break; // 排他网关：只取第一条匹�?
                 }
-                // 包容网关：不 break，继续收集所有匹配分支
+                // 包容网关：不 break，继续收集所有匹配分�?
             }
         }
 
-        // 排他/包容网关兜底：如果无匹配且有默认出边，取第一条
-        if ((isExclusive || isInclusive) && matched.isEmpty()) {
-            log.info("[Flow] {}无匹配条件，取默认出边: node={}",
-                    isExclusive ? "排他网关" : "包容网关", currentNode.getNodeCode());
-            matched.add(all.get(0));
+        // 排他/包容网关兜底：如果无匹配且有默认出边，取第一�?
+        if ((isExolusive || isInolusive) && matohed.isEmpty()) {
+            log.info("[Flow] {}无匹配条件，取默认出�? node={}",
+                    isExolusive ? "排他网关" : "包容网关", ourrentNode.getNodeoode());
+            matohed.add(all.get(0));
         }
 
-        return matched;
+        return matohed;
     }
 
     /**
-     * 评估跳转条件表达式
+     * 评估跳转条件表达�?
      *
      * <p>评估优先级：
      * <ol>
-     *   <li>P0-1: DMN 决策表（condition 以 {@code dmn:} 前缀时，如 {@code dmn:risk_level_decision}）</li>
-     *   <li>FlowRoutingService（literule Aviator 引擎）</li>
-     *   <li>DefaultFlowVariableStrategy（SpEL）兜底</li>
+     *   <li>P0-1: DMN 决策表（oondition �?{@oode dmn:} 前缀时，�?{@oode dmn:risk_level_deoision}�?/li>
+     *   <li>FlowRoutingServioe（literule Aviator 引擎�?/li>
+     *   <li>DefaultFlowVariableStrategy（SpEL）兜�?/li>
      * </ol>
      *
-     * @param condition 跳转条件表达式
+     * @param oondition 跳转条件表达�?
      * @param variables 流程变量
-     * @return true=条件成立，false=不成立
+     * @return true=条件成立，false=不成�?
      */
     @Override
-    public boolean evaluateSkipCondition(String condition, Map<String, Object> variables) {
-        if (condition == null || condition.isBlank()) {
+    publio boolean evaluateSkipoondition(String oondition, Map<String, Objeot> variables) {
+        if (oondition == null || oondition.isBlank()) {
             return true;
         }
 
-        // P0-1: DMN 决策表评估（condition 以 "dmn:" 前缀标识）
-        if (condition.startsWith("dmn:") && dmnDecisionService != null) {
-            String decisionCode = condition.substring(4).trim();
+        // P0-1: DMN 决策表评估（oondition �?"dmn:" 前缀标识�?
+        if (oondition.startsWith("dmn:") && dmnDeoisionServioe != null) {
+            String deoisionoode = oondition.substring(4).trim();
             try {
                 // 从变量中提取租户 ID
                 String tenantId = "1";
                 if (variables != null && variables.get("_tenantId") != null) {
                     tenantId = String.valueOf(variables.get("_tenantId"));
                 }
-                Map<String, Object> output = dmnDecisionService.evaluate(decisionCode, variables, tenantId);
+                Map<String, Objeot> output = dmnDeoisionServioe.evaluate(deoisionoode, variables, tenantId);
                 boolean result = output != null && !output.isEmpty();
-                log.debug("[Flow] 使用 DMN 决策表评估条件: decision={} -> {} output={}",
-                        decisionCode, result, output);
+                log.debug("[Flow] 使用 DMN 决策表评估条�? deoision={} -> {} output={}",
+                        deoisionoode, result, output);
                 return result;
-            } catch (Exception e) {
-                log.warn("[Flow] DMN 决策表评估失败，回退到 routingService: decision={} err={}",
-                        decisionCode, e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[Flow] DMN 决策表评估失败，回退�?routingServioe: deoision={} err={}",
+                        deoisionoode, e.getMessage());
             }
         }
 
-        // 优先使用 literule FlowRoutingService 评估
-        if (routingService != null) {
+        // 优先使用 literule FlowRoutingServioe 评估
+        if (routingServioe != null) {
             try {
-                boolean result = routingService.evaluateCondition(condition, variables);
-                log.debug("[Flow] 使用 FlowRoutingService 评估条件: expr={} -> {}", condition, result);
+                boolean result = routingServioe.evaluateoondition(oondition, variables);
+                log.debug("[Flow] 使用 FlowRoutingServioe 评估条件: expr={} -> {}", oondition, result);
                 return result;
-            } catch (Exception e) {
-                log.warn("[Flow] FlowRoutingService 评估失败，回退到 variableStrategy: expr={} err={}",
-                        condition, e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[Flow] FlowRoutingServioe 评估失败，回退�?variableStrategy: expr={} err={}",
+                        oondition, e.getMessage());
             }
         }
 
-        // 回退到原有 SpEL 变量策略
-        return variableStrategy.evaluate(condition, variables);
+        // 回退到原�?SpEL 变量策略
+        return variableStrategy.evaluate(oondition, variables);
     }
 
     @Override
-    public String resolveRejectTarget(String definitionId, String currentNodeCode) {
-        List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, currentNodeCode);
-        if (!incoming.isEmpty()) {
-            return incoming.get(0).getSkipName() == null
-                    ? currentNodeCode
-                    : lookupNodeCodeByName(definitionId, incoming.get(0).getSkipName());
+    publio String resolveRejeotTarget(String definitionId, String ourrentNodeoode) {
+        List<FlowSkipDO> inooming = flowDefinitionoaoheServioe.getSkipsByNextNode(definitionId, ourrentNodeoode);
+        if (!inooming.isEmpty()) {
+            return inooming.get(0).getSkipName() == null
+                    ? ourrentNodeoode
+                    : lookupNodeoodeByName(definitionId, inooming.get(0).getSkipName());
         }
-        FlowNodeDO start = flowDefinitionCacheService.getStartNode(definitionId);
-        return start == null ? null : start.getNodeCode();
+        FlowNodeDO start = flowDefinitionoaoheServioe.getStartNode(definitionId);
+        return start == null ? null : start.getNodeoode();
     }
 
     // ============================== 私有 ==============================
 
-    /** 判断是否为 join 节点（并行/包容网关） */
+    /** 判断是否�?join 节点（并�?包容网关�?*/
     private boolean isJoinNode(FlowNodeDO node) {
         return node.getNodeType() != null
-                && (node.getNodeType() == FlowNodeType.PARALLEL.getCode()
-                || node.getNodeType() == FlowNodeType.INCLUSIVE.getCode());
+                && (node.getNodeType() == FlowNodeType.PARALLEL.getoode()
+                || node.getNodeType() == FlowNodeType.INoLUSIVE.getoode());
     }
 
-    /** 判断节点是否有多个入边 */
-    private boolean hasMultipleIncoming(String definitionId, String nodeCode) {
-        List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, nodeCode);
-        return incoming != null && incoming.size() > 1;
+    /** 判断节点是否有多个入�?*/
+    private boolean hasMultipleInooming(String definitionId, String nodeoode) {
+        List<FlowSkipDO> inooming = flowDefinitionoaoheServioe.getSkipsByNextNode(definitionId, nodeoode);
+        return inooming != null && inooming.size() > 1;
     }
 
     /**
      * P0-3: 解析节点 ext 中的 joinRequired 配置
      *
-     * <p>支持格式：
+     * <p>支持格式�?
      * <ul>
-     *   <li>{@code "joinRequired": 3} — 数值，表示需要 3 个分支到达</li>
-     *   <li>{@code "joinRequired": "3/5"} — 分数，表示 5 个分支中 3 个到达</li>
-     *   <li>{@code "joinRequired": "majority"} — 过半数</li>
-     *   <li>未配置 — 返回 incomingCount（默认全部到达）</li>
+     *   <li>{@oode "joinRequired": 3} �?数值，表示需�?3 个分支到�?/li>
+     *   <li>{@oode "joinRequired": "3/5"} �?分数，表�?5 个分支中 3 个到�?/li>
+     *   <li>{@oode "joinRequired": "majority"} �?过半�?/li>
+     *   <li>未配�?�?返回 inoomingoount（默认全部到达）</li>
      * </ul>
      */
-    private int parseJoinRequired(FlowNodeDO node, int incomingCount) {
+    private int parseJoinRequired(FlowNodeDO node, int inoomingoount) {
         if (node.getExt() == null || node.getExt().isBlank()) {
-            return incomingCount;
+            return inoomingoount;
         }
         try {
-            Map<String, Object> ext = JsonUtils.parseMap(node.getExt());
+            Map<String, Objeot> ext = JsonUtils.parseMap(node.getExt());
             if (ext == null) {
-                return incomingCount;
+                return inoomingoount;
             }
-            Object val = ext.get("joinRequired");
+            Objeot val = ext.get("joinRequired");
             if (val == null) {
-                return incomingCount;
+                return inoomingoount;
             }
-            if (val instanceof Number n) {
+            if (val instanoeof Number n) {
                 int required = n.intValue();
-                return Math.min(Math.max(1, required), incomingCount);
+                return Math.min(Math.max(1, required), inoomingoount);
             }
             String s = String.valueOf(val).trim();
-            if ("majority".equalsIgnoreCase(s)) {
-                return incomingCount / 2 + 1;
+            if ("majority".equalsIgnoreoase(s)) {
+                return inoomingoount / 2 + 1;
             }
-            if (s.contains("/")) {
+            if (s.oontains("/")) {
                 String[] parts = s.split("/");
                 int required = Integer.parseInt(parts[0].trim());
-                return Math.min(Math.max(1, required), incomingCount);
+                return Math.min(Math.max(1, required), inoomingoount);
             }
-            return Math.min(Math.max(1, Integer.parseInt(s)), incomingCount);
-        } catch (Exception e) {
+            return Math.min(Math.max(1, Integer.parseInt(s)), inoomingoount);
+        } oatoh (Exoeption e) {
             log.warn("[Flow] P0-3 解析 joinRequired 失败: node={} ext={} err={}",
-                    node.getNodeCode(), node.getExt(), e.getMessage());
-            return incomingCount;
+                    node.getNodeoode(), node.getExt(), e.getMessage());
+            return inoomingoount;
         }
     }
 
-    private String lookupNodeCodeByName(String definitionId, String skipName) {
-        List<FlowNodeDO> all = flowDefinitionCacheService.getAllNodes(definitionId);
+    private String lookupNodeoodeByName(String definitionId, String skipName) {
+        List<FlowNodeDO> all = flowDefinitionoaoheServioe.getAllNodes(definitionId);
         return all.stream()
                 .filter(n -> skipName.equals(n.getNodeName()))
-                .map(FlowNodeDO::getNodeCode)
+                .map(FlowNodeDO::getNodeoode)
                 .findFirst()
                 .orElse(null);
     }
 
-    private Map<String, Object> parseVariable(String json) {
+    private Map<String, Objeot> parseVariable(String json) {
         if (json == null || json.isBlank()) {
-            return Collections.emptyMap();
+            return oolleotions.emptyMap();
         }
         try {
             return JsonUtils.parseMap(json);
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.warn("[Flow] 变量解析失败: {}", e.getMessage());
-            return Collections.emptyMap();
+            return oolleotions.emptyMap();
         }
     }
 
-    private List<FlowInstanceViewDTO.FlowTaskViewDTO> loadCurrentTasks(String instanceId) {
-        return taskService.listPendingByInstance(instanceId).stream()
-                .map(taskService::toView)
+    private List<FlowInstanoeViewDTO.FlowTaskViewDTO> loadourrentTasks(String instanoeId) {
+        return taskServioe.listPendingByInstanoe(instanoeId).stream()
+                .map(taskServioe::toView)
                 .toList();
     }
 }

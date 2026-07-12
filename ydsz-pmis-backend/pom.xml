@@ -231,11 +231,6 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-all</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -291,64 +286,264 @@
             </dependency>
 
             <!-- DDD 子模块：api（Feign 门面） -->
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-api</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-api</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-api</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-api</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-api</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-api</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-api</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-api</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-api</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-api</artifactId><version>${project.version}</version></dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-sales-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-finance-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-system-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-userinfo-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-cronjob-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-message-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-project-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-literule-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-workflow-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- DDD 子模块：domain -->
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-domain</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-domain</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-domain</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-domain</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-domain</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-domain</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-domain</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-domain</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-domain</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-sales-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-finance-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-system-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-userinfo-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-cronjob-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-message-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-project-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-literule-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-workflow-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- DDD 子模块：infra -->
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-infra</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-infra</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-infra</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-infra</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-infra</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-infra</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-infra</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-infra</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-infra</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-infra</artifactId><version>${project.version}</version></dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-sales-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-finance-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-system-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-userinfo-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-cronjob-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-message-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-project-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-literule-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-workflow-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- DDD 子模块：server -->
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-server</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-server</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-server</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-server</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-server</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-server</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-server</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-server</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-server</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-server</artifactId><version>${project.version}</version></dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-sales-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-finance-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-system-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-userinfo-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-cronjob-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-message-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-project-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-literule-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-workflow-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- DDD 子模块：web -->
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-sales-web</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-web</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-web</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-web</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-cronjob-web</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-web</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-web</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-web</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-web</artifactId><version>${project.version}</version></dependency>
-            <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-web</artifactId><version>${project.version}</version></dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-sales-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-finance-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-system-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-userinfo-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-cronjob-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-message-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-project-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-literule-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-workflow-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- MyBatis-Plus (Spring Boot 4 专用 starter) -->
             <dependency>
@@ -793,348 +988,353 @@
                     </configuration>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                            <path>
+                                <groupId>org.mapstruct</groupId>
+                                <artifactId>mapstruct-processor</artifactId>
+                                <version>${mapstruct.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <!-- P0-1: 保留 failIfNoTests=false 避免无测试的模块阻断构建，
+                             但 JaCoCo 覆盖率门禁（jacoco-check）会拦截覆盖率不达标的情况 -->
+                        <failIfNoTests>false</failIfNoTests>
+                        <!-- Windows 下 classpath 含不同盘符根路径时禁用 URL 校验,避免 fork JVM 启动失败 -->
+                        <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+                        <includes>
+                            <include>**/*Test.java</include>
+                            <include>**/*Tests.java</include>
+                            <include>**/*TestCase.java</include>
+                        </includes>
+                    </configuration>
+                </plugin>
+                <!-- Checkstyle 静态检查（批次18：与 code-quality.md 规范一致） -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <configuration>
+                        <configLocation>checkstyle.xml</configLocation>
+                        <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                        <consoleOutput>true</consoleOutput>
+                        <failsOnError>true</failsOnError>
+                        <linkXRef>false</linkXRef>
+                        <violationSeverity>error</violationSeverity>
+                        <skip>false</skip>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>10.13.0</version>
+                        </dependency>
+                    </dependencies>
+                    <executions>
+                        <execution>
+                            <id>checkstyle-validate</id>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <skip>false</skip>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- JaCoCo 覆盖率（SonarQube 接入 + CI 质量门禁） -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.11</version>
+                    <configuration>
+                        <skip>false</skip>
+                        <!-- 排除不需要覆盖率统计的类：DTO/Entity/Config/Mapper 等非业务逻辑类 -->
+                        <excludes>
+                            <exclude>**/dto/**</exclude>
+                            <exclude>**/entity/**</exclude>
+                            <exclude>**/vo/**</exclude>
+                            <exclude>**/config/**</exclude>
+                            <exclude>**/mapper/**</exclude>
+                            <exclude>**/enums/**</exclude>
+                            <exclude>**/constant/**</exclude>
+                            <exclude>**/*DO.class</exclude>
+                            <exclude>**/*DTO.class</exclude>
+                            <exclude>**/*VO.class</exclude>
+                            <exclude>**/*Application.class</exclude>
+                            <exclude>**/migration/**</exclude>
+                        </excludes>
+                    </configuration>
+                    <executions>
+                        <!-- 测试前注入 Agent -->
+                        <execution>
+                            <id>jacoco-prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <!-- 测试后生成报告 -->
+                        <execution>
+                            <id>jacoco-report</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                        <!--
+                            覆盖率门禁检查（分阶段提升计划）
+                            ==============================================================
+                            阶段 1（当前, 2026-07）: LINE>=80%, BRANCH>=70%  — 立即收口
+                            阶段 2（2026-08）:      LINE>=90%, BRANCH>=85%  — 接近大厂标准
+                            阶段 3（2026-09）:      LINE>=95%, BRANCH>=90%  — 对齐项目规范 100% 覆盖目标
+                            ==============================================================
+                            规则设计:
+                              1. BUNDLE 级别: 整体行/分支覆盖率, 拦截整体退化
+                              2. PACKAGE 级别: 按 Java 包校验, 避免"高质模块拉低质模块平均值"
+                              3. METHOD 级别: 单方法覆盖率, 拦截未测试的核心方法
+                            排除项: DTO/Entity/VO/Config/Mapper/Enums/Constant/Application 已在上方 excludes 中声明
+                        -->
+                        <execution>
+                            <id>jacoco-check</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <!-- 规则 1: 整体 BUNDLE 覆盖率门禁 -->
+                                    <rule>
+                                        <element>BUNDLE</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.80</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.70</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                    <!-- 规则 2: PACKAGE 级别门禁, 防止低质包被整体平均掩盖 -->
+                                    <rule>
+                                        <element>PACKAGE</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.75</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.65</minimum>
+                                            </limit>
+                                        </limits>
+                                        <excludes>
+                                            <!-- 启动类与配置包允许较低覆盖率 -->
+                                            <exclude>com.njydsz.pmis.*.config</exclude>
+                                            <exclude>com.njydsz.pmis.*.migration</exclude>
+                                        </excludes>
+                                    </rule>
+                                    <!-- 规则 3: METHOD 级别, 单方法行覆盖≥50%, 拦截完全未测试的核心方法 -->
+                                    <rule>
+                                        <element>METHOD</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.50</minimum>
+                                            </limit>
+                                        </limits>
+                                        <excludes>
+                                            <exclude>com.njydsz.pmis.*.config.*</exclude>
+                                            <exclude>com.njydsz.pmis.*.migration.*</exclude>
+                                        </excludes>
+                                    </rule>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- OWASP dependency-check（P0-3：依赖漏洞扫描，默认跳过，CI 中 -DskipDependencyCheck=false 启用） -->
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>9.0.9</version>
+                    <configuration>
+                        <failBuildOnCVSS>7</failBuildOnCVSS>
+                        <formats>
+                            <format>HTML</format>
+                            <format>JSON</format>
+                        </formats>
+                        <skip>${skipDependencyCheck}</skip>
+                    </configuration>
+                </plugin>
+                <!-- Maven Enforcer（P2-8：构建规则约束） -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${enforcer.version}</version>
+                    <configuration>
+                        <skip>${skipEnforcer}</skip>
+                        <rules>
+                            <requireJavaVersion>
+                                <version>[21,)</version>
+                                <message>PMIS 要求 JDK 21+，当前环境不满足。</message>
+                            </requireJavaVersion>
+                            <requireMavenVersion>
+                                <version>[3.9,)</version>
+                                <message>PMIS 要求 Maven 3.9+，当前环境不满足。</message>
+                            </requireMavenVersion>
+                            <requireUpperBoundDeps>
+                                <excludes combine.children="append">
+                                    <!-- 排除已知安全的多版本共存依赖 -->
+                                    <exclude>com.google.guava:guava</exclude>
+                                    <exclude>commons-io:commons-io</exclude>
+                                    <exclude>com.google.errorprone:error_prone_annotations</exclude>
+                                    <exclude>com.squareup.okio:okio-jvm</exclude>
+                                    <exclude>com.squareup.okhttp3:okhttp</exclude>
+                                    <exclude>io.grpc:grpc-netty-shaded</exclude>
+                                    <exclude>io.grpc:grpc-core</exclude>
+                                    <exclude>io.grpc:grpc-stub</exclude>
+                                    <exclude>io.grpc:grpc-api</exclude>
+                                    <exclude>com.google.code.gson:gson</exclude>
+                                    <exclude>org.springdoc:springdoc-openapi-starter-webmvc-ui</exclude>
+                                </excludes>
+                            </requireUpperBoundDeps>
+                            <dependencyConvergence>
+                                <excludes combine.children="append">
+                                    <!-- 排除已知不可避免的版本收敛冲突 -->
+                                    <exclude>com.google.guava:guava</exclude>
+                                    <exclude>org.slf4j:slf4j-api</exclude>
+                                    <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
+                                    <exclude>org.checkerframework:checker-qual</exclude>
+                                    <exclude>com.alibaba:druid</exclude>
+                                    <exclude>org.apache.poi:poi</exclude>
+                                    <exclude>org.apache.commons:commons-collections4</exclude>
+                                    <exclude>org.apache.commons:commons-compress</exclude>
+                                    <exclude>org.antlr:ST4</exclude>
+                                    <exclude>org.antlr:antlr4-runtime</exclude>
+                                    <exclude>com.squareup.okio:okio-jvm</exclude>
+                                    <exclude>com.google.code.gson:gson</exclude>
+                                    <exclude>io.grpc:grpc-netty-shaded</exclude>
+                                    <exclude>com.google.errorprone:error_prone_annotations</exclude>
+                                    <exclude>io.grpc:grpc-core</exclude>
+                                    <exclude>io.grpc:grpc-stub</exclude>
+                                    <exclude>io.grpc:grpc-api</exclude>
+                                </excludes>
+                            </dependencyConvergence>
+                            <bannedDependencies>
+                                <excludes>
+                                    <!-- 禁止 fastjson 1.x（历史安全漏洞），允许 fastjson2 及兼容包 com.alibaba:fastjson:2.x -->
+                                    <exclude>com.alibaba:fastjson:*:[,2)</exclude>
+                                    <!-- 禁止 commons-collections 3.x（反序列化漏洞），允许 commons-collections4 -->
+                                    <exclude>commons-collections:commons-collections</exclude>
+                                    <exclude>org.apache.commons:commons-collections</exclude>
+                                    <!-- 禁止 Jackson 1.x -->
+                                    <exclude>org.codehaus.jackson:*</exclude>
+                                    <!-- 禁止 javax.*（Spring Boot 4 使用 jakarta.*） -->
+                                    <exclude>javax.servlet:*</exclude>
+                                    <exclude>javax.validation:*</exclude>
+                                    <exclude>javax.persistence:*</exclude>
+                                    <exclude>javax.annotation:*</exclude>
+                                    <exclude>javax.ws.rs:*</exclude>
+                                    <!-- 禁止 log4j 1.x / log4j-core（安全漏洞 CVE-2021-44228） -->
+                                    <exclude>log4j:log4j</exclude>
+                                    <exclude>org.apache.logging.log4j:log4j-core</exclude>
+                                    <!-- 禁止 slf4j-log4j12 绑定 -->
+                                    <exclude>org.slf4j:slf4j-log4j12</exclude>
+                                </excludes>
+                                <message>禁止使用 fastjson 1.x / commons-collections 3.x / Jackson 1.x / javax.* / log4j
+                                    等历史不安全或不兼容依赖，请使用 fastjson2 / commons-collections4 / Jackson 2.x /
+                                    jakarta.* / logback。
+                                </message>
+                            </bannedDependencies>
+                            <requireNoRepositories>
+                                <allowedRepositories>
+                                    <id>aliyun-public</id>
+                                    <id>aliyun-spring</id>
+                                    <id>central</id>
+                                </allowedRepositories>
+                                <allowedPluginRepositories>
+                                    <id>aliyun-public</id>
+                                    <id>central</id>
+                                </allowedPluginRepositories>
+                                <message>禁止子模块私自声明 Maven 仓库，统一使用 parent POM 中声明的 aliyun / central
+                                    仓库。
+                                </message>
+                            </requireNoRepositories>
+                        </rules>
+                        <fail>true</fail>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>enforce-rules</id>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- SpotBugs 静态分析（P3-25：安全漏洞与代码缺陷检测，含 FindSecBugs） -->
+                <plugin>
+                    <groupId>com.github.spotbugs</groupId>
+                    <artifactId>spotbugs-maven-plugin</artifactId>
+                    <version>4.8.6.4</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.h3xstream.findsecbugs</groupId>
+                            <artifactId>findsecbugs-plugin</artifactId>
+                            <version>1.13.0</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <effort>Max</effort>
+                        <threshold>Low</threshold>
+                        <failOnError>true</failOnError>
+                        <excludeFilterFile>${project.basedir}/spotbugs-exclude.xml</excludeFilterFile>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则（所有子模块继承生效） -->
+        <plugins>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                        <path>
-                            <groupId>org.mapstruct</groupId>
-                            <artifactId>mapstruct-processor</artifactId>
-                            <version>${mapstruct.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <!-- P0-1: 保留 failIfNoTests=false 避免无测试的模块阻断构建，
-                         但 JaCoCo 覆盖率门禁（jacoco-check）会拦截覆盖率不达标的情况 -->
-                    <failIfNoTests>false</failIfNoTests>
-                    <!-- Windows 下 classpath 含不同盘符根路径时禁用 URL 校验,避免 fork JVM 启动失败 -->
-                    <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
-                    <includes>
-                        <include>**/*Test.java</include>
-                        <include>**/*Tests.java</include>
-                        <include>**/*TestCase.java</include>
-                    </includes>
-                </configuration>
-            </plugin>
-            <!-- Checkstyle 静态检查（批次18：与 code-quality.md 规范一致） -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.3.1</version>
-                <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                    <linkXRef>false</linkXRef>
-                    <violationSeverity>error</violationSeverity>
-                    <skip>false</skip>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.puppycrawl.tools</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>10.13.0</version>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <id>checkstyle-validate</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <skip>false</skip>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- JaCoCo 覆盖率（SonarQube 接入 + CI 质量门禁） -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
-                <configuration>
-                    <skip>false</skip>
-                    <!-- 排除不需要覆盖率统计的类：DTO/Entity/Config/Mapper 等非业务逻辑类 -->
-                    <excludes>
-                        <exclude>**/dto/**</exclude>
-                        <exclude>**/entity/**</exclude>
-                        <exclude>**/vo/**</exclude>
-                        <exclude>**/config/**</exclude>
-                        <exclude>**/mapper/**</exclude>
-                        <exclude>**/enums/**</exclude>
-                        <exclude>**/constant/**</exclude>
-                        <exclude>**/*DO.class</exclude>
-                        <exclude>**/*DTO.class</exclude>
-                        <exclude>**/*VO.class</exclude>
-                        <exclude>**/*Application.class</exclude>
-                        <exclude>**/migration/**</exclude>
-                    </excludes>
-                </configuration>
-                <executions>
-                    <!-- 测试前注入 Agent -->
-                    <execution>
-                        <id>jacoco-prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <!-- 测试后生成报告 -->
-                    <execution>
-                        <id>jacoco-report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                    <!--
-                        覆盖率门禁检查（分阶段提升计划）
-                        ==============================================================
-                        阶段 1（当前, 2026-07）: LINE>=80%, BRANCH>=70%  — 立即收口
-                        阶段 2（2026-08）:      LINE>=90%, BRANCH>=85%  — 接近大厂标准
-                        阶段 3（2026-09）:      LINE>=95%, BRANCH>=90%  — 对齐项目规范 100% 覆盖目标
-                        ==============================================================
-                        规则设计:
-                          1. BUNDLE 级别: 整体行/分支覆盖率, 拦截整体退化
-                          2. PACKAGE 级别: 按 Java 包校验, 避免"高质模块拉低质模块平均值"
-                          3. METHOD 级别: 单方法覆盖率, 拦截未测试的核心方法
-                        排除项: DTO/Entity/VO/Config/Mapper/Enums/Constant/Application 已在上方 excludes 中声明
-                    -->
-                    <execution>
-                        <id>jacoco-check</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <!-- 规则 1: 整体 BUNDLE 覆盖率门禁 -->
-                                <rule>
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.80</minimum>
-                                        </limit>
-                                        <limit>
-                                            <counter>BRANCH</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                                <!-- 规则 2: PACKAGE 级别门禁, 防止低质包被整体平均掩盖 -->
-                                <rule>
-                                    <element>PACKAGE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.75</minimum>
-                                        </limit>
-                                        <limit>
-                                            <counter>BRANCH</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.65</minimum>
-                                        </limit>
-                                    </limits>
-                                    <excludes>
-                                        <!-- 启动类与配置包允许较低覆盖率 -->
-                                        <exclude>com.njydsz.pmis.*.config</exclude>
-                                        <exclude>com.njydsz.pmis.*.migration</exclude>
-                                    </excludes>
-                                </rule>
-                                <!-- 规则 3: METHOD 级别, 单方法行覆盖≥50%, 拦截完全未测试的核心方法 -->
-                                <rule>
-                                    <element>METHOD</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.50</minimum>
-                                        </limit>
-                                    </limits>
-                                    <excludes>
-                                        <exclude>com.njydsz.pmis.*.config.*</exclude>
-                                        <exclude>com.njydsz.pmis.*.migration.*</exclude>
-                                    </excludes>
-                                </rule>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- OWASP dependency-check（P0-3：依赖漏洞扫描，默认跳过，CI 中 -DskipDependencyCheck=false 启用） -->
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>9.0.9</version>
-                <configuration>
-                    <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <formats>
-                        <format>HTML</format>
-                        <format>JSON</format>
-                    </formats>
-                    <skip>${skipDependencyCheck}</skip>
-                </configuration>
-            </plugin>
-            <!-- Maven Enforcer（P2-8：构建规则约束） -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>${enforcer.version}</version>
-                <configuration>
-                    <skip>${skipEnforcer}</skip>
-                    <rules>
-                        <requireJavaVersion>
-                            <version>[21,)</version>
-                            <message>PMIS 要求 JDK 21+，当前环境不满足。</message>
-                        </requireJavaVersion>
-                        <requireMavenVersion>
-                            <version>[3.9,)</version>
-                            <message>PMIS 要求 Maven 3.9+，当前环境不满足。</message>
-                        </requireMavenVersion>
-                        <requireUpperBoundDeps>
-                            <excludes combine.children="append">
-                                <!-- 排除已知安全的多版本共存依赖 -->
-                                <exclude>com.google.guava:guava</exclude>
-                                <exclude>commons-io:commons-io</exclude>
-                                <exclude>com.google.errorprone:error_prone_annotations</exclude>
-                                <exclude>com.squareup.okio:okio-jvm</exclude>
-                                <exclude>com.squareup.okhttp3:okhttp</exclude>
-                                <exclude>io.grpc:grpc-netty-shaded</exclude>
-                                <exclude>io.grpc:grpc-core</exclude>
-                                <exclude>io.grpc:grpc-stub</exclude>
-                                <exclude>io.grpc:grpc-api</exclude>
-                                <exclude>com.google.code.gson:gson</exclude>
-                                <exclude>org.springdoc:springdoc-openapi-starter-webmvc-ui</exclude>
-                            </excludes>
-                        </requireUpperBoundDeps>
-                        <dependencyConvergence>
-                            <excludes combine.children="append">
-                                <!-- 排除已知不可避免的版本收敛冲突 -->
-                                <exclude>com.google.guava:guava</exclude>
-                                <exclude>org.slf4j:slf4j-api</exclude>
-                                <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
-                                <exclude>org.checkerframework:checker-qual</exclude>
-                                <exclude>com.alibaba:druid</exclude>
-                                <exclude>org.apache.poi:poi</exclude>
-                                <exclude>org.apache.commons:commons-collections4</exclude>
-                                <exclude>org.apache.commons:commons-compress</exclude>
-                                <exclude>org.antlr:ST4</exclude>
-                                <exclude>org.antlr:antlr4-runtime</exclude>
-                                <exclude>com.squareup.okio:okio-jvm</exclude>
-                                <exclude>com.google.code.gson:gson</exclude>
-                                <exclude>io.grpc:grpc-netty-shaded</exclude>
-                                <exclude>com.google.errorprone:error_prone_annotations</exclude>
-                                <exclude>io.grpc:grpc-core</exclude>
-                                <exclude>io.grpc:grpc-stub</exclude>
-                                <exclude>io.grpc:grpc-api</exclude>
-                            </excludes>
-                        </dependencyConvergence>
-                        <bannedDependencies>
-                            <excludes>
-                                <!-- 禁止 fastjson 1.x（历史安全漏洞），允许 fastjson2 及兼容包 com.alibaba:fastjson:2.x -->
-                                <exclude>com.alibaba:fastjson:*:[,2)</exclude>
-                                <!-- 禁止 commons-collections 3.x（反序列化漏洞），允许 commons-collections4 -->
-                                <exclude>commons-collections:commons-collections</exclude>
-                                <exclude>org.apache.commons:commons-collections</exclude>
-                                <!-- 禁止 Jackson 1.x -->
-                                <exclude>org.codehaus.jackson:*</exclude>
-                                <!-- 禁止 javax.*（Spring Boot 4 使用 jakarta.*） -->
-                                <exclude>javax.servlet:*</exclude>
-                                <exclude>javax.validation:*</exclude>
-                                <exclude>javax.persistence:*</exclude>
-                                <exclude>javax.annotation:*</exclude>
-                                <exclude>javax.ws.rs:*</exclude>
-                                <!-- 禁止 log4j 1.x / log4j-core（安全漏洞 CVE-2021-44228） -->
-                                <exclude>log4j:log4j</exclude>
-                                <exclude>org.apache.logging.log4j:log4j-core</exclude>
-                                <!-- 禁止 slf4j-log4j12 绑定 -->
-                                <exclude>org.slf4j:slf4j-log4j12</exclude>
-                            </excludes>
-                            <message>禁止使用 fastjson 1.x / commons-collections 3.x / Jackson 1.x / javax.* / log4j 等历史不安全或不兼容依赖，请使用 fastjson2 / commons-collections4 / Jackson 2.x / jakarta.* / logback。</message>
-                        </bannedDependencies>
-                        <requireNoRepositories>
-                            <allowedRepositories>
-                                <id>aliyun-public</id>
-                                <id>aliyun-spring</id>
-                                <id>central</id>
-                            </allowedRepositories>
-                            <allowedPluginRepositories>
-                                <id>aliyun-public</id>
-                                <id>central</id>
-                            </allowedPluginRepositories>
-                            <message>禁止子模块私自声明 Maven 仓库，统一使用 parent POM 中声明的 aliyun / central 仓库。</message>
-                        </requireNoRepositories>
-                    </rules>
-                    <fail>true</fail>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>enforce-rules</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- SpotBugs 静态分析（P3-25：安全漏洞与代码缺陷检测，含 FindSecBugs） -->
-            <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.8.6.4</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.h3xstream.findsecbugs</groupId>
-                        <artifactId>findsecbugs-plugin</artifactId>
-                        <version>1.13.0</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <effort>Max</effort>
-                    <threshold>Low</threshold>
-                    <failOnError>true</failOnError>
-                    <excludeFilterFile>${project.basedir}/spotbugs-exclude.xml</excludeFilterFile>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
-    </pluginManagement>
-
-    <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则（所有子模块继承生效） -->
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-        </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-enforcer-plugin</artifactId>
-        </plugin>
-    </plugins>
     </build>
 
     <repositories>
@@ -1142,8 +1342,12 @@
             <id>aliyun-public</id>
             <name>Aliyun Public</name>
             <url>https://maven.aliyun.com/repository/public</url>
-            <releases><enabled>true</enabled></releases>
-            <snapshots><enabled>false</enabled></snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
         <repository>
             <id>aliyun-spring</id>

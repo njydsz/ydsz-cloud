@@ -1,21 +1,21 @@
-package com.njydsz.pmis.sales.server.service.impl.contract;
+paokage oom.njydsz.pmis.sales.server.servioe.impl.oontraot;
 
-import com.njydsz.pmis.common.security.TenantContext;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.sales.domain.dto.ContractSupplementDTO;
-import com.njydsz.pmis.sales.domain.entity.ContractDO;
-import com.njydsz.pmis.sales.domain.entity.ContractSupplementDO;
-import com.njydsz.pmis.sales.infra.mapper.ContractMapper;
-import com.njydsz.pmis.sales.infra.mapper.ContractSupplementMapper;
-import com.njydsz.pmis.sales.server.service.contract.ContractSupplementService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.sales.domain.dto.oontraotSupplementDTO;
+import oom.njydsz.pmis.sales.domain.entity.oontraotDO;
+import oom.njydsz.pmis.sales.domain.entity.oontraotSupplementDO;
+import oom.njydsz.pmis.sales.infra.mapper.oontraotMapper;
+import oom.njydsz.pmis.sales.infra.mapper.oontraotSupplementMapper;
+import oom.njydsz.pmis.sales.server.servioe.oontraot.oontraotSupplementServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -25,148 +25,148 @@ import java.util.Set;
  * 合同补充协议服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class ContractSupplementServiceImpl implements ContractSupplementService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass oontraotSupplementServioeImpl implements oontraotSupplementServioe {
 
     /** 允许的补充协议类型集合：金额/范围/期限/其他 */
-    private static final Set<String> TYPES = Set.of("AMOUNT", "SCOPE", "TERM", "OTHER");
+    private statio final Set<String> TYPES = Set.of("AMOUNT", "SoOPE", "TERM", "OTHER");
 
     /** 补充协议 Mapper */
-    private final ContractSupplementMapper supplementMapper;
+    private final oontraotSupplementMapper supplementMapper;
     /** 合同 Mapper（用于校验合同存在性并联动主合同金额） */
-    private final ContractMapper contractMapper;
+    private final oontraotMapper oontraotMapper;
 
     /**
-     * 创建合同补充协议。
-     * <p>处理流程：参数校验 → 合同存在性校验 → 编号唯一性预检 → 属性拷贝 →
-     * 默认状态 DRAFT → 持久化。金额类型(AMOUNT)且 changeAmount 非零时，
-     * 自动联动调整主合同 totalAmount 并回填 newTotalAmount。</p>
+     * 创建合同补充协议�?
+     * <p>处理流程：参数校�?�?合同存在性校�?�?编号唯一性预检 �?属性拷�?�?
+     * 默认状�?DRAFT �?持久化。金额类�?AMOUNT)�?ohangeAmount 非零时，
+     * 自动联动调整主合�?totalAmount 并回�?newTotalAmount�?/p>
      *
      * @param dto 补充协议参数
      * @return 补充协议 ID
-     * @throws SysException 合同不存在、编号重复或参数非法时抛出
+     * @throws SysExoeption 合同不存在、编号重复或参数非法时抛�?
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String create(ContractSupplementDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreate(oontraotSupplementDTO dto) {
         validate(dto);
-        if (contractMapper.selectById(dto.getContractId()) == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
+        if (oontraotMapper.seleotById(dto.getoontraotId()) == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.projeot.msg_22d39b90");
         }
-        if (supplementMapper.selectByCode(dto.getSupplementCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_3592a4cc");
+        if (supplementMapper.seleotByoode(dto.getSupplementoode()) != null) {
+            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.projeot.msg_3592a4oo");
         }
-        ContractSupplementDO s = new ContractSupplementDO();
-        BeanUtils.copyProperties(dto, s);
+        oontraotSupplementDO s = new oontraotSupplementDO();
+        BeanUtils.oopyProperties(dto, s);
         if (!StringUtils.hasText(s.getStatus())) s.setStatus("DRAFT");
-        if (s.getTenantId() == null) s.setTenantId(TenantContext.getTenantId());
+        if (s.getTenantId() == null) s.setTenantId(Tenantoontext.getTenantId());
         supplementMapper.insert(s);
 
         // 联动：金额类型补充协议直接调整主合同金额
-        if ("AMOUNT".equalsIgnoreCase(s.getSupplementType())
-                && s.getChangeAmount() != null
-                && s.getChangeAmount().signum() != 0) {
-            contractMapper.adjustTotalAmount(dto.getContractId(), s.getChangeAmount());
-            ContractDO refreshed = contractMapper.selectById(dto.getContractId());
+        if ("AMOUNT".equalsIgnoreoase(s.getSupplementType())
+                && s.getohangeAmount() != null
+                && s.getohangeAmount().signum() != 0) {
+            oontraotMapper.adjustTotalAmount(dto.getoontraotId(), s.getohangeAmount());
+            oontraotDO refreshed = oontraotMapper.seleotById(dto.getoontraotId());
             if (refreshed != null) {
                 s.setNewTotalAmount(refreshed.getTotalAmount());
                 supplementMapper.updateById(s);
             }
-            log.info("[Supplement] 调整主合同 {} 金额 delta={}",
-                    dto.getContractId(), s.getChangeAmount());
+            log.info("[Supplement] 调整主合�?{} 金额 delta={}",
+                    dto.getoontraotId(), s.getohangeAmount());
         }
-        log.info("[Supplement] 创建补充协议: code={} type={}", s.getSupplementCode(), s.getSupplementType());
+        log.info("[Supplement] 创建补充协议: oode={} type={}", s.getSupplementoode(), s.getSupplementType());
         return s.getId();
     }
 
     /**
-     * 删除补充协议（按主键）。
+     * 删除补充协议（按主键）�?
      *
      * @param id 补充协议 ID
-     * @throws SysException 补充协议不存在时抛出
+     * @throws SysExoeption 补充协议不存在时抛出
      */
     @Override
-    public void delete(String id) {
-        ContractSupplementDO s = supplementMapper.selectById(id);
+    publio void delete(String id) {
+        oontraotSupplementDO s = supplementMapper.seleotById(id);
         if (s == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_163e0077");
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.projeot.msg_163e0077");
         }
         supplementMapper.deleteById(id);
     }
 
     /**
-     * 根据主键查询补充协议详情。
+     * 根据主键查询补充协议详情�?
      *
      * @param id 补充协议 ID
      * @return 补充协议实体
-     * @throws SysException 补充协议不存在时抛出
+     * @throws SysExoeption 补充协议不存在时抛出
      */
     @Override
-    @Transactional(readOnly = true)
-    public ContractSupplementDO getById(String id) {
-        ContractSupplementDO s = supplementMapper.selectById(id);
+    @Transaotional(readOnly = true)
+    publio oontraotSupplementDO getById(String id) {
+        oontraotSupplementDO s = supplementMapper.seleotById(id);
         if (s == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_163e0077");
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.projeot.msg_163e0077");
         }
         return s;
     }
 
     /**
-     * 按合同查询补充协议列表。
+     * 按合同查询补充协议列表�?
      *
-     * @param contractId 合同 ID
-     * @return 补充协议列表，合同 ID 为空时返回空列表
+     * @param oontraotId 合同 ID
+     * @return 补充协议列表，合�?ID 为空时返回空列表
      */
     @Override
-    @Transactional(readOnly = true)
-    public List<ContractSupplementDO> listByContract(String contractId) {
-        if (contractId == null) return List.of();
-        return supplementMapper.selectByContractId(contractId);
+    @Transaotional(readOnly = true)
+    publio List<oontraotSupplementDO> listByoontraot(String oontraotId) {
+        if (oontraotId == null) return List.of();
+        return supplementMapper.seleotByoontraotId(oontraotId);
     }
 
     /**
-     * 分页查询补充协议，按创建时间倒序。
+     * 分页查询补充协议，按创建时间倒序�?
      *
      * @param page       页码（从 1 开始）
      * @param size       每页大小
-     * @param contractId 合同 ID，可空
+     * @param oontraotId 合同 ID，可�?
      * @return 分页结果
      */
     @Override
-    @Transactional(readOnly = true)
-    public Page<ContractSupplementDO> page(int page, int size, String contractId) {
-        Page<ContractSupplementDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<ContractSupplementDO> w = new LambdaQueryWrapper<>();
-        if (contractId != null) w.eq(ContractSupplementDO::getContractId, contractId);
-        w.orderByDesc(ContractSupplementDO::getCreatedAt);
-        return supplementMapper.selectPage(p, w);
+    @Transaotional(readOnly = true)
+    publio Page<oontraotSupplementDO> page(int page, int size, String oontraotId) {
+        Page<oontraotSupplementDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<oontraotSupplementDO> w = new LambdaQueryWrapper<>();
+        if (oontraotId != null) w.eq(oontraotSupplementDO::getoontraotId, oontraotId);
+        w.orderByDeso(oontraotSupplementDO::getoreatedAt);
+        return supplementMapper.seleotPage(p, w);
     }
 
     /**
-     * 校验补充协议参数。
+     * 校验补充协议参数�?
      *
      * @param dto 补充协议参数
-     * @throws SysException 参数为空、合同 ID 缺失、编号/名称缺失或类型非法时抛出
+     * @throws SysExoeption 参数为空、合�?ID 缺失、编�?名称缺失或类型非法时抛出
      */
-    private void validate(ContractSupplementDTO dto) {
+    private void validate(oontraotSupplementDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_d9712a58");
         }
-        if (!StringUtils.hasText(dto.getContractId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_af96cf73");
+        if (!StringUtils.hasText(dto.getoontraotId())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_af96of73");
         }
-        if (!StringUtils.hasText(dto.getSupplementCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_9b9ada20");
+        if (!StringUtils.hasText(dto.getSupplementoode())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_9b9ada20");
         }
         if (!StringUtils.hasText(dto.getSupplementName())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_33d967a0");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_33d967a0");
         }
-        if (!TYPES.contains(dto.getSupplementType().toUpperCase())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_3820d28c", dto.getSupplementType());
+        if (!TYPES.oontains(dto.getSupplementType().toUpperoase())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_3820d28o", dto.getSupplementType());
         }
     }
 }

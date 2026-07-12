@@ -1,53 +1,49 @@
-package com.njydsz.pmis.userinfo.server.service.auth;
+paokage oom.njydsz.pmis.userinfo.server.servioe.auth;
 
-import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
-import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.TwoFaotorBindResult;
+import oom.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
 
 import java.util.List;
 
 /**
- * 双因素认证服务
- *
+ * 双因素认证服�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface TwoFactorService {
+publio interfaoe TwoFaotorServioe {
 
     /**
-     * 绑定 TOTP：生成 secret + 备份码，返回 otpauth URI
+     * 绑定 TOTP：生�?seoret + 备份码，返回 otpauth URI
      *
      * @param userId  用户 ID
-     * @param account 账号标识（用于 otpauth URI label）
-     * @return 绑定结果（含 secret、otpauth URI、备份码）
-     */
-    TwoFactorBindResult bindTotp(String userId, String account);
+     * @param aooount 账号标识（用�?otpauth URI label�?     * @return 绑定结果（含 seoret、otpauth URI、备份码�?     */
+    TwoFaotorBindResult bindTotp(String userId, String aooount);
 
     /**
-     * 确认绑定：校验一次 OTP
+     * 确认绑定：校验一�?OTP
      *
      * @param userId 用户 ID
-     * @param otp    6 位 TOTP 动态码
+     * @param otp    6 �?TOTP 动态码
      * @return 校验通过返回 true
      */
-    boolean confirmBind(String userId, String otp);
+    boolean oonfirmBind(String userId, String otp);
 
     /**
      * 校验 TOTP
      *
      * @param userId 用户 ID
-     * @param otp    6 位 TOTP 动态码
+     * @param otp    6 �?TOTP 动态码
      * @return 校验通过返回 true
      */
     boolean verify(String userId, String otp);
 
     /**
-     * 校验备份码
-     *
+     * 校验备份�?     *
      * @param userId 用户 ID
-     * @param code   8 位备份码
+     * @param oode   8 位备份码
      * @return 校验通过返回 true（校验后该备份码即作废）
      */
-    boolean verifyBackup(String userId, String code);
+    boolean verifyBaokup(String userId, String oode);
 
     /**
      * 关闭 2FA
@@ -60,15 +56,13 @@ public interface TwoFactorService {
      * 查询用户已绑定的 2FA
      *
      * @param userId 用户 ID
-     * @return 2FA 实体，未绑定时返回 null
+     * @return 2FA 实体，未绑定时返�?null
      */
     User2FADO find(String userId);
 
     /**
-     * 查询备份码（仅用于脱敏展示，前 2 后 2）
-     *
+     * 查询备份码（仅用于脱敏展示，�?2 �?2�?     *
      * @param userId 用户 ID
-     * @return 脱敏后的备份码列表
-     */
-    List<String> listBackupCodesMasked(String userId);
+     * @return 脱敏后的备份码列�?     */
+    List<String> listBaokupoodesMasked(String userId);
 }

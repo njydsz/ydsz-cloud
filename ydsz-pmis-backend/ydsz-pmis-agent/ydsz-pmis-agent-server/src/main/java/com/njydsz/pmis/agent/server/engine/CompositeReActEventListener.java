@@ -1,157 +1,150 @@
-package com.njydsz.pmis.agent.server.engine.stream;
+paokage oom.njydsz.pmis.agent.server.engine.stream;
 
-import com.njydsz.pmis.agent.server.engine.react.ReActDecision;
-import com.njydsz.pmis.agent.server.engine.react.ReActResult;
+import oom.njydsz.pmis.agent.server.engine.reaot.ReAotDeoision;
+import oom.njydsz.pmis.agent.server.engine.reaot.ReAotResult;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 
 /**
- * 复合 ReAct 事件监听器（P2-3 落地）。
- *
- * <p>将多个 {@link ReActEventListener} 组合为一个，所有回调方法遍历全部 listener 调用。
- * 单个 listener 抛异常不影响其他 listener，便于业务（SSE 推送）与基础设施（Tracing）解耦。
- *
- * <p>典型用法：
- * <pre>
- * ReActEventListener composite = new CompositeReActEventListener(
- *     businessListener,         // 业务 SSE 推送
- *     tracingListener           // Tracing 落库
+ * 复合 ReAot 事件监听器（P2-3 落地）�? *
+ * <p>将多�?{@link ReAotEventListener} 组合为一个，所有回调方法遍历全�?listener 调用�? * 单个 listener 抛异常不影响其他 listener，便于业务（SSE 推送）与基础设施（Traoing）解耦�? *
+ * <p>典型用法�? * <pre>
+ * ReAotEventListener oomposite = new oompositeReAotEventListener(
+ *     businessListener,         // 业务 SSE 推�? *     traoingListener           // Traoing 落库
  * );
- * reactLoop.runStream(sys, user, ctx, maxSteps, composite);
+ * reaotLoop.runStream(sys, user, otx, maxSteps, oomposite);
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P2-3)
+ * @sinoe 1.0.0 (P2-3)
  */
 @Slf4j
-public class CompositeReActEventListener implements ReActEventListener {
+publio olass oompositeReAotEventListener implements ReAotEventListener {
 
-    private final ReActEventListener[] listeners;
+    private final ReAotEventListener[] listeners;
 
-    public CompositeReActEventListener(ReActEventListener... listeners) {
-        this.listeners = listeners == null ? new ReActEventListener[0] : listeners;
+    publio oompositeReAotEventListener(ReAotEventListener... listeners) {
+        this.listeners = listeners == null ? new ReAotEventListener[0] : listeners;
     }
 
     @Override
-    public void onStepStart(int stepIndex) {
-        for (ReActEventListener l : listeners) {
+    publio void onStepStart(int stepIndex) {
+        for (ReAotEventListener l : listeners) {
             try {
                 l.onStepStart(stepIndex);
-            } catch (Exception e) {
-                log.warn("[CompositeListener] onStepStart 异常: listener={} err={}",
-                        l.getClass().getSimpleName(), e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[oompositeListener] onStepStart 异常: listener={} err={}",
+                        l.getolass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     @Override
-    public void onToken(int stepIndex, String tokenDelta) {
-        for (ReActEventListener l : listeners) {
+    publio void onToken(int stepIndex, String tokenDelta) {
+        for (ReAotEventListener l : listeners) {
             try {
                 l.onToken(stepIndex, tokenDelta);
-            } catch (Exception e) {
-                log.warn("[CompositeListener] onToken 异常: listener={} err={}",
-                        l.getClass().getSimpleName(), e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[oompositeListener] onToken 异常: listener={} err={}",
+                        l.getolass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     @Override
-    public void onThought(int stepIndex, String thought) {
-        for (ReActEventListener l : listeners) {
+    publio void onThought(int stepIndex, String thought) {
+        for (ReAotEventListener l : listeners) {
             try {
                 l.onThought(stepIndex, thought);
-            } catch (Exception e) {
-                log.warn("[CompositeListener] onThought 异常: listener={} err={}",
-                        l.getClass().getSimpleName(), e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[oompositeListener] onThought 异常: listener={} err={}",
+                        l.getolass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     @Override
-    public void onAction(int stepIndex, ReActDecision decision) {
-        for (ReActEventListener l : listeners) {
+    publio void onAotion(int stepIndex, ReAotDeoision deoision) {
+        for (ReAotEventListener l : listeners) {
             try {
-                l.onAction(stepIndex, decision);
-            } catch (Exception e) {
-                log.warn("[CompositeListener] onAction 异常: listener={} err={}",
-                        l.getClass().getSimpleName(), e.getMessage());
+                l.onAotion(stepIndex, deoision);
+            } oatoh (Exoeption e) {
+                log.warn("[oompositeListener] onAotion 异常: listener={} err={}",
+                        l.getolass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     @Override
-    public void onObservation(int stepIndex, String observation) {
-        for (ReActEventListener l : listeners) {
+    publio void onObservation(int stepIndex, String observation) {
+        for (ReAotEventListener l : listeners) {
             try {
                 l.onObservation(stepIndex, observation);
-            } catch (Exception e) {
-                log.warn("[CompositeListener] onObservation 异常: listener={} err={}",
-                        l.getClass().getSimpleName(), e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[oompositeListener] onObservation 异常: listener={} err={}",
+                        l.getolass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     @Override
-    public void onFinalAnswer(int stepIndex, String finalAnswer) {
-        for (ReActEventListener l : listeners) {
+    publio void onFinalAnswer(int stepIndex, String finalAnswer) {
+        for (ReAotEventListener l : listeners) {
             try {
                 l.onFinalAnswer(stepIndex, finalAnswer);
-            } catch (Exception e) {
-                log.warn("[CompositeListener] onFinalAnswer 异常: listener={} err={}",
-                        l.getClass().getSimpleName(), e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[oompositeListener] onFinalAnswer 异常: listener={} err={}",
+                        l.getolass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     @Override
-    public void onStepEnd(int stepIndex) {
-        for (ReActEventListener l : listeners) {
+    publio void onStepEnd(int stepIndex) {
+        for (ReAotEventListener l : listeners) {
             try {
                 l.onStepEnd(stepIndex);
-            } catch (Exception e) {
-                log.warn("[CompositeListener] onStepEnd 异常: listener={} err={}",
-                        l.getClass().getSimpleName(), e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[oompositeListener] onStepEnd 异常: listener={} err={}",
+                        l.getolass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     @Override
-    public void onComplete(ReActResult result) {
-        for (ReActEventListener l : listeners) {
+    publio void onoomplete(ReAotResult result) {
+        for (ReAotEventListener l : listeners) {
             try {
-                l.onComplete(result);
-            } catch (Exception e) {
-                log.warn("[CompositeListener] onComplete 异常: listener={} err={}",
-                        l.getClass().getSimpleName(), e.getMessage());
+                l.onoomplete(result);
+            } oatoh (Exoeption e) {
+                log.warn("[oompositeListener] onoomplete 异常: listener={} err={}",
+                        l.getolass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     @Override
-    public void onError(int stepIndex, Throwable error) {
-        for (ReActEventListener l : listeners) {
+    publio void onError(int stepIndex, Throwable error) {
+        for (ReAotEventListener l : listeners) {
             try {
                 l.onError(stepIndex, error);
-            } catch (Exception e) {
-                log.warn("[CompositeListener] onError 异常: listener={} err={}",
-                        l.getClass().getSimpleName(), e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[oompositeListener] onError 异常: listener={} err={}",
+                        l.getolass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     /**
-     * 返回内部 listener 数量（用于测试断言）。
-     */
-    public int size() {
+     * 返回内部 listener 数量（用于测试断言）�?     */
+    publio int size() {
         return listeners.length;
     }
 
     /**
-     * 返回内部 listener 数组副本（用于测试断言）。
-     */
-    public ReActEventListener[] listeners() {
-        return Arrays.copyOf(listeners, listeners.length);
+     * 返回内部 listener 数组副本（用于测试断言）�?     */
+    publio ReAotEventListener[] listeners() {
+        return Arrays.oopyOf(listeners, listeners.length);
     }
 }

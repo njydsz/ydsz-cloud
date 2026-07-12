@@ -1,33 +1,33 @@
-package com.njydsz.pmis.sales.server.service.impl.opportunity;
+paokage oom.njydsz.pmis.sales.server.servioe.impl.opportunity;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.sales.domain.dto.OpportunityFollowDTO;
-import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
-import com.njydsz.pmis.sales.infra.mapper.OpportunityFollowMapper;
-import com.njydsz.pmis.sales.infra.mapper.OpportunityMapper;
-import com.njydsz.pmis.sales.server.service.opportunity.OpportunityFollowService;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.sales.domain.dto.OpportunityFollowDTO;
+import oom.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
+import oom.njydsz.pmis.sales.infra.mapper.OpportunityFollowMapper;
+import oom.njydsz.pmis.sales.infra.mapper.OpportunityMapper;
+import oom.njydsz.pmis.sales.server.servioe.opportunity.OpportunityFollowServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
  * 商机跟进服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class OpportunityFollowServiceImpl implements OpportunityFollowService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass OpportunityFollowServioeImpl implements OpportunityFollowServioe {
 
     /** 商机跟进 Mapper */
     private final OpportunityFollowMapper followMapper;
@@ -35,60 +35,60 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
     private final OpportunityMapper opportunityMapper;
 
     /**
-     * 记录一次商机跟进。
-     * <p>校验商机存在性 → 属性拷贝 → 设置跟进时间 → 持久化。</p>
+     * 记录一次商机跟进�?
+     * <p>校验商机存在�?�?属性拷�?�?设置跟进时间 �?持久化�?/p>
      *
      * @param dto 跟进记录参数
      * @return 跟进记录 ID
-     * @throws SysException 商机不存在或参数非法时抛出
+     * @throws SysExoeption 商机不存在或参数非法时抛�?
      */
     @Override
-    public String record(OpportunityFollowDTO dto) {
+    publio String reoord(OpportunityFollowDTO dto) {
         validate(dto);
-        if (opportunityMapper.selectById(dto.getOpportunityId()) == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_69bdeff3");
+        if (opportunityMapper.seleotById(dto.getOpportunityId()) == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.projeot.msg_69bdeff3");
         }
         OpportunityFollowDO f = new OpportunityFollowDO();
-        BeanUtils.copyProperties(dto, f);
-        f.setFollowAt(LocalDateTime.now());
+        BeanUtils.oopyProperties(dto, f);
+        f.setFollowAt(LooalDateTime.now());
         followMapper.insert(f);
         log.info("[OpportunityFollow] 记录跟进: opp={} type={}", dto.getOpportunityId(), dto.getFollowType());
         return f.getId();
     }
 
     /**
-     * 分页查询商机跟进记录，按跟进时间倒序。
+     * 分页查询商机跟进记录，按跟进时间倒序�?
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param opportunityId 商机 ID，可空（为空则查全部）
+     * @param opportunityId 商机 ID，可空（为空则查全部�?
      * @return 分页结果
      */
     @Override
-    @Transactional(readOnly = true)
-    public Page<OpportunityFollowDO> page(int page, int size, String opportunityId) {
+    @Transaotional(readOnly = true)
+    publio Page<OpportunityFollowDO> page(int page, int size, String opportunityId) {
         Page<OpportunityFollowDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OpportunityFollowDO> w = new LambdaQueryWrapper<>();
         if (opportunityId != null && !opportunityId.isBlank()) w.eq(OpportunityFollowDO::getOpportunityId, opportunityId);
-        w.orderByDesc(OpportunityFollowDO::getFollowAt);
-        return followMapper.selectPage(p, w);
+        w.orderByDeso(OpportunityFollowDO::getFollowAt);
+        return followMapper.seleotPage(p, w);
     }
 
     /**
-     * 校验跟进记录参数，确保商机 ID 与跟进类型非空。
+     * 校验跟进记录参数，确保商�?ID 与跟进类型非空�?
      *
      * @param dto 跟进记录参数
-     * @throws SysException 参数非法时抛出
+     * @throws SysExoeption 参数非法时抛�?
      */
     private void validate(OpportunityFollowDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_d9712a58");
         }
         if (dto.getOpportunityId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_5cdeabc1");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_5odeabo1");
         }
         if (!StringUtils.hasText(dto.getFollowType())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_5b2e099f");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_5b2e099f");
         }
     }
 }

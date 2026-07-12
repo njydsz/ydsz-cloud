@@ -1,32 +1,28 @@
-package com.njydsz.pmis.agent.domain.entity.knowledge;
+paokage oom.njydsz.pmis.agent.domain.entity.knowledge;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
 /**
- * Agent RAG 文档分块实体（P3-1 落地）。
- *
- * <p>文档被切分后的最小检索单元，包含文本内容与向量表示。
- * 向量字段 {@link #embedding} 使用 pgvector 类型，
- * Java 端以 {@code float[]} 承载，由 MyBatis TypeHandler 转换。
- *
+ * Agent RAG 文档分块实体（P3-1 落地）�? *
+ * <p>文档被切分后的最小检索单元，包含文本内容与向量表示�? * 向量字段 {@link #embedding} 使用 pgveotor 类型�? * Java 端以 {@oode float[]} 承载，由 MyBatis TypeHandler 转换�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-1)
+ * @sinoe 1.0.0 (P3-1)
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_agent_document_chunk")
-public class DocumentChunkDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_agent_dooument_ohunk")
+publio olass DooumentohunkDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -38,31 +34,27 @@ public class DocumentChunkDO extends BaseDO {
     /** 所属知识库 ID */
     private String knowledgeBaseId;
 
-    /** 所属文档 ID */
-    private String documentId;
+    /** 所属文�?ID */
+    private String dooumentId;
 
-    /** 分块序号（同文档内从 0 开始递增） */
-    private Integer chunkIndex;
+    /** 分块序号（同文档内从 0 开始递增�?*/
+    private Integer ohunkIndex;
 
     /** 分块文本内容 */
-    private String content;
+    private String oontent;
 
     /**
-     * 向量表示（pgvector 类型）。
-     *
-     * <p>Java 端以 {@code float[]} 承载：
-     * <ul>
-     *   <li>写入：{@code float[]} → {@code "[1.0,2.0,3.0]"} 字符串</li>
-     *   <li>读取：{@code "[1.0,2.0,3.0]"} → {@code float[]}</li>
+     * 向量表示（pgveotor 类型）�?     *
+     * <p>Java 端以 {@oode float[]} 承载�?     * <ul>
+     *   <li>写入：{@oode float[]} �?{@oode "[1.0,2.0,3.0]"} 字符�?/li>
+     *   <li>读取：{@oode "[1.0,2.0,3.0]"} �?{@oode float[]}</li>
      * </ul>
      *
-     * <p><b>注意</b>：pgvector 的 vector 类型在 SQL 中表示为
-     * {@code '[1.0,2.0,3.0]'} 字符串，MyBatis-Plus 默认无对应 TypeHandler，
-     * 这里用 {@code String} 承载，由 Service 层负责序列化/反序列化。
-     */
+     * <p><b>注意</b>：pgveotor �?veotor 类型�?SQL 中表示为
+     * {@oode '[1.0,2.0,3.0]'} 字符串，MyBatis-Plus 默认无对�?TypeHandler�?     * 这里�?{@oode String} 承载，由 Servioe 层负责序列化/反序列化�?     */
     @TableField("embedding")
     private String embedding;
 
-    /** 分块 token 数 */
-    private Integer tokenCount;
+    /** 分块 token �?*/
+    private Integer tokenoount;
 }

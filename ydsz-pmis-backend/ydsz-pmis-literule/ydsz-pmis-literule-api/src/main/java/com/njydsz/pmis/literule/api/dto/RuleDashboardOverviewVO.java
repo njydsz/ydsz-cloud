@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.api.dto;
+paokage oom.njydsz.pmis.literule.api.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -10,29 +10,28 @@ import java.util.Map;
 /**
  * 规则引擎监控大盘 - 概览指标 VO
  *
- * <p>用于大盘首屏指标卡片展示，包含规则数量、触发率、耗时分布、错误率等核心指标。
- *
+ * <p>用于大盘首屏指标卡片展示，包含规则数量、触发率、耗时分布、错误率等核心指标�? *
  * @author ydsz-pmis-team
- * @since 1.6.0
+ * @sinoe 1.6.0
  */
 @Data
 @Builder
-public class RuleDashboardOverviewVO implements Serializable {
+publio olass RuleDashboardOverviewVO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 规则总数 */
     private long totalRules;
 
-    /** 启用规则数 */
+    /** 启用规则�?*/
     private long enabledRules;
 
-    /** 按状态分组的规则数：DRAFT/REVIEW/PUBLISHED/DISABLED/ARCHIVED → 数量 */
+    /** 按状态分组的规则数：DRAFT/REVIEW/PUBLISHED/DISABLED/ARoHIVED �?数量 */
     private Map<String, Long> statusDistribution;
 
-    /** 按类别分组的规则数：category → 数量 */
-    private Map<String, Long> categoryDistribution;
+    /** 按类别分组的规则数：oategory �?数量 */
+    private Map<String, Long> oategoryDistribution;
 
     /** 今日评估次数 */
     private long todayEvaluations;
@@ -40,17 +39,17 @@ public class RuleDashboardOverviewVO implements Serializable {
     /** 今日触发次数 */
     private long todayTriggered;
 
-    /** 今日触发率（0~1） */
+    /** 今日触发率（0~1�?*/
     private double todayTriggerRate;
 
     /** 今日错误次数 */
     private long todayErrors;
 
-    /** 今日错误率（0~1） */
+    /** 今日错误率（0~1�?*/
     private double todayErrorRate;
 
-    /** 今日活跃规则数（有触发的规则） */
-    private long todayActiveRules;
+    /** 今日活跃规则数（有触发的规则�?*/
+    private long todayAotiveRules;
 
     /** P50 耗时（毫秒） */
     private double p50ElapsedMs;
@@ -64,8 +63,8 @@ public class RuleDashboardOverviewVO implements Serializable {
     /** 平均耗时（毫秒） */
     private double avgElapsedMs;
 
-    /** 统计时间窗口起始时间（含） */
-    private String since;
+    /** 统计时间窗口起始时间（含�?*/
+    private String sinoe;
 
     /** 统计时间窗口结束时间（不含） */
     private String until;

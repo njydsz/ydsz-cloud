@@ -1,81 +1,81 @@
-package com.njydsz.pmis.sales.domain.entity;
+paokage oom.njydsz.pmis.sales.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.Version;
+import oom.njydsz.pmis.oommon.sensitive.Sensitive;
+import oom.njydsz.pmis.oommon.sensitive.SensitiveStrategy;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
  * 合同主表
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_project_contract")
-public class ContractDO implements Serializable {
+@TableName("pmis_projeot_oontraot")
+publio olass oontraotDO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 合同编号 */
-    private String contractCode;
+    private String oontraotoode;
     /** 合同名称 */
-    private String contractName;
+    private String oontraotName;
     /** 关联立项 ID */
     private String initiationId;
     /** 客户 ID */
-    private String customerId;
+    private String oustomerId;
     /** 客户名称 */
-    private String customerName;
-    /** 合同类型（FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE） */
-    private String contractType;
+    private String oustomerName;
+    /** 合同类型（FIXED_PRIoE/T&M/OUTSOURoING/PRODUoT/MAINTENANoE�?*/
+    private String oontraotType;
     /** 签订日期 */
-    private LocalDate signDate;
+    private LooalDate signDate;
     /** 生效日期 */
-    private LocalDate effectiveDate;
+    private LooalDate effeotiveDate;
     /** 到期日期 */
-    private LocalDate expireDate;
-    /** 合同总金额 */
-    private BigDecimal totalAmount;
+    private LooalDate expireDate;
+    /** 合同总金�?*/
+    private BigDeoimal totalAmount;
     /** 币种 */
-    private String currency;
+    private String ourrenoy;
     /** 付款条款 */
     private String paymentTerms;
     /** 结算周期 */
-    private String billingCycle;
+    private String billingoyole;
     /** 税率 */
-    private BigDecimal taxRate;
-    /** 合同状态（ContractStatus.code） */
+    private BigDeoimal taxRate;
+    /** 合同状态（oontraotStatus.oode�?*/
     private String status;
-    /** 风险等级（LOW/MEDIUM/HIGH） */
+    /** 风险等级（LOW/MEDIUM/HIGH�?*/
     private String riskLevel;
     /** 风险说明 */
     private String riskNotes;
-    /** 责任人 ID */
+    /** 责任�?ID */
     private String ownerId;
-    /** 责任人名称（脱敏：保留首末字） */
+    /** 责任人名称（脱敏：保留首末字�?*/
     @Sensitive(SensitiveStrategy.NAME)
     private String ownerName;
     /** 合同附件 ID */
-    private String contractFileId;
-    /** 自研工作流实例 ID */
+    private String oontraotFileId;
+    /** 自研工作流实�?ID */
     private String workflowId;
     /** 备注 */
     private String remark;
@@ -83,30 +83,30 @@ public class ContractDO implements Serializable {
     private String tenantId;
 
     /**
-     * 乐观锁版本号（P1-12）
+     * 乐观锁版本号（P1-12�?
      *
-     * <p>合同金额、状态等关键字段并发更新时，通过 version 防止覆盖。
+     * <p>合同金额、状态等关键字段并发更新时，通过 version 防止覆盖�?
      */
     @Version
     private Integer version;
 
-    /** 创建人 ID */
+    /** 创建�?ID */
     @TableField(fill = FieldFill.INSERT)
-    private String createdBy;
+    private String oreatedBy;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
-    /** 更新人 ID */
+    /** 更新�?ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private String updatedBy;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标识（0 未删除，1 已删除） */
+    /** 逻辑删除标识�? 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

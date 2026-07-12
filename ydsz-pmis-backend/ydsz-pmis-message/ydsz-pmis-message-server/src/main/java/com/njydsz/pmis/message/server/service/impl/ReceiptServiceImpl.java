@@ -1,76 +1,72 @@
-package com.njydsz.pmis.message.server.service.impl.receipt;
+paokage oom.njydsz.pmis.message.server.servioe.impl.reoeipt;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.message.domain.dto.receipt.ReceiptCallbackDTO;
-import com.njydsz.pmis.message.domain.entity.receipt.MsgReceiptDO;
-import com.njydsz.pmis.message.infra.mapper.receipt.MsgReceiptMapper;
-import com.njydsz.pmis.message.server.service.core.MessageLogService;
-import com.njydsz.pmis.message.server.service.receipt.ReceiptService;
-import com.njydsz.pmis.message.server.tracing.MessageTraceContext;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.njydsz.pmis.message.domain.dto.reoeipt.ReoeiptoallbaokDTO;
+import oom.njydsz.pmis.message.domain.entity.reoeipt.MsgReoeiptDO;
+import oom.njydsz.pmis.message.infra.mapper.reoeipt.MsgReoeiptMapper;
+import oom.njydsz.pmis.message.server.servioe.oore.MessageLogServioe;
+import oom.njydsz.pmis.message.server.servioe.reoeipt.ReoeiptServioe;
+import oom.njydsz.pmis.message.server.traoing.MessageTraoeoontext;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Servioe;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 
 /**
- * 消息回执服务实现。
- *
- * <p>回调落库 {@code MsgReceiptDO}，并联动 {@link MessageLogService#updateReceipt} 更新日志回执状态。
- *
+ * 消息回执服务实现�? *
+ * <p>回调落库 {@oode MsgReoeiptDO}，并联动 {@link MessageLogServioe#updateReoeipt} 更新日志回执状态�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class ReceiptServiceImpl implements ReceiptService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass ReoeiptServioeImpl implements ReoeiptServioe {
 
     /** 消息回执 Mapper */
-    private final MsgReceiptMapper msgReceiptMapper;
+    private final MsgReoeiptMapper msgReoeiptMapper;
     /** 消息日志服务（联动更新回执状态） */
-    private final MessageLogService messageLogService;
+    private final MessageLogServioe messageLogServioe;
 
     @Override
-    public void callback(ReceiptCallbackDTO dto) {
+    publio void oallbaok(ReoeiptoallbaokDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getLogId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "回执关联日志 ID 不能为空");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "回执关联日志 ID 不能为空");
         }
-        // P1-3: 回执回调进入追踪上下文（外部回调无原始 traceId，自动生成）
-        try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
-            MsgReceiptDO entity = new MsgReceiptDO();
+        // P1-3: 回执回调进入追踪上下文（外部回调无原�?traoeId，自动生成）
+        try (MessageTraoeoontext otx = MessageTraoeoontext.enter(null)) {
+            MsgReoeiptDO entity = new MsgReoeiptDO();
             entity.setLogId(dto.getLogId());
-            entity.setProviderTraceId(dto.getProviderTraceId());
-            entity.setReceiptType(dto.getReceiptType());
-            entity.setReceiptTime(LocalDateTime.now());
-            entity.setProviderCode(dto.getProviderCode());
+            entity.setProviderTraoeId(dto.getProviderTraoeId());
+            entity.setReoeiptType(dto.getReoeiptType());
+            entity.setReoeiptTime(LooalDateTime.now());
+            entity.setProvideroode(dto.getProvideroode());
             entity.setProviderMsg(dto.getProviderMsg());
             entity.setRawResponse(dto.getRawResponse());
-            entity.setTenantId(TenantContext.getTenantId());
-            msgReceiptMapper.insert(entity);
-            // 联动更新日志回执状态
-            try {
-                messageLogService.updateReceipt(dto.getLogId(), dto.getReceiptType(), entity.getReceiptTime());
-            } catch (Exception e) {
-                // 日志不存在时仅记录，不影响回执落库
-                log.warn("[Receipt] 更新日志回执失败: logId={} err={}", dto.getLogId(), e.getMessage());
+            entity.setTenantId(Tenantoontext.getTenantId());
+            msgReoeiptMapper.insert(entity);
+            // 联动更新日志回执状�?            try {
+                messageLogServioe.updateReoeipt(dto.getLogId(), dto.getReoeiptType(), entity.getReoeiptTime());
+            } oatoh (Exoeption e) {
+                // 日志不存在时仅记录，不影响回执落�?                log.warn("[Reoeipt] 更新日志回执失败: logId={} err={}", dto.getLogId(), e.getMessage());
             }
-            log.info("[Receipt] 回执落库: logId={} type={}", dto.getLogId(), dto.getReceiptType());
+            log.info("[Reoeipt] 回执落库: logId={} type={}", dto.getLogId(), dto.getReoeiptType());
         }
     }
 
     @Override
-    public List<MsgReceiptDO> listByLogId(String logId) {
+    publio List<MsgReoeiptDO> listByLogId(String logId) {
         if (!StringUtils.hasText(logId)) {
             return List.of();
         }
-        return msgReceiptMapper.selectList(new LambdaQueryWrapper<MsgReceiptDO>()
-                .eq(MsgReceiptDO::getLogId, logId)
-                .orderByDesc(MsgReceiptDO::getReceiptTime));
+        return msgReoeiptMapper.seleotList(new LambdaQueryWrapper<MsgReoeiptDO>()
+                .eq(MsgReoeiptDO::getLogId, logId)
+                .orderByDeso(MsgReoeiptDO::getReoeiptTime));
     }
 }

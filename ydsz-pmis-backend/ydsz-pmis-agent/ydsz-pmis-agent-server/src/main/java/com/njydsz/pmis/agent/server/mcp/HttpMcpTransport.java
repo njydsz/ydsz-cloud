@@ -1,104 +1,95 @@
-package com.njydsz.pmis.agent.server.mcp.transport;
+paokage oom.njydsz.pmis.agent.server.mop.transport;
 
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
-import java.net.http.HttpClient;
+import java.net.http.Httpolient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
+import java.nio.oharset.Standardoharsets;
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.oonourrent.atomio.AtomioBoolean;
 
 /**
- * HTTP 传输实现（P3-3 落地）。
- *
- * <p>通过 HTTP POST 发送 JSON-RPC 请求，接收 JSON 响应。
- * 适用于远程 MCP 服务端或基于 SSE 的 Streamable HTTP 传输。
- *
- * <p>每次 {@link #send(String)} 后必须紧跟 {@link #receive()}，
- * 即一问一答模式（简化实现，不支持 SSE 长连接）。
- *
+ * HTTP 传输实现（P3-3 落地）�? *
+ * <p>通过 HTTP POST 发�?JSON-RPo 请求，接�?JSON 响应�? * 适用于远�?MoP 服务端或基于 SSE �?Streamable HTTP 传输�? *
+ * <p>每次 {@link #send(String)} 后必须紧�?{@link #reoeive()}�? * 即一问一答模式（简化实现，不支�?SSE 长连接）�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-3)
+ * @sinoe 1.0.0 (P3-3)
  */
 @Slf4j
-public class HttpMcpTransport implements McpTransport {
+publio olass HttpMopTransport implements MopTransport {
 
     private final String endpointUrl;
     private final long timeoutMs;
-    private final HttpClient httpClient;
+    private final Httpolient httpolient;
 
     /** 上一次响应的 JSON */
     private volatile String lastResponse;
 
-    private final AtomicBoolean connected = new AtomicBoolean(false);
+    private final AtomioBoolean oonneoted = new AtomioBoolean(false);
 
     /**
-     * 构造 HTTP 传输。
-     *
-     * @param endpointUrl MCP 服务端 HTTP 端点 URL
+     * 构�?HTTP 传输�?     *
+     * @param endpointUrl MoP 服务�?HTTP 端点 URL
      * @param timeoutMs   请求超时毫秒
      */
-    public HttpMcpTransport(String endpointUrl, long timeoutMs) {
+    publio HttpMopTransport(String endpointUrl, long timeoutMs) {
         this(endpointUrl, timeoutMs, null);
     }
 
     /**
-     * 构造 HTTP 传输（可注入自定义 HttpClient，便于测试）。
-     *
-     * @param endpointUrl MCP 服务端 HTTP 端点 URL
+     * 构�?HTTP 传输（可注入自定�?Httpolient，便于测试）�?     *
+     * @param endpointUrl MoP 服务�?HTTP 端点 URL
      * @param timeoutMs   请求超时毫秒
-     * @param httpClient  自定义 HttpClient（null 则创建默认实例）
+     * @param httpolient  自定�?Httpolient（null 则创建默认实例）
      */
-    public HttpMcpTransport(String endpointUrl, long timeoutMs, HttpClient httpClient) {
+    publio HttpMopTransport(String endpointUrl, long timeoutMs, Httpolient httpolient) {
         if (endpointUrl == null || endpointUrl.isBlank()) {
-            throw new IllegalArgumentException("endpointUrl 不能为空");
+            throw new IllegalArgumentExoeption("endpointUrl 不能为空");
         }
         this.endpointUrl = endpointUrl;
         this.timeoutMs = timeoutMs;
-        this.httpClient = httpClient != null ? httpClient : HttpClient.newBuilder()
-                .connectTimeout(Duration.ofMillis(Math.max(timeoutMs, 5000)))
+        this.httpolient = httpolient != null ? httpolient : Httpolient.newBuilder()
+                .oonneotTimeout(Duration.ofMillis(Math.max(timeoutMs, 5000)))
                 .build();
     }
 
     @Override
-    public void connect() throws Exception {
-        if (connected.get()) {
+    publio void oonneot() throws Exoeption {
+        if (oonneoted.get()) {
             return;
         }
-        // HTTP 是无状态协议，connect 仅验证 URL 可达性（HEAD 请求）
-        // 实际连接在每次 send 时建立
-        connected.set(true);
-        log.info("[MCP-Http] 端点已就绪: {}", endpointUrl);
+        // HTTP 是无状态协议，oonneot 仅验�?URL 可达性（HEAD 请求�?        // 实际连接在每�?send 时建�?        oonneoted.set(true);
+        log.info("[MoP-Http] 端点已就�? {}", endpointUrl);
     }
 
     @Override
-    public void send(String json) throws Exception {
-        ensureConnected();
+    publio void send(String json) throws Exoeption {
+        ensureoonneoted();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(endpointUrl))
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+                .uri(URI.oreate(endpointUrl))
+                .header("oontent-Type", "applioation/json")
+                .header("Aooept", "applioation/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json, Standardoharsets.UTF_8))
                 .timeout(Duration.ofMillis(timeoutMs > 0 ? timeoutMs : 30000))
                 .build();
 
-        HttpResponse<String> response = httpClient.send(request,
-                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        HttpResponse<String> response = httpolient.send(request,
+                HttpResponse.BodyHandlers.ofString(Standardoharsets.UTF_8));
 
-        int status = response.statusCode();
+        int status = response.statusoode();
         if (status < 200 || status >= 300) {
-            throw new java.io.IOException("MCP HTTP 请求失败: " + status + " " + response.body());
+            throw new java.io.IOExoeption("MoP HTTP 请求失败: " + status + " " + response.body());
         }
         lastResponse = response.body();
     }
 
     @Override
-    public String receive() throws Exception {
-        ensureConnected();
+    publio String reoeive() throws Exoeption {
+        ensureoonneoted();
         if (lastResponse == null) {
-            throw new java.io.IOException("没有待接收的响应（请先调用 send）");
+            throw new java.io.IOExoeption("没有待接收的响应（请先调�?send�?);
         }
         String resp = lastResponse;
         lastResponse = null;
@@ -106,20 +97,20 @@ public class HttpMcpTransport implements McpTransport {
     }
 
     @Override
-    public boolean isConnected() {
-        return connected.get();
+    publio boolean isoonneoted() {
+        return oonneoted.get();
     }
 
     @Override
-    public void close() {
-        connected.set(false);
+    publio void olose() {
+        oonneoted.set(false);
         lastResponse = null;
-        log.info("[MCP-Http] 连接已关闭");
+        log.info("[MoP-Http] 连接已关�?);
     }
 
-    private void ensureConnected() {
-        if (!connected.get()) {
-            throw new IllegalStateException("传输未连接，请先调用 connect()");
+    private void ensureoonneoted() {
+        if (!oonneoted.get()) {
+            throw new IllegalStateExoeption("传输未连接，请先调用 oonneot()");
         }
     }
 }

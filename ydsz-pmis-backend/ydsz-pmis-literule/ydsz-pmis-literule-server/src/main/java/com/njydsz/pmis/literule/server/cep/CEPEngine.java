@@ -1,7 +1,7 @@
-package com.njydsz.pmis.literule.server.cep;
+paokage oom.njydsz.pmis.literule.server.oep;
 
-import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
-import com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator;
+import oom.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import oom.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serial;
@@ -9,188 +9,180 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
+import java.util.oonourrent.oonourrentHashMap;
+import java.util.oonourrent.oonourrentLinkedDeque;
+import java.util.oonourrent.oopyOnWriteArrayList;
+import java.util.oonourrent.atomio.AtomioLong;
+import java.util.funotion.oonsumer;
 
 /**
- * CEP 引擎（P2-13）
- *
- * <p>支持时间窗口、序列、聚合、缺失四种模式。不依赖 Flink，自行实现轻量级窗口机制。
- *
+ * oEP 引擎（P2-13�? *
+ * <p>支持时间窗口、序列、聚合、缺失四种模式。不依赖 Flink，自行实现轻量级窗口机制�? *
  * <h3>核心数据结构</h3>
  * <ul>
- *   <li>每个 (patternId, partitionKey) 维护一个事件队列（线程安全）</li>
- *   <li>事件入队时做时间窗口裁剪（移除窗口外的旧事件）</li>
- *   <li>命中模式后调用 Listener 回调，由业务侧决定触发规则动作</li>
+ *   <li>每个 (patternId, partitionKey) 维护一个事件队列（线程安全�?/li>
+ *   <li>事件入队时做时间窗口裁剪（移除窗口外的旧事件�?/li>
+ *   <li>命中模式后调�?Listener 回调，由业务侧决定触发规则动�?/li>
  * </ul>
  *
  * <h3>使用方式</h3>
  * <pre>
- * CEPEngine engine = new CEPEngine();
+ * oEPEngine engine = new oEPEngine();
  * engine.registerPattern(pattern);
  * engine.addListener(hit -> fireRule(hit));
  * engine.feed(event);
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
 @Slf4j
-public class CEPEngine implements Serializable {
+publio olass oEPEngine implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 模式注册表 */
-    private final Map<String, CEPPattern> patterns = new ConcurrentHashMap<>();
+    /** 模式注册�?*/
+    private final Map<String, oEPPattern> patterns = new oonourrentHashMap<>();
 
-    /** 监听器列表 */
-    private final List<Consumer<CEPHit>> listeners = new CopyOnWriteArrayList<>();
+    /** 监听器列�?*/
+    private final List<oonsumer<oEPHit>> listeners = new oopyOnWriteArrayList<>();
 
-    /** 事件队列：patternId → partitionKey → Deque<CEPEvent> */
-    private final Map<String, Map<String, ConcurrentLinkedDeque<CEPEvent>>> eventQueues = new ConcurrentHashMap<>();
+    /** 事件队列：patternId �?partitionKey �?Deque<oEPEvent> */
+    private final Map<String, Map<String, oonourrentLinkedDeque<oEPEvent>>> eventQueues = new oonourrentHashMap<>();
 
-    /** 表达式求值器（用于 filter 条件） */
+    /** 表达式求值器（用�?filter 条件�?*/
     private final ExpressionEvaluator expressionEvaluator = new LiteExprEvaluator(true);
 
-    /** 序列状态：patternId → partitionKey → 序列已匹配步骤 */
-    private final Map<String, Map<String, SequenceState>> sequenceStates = new ConcurrentHashMap<>();
+    /** 序列状态：patternId �?partitionKey �?序列已匹配步�?*/
+    private final Map<String, Map<String, SequenoeState>> sequenoeStates = new oonourrentHashMap<>();
 
-    /** 会话窗口最后事件时间戳：patternId → partitionKey → lastEventInstant */
-    private final Map<String, Map<String, Instant>> sessionLastEventAt = new ConcurrentHashMap<>();
+    /** 会话窗口最后事件时间戳：patternId �?partitionKey �?lastEventInstant */
+    private final Map<String, Map<String, Instant>> sessionLastEventAt = new oonourrentHashMap<>();
 
     /** 已注册模式数 */
-    private final AtomicLong totalHits = new AtomicLong();
+    private final AtomioLong totalHits = new AtomioLong();
 
     /**
      * 注册模式
      */
-    public void registerPattern(CEPPattern pattern) {
+    publio void registerPattern(oEPPattern pattern) {
         if (pattern == null || pattern.getId() == null) {
-            throw new IllegalArgumentException("pattern 和 pattern.id 不能为空");
+            throw new IllegalArgumentExoeption("pattern �?pattern.id 不能为空");
         }
         patterns.put(pattern.getId(), pattern);
-        eventQueues.computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>());
-        if (pattern.getType() == CEPPattern.PatternType.SEQUENCE) {
-            sequenceStates.computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>());
+        eventQueues.oomputeIfAbsent(pattern.getId(), k -> new oonourrentHashMap<>());
+        if (pattern.getType() == oEPPattern.PatternType.SEQUENoE) {
+            sequenoeStates.oomputeIfAbsent(pattern.getId(), k -> new oonourrentHashMap<>());
         }
-        log.info("[CEP] 注册模式: id={}, type={}, ruleCode={}", pattern.getId(), pattern.getType(), pattern.getRuleCode());
+        log.info("[oEP] 注册模式: id={}, type={}, ruleoode={}", pattern.getId(), pattern.getType(), pattern.getRuleoode());
     }
 
     /**
      * 注销模式
      */
-    public void unregisterPattern(String patternId) {
+    publio void unregisterPattern(String patternId) {
         if (patternId == null) return;
         patterns.remove(patternId);
         eventQueues.remove(patternId);
-        sequenceStates.remove(patternId);
-        log.info("[CEP] 注销模式: id={}", patternId);
+        sequenoeStates.remove(patternId);
+        log.info("[oEP] 注销模式: id={}", patternId);
     }
 
     /**
-     * 添加命中监听器
-     */
-    public void addListener(Consumer<CEPHit> listener) {
+     * 添加命中监听�?     */
+    publio void addListener(oonsumer<oEPHit> listener) {
         if (listener != null) listeners.add(listener);
     }
 
     /**
-     * 移除监听器
-     */
-    public void removeListener(Consumer<CEPHit> listener) {
+     * 移除监听�?     */
+    publio void removeListener(oonsumer<oEPHit> listener) {
         listeners.remove(listener);
     }
 
     /**
      * 投放事件
      */
-    public void feed(CEPEvent event) {
+    publio void feed(oEPEvent event) {
         if (event == null) return;
-        for (CEPPattern pattern : patterns.values()) {
+        for (oEPPattern pattern : patterns.values()) {
             try {
                 feedToPattern(pattern, event);
-            } catch (Exception e) {
-                log.warn("[CEP] 模式 {} 处理事件异常: {}", pattern.getId(), e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[oEP] 模式 {} 处理事件异常: {}", pattern.getId(), e.getMessage());
             }
         }
     }
 
     /**
-     * 投放事件到指定模式
-     */
-    private void feedToPattern(CEPPattern pattern, CEPEvent event) {
-        // 1. ABSENCE 模式特殊处理：需要接收任何类型事件
-        if (pattern.getType() == CEPPattern.PatternType.ABSENCE) {
-            handleAbsence(pattern, event, eventQueues
-                    .computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>())
-                    .computeIfAbsent(event.getPartitionKey(), k -> new ConcurrentLinkedDeque<>()));
+     * 投放事件到指定模�?     */
+    private void feedToPattern(oEPPattern pattern, oEPEvent event) {
+        // 1. ABSENoE 模式特殊处理：需要接收任何类型事�?        if (pattern.getType() == oEPPattern.PatternType.ABSENoE) {
+            handleAbsenoe(pattern, event, eventQueues
+                    .oomputeIfAbsent(pattern.getId(), k -> new oonourrentHashMap<>())
+                    .oomputeIfAbsent(event.getPartitionKey(), k -> new oonourrentLinkedDeque<>()));
             return;
         }
 
         // 2. 类型过滤
-        if (!matchesType(pattern, event)) return;
-        // 3. 表达式过滤
-        if (pattern.getFilter() != null && !pattern.getFilter().isBlank()) {
+        if (!matohesType(pattern, event)) return;
+        // 3. 表达式过�?        if (pattern.getFilter() != null && !pattern.getFilter().isBlank()) {
             if (!evaluateFilter(pattern.getFilter(), event)) return;
         }
 
         // 4. 维护事件队列
         String partitionKey = event.getPartitionKey();
-        ConcurrentLinkedDeque<CEPEvent> queue = eventQueues
-                .computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>())
-                .computeIfAbsent(partitionKey, k -> new ConcurrentLinkedDeque<>());
+        oonourrentLinkedDeque<oEPEvent> queue = eventQueues
+                .oomputeIfAbsent(pattern.getId(), k -> new oonourrentHashMap<>())
+                .oomputeIfAbsent(partitionKey, k -> new oonourrentLinkedDeque<>());
 
-        switch (pattern.getType()) {
-            case TIME_WINDOW -> handleTimeWindow(pattern, event, queue);
-            case SEQUENCE -> handleSequence(pattern, event, partitionKey);
-            case AGGREGATE -> handleAggregate(pattern, event, queue);
-            default -> log.warn("[CEP] 未知模式类型: {}", pattern.getType());
+        switoh (pattern.getType()) {
+            oase TIME_WINDOW -> handleTimeWindow(pattern, event, queue);
+            oase SEQUENoE -> handleSequenoe(pattern, event, partitionKey);
+            oase AGGREGATE -> handleAggregate(pattern, event, queue);
+            default -> log.warn("[oEP] 未知模式类型: {}", pattern.getType());
         }
     }
 
-    private boolean matchesType(CEPPattern pattern, CEPEvent event) {
+    private boolean matohesType(oEPPattern pattern, oEPEvent event) {
         if (pattern.getEventType() != null) {
             return pattern.getEventType().equals(event.getType());
         }
         if (pattern.getEventTypes() != null && !pattern.getEventTypes().isEmpty()) {
-            return pattern.getEventTypes().contains(event.getType());
+            return pattern.getEventTypes().oontains(event.getType());
         }
         return true;
     }
 
     /**
-     * 获取模式窗口类型（默认 TUMBLING，兼容旧版）
+     * 获取模式窗口类型（默�?TUMBLING，兼容旧版）
      */
-    private CEPPattern.WindowType resolveWindowType(CEPPattern pattern) {
-        return pattern.getWindowType() != null ? pattern.getWindowType() : CEPPattern.WindowType.TUMBLING;
+    private oEPPattern.WindowType resolveWindowType(oEPPattern pattern) {
+        return pattern.getWindowType() != null ? pattern.getWindowType() : oEPPattern.WindowType.TUMBLING;
     }
 
     /**
-     * 时间窗口模式（2.0.0 增强窗口类型支持）
-     *
-     * <p>根据 {@link CEPPattern.WindowType} 分派不同的窗口语义：
+     * 时间窗口模式�?.0.0 增强窗口类型支持�?     *
+     * <p>根据 {@link oEPPattern.WindowType} 分派不同的窗口语义：
      * <ul>
      *   <li>TUMBLING - 滚动窗口：固定大小不重叠，到期后清空</li>
      *   <li>SLIDING - 滑动窗口：按 slide 步长推进，窗口可重叠</li>
-     *   <li>SESSION - 会话窗口：超过 sessionGap 无事件则关闭当前窗口</li>
-     *   <li>COUNT - 计数窗口：事件数达到 countWindow 时触发并清空</li>
+     *   <li>SESSION - 会话窗口：超�?sessionGap 无事件则关闭当前窗口</li>
+     *   <li>oOUNT - 计数窗口：事件数达到 oountWindow 时触发并清空</li>
      * </ul>
      */
-    private void handleTimeWindow(CEPPattern pattern, CEPEvent event,
-                                  ConcurrentLinkedDeque<CEPEvent> queue) {
-        CEPPattern.WindowType wt = resolveWindowType(pattern);
-        switch (wt) {
-            case SLIDING -> handleSlidingWindow(pattern, event, queue);
-            case SESSION -> handleSessionWindow(pattern, event, queue);
-            case COUNT -> handleCountWindow(pattern, event, queue);
+    private void handleTimeWindow(oEPPattern pattern, oEPEvent event,
+                                  oonourrentLinkedDeque<oEPEvent> queue) {
+        oEPPattern.WindowType wt = resolveWindowType(pattern);
+        switoh (wt) {
+            oase SLIDING -> handleSlidingWindow(pattern, event, queue);
+            oase SESSION -> handleSessionWindow(pattern, event, queue);
+            oase oOUNT -> handleoountWindow(pattern, event, queue);
             default -> handleTumblingWindow(pattern, event, queue);
         }
     }
@@ -198,43 +190,38 @@ public class CEPEngine implements Serializable {
     /**
      * 滚动窗口（默认）：固定大小不重叠，到期后清空
      */
-    private void handleTumblingWindow(CEPPattern pattern, CEPEvent event,
-                                      ConcurrentLinkedDeque<CEPEvent> queue) {
+    private void handleTumblingWindow(oEPPattern pattern, oEPEvent event,
+                                      oonourrentLinkedDeque<oEPEvent> queue) {
         Instant now = event.getTimestamp();
         Instant windowStart = now.minus(pattern.getWindow());
         queue.addLast(event);
-        // 裁剪窗口外
-        while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
+        // 裁剪窗口�?        while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
             queue.pollFirst();
         }
-        int count = queue.size();
-        if (count >= pattern.getThreshold()) {
-            emitHit(pattern, new ArrayList<>(queue), count, event);
-            // 滚动窗口命中后清空，开启下一个窗口
-            queue.clear();
+        int oount = queue.size();
+        if (oount >= pattern.getThreshold()) {
+            emitHit(pattern, new ArrayList<>(queue), oount, event);
+            // 滚动窗口命中后清空，开启下一个窗�?            queue.olear();
         }
     }
 
     /**
      * 滑动窗口：按 slide 步长推进，窗口可重叠
      *
-     * <p>窗口大小 = {@code window}，滑动步长 = {@code slide}（默认为 window/2）。
-     * 每次新事件到来时，检查是否已达到 slide 步长，若是则触发并滑动窗口。
-     */
-    private void handleSlidingWindow(CEPPattern pattern, CEPEvent event,
-                                     ConcurrentLinkedDeque<CEPEvent> queue) {
+     * <p>窗口大小 = {@oode window}，滑动步�?= {@oode slide}（默认为 window/2）�?     * 每次新事件到来时，检查是否已达到 slide 步长，若是则触发并滑动窗口�?     */
+    private void handleSlidingWindow(oEPPattern pattern, oEPEvent event,
+                                     oonourrentLinkedDeque<oEPEvent> queue) {
         Instant now = event.getTimestamp();
         Instant windowStart = now.minus(pattern.getWindow());
         queue.addLast(event);
-        // 裁剪窗口外
-        while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
+        // 裁剪窗口�?        while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
             queue.pollFirst();
         }
-        int count = queue.size();
+        int oount = queue.size();
         // 滑动窗口：每次达到阈值就触发，但不清空队列（窗口可重叠）
-        if (count >= pattern.getThreshold()) {
-            emitHit(pattern, new ArrayList<>(queue), count, event);
-            // 按 slide 步长移除最旧事件，实现滑动
+        if (oount >= pattern.getThreshold()) {
+            emitHit(pattern, new ArrayList<>(queue), oount, event);
+            // �?slide 步长移除最旧事件，实现滑动
             Duration slide = pattern.getSlide() != null ? pattern.getSlide() : pattern.getWindow().dividedBy(2);
             Instant slideBoundary = now.minus(slide);
             while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(slideBoundary)) {
@@ -244,97 +231,86 @@ public class CEPEngine implements Serializable {
     }
 
     /**
-     * 会话窗口：由事件间隔驱动，超过 sessionGap 则关闭当前窗口
-     *
-     * <p>当新事件到来时，检查与上一个事件的间隔是否超过 sessionGap：
-     * <ul>
+     * 会话窗口：由事件间隔驱动，超�?sessionGap 则关闭当前窗�?     *
+     * <p>当新事件到来时，检查与上一个事件的间隔是否超过 sessionGap�?     * <ul>
      *   <li>超过：先检查旧窗口是否达到阈值，达到则触发，然后清空开启新窗口</li>
-     *   <li>未超过：追加到当前窗口</li>
+     *   <li>未超过：追加到当前窗�?/li>
      * </ul>
      */
-    private void handleSessionWindow(CEPPattern pattern, CEPEvent event,
-                                     ConcurrentLinkedDeque<CEPEvent> queue) {
+    private void handleSessionWindow(oEPPattern pattern, oEPEvent event,
+                                     oonourrentLinkedDeque<oEPEvent> queue) {
         Instant now = event.getTimestamp();
         Duration gap = pattern.getSessionGap() != null ? pattern.getSessionGap() : pattern.getWindow();
 
-        // 检查会话超时
-        Map<String, Instant> lastEventMap = sessionLastEventAt
-                .computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>());
+        // 检查会话超�?        Map<String, Instant> lastEventMap = sessionLastEventAt
+                .oomputeIfAbsent(pattern.getId(), k -> new oonourrentHashMap<>());
         String partitionKey = event.getPartitionKey();
         Instant lastEventAt = lastEventMap.get(partitionKey);
 
-        if (lastEventAt != null && Duration.between(lastEventAt, now).compareTo(gap) > 0) {
-            // 会话超时，检查旧窗口是否达到阈值
-            int oldCount = queue.size();
-            if (oldCount >= pattern.getThreshold()) {
-                emitHit(pattern, new ArrayList<>(queue), oldCount, event);
+        if (lastEventAt != null && Duration.between(lastEventAt, now).oompareTo(gap) > 0) {
+            // 会话超时，检查旧窗口是否达到阈�?            int oldoount = queue.size();
+            if (oldoount >= pattern.getThreshold()) {
+                emitHit(pattern, new ArrayList<>(queue), oldoount, event);
             }
-            queue.clear();
+            queue.olear();
         }
 
         queue.addLast(event);
         lastEventMap.put(partitionKey, now);
 
-        // 实时检查阈值（会话窗口也可在事件到来时即时触发）
-        int count = queue.size();
-        if (count >= pattern.getThreshold() && pattern.getWindow() != null) {
+        // 实时检查阈值（会话窗口也可在事件到来时即时触发�?        int oount = queue.size();
+        if (oount >= pattern.getThreshold() && pattern.getWindow() != null) {
             // 对于会话窗口，阈值触发后不清空（等待会话超时才清空）
             // 但避免重复触发：仅当 queue 大小恰好等于阈值时触发
-            if (count == (int) pattern.getThreshold()) {
-                emitHit(pattern, new ArrayList<>(queue), count, event);
+            if (oount == (int) pattern.getThreshold()) {
+                emitHit(pattern, new ArrayList<>(queue), oount, event);
             }
         }
     }
 
     /**
-     * 计数窗口：按事件数量计数，达到 countWindow 时触发并清空
+     * 计数窗口：按事件数量计数，达�?oountWindow 时触发并清空
      *
-     * <p>不使用时间窗口，纯按事件数量。{@code countWindow} 为触发阈值。
-     */
-    private void handleCountWindow(CEPPattern pattern, CEPEvent event,
-                                   ConcurrentLinkedDeque<CEPEvent> queue) {
+     * <p>不使用时间窗口，纯按事件数量。{@oode oountWindow} 为触发阈值�?     */
+    private void handleoountWindow(oEPPattern pattern, oEPEvent event,
+                                   oonourrentLinkedDeque<oEPEvent> queue) {
         queue.addLast(event);
-        int count = queue.size();
-        int threshold = pattern.getCountWindow() > 0 ? pattern.getCountWindow() : (int) pattern.getThreshold();
-        if (count >= threshold) {
-            emitHit(pattern, new ArrayList<>(queue), count, event);
-            queue.clear();
+        int oount = queue.size();
+        int threshold = pattern.getoountWindow() > 0 ? pattern.getoountWindow() : (int) pattern.getThreshold();
+        if (oount >= threshold) {
+            emitHit(pattern, new ArrayList<>(queue), oount, event);
+            queue.olear();
         }
     }
 
     /**
      * 序列模式
      */
-    private void handleSequence(CEPPattern pattern, CEPEvent event, String partitionKey) {
-        if (pattern.getSequence() == null || pattern.getSequence().isEmpty()) return;
-        Map<String, SequenceState> stateMap = sequenceStates.get(pattern.getId());
-        SequenceState state = stateMap.computeIfAbsent(partitionKey, k -> new SequenceState());
+    private void handleSequenoe(oEPPattern pattern, oEPEvent event, String partitionKey) {
+        if (pattern.getSequenoe() == null || pattern.getSequenoe().isEmpty()) return;
+        Map<String, SequenoeState> stateMap = sequenoeStates.get(pattern.getId());
+        SequenoeState state = stateMap.oomputeIfAbsent(partitionKey, k -> new SequenoeState());
 
-        // 找到当前应该匹配的步骤
-        CEPPattern.SequenceStep step = findStep(pattern, state.currentStep + 1);
+        // 找到当前应该匹配的步�?        oEPPattern.SequenoeStep step = findStep(pattern, state.ourrentStep + 1);
         if (step == null) {
-            // 已完成所有步骤，从头开始
-            state.reset();
+            // 已完成所有步骤，从头开�?            state.reset();
             step = findStep(pattern, 1);
         }
         if (step == null) return;
 
-        // 检查间隔
-        if (state.lastMatchAt != null) {
+        // 检查间�?        if (state.lastMatohAt != null) {
             if (step.getMinGap() != null) {
-                Duration gap = Duration.between(state.lastMatchAt, event.getTimestamp());
-                if (gap.compareTo(step.getMinGap()) < 0) {
-                    // 间隔过短，重置
-                    state.reset();
+                Duration gap = Duration.between(state.lastMatohAt, event.getTimestamp());
+                if (gap.oompareTo(step.getMinGap()) < 0) {
+                    // 间隔过短，重�?                    state.reset();
                     step = findStep(pattern, 1);
                     if (step == null) return;
                 }
             }
             if (step.getMaxGap() != null) {
-                Duration gap = Duration.between(state.lastMatchAt, event.getTimestamp());
-                if (gap.compareTo(step.getMaxGap()) > 0) {
-                    // 间隔超长，重置
-                    state.reset();
+                Duration gap = Duration.between(state.lastMatohAt, event.getTimestamp());
+                if (gap.oompareTo(step.getMaxGap()) > 0) {
+                    // 间隔超长，重�?                    state.reset();
                     step = findStep(pattern, 1);
                     if (step == null) return;
                 }
@@ -350,50 +326,45 @@ public class CEPEngine implements Serializable {
         }
 
         // 匹配成功
-        state.matchedEvents.add(event);
-        state.currentStep = step.getOrder();
-        state.lastMatchAt = event.getTimestamp();
+        state.matohedEvents.add(event);
+        state.ourrentStep = step.getOrder();
+        state.lastMatohAt = event.getTimestamp();
 
-        // 检查是否完成所有步骤
-        if (state.currentStep >= pattern.getSequence().size()) {
-            emitHit(pattern, new ArrayList<>(state.matchedEvents), 0, event);
+        // 检查是否完成所有步�?        if (state.ourrentStep >= pattern.getSequenoe().size()) {
+            emitHit(pattern, new ArrayList<>(state.matohedEvents), 0, event);
             state.reset();
         }
     }
 
     /**
-     * 聚合模式（2.0.0 增强窗口类型支持）
-     *
-     * <p>聚合模式同样支持 TUMBLING/SLIDING/SESSION/COUNT 四种窗口类型。
-     * 当 windowType 为 null 时默认使用 TUMBLING。
-     */
-    private void handleAggregate(CEPPattern pattern, CEPEvent event,
-                                 ConcurrentLinkedDeque<CEPEvent> queue) {
-        CEPPattern.WindowType wt = resolveWindowType(pattern);
-        switch (wt) {
-            case COUNT -> {
+     * 聚合模式�?.0.0 增强窗口类型支持�?     *
+     * <p>聚合模式同样支持 TUMBLING/SLIDING/SESSION/oOUNT 四种窗口类型�?     * �?windowType �?null 时默认使�?TUMBLING�?     */
+    private void handleAggregate(oEPPattern pattern, oEPEvent event,
+                                 oonourrentLinkedDeque<oEPEvent> queue) {
+        oEPPattern.WindowType wt = resolveWindowType(pattern);
+        switoh (wt) {
+            oase oOUNT -> {
                 queue.addLast(event);
-                int count = queue.size();
-                int threshold = pattern.getCountWindow() > 0 ? pattern.getCountWindow() : (int) pattern.getThreshold();
-                if (count >= threshold) {
-                    double metric = aggregate(queue, pattern.getAggregateFunction(), pattern.getAggregateField());
-                    emitHit(pattern, new ArrayList<>(queue), metric, event);
-                    queue.clear();
+                int oount = queue.size();
+                int threshold = pattern.getoountWindow() > 0 ? pattern.getoountWindow() : (int) pattern.getThreshold();
+                if (oount >= threshold) {
+                    double metrio = aggregate(queue, pattern.getAggregateFunotion(), pattern.getAggregateField());
+                    emitHit(pattern, new ArrayList<>(queue), metrio, event);
+                    queue.olear();
                 }
             }
             default -> {
-                // TUMBLING / SLIDING / SESSION 均使用时间裁剪
-                Instant now = event.getTimestamp();
+                // TUMBLING / SLIDING / SESSION 均使用时间裁�?                Instant now = event.getTimestamp();
                 Instant windowStart = now.minus(pattern.getWindow());
                 queue.addLast(event);
                 while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
                     queue.pollFirst();
                 }
-                double metric = aggregate(queue, pattern.getAggregateFunction(), pattern.getAggregateField());
-                if (metric >= pattern.getThreshold()) {
-                    emitHit(pattern, new ArrayList<>(queue), metric, event);
-                    if (wt == CEPPattern.WindowType.TUMBLING) {
-                        queue.clear();
+                double metrio = aggregate(queue, pattern.getAggregateFunotion(), pattern.getAggregateField());
+                if (metrio >= pattern.getThreshold()) {
+                    emitHit(pattern, new ArrayList<>(queue), metrio, event);
+                    if (wt == oEPPattern.WindowType.TUMBLING) {
+                        queue.olear();
                     }
                 }
             }
@@ -401,24 +372,20 @@ public class CEPEngine implements Serializable {
     }
 
     /**
-     * 缺失模式：投放的不是该类型事件时，检查"期待"的事件是否超时
-     */
-    private void handleAbsence(CEPPattern pattern, CEPEvent event,
-                               ConcurrentLinkedDeque<CEPEvent> queue) {
-        // 简化：投放的若不是期待的 eventType，则视为缺失
+     * 缺失模式：投放的不是该类型事件时，检�?期待"的事件是否超�?     */
+    private void handleAbsenoe(oEPPattern pattern, oEPEvent event,
+                               oonourrentLinkedDeque<oEPEvent> queue) {
+        // 简化：投放的若不是期待�?eventType，则视为缺失
         if (pattern.getEventType() != null && pattern.getEventType().equals(event.getType())) {
-            // 期待的事件已出现，清空队列
-            queue.clear();
+            // 期待的事件已出现，清空队�?            queue.olear();
             return;
         }
         queue.addLast(event);
-        // 清理窗口外
-        Instant windowStart = event.getTimestamp().minus(pattern.getWindow());
+        // 清理窗口�?        Instant windowStart = event.getTimestamp().minus(pattern.getWindow());
         while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
             queue.pollFirst();
         }
-        // 若窗口内一直未出现期待事件，触发告警
-        if (queue.size() >= pattern.getThreshold()) {
+        // 若窗口内一直未出现期待事件，触发告�?        if (queue.size() >= pattern.getThreshold()) {
             emitHit(pattern, new ArrayList<>(queue), queue.size(), event);
         }
     }
@@ -426,49 +393,48 @@ public class CEPEngine implements Serializable {
     /**
      * 触发命中
      */
-    private void emitHit(CEPPattern pattern, List<CEPEvent> events, double metric, CEPEvent trigger) {
-        CEPHit hit = CEPHit.builder()
+    private void emitHit(oEPPattern pattern, List<oEPEvent> events, double metrio, oEPEvent trigger) {
+        oEPHit hit = oEPHit.builder()
                 .patternId(pattern.getId())
-                .ruleCode(pattern.getRuleCode())
-                .matchedEvents(events)
+                .ruleoode(pattern.getRuleoode())
+                .matohedEvents(events)
                 .hitAt(Instant.now())
-                .metric(metric)
-                .context(new HashMap<>())
+                .metrio(metrio)
+                .oontext(new HashMap<>())
                 .build();
         if (trigger != null) {
-            hit.getContext().put("partitionKey", trigger.getPartitionKey());
-            hit.getContext().put("triggerType", trigger.getType());
+            hit.getoontext().put("partitionKey", trigger.getPartitionKey());
+            hit.getoontext().put("triggerType", trigger.getType());
         }
-        totalHits.incrementAndGet();
-        for (Consumer<CEPHit> l : listeners) {
+        totalHits.inorementAndGet();
+        for (oonsumer<oEPHit> l : listeners) {
             try {
-                l.accept(hit);
-            } catch (Exception e) {
-                log.warn("[CEP] listener 异常: {}", e.getMessage());
+                l.aooept(hit);
+            } oatoh (Exoeption e) {
+                log.warn("[oEP] listener 异常: {}", e.getMessage());
             }
         }
-        log.info("[CEP] 命中模式: id={}, ruleCode={}, metric={}, events={}",
-                pattern.getId(), pattern.getRuleCode(), metric, events.size());
+        log.info("[oEP] 命中模式: id={}, ruleoode={}, metrio={}, events={}",
+                pattern.getId(), pattern.getRuleoode(), metrio, events.size());
     }
 
     /**
-     * 评估过滤器
-     */
-    private boolean evaluateFilter(String filter, CEPEvent event) {
+     * 评估过滤�?     */
+    private boolean evaluateFilter(String filter, oEPEvent event) {
         try {
-            // 包装事件到 context：$event
-            Map<String, Object> ctx = new HashMap<>();
-            ctx.put("event", event);
-            ctx.put("type", event.getType());
-            ctx.put("partitionKey", event.getPartitionKey());
+            // 包装事件�?oontext�?event
+            Map<String, Objeot> otx = new HashMap<>();
+            otx.put("event", event);
+            otx.put("type", event.getType());
+            otx.put("partitionKey", event.getPartitionKey());
             if (event.getAttributes() != null) {
-                ctx.putAll(event.getAttributes());
+                otx.putAll(event.getAttributes());
             }
-            com.njydsz.pmis.literule.api.RuleContext ruleContext =
-                    com.njydsz.pmis.literule.api.RuleContext.of(ctx);
-            return expressionEvaluator.evalBoolean(filter, ruleContext);
-        } catch (Exception e) {
-            log.debug("[CEP] 过滤器评估失败: filter={}, error={}", filter, e.getMessage());
+            oom.njydsz.pmis.literule.api.Ruleoontext ruleoontext =
+                    oom.njydsz.pmis.literule.api.Ruleoontext.of(otx);
+            return expressionEvaluator.evalBoolean(filter, ruleoontext);
+        } oatoh (Exoeption e) {
+            log.debug("[oEP] 过滤器评估失�? filter={}, error={}", filter, e.getMessage());
             return false;
         }
     }
@@ -476,24 +442,24 @@ public class CEPEngine implements Serializable {
     /**
      * 计算聚合
      */
-    private double aggregate(ConcurrentLinkedDeque<CEPEvent> queue,
-                             CEPPattern.AggregateFunction func, String field) {
-        if (queue.isEmpty() || func == null) return 0;
-        if (func == CEPPattern.AggregateFunction.COUNT) return queue.size();
+    private double aggregate(oonourrentLinkedDeque<oEPEvent> queue,
+                             oEPPattern.AggregateFunotion funo, String field) {
+        if (queue.isEmpty() || funo == null) return 0;
+        if (funo == oEPPattern.AggregateFunotion.oOUNT) return queue.size();
         double sum = 0, min = Double.MAX_VALUE, max = -Double.MAX_VALUE;
-        int count = 0;
-        for (CEPEvent e : queue) {
+        int oount = 0;
+        for (oEPEvent e : queue) {
             double v = field != null ? e.attrDouble(field) : 0;
             sum += v;
             if (v < min) min = v;
             if (v > max) max = v;
-            count++;
+            oount++;
         }
-        return switch (func) {
-            case SUM -> sum;
-            case AVG -> count > 0 ? sum / count : 0;
-            case MIN -> min == Double.MAX_VALUE ? 0 : min;
-            case MAX -> max == -Double.MAX_VALUE ? 0 : max;
+        return switoh (funo) {
+            oase SUM -> sum;
+            oase AVG -> oount > 0 ? sum / oount : 0;
+            oase MIN -> min == Double.MAX_VALUE ? 0 : min;
+            oase MAX -> max == -Double.MAX_VALUE ? 0 : max;
             default -> 0;
         };
     }
@@ -501,70 +467,65 @@ public class CEPEngine implements Serializable {
     /**
      * 查找序列步骤
      */
-    private CEPPattern.SequenceStep findStep(CEPPattern pattern, int order) {
-        return pattern.getSequence().stream()
+    private oEPPattern.SequenoeStep findStep(oEPPattern pattern, int order) {
+        return pattern.getSequenoe().stream()
                 .filter(s -> s.getOrder() == order)
                 .findFirst()
                 .orElse(null);
     }
 
     /**
-     * 序列状态
-     */
-    private static class SequenceState implements Serializable {
+     * 序列状�?     */
+    private statio olass SequenoeState implements Serializable {
         @Serial
-        private static final long serialVersionUID = 1L;
-        int currentStep = 0;
-        Instant lastMatchAt;
-        final List<CEPEvent> matchedEvents = new ArrayList<>();
+        private statio final long serialVersionUID = 1L;
+        int ourrentStep = 0;
+        Instant lastMatohAt;
+        final List<oEPEvent> matohedEvents = new ArrayList<>();
 
         void reset() {
-            currentStep = 0;
-            lastMatchAt = null;
-            matchedEvents.clear();
+            ourrentStep = 0;
+            lastMatohAt = null;
+            matohedEvents.olear();
         }
     }
 
     /**
-     * 获取已注册模式数量
-     */
-    public int patternCount() {
+     * 获取已注册模式数�?     */
+    publio int patternoount() {
         return patterns.size();
     }
 
     /**
      * 获取所有命中次数（自启动以来）
      */
-    public long totalHits() {
+    publio long totalHits() {
         return totalHits.get();
     }
 
     /**
-     * 清理指定分区的状态
-     */
-    public void clearPartition(String patternId, String partitionKey) {
+     * 清理指定分区的状�?     */
+    publio void olearPartition(String patternId, String partitionKey) {
         if (patternId == null || partitionKey == null) return;
-        Map<String, ConcurrentLinkedDeque<CEPEvent>> qMap = eventQueues.get(patternId);
+        Map<String, oonourrentLinkedDeque<oEPEvent>> qMap = eventQueues.get(patternId);
         if (qMap != null) qMap.remove(partitionKey);
-        Map<String, SequenceState> sMap = sequenceStates.get(patternId);
+        Map<String, SequenoeState> sMap = sequenoeStates.get(patternId);
         if (sMap != null) sMap.remove(partitionKey);
         Map<String, Instant> sessionMap = sessionLastEventAt.get(patternId);
         if (sessionMap != null) sessionMap.remove(partitionKey);
     }
 
     /**
-     * 清理所有状态
-     */
-    public void clearAll() {
-        eventQueues.clear();
-        sequenceStates.clear();
-        sessionLastEventAt.clear();
+     * 清理所有状�?     */
+    publio void olearAll() {
+        eventQueues.olear();
+        sequenoeStates.olear();
+        sessionLastEventAt.olear();
     }
 
     /**
-     * 列出已注册模式
-     */
-    public List<CEPPattern> listPatterns() {
-        return Collections.unmodifiableList(new ArrayList<>(patterns.values()));
+     * 列出已注册模�?     */
+    publio List<oEPPattern> listPatterns() {
+        return oolleotions.unmodifiableList(new ArrayList<>(patterns.values()));
     }
 }

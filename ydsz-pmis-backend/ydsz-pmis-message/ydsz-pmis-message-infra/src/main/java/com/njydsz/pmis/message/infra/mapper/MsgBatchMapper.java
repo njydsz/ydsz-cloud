@@ -1,15 +1,15 @@
-package com.njydsz.pmis.message.infra.mapper.batch;
+paokage oom.njydsz.pmis.message.infra.mapper.batoh;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.message.domain.entity.batch.MsgBatchDO;
-import org.apache.ibatis.annotations.Mapper;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.message.domain.entity.batoh.MsgBatohDO;
+import org.apaohe.ibatis.annotations.Mapper;
 
 /**
- * 消息批次 Mapper。
+ * 消息批次 Mapper�?
  *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
 @Mapper
-public interface MsgBatchMapper extends BaseMapper<MsgBatchDO> {
+publio interfaoe MsgBatohMapper extends BaseMapper<MsgBatohDO> {
 }

@@ -1,278 +1,278 @@
-package com.njydsz.pmis.agent.server.engine.llm;
+paokage oom.njydsz.pmis.agent.server.engine.llm;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.agent.server.engine.AgentContext;
-import com.njydsz.pmis.agent.server.engine.MultimodalInput;
-import com.njydsz.pmis.agent.server.engine.memory.ChatMessage;
-import com.njydsz.pmis.agent.server.engine.memory.ChatMemory;
-import com.njydsz.pmis.agent.server.engine.llm.LlmToolCallResponse.ToolCall;
+import oom.alibaba.fastjson2.JSONArray;
+import oom.alibaba.fastjson2.JSONObjeot;
+import oom.njydsz.pmis.agent.server.engine.Agentoontext;
+import oom.njydsz.pmis.agent.server.engine.MultimodalInput;
+import oom.njydsz.pmis.agent.server.engine.memory.ohatMessage;
+import oom.njydsz.pmis.agent.server.engine.memory.ohatMemory;
+import oom.njydsz.pmis.agent.server.engine.llm.LlmTooloallResponse.Tooloall;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 结构化消息列表构建器（P0-2 落地）。
+ * 结构化消息列表构建器（P0-2 落地）�?
  *
- * <p>对标 OpenAI Chat Completions API 的 messages 数组格式，
- * 替代原有的纯文本拼接方式，让 LLM API 原生理解对话上下文。
+ * <p>对标 OpenAI ohat oompletions API �?messages 数组格式�?
+ * 替代原有的纯文本拼接方式，让 LLM API 原生理解对话上下文�?
  *
- * <p>消息格式：
+ * <p>消息格式�?
  * <pre>
  * [
- *   {"role":"system","content":"你是一个助手..."},
- *   {"role":"user","content":"你好"},
- *   {"role":"assistant","content":"你好，有什么可以帮你的？"},
- *   {"role":"assistant","tool_calls":[{"id":"call_1","type":"function","function":{"name":"search","arguments":"{...}"}}]},
- *   {"role":"tool","tool_call_id":"call_1","content":"搜索结果..."},
- *   {"role":"user","content":"继续"}
+ *   {"role":"system","oontent":"你是一个助�?.."},
+ *   {"role":"user","oontent":"你好"},
+ *   {"role":"assistant","oontent":"你好，有什么可以帮你的�?},
+ *   {"role":"assistant","tool_oalls":[{"id":"oall_1","type":"funotion","funotion":{"name":"searoh","arguments":"{...}"}}]},
+ *   {"role":"tool","tool_oall_id":"oall_1","oontent":"搜索结果..."},
+ *   {"role":"user","oontent":"继续"}
  * ]
  * </pre>
  *
  * <p>与纯文本拼接相比的优势：
  * <ul>
- *   <li>System prompt 与历史消息边界清晰，LLM 能正确区分角色</li>
+ *   <li>System prompt 与历史消息边界清晰，LLM 能正确区分角�?/li>
  *   <li>Token 节省：无需每轮重复传输角色前缀文本</li>
- *   <li>支持 OpenAI tool role 消息传递工具调用结果</li>
- *   <li>支持多模态 content 数组（图片+文本混合）</li>
+ *   <li>支持 OpenAI tool role 消息传递工具调用结�?/li>
+ *   <li>支持多模�?oontent 数组（图�?文本混合�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.5.0 (P0-2)
+ * @sinoe 1.5.0 (P0-2)
  */
-public class ChatMessageBuilder {
+publio olass ohatMessageBuilder {
 
-    private final List<JSONObject> messages = new ArrayList<>();
+    private final List<JSONObjeot> messages = new ArrayList<>();
 
     /**
-     * 添加 system 消息。
+     * 添加 system 消息�?
      *
-     * @param content 系统提示词
+     * @param oontent 系统提示�?
      * @return this（链式调用）
      */
-    public ChatMessageBuilder system(String content) {
-        if (content != null && !content.isBlank()) {
-            JSONObject msg = new JSONObject();
+    publio ohatMessageBuilder system(String oontent) {
+        if (oontent != null && !oontent.isBlank()) {
+            JSONObjeot msg = new JSONObjeot();
             msg.put("role", "system");
-            msg.put("content", content);
+            msg.put("oontent", oontent);
             messages.add(msg);
         }
         return this;
     }
 
     /**
-     * 添加 user 消息（纯文本）。
+     * 添加 user 消息（纯文本）�?
      *
-     * @param content 用户输入
+     * @param oontent 用户输入
      * @return this
      */
-    public ChatMessageBuilder user(String content) {
-        if (content != null && !content.isBlank()) {
-            JSONObject msg = new JSONObject();
+    publio ohatMessageBuilder user(String oontent) {
+        if (oontent != null && !oontent.isBlank()) {
+            JSONObjeot msg = new JSONObjeot();
             msg.put("role", "user");
-            msg.put("content", content);
+            msg.put("oontent", oontent);
             messages.add(msg);
         }
         return this;
     }
 
     /**
-     * 添加 user 消息（多模态，P1-5 落地）。
+     * 添加 user 消息（多模态，P1-5 落地）�?
      *
-     * <p>当 AgentContext 携带 MultimodalInput 时，构造 OpenAI Vision 格式的
-     * content 数组，支持图片+文本混合输入。
+     * <p>�?Agentoontext 携带 MultimodalInput 时，构�?OpenAI Vision 格式�?
+     * oontent 数组，支持图�?文本混合输入�?
      *
      * @param text     文本内容
-     * @param multimodal 多模态输入
+     * @param multimodal 多模态输�?
      * @return this
      */
-    public ChatMessageBuilder userMultimodal(String text, MultimodalInput multimodal) {
-        JSONObject msg = new JSONObject();
+    publio ohatMessageBuilder userMultimodal(String text, MultimodalInput multimodal) {
+        JSONObjeot msg = new JSONObjeot();
         msg.put("role", "user");
 
-        if (multimodal != null && multimodal.hasMultimodalContent()) {
-            // 多模态：构造 content 数组
-            JSONArray contentArr = new JSONArray();
+        if (multimodal != null && multimodal.hasMultimodaloontent()) {
+            // 多模态：构�?oontent 数组
+            JSONArray oontentArr = new JSONArray();
             if (text != null && !text.isBlank()) {
-                JSONObject textPart = new JSONObject();
+                JSONObjeot textPart = new JSONObjeot();
                 textPart.put("type", "text");
                 textPart.put("text", text);
-                contentArr.add(textPart);
+                oontentArr.add(textPart);
             }
             if (multimodal.getImageUrls() != null) {
                 for (String url : multimodal.getImageUrls()) {
-                    JSONObject imgPart = new JSONObject();
+                    JSONObjeot imgPart = new JSONObjeot();
                     imgPart.put("type", "image_url");
-                    JSONObject imgUrl = new JSONObject();
+                    JSONObjeot imgUrl = new JSONObjeot();
                     imgUrl.put("url", url);
                     imgPart.put("image_url", imgUrl);
-                    contentArr.add(imgPart);
+                    oontentArr.add(imgPart);
                 }
             }
             if (multimodal.getImageBase64List() != null) {
                 for (String base64 : multimodal.getImageBase64List()) {
-                    JSONObject imgPart = new JSONObject();
+                    JSONObjeot imgPart = new JSONObjeot();
                     imgPart.put("type", "image_url");
-                    JSONObject imgUrl = new JSONObject();
+                    JSONObjeot imgUrl = new JSONObjeot();
                     imgUrl.put("url", base64);
                     imgPart.put("image_url", imgUrl);
-                    contentArr.add(imgPart);
+                    oontentArr.add(imgPart);
                 }
             }
-            msg.put("content", contentArr);
+            msg.put("oontent", oontentArr);
         } else {
-            msg.put("content", text == null ? "" : text);
+            msg.put("oontent", text == null ? "" : text);
         }
         messages.add(msg);
         return this;
     }
 
     /**
-     * 添加 assistant 消息（纯文本回复）。
+     * 添加 assistant 消息（纯文本回复）�?
      *
-     * @param content 助手回复
+     * @param oontent 助手回复
      * @return this
      */
-    public ChatMessageBuilder assistant(String content) {
-        JSONObject msg = new JSONObject();
+    publio ohatMessageBuilder assistant(String oontent) {
+        JSONObjeot msg = new JSONObjeot();
         msg.put("role", "assistant");
-        msg.put("content", content == null ? "" : content);
+        msg.put("oontent", oontent == null ? "" : oontent);
         messages.add(msg);
         return this;
     }
 
     /**
-     * 添加 assistant 消息（带工具调用请求）。
+     * 添加 assistant 消息（带工具调用请求）�?
      *
-     * <p>对标 OpenAI 格式：assistant 消息可以携带 tool_calls 字段，
-     * 表示 LLM 请求调用工具。
+     * <p>对标 OpenAI 格式：assistant 消息可以携带 tool_oalls 字段�?
+     * 表示 LLM 请求调用工具�?
      *
-     * @param content    助手文本（可为空）
-     * @param toolCalls  工具调用列表
+     * @param oontent    助手文本（可为空�?
+     * @param tooloalls  工具调用列表
      * @return this
      */
-    public ChatMessageBuilder assistantWithToolCalls(String content, List<ToolCall> toolCalls) {
-        JSONObject msg = new JSONObject();
+    publio ohatMessageBuilder assistantWithTooloalls(String oontent, List<Tooloall> tooloalls) {
+        JSONObjeot msg = new JSONObjeot();
         msg.put("role", "assistant");
-        if (content != null && !content.isBlank()) {
-            msg.put("content", content);
+        if (oontent != null && !oontent.isBlank()) {
+            msg.put("oontent", oontent);
         }
-        if (toolCalls != null && !toolCalls.isEmpty()) {
-            JSONArray tcArr = new JSONArray();
-            for (ToolCall tc : toolCalls) {
-                JSONObject tcJson = new JSONObject();
-                tcJson.put("id", tc.getId());
-                tcJson.put("type", tc.getType() != null ? tc.getType() : "function");
-                if (tc.getFunction() != null) {
-                    JSONObject fn = new JSONObject();
-                    fn.put("name", tc.getFunction().getName());
-                    fn.put("arguments", tc.getFunction().getArguments() != null
-                            ? tc.getFunction().getArguments() : "{}");
-                    tcJson.put("function", fn);
+        if (tooloalls != null && !tooloalls.isEmpty()) {
+            JSONArray toArr = new JSONArray();
+            for (Tooloall to : tooloalls) {
+                JSONObjeot toJson = new JSONObjeot();
+                toJson.put("id", to.getId());
+                toJson.put("type", to.getType() != null ? to.getType() : "funotion");
+                if (to.getFunotion() != null) {
+                    JSONObjeot fn = new JSONObjeot();
+                    fn.put("name", to.getFunotion().getName());
+                    fn.put("arguments", to.getFunotion().getArguments() != null
+                            ? to.getFunotion().getArguments() : "{}");
+                    toJson.put("funotion", fn);
                 }
-                tcArr.add(tcJson);
+                toArr.add(toJson);
             }
-            msg.put("tool_calls", tcArr);
+            msg.put("tool_oalls", toArr);
         }
         messages.add(msg);
         return this;
     }
 
     /**
-     * 添加 tool 消息（工具执行结果回传）。
+     * 添加 tool 消息（工具执行结果回传）�?
      *
-     * <p>对标 OpenAI 格式：工具执行结果以 role=tool 消息回传，
-     * 携带 tool_call_id 关联到对应的工具调用请求。
+     * <p>对标 OpenAI 格式：工具执行结果以 role=tool 消息回传�?
+     * 携带 tool_oall_id 关联到对应的工具调用请求�?
      *
-     * @param toolCallId 工具调用 ID
-     * @param content    工具执行结果
+     * @param tooloallId 工具调用 ID
+     * @param oontent    工具执行结果
      * @return this
      */
-    public ChatMessageBuilder tool(String toolCallId, String content) {
-        JSONObject msg = new JSONObject();
+    publio ohatMessageBuilder tool(String tooloallId, String oontent) {
+        JSONObjeot msg = new JSONObjeot();
         msg.put("role", "tool");
-        msg.put("tool_call_id", toolCallId);
-        msg.put("content", content == null ? "" : content);
+        msg.put("tool_oall_id", tooloallId);
+        msg.put("oontent", oontent == null ? "" : oontent);
         messages.add(msg);
         return this;
     }
 
     /**
-     * 从 ChatMemory 加载历史对话并添加到消息列表（P0-2 结构化历史传递）。
+     * �?ohatMemory 加载历史对话并添加到消息列表（P0-2 结构化历史传递）�?
      *
-     * @param chatMemory 对话记忆
+     * @param ohatMemory 对话记忆
      * @param sessionId  会话 ID
      * @return this
      */
-    public ChatMessageBuilder history(ChatMemory chatMemory, String sessionId) {
-        if (chatMemory == null || sessionId == null || sessionId.isBlank()) {
+    publio ohatMessageBuilder history(ohatMemory ohatMemory, String sessionId) {
+        if (ohatMemory == null || sessionId == null || sessionId.isBlank()) {
             return this;
         }
         try {
-            List<ChatMessage> history = chatMemory.getHistory(sessionId);
+            List<ohatMessage> history = ohatMemory.getHistory(sessionId);
             if (history == null || history.isEmpty()) {
                 return this;
             }
-            for (ChatMessage msg : history) {
-                if (msg == null || msg.getContent() == null) continue;
-                String role = msg.getRole() == null ? "user" : msg.getRole().name().toLowerCase();
-                JSONObject jsonMsg = new JSONObject();
+            for (ohatMessage msg : history) {
+                if (msg == null || msg.getoontent() == null) oontinue;
+                String role = msg.getRole() == null ? "user" : msg.getRole().name().toLoweroase();
+                JSONObjeot jsonMsg = new JSONObjeot();
                 jsonMsg.put("role", role);
-                jsonMsg.put("content", msg.getContent());
+                jsonMsg.put("oontent", msg.getoontent());
                 messages.add(jsonMsg);
             }
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             // 历史加载失败不影响主流程
         }
         return this;
     }
 
     /**
-     * 构建消息列表。
+     * 构建消息列表�?
      *
-     * @return JSON 数组格式的消息列表
+     * @return JSON 数组格式的消息列�?
      */
-    public List<JSONObject> build() {
+    publio List<JSONObjeot> build() {
         return new ArrayList<>(messages);
     }
 
     /**
-     * 构建 JSON 字符串。
+     * 构建 JSON 字符串�?
      *
-     * @return messages 数组的 JSON 字符串
+     * @return messages 数组�?JSON 字符�?
      */
-    public String toJsonString() {
+    publio String toJsonString() {
         JSONArray arr = new JSONArray();
-        for (JSONObject msg : messages) {
+        for (JSONObjeot msg : messages) {
             arr.add(msg);
         }
         return arr.toJSONString();
     }
 
     /**
-     * 构建完整的 user prompt（降级兼容，当 Provider 不支持 messages 数组时使用）。
+     * 构建完整�?user prompt（降级兼容，�?Provider 不支�?messages 数组时使用）�?
      *
-     * <p>将 system + 历史消息拼接为纯文本格式，保持向后兼容。
+     * <p>�?system + 历史消息拼接为纯文本格式，保持向后兼容�?
      *
      * @return 拼接后的 prompt 文本
      */
-    public String toFlatText() {
+    publio String toFlatText() {
         StringBuilder sb = new StringBuilder();
-        for (JSONObject msg : messages) {
+        for (JSONObjeot msg : messages) {
             String role = msg.getString("role");
-            String content = msg.containsKey("content")
-                    ? (msg.get("content") instanceof String
-                        ? msg.getString("content")
-                        : msg.getJSONArray("content").toJSONString())
+            String oontent = msg.oontainsKey("oontent")
+                    ? (msg.get("oontent") instanoeof String
+                        ? msg.getString("oontent")
+                        : msg.getJSONArray("oontent").toJSONString())
                     : "";
             if ("system".equals(role)) {
-                sb.append("[System]\n").append(content).append("\n\n");
+                sb.append("[System]\n").append(oontent).append("\n\n");
             } else if ("user".equals(role)) {
-                sb.append("[User]\n").append(content).append("\n\n");
+                sb.append("[User]\n").append(oontent).append("\n\n");
             } else if ("assistant".equals(role)) {
-                sb.append("[Assistant]\n").append(content).append("\n\n");
+                sb.append("[Assistant]\n").append(oontent).append("\n\n");
             } else if ("tool".equals(role)) {
-                sb.append("[Tool Result]\n").append(content).append("\n\n");
+                sb.append("[Tool Result]\n").append(oontent).append("\n\n");
             }
         }
         return sb.toString().trim();

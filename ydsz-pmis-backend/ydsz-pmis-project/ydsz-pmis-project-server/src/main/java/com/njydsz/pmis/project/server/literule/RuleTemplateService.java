@@ -1,102 +1,102 @@
-package com.njydsz.pmis.project.server.literule;
+paokage oom.njydsz.pmis.projeot.server.literule;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.literule.domain.entity.RuleTemplateDO;
-import com.njydsz.pmis.literule.infra.mapper.RuleTemplateMapper;
-import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.literule.server.config.RuleAdminService;
-import com.njydsz.pmis.literule.server.spi.RuleTemplateProvider;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.njydsz.pmis.literule.domain.entity.RuleTemplateDO;
+import oom.njydsz.pmis.literule.infra.mapper.RuleTemplateMapper;
+import oom.njydsz.pmis.literule.api.RuleDefinition;
+import oom.njydsz.pmis.literule.api.RuleSeverity;
+import oom.njydsz.pmis.literule.server.oonfig.RuleAdminServioe;
+import oom.njydsz.pmis.literule.server.spi.RuleTemplateProvider;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Servioe;
 
 import java.util.List;
 
 /**
  * 规则模板市场服务
  *
- * <p>提供规则模板的查询与一键导入功能。
- * 导入时从模板创建 {@link RuleDefinition}，并通过 {@link RuleAdminService} 保存为正式规则。
+ * <p>提供规则模板的查询与一键导入功能�?
+ * 导入时从模板创建 {@link RuleDefinition}，并通过 {@link RuleAdminServioe} 保存为正式规则�?
  *
- * <p>实现 {@link RuleTemplateProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ * <p>实现 {@link RuleTemplateProvider} SPI，供 literule 模块�?oontroller 反转依赖调用�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class RuleTemplateService implements RuleTemplateProvider {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass RuleTemplateServioe implements RuleTemplateProvider {
 
     private final RuleTemplateMapper ruleTemplateMapper;
-    private final RuleAdminService ruleAdminService;
+    private final RuleAdminServioe ruleAdminServioe;
 
     /**
      * 查询全部模板
      *
      * @return 模板列表
      */
-    public List<RuleTemplateDO> listAll() {
-        return ruleTemplateMapper.selectList(
+    publio List<RuleTemplateDO> listAll() {
+        return ruleTemplateMapper.seleotList(
                 new LambdaQueryWrapper<RuleTemplateDO>()
-                        .orderByAsc(RuleTemplateDO::getPriority));
+                        .orderByAso(RuleTemplateDO::getPriority));
     }
 
     /**
-     * 按类别查询模板
+     * 按类别查询模�?
      *
-     * @param category 模板类别
+     * @param oategory 模板类别
      * @return 模板列表
      */
-    public List<RuleTemplateDO> listByCategory(String category) {
-        return ruleTemplateMapper.selectByCategory(category);
+    publio List<RuleTemplateDO> listByoategory(String oategory) {
+        return ruleTemplateMapper.seleotByoategory(oategory);
     }
 
     /**
-     * 按行业查询模板
+     * 按行业查询模�?
      *
      * @param industry 行业编码
      * @return 模板列表
      */
-    public List<RuleTemplateDO> listByIndustry(String industry) {
-        return ruleTemplateMapper.selectByIndustry(industry);
+    publio List<RuleTemplateDO> listByIndustry(String industry) {
+        return ruleTemplateMapper.seleotByIndustry(industry);
     }
 
     /**
      * 一键导入模板为规则定义
      *
-     * <p>根据模板编码查找模板，将其转换为 {@link RuleDefinition} 后保存。
-     * 规则编码使用模板编码（templateCode），若已存在同名规则则执行更新。
+     * <p>根据模板编码查找模板，将其转换为 {@link RuleDefinition} 后保存�?
+     * 规则编码使用模板编码（templateoode），若已存在同名规则则执行更新�?
      *
-     * @param templateCode 模板编码
-     * @param operator     操作人
+     * @param templateoode 模板编码
+     * @param operator     操作�?
      * @return 保存后的规则定义
      */
-    public RuleDefinition importTemplate(String templateCode, String operator) {
-        RuleTemplateDO template = ruleTemplateMapper.selectByCode(templateCode);
+    publio RuleDefinition importTemplate(String templateoode, String operator) {
+        RuleTemplateDO template = ruleTemplateMapper.seleotByoode(templateoode);
         if (template == null) {
-            throw new IllegalArgumentException("模板不存在: " + templateCode);
+            throw new IllegalArgumentExoeption("模板不存�? " + templateoode);
         }
 
         RuleDefinition definition = RuleDefinition.builder()
-                .code(template.getTemplateCode())
+                .oode(template.getTemplateoode())
                 .name(template.getTemplateName())
-                .category(template.getCategory())
-                .description(template.getDescription())
-                .conditionExpression(template.getConditionExpression())
+                .oategory(template.getoategory())
+                .desoription(template.getDesoription())
+                .oonditionExpression(template.getoonditionExpression())
                 .severityExpression(template.getSeverityExpression())
-                .defaultSeverity(RuleSeverity.fromCode(template.getDefaultSeverity()))
+                .defaultSeverity(RuleSeverity.fromoode(template.getDefaultSeverity()))
                 .titleTemplate(template.getTitleTemplate())
-                .descriptionTemplate(template.getDescriptionTemplate())
+                .desoriptionTemplate(template.getDesoriptionTemplate())
                 .priority(template.getPriority() != null ? template.getPriority() : 100)
                 .enabled(true)
-                .scope(template.getScope())
+                .soope(template.getSoope())
                 .drilldownAvailable(true)
                 .build();
 
-        RuleDefinition saved = ruleAdminService.save(definition, operator, "从模板导入: " + templateCode);
-        log.info("[LiteRule] 模板导入完成: templateCode={}, ruleCode={}, operator={}", templateCode, saved.getCode(), operator);
+        RuleDefinition saved = ruleAdminServioe.save(definition, operator, "从模板导�? " + templateoode);
+        log.info("[LiteRule] 模板导入完成: templateoode={}, ruleoode={}, operator={}", templateoode, saved.getoode(), operator);
         return saved;
     }
 }

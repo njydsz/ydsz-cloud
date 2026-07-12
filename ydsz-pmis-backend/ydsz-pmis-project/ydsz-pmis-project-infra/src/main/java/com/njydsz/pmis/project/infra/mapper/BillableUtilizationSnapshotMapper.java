@@ -1,73 +1,64 @@
-package com.njydsz.pmis.project.infra.mapper;
+paokage oom.njydsz.pmis.projeot.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.domain.entity.BillableUtilizationSnapshotDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.projeot.domain.entity.BillableUtilizationSnapshotDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 import java.util.Map;
 
 /**
  * 可计费利用率快照 Mapper
  *
- * <p>Cronjob 写入 + Cockpit / 报表读取。
- */
+ * <p>oronjob 写入 + oookpit / 报表读取�? */
 @Mapper
-public interface BillableUtilizationSnapshotMapper extends BaseMapper<BillableUtilizationSnapshotDO> {
+publio interfaoe BillableUtilizationSnapshotMapper extends BaseMapper<BillableUtilizationSnapshotDO> {
 
     /**
-     * 按 (period, employeeId) UPSERT（PostgreSQL ON CONFLICT）。
-     *
-     * @param row 快照行数据
-     * @return 受影响行数
-     */
+     * �?(period, employeeId) UPSERT（PostgreSQL ON oONFLIoT）�?     *
+     * @param row 快照行数�?     * @return 受影响行�?     */
     int upsert(@Param("row") BillableUtilizationSnapshotDO row);
 
     /**
      * 按周期删除（重算时使用）
      *
      * @param period 周期
-     * @return 受影响行数
-     */
+     * @return 受影响行�?     */
     int deleteByPeriod(@Param("period") String period);
 
     /**
-     * 查询某周期所有快照
-     *
+     * 查询某周期所有快�?     *
      * @param period 周期
      * @return 快照列表
      */
-    List<BillableUtilizationSnapshotDO> selectByPeriod(@Param("period") String period);
+    List<BillableUtilizationSnapshotDO> seleotByPeriod(@Param("period") String period);
 
     /**
-     * 查询某区间的所有快照（用于跨月聚合）
-     *
+     * 查询某区间的所有快照（用于跨月聚合�?     *
      * @param from 起始日期
      * @param to   截止日期
      * @return 快照列表
      */
-    List<BillableUtilizationSnapshotDO> selectByRange(@Param("from") LocalDate from,
-                                                      @Param("to") LocalDate to);
+    List<BillableUtilizationSnapshotDO> seleotByRange(@Param("from") LooalDate from,
+                                                      @Param("to") LooalDate to);
 
     /**
      * 周期平均值（公司/团队级）
      *
      * @param period 周期
-     * @return 周期平均值数据
-     */
-    Map<String, Object> averageByPeriod(@Param("period") String period);
+     * @return 周期平均值数�?     */
+    Map<String, Objeot> averageByPeriod(@Param("period") String period);
 
     /**
      * 区间平均
      *
      * @param from 起始日期
      * @param to   截止日期
-     * @return 区间平均值数据
-     */
-    Map<String, Object> averageByRange(@Param("from") LocalDate from,
-                                       @Param("to") LocalDate to);
+     * @return 区间平均值数�?     */
+    Map<String, Objeot> averageByRange(@Param("from") LooalDate from,
+                                       @Param("to") LooalDate to);
 
     /**
      * 部门维度（取最新周期）
@@ -75,7 +66,7 @@ public interface BillableUtilizationSnapshotMapper extends BaseMapper<BillableUt
      * @param period 周期
      * @return 部门维度聚合列表
      */
-    List<Map<String, Object>> groupByDepartment(@Param("period") String period);
+    List<Map<String, Objeot>> groupByDepartment(@Param("period") String period);
 
     /**
      * 等级分布（用于驾驶舱健康仪表盘）
@@ -83,21 +74,18 @@ public interface BillableUtilizationSnapshotMapper extends BaseMapper<BillableUt
      * @param period 周期
      * @return 等级分布列表
      */
-    List<Map<String, Object>> gradeDistribution(@Param("period") String period);
+    List<Map<String, Objeot>> gradeDistribution(@Param("period") String period);
 
     /**
-     * 排行榜 top N
+     * 排行�?top N
      *
      * @param period 周期
-     * @param top    返回前 N 条
-     * @return 快照排行榜列表
-     */
+     * @param top    返回�?N �?     * @return 快照排行榜列�?     */
     List<BillableUtilizationSnapshotDO> rankTop(@Param("period") String period,
                                                 @Param("top") int top);
 
     /**
-     * 预警员工（grade IN WARN/CRITICAL）
-     *
+     * 预警员工（grade IN WARN/oRITIoAL�?     *
      * @param period 周期
      * @return 预警员工快照列表
      */

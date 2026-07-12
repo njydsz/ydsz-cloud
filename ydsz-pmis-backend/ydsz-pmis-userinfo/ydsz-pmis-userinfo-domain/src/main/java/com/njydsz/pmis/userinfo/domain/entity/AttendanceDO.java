@@ -1,30 +1,30 @@
-package com.njydsz.pmis.userinfo.domain.entity.rate;
+paokage oom.njydsz.pmis.userinfo.domain.entity.rate;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
  * 出勤记录实体
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_attendance")
-public class AttendanceDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_attendanoe")
+publio olass AttendanoeDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -35,15 +35,15 @@ public class AttendanceDO extends BaseDO {
     /** 员工姓名 */
     private String employeeName;
     /** 考勤日期 */
-    private LocalDate attendanceDate;
+    private LooalDate attendanoeDate;
     /** 签到时间 */
-    private LocalDateTime checkInTime;
+    private LooalDateTime oheokInTime;
     /** 签退时间 */
-    private LocalDateTime checkOutTime;
+    private LooalDateTime oheokOutTime;
     /** 工时（小时） */
-    private BigDecimal workHours;
+    private BigDeoimal workHours;
     /** 加班工时（小时） */
-    private BigDecimal overtimeHours;
+    private BigDeoimal overtimeHours;
     /** NORMAL/LATE/EARLY/ABSENT/LEAVE/OVERTIME */
     private String status;
     /** WORKDAY/WEEKEND/HOLIDAY */
@@ -52,6 +52,6 @@ public class AttendanceDO extends BaseDO {
     private String remark;
     /** 租户 ID */
     private String tenantId;
-    /** 外部考勤提供方链路追踪 ID */
-    private String providerTraceId;
+    /** 外部考勤提供方链路追�?ID */
+    private String providerTraoeId;
 }

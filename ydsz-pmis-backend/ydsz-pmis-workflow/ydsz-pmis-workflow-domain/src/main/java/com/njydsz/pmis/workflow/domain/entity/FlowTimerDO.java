@@ -1,38 +1,36 @@
-package com.njydsz.pmis.workflow.domain.entity.integration;
+paokage oom.njydsz.pmis.workflow.domain.entity.integration;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
  * 工作流定时器 DO
  *
- * <p>P1-2: 中间定时器 / 边界定时器调度实体。
- *
- * <p>设计要点：
- * <ul>
- *   <li>每创建一个定时器节点实例，插入一行 PENDING 记录</li>
- *   <li>cronjob 每 30s 扫描 fire_at &lt;= now() AND timer_status = 'PENDING'</li>
- *   <li>触发后更新 status = FIRED, fired_at = now()，并由 DefaultFlowAdvancer 推进流程</li>
- *   <li>被依附的 userTask 完成时关闭对应 BOUNDARY 定时器（CANCELLED）</li>
+ * <p>P1-2: 中间定时�?/ 边界定时器调度实体�? *
+ * <p>设计要点�? * <ul>
+ *   <li>每创建一个定时器节点实例，插入一�?PENDING 记录</li>
+ *   <li>oronjob �?30s 扫描 fire_at &lt;= now() AND timer_status = 'PENDING'</li>
+ *   <li>触发后更�?status = FIRED, fired_at = now()，并�?DefaultFlowAdvanoer 推进流程</li>
+ *   <li>被依附的 userTask 完成时关闭对�?BOUNDARY 定时器（oANoELLED�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashoode(oallSuper = true)
 @TableName("pmis_flow_timer")
-public class FlowTimerDO extends BaseDO {
+publio olass FlowTimerDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
@@ -41,16 +39,16 @@ public class FlowTimerDO extends BaseDO {
     private String tenantId;
 
     /** 流程实例 ID */
-    private String instanceId;
+    private String instanoeId;
 
     /** 流程定义 ID */
     private String definitionId;
 
     /** 流程编码 */
-    private String flowCode;
+    private String flowoode;
 
     /** 节点编码 */
-    private String nodeCode;
+    private String nodeoode;
 
     /** 节点名称 */
     private String nodeName;
@@ -58,24 +56,24 @@ public class FlowTimerDO extends BaseDO {
     /** 定时器类型：INTERMEDIATE 中间 / BOUNDARY 边界 */
     private String timerType;
 
-    /** 边界定时器关联的 userTask ID（INTERMEDIATE 为 null） */
+    /** 边界定时器关联的 userTask ID（INTERMEDIATE �?null�?*/
     private String boundaryTaskId;
 
-    /** 到点时间（cronjob 按此扫描） */
-    private LocalDateTime fireAt;
+    /** 到点时间（cronjob 按此扫描�?*/
+    private LooalDateTime fireAt;
 
-    /** CRON 表达式（循环定时器，可空） */
-    private String cycle;
+    /** oRON 表达式（循环定时器，可空�?*/
+    private String oyole;
 
-    /** 状态：PENDING / FIRED / CANCELLED */
+    /** 状态：PENDING / FIRED / oANoELLED */
     private String timerStatus;
 
     /** 实际触发时间 */
-    private LocalDateTime firedAt;
+    private LooalDateTime firedAt;
 
     /** 取消原因（userTask 完成时关闭） */
-    private String cancelReason;
+    private String oanoelReason;
 
     /** 链路追踪 ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 }

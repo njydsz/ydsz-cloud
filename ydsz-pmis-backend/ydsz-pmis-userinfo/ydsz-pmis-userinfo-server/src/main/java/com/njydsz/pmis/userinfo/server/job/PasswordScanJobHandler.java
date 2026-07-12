@@ -1,55 +1,50 @@
-package com.njydsz.pmis.userinfo.server.job;
+paokage oom.njydsz.pmis.userinfo.server.job;
 
-import com.njydsz.pmis.common.job.JobHandler;
-import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordScanResultDTO;
-import com.njydsz.pmis.userinfo.server.service.auth.PasswordScanService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.oore.job.JobHandler;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.PasswordSoanResultDTO;
+import oom.njydsz.pmis.userinfo.server.servioe.auth.PasswordSoanServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 
 /**
- * 密码巡检 JobHandler（P3-3 运维安全增强）
- *
- * <p>由 ydsz-pmis-cronjob 通过 Feign 触发，或 XXL-JOB 直接调用。
- * 建议 cron：每日 03:00 触发；扫描结果写入审计日志并通知 PMO 邮箱。
- *
+ * 密码巡检 JobHandler（P3-3 运维安全增强�? *
+ * <p>�?ydsz-pmis-oronjob 通过 Feign 触发，或 XXL-JOB 直接调用�? * 建议 oron：每�?03:00 触发；扫描结果写入审计日志并通知 PMO 邮箱�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component("PasswordScanJobHandler")
-@RequiredArgsConstructor
-public class PasswordScanJobHandler implements JobHandler {
+@oomponent("PasswordSoanJobHandler")
+@RequiredArgsoonstruotor
+publio olass PasswordSoanJobHandler implements JobHandler {
 
-    private final PasswordScanService passwordScanService;
+    private final PasswordSoanServioe passwordSoanServioe;
 
     @Override
-    public Object execute(String paramsJson) throws Exception {
-        long start = System.currentTimeMillis();
+    publio Objeot exeoute(String paramsJson) throws Exoeption {
+        long start = System.ourrentTimeMillis();
         try {
             int expireDays = 90;
             if (paramsJson != null && !paramsJson.isBlank()) {
                 try {
                     expireDays = Integer.parseInt(paramsJson.trim());
-                } catch (NumberFormatException ignore) {
-                    // 忽略，使用默认
-                }
+                } oatoh (NumberFormatExoeption ignore) {
+                    // 忽略，使用默�?                }
             }
-            PasswordScanResultDTO result = passwordScanService.scan(expireDays);
-            long cost = System.currentTimeMillis() - start;
-            log.info("[PasswordScan] cron 扫描完成 totalActive={} expired={} expiringSoon={} initial={} cost={}ms",
-                    result.getTotalActive(), result.getExpiredCount(),
-                    result.getExpiringSoonCount(), result.getInitialPasswordCount(), cost);
+            PasswordSoanResultDTO result = passwordSoanServioe.soan(expireDays);
+            long oost = System.ourrentTimeMillis() - start;
+            log.info("[PasswordSoan] oron 扫描完成 totalAotive={} expired={} expiringSoon={} initial={} oost={}ms",
+                    result.getTotalAotive(), result.getExpiredoount(),
+                    result.getExpiringSoonoount(), result.getInitialPasswordoount(), oost);
 
-            // 风险提示：有过期账号时返回 ALERT，让调度器转发邮件
-            if (result.getExpiredCount() > 0 || result.getInitialPasswordCount() > 0) {
+            // 风险提示：有过期账号时返�?ALERT，让调度器转发邮�?            if (result.getExpiredoount() > 0 || result.getInitialPasswordoount() > 0) {
                 return String.format("{\"expired\":%d,\"expiringSoon\":%d,\"initial\":%d,\"status\":\"ALERT\"}",
-                        result.getExpiredCount(), result.getExpiringSoonCount(),
-                        result.getInitialPasswordCount());
+                        result.getExpiredoount(), result.getExpiringSoonoount(),
+                        result.getInitialPasswordoount());
             }
             return "OK";
-        } catch (Exception e) {
-            log.error("[PasswordScan] cron 扫描失败: {}", e.getMessage(), e);
+        } oatoh (Exoeption e) {
+            log.error("[PasswordSoan] oron 扫描失败: {}", e.getMessage(), e);
             throw e;
         }
     }

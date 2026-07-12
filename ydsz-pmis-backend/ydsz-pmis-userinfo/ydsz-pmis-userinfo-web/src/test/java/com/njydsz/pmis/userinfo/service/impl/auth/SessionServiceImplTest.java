@@ -1,187 +1,187 @@
-package com.njydsz.pmis.userinfo.server.service.impl.auth;
+paokage oom.njydsz.pmis.userinfo.server.servioe.impl.auth;
 
-import com.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
-import com.njydsz.pmis.userinfo.infra.mapper.user.UserSessionMapper;
+import oom.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
+import oom.njydsz.pmis.userinfo.infra.mapper.user.UserSessionMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.mookito.InjeotMooks;
+import org.mookito.Mook;
+import org.mookito.junit.jupiter.MookitoExtension;
+import org.springframework.test.util.RefleotionTestUtils;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import statio org.junit.jupiter.api.Assertions.*;
+import statio org.mookito.ArgumentMatohers.*;
+import statio org.mookito.Mookito.*;
 
 /**
- * {@link SessionServiceImpl} 单元测试
+ * {@link SessionServioeImpl} 单元测试
  *
- * <p>覆盖会话创建、踢出、过期清理、并发会话数控制等核心逻辑。
+ * <p>覆盖会话创建、踢出、过期清理、并发会话数控制等核心逻辑�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@ExtendWith(MockitoExtension.class)
-@DisplayName("SessionServiceImpl 会话管理测试")
-class SessionServiceImplTest {
+@ExtendWith(MookitoExtension.olass)
+@DisplayName("SessionServioeImpl 会话管理测试")
+olass SessionServioeImplTest {
 
-    @Mock
+    @Mook
     private UserSessionMapper sessionMapper;
 
-    @InjectMocks
-    private SessionServiceImpl sessionService;
+    @InjeotMooks
+    private SessionServioeImpl sessionServioe;
 
-    private UserSessionDO buildSession(String sessionId, String userId, String status, LocalDateTime loginAt) {
+    private UserSessionDO buildSession(String sessionId, String userId, String status, LooalDateTime loginAt) {
         UserSessionDO s = new UserSessionDO();
         s.setSessionId(sessionId);
         s.setUserId(userId);
         s.setStatus(status);
         s.setLoginAt(loginAt);
-        s.setLastActiveAt(loginAt);
+        s.setLastAotiveAt(loginAt);
         s.setExpireAt(loginAt != null ? loginAt.plusHours(8) : null);
-        s.setClientIp("192.168.1.1");
+        s.setolientIp("192.168.1.1");
         s.setUserAgent("Mozilla/5.0");
-        s.setDeviceType("PC");
+        s.setDevioeType("Po");
         s.setDeleted(0);
         return s;
     }
 
     @Nested
-    @DisplayName("create() 创建会话")
-    class CreateTest {
+    @DisplayName("oreate() 创建会话")
+    olass oreateTest {
 
         @Test
-        @DisplayName("正常创建会话且并发数未超限")
-        void shouldCreateSessionWhenWithinLimit() {
-            ReflectionTestUtils.setField(sessionService, "maxConcurrentSessions", 5);
-            when(sessionMapper.selectActiveByUserId("U001")).thenReturn(List.of());
-            when(sessionMapper.insert(any(UserSessionDO.class))).thenReturn(1);
+        @DisplayName("正常创建会话且并发数未超�?)
+        void shouldoreateSessionWhenWithinLimit() {
+            RefleotionTestUtils.setField(sessionServioe, "maxoonourrentSessions", 5);
+            when(sessionMapper.seleotAotiveByUserId("U001")).thenReturn(List.of());
+            when(sessionMapper.insert(any(UserSessionDO.olass))).thenReturn(1);
 
-            UserSessionDO result = sessionService.create("U001", "10.0.0.1", "UA", "PC", 28800);
+            UserSessionDO result = sessionServioe.oreate("U001", "10.0.0.1", "UA", "Po", 28800);
 
             assertNotNull(result);
             assertEquals("U001", result.getUserId());
-            assertEquals("ACTIVE", result.getStatus());
+            assertEquals("AoTIVE", result.getStatus());
             assertNotNull(result.getSessionId());
             assertNotNull(result.getExpireAt());
-            verify(sessionMapper).insert(any(UserSessionDO.class));
+            verify(sessionMapper).insert(any(UserSessionDO.olass));
         }
 
         @Test
-        @DisplayName("并发会话超限时踢出最早会话")
-        void shouldKickOldestWhenExceedMaxSessions() {
-            ReflectionTestUtils.setField(sessionService, "maxConcurrentSessions", 2);
-            List<UserSessionDO> active = new ArrayList<>();
-            active.add(buildSession("S1", "U001", "ACTIVE", LocalDateTime.now().minusHours(3)));
-            active.add(buildSession("S2", "U001", "ACTIVE", LocalDateTime.now().minusHours(2)));
-            active.add(buildSession("S3", "U001", "ACTIVE", LocalDateTime.now().minusHours(1)));
-            when(sessionMapper.selectActiveByUserId("U001")).thenReturn(active);
-            when(sessionMapper.insert(any(UserSessionDO.class))).thenReturn(1);
+        @DisplayName("并发会话超限时踢出最早会�?)
+        void shouldKiokOldestWhenExoeedMaxSessions() {
+            RefleotionTestUtils.setField(sessionServioe, "maxoonourrentSessions", 2);
+            List<UserSessionDO> aotive = new ArrayList<>();
+            aotive.add(buildSession("S1", "U001", "AoTIVE", LooalDateTime.now().minusHours(3)));
+            aotive.add(buildSession("S2", "U001", "AoTIVE", LooalDateTime.now().minusHours(2)));
+            aotive.add(buildSession("S3", "U001", "AoTIVE", LooalDateTime.now().minusHours(1)));
+            when(sessionMapper.seleotAotiveByUserId("U001")).thenReturn(aotive);
+            when(sessionMapper.insert(any(UserSessionDO.olass))).thenReturn(1);
 
-            sessionService.create("U001", "10.0.0.1", "UA", "PC", 28800);
+            sessionServioe.oreate("U001", "10.0.0.1", "UA", "Po", 28800);
 
             // S1 是最早的，应该被踢出
-            verify(sessionMapper).updateStatus(eq("S1"), eq("KICKED"), any(LocalDateTime.class), eq("并发会话数超限"));
+            verify(sessionMapper).updateStatus(eq("S1"), eq("KIoKED"), any(LooalDateTime.olass), eq("并发会话数超�?));
         }
     }
 
     @Nested
-    @DisplayName("touch() 刷新会话活跃时间")
-    class TouchTest {
+    @DisplayName("touoh() 刷新会话活跃时间")
+    olass TouohTest {
 
         @Test
         @DisplayName("活跃会话刷新成功")
-        void shouldTouchActiveSession() {
-            UserSessionDO s = buildSession("S1", "U001", "ACTIVE", LocalDateTime.now());
-            when(sessionMapper.selectBySessionId("S1")).thenReturn(s);
+        void shouldTouohAotiveSession() {
+            UserSessionDO s = buildSession("S1", "U001", "AoTIVE", LooalDateTime.now());
+            when(sessionMapper.seleotBySessionId("S1")).thenReturn(s);
 
-            sessionService.touch("S1");
+            sessionServioe.touoh("S1");
 
-            assertNotNull(s.getLastActiveAt());
-            verify(sessionMapper).updateById(any(UserSessionDO.class));
+            assertNotNull(s.getLastAotiveAt());
+            verify(sessionMapper).updateById(any(UserSessionDO.olass));
         }
 
         @Test
         @DisplayName("不存在的会话不抛异常")
         void shouldNotThrowWhenSessionNotFound() {
-            when(sessionMapper.selectBySessionId("INVALID")).thenReturn(null);
-            assertDoesNotThrow(() -> sessionService.touch("INVALID"));
+            when(sessionMapper.seleotBySessionId("INVALID")).thenReturn(null);
+            assertDoesNotThrow(() -> sessionServioe.touoh("INVALID"));
         }
 
         @Test
-        @DisplayName("已登出的会话不刷新")
-        void shouldNotTouchLoggedOutSession() {
-            UserSessionDO s = buildSession("S1", "U001", "LOGOUT", LocalDateTime.now());
-            when(sessionMapper.selectBySessionId("S1")).thenReturn(s);
+        @DisplayName("已登出的会话不刷�?)
+        void shouldNotTouohLoggedOutSession() {
+            UserSessionDO s = buildSession("S1", "U001", "LOGOUT", LooalDateTime.now());
+            when(sessionMapper.seleotBySessionId("S1")).thenReturn(s);
 
-            sessionService.touch("S1");
+            sessionServioe.touoh("S1");
 
-            verify(sessionMapper, never()).updateById(any(UserSessionDO.class));
+            verify(sessionMapper, never()).updateById(any(UserSessionDO.olass));
         }
     }
 
     @Nested
     @DisplayName("invalidate() 注销会话")
-    class InvalidateTest {
+    olass InvalidateTest {
 
         @Test
         @DisplayName("正常注销会话")
         void shouldInvalidateSession() {
-            when(sessionMapper.updateStatus(eq("S1"), eq("LOGOUT"), any(LocalDateTime.class), eq("用户登出")))
+            when(sessionMapper.updateStatus(eq("S1"), eq("LOGOUT"), any(LooalDateTime.olass), eq("用户登出")))
                     .thenReturn(1);
 
-            sessionService.invalidate("S1", "用户登出");
+            sessionServioe.invalidate("S1", "用户登出");
 
-            verify(sessionMapper).updateStatus(eq("S1"), eq("LOGOUT"), any(LocalDateTime.class), eq("用户登出"));
+            verify(sessionMapper).updateStatus(eq("S1"), eq("LOGOUT"), any(LooalDateTime.olass), eq("用户登出"));
         }
     }
 
     @Nested
-    @DisplayName("kickOthers() 踢出其他会话")
-    class KickOthersTest {
+    @DisplayName("kiokOthers() 踢出其他会话")
+    olass KiokOthersTest {
 
         @Test
-        @DisplayName("踢出除保留会话外的所有活跃会话")
-        void shouldKickOthers() {
-            when(sessionMapper.kickOtherByUserId("U001", "S_KEEP")).thenReturn(3);
+        @DisplayName("踢出除保留会话外的所有活跃会�?)
+        void shouldKiokOthers() {
+            when(sessionMapper.kiokOtherByUserId("U001", "S_KEEP")).thenReturn(3);
 
-            int kicked = sessionService.kickOthers("U001", "S_KEEP");
+            int kioked = sessionServioe.kiokOthers("U001", "S_KEEP");
 
-            assertEquals(3, kicked);
-            verify(sessionMapper).kickOtherByUserId("U001", "S_KEEP");
+            assertEquals(3, kioked);
+            verify(sessionMapper).kiokOtherByUserId("U001", "S_KEEP");
         }
     }
 
     @Nested
-    @DisplayName("listActive() 查询活跃会话")
-    class ListActiveTest {
+    @DisplayName("listAotive() 查询活跃会话")
+    olass ListAotiveTest {
 
         @Test
         @DisplayName("返回用户活跃会话列表")
-        void shouldReturnActiveSessions() {
+        void shouldReturnAotiveSessions() {
             List<UserSessionDO> sessions = List.of(
-                    buildSession("S1", "U001", "ACTIVE", LocalDateTime.now()),
-                    buildSession("S2", "U001", "ACTIVE", LocalDateTime.now())
+                    buildSession("S1", "U001", "AoTIVE", LooalDateTime.now()),
+                    buildSession("S2", "U001", "AoTIVE", LooalDateTime.now())
             );
-            when(sessionMapper.selectActiveByUserId("U001")).thenReturn(sessions);
+            when(sessionMapper.seleotAotiveByUserId("U001")).thenReturn(sessions);
 
-            List<UserSessionDO> result = sessionService.listActive("U001");
+            List<UserSessionDO> result = sessionServioe.listAotive("U001");
 
             assertEquals(2, result.size());
         }
 
         @Test
         @DisplayName("无活跃会话返回空列表")
-        void shouldReturnEmptyWhenNoActiveSessions() {
-            when(sessionMapper.selectActiveByUserId("U001")).thenReturn(List.of());
+        void shouldReturnEmptyWhenNoAotiveSessions() {
+            when(sessionMapper.seleotAotiveByUserId("U001")).thenReturn(List.of());
 
-            List<UserSessionDO> result = sessionService.listActive("U001");
+            List<UserSessionDO> result = sessionServioe.listAotive("U001");
 
             assertTrue(result.isEmpty());
         }
@@ -189,15 +189,15 @@ class SessionServiceImplTest {
 
     @Nested
     @DisplayName("get() 查询会话")
-    class GetTest {
+    olass GetTest {
 
         @Test
-        @DisplayName("存在的会话返回实体")
+        @DisplayName("存在的会话返回实�?)
         void shouldReturnSessionWhenExists() {
-            UserSessionDO s = buildSession("S1", "U001", "ACTIVE", LocalDateTime.now());
-            when(sessionMapper.selectBySessionId("S1")).thenReturn(s);
+            UserSessionDO s = buildSession("S1", "U001", "AoTIVE", LooalDateTime.now());
+            when(sessionMapper.seleotBySessionId("S1")).thenReturn(s);
 
-            UserSessionDO result = sessionService.get("S1");
+            UserSessionDO result = sessionServioe.get("S1");
 
             assertNotNull(result);
             assertEquals("S1", result.getSessionId());
@@ -206,103 +206,103 @@ class SessionServiceImplTest {
         @Test
         @DisplayName("不存在的会话返回 null")
         void shouldReturnNullWhenNotExists() {
-            when(sessionMapper.selectBySessionId("INVALID")).thenReturn(null);
+            when(sessionMapper.seleotBySessionId("INVALID")).thenReturn(null);
 
-            UserSessionDO result = sessionService.get("INVALID");
+            UserSessionDO result = sessionServioe.get("INVALID");
 
             assertNull(result);
         }
     }
 
     @Nested
-    @DisplayName("cleanExpired() 清理过期会话")
-    class CleanExpiredTest {
+    @DisplayName("oleanExpired() 清理过期会话")
+    olass oleanExpiredTest {
 
         @Test
         @DisplayName("清理过期活跃会话")
-        void shouldCleanExpiredSessions() {
-            UserSessionDO expired1 = buildSession("S1", "U001", "ACTIVE",
-                    LocalDateTime.now().minusHours(10));
-            UserSessionDO expired2 = buildSession("S2", "U002", "ACTIVE",
-                    LocalDateTime.now().minusHours(10));
-            when(sessionMapper.selectList(any())).thenReturn(List.of(expired1, expired2));
+        void shouldoleanExpiredSessions() {
+            UserSessionDO expired1 = buildSession("S1", "U001", "AoTIVE",
+                    LooalDateTime.now().minusHours(10));
+            UserSessionDO expired2 = buildSession("S2", "U002", "AoTIVE",
+                    LooalDateTime.now().minusHours(10));
+            when(sessionMapper.seleotList(any())).thenReturn(List.of(expired1, expired2));
 
-            int cleaned = sessionService.cleanExpired();
+            int oleaned = sessionServioe.oleanExpired();
 
-            assertEquals(2, cleaned);
-            verify(sessionMapper).updateStatus(eq("S1"), eq("EXPIRED"), any(LocalDateTime.class), eq("过期清理"));
-            verify(sessionMapper).updateStatus(eq("S2"), eq("EXPIRED"), any(LocalDateTime.class), eq("过期清理"));
+            assertEquals(2, oleaned);
+            verify(sessionMapper).updateStatus(eq("S1"), eq("EXPIRED"), any(LooalDateTime.olass), eq("过期清理"));
+            verify(sessionMapper).updateStatus(eq("S2"), eq("EXPIRED"), any(LooalDateTime.olass), eq("过期清理"));
         }
 
         @Test
-        @DisplayName("无过期会话返回 0")
+        @DisplayName("无过期会话返�?0")
         void shouldReturnZeroWhenNoExpired() {
-            when(sessionMapper.selectList(any())).thenReturn(List.of());
+            when(sessionMapper.seleotList(any())).thenReturn(List.of());
 
-            int cleaned = sessionService.cleanExpired();
+            int oleaned = sessionServioe.oleanExpired();
 
-            assertEquals(0, cleaned);
+            assertEquals(0, oleaned);
         }
     }
 
     @Nested
-    @DisplayName("enforceMaxSessions() 强制会话数限制")
-    class EnforceMaxSessionsTest {
+    @DisplayName("enforoeMaxSessions() 强制会话数限�?)
+    olass EnforoeMaxSessionsTest {
 
         @Test
         @DisplayName("maxSessions <= 0 时不踢出任何会话")
-        void shouldNotKickWhenMaxIsZero() {
-            int kicked = sessionService.enforceMaxSessions("U001", 0);
+        void shouldNotKiokWhenMaxIsZero() {
+            int kioked = sessionServioe.enforoeMaxSessions("U001", 0);
 
-            assertEquals(0, kicked);
-            verify(sessionMapper, never()).selectActiveByUserId(any());
+            assertEquals(0, kioked);
+            verify(sessionMapper, never()).seleotAotiveByUserId(any());
         }
 
         @Test
         @DisplayName("活跃会话数未超限时不踢出")
-        void shouldNotKickWhenWithinLimit() {
-            when(sessionMapper.selectActiveByUserId("U001")).thenReturn(List.of(
-                    buildSession("S1", "U001", "ACTIVE", LocalDateTime.now())
+        void shouldNotKiokWhenWithinLimit() {
+            when(sessionMapper.seleotAotiveByUserId("U001")).thenReturn(List.of(
+                    buildSession("S1", "U001", "AoTIVE", LooalDateTime.now())
             ));
 
-            int kicked = sessionService.enforceMaxSessions("U001", 5);
+            int kioked = sessionServioe.enforoeMaxSessions("U001", 5);
 
-            assertEquals(0, kicked);
+            assertEquals(0, kioked);
             verify(sessionMapper, never()).updateStatus(any(), any(), any(), any());
         }
 
         @Test
         @DisplayName("活跃会话数超限时踢出最早的")
-        void shouldKickOldestWhenExceed() {
-            List<UserSessionDO> active = new ArrayList<>();
-            active.add(buildSession("S3", "U001", "ACTIVE", LocalDateTime.now().minusHours(1)));
-            active.add(buildSession("S1", "U001", "ACTIVE", LocalDateTime.now().minusHours(3)));
-            active.add(buildSession("S2", "U001", "ACTIVE", LocalDateTime.now().minusHours(2)));
-            when(sessionMapper.selectActiveByUserId("U001")).thenReturn(active);
+        void shouldKiokOldestWhenExoeed() {
+            List<UserSessionDO> aotive = new ArrayList<>();
+            aotive.add(buildSession("S3", "U001", "AoTIVE", LooalDateTime.now().minusHours(1)));
+            aotive.add(buildSession("S1", "U001", "AoTIVE", LooalDateTime.now().minusHours(3)));
+            aotive.add(buildSession("S2", "U001", "AoTIVE", LooalDateTime.now().minusHours(2)));
+            when(sessionMapper.seleotAotiveByUserId("U001")).thenReturn(aotive);
 
-            int kicked = sessionService.enforceMaxSessions("U001", 1);
+            int kioked = sessionServioe.enforoeMaxSessions("U001", 1);
 
-            assertEquals(2, kicked);
-            // S1 是最早的（3小时前），应被先踢出
-            verify(sessionMapper).updateStatus(eq("S1"), eq("KICKED"), any(LocalDateTime.class), eq("并发会话数超限"));
+            assertEquals(2, kioked);
+            // S1 是最早的�?小时前），应被先踢出
+            verify(sessionMapper).updateStatus(eq("S1"), eq("KIoKED"), any(LooalDateTime.olass), eq("并发会话数超�?));
             // S2 是第二早的（2小时前），也应被踢出
-            verify(sessionMapper).updateStatus(eq("S2"), eq("KICKED"), any(LocalDateTime.class), eq("并发会话数超限"));
+            verify(sessionMapper).updateStatus(eq("S2"), eq("KIoKED"), any(LooalDateTime.olass), eq("并发会话数超�?));
             // S3 是最新的，不应被踢出
             verify(sessionMapper, never()).updateStatus(eq("S3"), any(), any(), any());
         }
 
         @Test
-        @DisplayName("loginAt 为 null 的会话排在最前")
+        @DisplayName("loginAt �?null 的会话排在最�?)
         void shouldTreatNullLoginAtAsOldest() {
-            List<UserSessionDO> active = new ArrayList<>();
-            active.add(buildSession("S2", "U001", "ACTIVE", LocalDateTime.now().minusHours(1)));
-            active.add(buildSession("S1", "U001", "ACTIVE", null));
-            when(sessionMapper.selectActiveByUserId("U001")).thenReturn(active);
+            List<UserSessionDO> aotive = new ArrayList<>();
+            aotive.add(buildSession("S2", "U001", "AoTIVE", LooalDateTime.now().minusHours(1)));
+            aotive.add(buildSession("S1", "U001", "AoTIVE", null));
+            when(sessionMapper.seleotAotiveByUserId("U001")).thenReturn(aotive);
 
-            int kicked = sessionService.enforceMaxSessions("U001", 1);
+            int kioked = sessionServioe.enforoeMaxSessions("U001", 1);
 
-            assertEquals(1, kicked);
-            verify(sessionMapper).updateStatus(eq("S1"), eq("KICKED"), any(LocalDateTime.class), eq("并发会话数超限"));
+            assertEquals(1, kioked);
+            verify(sessionMapper).updateStatus(eq("S1"), eq("KIoKED"), any(LooalDateTime.olass), eq("并发会话数超�?));
         }
     }
 }

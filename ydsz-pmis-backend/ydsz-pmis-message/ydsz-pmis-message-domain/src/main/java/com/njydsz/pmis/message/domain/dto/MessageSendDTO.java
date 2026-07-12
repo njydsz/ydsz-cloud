@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.domain.dto.core;
+paokage oom.njydsz.pmis.message.domain.dto.oore;
 
 
 import lombok.Data;
@@ -6,31 +6,31 @@ import lombok.Data;
 import java.util.Map;
 
 /**
- * 消息直接发送 DTO
+ * 消息直接发�?DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class MessageSendDTO {
+publio olass MessageSendDTO {
 
     /** 通道 */
-    private String channel;
+    private String ohannel;
 
     /** 模板编码 */
-    private String templateCode;
+    private String templateoode;
 
-    /** 接收人 */
-    private String receiver;
+    /** 接收�?*/
+    private String reoeiver;
 
-    /** 模板参数(用于占位符渲染) */
-    private Map<String, Object> params;
+    /** 模板参数(用于占位符渲�? */
+    private Map<String, Objeot> params;
 
     /** 直接发送的内容(不走模板) */
-    private String content;
+    private String oontent;
 
-    /** 邮件主题(仅 EMAIL) */
-    private String subject;
+    /** 邮件主题(�?EMAIL) */
+    private String subjeot;
 
     /** 业务类型 */
     private String bizType;
@@ -47,9 +47,9 @@ public class MessageSendDTO {
     /** 触发发送的用户 ID */
     private String senderId;
 
-    /** 聚合组 */
+    /** 聚合�?*/
     private String messageGroup;
 
     /** 语言区域 */
-    private String locale;
+    private String looale;
 }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.finance.domain.enums;
+paokage oom.njydsz.pmis.finanoe.domain.enums;
 
 /**
  * 对账严重等级
@@ -10,9 +10,9 @@ package com.njydsz.pmis.finance.domain.enums;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum ReconcileLevel {
+publio enum ReoonoileLevel {
     INFO,
     WARN,
     ERROR

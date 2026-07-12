@@ -1,7 +1,7 @@
-package com.njydsz.pmis.userinfo.domain.dto.permission;
+paokage oom.njydsz.pmis.userinfo.domain.dto.permission;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import jakarta.validation.oonstraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serial;
@@ -11,24 +11,24 @@ import java.io.Serializable;
  * 权限/菜单创建/更新 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "权限表单")
-public class PermissionFormDTO implements Serializable {
+@Sohema(desoription = "权限表单")
+publio olass PermissionFormDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 主键 ID（更新时必填） */
+    /** 主键 ID（更新时必填�?*/
     private String id;
 
-    /** 父权限 ID（0=根） */
+    /** 父权�?ID�?=根） */
     private String parentId;
 
     @NotBlank
-    @Schema(description = "权限编码: system:user:create")
-    private String permCode;
+    @Sohema(desoription = "权限编码: system:user:oreate")
+    private String permoode;
 
     /** 权限名称 */
     @NotBlank
@@ -41,10 +41,10 @@ public class PermissionFormDTO implements Serializable {
     /** 路由路径 */
     private String path;
     /** 组件路径 */
-    private String component;
+    private String oomponent;
     /** 菜单图标 */
-    private String icon;
-    /** 排序号 */
+    private String ioon;
+    /** 排序�?*/
     private Integer sortOrder;
     /** 1=显示, 0=隐藏 */
     private Integer visible = 1;

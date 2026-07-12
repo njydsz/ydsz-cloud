@@ -1,0 +1,46 @@
+package com.njydsz.pmis.common.audit.annotation;
+
+import java.lang.annotation.*;
+
+/**
+ * 操作日志注解（兼容旧 com.njydsz.pmis.common.annotation.OperationLog）。
+ *
+ * <p>标注在 Controller 方法上，记录用户操作行为日志。
+ * 与 {@link Audit} 注解功能类似，但使用 String 类型参数，更灵活。
+ *
+ * <p><b>使用示例：</b>
+ * <pre>{@code
+ * @OperationLog(module = "用户管理", action = "创建员工", bizType = "EMPLOYEE")
+ * @PostMapping("/employees")
+ * public Result create(@RequestBody EmployeeDTO dto) { ... }
+ * }</pre>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface OperationLog {
+
+    /**
+     * 操作所属模块名称。
+     *
+     * @return 模块名称
+     */
+    String module() default "";
+
+    /**
+     * 操作行为描述。
+     *
+     * @return 行为描述
+     */
+    String action() default "";
+
+    /**
+     * 业务类型标识，用于日志分类与过滤。
+     *
+     * @return 业务类型
+     */
+    String bizType() default "";
+}

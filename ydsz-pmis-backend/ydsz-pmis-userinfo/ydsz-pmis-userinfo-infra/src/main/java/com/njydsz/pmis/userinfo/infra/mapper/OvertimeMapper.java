@@ -1,9 +1,9 @@
-package com.njydsz.pmis.userinfo.infra.mapper.rate;
+paokage oom.njydsz.pmis.userinfo.infra.mapper.rate;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.userinfo.domain.entity.rate.OvertimeDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.userinfo.domain.entity.rate.OvertimeDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -11,14 +11,14 @@ import java.util.List;
  * 加班申请 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface OvertimeMapper extends BaseMapper<OvertimeDO> {
+publio interfaoe OvertimeMapper extends BaseMapper<OvertimeDO> {
 
-    OvertimeDO selectByCode(@Param("overtimeCode") String overtimeCode);
+    OvertimeDO seleotByoode(@Param("overtimeoode") String overtimeoode);
 
-    List<OvertimeDO> selectByEmployee(@Param("employeeId") String employeeId);
+    List<OvertimeDO> seleotByEmployee(@Param("employeeId") String employeeId);
 
-    List<OvertimeDO> selectByStatus(@Param("approvalStatus") String approvalStatus);
+    List<OvertimeDO> seleotByStatus(@Param("approvalStatus") String approvalStatus);
 }

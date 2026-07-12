@@ -1,15 +1,15 @@
-package com.njydsz.pmis.message.infra.mapper.canary;
+paokage oom.njydsz.pmis.message.infra.mapper.oanary;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.message.domain.entity.canary.MsgCanaryDO;
-import org.apache.ibatis.annotations.Mapper;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.message.domain.entity.oanary.MsgoanaryDO;
+import org.apaohe.ibatis.annotations.Mapper;
 
 /**
- * 灰度桶 Mapper
+ * 灰度�?Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface MsgCanaryMapper extends BaseMapper<MsgCanaryDO> {
+publio interfaoe MsgoanaryMapper extends BaseMapper<MsgoanaryDO> {
 }

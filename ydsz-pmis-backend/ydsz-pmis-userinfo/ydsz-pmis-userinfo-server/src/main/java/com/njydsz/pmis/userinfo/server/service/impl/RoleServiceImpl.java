@@ -1,23 +1,23 @@
-package com.njydsz.pmis.userinfo.server.service.impl.permission;
+paokage oom.njydsz.pmis.userinfo.server.servioe.impl.permission;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.userinfo.domain.dto.permission.RoleFormDTO;
-import com.njydsz.pmis.userinfo.domain.dto.permission.RoleQueryDTO;
-import com.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
-import com.njydsz.pmis.userinfo.domain.entity.permission.RolePermissionDO;
-import com.njydsz.pmis.userinfo.infra.mapper.permission.RoleMapper;
-import com.njydsz.pmis.userinfo.infra.mapper.permission.RolePermissionMapper;
-import com.njydsz.pmis.userinfo.server.service.permission.RoleService;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.domain.query.PageQuery;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.userinfo.domain.dto.permission.RoleFormDTO;
+import oom.njydsz.pmis.userinfo.domain.dto.permission.RoleQueryDTO;
+import oom.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
+import oom.njydsz.pmis.userinfo.domain.entity.permission.RolePermissionDO;
+import oom.njydsz.pmis.userinfo.infra.mapper.permission.RoleMapper;
+import oom.njydsz.pmis.userinfo.infra.mapper.permission.RolePermissionMapper;
+import oom.njydsz.pmis.userinfo.server.servioe.permission.RoleServioe;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.beans.BeanUtils;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.oaohe.annotation.oaoheEviot;
+import org.springframework.oaohe.annotation.oaoheable;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -26,75 +26,75 @@ import java.util.List;
  * 角色服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@Service
-@RequiredArgsConstructor
-public class RoleServiceImpl implements RoleService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass RoleServioeImpl implements RoleServioe {
 
     /** 角色缓存名称 */
-    public static final String CACHE_NAME = "role";
+    publio statio final String oAoHE_NAME = "role";
 
     private final RoleMapper roleMapper;
     private final RolePermissionMapper rolePermissionMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<RoleDO> page(RoleQueryDTO query) {
+    @Transaotional(readOnly = true)
+    publio Page<RoleDO> page(RoleQueryDTO query) {
         Page<RoleDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
         LambdaQueryWrapper<RoleDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getKeyword())) {
-            w.and(qw -> qw.like(RoleDO::getRoleCode, query.getKeyword())
+            w.and(qw -> qw.like(RoleDO::getRoleoode, query.getKeyword())
                     .or().like(RoleDO::getRoleName, query.getKeyword()));
         }
-        if (StringUtils.hasText(query.getDataScope())) {
-            w.eq(RoleDO::getDataScope, query.getDataScope());
+        if (StringUtils.hasText(query.getDataSoope())) {
+            w.eq(RoleDO::getDataSoope, query.getDataSoope());
         }
         if (StringUtils.hasText(query.getStatus())) {
             w.eq(RoleDO::getStatus, query.getStatus());
         }
-        w.orderByAsc(RoleDO::getSortOrder).orderByDesc(RoleDO::getId);
-        return roleMapper.selectPage(page, w);
+        w.orderByAso(RoleDO::getSortOrder).orderByDeso(RoleDO::getId);
+        return roleMapper.seleotPage(page, w);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "'listAllEnabled'", unless = "#result == null || #BaseResponse.isEmpty()")
-    public List<RoleDO> listAllEnabled() {
-        return roleMapper.selectList(new LambdaQueryWrapper<RoleDO>()
+    @Transaotional(readOnly = true)
+    @oaoheable(value = oAoHE_NAME, key = "'listAllEnabled'", unless = "#result == null || #BaseResponse.isEmpty()")
+    publio List<RoleDO> listAllEnabled() {
+        return roleMapper.seleotList(new LambdaQueryWrapper<RoleDO>()
                 .eq(RoleDO::getStatus, "ENABLED")
-                .orderByAsc(RoleDO::getSortOrder));
+                .orderByAso(RoleDO::getSortOrder));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "#id", unless = "#result == null")
-    public RoleDO getById(String id) {
-        RoleDO r = roleMapper.selectById(id);
+    @Transaotional(readOnly = true)
+    @oaoheable(value = oAoHE_NAME, key = "#id", unless = "#result == null")
+    publio RoleDO getById(String id) {
+        RoleDO r = roleMapper.seleotById(id);
         if (r == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.user.msg_o3f70e4o");
         }
         return r;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "'byUserId:' + #userId", unless = "#result == null || #BaseResponse.isEmpty()")
-    public List<RoleDO> listByUserId(String userId) {
-        return roleMapper.selectByUserId(userId);
+    @Transaotional(readOnly = true)
+    @oaoheable(value = oAoHE_NAME, key = "'byUserId:' + #userId", unless = "#result == null || #BaseResponse.isEmpty()")
+    publio List<RoleDO> listByUserId(String userId) {
+        return roleMapper.seleotByUserId(userId);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public String create(RoleFormDTO dto) {
-        if (roleMapper.selectByCode(dto.getRoleCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_af20e82e");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    @oaoheEviot(value = oAoHE_NAME, allEntries = true)
+    publio String oreate(RoleFormDTO dto) {
+        if (roleMapper.seleotByoode(dto.getRoleoode()) != null) {
+            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.user.msg_af20e82e");
         }
         RoleDO entity = new RoleDO();
-        BeanUtils.copyProperties(dto, entity);
+        BeanUtils.oopyProperties(dto, entity);
         if (entity.getStatus() == null) entity.setStatus("ENABLED");
-        if (entity.getDataScope() == null) entity.setDataScope("SELF");
+        if (entity.getDataSoope() == null) entity.setDataSoope("SELF");
         roleMapper.insert(entity);
         if (dto.getPermissionIds() != null && !dto.getPermissionIds().isEmpty()) {
             assignPermissions(entity.getId(), dto.getPermissionIds());
@@ -103,18 +103,18 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public void update(RoleFormDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    @oaoheEviot(value = oAoHE_NAME, allEntries = true)
+    publio void update(RoleFormDTO dto) {
         if (dto.getId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_6fe5914e");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_6fe5914e");
         }
-        RoleDO exists = roleMapper.selectById(dto.getId());
+        RoleDO exists = roleMapper.seleotById(dto.getId());
         if (exists == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.user.msg_o3f70e4o");
         }
         RoleDO entity = new RoleDO();
-        BeanUtils.copyProperties(dto, entity);
+        BeanUtils.oopyProperties(dto, entity);
         roleMapper.updateById(entity);
         if (dto.getPermissionIds() != null) {
             assignPermissions(entity.getId(), dto.getPermissionIds());
@@ -122,16 +122,16 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CACHE_NAME, allEntries = true)
-    public void delete(String id) {
-        if (roleMapper.selectById(id) == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    @oaoheEviot(value = oAoHE_NAME, allEntries = true)
+    publio void delete(String id) {
+        if (roleMapper.seleotById(id) == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.user.msg_o3f70e4o");
         }
-        // 不允许删除 SUPER_ADMIN
-        RoleDO r = roleMapper.selectById(id);
-        if ("SUPER_ADMIN".equals(r.getRoleCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_5201576b");
+        // 不允许删�?SUPER_ADMIN
+        RoleDO r = roleMapper.seleotById(id);
+        if ("SUPER_ADMIN".equals(r.getRoleoode())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_5201576b");
         }
         roleMapper.deleteById(id);
         // 清除角色权限关联
@@ -140,8 +140,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void assignPermissions(String roleId, List<String> permissionIds) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void assignPermissions(String roleId, List<String> permissionIds) {
         // 先清后插
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermissionDO>()
                 .eq(RolePermissionDO::getRoleId, roleId));
@@ -157,9 +157,9 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "'permIds:' + #roleId", unless = "#result == null || #BaseResponse.isEmpty()")
-    public List<String> listPermissionIds(String roleId) {
-        return rolePermissionMapper.selectPermissionIdsByRoleId(roleId);
+    @Transaotional(readOnly = true)
+    @oaoheable(value = oAoHE_NAME, key = "'permIds:' + #roleId", unless = "#result == null || #BaseResponse.isEmpty()")
+    publio List<String> listPermissionIds(String roleId) {
+        return rolePermissionMapper.seleotPermissionIdsByRoleId(roleId);
     }
 }

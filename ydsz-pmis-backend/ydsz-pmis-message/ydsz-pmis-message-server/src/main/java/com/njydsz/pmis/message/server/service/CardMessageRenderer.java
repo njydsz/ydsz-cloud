@@ -1,90 +1,90 @@
-package com.njydsz.pmis.message.server.service.core;
+paokage oom.njydsz.pmis.message.server.servioe.oore;
 
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.message.domain.dto.core.CardMessageDTO;
-import org.springframework.stereotype.Component;
+import oom.njydsz.pmis.oommon.feign.MessageRequest;
+import oom.njydsz.pmis.message.domain.dto.oore.oardMessageDTO;
+import org.springframework.stereotype.oomponent;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 交互式卡片消息渲染器（P1-1）。
+ * 交互式卡片消息渲染器（P1-1）�?
  *
- * <p>将 {@link CardMessageDTO} 转换为各通道的消息请求：
+ * <p>�?{@link oardMessageDTO} 转换为各通道的消息请求：
  * <ul>
- *   <li>DINGTALK/DINGTALK_WORK: msgType=action_card</li>
- *   <li>WECOM/WECOM_APP: msgType=textcard</li>
+ *   <li>DINGTALK/DINGTALK_WORK: msgType=aotion_oard</li>
+ *   <li>WEoOM/WEoOM_APP: msgType=textoard</li>
  *   <li>INAPP: extra 字段携带卡片 JSON,前端渲染</li>
  *   <li>其他通道: 降级为纯文本</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
-@Component
-public class CardMessageRenderer {
+@oomponent
+publio olass oardMessageRenderer {
 
     /**
-     * 将卡片 DTO 转换为 MessageRequest。
+     * 将卡�?DTO 转换�?MessageRequest�?
      *
-     * @param card     卡片 DTO
-     * @param channel  目标通道
-     * @param receiver 接收人
+     * @param oard     卡片 DTO
+     * @param ohannel  目标通道
+     * @param reoeiver 接收�?
      * @param bizType  业务类型
      * @param bizId    业务 ID
      * @return MessageRequest
      */
-    public MessageRequest toMessageRequest(CardMessageDTO card, String channel,
-                                           String receiver, String bizType, String bizId) {
+    publio MessageRequest toMessageRequest(oardMessageDTO oard, String ohannel,
+                                           String reoeiver, String bizType, String bizId) {
         MessageRequest request = new MessageRequest();
-        request.setChannel(channel);
-        request.setReceiver(receiver);
+        request.setohannel(ohannel);
+        request.setReoeiver(reoeiver);
         request.setBizType(bizType);
         request.setBizId(bizId);
-        request.setSubject(card.getTitle());
-        request.setContent(card.getContent());
+        request.setSubjeot(oard.getTitle());
+        request.setoontent(oard.getoontent());
 
-        Map<String, Object> params = new HashMap<>();
-        String upperChannel = channel == null ? "" : channel.toUpperCase();
+        Map<String, Objeot> params = new HashMap<>();
+        String upperohannel = ohannel == null ? "" : ohannel.toUpperoase();
 
-        switch (upperChannel) {
-            case "DINGTALK", "DINGTALK_WORK" -> {
-                params.put("msgType", "action_card");
-                if (card.getButtons() != null && !card.getButtons().isEmpty()) {
-                    params.put("actionUrl", card.getButtons().get(0).getUrl());
-                } else if (StringUtils.hasText(card.getActionUrl())) {
-                    params.put("actionUrl", card.getActionUrl());
+        switoh (upperohannel) {
+            oase "DINGTALK", "DINGTALK_WORK" -> {
+                params.put("msgType", "aotion_oard");
+                if (oard.getButtons() != null && !oard.getButtons().isEmpty()) {
+                    params.put("aotionUrl", oard.getButtons().get(0).getUrl());
+                } else if (StringUtils.hasText(oard.getAotionUrl())) {
+                    params.put("aotionUrl", oard.getAotionUrl());
                 }
             }
-            case "WECOM", "WECOM_APP" -> {
-                params.put("msgType", "textcard");
-                params.put("actionUrl", card.getActionUrl());
+            oase "WEoOM", "WEoOM_APP" -> {
+                params.put("msgType", "textoard");
+                params.put("aotionUrl", oard.getAotionUrl());
             }
-            case "INAPP" -> {
+            oase "INAPP" -> {
                 // 站内卡片: extra 携带卡片 JSON
-                Map<String, Object> extra = new HashMap<>();
-                extra.put("card", true);
-                extra.put("cardTitle", card.getTitle());
-                extra.put("cardIcon", card.getIcon());
-                extra.put("cardButtons", card.getButtons());
-                extra.put("actionUrl", card.getActionUrl());
-                extra.put("actionText", card.getActionText());
+                Map<String, Objeot> extra = new HashMap<>();
+                extra.put("oard", true);
+                extra.put("oardTitle", oard.getTitle());
+                extra.put("oardIoon", oard.getIoon());
+                extra.put("oardButtons", oard.getButtons());
+                extra.put("aotionUrl", oard.getAotionUrl());
+                extra.put("aotionText", oard.getAotionText());
                 params.put("extra", extra);
             }
             default -> {
-                // 降级纯文本
+                // 降级纯文�?
                 StringBuilder sb = new StringBuilder();
-                if (StringUtils.hasText(card.getTitle())) {
-                    sb.append("【").append(card.getTitle()).append("】\n");
+                if (StringUtils.hasText(oard.getTitle())) {
+                    sb.append("�?).append(oard.getTitle()).append("】\n");
                 }
-                sb.append(card.getContent());
-                if (card.getButtons() != null) {
-                    for (CardMessageDTO.CardButton btn : card.getButtons()) {
+                sb.append(oard.getoontent());
+                if (oard.getButtons() != null) {
+                    for (oardMessageDTO.oardButton btn : oard.getButtons()) {
                         sb.append("\n").append(btn.getText()).append(": ").append(btn.getUrl());
                     }
                 }
-                request.setContent(sb.toString());
+                request.setoontent(sb.toString());
             }
         }
         request.setParams(params);

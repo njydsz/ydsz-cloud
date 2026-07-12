@@ -1,15 +1,15 @@
-package com.njydsz.pmis.userinfo.web.controller.org;
+paokage oom.njydsz.pmis.userinfo.web.oontroller.org;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.userinfo.domain.entity.org.DictItemDO;
-import com.njydsz.pmis.userinfo.domain.entity.org.DictTypeDO;
-import com.njydsz.pmis.userinfo.server.service.org.DictService;
+import oom.njydsz.pmis.oommon.safe.annotation.RateLimit;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.userinfo.domain.entity.org.DiotItemDO;
+import oom.njydsz.pmis.userinfo.domain.entity.org.DiotTypeDO;
+import oom.njydsz.pmis.userinfo.server.servioe.org.DiotServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,54 +19,50 @@ import java.util.List;
  * 字典接口
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Tag(name = "基础数据-字典")
-@RestController
-@RequestMapping("/dict")
-@RequiredArgsConstructor
+@Restoontroller
+@RequestMapping("/diot")
+@RequiredArgsoonstruotor
 @Validated
-public class DictController {
+publio olass Diotoontroller {
 
     /** 字典服务 */
-    private final DictService dictService;
+    private final DiotServioe diotServioe;
 
     /**
-     * 查询所有字典类型
-     *
-     * @return 统一响应结果，包含字典类型列表
-     */
-    @Operation(summary = "查询所有字典类型")
-    @RateLimit(key = "dict", qps = 50, windowSeconds = 60)
+     * 查询所有字典类�?     *
+     * @return 统一响应结果，包含字典类型列�?     */
+    @Operation(summary = "查询所有字典类�?)
+    @RateLimit(key = "diot", qps = 50, windowSeoonds = 60)
     @GetMapping("/types")
-    public BaseResponse<List<DictTypeDO>> listTypes() {
-        return BaseResponse.ok(dictService.listAllTypes());
+    publio BaseResponse<List<DiotTypeDO>> listTypes() {
+        return BaseResponse.ok(diotServioe.listAllTypes());
     }
 
     /**
-     * 按 typeCode 查询字典项
-     *
-     * @param typeCode 字典类型编码
+     * �?typeoode 查询字典�?     *
+     * @param typeoode 字典类型编码
      * @return 统一响应结果，包含字典项列表
      */
-    @Operation(summary = "按 typeCode 查询字典项")
-    @RateLimit(key = "dict", qps = 50, windowSeconds = 60)
+    @Operation(summary = "�?typeoode 查询字典�?)
+    @RateLimit(key = "diot", qps = 50, windowSeoonds = 60)
     @GetMapping("/items")
-    public BaseResponse<List<DictItemDO>> listItems(@RequestParam String typeCode) {
-        return BaseResponse.ok(dictService.listItems(typeCode));
+    publio BaseResponse<List<DiotItemDO>> listItems(@RequestParam String typeoode) {
+        return BaseResponse.ok(diotServioe.listItems(typeoode));
     }
 
     /**
-     * 刷新指定字典类型的缓存
-     *
-     * @param typeCode 字典类型编码
+     * 刷新指定字典类型的缓�?     *
+     * @param typeoode 字典类型编码
      * @return 统一响应结果
      */
     @Operation(summary = "刷新字典缓存")
-    @Idempotent(key = "dict:refresh", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "diot:refresh", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
-    public BaseResponse<Void> refresh(@RequestParam String typeCode) {
-        dictService.refreshCache(typeCode);
+    publio BaseResponse<Void> refresh(@RequestParam String typeoode) {
+        diotServioe.refreshoaohe(typeoode);
         return BaseResponse.ok();
     }
 }

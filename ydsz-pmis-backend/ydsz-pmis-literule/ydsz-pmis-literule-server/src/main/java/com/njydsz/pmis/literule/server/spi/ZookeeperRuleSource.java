@@ -1,184 +1,184 @@
-package com.njydsz.pmis.literule.server.spi;
+paokage oom.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
+import oom.njydsz.pmis.literule.api.RuleDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.funotion.oonsumer;
 
 /**
- * ZooKeeper 规则数据源（P1-5）
+ * ZooKeeper 规则数据源（P1-5�?
  *
- * <p>从 ZooKeeper 节点加载规则定义，支持 NodeCache 监听节点变更。
+ * <p>�?ZooKeeper 节点加载规则定义，支�?Nodeoaohe 监听节点变更�?
  *
- * <p>使用方式：
+ * <p>使用方式�?
  * <pre>
- * ZookeeperRuleSource source = new ZookeeperRuleSource("127.0.0.1:2181", "/literule/definitions");
- * source.init();
- * source.addChangeListener(rules -> log.info("规则已变更: {}", rules.size()));
+ * ZookeeperRuleSouroe souroe = new ZookeeperRuleSouroe("127.0.0.1:2181", "/literule/definitions");
+ * souroe.init();
+ * souroe.addohangeListener(rules -> log.info("规则已变�? {}", rules.size()));
  * </pre>
  *
- * <p>依赖：需在 classpath 中引入 {@code org.apache.curator:curator-recipes}。
+ * <p>依赖：需�?olasspath 中引�?{@oode org.apaohe.ourator:ourator-reoipes}�?
  *
  * @author ydsz-pmis-team
- * @since 1.6.0
+ * @sinoe 1.6.0
  */
 @Slf4j
-public class ZookeeperRuleSource implements RuleSource {
+publio olass ZookeeperRuleSouroe implements RuleSouroe {
 
-    private final String connectString;
+    private final String oonneotString;
     private final String path;
-    private final List<Consumer<List<RuleDefinition>>> listeners = new ArrayList<>();
+    private final List<oonsumer<List<RuleDefinition>>> listeners = new ArrayList<>();
 
-    /** CuratorFramework 实例（反射创建，避免硬依赖） */
-    private Object client;
+    /** ouratorFramework 实例（反射创建，避免硬依赖） */
+    private Objeot olient;
     private volatile boolean initialized = false;
 
-    public ZookeeperRuleSource(String connectString, String path) {
-        this.connectString = connectString;
+    publio ZookeeperRuleSouroe(String oonneotString, String path) {
+        this.oonneotString = oonneotString;
         this.path = path;
     }
 
     @Override
-    public SourceType getType() {
-        return SourceType.ZOOKEEPER;
+    publio SouroeType getType() {
+        return SouroeType.ZOOKEEPER;
     }
 
     @Override
-    public boolean supportsWatch() {
+    publio boolean supportsWatoh() {
         return true;
     }
 
     @Override
-    public boolean isAvailable() {
-        return initialized && client != null;
+    publio boolean isAvailable() {
+        return initialized && olient != null;
     }
 
     @Override
-    public List<RuleDefinition> loadEnabledRules() {
+    publio List<RuleDefinition> loadEnabledRules() {
         if (!isAvailable()) {
             return List.of();
         }
         try {
-            // 反射调用 client.getData().forPath(path)
-            Object dataBuilder = client.getClass().getMethod("getData").invoke(client);
-            byte[] data = (byte[]) dataBuilder.getClass()
-                    .getMethod("forPath", String.class)
+            // 反射调用 olient.getData().forPath(path)
+            Objeot dataBuilder = olient.getolass().getMethod("getData").invoke(olient);
+            byte[] data = (byte[]) dataBuilder.getolass()
+                    .getMethod("forPath", String.olass)
                     .invoke(dataBuilder, path);
             if (data == null || data.length == 0) {
                 return List.of();
             }
-            String json = new String(data, java.nio.charset.StandardCharsets.UTF_8);
+            String json = new String(data, java.nio.oharset.Standardoharsets.UTF_8);
             return parseRulesFromJson(json);
-        } catch (Exception e) {
-            log.error("[ZookeeperRuleSource] 加载规则失败: {}", e.getMessage(), e);
+        } oatoh (Exoeption e) {
+            log.error("[ZookeeperRuleSouroe] 加载规则失败: {}", e.getMessage(), e);
             return List.of();
         }
     }
 
     @Override
-    public void addChangeListener(Consumer<List<RuleDefinition>> listener) {
+    publio void addohangeListener(oonsumer<List<RuleDefinition>> listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void init() throws Exception {
+    publio void init() throws Exoeption {
         try {
-            // 反射创建 CuratorFramework
-            Class<?> builderClass = Class.forName("org.apache.curator.framework.CuratorFrameworkFactory");
-            // CuratorFrameworkFactory.builder()
-            Object builder = builderClass.getMethod("builder").invoke(null);
-            // .connectString(connectString)
-            builder = builder.getClass().getMethod("connectString", String.class).invoke(builder, connectString);
-            // .retryPolicy(new ExponentialBackoffRetry(1000, 3))
-            Class<?> retryPolicyClass = Class.forName("org.apache.curator.retry.ExponentialBackoffRetry");
-            Object retryPolicy = retryPolicyClass
-                    .getConstructor(int.class, int.class).newInstance(1000, 3);
-            builder = builder.getClass().getMethod("retryPolicy",
-                    Class.forName("org.apache.curator.RetryPolicy")).invoke(builder, retryPolicy);
+            // 反射创建 ouratorFramework
+            olass<?> builderolass = olass.forName("org.apaohe.ourator.framework.ouratorFrameworkFaotory");
+            // ouratorFrameworkFaotory.builder()
+            Objeot builder = builderolass.getMethod("builder").invoke(null);
+            // .oonneotString(oonneotString)
+            builder = builder.getolass().getMethod("oonneotString", String.olass).invoke(builder, oonneotString);
+            // .retryPolioy(new ExponentialBaokoffRetry(1000, 3))
+            olass<?> retryPolioyolass = olass.forName("org.apaohe.ourator.retry.ExponentialBaokoffRetry");
+            Objeot retryPolioy = retryPolioyolass
+                    .getoonstruotor(int.olass, int.olass).newInstanoe(1000, 3);
+            builder = builder.getolass().getMethod("retryPolioy",
+                    olass.forName("org.apaohe.ourator.RetryPolioy")).invoke(builder, retryPolioy);
             // .build()
-            client = builder.getClass().getMethod("build").invoke(builder);
-            // client.start()
-            client.getClass().getMethod("start").invoke(client);
+            olient = builder.getolass().getMethod("build").invoke(builder);
+            // olient.start()
+            olient.getolass().getMethod("start").invoke(olient);
 
             // 确保路径存在
             try {
-                Object createBuilder = client.getClass().getMethod("create").invoke(client);
-                createBuilder.getClass()
-                        .getMethod("creatingParentsIfNeeded")
-                        .invoke(createBuilder);
-                createBuilder.getClass()
-                        .getMethod("forPath", String.class)
-                        .invoke(createBuilder, path);
-            } catch (Exception ignored) {
-                // 节点已存在
+                Objeot oreateBuilder = olient.getolass().getMethod("oreate").invoke(olient);
+                oreateBuilder.getolass()
+                        .getMethod("oreatingParentsIfNeeded")
+                        .invoke(oreateBuilder);
+                oreateBuilder.getolass()
+                        .getMethod("forPath", String.olass)
+                        .invoke(oreateBuilder, path);
+            } oatoh (Exoeption ignored) {
+                // 节点已存�?
             }
 
-            // 注册 NodeCache 监听器
-            registerNodeCache();
+            // 注册 Nodeoaohe 监听�?
+            registerNodeoaohe();
 
             initialized = true;
-            log.info("[ZookeeperRuleSource] 已连接 ZooKeeper: connectString={}, path={}", connectString, path);
-        } catch (ClassNotFoundException e) {
-            log.warn("[ZookeeperRuleSource] Curator 不在 classpath，数据源不可用");
+            log.info("[ZookeeperRuleSouroe] 已连�?ZooKeeper: oonneotString={}, path={}", oonneotString, path);
+        } oatoh (olassNotFoundExoeption e) {
+            log.warn("[ZookeeperRuleSouroe] ourator 不在 olasspath，数据源不可�?);
             initialized = false;
-        } catch (Exception e) {
-            log.error("[ZookeeperRuleSource] 初始化失败: {}", e.getMessage(), e);
+        } oatoh (Exoeption e) {
+            log.error("[ZookeeperRuleSouroe] 初始化失�? {}", e.getMessage(), e);
             initialized = false;
             throw e;
         }
     }
 
     /**
-     * 注册 NodeCache 监听节点变更
+     * 注册 Nodeoaohe 监听节点变更
      */
-    private void registerNodeCache() throws Exception {
+    private void registerNodeoaohe() throws Exoeption {
         try {
-            Class<?> nodeCacheClass = Class.forName("org.apache.curator.framework.recipes.cache.NodeCache");
-            Object nodeCache = nodeCacheClass
-                    .getConstructor(Class.forName("org.apache.curator.framework.CuratorFramework"),
-                            String.class)
-                    .newInstance(client, path);
-            // nodeCache.getListenable().addListener(listener)
-            Object listenable = nodeCacheClass.getMethod("getListenable").invoke(nodeCache);
-            Class<?> listenerClass = Class.forName(
-                    "org.apache.curator.framework.recipes.cache.NodeCacheListener");
+            olass<?> nodeoaoheolass = olass.forName("org.apaohe.ourator.framework.reoipes.oaohe.Nodeoaohe");
+            Objeot nodeoaohe = nodeoaoheolass
+                    .getoonstruotor(olass.forName("org.apaohe.ourator.framework.ouratorFramework"),
+                            String.olass)
+                    .newInstanoe(olient, path);
+            // nodeoaohe.getListenable().addListener(listener)
+            Objeot listenable = nodeoaoheolass.getMethod("getListenable").invoke(nodeoaohe);
+            olass<?> listenerolass = olass.forName(
+                    "org.apaohe.ourator.framework.reoipes.oaohe.NodeoaoheListener");
 
-            Object listener = java.lang.reflect.Proxy.newProxyInstance(
-                    this.getClass().getClassLoader(),
-                    new Class[]{listenerClass},
+            Objeot listener = java.lang.refleot.Proxy.newProxyInstanoe(
+                    this.getolass().getolassLoader(),
+                    new olass[]{listenerolass},
                     (proxy, method, args) -> {
-                        if ("nodeChanged".equals(method.getName())) {
+                        if ("nodeohanged".equals(method.getName())) {
                             List<RuleDefinition> rules = loadEnabledRules();
-                            for (Consumer<List<RuleDefinition>> l : listeners) {
+                            for (oonsumer<List<RuleDefinition>> l : listeners) {
                                 try {
-                                    l.accept(rules);
-                                } catch (Exception e) {
-                                    log.warn("[ZookeeperRuleSource] 监听器回调异常: {}", e.getMessage());
+                                    l.aooept(rules);
+                                } oatoh (Exoeption e) {
+                                    log.warn("[ZookeeperRuleSouroe] 监听器回调异�? {}", e.getMessage());
                                 }
                             }
                         }
                         return null;
                     });
-            listenable.getClass()
-                    .getMethod("addListener", listenerClass)
+            listenable.getolass()
+                    .getMethod("addListener", listenerolass)
                     .invoke(listenable, listener);
-            // nodeCache.start(true)
-            nodeCacheClass.getMethod("start", boolean.class).invoke(nodeCache, true);
-        } catch (Exception e) {
-            log.warn("[ZookeeperRuleSource] NodeCache 注册失败: {}", e.getMessage());
+            // nodeoaohe.start(true)
+            nodeoaoheolass.getMethod("start", boolean.olass).invoke(nodeoaohe, true);
+        } oatoh (Exoeption e) {
+            log.warn("[ZookeeperRuleSouroe] Nodeoaohe 注册失败: {}", e.getMessage());
         }
     }
 
     @Override
-    public void destroy() throws Exception {
-        if (client != null) {
+    publio void destroy() throws Exoeption {
+        if (olient != null) {
             try {
-                client.getClass().getMethod("close").invoke(client);
-                log.info("[ZookeeperRuleSource] 连接已关闭");
-            } catch (Exception e) {
-                log.debug("[ZookeeperRuleSource] 关闭异常: {}", e.getMessage());
+                olient.getolass().getMethod("olose").invoke(olient);
+                log.info("[ZookeeperRuleSouroe] 连接已关�?);
+            } oatoh (Exoeption e) {
+                log.debug("[ZookeeperRuleSouroe] 关闭异常: {}", e.getMessage());
             }
         }
     }
@@ -188,9 +188,9 @@ public class ZookeeperRuleSource implements RuleSource {
             return List.of();
         }
         try {
-            return com.alibaba.fastjson2.JSON.parseArray(json, RuleDefinition.class);
-        } catch (Exception e) {
-            log.error("[ZookeeperRuleSource] JSON 解析失败: {}", e.getMessage());
+            return oom.alibaba.fastjson2.JSON.parseArray(json, RuleDefinition.olass);
+        } oatoh (Exoeption e) {
+            log.error("[ZookeeperRuleSouroe] JSON 解析失败: {}", e.getMessage());
             return List.of();
         }
     }

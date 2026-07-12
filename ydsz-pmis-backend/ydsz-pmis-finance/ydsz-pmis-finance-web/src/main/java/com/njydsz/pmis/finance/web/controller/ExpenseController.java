@@ -1,19 +1,19 @@
-package com.njydsz.pmis.finance.web.controller;
+paokage oom.njydsz.pmis.finanoe.web.oontroller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
-import com.njydsz.pmis.finance.domain.dto.ExpenseCreateDTO;
-import com.njydsz.pmis.finance.domain.entity.ExpenseDO;
-import com.njydsz.pmis.finance.server.service.finance.ExpenseService;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.projeot.domain.dto.ApprovalDTO;
+import oom.njydsz.pmis.finanoe.domain.dto.ExpenseoreateDTO;
+import oom.njydsz.pmis.finanoe.domain.entity.ExpenseDO;
+import oom.njydsz.pmis.finanoe.server.servioe.finanoe.ExpenseServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.oonstraints.Max;
+import jakarta.validation.oonstraints.Min;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,25 +23,24 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 /**
- * 费用报销 Controller
+ * 费用报销 oontroller
  *
- * <p>负责费用创建、审批、状态迁移及分页查询；受预算强管控约束。
- *
+ * <p>负责费用创建、审批、状态迁移及分页查询；受预算强管控约束�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Tag(name = "费用报销")
-@RestController
-@RequestMapping("/finance/expense")
-@RequiredArgsConstructor
+@Restoontroller
+@RequestMapping("/finanoe/expense")
+@RequiredArgsoonstruotor
 @Validated
-public class ExpenseController {
+publio olass Expenseoontroller {
 
     /** 费用报销服务 */
-    private final ExpenseService service;
+    private final ExpenseServioe servioe;
 
     /**
      * 创建费用
@@ -50,25 +49,22 @@ public class ExpenseController {
      * @return 新建费用 ID
      */
     @Operation(summary = "创建费用")
-    @AuthApiPermission(apiCodes = "execution:expense:create")
-    @Idempotent(key = "expense:create", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "exeoution:expense:oreate")
+    @Idempotent(key = "expense:oreate", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping
-    public BaseResponse<String> create(@Valid @RequestBody ExpenseCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+    publio BaseResponse<String> oreate(@Valid @RequestBody ExpenseoreateDTO dto) {
+        return BaseResponse.ok(servioe.oreate(dto));
     }
 
     /**
-     * 费用状态迁移
-     *
-     * @param dto 审批/状态变更参数
-     * @return 空结果
-     */
-    @Operation(summary = "状态迁移")
-    @AuthApiPermission(apiCodes = "execution:expense:status")
-    @Idempotent(key = "expense:update", ttlSeconds = 5, message = "请勿重复提交")
+     * 费用状态迁�?     *
+     * @param dto 审批/状态变更参�?     * @return 空结�?     */
+    @Operation(summary = "状态迁�?)
+    @AuthApiPermission(apioodes = "exeoution:expense:status")
+    @Idempotent(key = "expense:update", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    public BaseResponse<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
-        service.changeStatus(dto);
+    publio BaseResponse<Void> ohangeStatus(@Valid @RequestBody ApprovalDTO dto) {
+        servioe.ohangeStatus(dto);
         return BaseResponse.ok();
     }
 
@@ -76,14 +72,13 @@ public class ExpenseController {
      * 删除费用
      *
      * @param id 费用 ID
-     * @return 空结果
-     */
+     * @return 空结�?     */
     @Operation(summary = "删除")
-    @AuthApiPermission(apiCodes = "execution:expense:delete")
-    @Idempotent(key = "expense:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "exeoution:expense:delete")
+    @Idempotent(key = "expense:delete", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public BaseResponse<Void> delete(@PathVariable String id) {
-        service.delete(id);
+    publio BaseResponse<Void> delete(@PathVariable String id) {
+        servioe.delete(id);
         return BaseResponse.ok();
     }
 
@@ -94,10 +89,10 @@ public class ExpenseController {
      * @return 费用实体
      */
     @Operation(summary = "详情")
-    @AuthApiPermission(apiCodes = "execution:expense:list")
+    @AuthApiPermission(apioodes = "exeoution:expense:list")
     @GetMapping("/{id}")
-    public BaseResponse<ExpenseDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+    publio BaseResponse<ExpenseDO> get(@PathVariable String id) {
+        return BaseResponse.ok(servioe.getById(id));
     }
 
     /**
@@ -105,17 +100,15 @@ public class ExpenseController {
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param keyword      关键词
-     * @param status       状态过滤
-     * @param expenseType  费用类型
+     * @param keyword      关键�?     * @param status       状态过�?     * @param expenseType  费用类型
      * @param employeeId   员工 ID
      * @param initiationId 项目立项 ID
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @AuthApiPermission(apiCodes = "execution:expense:list")
+    @AuthApiPermission(apioodes = "exeoution:expense:list")
     @GetMapping("/page")
-    public BaseResponse<Page<ExpenseDO>> page(
+    publio BaseResponse<Page<ExpenseDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
@@ -123,6 +116,6 @@ public class ExpenseController {
             @RequestParam(required = false) String expenseType,
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String initiationId) {
-        return BaseResponse.ok(service.page(page, size, keyword, status, expenseType, employeeId, initiationId));
+        return BaseResponse.ok(servioe.page(page, size, keyword, status, expenseType, employeeId, initiationId));
     }
 }

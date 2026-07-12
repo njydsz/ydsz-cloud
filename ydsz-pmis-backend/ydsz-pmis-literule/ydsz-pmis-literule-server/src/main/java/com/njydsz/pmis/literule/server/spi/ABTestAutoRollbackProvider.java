@@ -1,61 +1,54 @@
-package com.njydsz.pmis.literule.server.spi;
+paokage oom.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.domain.entity.RuleABPolicyDO;
-import com.njydsz.pmis.literule.domain.entity.RuleABRollbackDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleABPolioyDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleABRollbaokDO;
 
 import java.util.List;
 
 /**
- * AB Test 自动回滚提供者 SPI
+ * AB Test 自动回滚提供�?SPI
  *
- * <p>由消费方（如 project 模块）提供实现，提供 AB Test 策略管理、自动回滚评估、
- * 人工回滚、回滚历史查询等能力。将原有 {@code ABTestAutoRollbackService} 的能力抽象为 SPI，
- * 避免 literule 模块直接依赖 project 模块。
- *
+ * <p>由消费方（如 projeot 模块）提供实现，提供 AB Test 策略管理、自动回滚评估�? * 人工回滚、回滚历史查询等能力。将原有 {@oode ABTestAutoRollbaokServioe} 的能力抽象为 SPI�? * 避免 literule 模块直接依赖 projeot 模块�? *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
-public interface ABTestAutoRollbackProvider {
+publio interfaoe ABTestAutoRollbaokProvider {
 
     /**
-     * 获取规则的 AB Test 策略（无配置时返回默认策略）
+     * 获取规则�?AB Test 策略（无配置时返回默认策略）
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @return AB Test 策略
      */
-    RuleABPolicyDO getPolicy(String ruleCode);
+    RuleABPolioyDO getPolioy(String ruleoode);
 
     /**
      * 保存/更新 AB Test 策略
      *
-     * @param policy   策略
-     * @param operator 操作人
-     */
-    void savePolicy(RuleABPolicyDO policy, String operator);
+     * @param polioy   策略
+     * @param operator 操作�?     */
+    void savePolioy(RuleABPolioyDO polioy, String operator);
 
     /**
-     * 查询规则的所有回滚历史
-     *
-     * @param ruleCode 规则编码
+     * 查询规则的所有回滚历�?     *
+     * @param ruleoode 规则编码
      * @return 回滚历史列表
      */
-    List<RuleABRollbackDO> listRollbackHistory(String ruleCode);
+    List<RuleABRollbaokDO> listRollbaokHistory(String ruleoode);
 
     /**
      * 评估单条规则
      *
-     * @param ruleCode 规则编码
-     * @return true=执行了回滚/通知，false=无操作
-     */
-    boolean evaluateOne(String ruleCode);
+     * @param ruleoode 规则编码
+     * @return true=执行了回�?通知，false=无操�?     */
+    boolean evaluateOne(String ruleoode);
 
     /**
      * 人工触发回滚（Owner 主动请求 / 紧急操作）
      *
-     * @param ruleCode 规则编码
-     * @param operator 操作人
-     * @param reason   MANUAL / OWNER_REQUEST
+     * @param ruleoode 规则编码
+     * @param operator 操作�?     * @param reason   MANUAL / OWNER_REQUEST
      * @return 回滚记录
      */
-    RuleABRollbackDO manualRollback(String ruleCode, String operator, String reason);
+    RuleABRollbaokDO manualRollbaok(String ruleoode, String operator, String reason);
 }

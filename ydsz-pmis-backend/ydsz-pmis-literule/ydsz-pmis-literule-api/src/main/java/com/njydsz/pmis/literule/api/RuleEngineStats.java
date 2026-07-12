@@ -1,46 +1,45 @@
-package com.njydsz.pmis.literule.api;
+paokage oom.njydsz.pmis.literule.api;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.oonourrent.oonourrentHashMap;
 
 /**
  * 规则引擎执行统计快照
  *
- * <p>记录每条规则的执行次数、触发次数、异常次数、平均耗时，用于规则效能监控。
- *
+ * <p>记录每条规则的执行次数、触发次数、异常次数、平均耗时，用于规则效能监控�? *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RuleEngineStats implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass RuleEngineStats implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 总评估次数 */
+    /** 总评估次�?*/
     private long totalEvaluations;
 
-    /** 总触发次数 */
+    /** 总触发次�?*/
     private long totalTriggered;
 
-    /** 总异常次数 */
+    /** 总异常次�?*/
     private long totalErrors;
 
     /** 总评估耗时（毫秒） */
     private long totalElapsedMs;
 
-    /** 当前注册规则数（规则规模监控，用于评估 RETE 引入必要性） */
+    /** 当前注册规则数（规则规模监控，用于评�?RETE 引入必要性） */
     private int registeredRules;
 
-    /** 最近一次评估遍历的规则数 */
+    /** 最近一次评估遍历的规则�?*/
     private int lastEvaluatedRules;
 
     /** 按规则编码的统计明细 */
@@ -53,12 +52,12 @@ public class RuleEngineStats implements Serializable {
      */
     @Data
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class RuleStat implements Serializable {
-        private static final long serialVersionUID = 1L;
+    @NoArgsoonstruotor
+    @AllArgsoonstruotor
+    publio statio olass RuleStat implements Serializable {
+        private statio final long serialVersionUID = 1L;
         /** 执行次数 */
-        private long executions;
+        private long exeoutions;
         /** 触发次数 */
         private long triggered;
         /** 异常次数 */
@@ -68,13 +67,11 @@ public class RuleEngineStats implements Serializable {
     }
 
     /**
-     * 创建空统计快照
-     *
-     * @return 空快照
-     */
-    public static RuleEngineStats empty() {
+     * 创建空统计快�?     *
+     * @return 空快�?     */
+    publio statio RuleEngineStats empty() {
         return RuleEngineStats.builder()
-                .perRuleStats(new ConcurrentHashMap<>())
+                .perRuleStats(new oonourrentHashMap<>())
                 .build();
     }
 }

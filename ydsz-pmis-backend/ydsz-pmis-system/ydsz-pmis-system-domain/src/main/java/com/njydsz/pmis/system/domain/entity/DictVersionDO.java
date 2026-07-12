@@ -1,48 +1,45 @@
-package com.njydsz.pmis.system.domain.entity.dict;
+paokage oom.njydsz.pmis.system.domain.entity.diot;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
  * 字典版本实体
  *
- * <p>字典变更历史快照，支持回滚与变更审计。每次字典发布会产生一条新版本记录。
- *
- * <p>P2-15 包归属修正：从 {@code system.entity.audit} 迁移到 {@code system.entity.dict}。
- * 原归属错误（audit 包应只放审计日志类实体如 OperationLogDO/LoginAuditDO），
- * 字典版本属于字典领域实体，归入 dict 子包更符合领域驱动划分。
- *
+ * <p>字典变更历史快照，支持回滚与变更审计。每次字典发布会产生一条新版本记录�? *
+ * <p>P2-15 包归属修正：�?{@oode system.entity.audit} 迁移�?{@oode system.entity.diot}�? * 原归属错误（audit 包应只放审计日志类实体如 OperationLogDO/LoginAuditDO），
+ * 字典版本属于字典领域实体，归�?diot 子包更符合领域驱动划分�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_dict_version")
-public class DictVersionDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_diot_version")
+publio olass DiotVersionDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 字典类型编码（如 ORDER_STATUS） */
-    private String typeCode;
+    /** 字典类型编码（如 ORDER_STATUS�?*/
+    private String typeoode;
 
-    /** 版本号（语义化版本，如 1.0.0） */
+    /** 版本号（语义化版本，�?1.0.0�?*/
     private String version;
 
     /** 变更说明 */
-    private String changeLog;
+    private String ohangeLog;
 
     /** 生效时间 */
-    private LocalDateTime effectiveDate;
+    private LooalDateTime effeotiveDate;
 }

@@ -1,56 +1,53 @@
-package com.njydsz.pmis.project.infra.mapper;
+paokage oom.njydsz.pmis.projeot.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.domain.entity.RateCardDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.projeot.domain.entity.RateoardDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 
 /**
  * 对外费率卡片 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface RateCardMapper extends BaseMapper<RateCardDO> {
+publio interfaoe RateoardMapper extends BaseMapper<RateoardDO> {
 
     /**
-     * 按编码查询对外费率卡片
-     *
-     * @param code 费率编码
+     * 按编码查询对外费率卡�?     *
+     * @param oode 费率编码
      * @return 对外费率卡片对象，未找到返回 null
      */
-    RateCardDO selectByCode(@Param("code") String code);
+    RateoardDO seleotByoode(@Param("oode") String oode);
 
     /**
-     * 按职级+项目类型+客户等级 命中当前生效的费率
-     *
-     * @param levelCode     职级编码
-     * @param projectType   项目类型
-     * @param customerLevel 客户等级
+     * 按职�?项目类型+客户等级 命中当前生效的费�?     *
+     * @param leveloode     职级编码
+     * @param projeotType   项目类型
+     * @param oustomerLevel 客户等级
      * @param date          生效日期
-     * @return 生效的对外费率卡片，未找到返回 null
+     * @return 生效的对外费率卡片，未找到返�?null
      */
-    RateCardDO matchEffective(@Param("levelCode") String levelCode,
-                              @Param("projectType") String projectType,
-                              @Param("customerLevel") String customerLevel,
-                              @Param("date") LocalDate date);
+    RateoardDO matohEffeotive(@Param("leveloode") String leveloode,
+                              @Param("projeotType") String projeotType,
+                              @Param("oustomerLevel") String oustomerLevel,
+                              @Param("date") LooalDate date);
 
     /**
-     * 按职级查询费率卡片列表
-     *
-     * @param levelCode 职级编码
+     * 按职级查询费率卡片列�?     *
+     * @param leveloode 职级编码
      * @return 对外费率卡片列表
      */
-    List<RateCardDO> selectByLevel(@Param("levelCode") String levelCode);
+    List<RateoardDO> seleotByLevel(@Param("leveloode") String leveloode);
 
     /**
      * 全量查询
      *
      * @return 对外费率卡片列表
      */
-    List<RateCardDO> selectAll();
+    List<RateoardDO> seleotAll();
 }

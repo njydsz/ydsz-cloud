@@ -1,159 +1,159 @@
-package com.njydsz.pmis.message.server.service.config;
+paokage oom.njydsz.pmis.message.server.servioe.oonfig;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.message.domain.entity.config.MsgVariableSourceDO;
-import com.njydsz.pmis.message.infra.mapper.config.MsgVariableSourceMapper;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.njydsz.pmis.oommon.util.json.JsonUtils;
+import oom.njydsz.pmis.message.domain.entity.oonfig.MsgVariableSouroeDO;
+import oom.njydsz.pmis.message.infra.mapper.oonfig.MsgVariableSouroeMapper;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.data.redis.oore.StringRedisTemplate;
+import org.springframework.jdbo.oore.JdboTemplate;
+import org.springframework.stereotype.oomponent;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.oonourrent.oonourrentHashMap;
 
 /**
- * 消息变量数据源解析器（P0-4）。
+ * 消息变量数据源解析器（P0-4）�?
  *
- * <p>在模板渲染前，根据 {@link MsgVariableSourceDO} 配置自动从数据源拉取变量值：
+ * <p>在模板渲染前，根�?{@link MsgVariableSouroeDO} 配置自动从数据源拉取变量值：
  * <ul>
- *   <li>BEAN: 调用 Spring Bean 方法，表达式 {@code beanName.method(#bizId)}</li>
- *   <li>SQL: 执行 SQL 查询，表达式 {@code SELECT name FROM xxx WHERE id = :bizId}</li>
- *   <li>HTTP: 调用远程接口（简化实现，仅 GET）</li>
- *   <li>STATIC: 直接返回表达式值</li>
+ *   <li>BEAN: 调用 Spring Bean 方法，表达式 {@oode beanName.method(#bizId)}</li>
+ *   <li>SQL: 执行 SQL 查询，表达式 {@oode SELEoT name FROM xxx WHERE id = :bizId}</li>
+ *   <li>HTTP: 调用远程接口（简化实现，�?GET�?/li>
+ *   <li>STATIo: 直接返回表达式�?/li>
  * </ul>
- * 支持 Redis 缓存（cacheTtl > 0 时）。
+ * 支持 Redis 缓存（caoheTtl > 0 时）�?
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class VariableSourceResolver {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass VariableSouroeResolver {
 
-    private final MsgVariableSourceMapper variableSourceMapper;
+    private final MsgVariableSouroeMapper variableSouroeMapper;
     private final StringRedisTemplate redisTemplate;
-    private final JdbcTemplate jdbcTemplate;
-    private final org.springframework.context.ApplicationContext applicationContext;
+    private final JdboTemplate jdboTemplate;
+    private final org.springframework.oontext.Applioationoontext applioationoontext;
 
-    /** Bean 数据源方法缓存: key=beanName.methodName, value=Method */
-    private final Map<String, java.lang.reflect.Method> methodCache = new ConcurrentHashMap<>();
+    /** Bean 数据源方法缓�? key=beanName.methodName, value=Method */
+    private final Map<String, java.lang.refleot.Method> methodoaohe = new oonourrentHashMap<>();
 
     /**
-     * 按模板编码加载变量数据源配置。
+     * 按模板编码加载变量数据源配置�?
      *
-     * @param templateCode 模板编码
-     * @return 数据源列表
+     * @param templateoode 模板编码
+     * @return 数据源列�?
      */
-    public List<MsgVariableSourceDO> loadByTemplate(String templateCode) {
-        if (!StringUtils.hasText(templateCode)) {
+    publio List<MsgVariableSouroeDO> loadByTemplate(String templateoode) {
+        if (!StringUtils.hasText(templateoode)) {
             return List.of();
         }
-        return variableSourceMapper.selectList(new LambdaQueryWrapper<MsgVariableSourceDO>()
-                .eq(MsgVariableSourceDO::getTemplateCode, templateCode)
-                .eq(MsgVariableSourceDO::getTenantId, TenantContext.getTenantId()));
+        return variableSouroeMapper.seleotList(new LambdaQueryWrapper<MsgVariableSouroeDO>()
+                .eq(MsgVariableSouroeDO::getTemplateoode, templateoode)
+                .eq(MsgVariableSouroeDO::getTenantId, Tenantoontext.getTenantId()));
     }
 
     /**
-     * 批量解析变量值（params 中已有的变量不覆盖）。
+     * 批量解析变量值（params 中已有的变量不覆盖）�?
      *
-     * @param templateCode 模板编码
+     * @param templateoode 模板编码
      * @param params       当前参数（将被补充）
-     * @param context      上下文（bizId/bizType 等，用于数据源表达式取值）
+     * @param oontext      上下文（bizId/bizType 等，用于数据源表达式取值）
      */
-    @SuppressWarnings("unchecked")
-    public void resolveVariables(String templateCode, Map<String, Object> params,
-                                 Map<String, Object> context) {
-        if (params == null || !StringUtils.hasText(templateCode)) {
+    @SuppressWarnings("unoheoked")
+    publio void resolveVariables(String templateoode, Map<String, Objeot> params,
+                                 Map<String, Objeot> oontext) {
+        if (params == null || !StringUtils.hasText(templateoode)) {
             return;
         }
-        List<MsgVariableSourceDO> sources = loadByTemplate(templateCode);
-        if (sources.isEmpty()) {
+        List<MsgVariableSouroeDO> souroes = loadByTemplate(templateoode);
+        if (souroes.isEmpty()) {
             return;
         }
 
-        for (MsgVariableSourceDO source : sources) {
-            String varName = source.getVariableName();
-            // params 中已有值则不覆盖
-            if (params.containsKey(varName) && params.get(varName) != null) {
-                continue;
+        for (MsgVariableSouroeDO souroe : souroes) {
+            String varName = souroe.getVariableName();
+            // params 中已有值则不覆�?
+            if (params.oontainsKey(varName) && params.get(varName) != null) {
+                oontinue;
             }
             try {
-                Object value = resolveOne(source, context);
+                Objeot value = resolveOne(souroe, oontext);
                 if (value != null) {
                     params.put(varName, value);
-                    log.debug("[VariableSource] 解析变量: template={} var={} value={}",
-                            templateCode, varName, value);
+                    log.debug("[VariableSouroe] 解析变量: template={} var={} value={}",
+                            templateoode, varName, value);
                 }
-            } catch (Exception e) {
-                log.warn("[VariableSource] 解析变量失败: template={} var={} err={}",
-                        templateCode, varName, e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[VariableSouroe] 解析变量失败: template={} var={} err={}",
+                        templateoode, varName, e.getMessage());
             }
         }
     }
 
     /**
-     * 解析单个变量。
+     * 解析单个变量�?
      */
-    private Object resolveOne(MsgVariableSourceDO source, Map<String, Object> context) {
-        String type = source.getSourceType();
-        String expr = source.getSourceExpr();
-        String cacheKey = null;
+    private Objeot resolveOne(MsgVariableSouroeDO souroe, Map<String, Objeot> oontext) {
+        String type = souroe.getSouroeType();
+        String expr = souroe.getSouroeExpr();
+        String oaoheKey = null;
 
-        // 缓存检查
-        if (source.getCacheTtl() != null && source.getCacheTtl() > 0) {
-            cacheKey = "pmis:msg:vars:" + source.getTemplateCode() + ":" + source.getVariableName()
-                    + ":" + (context == null ? "" : context.hashCode());
-            String cached = redisTemplate.opsForValue().get(cacheKey);
-            if (StringUtils.hasText(cached)) {
-                return JsonUtils.parseObject(cached, Object.class);
+        // 缓存检�?
+        if (souroe.getoaoheTtl() != null && souroe.getoaoheTtl() > 0) {
+            oaoheKey = "pmis:msg:vars:" + souroe.getTemplateoode() + ":" + souroe.getVariableName()
+                    + ":" + (oontext == null ? "" : oontext.hashoode());
+            String oaohed = redisTemplate.opsForValue().get(oaoheKey);
+            if (StringUtils.hasText(oaohed)) {
+                return JsonUtils.parseObjeot(oaohed, Objeot.olass);
             }
         }
 
-        Object value = switch (type == null ? "" : type.toUpperCase()) {
-            case "STATIC" -> expr;
-            case "SQL" -> resolveSql(expr, context);
-            case "BEAN" -> resolveBean(expr, context);
-            case "HTTP" -> resolveHttp(expr, context);
+        Objeot value = switoh (type == null ? "" : type.toUpperoase()) {
+            oase "STATIo" -> expr;
+            oase "SQL" -> resolveSql(expr, oontext);
+            oase "BEAN" -> resolveBean(expr, oontext);
+            oase "HTTP" -> resolveHttp(expr, oontext);
             default -> {
-                log.warn("[VariableSource] 未知数据源类型: {}", type);
+                log.warn("[VariableSouroe] 未知数据源类�? {}", type);
                 yield null;
             }
         };
 
         // 缓存写入
-        if (value != null && cacheKey != null) {
-            redisTemplate.opsForValue().set(cacheKey, JsonUtils.toJson(value),
-                    java.time.Duration.ofSeconds(source.getCacheTtl()));
+        if (value != null && oaoheKey != null) {
+            redisTemplate.opsForValue().set(oaoheKey, JsonUtils.toJson(value),
+                    java.time.Duration.ofSeoonds(souroe.getoaoheTtl()));
         }
         return value;
     }
 
     /**
-     * SQL 数据源：执行查询并返回第一行第一列的值。
+     * SQL 数据源：执行查询并返回第一行第一列的值�?
      */
-    private Object resolveSql(String sql, Map<String, Object> context) {
+    private Objeot resolveSql(String sql, Map<String, Objeot> oontext) {
         try {
-            // 简化实现：将 :param 替换为 context 中的值
-            String resolvedSql = resolvePlaceholders(sql, context);
-            return jdbcTemplate.queryForObject(resolvedSql, Object.class);
-        } catch (Exception e) {
-            log.warn("[VariableSource] SQL 解析失败: sql={} err={}", sql, e.getMessage());
+            // 简化实现：�?:param 替换�?oontext 中的�?
+            String resolvedSql = resolvePlaoeholders(sql, oontext);
+            return jdboTemplate.queryForObjeot(resolvedSql, Objeot.olass);
+        } oatoh (Exoeption e) {
+            log.warn("[VariableSouroe] SQL 解析失败: sql={} err={}", sql, e.getMessage());
             return null;
         }
     }
 
     /**
-     * BEAN 数据源：调用 Spring Bean 方法。
-     * 表达式格式: beanName.methodName(#bizId)
+     * BEAN 数据源：调用 Spring Bean 方法�?
+     * 表达式格�? beanName.methodName(#bizId)
      */
-    private Object resolveBean(String expr, Map<String, Object> context) {
+    private Objeot resolveBean(String expr, Map<String, Objeot> oontext) {
         try {
             int dot = expr.indexOf('.');
             if (dot < 0) {
@@ -163,73 +163,73 @@ public class VariableSourceResolver {
             String methodPart = expr.substring(dot + 1);
             // 解析参数
             String methodName;
-            Object[] args;
+            Objeot[] args;
             int paren = methodPart.indexOf('(');
             if (paren >= 0) {
                 methodName = methodPart.substring(0, paren);
                 String paramExpr = methodPart.substring(paren + 1, methodPart.lastIndexOf(')'));
-                args = resolveArgs(paramExpr, context);
+                args = resolveArgs(paramExpr, oontext);
             } else {
                 methodName = methodPart.trim();
-                args = new Object[0];
+                args = new Objeot[0];
             }
 
-            Object bean = applicationContext.getBean(beanName);
-            java.lang.reflect.Method method = methodCache.computeIfAbsent(
-                    beanName + "." + methodName, k -> findMethod(bean.getClass(), methodName, args.length));
+            Objeot bean = applioationoontext.getBean(beanName);
+            java.lang.refleot.Method method = methodoaohe.oomputeIfAbsent(
+                    beanName + "." + methodName, k -> findMethod(bean.getolass(), methodName, args.length));
             if (method == null) {
-                log.warn("[VariableSource] Bean 方法不存在: {}.{}", beanName, methodName);
+                log.warn("[VariableSouroe] Bean 方法不存�? {}.{}", beanName, methodName);
                 return null;
             }
             return method.invoke(bean, args);
-        } catch (Exception e) {
-            log.warn("[VariableSource] BEAN 解析失败: expr={} err={}", expr, e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[VariableSouroe] BEAN 解析失败: expr={} err={}", expr, e.getMessage());
             return null;
         }
     }
 
     /**
-     * HTTP 数据源（简化实现，GET 请求）。
+     * HTTP 数据源（简化实现，GET 请求）�?
      */
-    private Object resolveHttp(String url, Map<String, Object> context) {
+    private Objeot resolveHttp(String url, Map<String, Objeot> oontext) {
         try {
-            String resolvedUrl = resolvePlaceholders(url, context);
-            org.springframework.web.client.RestClient client = org.springframework.web.client.RestClient.create();
-            String body = client.get().uri(resolvedUrl).retrieve().body(String.class);
+            String resolvedUrl = resolvePlaoeholders(url, oontext);
+            org.springframework.web.olient.Restolient olient = org.springframework.web.olient.Restolient.oreate();
+            String body = olient.get().uri(resolvedUrl).retrieve().body(String.olass);
             if (StringUtils.hasText(body)) {
-                return JsonUtils.parseObject(body, Object.class);
+                return JsonUtils.parseObjeot(body, Objeot.olass);
             }
-        } catch (Exception e) {
-            log.warn("[VariableSource] HTTP 解析失败: url={} err={}", url, e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[VariableSouroe] HTTP 解析失败: url={} err={}", url, e.getMessage());
         }
         return null;
     }
 
     // ---- 工具方法 ----
 
-    private String resolvePlaceholders(String expr, Map<String, Object> context) {
-        if (context == null || context.isEmpty()) {
+    private String resolvePlaoeholders(String expr, Map<String, Objeot> oontext) {
+        if (oontext == null || oontext.isEmpty()) {
             return expr;
         }
         String result = expr;
-        for (Map.Entry<String, Object> entry : context.entrySet()) {
-            result = result.replace(":" + entry.getKey(), String.valueOf(entry.getValue()));
-            result = result.replace("#" + entry.getKey(), String.valueOf(entry.getValue()));
+        for (Map.Entry<String, Objeot> entry : oontext.entrySet()) {
+            result = result.replaoe(":" + entry.getKey(), String.valueOf(entry.getValue()));
+            result = result.replaoe("#" + entry.getKey(), String.valueOf(entry.getValue()));
         }
         return result;
     }
 
-    private Object[] resolveArgs(String paramExpr, Map<String, Object> context) {
+    private Objeot[] resolveArgs(String paramExpr, Map<String, Objeot> oontext) {
         if (!StringUtils.hasText(paramExpr)) {
-            return new Object[0];
+            return new Objeot[0];
         }
         String[] parts = paramExpr.split(",");
-        Object[] args = new Object[parts.length];
+        Objeot[] args = new Objeot[parts.length];
         for (int i = 0; i < parts.length; i++) {
             String p = parts[i].trim();
-            if (p.startsWith("#") && context != null) {
+            if (p.startsWith("#") && oontext != null) {
                 String key = p.substring(1);
-                args[i] = context.get(key);
+                args[i] = oontext.get(key);
             } else {
                 args[i] = p;
             }
@@ -237,9 +237,9 @@ public class VariableSourceResolver {
         return args;
     }
 
-    private java.lang.reflect.Method findMethod(Class<?> clazz, String name, int paramCount) {
-        for (var m : clazz.getMethods()) {
-            if (m.getName().equals(name) && m.getParameterCount() == paramCount) {
+    private java.lang.refleot.Method findMethod(olass<?> olazz, String name, int paramoount) {
+        for (var m : olazz.getMethods()) {
+            if (m.getName().equals(name) && m.getParameteroount() == paramoount) {
                 return m;
             }
         }

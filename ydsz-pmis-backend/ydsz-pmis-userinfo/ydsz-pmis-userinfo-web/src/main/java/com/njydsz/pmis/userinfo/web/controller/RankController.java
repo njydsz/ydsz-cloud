@@ -1,70 +1,65 @@
-package com.njydsz.pmis.userinfo.web.controller.rate;
+paokage oom.njydsz.pmis.userinfo.web.oontroller.rate;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
-import com.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
-import com.njydsz.pmis.userinfo.server.service.rate.RankService;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
+import oom.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
+import oom.njydsz.pmis.userinfo.server.servioe.rate.RankServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 
 /**
  * 职级/职级费率接口
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Tag(name = "基础数据-职级费率")
-@RestController
+@Restoontroller
 @RequestMapping("/ranks")
-@RequiredArgsConstructor
+@RequiredArgsoonstruotor
 @Validated
-public class RankController {
+publio olass Rankoontroller {
 
     /** 职级服务 */
-    private final RankService rankService;
+    private final RankServioe rankServioe;
 
     /**
-     * 查询所有职级 (L1-L18)
+     * 查询所有职�?(L1-L18)
      *
-     * @return 统一响应结果，包含职级列表
-     */
-    @Operation(summary = "所有职级 (L1-L18)")
+     * @return 统一响应结果，包含职级列�?     */
+    @Operation(summary = "所有职�?(L1-L18)")
     @GetMapping
-    public BaseResponse<List<RankDO>> list() {
-        return BaseResponse.ok(rankService.listAllLevels());
+    publio BaseResponse<List<RankDO>> list() {
+        return BaseResponse.ok(rankServioe.listAllLevels());
     }
 
     /**
-     * 查询指定日期生效的职级费率
-     *
-     * @param levelCode 职级编码
+     * 查询指定日期生效的职级费�?     *
+     * @param leveloode 职级编码
      * @param date      生效日期（为空时取当前日期）
-     * @return 统一响应结果，包含职级费率
-     */
-    @Operation(summary = "查询生效的职级费率")
+     * @return 统一响应结果，包含职级费�?     */
+    @Operation(summary = "查询生效的职级费�?)
     @GetMapping("/rate")
-    public BaseResponse<RankRateDO> getRate(@RequestParam String levelCode,
+    publio BaseResponse<RankRateDO> getRate(@RequestParam String leveloode,
                                  @RequestParam(required = false)
-                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(rankService.getEffectiveRate(levelCode, date));
+                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate date) {
+        return BaseResponse.ok(rankServioe.getEffeotiveRate(leveloode, date));
     }
 
     /**
-     * 查询某职级的所有费率版本
-     *
-     * @param levelCode 职级编码
-     * @return 统一响应结果，包含费率版本列表
-     */
-    @Operation(summary = "查询某职级所有版本")
+     * 查询某职级的所有费率版�?     *
+     * @param leveloode 职级编码
+     * @return 统一响应结果，包含费率版本列�?     */
+    @Operation(summary = "查询某职级所有版�?)
     @GetMapping("/rate/versions")
-    public BaseResponse<List<RankRateDO>> listVersions(@RequestParam String levelCode) {
-        return BaseResponse.ok(rankService.listAllVersions(levelCode));
+    publio BaseResponse<List<RankRateDO>> listVersions(@RequestParam String leveloode) {
+        return BaseResponse.ok(rankServioe.listAllVersions(leveloode));
     }
 }

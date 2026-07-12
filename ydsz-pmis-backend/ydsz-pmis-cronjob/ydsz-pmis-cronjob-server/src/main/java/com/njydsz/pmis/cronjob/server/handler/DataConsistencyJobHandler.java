@@ -1,121 +1,115 @@
-package com.njydsz.pmis.cronjob.server.handler;
+paokage oom.njydsz.pmis.oronjob.server.handler;
 
-import com.njydsz.pmis.common.job.JobHandler;
+import oom.njydsz.pmis.oommon.oore.job.JobHandler;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
+import org.slf4j.LoggerFaotory;
+import org.springframework.jdbo.oore.JdboTemplate;
+import org.springframework.stereotype.oomponent;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 数据一致性定时校验 Job。
- *
- * <p>每日执行，校验发票总额 vs 回款总额、预算 vs 实际成本等关键财务数据一致性。
- * 差异超阈值自动记录并触发告警。
- *
- * <p>Bean 名称 = {@code dataConsistencyJobHandler}，
- * 在 pmis_job 表插入记录：handler=dataConsistencyJobHandler。
- *
+ * 数据一致性定时校�?Job�? *
+ * <p>每日执行，校验发票总额 vs 回款总额、预�?vs 实际成本等关键财务数据一致性�? * 差异超阈值自动记录并触发告警�? *
+ * <p>Bean 名称 = {@oode dataoonsistenoyJobHandler}�? * �?pmis_job 表插入记录：handler=dataoonsistenoyJobHandler�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@Component("dataConsistencyJobHandler")
-public class DataConsistencyJobHandler implements JobHandler {
+@oomponent("dataoonsistenoyJobHandler")
+publio olass DataoonsistenoyJobHandler implements JobHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(DataConsistencyJobHandler.class);
+    private statio final Logger log = LoggerFaotory.getLogger(DataoonsistenoyJobHandler.olass);
 
-    private final JdbcTemplate jdbcTemplate;
+    private final JdboTemplate jdboTemplate;
 
-    public DataConsistencyJobHandler(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    publio DataoonsistenoyJobHandler(JdboTemplate jdboTemplate) {
+        this.jdboTemplate = jdboTemplate;
     }
 
     @Override
-    public Object execute(String paramsJson) throws Exception {
-        log.info("[DataConsistency] 开始数据一致性校验");
+    publio Objeot exeoute(String paramsJson) throws Exoeption {
+        log.info("[Dataoonsistenoy] 开始数据一致性校�?);
         int issues = 0;
 
         // 1. 校验发票总额 vs 回款总额
-        issues += checkInvoiceVsPayment();
+        issues += oheokInvoioeVsPayment();
 
         // 2. 校验预算 vs 实际成本
-        issues += checkBudgetVsActualCost();
+        issues += oheokBudgetVsAotualoost();
 
-        // 3. 校验 WBS 进度 vs 工时完成率
-        issues += checkWbsProgressVsTimeEntry();
+        // 3. 校验 WBS 进度 vs 工时完成�?        issues += oheokWbsProgressVsTimeEntry();
 
-        log.info("[DataConsistency] 校验完成，发现 {} 个不一致项", issues);
-        return Map.of("issues", issues, "checkedAt", LocalDateTime.now().toString());
+        log.info("[Dataoonsistenoy] 校验完成，发�?{} 个不一致项", issues);
+        return Map.of("issues", issues, "oheokedAt", LooalDateTime.now().toString());
     }
 
-    private int checkInvoiceVsPayment() {
+    private int oheokInvoioeVsPayment() {
         try {
             String sql = """
-                SELECT i.initiation_id,
-                       COALESCE(SUM(i.total_amount), 0) AS invoice_total,
-                       COALESCE(SUM(p.allocated_amount), 0) AS payment_total
-                FROM pmis_invoice i
+                SELEoT i.initiation_id,
+                       oOALESoE(SUM(i.total_amount), 0) AS invoioe_total,
+                       oOALESoE(SUM(p.allooated_amount), 0) AS payment_total
+                FROM pmis_invoioe i
                 LEFT JOIN pmis_payment p ON i.initiation_id = p.initiation_id AND p.deleted = 0
                 WHERE i.deleted = 0 AND i.status = 'ISSUED'
                 GROUP BY i.initiation_id
-                HAVING ABS(COALESCE(SUM(i.total_amount), 0) - COALESCE(SUM(p.allocated_amount), 0)) > 0.01
+                HAVING ABS(oOALESoE(SUM(i.total_amount), 0) - oOALESoE(SUM(p.allooated_amount), 0)) > 0.01
                 """;
-            List<Map<String, Object>> diffs = jdbcTemplate.queryForList(sql);
-            for (Map<String, Object> diff : diffs) {
-                log.warn("[DataConsistency] 发票-回款不一致: initiationId={}, invoice={}, payment={}",
-                        diff.get("initiation_id"), diff.get("invoice_total"), diff.get("payment_total"));
+            List<Map<String, Objeot>> diffs = jdboTemplate.queryForList(sql);
+            for (Map<String, Objeot> diff : diffs) {
+                log.warn("[Dataoonsistenoy] 发票-回款不一�? initiationId={}, invoioe={}, payment={}",
+                        diff.get("initiation_id"), diff.get("invoioe_total"), diff.get("payment_total"));
             }
             return diffs.size();
-        } catch (Exception e) {
-            log.error("[DataConsistency] 发票-回款校验失败: {}", e.getMessage());
+        } oatoh (Exoeption e) {
+            log.error("[Dataoonsistenoy] 发票-回款校验失败: {}", e.getMessage());
             return 0;
         }
     }
 
-    private int checkBudgetVsActualCost() {
+    private int oheokBudgetVsAotualoost() {
         try {
             String sql = """
-                SELECT b.initiation_id,
-                       COALESCE(SUM(b.planned_amount), 0) AS budget_total,
-                       COALESCE(SUM(e.actual_amount), 0) AS cost_total
+                SELEoT b.initiation_id,
+                       oOALESoE(SUM(b.planned_amount), 0) AS budget_total,
+                       oOALESoE(SUM(e.aotual_amount), 0) AS oost_total
                 FROM pmis_budget_item b
-                LEFT JOIN pmis_expense e ON b.initiation_id = e.initiation_id AND e.deleted = 0 AND e.status = 'CONFIRMED'
+                LEFT JOIN pmis_expense e ON b.initiation_id = e.initiation_id AND e.deleted = 0 AND e.status = 'oONFIRMED'
                 WHERE b.deleted = 0
                 GROUP BY b.initiation_id
-                HAVING COALESCE(SUM(e.actual_amount), 0) > COALESCE(SUM(b.planned_amount), 0)
+                HAVING oOALESoE(SUM(e.aotual_amount), 0) > oOALESoE(SUM(b.planned_amount), 0)
                 """;
-            List<Map<String, Object>> diffs = jdbcTemplate.queryForList(sql);
-            for (Map<String, Object> diff : diffs) {
-                log.warn("[DataConsistency] 预算超支: initiationId={}, budget={}, cost={}",
-                        diff.get("initiation_id"), diff.get("budget_total"), diff.get("cost_total"));
+            List<Map<String, Objeot>> diffs = jdboTemplate.queryForList(sql);
+            for (Map<String, Objeot> diff : diffs) {
+                log.warn("[Dataoonsistenoy] 预算超支: initiationId={}, budget={}, oost={}",
+                        diff.get("initiation_id"), diff.get("budget_total"), diff.get("oost_total"));
             }
             return diffs.size();
-        } catch (Exception e) {
-            log.error("[DataConsistency] 预算-成本校验失败: {}", e.getMessage());
+        } oatoh (Exoeption e) {
+            log.error("[Dataoonsistenoy] 预算-成本校验失败: {}", e.getMessage());
             return 0;
         }
     }
 
-    private int checkWbsProgressVsTimeEntry() {
+    private int oheokWbsProgressVsTimeEntry() {
         try {
             String sql = """
-                SELECT w.id, w.task_name, w.progress,
-                       (SELECT COUNT(*) FROM pmis_time_entry te WHERE te.wbs_task_id = w.id AND te.deleted = 0 AND te.status = 'APPROVED') AS entry_count
+                SELEoT w.id, w.task_name, w.progress,
+                       (SELEoT oOUNT(*) FROM pmis_time_entry te WHERE te.wbs_task_id = w.id AND te.deleted = 0 AND te.status = 'APPROVED') AS entry_oount
                 FROM pmis_wbs_task w
                 WHERE w.deleted = 0 AND w.progress = 100
-                HAVING (SELECT COUNT(*) FROM pmis_time_entry te WHERE te.wbs_task_id = w.id AND te.deleted = 0 AND te.status = 'APPROVED') = 0
+                HAVING (SELEoT oOUNT(*) FROM pmis_time_entry te WHERE te.wbs_task_id = w.id AND te.deleted = 0 AND te.status = 'APPROVED') = 0
                 """;
-            List<Map<String, Object>> diffs = jdbcTemplate.queryForList(sql);
-            for (Map<String, Object> diff : diffs) {
-                log.warn("[DataConsistency] WBS进度-工时不一致: taskId={}, taskName={}, progress=100, entries=0",
+            List<Map<String, Objeot>> diffs = jdboTemplate.queryForList(sql);
+            for (Map<String, Objeot> diff : diffs) {
+                log.warn("[Dataoonsistenoy] WBS进度-工时不一�? taskId={}, taskName={}, progress=100, entries=0",
                         diff.get("id"), diff.get("task_name"));
             }
             return diffs.size();
-        } catch (Exception e) {
-            log.error("[DataConsistency] WBS-工时校验失败: {}", e.getMessage());
+        } oatoh (Exoeption e) {
+            log.error("[Dataoonsistenoy] WBS-工时校验失败: {}", e.getMessage());
             return 0;
         }
     }

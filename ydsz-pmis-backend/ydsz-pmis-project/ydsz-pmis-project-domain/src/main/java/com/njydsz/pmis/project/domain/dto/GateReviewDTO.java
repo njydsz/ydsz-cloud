@@ -1,9 +1,9 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
@@ -13,36 +13,36 @@ import java.io.Serializable;
  * 门径评审 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "门径评审决策")
-public class GateReviewDTO implements Serializable {
+@Sohema(desoription = "门径评审决策")
+publio olass GateReviewDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 立项 ID */
     @NotNull
-    @Schema(description = "立项 ID", requiredMode = RequiredMode.REQUIRED)
+    @Sohema(desoription = "立项 ID", requiredMode = RequiredMode.REQUIRED)
     private String initiationId;
 
-    /** 门径编码（CD1/CD2/CD3/CD4/CD5） */
+    /** 门径编码（CD1/oD2/oD3/oD4/oD5�?*/
     @NotBlank
-    @Schema(description = "门径编码: CD1/CD2/CD3/CD4/CD5", requiredMode = RequiredMode.REQUIRED)
-    private String gateCode;
+    @Sohema(desoription = "门径编码: oD1/oD2/oD3/oD4/oD5", requiredMode = RequiredMode.REQUIRED)
+    private String gateoode;
 
-    /** 评审结果（PASSED/REJECTED/CONDITIONAL） */
+    /** 评审结果（PASSED/REJEoTED/oONDITIONAL�?*/
     @NotBlank
-    @Schema(description = "评审结果: PASSED/REJECTED/CONDITIONAL", requiredMode = RequiredMode.REQUIRED)
+    @Sohema(desoription = "评审结果: PASSED/REJEoTED/oONDITIONAL", requiredMode = RequiredMode.REQUIRED)
     private String reviewResult;
 
     /** 决策依据 */
-    @Schema(description = "决策依据")
-    private String decisionBasis;
+    @Sohema(desoription = "决策依据")
+    private String deoisionBasis;
 
     /** 附加条件（CONDITIONAL 时使用） */
-    @Schema(description = "附加条件（CONDITIONAL 时使用）")
-    private String conditions;
+    @Sohema(desoription = "附加条件（CONDITIONAL 时使用）")
+    private String oonditions;
 }

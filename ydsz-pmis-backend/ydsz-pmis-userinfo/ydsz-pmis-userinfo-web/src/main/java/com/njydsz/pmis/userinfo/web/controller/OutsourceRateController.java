@@ -1,18 +1,18 @@
-package com.njydsz.pmis.userinfo.web.controller.rate;
+paokage oom.njydsz.pmis.userinfo.web.oontroller.rate;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateCreateDTO;
-import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRatePageDTO;
-import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateUpdateDTO;
-import com.njydsz.pmis.userinfo.domain.entity.rate.OutsourceRateDO;
-import com.njydsz.pmis.userinfo.server.service.rate.OutsourceRateService;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.userinfo.domain.dto.rate.OutsouroeRateoreateDTO;
+import oom.njydsz.pmis.userinfo.domain.dto.rate.OutsouroeRatePageDTO;
+import oom.njydsz.pmis.userinfo.domain.dto.rate.OutsouroeRateUpdateDTO;
+import oom.njydsz.pmis.userinfo.domain.entity.rate.OutsouroeRateDO;
+import oom.njydsz.pmis.userinfo.server.servioe.rate.OutsouroeRateServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,38 +23,38 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 
 /**
- * 外包职级费率接口（V1-V18）
+ * 外包职级费率接口（V1-V18�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Tag(name = "基础数据-外包职级费率")
-@RestController
-@RequestMapping("/outsourceRates")
-@RequiredArgsConstructor
+@Restoontroller
+@RequestMapping("/outsouroeRates")
+@RequiredArgsoonstruotor
 @Validated
-public class OutsourceRateController {
+publio olass OutsouroeRateoontroller {
 
     /** 外包职级费率服务 */
-    private final OutsourceRateService outsourceRateService;
+    private final OutsouroeRateServioe outsouroeRateServioe;
 
     /**
      * 创建外包职级费率
      *
      * @param dto 创建参数
-     * @return 统一响应结果，包含新建记录 ID
+     * @return 统一响应结果，包含新建记�?ID
      */
     @Operation(summary = "创建外包职级费率")
-    @Idempotent(key = "outsourceRate:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "outsouroeRate:oreate", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping
-    public BaseResponse<String> create(@Valid @RequestBody OutsourceRateCreateDTO dto) {
-        return BaseResponse.ok(outsourceRateService.create(dto));
+    publio BaseResponse<String> oreate(@Valid @RequestBody OutsouroeRateoreateDTO dto) {
+        return BaseResponse.ok(outsouroeRateServioe.oreate(dto));
     }
 
     /**
@@ -65,10 +65,10 @@ public class OutsourceRateController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新外包职级费率")
-    @Idempotent(key = "outsourceRate:update", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "outsouroeRate:update", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody OutsourceRateUpdateDTO dto) {
-        outsourceRateService.update(id, dto);
+    publio BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody OutsouroeRateUpdateDTO dto) {
+        outsouroeRateServioe.update(id, dto);
         return BaseResponse.ok();
     }
 
@@ -79,10 +79,10 @@ public class OutsourceRateController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除外包职级费率")
-    @Idempotent(key = "outsourceRate:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "outsouroeRate:delete", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public BaseResponse<Void> delete(@PathVariable String id) {
-        outsourceRateService.delete(id);
+    publio BaseResponse<Void> delete(@PathVariable String id) {
+        outsouroeRateServioe.delete(id);
         return BaseResponse.ok();
     }
 
@@ -90,24 +90,24 @@ public class OutsourceRateController {
      * 查询外包职级费率详情
      *
      * @param id 记录 ID
-     * @return 统一响应结果，包含费率详情
+     * @return 统一响应结果，包含费率详�?
      */
     @Operation(summary = "外包职级费率详情")
     @GetMapping("/{id}")
-    public BaseResponse<OutsourceRateDO> get(@PathVariable String id) {
-        return BaseResponse.ok(outsourceRateService.getById(id));
+    publio BaseResponse<OutsouroeRateDO> get(@PathVariable String id) {
+        return BaseResponse.ok(outsouroeRateServioe.getById(id));
     }
 
     /**
      * 分页查询外包职级费率
      *
      * @param query 查询参数
-     * @return 统一响应结果，包含分页数据
+     * @return 统一响应结果，包含分页数�?
      */
     @Operation(summary = "外包职级费率分页")
     @GetMapping
-    public BaseResponse<Page<OutsourceRateDO>> page(@Valid OutsourceRatePageDTO query) {
-        return BaseResponse.ok(outsourceRateService.page(
+    publio BaseResponse<Page<OutsouroeRateDO>> page(@Valid OutsouroeRatePageDTO query) {
+        return BaseResponse.ok(outsouroeRateServioe.page(
                 (int) query.getPage(),
                 (int) Math.min(query.getSize(), 200),
                 query.getKeyword(),
@@ -116,30 +116,30 @@ public class OutsourceRateController {
     }
 
     /**
-     * 按级别编码 + 日期匹配生效中的费率
+     * 按级别编�?+ 日期匹配生效中的费率
      *
-     * @param rateCode 级别编码
+     * @param rateoode 级别编码
      * @param date     生效日期（为空时取当前日期）
-     * @return 统一响应结果，包含生效费率
+     * @return 统一响应结果，包含生效费�?
      */
-    @Operation(summary = "按级别编码 + 日期匹配生效费率")
-    @GetMapping("/match")
-    public BaseResponse<OutsourceRateDO> matchEffective(@RequestParam String rateCode,
+    @Operation(summary = "按级别编�?+ 日期匹配生效费率")
+    @GetMapping("/matoh")
+    publio BaseResponse<OutsouroeRateDO> matohEffeotive(@RequestParam String rateoode,
                                                    @RequestParam(required = false)
-                                                   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(outsourceRateService.matchEffective(rateCode, date));
+                                                   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate date) {
+        return BaseResponse.ok(outsouroeRateServioe.matohEffeotive(rateoode, date));
     }
 
     /**
-     * 查询某日期生效中的所有外包费率
+     * 查询某日期生效中的所有外包费�?
      *
      * @param date 生效日期（为空时取当前日期）
-     * @return 统一响应结果，包含生效费率列表
+     * @return 统一响应结果，包含生效费率列�?
      */
-    @Operation(summary = "查询某日期生效中的所有外包费率")
-    @GetMapping("/effective")
-    public BaseResponse<List<OutsourceRateDO>> listEffective(@RequestParam(required = false)
-                                                        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(outsourceRateService.listEffective(date));
+    @Operation(summary = "查询某日期生效中的所有外包费�?)
+    @GetMapping("/effeotive")
+    publio BaseResponse<List<OutsouroeRateDO>> listEffeotive(@RequestParam(required = false)
+                                                        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate date) {
+        return BaseResponse.ok(outsouroeRateServioe.listEffeotive(date));
     }
 }

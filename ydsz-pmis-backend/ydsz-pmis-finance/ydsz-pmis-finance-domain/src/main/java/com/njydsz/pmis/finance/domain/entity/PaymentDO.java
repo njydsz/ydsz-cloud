@@ -1,102 +1,102 @@
-package com.njydsz.pmis.finance.domain.entity;
+paokage oom.njydsz.pmis.finanoe.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.Version;
+import oom.njydsz.pmis.oommon.sensitive.Sensitive;
+import oom.njydsz.pmis.oommon.sensitive.SensitiveStrategy;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
  * 回款记录
  *
- * <p>支持按客户回款、按合同核销；可与一张或多张发票自动匹配核销。
+ * <p>支持按客户回款、按合同核销；可与一张或多张发票自动匹配核销�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_finance_payment")
-public class PaymentDO implements Serializable {
+@TableName("pmis_finanoe_payment")
+publio olass PaymentDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 流水号 */
+    /** 流水�?*/
     private String paymentNo;
     /** 业务编号 */
-    private String paymentCode;
+    private String paymentoode;
     /** 合同ID */
-    private String contractId;
+    private String oontraotId;
     /** 项目立项ID */
     private String initiationId;
     /** 客户ID */
-    private String customerId;
+    private String oustomerId;
     /** 客户名称 */
-    private String customerName;
+    private String oustomerName;
     /** 回款金额 */
-    private BigDecimal amount;
+    private BigDeoimal amount;
     /** 币种 */
-    private String currency;
-    /** 付款方式：BANK_TRANSFER/CHECK/CASH/OTHER */
+    private String ourrenoy;
+    /** 付款方式：BANK_TRANSFER/oHEoK/oASH/OTHER */
     private String paymentMethod;
     /** 到账日期 */
-    private LocalDate paymentDate;
-    /** 客户付款账户（脱敏：保留前 4 后 4） */
-    @Sensitive(SensitiveStrategy.BANK_CARD)
-    private String bankAccount;
-    /** 我方收款账户（脱敏：保留前 4 后 4） */
-    @Sensitive(SensitiveStrategy.BANK_CARD)
-    private String ourBankAccount;
-    /** 银行流水号 */
-    private String bankReference;
-    /** 已分配发票ID列表（JSON/逗号分隔） */
-    private String invoiceAllocation;
+    private LooalDate paymentDate;
+    /** 客户付款账户（脱敏：保留�?4 �?4�?*/
+    @Sensitive(SensitiveStrategy.BANK_oARD)
+    private String bankAooount;
+    /** 我方收款账户（脱敏：保留�?4 �?4�?*/
+    @Sensitive(SensitiveStrategy.BANK_oARD)
+    private String ourBankAooount;
+    /** 银行流水�?*/
+    private String bankReferenoe;
+    /** 已分配发票ID列表（JSON/逗号分隔�?*/
+    private String invoioeAllooation;
     /** 已核销金额 */
-    private BigDecimal allocatedAmount;
+    private BigDeoimal allooatedAmount;
     /** 未核销金额 */
-    private BigDecimal unallocatedAmount;
-    /** 状态：PaymentStatus.code */
+    private BigDeoimal unallooatedAmount;
+    /** 状态：PaymentStatus.oode */
     private String status;
     /** 备注 */
     private String remark;
     /** 确认人ID */
-    private String confirmedBy;
+    private String oonfirmedBy;
     /** 确认时间 */
-    private LocalDateTime confirmedAt;
+    private LooalDateTime oonfirmedAt;
     /** 录入人ID */
-    private String recordedBy;
+    private String reoordedBy;
     /** 租户ID */
     private String tenantId;
     /** 链路追踪ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 
-    /** 乐观锁版本号（P1-12） */
+    /** 乐观锁版本号（P1-12�?*/
     @Version
     private Integer version;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标志：1 已删除 / 0 未删除 */
+    /** 逻辑删除标志�? 已删�?/ 0 未删�?*/
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

@@ -1,45 +1,45 @@
-package com.njydsz.pmis.message.server.service.impl.config;
+paokage oom.njydsz.pmis.message.server.servioe.impl.oonfig;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.message.domain.dto.config.UserChannelBindingDTO;
-import com.njydsz.pmis.message.domain.entity.config.MsgUserChannelDO;
-import com.njydsz.pmis.message.infra.mapper.config.MsgUserChannelMapper;
-import com.njydsz.pmis.message.server.service.config.UserChannelBindingService;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.njydsz.pmis.message.domain.dto.oonfig.UserohannelBindingDTO;
+import oom.njydsz.pmis.message.domain.entity.oonfig.MsgUserohannelDO;
+import oom.njydsz.pmis.message.infra.mapper.oonfig.MsgUserohannelMapper;
+import oom.njydsz.pmis.message.server.servioe.oonfig.UserohannelBindingServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Servioe;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 /**
- * 用户通道绑定服务实现。
+ * 用户通道绑定服务实现�?
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class UserChannelBindingServiceImpl implements UserChannelBindingService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass UserohannelBindingServioeImpl implements UserohannelBindingServioe {
 
-    private final MsgUserChannelMapper msgUserChannelMapper;
+    private final MsgUserohannelMapper msgUserohannelMapper;
 
     @Override
-    public MsgUserChannelDO upsert(UserChannelBindingDTO dto) {
-        if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getChannelType())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "用户ID和通道类型不能为空");
+    publio MsgUserohannelDO upsert(UserohannelBindingDTO dto) {
+        if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getohannelType())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "用户ID和通道类型不能为空");
         }
-        String tenantId = TenantContext.getTenantId();
-        String channelType = dto.getChannelType().trim().toUpperCase();
+        String tenantId = Tenantoontext.getTenantId();
+        String ohannelType = dto.getohannelType().trim().toUpperoase();
 
         // 查找已有绑定
-        MsgUserChannelDO existing = getByUserAndChannel(dto.getUserId(), channelType);
+        MsgUserohannelDO existing = getByUserAndohannel(dto.getUserId(), ohannelType);
         if (existing != null) {
-            existing.setChannelUserId(dto.getChannelUserId());
+            existing.setohannelUserId(dto.getohannelUserId());
             if (dto.getVerified() != null) {
                 existing.setVerified(dto.getVerified());
             }
@@ -49,74 +49,74 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
             if (dto.getExtra() != null) {
                 existing.setExtra(dto.getExtra());
             }
-            msgUserChannelMapper.updateById(existing);
-            log.info("[UserChannelBinding] 更新绑定: userId={} channel={} channelUserId={}",
-                    dto.getUserId(), channelType, dto.getChannelUserId());
+            msgUserohannelMapper.updateById(existing);
+            log.info("[UserohannelBinding] 更新绑定: userId={} ohannel={} ohannelUserId={}",
+                    dto.getUserId(), ohannelType, dto.getohannelUserId());
             return existing;
         }
 
-        MsgUserChannelDO entity = new MsgUserChannelDO();
+        MsgUserohannelDO entity = new MsgUserohannelDO();
         entity.setUserId(dto.getUserId());
-        entity.setChannelType(channelType);
-        entity.setChannelUserId(dto.getChannelUserId());
+        entity.setohannelType(ohannelType);
+        entity.setohannelUserId(dto.getohannelUserId());
         entity.setVerified(dto.getVerified() != null ? dto.getVerified() : 0);
         entity.setIsPrimary(dto.getIsPrimary() != null ? dto.getIsPrimary() : 0);
         entity.setExtra(dto.getExtra());
         entity.setTenantId(tenantId);
-        msgUserChannelMapper.insert(entity);
-        log.info("[UserChannelBinding] 新增绑定: userId={} channel={} channelUserId={}",
-                dto.getUserId(), channelType, dto.getChannelUserId());
+        msgUserohannelMapper.insert(entity);
+        log.info("[UserohannelBinding] 新增绑定: userId={} ohannel={} ohannelUserId={}",
+                dto.getUserId(), ohannelType, dto.getohannelUserId());
         return entity;
     }
 
     @Override
-    public void delete(String id) {
+    publio void delete(String id) {
         if (!StringUtils.hasText(id)) {
             return;
         }
-        msgUserChannelMapper.deleteById(id);
+        msgUserohannelMapper.deleteById(id);
     }
 
     @Override
-    public List<MsgUserChannelDO> listByUser(String userId) {
+    publio List<MsgUserohannelDO> listByUser(String userId) {
         if (!StringUtils.hasText(userId)) {
             return List.of();
         }
-        return msgUserChannelMapper.selectList(new LambdaQueryWrapper<MsgUserChannelDO>()
-                .eq(MsgUserChannelDO::getUserId, userId)
-                .eq(MsgUserChannelDO::getTenantId, TenantContext.getTenantId())
-                .orderByDesc(MsgUserChannelDO::getIsPrimary)
-                .orderByDesc(MsgUserChannelDO::getCreatedAt));
+        return msgUserohannelMapper.seleotList(new LambdaQueryWrapper<MsgUserohannelDO>()
+                .eq(MsgUserohannelDO::getUserId, userId)
+                .eq(MsgUserohannelDO::getTenantId, Tenantoontext.getTenantId())
+                .orderByDeso(MsgUserohannelDO::getIsPrimary)
+                .orderByDeso(MsgUserohannelDO::getoreatedAt));
     }
 
     @Override
-    public MsgUserChannelDO getByUserAndChannel(String userId, String channelType) {
-        if (!StringUtils.hasText(userId) || !StringUtils.hasText(channelType)) {
+    publio MsgUserohannelDO getByUserAndohannel(String userId, String ohannelType) {
+        if (!StringUtils.hasText(userId) || !StringUtils.hasText(ohannelType)) {
             return null;
         }
-        return msgUserChannelMapper.selectOne(new LambdaQueryWrapper<MsgUserChannelDO>()
-                .eq(MsgUserChannelDO::getUserId, userId)
-                .eq(MsgUserChannelDO::getChannelType, channelType.trim().toUpperCase())
-                .eq(MsgUserChannelDO::getTenantId, TenantContext.getTenantId())
-                .orderByDesc(MsgUserChannelDO::getIsPrimary)
+        return msgUserohannelMapper.seleotOne(new LambdaQueryWrapper<MsgUserohannelDO>()
+                .eq(MsgUserohannelDO::getUserId, userId)
+                .eq(MsgUserohannelDO::getohannelType, ohannelType.trim().toUpperoase())
+                .eq(MsgUserohannelDO::getTenantId, Tenantoontext.getTenantId())
+                .orderByDeso(MsgUserohannelDO::getIsPrimary)
                 .last("LIMIT 1"));
     }
 
     @Override
-    public String resolveChannelUserId(String userId, String channelType) {
-        if (!StringUtils.hasText(userId) || !StringUtils.hasText(channelType)) {
+    publio String resolveohannelUserId(String userId, String ohannelType) {
+        if (!StringUtils.hasText(userId) || !StringUtils.hasText(ohannelType)) {
             return null;
         }
-        MsgUserChannelDO binding = getByUserAndChannel(userId, channelType);
+        MsgUserohannelDO binding = getByUserAndohannel(userId, ohannelType);
         if (binding == null) {
-            log.debug("[UserChannelBinding] 无通道绑定,降级使用原 receiver: userId={} channel={}",
-                    userId, channelType);
+            log.debug("[UserohannelBinding] 无通道绑定,降级使用�?reoeiver: userId={} ohannel={}",
+                    userId, ohannelType);
             return null;
         }
         if (binding.getVerified() != null && binding.getVerified() == 0) {
-            log.warn("[UserChannelBinding] 通道绑定未验证: userId={} channel={} channelUserId={}",
-                    userId, channelType, binding.getChannelUserId());
+            log.warn("[UserohannelBinding] 通道绑定未验�? userId={} ohannel={} ohannelUserId={}",
+                    userId, ohannelType, binding.getohannelUserId());
         }
-        return binding.getChannelUserId();
+        return binding.getohannelUserId();
     }
 }

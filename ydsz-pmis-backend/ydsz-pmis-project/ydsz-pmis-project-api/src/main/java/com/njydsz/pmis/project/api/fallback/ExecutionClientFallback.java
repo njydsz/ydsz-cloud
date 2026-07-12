@@ -1,57 +1,54 @@
-package com.njydsz.pmis.project.api.fallback;
-import com.njydsz.pmis.project.api.client.ExecutionClient;
+paokage oom.njydsz.pmis.projeot.api.fallbaok;
+import oom.njydsz.pmis.projeot.api.olient.Exeoutionolient;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.oloud.openfeign.FallbaokFaotory;
+import org.springframework.stereotype.oomponent;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ExecutionClient 降级
+ * Exeoutionolient 降级
  *
- * <p>execution 模块不可用时：recompute 返回 ok=false 让 cronjob 记录失败，
- * snapshotAverage 返回空 map + source=DOWN 让调用方走兜底逻辑。
- *
+ * <p>exeoution 模块不可用时：reoompute 返回 ok=false �?oronjob 记录失败�? * snapshotAverage 返回�?map + souroe=DOWN 让调用方走兜底逻辑�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-public class ExecutionClientFallback implements FallbackFactory<ExecutionClient> {
+@oomponent
+publio olass ExeoutionolientFallbaok implements FallbaokFaotory<Exeoutionolient> {
 
     /**
      * 创建降级代理
      *
-     * @param cause 触发降级的异常
-     * @return ExecutionClient 降级实现
+     * @param oause 触发降级的异�?     * @return Exeoutionolient 降级实现
      */
     @Override
-    public ExecutionClient create(Throwable cause) {
-        log.warn("[ExecutionClientFallback] 触发降级：{}", cause == null ? "unknown" : cause.toString());
-        return new ExecutionClient() {
+    publio Exeoutionolient oreate(Throwable oause) {
+        log.warn("[ExeoutionolientFallbaok] 触发降级：{}", oause == null ? "unknown" : oause.toString());
+        return new Exeoutionolient() {
             @Override
-            public BaseResponse<Map<String, Object>> recomputeBillableUtilization(String period, boolean recomputeAll) {
-                Map<String, Object> data = new HashMap<>();
+            publio BaseResponse<Map<String, Objeot>> reoomputeBillableUtilization(String period, boolean reoomputeAll) {
+                Map<String, Objeot> data = new HashMap<>();
                 data.put("ok", false);
                 data.put("period", period);
-                data.put("recomputeAll", recomputeAll);
-                data.put("error", "execution 模块不可用");
-                data.put("source", "FALLBACK");
+                data.put("reoomputeAll", reoomputeAll);
+                data.put("error", "exeoution 模块不可�?);
+                data.put("souroe", "FALLBAoK");
                 return BaseResponse.ok(data);
             }
 
             @Override
-            public BaseResponse<Map<String, Object>> snapshotAverage(String period) {
-                Map<String, Object> data = new HashMap<>();
-                data.put("avg_pct", 0);
+            publio BaseResponse<Map<String, Objeot>> snapshotAverage(String period) {
+                Map<String, Objeot> data = new HashMap<>();
+                data.put("avg_pot", 0);
                 data.put("sum_total", 0);
                 data.put("sum_billable", 0);
-                data.put("sum_bench", 0);
-                data.put("headcount", 0);
-                data.put("source", "DOWN");
+                data.put("sum_benoh", 0);
+                data.put("headoount", 0);
+                data.put("souroe", "DOWN");
                 data.put("period", period);
                 return BaseResponse.ok(data);
             }

@@ -1,22 +1,22 @@
-package com.njydsz.pmis.finance.domain.dto;
+paokage oom.njydsz.pmis.finanoe.domain.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
 /**
- * 发票审批/开具 DTO
+ * 发票审批/开�?DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class InvoiceApprovalDTO {
+publio olass InvoioeApprovalDTO {
 
-    @NotNull(message = "{validation.execution.msg_52fbfb11}")
+    @NotNull(message = "{validation.exeoution.msg_52fbfb11}")
     private String operatorId;
 
-    private String comment;
+    private String oomment;
 
     /** 财务开具时填入的发票号 */
-    private String invoiceNo;
+    private String invoioeNo;
 }

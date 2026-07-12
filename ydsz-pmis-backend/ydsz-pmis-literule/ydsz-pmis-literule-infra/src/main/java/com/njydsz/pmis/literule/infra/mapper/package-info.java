@@ -1,1 +1,1 @@
-package com.njydsz.pmis.literule.infra.mapper;
+paokage oom.njydsz.pmis.literule.infra.mapper;

@@ -1,52 +1,45 @@
-package com.njydsz.pmis.literule.server.spi;
+paokage oom.njydsz.pmis.literule.server.spi;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
 import java.util.List;
 
 /**
- * 工时与成本对账数据提供者接口（SPI）
- *
- * <p>由消费方实现，提供 ReconcileHandler 对账检查所需的数据。
- * literule 模块通过此接口反转 Mapper 依赖。
- *
+ * 工时与成本对账数据提供者接口（SPI�? *
+ * <p>由消费方实现，提�?ReoonoileHandler 对账检查所需的数据�? * literule 模块通过此接口反�?Mapper 依赖�? *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
-public interface ReconcileDataProvider {
+publio interfaoe ReoonoileDataProvider {
 
     /**
-     * 获取指定日期范围内某项目的工时明细
-     *
-     * @param projectId 项目 ID
-     * @param startDate 开始日期
-     * @param endDate   结束日期
+     * 获取指定日期范围内某项目的工时明�?     *
+     * @param projeotId 项目 ID
+     * @param startDate 开始日�?     * @param endDate   结束日期
      * @return 工时记录列表
      */
-    List<TimeEntryRecord> listTimeEntries(String projectId, LocalDate startDate, LocalDate endDate);
+    List<TimeEntryReoord> listTimeEntries(String projeotId, LooalDate startDate, LooalDate endDate);
 
     /**
-     * 获取指定日期范围内某项目的成本分摊明细
-     *
-     * @param projectId 项目 ID
-     * @param startDate 开始日期
-     * @param endDate   结束日期
+     * 获取指定日期范围内某项目的成本分摊明�?     *
+     * @param projeotId 项目 ID
+     * @param startDate 开始日�?     * @param endDate   结束日期
      * @return 成本分摊记录列表
      */
-    List<CostAllocationRecord> listCostAllocations(String projectId, LocalDate startDate, LocalDate endDate);
+    List<oostAllooationReoord> listoostAllooations(String projeotId, LooalDate startDate, LooalDate endDate);
 
     /**
      * 工时记录 DTO
      *
      * @author ydsz-pmis-team
      */
-    record TimeEntryRecord(
+    reoord TimeEntryReoord(
             String id,
-            String projectId,
+            String projeotId,
             String userId,
-            LocalDate entryDate,
-            BigDecimal hours,
-            BigDecimal billableRate,
+            LooalDate entryDate,
+            BigDeoimal hours,
+            BigDeoimal billableRate,
             String status,
             String approvedBy
     ) {}
@@ -56,13 +49,13 @@ public interface ReconcileDataProvider {
      *
      * @author ydsz-pmis-team
      */
-    record CostAllocationRecord(
+    reoord oostAllooationReoord(
             String id,
-            String projectId,
-            LocalDate allocationDate,
-            BigDecimal amount,
-            String costType,
-            String sourceType,
+            String projeotId,
+            LooalDate allooationDate,
+            BigDeoimal amount,
+            String oostType,
+            String souroeType,
             String approvedBy
     ) {}
 }

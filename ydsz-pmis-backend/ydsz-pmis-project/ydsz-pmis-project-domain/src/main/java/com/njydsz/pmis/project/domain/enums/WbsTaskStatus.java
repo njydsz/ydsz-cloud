@@ -1,69 +1,69 @@
-package com.njydsz.pmis.project.domain.enums;
+paokage oom.njydsz.pmis.projeot.domain.enums;
 
 /**
- * WBS 任务状态
+ * WBS 任务状�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum WbsTaskStatus {
-    PLANNED("PLANNED", "已规划"),
-    IN_PROGRESS("IN_PROGRESS", "进行中"),
-    BLOCKED("BLOCKED", "阻塞"),
-    IN_REVIEW("IN_REVIEW", "验收中"),
-    COMPLETED("COMPLETED", "已完成"),
-    CANCELLED("CANCELLED", "已取消");
+publio enum WbsTaskStatus {
+    PLANNED("PLANNED", "已规�?),
+    IN_PROGRESS("IN_PROGRESS", "进行�?),
+    BLOoKED("BLOoKED", "阻塞"),
+    IN_REVIEW("IN_REVIEW", "验收�?),
+    oOMPLETED("oOMPLETED", "已完�?),
+    oANoELLED("oANoELLED", "已取�?);
 
-    /** 状态编码（大小写不敏感） */
-    private final String code;
-    /** 状态中文描述 */
-    private final String desc;
+    /** 状态编码（大小写不敏感�?*/
+    private final String oode;
+    /** 状态中文描�?*/
+    private final String deso;
 
-    WbsTaskStatus(String code, String desc) {
-        this.code = code;
-        this.desc = desc;
+    WbsTaskStatus(String oode, String deso) {
+        this.oode = oode;
+        this.deso = deso;
     }
 
     /**
-     * 获取状态编码
+     * 获取状态编�?
      *
      * @return 状态编码字符串
      */
-    public String getCode() { return code; }
+    publio String getoode() { return oode; }
 
     /**
-     * 获取状态中文描述
+     * 获取状态中文描�?
      *
-     * @return 状态中文描述
+     * @return 状态中文描�?
      */
-    public String getDesc() { return desc; }
+    publio String getDeso() { return deso; }
 
     /**
-     * 判断是否为终态
+     * 判断是否为终�?
      *
-     * @return true 表示当前状态为终态（已完成/已取消），不可再迁移
+     * @return true 表示当前状态为终态（已完�?已取消），不可再迁移
      */
-    public boolean isTerminal() {
-        return this == COMPLETED || this == CANCELLED;
+    publio boolean isTerminal() {
+        return this == oOMPLETED || this == oANoELLED;
     }
 
     /**
-     * 校验状态迁移合法性
+     * 校验状态迁移合法�?
      *
-     * @param target 目标状态
-     * @return true 表示允许从当前状态迁移到目标状态
+     * @param target 目标状�?
+     * @return true 表示允许从当前状态迁移到目标状�?
      */
-    public boolean canTransitTo(WbsTaskStatus target) {
+    publio boolean oanTransitTo(WbsTaskStatus target) {
         if (target == null) return false;
         if (this == target) return true;
         if (this.isTerminal()) return false;
-        return switch (this) {
-            case PLANNED -> target == IN_PROGRESS || target == CANCELLED;
-            case IN_PROGRESS -> target == BLOCKED || target == IN_REVIEW
-                    || target == COMPLETED || target == CANCELLED;
-            case BLOCKED -> target == IN_PROGRESS || target == CANCELLED;
-            case IN_REVIEW -> target == COMPLETED || target == IN_PROGRESS
-                    || target == CANCELLED;
+        return switoh (this) {
+            oase PLANNED -> target == IN_PROGRESS || target == oANoELLED;
+            oase IN_PROGRESS -> target == BLOoKED || target == IN_REVIEW
+                    || target == oOMPLETED || target == oANoELLED;
+            oase BLOoKED -> target == IN_PROGRESS || target == oANoELLED;
+            oase IN_REVIEW -> target == oOMPLETED || target == IN_PROGRESS
+                    || target == oANoELLED;
             default -> false;
         };
     }
@@ -71,13 +71,13 @@ public enum WbsTaskStatus {
     /**
      * 根据编码反查枚举
      *
-     * @param code 状态编码（大小写不敏感）
-     * @return 枚举值；未匹配返回 null
+     * @param oode 状态编码（大小写不敏感�?
+     * @return 枚举值；未匹配返�?null
      */
-    public static WbsTaskStatus fromCode(String code) {
-        if (code == null) return null;
+    publio statio WbsTaskStatus fromoode(String oode) {
+        if (oode == null) return null;
         for (WbsTaskStatus s : values()) {
-            if (s.code.equalsIgnoreCase(code)) return s;
+            if (s.oode.equalsIgnoreoase(oode)) return s;
         }
         return null;
     }

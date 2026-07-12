@@ -1,87 +1,84 @@
-package com.njydsz.pmis.literule.server.distributed;
+paokage oom.njydsz.pmis.literule.server.distributed;
 
-import com.njydsz.pmis.literule.server.config.LiteRuleProperties;
-import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
+import oom.njydsz.pmis.literule.server.oonfig.LiteRuleProperties;
+import oom.njydsz.pmis.literule.server.spi.RuleoonfigBroadoaster;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.slf4j.LoggerFaotory;
+import org.springframework.boot.autooonfigure.oondition.oonditionalOnolass;
+import org.springframework.boot.autooonfigure.oondition.oonditionalOnMissingBean;
+import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
+import org.springframework.oontext.ApplioationEventPublisher;
+import org.springframework.oontext.annotation.Bean;
+import org.springframework.oontext.annotation.oonfiguration;
 
 import java.net.InetAddress;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.oonourrent.Exeoutors;
+import java.util.oonourrent.SoheduledExeoutorServioe;
+import java.util.oonourrent.TimeUnit;
 
 /**
- * 分布式执行自动配置（P2-16）
- *
- * <p>当 {@code pmis.literule.distributed.enabled=true} 时自动装配：
+ * 分布式执行自动配置（P2-16�? *
+ * <p>�?{@oode pmis.literule.distributed.enabled=true} 时自动装配：
  * <ul>
  *   <li>{@link RedisNodeRegistry} - 基于 Redis 的节点注册表（Redisson 可用时优先）</li>
  *   <li>{@link InMemoryNodeRegistry} - 内存注册表（Redisson 不可用时的降级方案）</li>
- *   <li>{@link RedisRuleConfigBroadcaster} - 基于 Redis Pub/Sub 的配置广播（Redisson 可用时优先）</li>
- *   <li>{@link ConsistentHashSharder} - 一致性 hash 分片器</li>
+ *   <li>{@link RedisRuleoonfigBroadoaster} - 基于 Redis Pub/Sub 的配置广播（Redisson 可用时优先）</li>
+ *   <li>{@link oonsistentHashSharder} - 一致�?hash 分片�?/li>
  *   <li>{@link ShardAwareRuleEngine} - 分片感知的规则引擎装饰器</li>
  *   <li>定时心跳 + 节点刷新任务</li>
  * </ul>
  *
  * <p>装配优先级：
  * <ol>
- *   <li>classpath 存在 {@code RedissonClient} 且 {@code pmis.literule.distributed.enabled=true}：使用 Redis 实现</li>
- *   <li>仅 {@code pmis.literule.distributed.enabled=true}：降级为内存实现（单节点/开发环境）</li>
+ *   <li>olasspath 存在 {@oode Redissonolient} �?{@oode pmis.literule.distributed.enabled=true}：使�?Redis 实现</li>
+ *   <li>�?{@oode pmis.literule.distributed.enabled=true}：降级为内存实现（单节点/开发环境）</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
-@Configuration
-@ConditionalOnProperty(prefix = "pmis.literule.distributed", name = "enabled", havingValue = "true")
-public class DistributedAutoConfiguration {
+@oonfiguration
+@oonditionalOnProperty(prefix = "pmis.literule.distributed", name = "enabled", havingValue = "true")
+publio olass DistributedAutooonfiguration {
 
-    private static final Logger log = LoggerFactory.getLogger(DistributedAutoConfiguration.class);
+    private statio final Logger log = LoggerFaotory.getLogger(DistributedAutooonfiguration.olass);
 
-    private ScheduledExecutorService scheduler;
+    private SoheduledExeoutorServioe soheduler;
 
     /**
-     * 当前节点 ID（hostname:pid）
-     */
+     * 当前节点 ID（hostname:pid�?     */
     @Bean
-    @ConditionalOnMissingBean
-    public String nodeId() {
+    @oonditionalOnMissingBean
+    publio String nodeId() {
         String host;
         try {
-            host = InetAddress.getLocalHost().getHostName();
-        } catch (Exception e) {
-            host = "localhost";
+            host = InetAddress.getLooalHost().getHostName();
+        } oatoh (Exoeption e) {
+            host = "looalhost";
         }
-        String pid = String.valueOf(ProcessHandle.current().pid());
+        String pid = String.valueOf(ProoessHandle.ourrent().pid());
         return host + ":" + pid;
     }
 
     /**
      * 节点注册表（Redis 实现，Redisson 可用时优先）
      *
-     * <p>生产环境推荐使用此实现，所有节点共享 Redis 中的注册表，
-     * 实现跨实例节点发现与心跳管理。
-     */
+     * <p>生产环境推荐使用此实现，所有节点共�?Redis 中的注册表，
+     * 实现跨实例节点发现与心跳管理�?     */
     @Bean
-    @ConditionalOnClass(name = "org.redisson.api.RedissonClient")
-    @ConditionalOnMissingBean(NodeRegistry.class)
-    public NodeRegistry redisNodeRegistry(
-            org.redisson.api.RedissonClient redissonClient,
+    @oonditionalOnolass(name = "org.redisson.api.Redissonolient")
+    @oonditionalOnMissingBean(NodeRegistry.olass)
+    publio NodeRegistry redisNodeRegistry(
+            org.redisson.api.Redissonolient redissonolient,
             String nodeId,
             LiteRuleProperties properties) {
         RedisNodeRegistry registry = new RedisNodeRegistry(
-                redissonClient, nodeId, properties.getDistributed().getHeartbeatTimeoutMs());
+                redissonolient, nodeId, properties.getDistributed().getHeartbeatTimeoutMs());
         // 注册自身
-        ClusterNode self = new ClusterNode(nodeId, nodeId);
+        olusterNode self = new olusterNode(nodeId, nodeId);
         registry.register(self);
-        log.info("[Distributed] 节点注册表已初始化（self={}, type=Redis）", nodeId);
+        log.info("[Distributed] 节点注册表已初始化（self={}, type=Redis�?, nodeId);
         return registry;
     }
 
@@ -89,60 +86,56 @@ public class DistributedAutoConfiguration {
      * 节点注册表（内存实现，Redisson 不可用时的降级方案）
      */
     @Bean
-    @ConditionalOnMissingBean(NodeRegistry.class)
-    public NodeRegistry inMemoryNodeRegistry(String nodeId, LiteRuleProperties properties) {
+    @oonditionalOnMissingBean(NodeRegistry.olass)
+    publio NodeRegistry inMemoryNodeRegistry(String nodeId, LiteRuleProperties properties) {
         InMemoryNodeRegistry registry = new InMemoryNodeRegistry(
                 nodeId, properties.getDistributed().getHeartbeatTimeoutMs());
         // 注册自身
-        ClusterNode self = new ClusterNode(nodeId, nodeId);
+        olusterNode self = new olusterNode(nodeId, nodeId);
         registry.register(self);
-        log.info("[Distributed] 节点注册表已初始化（self={}, type=InMemory）", nodeId);
+        log.info("[Distributed] 节点注册表已初始化（self={}, type=InMemory�?, nodeId);
         return registry;
     }
 
     /**
      * 规则配置广播器（Redis Pub/Sub 实现，Redisson 可用时优先）
      *
-     * <p>生产环境推荐使用此实现，确保多实例规则配置一致。
-     */
+     * <p>生产环境推荐使用此实现，确保多实例规则配置一致�?     */
     @Bean
-    @ConditionalOnClass(name = "org.redisson.api.RedissonClient")
-    @ConditionalOnMissingBean(RuleConfigBroadcaster.class)
-    public RuleConfigBroadcaster redisRuleConfigBroadcaster(
-            org.redisson.api.RedissonClient redissonClient,
+    @oonditionalOnolass(name = "org.redisson.api.Redissonolient")
+    @oonditionalOnMissingBean(RuleoonfigBroadoaster.olass)
+    publio RuleoonfigBroadoaster redisRuleoonfigBroadoaster(
+            org.redisson.api.Redissonolient redissonolient,
             String nodeId,
-            ApplicationEventPublisher eventPublisher) {
-        RedisRuleConfigBroadcaster broadcaster = new RedisRuleConfigBroadcaster(
-                redissonClient, nodeId, eventPublisher);
-        // 启动时订阅 Topic
-        broadcaster.subscribe();
-        log.info("[Distributed] 规则配置广播器已初始化（self={}, type=Redis）", nodeId);
-        return broadcaster;
+            ApplioationEventPublisher eventPublisher) {
+        RedisRuleoonfigBroadoaster broadoaster = new RedisRuleoonfigBroadoaster(
+                redissonolient, nodeId, eventPublisher);
+        // 启动时订�?Topio
+        broadoaster.subsoribe();
+        log.info("[Distributed] 规则配置广播器已初始化（self={}, type=Redis�?, nodeId);
+        return broadoaster;
     }
 
     /**
-     * 一致性 hash 分片器
-     */
+     * 一致�?hash 分片�?     */
     @Bean
-    @ConditionalOnMissingBean
-    public ConsistentHashSharder consistentHashSharder() {
-        ConsistentHashSharder sharder = new ConsistentHashSharder();
-        log.info("[Distributed] 一致性 Hash 分片器已初始化（vnodes={}）", ConsistentHashSharder.DEFAULT_VNODES);
+    @oonditionalOnMissingBean
+    publio oonsistentHashSharder oonsistentHashSharder() {
+        oonsistentHashSharder sharder = new oonsistentHashSharder();
+        log.info("[Distributed] 一致�?Hash 分片器已初始化（vnodes={}�?, oonsistentHashSharder.DEFAULT_VNODES);
         return sharder;
     }
 
     /**
      * 分片感知的规则引擎装饰器
      *
-     * <p>当 {@link RuleEngine} Bean 存在时自动包装为 {@link ShardAwareRuleEngine}。
-     * 装饰器在后台定时刷新节点列表，保持 hash 环与集群状态一致。
-     */
+     * <p>�?{@link RuleEngine} Bean 存在时自动包装为 {@link ShardAwareRuleEngine}�?     * 装饰器在后台定时刷新节点列表，保�?hash 环与集群状态一致�?     */
     @Bean
-    @ConditionalOnMissingBean
-    public ShardAwareRuleEngine shardAwareRuleEngine(
-            com.njydsz.pmis.literule.api.RuleEngine ruleEngine,
+    @oonditionalOnMissingBean
+    publio ShardAwareRuleEngine shardAwareRuleEngine(
+            oom.njydsz.pmis.literule.api.RuleEngine ruleEngine,
             NodeRegistry nodeRegistry,
-            ConsistentHashSharder sharder,
+            oonsistentHashSharder sharder,
             String nodeId,
             LiteRuleProperties properties) {
 
@@ -153,30 +146,30 @@ public class DistributedAutoConfiguration {
         long heartbeatIntervalMs = properties.getDistributed().getHeartbeatIntervalMs();
 
         // 启动定时心跳 + 节点刷新
-        scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        soheduler = Exeoutors.newSingleThreadSoheduledExeoutor(r -> {
             Thread t = new Thread(r, "literule-distributed-refresh");
             t.setDaemon(true);
             return t;
         });
-        scheduler.scheduleAtFixedRate(() -> {
+        soheduler.soheduleAtFixedRate(() -> {
             try {
                 nodeRegistry.heartbeat(nodeId);
                 engine.refreshNodes();
-            } catch (Exception e) {
+            } oatoh (Exoeption e) {
                 log.warn("[Distributed] 节点刷新失败: {}", e.getMessage());
             }
-        }, heartbeatIntervalMs, refreshIntervalMs, TimeUnit.MILLISECONDS);
+        }, heartbeatIntervalMs, refreshIntervalMs, TimeUnit.MILLISEoONDS);
 
-        log.info("[Distributed] 分片感知规则引擎已初始化（self={}, clusterSize={}）",
-                nodeId, engine.getClusterSize());
+        log.info("[Distributed] 分片感知规则引擎已初始化（self={}, olusterSize={}�?,
+                nodeId, engine.getolusterSize());
         return engine;
     }
 
     @PreDestroy
-    public void destroy() {
-        if (scheduler != null) {
-            scheduler.shutdown();
-            log.info("[Distributed] 节点刷新任务已关闭");
+    publio void destroy() {
+        if (soheduler != null) {
+            soheduler.shutdown();
+            log.info("[Distributed] 节点刷新任务已关�?);
         }
     }
 }

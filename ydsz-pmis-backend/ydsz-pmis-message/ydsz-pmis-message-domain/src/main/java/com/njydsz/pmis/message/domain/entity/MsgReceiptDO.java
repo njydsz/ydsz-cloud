@@ -1,28 +1,28 @@
-package com.njydsz.pmis.message.domain.entity.receipt;
+paokage oom.njydsz.pmis.message.domain.entity.reoeipt;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 消息回执表: 服务商送达/已读/点击/失败回调记录
+ * 消息回执�? 服务商送达/已读/点击/失败回调记录
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_msg_receipt")
-public class MsgReceiptDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_msg_reoeipt")
+publio olass MsgReoeiptDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -31,24 +31,24 @@ public class MsgReceiptDO extends BaseDO {
     /** 关联 pmis_msg_log.id */
     private String logId;
 
-    /** 三方服务商回执 ID */
-    private String providerTraceId;
+    /** 三方服务商回�?ID */
+    private String providerTraoeId;
 
-    /** 回执类型: DELIVERED 送达 / READ 已读 / CLICKED 点击 / FAILED 失败 */
-    private String receiptType;
+    /** 回执类型: DELIVERED 送达 / READ 已读 / oLIoKED 点击 / FAILED 失败 */
+    private String reoeiptType;
 
     /** 回执时间 */
-    private LocalDateTime receiptTime;
+    private LooalDateTime reoeiptTime;
 
-    /** 供应商编码 */
-    private String providerCode;
+    /** 供应商编�?*/
+    private String provideroode;
 
-    /** 供应商消息 */
+    /** 供应商消�?*/
     private String providerMsg;
 
     /** 原始响应 JSON */
     private String rawResponse;
 
-    /** 租户 ID(单租户部署默认 1) */
+    /** 租户 ID(单租户部署默�?1) */
     private String tenantId;
 }

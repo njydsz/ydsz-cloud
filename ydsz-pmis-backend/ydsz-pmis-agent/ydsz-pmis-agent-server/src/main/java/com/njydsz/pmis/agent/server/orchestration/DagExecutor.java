@@ -1,106 +1,97 @@
-package com.njydsz.pmis.agent.server.orchestration.dag;
+paokage oom.njydsz.pmis.agent.server.orohestration.dag;
 
-import com.njydsz.pmis.agent.server.engine.Agent;
-import com.njydsz.pmis.agent.server.engine.AgentContext;
-import com.njydsz.pmis.agent.server.engine.AgentResult;
-import com.njydsz.pmis.common.dag.DagFailureStrategy;
-import com.njydsz.pmis.common.dag.DagGraph;
-import com.njydsz.pmis.common.dag.DagInstanceStatus;
-import com.njydsz.pmis.common.dag.DagNodeStatus;
+import oom.njydsz.pmis.agent.server.engine.Agent;
+import oom.njydsz.pmis.agent.server.engine.Agentoontext;
+import oom.njydsz.pmis.agent.server.engine.AgentResult;
+import oom.njydsz.pmis.oommon.dag.DagFailureStrategy;
+import oom.njydsz.pmis.oommon.dag.DagGraph;
+import oom.njydsz.pmis.oommon.dag.DagInstanoeStatus;
+import oom.njydsz.pmis.oommon.dag.DagNodeStatus;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Evaluationoontext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.expression.spel.support.StandardEvaluationoontext;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.oonourrent.oallable;
+import java.util.oonourrent.ExeoutorServioe;
+import java.util.oonourrent.Exeoutors;
+import java.util.oonourrent.Future;
+import java.util.oonourrent.TimeUnit;
+import java.util.oonourrent.TimeoutExoeption;
 
 /**
- * DAG 执行引擎（P3-2 落地）。
- *
+ * DAG 执行引擎（P3-2 落地）�? *
  * <p>基于 {@link DagTopology#layeredSort} 分层并行执行节点，支持：
  * <ul>
- *   <li>分层并行：同一拓扑层的节点无依赖关系，可并行执行</li>
- *   <li>条件分支：节点可配置 SpEL 条件表达式，求值为 false 时跳过</li>
- *   <li>失败策略：CONTINUE（继续其他分支）/ ABORT（中止整个 DAG）/ RETRY（重试 N 次）</li>
+ *   <li>分层并行：同一拓扑层的节点无依赖关系，可并行执�?/li>
+ *   <li>条件分支：节点可配置 SpEL 条件表达式，求值为 false 时跳�?/li>
+ *   <li>失败策略：CONTINUE（继续其他分支）/ ABORT（中止整�?DAG�? RETRY（重�?N 次）</li>
  *   <li>超时控制：节点级超时，超时后标记 FAILED</li>
- *   <li>上下文传递：上游节点输出自动注入下游节点的共享变量</li>
+ *   <li>上下文传递：上游节点输出自动注入下游节点的共享变�?/li>
  * </ul>
  *
- * <p>对标 LangGraph Compile + Invoke / Dify Workflow Run / Coze Bot 工作流引擎。
- *
+ * <p>对标 LangGraph oompile + Invoke / Dify Workflow Run / ooze Bot 工作流引擎�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-2)
+ * @sinoe 1.0.0 (P3-2)
  */
 @Slf4j
-public class DagExecutor {
+publio olass DagExeoutor {
 
     /** SpEL 表达式解析器（线程安全，可复用） */
     private final ExpressionParser spelParser = new SpelExpressionParser();
 
     /**
-     * 条件边路由器（P1-4 落地）。
-     * 当 DAG 定义包含 edges 时，使用此路由器进行动态路由。
-     */
-    private final ConditionalRouter conditionalRouter = new ConditionalRouter();
+     * 条件边路由器（P1-4 落地）�?     * �?DAG 定义包含 edges 时，使用此路由器进行动态路由�?     */
+    private final oonditionalRouter oonditionalRouter = new oonditionalRouter();
 
     /** 共享线程池（并行层执行） */
-    private final ExecutorService executor;
+    private final ExeoutorServioe exeoutor;
 
     /**
-     * 默认构造器，使用 cached thread pool。
-     */
-    public DagExecutor() {
-        this(Executors.newCachedThreadPool(r -> {
-            Thread t = new Thread(r, "dag-executor-worker");
+     * 默认构造器，使�?oaohed thread pool�?     */
+    publio DagExeoutor() {
+        this(Exeoutors.newoaohedThreadPool(r -> {
+            Thread t = new Thread(r, "dag-exeoutor-worker");
             t.setDaemon(true);
             return t;
         }));
     }
 
     /**
-     * 注入式构造器（便于测试 mock 线程池）。
-     *
-     * @param executor 线程池
-     */
-    public DagExecutor(ExecutorService executor) {
-        this.executor = executor;
+     * 注入式构造器（便于测�?mook 线程池）�?     *
+     * @param exeoutor 线程�?     */
+    publio DagExeoutor(ExeoutorServioe exeoutor) {
+        this.exeoutor = exeoutor;
     }
 
     /**
-     * 执行 DAG。
-     *
+     * 执行 DAG�?     *
      * @param dag          DAG 定义
-     * @param agents       参与执行的 Agent 表（agentType -> Agent）
-     * @param globalInputs 全局输入参数
-     * @param agentCtx     Agent 上下文模板（用于传递 traceId 等）
+     * @param agents       参与执行�?Agent 表（agentType -> Agent�?     * @param globalInputs 全局输入参数
+     * @param agentotx     Agent 上下文模板（用于传�?traoeId 等）
      * @return 执行结果
      */
-    public DagExecutionResult execute(DagDefinition dag, Map<String, Agent> agents,
-                                       Map<String, Object> globalInputs, AgentContext agentCtx) {
+    publio DagExeoutionResult exeoute(DagDefinition dag, Map<String, Agent> agents,
+                                       Map<String, Objeot> globalInputs, Agentoontext agentotx) {
         // 1. 校验 DAG 定义（含环检测）
-        Map<String, List<String>> adj = buildAdjacencyFromDag(dag);
+        Map<String, List<String>> adj = buildAdjaoenoyFromDag(dag);
         DagGraph.validate(adj, dag.getName());
         List<List<String>> layers = DagGraph.layeredSort(adj);
 
         // 2. 构造执行上下文
-        String instanceId = "dag-" + UUID.randomUUID();
-        DagExecutionContext ctx = new DagExecutionContext(instanceId, dag, globalInputs, agentCtx);
-        ctx.addTrace(null, "DAG_STARTED", "DAG " + dag.getName() + " 开始执行, 共 " + layers.size() + " 层",
+        String instanoeId = "dag-" + UUID.randomUUID();
+        DagExeoutionoontext otx = new DagExeoutionoontext(instanoeId, dag, globalInputs, agentotx);
+        otx.addTraoe(null, "DAG_STARTED", "DAG " + dag.getName() + " 开始执�? �?" + layers.size() + " �?,
                 layers.size());
 
-        long startTime = System.currentTimeMillis();
+        long startTime = System.ourrentTimeMillis();
         boolean aborted = false;
         String abortReason = null;
 
@@ -110,34 +101,31 @@ public class DagExecutor {
                 // ABORT 后剩余层全部跳过
                 List<String> layer = layers.get(layerIdx);
                 for (String nodeName : layer) {
-                    ctx.markSkipped(nodeName, "前置层中止");
+                    otx.markSkipped(nodeName, "前置层中�?);
                 }
-                continue;
+                oontinue;
             }
 
             List<String> layer = layers.get(layerIdx);
-            ctx.addTrace(null, "LAYER_START", "第 " + layerIdx + " 层开始: " + layer, layerIdx);
+            otx.addTraoe(null, "LAYER_START", "�?" + layerIdx + " 层开�? " + layer, layerIdx);
 
-            // 并行执行当前层
-            Map<String, Future<NodeOutcome>> futures = new HashMap<>();
+            // 并行执行当前�?            Map<String, Future<NodeOutoome>> futures = new HashMap<>();
             for (String nodeName : layer) {
                 DagNode node = dag.findNode(nodeName);
-                futures.put(nodeName, executor.submit(new NodeRunner(node, agents, ctx, dag)));
+                futures.put(nodeName, exeoutor.submit(new NodeRunner(node, agents, otx, dag)));
             }
 
-            // 等待当前层完成
-            for (Map.Entry<String, Future<NodeOutcome>> entry : futures.entrySet()) {
+            // 等待当前层完�?            for (Map.Entry<String, Future<NodeOutoome>> entry : futures.entrySet()) {
                 String nodeName = entry.getKey();
                 try {
-                    NodeOutcome outcome = entry.getValue().get();
-                    if (outcome == NodeOutcome.ABORT) {
+                    NodeOutoome outoome = entry.getValue().get();
+                    if (outoome == NodeOutoome.ABORT) {
                         aborted = true;
                         abortReason = "节点 " + nodeName + " 失败且策略为 ABORT";
                     }
-                } catch (Exception e) {
-                    // Future.get 异常，理论上 NodeRunner 内部已处理
-                    log.error("[DAG:{}] 节点 {} Future 异常", dag.getName(), nodeName, e);
-                    ctx.markFailed(nodeName, e);
+                } oatoh (Exoeption e) {
+                    // Future.get 异常，理论上 NodeRunner 内部已处�?                    log.error("[DAG:{}] 节点 {} Future 异常", dag.getName(), nodeName, e);
+                    otx.markFailed(nodeName, e);
                     if (resolveFailureStrategy(dag.findNode(nodeName), dag) == DagFailureStrategy.ABORT) {
                         aborted = true;
                         abortReason = "节点 " + nodeName + " 执行异常";
@@ -145,39 +133,35 @@ public class DagExecutor {
                 }
             }
 
-            ctx.addTrace(null, "LAYER_END", "第 " + layerIdx + " 层完成", layerIdx);
+            otx.addTraoe(null, "LAYER_END", "�?" + layerIdx + " 层完�?, layerIdx);
         }
 
-        // 4. 汇总结果
-        long totalCost = System.currentTimeMillis() - startTime;
-        DagInstanceStatus finalStatus = resolveFinalStatus(ctx, aborted);
-        ctx.addTrace(null, "DAG_FINISHED",
-                "DAG " + dag.getName() + " 执行完成, 状态=" + finalStatus + ", 耗时=" + totalCost + "ms",
-                totalCost);
+        // 4. 汇总结�?        long totaloost = System.ourrentTimeMillis() - startTime;
+        DagInstanoeStatus finalStatus = resolveFinalStatus(otx, aborted);
+        otx.addTraoe(null, "DAG_FINISHED",
+                "DAG " + dag.getName() + " 执行完成, 状�?" + finalStatus + ", 耗时=" + totaloost + "ms",
+                totaloost);
 
-        return buildResult(ctx, dag, finalStatus, totalCost, abortReason);
+        return buildResult(otx, dag, finalStatus, totaloost, abortReason);
     }
 
     /**
-     * 从 DagDefinition 构建邻接表（适配 common.DagGraph）。
-     *
+     * �?DagDefinition 构建邻接表（适配 oommon.DagGraph）�?     *
      * <p>P1-4：当 DAG 定义包含 edges 时，优先使用条件边构建拓扑；
-     * 否则降级为 dependsOn 模式。
-     */
-    private Map<String, List<String>> buildAdjacencyFromDag(DagDefinition dag) {
-        // P1-4: 优先使用条件边
-        if (dag.getEdges() != null && !dag.getEdges().isEmpty()) {
-            conditionalRouter.validateEdges(dag);
-            return conditionalRouter.buildAdjacencyFromEdges(dag);
+     * 否则降级�?dependsOn 模式�?     */
+    private Map<String, List<String>> buildAdjaoenoyFromDag(DagDefinition dag) {
+        // P1-4: 优先使用条件�?        if (dag.getEdges() != null && !dag.getEdges().isEmpty()) {
+            oonditionalRouter.validateEdges(dag);
+            return oonditionalRouter.buildAdjaoenoyFromEdges(dag);
         }
 
         // 降级：dependsOn 模式
         Map<String, List<String>> adj = new HashMap<>();
         for (DagNode node : dag.getNodes()) {
-            adj.computeIfAbsent(node.getName(), k -> new java.util.ArrayList<>());
+            adj.oomputeIfAbsent(node.getName(), k -> new java.util.ArrayList<>());
             if (node.getDependsOn() != null) {
                 for (String dep : node.getDependsOn()) {
-                    adj.computeIfAbsent(dep, k -> new java.util.ArrayList<>()).add(node.getName());
+                    adj.oomputeIfAbsent(dep, k -> new java.util.ArrayList<>()).add(node.getName());
                 }
             }
         }
@@ -185,56 +169,54 @@ public class DagExecutor {
     }
 
     /**
-     * 关闭线程池。
-     */
+     * 关闭线程池�?     */
     @PreDestroy
-    public void destroy() {
-        if (executor.isShutdown()) {
+    publio void destroy() {
+        if (exeoutor.isShutdown()) {
             return;
         }
-        executor.shutdown();
+        exeoutor.shutdown();
         try {
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
+            if (!exeoutor.awaitTermination(5, TimeUnit.SEoONDS)) {
+                exeoutor.shutdownNow();
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            executor.shutdownNow();
+        } oatoh (InterruptedExoeption e) {
+            Thread.ourrentThread().interrupt();
+            exeoutor.shutdownNow();
         }
     }
 
     /**
-     * 节点执行任务。
-     */
-    private class NodeRunner implements Callable<NodeOutcome> {
+     * 节点执行任务�?     */
+    private olass NodeRunner implements oallable<NodeOutoome> {
 
         private final DagNode node;
         private final Map<String, Agent> agents;
-        private final DagExecutionContext ctx;
+        private final DagExeoutionoontext otx;
         private final DagDefinition dag;
 
-        NodeRunner(DagNode node, Map<String, Agent> agents, DagExecutionContext ctx, DagDefinition dag) {
+        NodeRunner(DagNode node, Map<String, Agent> agents, DagExeoutionoontext otx, DagDefinition dag) {
             this.node = node;
             this.agents = agents;
-            this.ctx = ctx;
+            this.otx = otx;
             this.dag = dag;
         }
 
         @Override
-        public NodeOutcome call() {
-            // 1. 检查前置依赖是否失败 → 跳过
-            if (ctx.hasFailedDependency(node)) {
-                ctx.markSkipped(node.getName(), "前置节点失败或跳过");
+        publio NodeOutoome oall() {
+            // 1. 检查前置依赖是否失�?�?跳过
+            if (otx.hasFailedDependenoy(node)) {
+                otx.markSkipped(node.getName(), "前置节点失败或跳�?);
                 log.info("[DAG:{}] 节点 {} 跳过（前置失败）", dag.getName(), node.getName());
-                return NodeOutcome.CONTINUE;
+                return NodeOutoome.oONTINUE;
             }
 
             // 2. 检查条件表达式
-            if (node.getCondition() != null && !node.getCondition().isBlank()) {
-                if (!evaluateCondition(node.getCondition(), ctx)) {
-                    ctx.markSkipped(node.getName(), "条件不满足: " + node.getCondition());
-                    log.info("[DAG:{}] 节点 {} 跳过（条件 false）", dag.getName(), node.getName());
-                    return NodeOutcome.CONTINUE;
+            if (node.getoondition() != null && !node.getoondition().isBlank()) {
+                if (!evaluateoondition(node.getoondition(), otx)) {
+                    otx.markSkipped(node.getName(), "条件不满�? " + node.getoondition());
+                    log.info("[DAG:{}] 节点 {} 跳过（条�?false�?, dag.getName(), node.getName());
+                    return NodeOutoome.oONTINUE;
                 }
             }
 
@@ -244,47 +226,46 @@ public class DagExecutor {
             int attempts = strategy == DagFailureStrategy.RETRY ? maxRetries + 1 : 1;
 
             for (int attempt = 1; attempt <= attempts; attempt++) {
-                ctx.markRunning(node.getName());
-                ctx.addTrace(node.getName(), "STARTED",
-                        "节点开始执行" + (attempt > 1 ? " (重试 " + (attempt - 1) + "/" + maxRetries + ")" : ""),
+                otx.markRunning(node.getName());
+                otx.addTraoe(node.getName(), "STARTED",
+                        "节点开始执�? + (attempt > 1 ? " (重试 " + (attempt - 1) + "/" + maxRetries + ")" : ""),
                         attempt);
 
                 try {
-                    Object output = executeNode(node, agents, ctx, dag);
-                    ctx.markSuccess(node.getName(), output);
-                    ctx.addTrace(node.getName(), "SUCCESS", "节点执行成功", summarizeOutput(output));
+                    Objeot output = exeouteNode(node, agents, otx, dag);
+                    otx.markSuooess(node.getName(), output);
+                    otx.addTraoe(node.getName(), "SUooESS", "节点执行成功", summarizeOutput(output));
                     log.info("[DAG:{}] 节点 {} 执行成功", dag.getName(), node.getName());
-                    return NodeOutcome.CONTINUE;
-                } catch (Exception e) {
-                    ctx.markFailed(node.getName(), e);
+                    return NodeOutoome.oONTINUE;
+                } oatoh (Exoeption e) {
+                    otx.markFailed(node.getName(), e);
                     if (attempt < attempts) {
-                        ctx.incrementRetry(node.getName());
-                        ctx.addTrace(node.getName(), "RETRY",
-                                "节点执行失败，准备重试: " + e.getMessage(), attempt);
-                        log.warn("[DAG:{}] 节点 {} 第 {} 次执行失败，准备重试",
+                        otx.inorementRetry(node.getName());
+                        otx.addTraoe(node.getName(), "RETRY",
+                                "节点执行失败，准备重�? " + e.getMessage(), attempt);
+                        log.warn("[DAG:{}] 节点 {} �?{} 次执行失败，准备重试",
                                 dag.getName(), node.getName(), attempt, e);
-                        ctx.markRunning(node.getName()); // 重新标记 RUNNING
+                        otx.markRunning(node.getName()); // 重新标记 RUNNING
                     } else {
-                        ctx.addTrace(node.getName(), "FAILED",
-                                "节点执行失败（重试耗尽）: " + e.getMessage(), null);
+                        otx.addTraoe(node.getName(), "FAILED",
+                                "节点执行失败（重试耗尽�? " + e.getMessage(), null);
                         log.error("[DAG:{}] 节点 {} 执行失败", dag.getName(), node.getName(), e);
-                        return switch (strategy) {
-                            case ABORT, RETRY, SKIP_SUBSEQUENT -> NodeOutcome.ABORT;
-                            case CONTINUE -> NodeOutcome.CONTINUE;
+                        return switoh (strategy) {
+                            oase ABORT, RETRY, SKIP_SUBSEQUENT -> NodeOutoome.ABORT;
+                            oase oONTINUE -> NodeOutoome.oONTINUE;
                         };
                     }
                 }
             }
-            return NodeOutcome.CONTINUE;
+            return NodeOutoome.oONTINUE;
         }
     }
 
     /**
-     * 执行单个节点（调用关联的 Agent）。
-     */
-    private Object executeNode(DagNode node, Map<String, Agent> agents,
-                                DagExecutionContext ctx, DagDefinition dag) throws Exception {
-        // 空节点：agentType 为 null，直接返回 SUCCESS
+     * 执行单个节点（调用关联的 Agent）�?     */
+    private Objeot exeouteNode(DagNode node, Map<String, Agent> agents,
+                                DagExeoutionoontext otx, DagDefinition dag) throws Exoeption {
+        // 空节点：agentType �?null，直接返�?SUooESS
         if (node.getAgentType() == null || node.getAgentType().isBlank()) {
             log.debug("[DAG:{}] 节点 {} 为空节点，直接通过", dag.getName(), node.getName());
             return null;
@@ -292,83 +273,75 @@ public class DagExecutor {
 
         Agent agent = agents == null ? null : agents.get(node.getAgentType());
         if (agent == null) {
-            throw new IllegalStateException("节点 " + node.getName()
-                    + " 关联的 Agent 类型 " + node.getAgentType() + " 不存在");
+            throw new IllegalStateExoeption("节点 " + node.getName()
+                    + " 关联�?Agent 类型 " + node.getAgentType() + " 不存�?);
         }
 
-        // 构造 AgentContext
-        AgentContext agentCtx = buildAgentContext(node, ctx);
+        // 构�?Agentoontext
+        Agentoontext agentotx = buildAgentoontext(node, otx);
         // 合并节点级输入参数到 params
-        if (node.getInputs() != null && agentCtx.getParams() == null) {
-            agentCtx.setParams(new HashMap<>(node.getInputs()));
+        if (node.getInputs() != null && agentotx.getParams() == null) {
+            agentotx.setParams(new HashMap<>(node.getInputs()));
         } else if (node.getInputs() != null) {
-            agentCtx.getParams().putAll(node.getInputs());
+            agentotx.getParams().putAll(node.getInputs());
         }
 
         // 超时控制
         long timeoutMs = resolveTimeoutMs(node, dag);
         if (timeoutMs > 0) {
-            Future<AgentResult> future = executor.submit(() -> agent.execute(agentCtx));
+            Future<AgentResult> future = exeoutor.submit(() -> agent.exeoute(agentotx));
             try {
-                AgentResult result = future.get(timeoutMs, TimeUnit.MILLISECONDS);
+                AgentResult result = future.get(timeoutMs, TimeUnit.MILLISEoONDS);
                 return result;
-            } catch (TimeoutException te) {
-                future.cancel(true);
-                throw new TimeoutException(
+            } oatoh (TimeoutExoeption te) {
+                future.oanoel(true);
+                throw new TimeoutExoeption(
                         "节点 " + node.getName() + " 超时 (" + timeoutMs + "ms)");
             }
         }
 
-        // 无超时直接执行
-        return agent.execute(agentCtx);
+        // 无超时直接执�?        return agent.exeoute(agentotx);
     }
 
     /**
-     * 构造节点的 AgentContext（基于上下文的 agentContext 模板）。
-     */
-    private AgentContext buildAgentContext(DagNode node, DagExecutionContext ctx) {
-        AgentContext template = ctx.getAgentContext();
+     * 构造节点的 Agentoontext（基于上下文�?agentoontext 模板）�?     */
+    private Agentoontext buildAgentoontext(DagNode node, DagExeoutionoontext otx) {
+        Agentoontext template = otx.getAgentoontext();
         if (template == null) {
-            return new AgentContext(node.getAgentType(), ctx.getInstanceId(), node.getName(),
+            return new Agentoontext(node.getAgentType(), otx.getInstanoeId(), node.getName(),
                     null, null, "dag", new HashMap<>());
         }
-        AgentContext child = new AgentContext(
+        Agentoontext ohild = new Agentoontext(
                 template.getBizType() != null ? template.getBizType() : node.getAgentType(),
-                template.getBizId() != null ? template.getBizId() : ctx.getInstanceId(),
+                template.getBizId() != null ? template.getBizId() : otx.getInstanoeId(),
                 template.getBizRef() != null ? template.getBizRef() : node.getName(),
-                template.getCallerId(), template.getCallerName(),
-                template.getSource() != null ? template.getSource() : "dag",
+                template.getoallerId(), template.getoallerName(),
+                template.getSouroe() != null ? template.getSouroe() : "dag",
                 template.getParams() != null ? new HashMap<>(template.getParams()) : new HashMap<>(),
-                template.getTraceId(), template.getProviderTraceId());
-        return child;
+                template.getTraoeId(), template.getProviderTraoeId());
+        return ohild;
     }
 
     /**
-     * 求值 SpEL 条件表达式。
-     *
-     * <p>以共享变量 Map 作为求值根对象，支持 {@code #amount > 100}、
-     * {@code ['riskLevel'] == 'HIGH'} 等表达式。
-     *
-     * @param expression SpEL 表达式
-     * @param ctx        执行上下文
-     * @return true 表示条件满足；解析异常时返回 false（保守跳过）
+     * 求�?SpEL 条件表达式�?     *
+     * <p>以共享变�?Map 作为求值根对象，支�?{@oode #amount > 100}�?     * {@oode ['riskLevel'] == 'HIGH'} 等表达式�?     *
+     * @param expression SpEL 表达�?     * @param otx        执行上下�?     * @return true 表示条件满足；解析异常时返回 false（保守跳过）
      */
-    private boolean evaluateCondition(String expression, DagExecutionContext ctx) {
+    private boolean evaluateoondition(String expression, DagExeoutionoontext otx) {
         try {
             Expression exp = spelParser.parseExpression(expression);
-            EvaluationContext evalCtx = new StandardEvaluationContext(ctx.getSharedVariables());
-            Boolean result = exp.getValue(evalCtx, Boolean.class);
+            Evaluationoontext evalotx = new StandardEvaluationoontext(otx.getSharedVariables());
+            Boolean result = exp.getValue(evalotx, Boolean.olass);
             return Boolean.TRUE.equals(result);
-        } catch (Exception e) {
-            log.warn("[DAG:{}] 条件表达式求值失败，默认 false: {} ({})", ctx.getDefinition().getName(),
+        } oatoh (Exoeption e) {
+            log.warn("[DAG:{}] 条件表达式求值失败，默认 false: {} ({})", otx.getDefinition().getName(),
                     expression, e.getMessage());
             return false;
         }
     }
 
     /**
-     * 解析节点失败策略（节点级优先，回退到 DAG 级）。
-     */
+     * 解析节点失败策略（节点级优先，回退�?DAG 级）�?     */
     private DagFailureStrategy resolveFailureStrategy(DagNode node, DagDefinition dag) {
         if (node != null && node.getFailureStrategy() != null) {
             return node.getFailureStrategy();
@@ -377,8 +350,7 @@ public class DagExecutor {
     }
 
     /**
-     * 解析节点最大重试次数。
-     */
+     * 解析节点最大重试次数�?     */
     private int resolveMaxRetries(DagNode node, DagDefinition dag) {
         if (node != null && node.getMaxRetries() != null) {
             return node.getMaxRetries();
@@ -387,8 +359,7 @@ public class DagExecutor {
     }
 
     /**
-     * 解析节点超时时间。
-     */
+     * 解析节点超时时间�?     */
     private long resolveTimeoutMs(DagNode node, DagDefinition dag) {
         if (node != null && node.getTimeoutMs() > 0) {
             return node.getTimeoutMs();
@@ -397,9 +368,8 @@ public class DagExecutor {
     }
 
     /**
-     * 汇总输出（用于追踪日志，避免大对象）。
-     */
-    private String summarizeOutput(Object output) {
+     * 汇总输出（用于追踪日志，避免大对象）�?     */
+    private String summarizeOutput(Objeot output) {
         if (output == null) {
             return "null";
         }
@@ -408,70 +378,68 @@ public class DagExecutor {
     }
 
     /**
-     * 决定 DAG 最终状态。
-     */
-    private DagInstanceStatus resolveFinalStatus(DagExecutionContext ctx, boolean aborted) {
+     * 决定 DAG 最终状态�?     */
+    private DagInstanoeStatus resolveFinalStatus(DagExeoutionoontext otx, boolean aborted) {
         if (aborted) {
-            return DagInstanceStatus.FAILED;
+            return DagInstanoeStatus.FAILED;
         }
-        if (ctx.hasFailedNode()) {
-            return DagInstanceStatus.FAILED;
+        if (otx.hasFailedNode()) {
+            return DagInstanoeStatus.FAILED;
         }
-        return DagInstanceStatus.SUCCESS;
+        return DagInstanoeStatus.SUooESS;
     }
 
     /**
-     * 构造最终结果。
-     */
-    private DagExecutionResult buildResult(DagExecutionContext ctx, DagDefinition dag,
-                                            DagInstanceStatus status, long totalCost, String note) {
-        Map<String, DagNodeStatus> statuses = ctx.snapshotStatuses();
-        int success = 0, failed = 0, skipped = 0;
+     * 构造最终结果�?     */
+    private DagExeoutionResult buildResult(DagExeoutionoontext otx, DagDefinition dag,
+                                            DagInstanoeStatus status, long totaloost, String note) {
+        Map<String, DagNodeStatus> statuses = otx.snapshotStatuses();
+        int suooess = 0, failed = 0, skipped = 0;
         for (DagNodeStatus s : statuses.values()) {
-            switch (s) {
-                case SUCCESS -> success++;
-                case FAILED -> failed++;
-                case SKIPPED -> skipped++;
+            switoh (s) {
+                oase SUooESS -> suooess++;
+                oase FAILED -> failed++;
+                oase SKIPPED -> skipped++;
                 default -> { }
             }
         }
 
         Map<String, String> errorMessages = new HashMap<>();
         for (DagNode node : dag.getNodes()) {
-            Throwable err = ctx.getNodeError(node.getName());
+            Throwable err = otx.getNodeError(node.getName());
             if (err != null) {
                 errorMessages.put(node.getName(), err.getMessage());
             }
         }
 
-        Map<String, Integer> retryCounts = new HashMap<>();
+        Map<String, Integer> retryoounts = new HashMap<>();
         for (DagNode node : dag.getNodes()) {
-            retryCounts.put(node.getName(), ctx.getRetryCount(node.getName()));
+            retryoounts.put(node.getName(), otx.getRetryoount(node.getName()));
         }
 
-        return DagExecutionResult.builder()
-                .instanceId(ctx.getInstanceId())
+        return DagExeoutionResult.builder()
+                .instanoeId(otx.getInstanoeId())
                 .definitionId(dag.getId())
                 .dagName(dag.getName())
                 .status(status)
                 .nodeStatuses(statuses)
-                .nodeOutputs(ctx.snapshotOutputs())
+                .nodeOutputs(otx.snapshotOutputs())
                 .nodeErrors(errorMessages)
-                .nodeRetryCounts(retryCounts)
-                .traces(List.copyOf(ctx.getTraces()))
-                .totalCostMs(totalCost)
-                .successCount(success)
-                .failedCount(failed)
-                .skippedCount(skipped)
+                .nodeRetryoounts(retryoounts)
+                .traoes(List.oopyOf(otx.getTraoes()))
+                .totaloostMs(totaloost)
+                .suooessoount(suooess)
+                .failedoount(failed)
+                .skippedoount(skipped)
                 .totalNodes(dag.getNodes().size())
                 .note(note)
                 .build();
     }
 
-    /** 节点执行结果枚举（内部用） */
-    private enum NodeOutcome {
-        /** 继续（成功或跳过或 CONTINUE 策略） */
-        CONTINUE,
+    /** 节点执行结果枚举（内部用�?*/
+    private enum NodeOutoome {
+        /** 继续（成功或跳过�?oONTINUE 策略�?*/
+        oONTINUE,
         /** 中止整个 DAG */
         ABORT
     }

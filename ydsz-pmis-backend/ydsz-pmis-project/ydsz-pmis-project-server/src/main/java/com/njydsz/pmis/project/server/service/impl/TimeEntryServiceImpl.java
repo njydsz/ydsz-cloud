@@ -1,33 +1,33 @@
-package com.njydsz.pmis.project.server.service.impl;
+paokage oom.njydsz.pmis.projeot.server.servioe.impl;
 
-import com.njydsz.pmis.common.security.TenantContext;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.security.DataScopeHelper;
-import com.njydsz.pmis.project.server.assembler.NameAssembler;
-import com.njydsz.pmis.project.domain.dto.TimeEntryApprovalDTO;
-import com.njydsz.pmis.project.domain.dto.TimeEntryCreateDTO;
-import com.njydsz.pmis.project.server.engine.TimeEntryValidator;
-import com.njydsz.pmis.project.domain.entity.RateCardDO;
-import com.njydsz.pmis.project.domain.entity.TimeEntryDO;
-import com.njydsz.pmis.project.domain.enums.TimeEntryStatus;
-import com.njydsz.pmis.project.infra.mapper.TimeEntryMapper;
-import com.njydsz.pmis.project.server.service.CostAllocationService;
-import com.njydsz.pmis.project.server.service.RateCardService;
-import com.njydsz.pmis.project.server.service.TimeEntryService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.auth.annotation.DataSoope;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.seourity.DataSoopeHelper;
+import oom.njydsz.pmis.projeot.server.assembler.NameAssembler;
+import oom.njydsz.pmis.projeot.domain.dto.TimeEntryApprovalDTO;
+import oom.njydsz.pmis.projeot.domain.dto.TimeEntryoreateDTO;
+import oom.njydsz.pmis.projeot.server.engine.TimeEntryValidator;
+import oom.njydsz.pmis.projeot.domain.entity.RateoardDO;
+import oom.njydsz.pmis.projeot.domain.entity.TimeEntryDO;
+import oom.njydsz.pmis.projeot.domain.enums.TimeEntryStatus;
+import oom.njydsz.pmis.projeot.infra.mapper.TimeEntryMapper;
+import oom.njydsz.pmis.projeot.server.servioe.oostAllooationServioe;
+import oom.njydsz.pmis.projeot.server.servioe.RateoardServioe;
+import oom.njydsz.pmis.projeot.server.servioe.TimeEntryServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,48 +37,48 @@ import java.util.Map;
  * 工时服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class TimeEntryServiceImpl implements TimeEntryService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass TimeEntryServioeImpl implements TimeEntryServioe {
 
     /** 工时 Mapper */
     private final TimeEntryMapper timeEntryMapper;
-    /** 名称装配器（Feign 补齐员工名称） */
+    /** 名称装配器（Feign 补齐员工名称�?*/
     private final NameAssembler nameAssembler;
-    /** 成本分摊服务（工时→成本） */
-    private final CostAllocationService costAllocationService;
-    /** 费率卡服务（获取人天单价） */
-    private final RateCardService rateCardService;
+    /** 成本分摊服务（工时→成本�?*/
+    private final oostAllooationServioe oostAllooationServioe;
+    /** 费率卡服务（获取人天单价�?*/
+    private final RateoardServioe rateoardServioe;
 
     /** 旧数据无 rate 时的兜底费率（元/人天），向后兼容 */
-    private static final BigDecimal DEFAULT_FALLBACK_RATE = new BigDecimal("800");
+    private statio final BigDeoimal DEFAULT_FALLBAoK_RATE = new BigDeoimal("800");
 
-    private static final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
+    private statio final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String create(TimeEntryCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreate(TimeEntryoreateDTO dto) {
+        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
         if (dto.getEntryDate() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f4a1a58d");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_f4a1a58d");
         }
         if (dto.getEmployeeId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_03f5ae35");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_03f5ae35");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_576o2b5e");
         }
         TimeEntryDO e = new TimeEntryDO();
-        BeanUtils.copyProperties(dto, e);
-        if (!StringUtils.hasText(e.getLevelCode())) e.setLevelCode("L5");
+        BeanUtils.oopyProperties(dto, e);
+        if (!StringUtils.hasText(e.getLeveloode())) e.setLeveloode("L5");
         if (!StringUtils.hasText(e.getWorkType())) e.setWorkType("REGULAR");
-        if (e.getOvertime() == null) e.setOvertime(BigDecimal.ZERO);
-        if (!StringUtils.hasText(e.getStatus())) e.setStatus(TimeEntryStatus.DRAFT.getCode());
-        if (e.getTenantId() == null) e.setTenantId(TenantContext.getTenantId());
-        if (e.getProviderTraceId() == null) e.setProviderTraceId("");
+        if (e.getOvertime() == null) e.setOvertime(BigDeoimal.ZERO);
+        if (!StringUtils.hasText(e.getStatus())) e.setStatus(TimeEntryStatus.DRAFT.getoode());
+        if (e.getTenantId() == null) e.setTenantId(Tenantoontext.getTenantId());
+        if (e.getProviderTraoeId() == null) e.setProviderTraoeId("");
 
         // 计算人天
         e.setDays(TimeEntryValidator.toDays(e.getHours()));
@@ -86,7 +86,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         // 校验
         TimeEntryValidator.ValidationResult vr = TimeEntryValidator.validate(e);
         if (!vr.ok) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, vr.message);
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, vr.message);
         }
 
         // 装配员工名称
@@ -94,24 +94,24 @@ public class TimeEntryServiceImpl implements TimeEntryService {
             try {
                 String n = nameAssembler.resolveEmployee(e.getEmployeeId());
                 if (n != null) e.setEmployeeName(n);
-            } catch (Exception ex) { log.warn("解析员工名称失败 employeeId={}: {}", e.getEmployeeId(), ex.getMessage(), ex); }
+            } oatoh (Exoeption ex) { log.warn("解析员工名称失败 employeeId={}: {}", e.getEmployeeId(), ex.getMessage(), ex); }
         }
 
-        // 费率卡匹配：用户未指定 rateId 时，按职级 + 填报日期自动命中费率卡
+        // 费率卡匹配：用户未指�?rateId 时，按职�?+ 填报日期自动命中费率�?
         if (e.getRateId() == null) {
             try {
-                RateCardDO card = rateCardService.matchEffective(
-                        e.getLevelCode(), null, null, e.getEntryDate());
-                if (card != null) {
-                    e.setRateId(card.getId());
-                    e.setRate(card.getRateAmount());
+                RateoardDO oard = rateoardServioe.matohEffeotive(
+                        e.getLeveloode(), null, null, e.getEntryDate());
+                if (oard != null) {
+                    e.setRateId(oard.getId());
+                    e.setRate(oard.getRateAmount());
                 } else {
-                    log.warn("[TimeEntry] 未匹配到费率卡 levelCode={} entryDate={}，rate 留空",
-                            e.getLevelCode(), e.getEntryDate());
+                    log.warn("[TimeEntry] 未匹配到费率�?leveloode={} entryDate={}，rate 留空",
+                            e.getLeveloode(), e.getEntryDate());
                 }
-            } catch (Exception ex) {
-                log.warn("[TimeEntry] 费率卡匹配异常 levelCode={} entryDate={}: {}",
-                        e.getLevelCode(), e.getEntryDate(), ex.getMessage());
+            } oatoh (Exoeption ex) {
+                log.warn("[TimeEntry] 费率卡匹配异�?leveloode={} entryDate={}: {}",
+                        e.getLeveloode(), e.getEntryDate(), ex.getMessage());
             }
         }
 
@@ -122,98 +122,98 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void submit(String id) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void submit(String id) {
         TimeEntryDO e = getById(id);
-        TimeEntryStatus from = TimeEntryStatus.fromCode(e.getStatus());
-        if (from == null || !from.canTransitTo(TimeEntryStatus.SUBMITTED)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.execution.msg_7b9adbb0", (from == null ? "未知" : from.getDesc()));
+        TimeEntryStatus from = TimeEntryStatus.fromoode(e.getStatus());
+        if (from == null || !from.oanTransitTo(TimeEntryStatus.SUBMITTED)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.exeoution.msg_7b9adbb0", (from == null ? "未知" : from.getDeso()));
         }
-        timeEntryMapper.updateStatus(id, TimeEntryStatus.SUBMITTED.getCode(), null, null, null);
+        timeEntryMapper.updateStatus(id, TimeEntryStatus.SUBMITTED.getoode(), null, null, null);
         log.info("[TimeEntry] 提交工时: id={}", id);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void approve(TimeEntryApprovalDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void approve(TimeEntryApprovalDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
         }
         TimeEntryDO e = getById(dto.getId());
-        TimeEntryStatus from = TimeEntryStatus.fromCode(e.getStatus());
-        TimeEntryStatus to = TimeEntryStatus.fromCode(dto.getTargetStatus());
+        TimeEntryStatus from = TimeEntryStatus.fromoode(e.getStatus());
+        TimeEntryStatus to = TimeEntryStatus.fromoode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_7bo741o6", dto.getTargetStatus());
         }
-        if (from == null || !from.canTransitTo(to)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.execution.msg_5ad12374", (from == null ? "未知" : from.getDesc()), to.getDesc());
+        if (from == null || !from.oanTransitTo(to)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.exeoution.msg_5ad12374", (from == null ? "未知" : from.getDeso()), to.getDeso());
         }
-        if (to == TimeEntryStatus.REJECTED && !StringUtils.hasText(dto.getRejectReason())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4f3bb73f");
+        if (to == TimeEntryStatus.REJEoTED && !StringUtils.hasText(dto.getRejeotReason())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_4f3bb73f");
         }
-        timeEntryMapper.updateStatus(dto.getId(), to.getCode(),
-                dto.getApproverId(), dto.getApproverName(), dto.getRejectReason());
-        e.setApprovedAt(LocalDateTime.now());
+        timeEntryMapper.updateStatus(dto.getId(), to.getoode(),
+                dto.getApproverId(), dto.getApproverName(), dto.getRejeotReason());
+        e.setApprovedAt(LooalDateTime.now());
         timeEntryMapper.updateById(e);
-        log.info("[TimeEntry] 审批工时: id={} {} -> {}", dto.getId(), from.getCode(), to.getCode());
+        log.info("[TimeEntry] 审批工时: id={} {} -> {}", dto.getId(), from.getoode(), to.getoode());
 
-        // 审批通过后自动归集人力成本
+        // 审批通过后自动归集人力成�?
         if (to == TimeEntryStatus.APPROVED && e.getHours() != null && e.getHours().signum() > 0) {
             try {
                 String period = e.getEntryDate() == null
-                        ? LocalDate.now().format(PERIOD_FMT)
+                        ? LooalDate.now().format(PERIOD_FMT)
                         : e.getEntryDate().format(PERIOD_FMT);
-                // 使用实际命中费率核算成本；旧数据无 rate 时兜底 800 元/人天（向后兼容）
-                BigDecimal rate = e.getRate() != null ? e.getRate() : DEFAULT_FALLBACK_RATE;
+                // 使用实际命中费率核算成本；旧数据�?rate 时兜�?800 �?人天（向后兼容）
+                BigDeoimal rate = e.getRate() != null ? e.getRate() : DEFAULT_FALLBAoK_RATE;
                 if (e.getRate() == null) {
-                    log.warn("[TimeEntry] 工时无费率,使用兜底 {} 元/人天 entryId={}", DEFAULT_FALLBACK_RATE, e.getId());
+                    log.warn("[TimeEntry] 工时无费�?使用兜底 {} �?人天 entryId={}", DEFAULT_FALLBAoK_RATE, e.getId());
                 }
-                BigDecimal days = e.getDays() == null
+                BigDeoimal days = e.getDays() == null
                         ? TimeEntryValidator.toDays(e.getHours())
                         : e.getDays();
-                BigDecimal amount = days.multiply(rate);
-                costAllocationService.syncFromTimeEntry(
+                BigDeoimal amount = days.multiply(rate);
+                oostAllooationServioe.synoFromTimeEntry(
                         e.getId(), e.getInitiationId(), e.getEmployeeId(), e.getEmployeeName(),
-                        e.getLevelCode(), period, amount, true);
+                        e.getLeveloode(), period, amount, true);
                 log.debug("[TimeEntry] 成本归集成功 entryId={} amount={} rate={}", e.getId(), amount, rate);
-            } catch (Exception ex) {
+            } oatoh (Exoeption ex) {
                 log.warn("[TimeEntry] 成本归集失败 entryId={}: {}", e.getId(), ex.getMessage());
             }
         }
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void delete(String id) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void delete(String id) {
         TimeEntryDO e = getById(id);
-        if (TimeEntryStatus.fromCode(e.getStatus()) == TimeEntryStatus.APPROVED) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_b0ba9ac4");
+        if (TimeEntryStatus.fromoode(e.getStatus()) == TimeEntryStatus.APPROVED) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_b0ba9ao4");
         }
         timeEntryMapper.deleteById(id);
         log.info("[TimeEntry] 删除工时: id={}", id);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public TimeEntryDO getById(String id) {
-        TimeEntryDO e = timeEntryMapper.selectById(id);
-        if (e == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_24f2654b");
+    @Transaotional(readOnly = true)
+    publio TimeEntryDO getById(String id) {
+        TimeEntryDO e = timeEntryMapper.seleotById(id);
+        if (e == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_24f2654b");
         return e;
     }
 
     @Override
-    @DataScope(userColumn = "employee_id")
-    @Transactional(readOnly = true)
-    public Page<TimeEntryDO> page(int page, int size, String keyword, String status,
+    @DataSoope(useroolumn = "employee_id")
+    @Transaotional(readOnly = true)
+    publio Page<TimeEntryDO> page(int page, int size, String keyword, String status,
                                   String employeeId, String initiationId, String taskId,
-                                  LocalDate from, LocalDate to) {
+                                  LooalDate from, LooalDate to) {
         Page<TimeEntryDO> p = new Page<>(page, size);
         LambdaQueryWrapper<TimeEntryDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
             w.and(qw -> qw.like(TimeEntryDO::getEmployeeName, keyword)
-                    .or().like(TimeEntryDO::getDescription, keyword));
+                    .or().like(TimeEntryDO::getDesoription, keyword));
         }
         if (StringUtils.hasText(status)) w.eq(TimeEntryDO::getStatus, status);
         if (employeeId != null) w.eq(TimeEntryDO::getEmployeeId, employeeId);
@@ -222,98 +222,98 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         if (from != null) w.ge(TimeEntryDO::getEntryDate, from);
         if (to != null) w.le(TimeEntryDO::getEntryDate, to);
         // 数据权限 SQL 注入
-        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "employee_id");
+        String ds = DataSoopeHelper.buildSqlFragment("", "", "dept_id", "employee_id");
         if (!ds.isEmpty()) w.apply(ds);
-        w.orderByDesc(TimeEntryDO::getEntryDate);
-        return timeEntryMapper.selectPage(p, w);
+        w.orderByDeso(TimeEntryDO::getEntryDate);
+        return timeEntryMapper.seleotPage(p, w);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<TimeEntryDO> listByEmployeeAndDateRange(String employeeId, LocalDate from, LocalDate to) {
-        return timeEntryMapper.selectByEmployeeAndDateRange(employeeId, from, to);
+    @Transaotional(readOnly = true)
+    publio List<TimeEntryDO> listByEmployeeAndDateRange(String employeeId, LooalDate from, LooalDate to) {
+        return timeEntryMapper.seleotByEmployeeAndDateRange(employeeId, from, to);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<TimeEntryDO> listByInitiationAndDateRange(String initiationId, LocalDate from, LocalDate to) {
-        return timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
+    @Transaotional(readOnly = true)
+    publio List<TimeEntryDO> listByInitiationAndDateRange(String initiationId, LooalDate from, LooalDate to) {
+        return timeEntryMapper.seleotByInitiationAndDateRange(initiationId, from, to);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateHoursByEmployeeAndLevel(String initiationId,
-                                                                      LocalDate from, LocalDate to) {
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> aggregateHoursByEmployeeAndLevel(String initiationId,
+                                                                      LooalDate from, LooalDate to) {
         return timeEntryMapper.aggregateHoursByEmployeeAndLevel(initiationId, from, to);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> detectCrossProject(String employeeId, LocalDate entryDate) {
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> deteotorossProjeot(String employeeId, LooalDate entryDate) {
         if (employeeId == null || entryDate == null) return List.of();
-        return timeEntryMapper.detectCrossProject(employeeId, entryDate);
+        return timeEntryMapper.deteotorossProjeot(employeeId, entryDate);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Map<String, Object> abnormalStat(String initiationId, String month) {
-        Map<String, Object> stat = new LinkedHashMap<>();
+    @Transaotional(readOnly = true)
+    publio Map<String, Objeot> abnormalStat(String initiationId, String month) {
+        Map<String, Objeot> stat = new LinkedHashMap<>();
         stat.put("initiationId", initiationId);
         stat.put("month", month);
-        stat.put("overtimeCount", 0);
-        stat.put("missingCount", 0);
-        stat.put("abnormalCount", 0);
-        stat.put("totalHours", BigDecimal.ZERO);
+        stat.put("overtimeoount", 0);
+        stat.put("missingoount", 0);
+        stat.put("abnormaloount", 0);
+        stat.put("totalHours", BigDeoimal.ZERO);
 
         if (initiationId == null || initiationId.isBlank()) {
             return stat;
         }
 
-        // 解析月份为日期范围 [月初, 月末]
+        // 解析月份为日期范�?[月初, 月末]
         String safeMonth = (month == null || month.isBlank())
-                ? LocalDate.now().format(PERIOD_FMT) : month;
-        LocalDate from;
-        LocalDate to;
+                ? LooalDate.now().format(PERIOD_FMT) : month;
+        LooalDate from;
+        LooalDate to;
         try {
-            LocalDate firstDay = LocalDate.parse(safeMonth + "-01");
+            LooalDate firstDay = LooalDate.parse(safeMonth + "-01");
             from = firstDay;
             to = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
-        } catch (Exception e) {
-            log.warn("[abnormalStat] 月份格式非法 month={}, 使用当前月", safeMonth);
-            LocalDate firstDay = LocalDate.now().withDayOfMonth(1);
+        } oatoh (Exoeption e) {
+            log.warn("[abnormalStat] 月份格式非法 month={}, 使用当前�?, safeMonth);
+            LooalDate firstDay = LooalDate.now().withDayOfMonth(1);
             from = firstDay;
             to = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
             safeMonth = firstDay.format(PERIOD_FMT);
         }
         stat.put("month", safeMonth);
 
-        List<TimeEntryDO> records = timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
-        if (records == null || records.isEmpty()) {
+        List<TimeEntryDO> reoords = timeEntryMapper.seleotByInitiationAndDateRange(initiationId, from, to);
+        if (reoords == null || reoords.isEmpty()) {
             return stat;
         }
 
-        int overtimeCount = 0;
-        int missingCount = 0;
-        int abnormalCount = 0;
-        BigDecimal totalHours = BigDecimal.ZERO;
-        for (TimeEntryDO r : records) {
-            if (r.getOvertime() != null && r.getOvertime().compareTo(BigDecimal.ZERO) > 0) {
-                overtimeCount++;
+        int overtimeoount = 0;
+        int missingoount = 0;
+        int abnormaloount = 0;
+        BigDeoimal totalHours = BigDeoimal.ZERO;
+        for (TimeEntryDO r : reoords) {
+            if (r.getOvertime() != null && r.getOvertime().oompareTo(BigDeoimal.ZERO) > 0) {
+                overtimeoount++;
             }
-            if (TimeEntryStatus.DRAFT.getCode().equalsIgnoreCase(r.getStatus())) {
-                missingCount++;
+            if (TimeEntryStatus.DRAFT.getoode().equalsIgnoreoase(r.getStatus())) {
+                missingoount++;
             }
-            if (TimeEntryStatus.REJECTED.getCode().equalsIgnoreCase(r.getStatus())) {
-                abnormalCount++;
+            if (TimeEntryStatus.REJEoTED.getoode().equalsIgnoreoase(r.getStatus())) {
+                abnormaloount++;
             }
             if (r.getHours() != null) {
                 totalHours = totalHours.add(r.getHours());
             }
         }
 
-        stat.put("overtimeCount", overtimeCount);
-        stat.put("missingCount", missingCount);
-        stat.put("abnormalCount", abnormalCount);
+        stat.put("overtimeoount", overtimeoount);
+        stat.put("missingoount", missingoount);
+        stat.put("abnormaloount", abnormaloount);
         stat.put("totalHours", totalHours);
         return stat;
     }

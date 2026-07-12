@@ -1,18 +1,18 @@
-package com.njydsz.pmis.cronjob.web.controller.alert;
+paokage oom.njydsz.pmis.oronjob.web.oontroller.alert;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.cronjob.domain.dto.alert.JobSlaSaveDTO;
-import com.njydsz.pmis.cronjob.domain.entity.alert.JobSlaDO;
-import com.njydsz.pmis.cronjob.server.service.alert.JobSlaService;
+import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oommon.permission.Permissionoodes;
+import oom.njydsz.pmis.oronjob.domain.dto.alert.JobSlaSaveDTO;
+import oom.njydsz.pmis.oronjob.domain.entity.alert.JobSlaDO;
+import oom.njydsz.pmis.oronjob.server.servioe.alert.JobSlaServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,127 +21,127 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 import java.util.List;
 
 /**
- * SLA 管理 Controller（P2-7 SLA 管理）。
+ * SLA 管理 oontroller（P2-7 SLA 管理）�?
  *
- * <p>提供 SLA 规则的 CRUD 接口与违约检查接口。
+ * <p>提供 SLA 规则�?oRUD 接口与违约检查接口�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Tag(name = "任务 SLA 管理")
-@RestController
-@RequestMapping("/cronjob/sla")
-@RequiredArgsConstructor
-public class JobSlaController {
+@Restoontroller
+@RequestMapping("/oronjob/sla")
+@RequiredArgsoonstruotor
+publio olass JobSlaoontroller {
 
     /** SLA 管理服务 */
-    private final JobSlaService jobSlaService;
+    private final JobSlaServioe jobSlaServioe;
 
     /**
-     * 创建 SLA 规则。
+     * 创建 SLA 规则�?
      *
-     * @param dto SLA 规则保存请求体
-     * @return 统一响应结果，包含新增 SLA ID
+     * @param dto SLA 规则保存请求�?
+     * @return 统一响应结果，包含新�?SLA ID
      */
     @Operation(summary = "创建 SLA 规则")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_CREATE)
-    @OperationLog(module = "任务调度", action = "创建 SLA 规则", bizType = "CRONJOB_SLA")
-    @Idempotent(key = "jobSla:create", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_SLA_oREATE)
+    @OperationLog(module = "任务调度", aotion = "创建 SLA 规则", bizType = "oRONJOB_SLA")
+    @Idempotent(key = "jobSla:oreate", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping
-    public BaseResponse<String> create(@Valid @RequestBody JobSlaSaveDTO dto) {
-        return BaseResponse.ok(jobSlaService.createSla(dto));
+    publio BaseResponse<String> oreate(@Valid @RequestBody JobSlaSaveDTO dto) {
+        return BaseResponse.ok(jobSlaServioe.oreateSla(dto));
     }
 
     /**
-     * 更新 SLA 规则。
+     * 更新 SLA 规则�?
      *
      * @param id  SLA 规则 ID
-     * @param dto SLA 规则保存请求体
+     * @param dto SLA 规则保存请求�?
      * @return 统一响应结果
      */
     @Operation(summary = "更新 SLA 规则")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
-    @OperationLog(module = "任务调度", action = "更新 SLA 规则", bizType = "CRONJOB_SLA")
-    @Idempotent(key = "jobSla:update", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_SLA_UPDATE)
+    @OperationLog(module = "任务调度", aotion = "更新 SLA 规则", bizType = "oRONJOB_SLA")
+    @Idempotent(key = "jobSla:update", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody JobSlaSaveDTO dto) {
-        jobSlaService.updateSla(id, dto);
+    publio BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody JobSlaSaveDTO dto) {
+        jobSlaServioe.updateSla(id, dto);
         return BaseResponse.ok();
     }
 
     /**
-     * 删除 SLA 规则。
+     * 删除 SLA 规则�?
      *
      * @param id SLA 规则 ID
      * @return 统一响应结果
      */
     @Operation(summary = "删除 SLA 规则")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_DELETE)
-    @OperationLog(module = "任务调度", action = "删除 SLA 规则", bizType = "CRONJOB_SLA")
-    @Idempotent(key = "jobSla:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_SLA_DELETE)
+    @OperationLog(module = "任务调度", aotion = "删除 SLA 规则", bizType = "oRONJOB_SLA")
+    @Idempotent(key = "jobSla:delete", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public BaseResponse<Void> delete(@PathVariable String id) {
-        jobSlaService.deleteSla(id);
+    publio BaseResponse<Void> delete(@PathVariable String id) {
+        jobSlaServioe.deleteSla(id);
         return BaseResponse.ok();
     }
 
     /**
-     * 查询 SLA 规则详情。
+     * 查询 SLA 规则详情�?
      *
      * @param id SLA 规则 ID
-     * @return 统一响应结果，包含 SLA 规则详情
+     * @return 统一响应结果，包�?SLA 规则详情
      */
     @Operation(summary = "查询 SLA 规则详情")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
+    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_SLA_VIEW)
     @GetMapping("/{id}")
-    public BaseResponse<JobSlaDO> getById(@PathVariable String id) {
-        return BaseResponse.ok(jobSlaService.getSlaById(id));
+    publio BaseResponse<JobSlaDO> getById(@PathVariable String id) {
+        return BaseResponse.ok(jobSlaServioe.getSlaById(id));
     }
 
     /**
-     * 查询全部 SLA 规则。
+     * 查询全部 SLA 规则�?
      *
-     * @return 统一响应结果，包含 SLA 规则列表
+     * @return 统一响应结果，包�?SLA 规则列表
      */
     @Operation(summary = "查询全部 SLA 规则")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
+    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_SLA_VIEW)
     @GetMapping("/list")
-    public BaseResponse<List<JobSlaDO>> list() {
-        return BaseResponse.ok(jobSlaService.listSla());
+    publio BaseResponse<List<JobSlaDO>> list() {
+        return BaseResponse.ok(jobSlaServioe.listSla());
     }
 
     /**
-     * 启用或禁用 SLA 规则。
+     * 启用或禁�?SLA 规则�?
      *
      * @param id      SLA 规则 ID
-     * @param enabled 启用状态（1=启用，0=禁用）
+     * @param enabled 启用状态（1=启用�?=禁用�?
      * @return 统一响应结果
      */
     @Operation(summary = "启用/禁用 SLA 规则")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_UPDATE)
-    @OperationLog(module = "任务调度", action = "切换 SLA 启用状态", bizType = "CRONJOB_SLA")
-    @Idempotent(key = "jobSla:toggle", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_SLA_UPDATE)
+    @OperationLog(module = "任务调度", aotion = "切换 SLA 启用状�?, bizType = "oRONJOB_SLA")
+    @Idempotent(key = "jobSla:toggle", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/toggle")
-    public BaseResponse<Void> toggle(@PathVariable String id, @RequestParam Integer enabled) {
-        jobSlaService.toggleSla(id, enabled);
+    publio BaseResponse<Void> toggle(@PathVariable String id, @RequestParam Integer enabled) {
+        jobSlaServioe.toggleSla(id, enabled);
         return BaseResponse.ok();
     }
 
     /**
-     * 检查任务是否违反 SLA。
+     * 检查任务是否违�?SLA�?
      *
      * @param jobId 任务 ID
-     * @return 统一响应结果，包含违约记录列表
+     * @return 统一响应结果，包含违约记录列�?
      */
-    @Operation(summary = "检查任务是否违反 SLA")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_SLA_VIEW)
-    @GetMapping("/check")
-    public BaseResponse<List<JobSlaService.SlaViolation>> checkViolation(@RequestParam String jobId) {
-        return BaseResponse.ok(jobSlaService.checkViolation(jobId));
+    @Operation(summary = "检查任务是否违�?SLA")
+    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_SLA_VIEW)
+    @GetMapping("/oheok")
+    publio BaseResponse<List<JobSlaServioe.SlaViolation>> oheokViolation(@RequestParam String jobId) {
+        return BaseResponse.ok(jobSlaServioe.oheokViolation(jobId));
     }
 }

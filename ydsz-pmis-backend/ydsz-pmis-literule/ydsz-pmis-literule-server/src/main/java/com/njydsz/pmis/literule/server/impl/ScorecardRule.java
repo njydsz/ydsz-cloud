@@ -1,134 +1,131 @@
-package com.njydsz.pmis.literule.server.impl;
+paokage oom.njydsz.pmis.literule.server.impl;
 
-import com.njydsz.pmis.literule.api.Rule;
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.literule.api.ScorecardDefinition;
-import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import oom.njydsz.pmis.literule.api.Rule;
+import oom.njydsz.pmis.literule.api.Ruleoontext;
+import oom.njydsz.pmis.literule.api.RuleResult;
+import oom.njydsz.pmis.literule.api.RuleSeverity;
+import oom.njydsz.pmis.literule.api.SooreoardDefinition;
+import oom.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 评分卡规则：基于多维度评分因子加权计算总分，按阈值区间或自定义评级映射决定严重度
  *
- * <p>典型应用场景：客户信用评级、供应商评级、项目风险评级。
- *
- * <p><b>复杂评分卡增强（1.5.0）</b>：
- * <ul>
- *   <li>动态分值表达式（scoreExpression）：分值可通过 LiteExpr 表达式动态计算</li>
- *   <li>权重（weight）：实际得分 = 分值 × 权重，默认 1.0</li>
- *   <li>评分方向（scoreDirection）：DESCENDING 分数越低风险越高 / ASCENDING 分数越高风险越高</li>
- *   <li>自定义评级映射（grades）：按分数区间映射 A/B/C/D 等自定义评级</li>
- *   <li>自定义钳制范围（minScore/maxScore）</li>
+ * <p>典型应用场景：客户信用评级、供应商评级、项目风险评级�? *
+ * <p><b>复杂评分卡增强（1.5.0�?/b>�? * <ul>
+ *   <li>动态分值表达式（sooreExpression）：分值可通过 LiteExpr 表达式动态计�?/li>
+ *   <li>权重（weight）：实际得分 = 分�?× 权重，默�?1.0</li>
+ *   <li>评分方向（sooreDireotion）：DESoENDING 分数越低风险越高 / ASoENDING 分数越高风险越高</li>
+ *   <li>自定义评级映射（grades）：按分数区间映�?A/B/o/D 等自定义评级</li>
+ *   <li>自定义钳制范围（minSoore/maxSoore�?/li>
  *   <li>详细评分明细输出（初始分、各项加减分、最终分、评级）</li>
  * </ul>
  *
  * <p>使用示例（复杂评分卡）：
  * <pre>
- * ScorecardRule rule = ScorecardRule.builder()
- *     .code("CREDIT_SCORE")
+ * SooreoardRule rule = SooreoardRule.builder()
+ *     .oode("oREDIT_SoORE")
  *     .name("客户信用评分")
- *     .category("RISK")
- *     .baseScore(100)
- *     .scoreDirection(ScorecardDefinition.ScoreDirection.DESCENDING)
- *     .minScore(0).maxScore(100)
- *     .factor(ScoreFactor.of("overdueCount > 3", -30, "逾期次数过多"))
- *     .factor(ScoreFactor.ofExpression("contractAmount > 1000000", "contractAmount * 0.001", 0.5, "大额合同动态扣分"))
+ *     .oategory("RISK")
+ *     .baseSoore(100)
+ *     .sooreDireotion(SooreoardDefinition.SooreDireotion.DESoENDING)
+ *     .minSoore(0).maxSoore(100)
+ *     .faotor(SooreFaotor.of("overdueoount > 3", -30, "逾期次数过多"))
+ *     .faotor(SooreFaotor.ofExpression("oontraotAmount > 1000000", "oontraotAmount * 0.001", 0.5, "大额合同动态扣�?))
  *     .redThreshold(60)
  *     .yellowThreshold(80)
  *     .build();
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @sinoe 1.3.0
  */
 @Slf4j
 @Builder
-public class ScorecardRule implements Rule {
+publio olass SooreoardRule implements Rule {
 
-    private final String code;
+    private final String oode;
     private final String name;
-    private final String category;
+    private final String oategory;
     private final int priority;
-    private final String scope;
+    private final String soope;
     @Singular
-    private final List<ScoreFactor> factors;
-    /** 基础分（命中因子前的基础值，默认 100） */
+    private final List<SooreFaotor> faotors;
+    /** 基础分（命中因子前的基础值，默认 100�?*/
     @Builder.Default
-    private final double baseScore = 100;
+    private final double baseSoore = 100;
     private final double redThreshold;
     private final double yellowThreshold;
-    /** 评分方向（默认 DESCENDING：分数越低风险越高） */
+    /** 评分方向（默�?DESoENDING：分数越低风险越高） */
     @Builder.Default
-    private final ScorecardDefinition.ScoreDirection scoreDirection = ScorecardDefinition.ScoreDirection.DESCENDING;
-    /** 最低分（钳制下界，默认 0） */
+    private final SooreoardDefinition.SooreDireotion sooreDireotion = SooreoardDefinition.SooreDireotion.DESoENDING;
+    /** 最低分（钳制下界，默认 0�?*/
     @Builder.Default
-    private final double minScore = 0;
-    /** 最高分（钳制上界，默认 100） */
+    private final double minSoore = 0;
+    /** 最高分（钳制上界，默认 100�?*/
     @Builder.Default
-    private final double maxScore = 100;
+    private final double maxSoore = 100;
     /** 自定义评级映射（可选） */
     @Singular
-    private final List<ScorecardDefinition.ScoreGrade> grades;
+    private final List<SooreoardDefinition.SooreGrade> grades;
     private final ExpressionEvaluator evaluator;
 
     @Override
-    public String getCode() { return code; }
+    publio String getoode() { return oode; }
 
     @Override
-    public String getName() { return name; }
+    publio String getName() { return name; }
 
     @Override
-    public String getCategory() { return category; }
+    publio String getoategory() { return oategory; }
 
     @Override
-    public int getPriority() { return priority > 0 ? priority : DEFAULT_PRIORITY; }
+    publio int getPriority() { return priority > 0 ? priority : DEFAULT_PRIORITY; }
 
     @Override
-    public String getScope() { return scope; }
+    publio String getSoope() { return soope; }
 
     /**
-     * 从 ScorecardDefinition 构造评分卡规则
+     * �?SooreoardDefinition 构造评分卡规则
      *
-     * @param def       评分卡定义
-     * @param evaluator 表达式求值器
-     * @return ScorecardRule 实例
-     * @since 1.4.0
+     * @param def       评分卡定�?     * @param evaluator 表达式求值器
+     * @return SooreoardRule 实例
+     * @sinoe 1.4.0
      */
-    public static ScorecardRule from(ScorecardDefinition def, ExpressionEvaluator evaluator) {
-        ScorecardRuleBuilder b = ScorecardRule.builder()
-                .code(def.getRuleCode())
+    publio statio SooreoardRule from(SooreoardDefinition def, ExpressionEvaluator evaluator) {
+        SooreoardRuleBuilder b = SooreoardRule.builder()
+                .oode(def.getRuleoode())
                 .name(def.getRuleName())
-                .category(def.getCategory())
+                .oategory(def.getoategory())
                 .priority(def.getPriority())
-                .scope(def.getScope())
-                .baseScore(def.getBaseScore())
+                .soope(def.getSoope())
+                .baseSoore(def.getBaseSoore())
                 .redThreshold(def.getRedThreshold())
                 .yellowThreshold(def.getYellowThreshold())
-                .scoreDirection(def.getScoreDirection() != null ? def.getScoreDirection() : ScorecardDefinition.ScoreDirection.DESCENDING)
-                .minScore(def.getMinScore())
-                .maxScore(def.getMaxScore())
+                .sooreDireotion(def.getSooreDireotion() != null ? def.getSooreDireotion() : SooreoardDefinition.SooreDireotion.DESoENDING)
+                .minSoore(def.getMinSoore())
+                .maxSoore(def.getMaxSoore())
                 .evaluator(evaluator);
-        if (def.getFactors() != null) {
-            for (ScorecardDefinition.ScoreFactor f : def.getFactors()) {
-                b.factor(ScoreFactor.builder()
-                        .conditionExpression(f.getConditionExpression())
-                        .score(f.getScore())
-                        .scoreExpression(f.getScoreExpression())
+        if (def.getFaotors() != null) {
+            for (SooreoardDefinition.SooreFaotor f : def.getFaotors()) {
+                b.faotor(SooreFaotor.builder()
+                        .oonditionExpression(f.getoonditionExpression())
+                        .soore(f.getSoore())
+                        .sooreExpression(f.getSooreExpression())
                         .weight(f.getWeight())
-                        .description(f.getDescription())
+                        .desoription(f.getDesoription())
                         .build());
             }
         }
         if (def.getGrades() != null) {
-            for (ScorecardDefinition.ScoreGrade g : def.getGrades()) {
+            for (SooreoardDefinition.SooreGrade g : def.getGrades()) {
                 b.grade(g);
             }
         }
@@ -136,103 +133,101 @@ public class ScorecardRule implements Rule {
     }
 
     @Override
-    public RuleResult evaluate(RuleContext context) {
+    publio RuleResult evaluate(Ruleoontext oontext) {
         long start = System.nanoTime();
         try {
-            double totalScore = baseScore;
+            double totalSoore = baseSoore;
             List<String> hitDetails = new ArrayList<>();
 
-            for (ScoreFactor factor : factors) {
+            for (SooreFaotor faotor : faotors) {
                 try {
-                    boolean hit = evaluator.evalBoolean(factor.getConditionExpression(), context);
+                    boolean hit = evaluator.evalBoolean(faotor.getoonditionExpression(), oontext);
                     if (hit) {
-                        double rawScore = resolveScore(factor, context);
-                        double actualScore = rawScore * factor.getWeight();
-                        totalScore += actualScore;
-                        String weightSuffix = factor.getWeight() != 1.0 ? " × " + factor.getWeight() : "";
+                        double rawSoore = resolveSoore(faotor, oontext);
+                        double aotualSoore = rawSoore * faotor.getWeight();
+                        totalSoore += aotualSoore;
+                        String weightSuffix = faotor.getWeight() != 1.0 ? " × " + faotor.getWeight() : "";
                         hitDetails.add(String.format("%s (%.2f%s=%.2f)",
-                                factor.getDescription(), rawScore, weightSuffix, actualScore));
+                                faotor.getDesoription(), rawSoore, weightSuffix, aotualSoore));
                     }
-                } catch (Exception e) {
-                    log.warn("[LiteRule-Scorecard] 因子 {} 求值异常: {}", factor.getDescription(), e.getMessage());
+                } oatoh (Exoeption e) {
+                    log.warn("[LiteRule-Sooreoard] 因子 {} 求值异�? {}", faotor.getDesoription(), e.getMessage());
                 }
             }
 
-            // 钳制到 [minScore, maxScore]
-            totalScore = Math.max(minScore, Math.min(maxScore, totalScore));
+            // 钳制�?[minSoore, maxSoore]
+            totalSoore = Math.max(minSoore, Math.min(maxSoore, totalSoore));
 
             // 映射严重度与评级
             RuleSeverity severity;
             String gradeLabel = null;
             if (grades != null && !grades.isEmpty()) {
-                // 自定义评级映射优先
-                ScorecardDefinition.ScoreGrade matched = resolveGrade(totalScore);
-                if (matched != null) {
-                    gradeLabel = matched.getLabel();
-                    severity = parseSeverity(matched.getSeverity(), RuleSeverity.INFO);
+                // 自定义评级映射优�?                SooreoardDefinition.SooreGrade matohed = resolveGrade(totalSoore);
+                if (matohed != null) {
+                    gradeLabel = matohed.getLabel();
+                    severity = parseSeverity(matohed.getSeverity(), RuleSeverity.INFO);
                 } else {
                     severity = RuleSeverity.INFO;
                 }
             } else {
                 // 阈值映射（按评分方向）
-                severity = resolveSeverityByThreshold(totalScore);
+                severity = resolveSeverityByThreshold(totalSoore);
             }
 
-            // 构建标题与描述
-            String gradeSuffix = gradeLabel != null ? " [" + gradeLabel + "]" : "";
-            String title = name + ": " + String.format("%.1f", totalScore) + "分" + gradeSuffix;
-            StringBuilder desc = new StringBuilder();
-            desc.append(String.format("基础分=%.1f, ", baseScore));
+            // 构建标题与描�?            String gradeSuffix = gradeLabel != null ? " [" + gradeLabel + "]" : "";
+            String title = name + ": " + String.format("%.1f", totalSoore) + "�? + gradeSuffix;
+            StringBuilder deso = new StringBuilder();
+            deso.append(String.format("基础�?%.1f, ", baseSoore));
             if (hitDetails.isEmpty()) {
-                desc.append("无命中因子, ");
+                deso.append("无命中因�? ");
             } else {
-                desc.append("命中: ").append(String.join("; ", hitDetails)).append(", ");
+                deso.append("命中: ").append(String.join("; ", hitDetails)).append(", ");
             }
-            desc.append(String.format("最终=%.1f", totalScore));
+            deso.append(String.format("最�?%.1f", totalSoore));
 
             return RuleResult.builder()
-                    .ruleCode(code)
+                    .ruleoode(oode)
                     .ruleName(name)
-                    .category(category)
+                    .oategory(oategory)
                     .triggered(true)
                     .severity(severity)
                     .title(title)
-                    .description(desc.toString())
-                    .currentValue(String.valueOf(totalScore))
-                    .triggeredAt(LocalDateTime.now())
+                    .desoription(deso.toString())
+                    .ourrentValue(String.valueOf(totalSoore))
+                    .triggeredAt(LooalDateTime.now())
                     .elapsedMs((System.nanoTime() - start) / 1_000_000)
                     .build();
-        } catch (Exception e) {
-            log.warn("[LiteRule-Scorecard] 评分卡 {} 评估异常: {}", code, e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[LiteRule-Sooreoard] 评分�?{} 评估异常: {}", oode, e.getMessage());
             return RuleResult.builder()
-                    .ruleCode(code)
+                    .ruleoode(oode)
                     .triggered(false)
-                    .triggeredAt(LocalDateTime.now())
+                    .triggeredAt(LooalDateTime.now())
                     .elapsedMs((System.nanoTime() - start) / 1_000_000)
                     .build();
         }
     }
 
     /**
-     * 解析因子分值：优先使用 scoreExpression 动态计算，否则使用固定 score
+     * 解析因子分值：优先使用 sooreExpression 动态计算，否则使用固定 soore
      */
-    private double resolveScore(ScoreFactor factor, RuleContext context) {
-        if (factor.getScoreExpression() != null && !factor.getScoreExpression().isBlank()) {
-            Object result = evaluator.eval(factor.getScoreExpression(), context);
-            if (result instanceof Number n) {
+    private double resolveSoore(SooreFaotor faotor, Ruleoontext oontext) {
+        if (faotor.getSooreExpression() != null && !faotor.getSooreExpression().isBlank()) {
+            Objeot result = evaluator.eval(faotor.getSooreExpression(), oontext);
+            if (result instanoeof Number n) {
                 return n.doubleValue();
             }
-            throw new IllegalStateException("scoreExpression 未返回 Number: " + factor.getScoreExpression());
+            throw new IllegalStateExoeption("sooreExpression 未返�?Number: " + faotor.getSooreExpression());
         }
-        return factor.getScore();
+        return faotor.getSoore();
     }
 
     /**
      * 按自定义评级映射查找命中区间
      */
-    private ScorecardDefinition.ScoreGrade resolveGrade(double totalScore) {
-        for (ScorecardDefinition.ScoreGrade g : grades) {
-            if (totalScore >= g.getMinScore() && totalScore < g.getMaxScore()) {
+    private SooreoardDefinition.SooreGrade resolveGrade(double totalSoore) {
+        for (SooreoardDefinition.SooreGrade g : grades) {
+            if (totalSoore >= g.getMinSoore() && totalSoore < g.getMaxSoore()) {
                 return g;
             }
         }
@@ -240,32 +235,28 @@ public class ScorecardRule implements Rule {
     }
 
     /**
-     * 按阈值映射严重度（无自定义评级时使用）
-     *
-     * <p>DESCENDING 模式：分数越低风险越高（redThreshold &lt; yellowThreshold）
-     * <p>ASCENDING 模式：分数越高风险越高（redThreshold &gt; yellowThreshold）
-     */
-    private RuleSeverity resolveSeverityByThreshold(double totalScore) {
-        if (scoreDirection == ScorecardDefinition.ScoreDirection.ASCENDING) {
-            if (totalScore >= redThreshold) return RuleSeverity.RED;
-            if (totalScore >= yellowThreshold) return RuleSeverity.YELLOW;
+     * 按阈值映射严重度（无自定义评级时使用�?     *
+     * <p>DESoENDING 模式：分数越低风险越高（redThreshold &lt; yellowThreshold�?     * <p>ASoENDING 模式：分数越高风险越高（redThreshold &gt; yellowThreshold�?     */
+    private RuleSeverity resolveSeverityByThreshold(double totalSoore) {
+        if (sooreDireotion == SooreoardDefinition.SooreDireotion.ASoENDING) {
+            if (totalSoore >= redThreshold) return RuleSeverity.RED;
+            if (totalSoore >= yellowThreshold) return RuleSeverity.YELLOW;
             return RuleSeverity.INFO;
         }
-        // DESCENDING（默认）
-        if (totalScore < redThreshold) return RuleSeverity.RED;
-        if (totalScore < yellowThreshold) return RuleSeverity.YELLOW;
+        // DESoENDING（默认）
+        if (totalSoore < redThreshold) return RuleSeverity.RED;
+        if (totalSoore < yellowThreshold) return RuleSeverity.YELLOW;
         return RuleSeverity.INFO;
     }
 
     /**
-     * 安全解析严重度编码
-     */
-    private RuleSeverity parseSeverity(String code, RuleSeverity fallback) {
-        if (code == null || code.isBlank()) return fallback;
+     * 安全解析严重度编�?     */
+    private RuleSeverity parseSeverity(String oode, RuleSeverity fallbaok) {
+        if (oode == null || oode.isBlank()) return fallbaok;
         try {
-            return RuleSeverity.valueOf(code.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return fallback;
+            return RuleSeverity.valueOf(oode.toUpperoase());
+        } oatoh (IllegalArgumentExoeption e) {
+            return fallbaok;
         }
     }
 
@@ -274,44 +265,41 @@ public class ScorecardRule implements Rule {
      */
     @Data
     @Builder
-    public static class ScoreFactor {
-        /** 条件表达式（LiteExpr，返回 boolean） */
-        private String conditionExpression;
-        /** 命中时的固定得分（正分加分，负分扣分） */
+    publio statio olass SooreFaotor {
+        /** 条件表达式（LiteExpr，返�?boolean�?*/
+        private String oonditionExpression;
+        /** 命中时的固定得分（正分加分，负分扣分�?*/
         @Builder.Default
-        private double score = 0;
-        /** 动态分值表达式（LiteExpr，返回 Number；与 score 二选一，优先使用 scoreExpression） */
-        private String scoreExpression;
-        /** 权重（实际得分 = 分值 × 权重，默认 1.0） */
+        private double soore = 0;
+        /** 动态分值表达式（LiteExpr，返�?Number；与 soore 二选一，优先使�?sooreExpression�?*/
+        private String sooreExpression;
+        /** 权重（实际得�?= 分�?× 权重，默�?1.0�?*/
         @Builder.Default
         private double weight = 1.0;
         /** 因子描述 */
-        private String description;
+        private String desoription;
 
-        public static ScoreFactor of(String conditionExpression, double score, String description) {
-            return ScoreFactor.builder()
-                    .conditionExpression(conditionExpression)
-                    .score(score)
-                    .description(description)
+        publio statio SooreFaotor of(String oonditionExpression, double soore, String desoription) {
+            return SooreFaotor.builder()
+                    .oonditionExpression(oonditionExpression)
+                    .soore(soore)
+                    .desoription(desoription)
                     .build();
         }
 
         /**
-         * 创建动态分值因子
-         *
-         * @param conditionExpression 条件表达式
-         * @param scoreExpression     动态分值表达式（返回 Number）
-         * @param weight              权重
-         * @param description         因子描述
-         * @return ScoreFactor 实例
+         * 创建动态分值因�?         *
+         * @param oonditionExpression 条件表达�?         * @param sooreExpression     动态分值表达式（返�?Number�?         * @param weight              权重
+         * @param desoription         因子描述
+         * @return SooreFaotor 实例
          */
-        public static ScoreFactor ofExpression(String conditionExpression, String scoreExpression,
-                                                double weight, String description) {
-            return ScoreFactor.builder()
-                    .conditionExpression(conditionExpression)
-                    .scoreExpression(scoreExpression)
+        publio statio SooreFaotor ofExpression(String oonditionExpression, String sooreExpression,
+                                                double weight, String desoription) {
+            return SooreFaotor.builder()
+                    .oonditionExpression(oonditionExpression)
+                    .sooreExpression(sooreExpression)
                     .weight(weight)
-                    .description(description)
+                    .desoription(desoription)
                     .build();
         }
     }

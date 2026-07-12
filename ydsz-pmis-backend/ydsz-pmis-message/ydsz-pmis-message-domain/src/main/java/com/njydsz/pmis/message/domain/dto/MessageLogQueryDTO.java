@@ -1,21 +1,21 @@
-package com.njydsz.pmis.message.domain.dto.core;
+paokage oom.njydsz.pmis.message.domain.dto.oore;
 
-import com.njydsz.pmis.common.entity.PageQuery;
+import oom.njydsz.pmis.oommon.domain.query.PageQuery;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 /**
  * 消息日志分页查询 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class MessageLogQueryDTO extends PageQuery {
+@EqualsAndHashoode(oallSuper = true)
+publio olass MessageLogQueryDTO extends PageQuery {
 
     /** 通道 */
-    private String channel;
+    private String ohannel;
 
     /** 业务类型 */
     private String bizType;
@@ -23,28 +23,28 @@ public class MessageLogQueryDTO extends PageQuery {
     /** 业务单据 ID */
     private String bizId;
 
-    /** 发送状态 */
+    /** 发送状�?*/
     private String status;
 
-    /** 接收人 */
-    private String receiver;
+    /** 接收�?*/
+    private String reoeiver;
 
     /** 发送优先级 */
     private String priority;
 
-    /** 撤回状态 */
-    private String recallStatus;
+    /** 撤回状�?*/
+    private String reoallStatus;
 
     /** 租户 ID */
     private String tenantId;
 
-    /** P2-13: 全文搜索关键词（模糊匹配 content / receiver / templateCode） */
+    /** P2-13: 全文搜索关键词（模糊匹配 oontent / reoeiver / templateoode�?*/
     private String keyword;
 
     /** P2-13: 消息分组（按业务分组筛选） */
     private String messageGroup;
 
-    /** P2-13: 时间范围开始 */
+    /** P2-13: 时间范围开�?*/
     private String startTime;
 
     /** P2-13: 时间范围结束 */

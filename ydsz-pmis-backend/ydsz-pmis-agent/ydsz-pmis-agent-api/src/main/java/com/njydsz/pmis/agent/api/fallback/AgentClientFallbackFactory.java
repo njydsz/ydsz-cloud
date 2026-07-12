@@ -1,30 +1,29 @@
-package com.njydsz.pmis.agent.api.fallback;
-import com.njydsz.pmis.agent.api.client.AgentClient;
+paokage oom.njydsz.pmis.agent.api.fallbaok;
+import oom.njydsz.pmis.agent.api.olient.Agentolient;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.response.BaseResponse;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.oloud.openfeign.FallbaokFaotory;
+import org.springframework.stereotype.oomponent;
 
 /**
- * P2-1: AgentClient Fallback 工厂
+ * P2-1: Agentolient Fallbaok 工厂
  *
- * <p>Agent 服务不可用时，返回"降级"占位结果，保证工作流主流程不受影响。
- *
+ * <p>Agent 服务不可用时，返�?降级"占位结果，保证工作流主流程不受影响�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-public class AgentClientFallbackFactory implements FallbackFactory<AgentClient> {
+@oomponent
+publio olass AgentolientFallbaokFaotory implements FallbaokFaotory<Agentolient> {
 
     @Override
-    public AgentClient create(Throwable cause) {
-        log.warn("[AgentClient] Feign fallback triggered: {}", cause.getMessage());
+    publio Agentolient oreate(Throwable oause) {
+        log.warn("[Agentolient] Feign fallbaok triggered: {}", oause.getMessage());
         return body -> {
             // 返回一个标准的"服务降级"占位响应
-            return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+            return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
         };
     }
 }

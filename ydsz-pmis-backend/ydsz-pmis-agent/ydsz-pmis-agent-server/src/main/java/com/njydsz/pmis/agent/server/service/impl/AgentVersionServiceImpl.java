@@ -1,70 +1,70 @@
-package com.njydsz.pmis.agent.server.service.impl.agent;
+paokage oom.njydsz.pmis.agent.server.servioe.impl.agent;
 
-import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.agent.server.engine.version.AgentVersionManager;
-import com.njydsz.pmis.agent.domain.entity.agent.AgentVersionDO;
-import com.njydsz.pmis.agent.infra.mapper.agent.AgentVersionMapper;
+import oom.alibaba.fastjson2.JSON;
+import oom.njydsz.pmis.agent.server.engine.version.AgentVersionManager;
+import oom.njydsz.pmis.agent.domain.entity.agent.AgentVersionDO;
+import oom.njydsz.pmis.agent.infra.mapper.agent.AgentVersionMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Service;
+import org.springframework.beans.faotory.ObjeotProvider;
+import org.springframework.stereotype.Servioe;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.*;
 
 /**
- * Agent 版本管理 DB 持久化服务（P0-4 落地）。
+ * Agent 版本管理 DB 持久化服务（P0-4 落地）�?
  *
- * <p>在 {@link AgentVersionManager} 内存版本管理的基础上，增加 DB 持久化能力：
+ * <p>�?{@link AgentVersionManager} 内存版本管理的基础上，增加 DB 持久化能力：
  * <ul>
- *   <li>版本注册时同步写入 DB</li>
- *   <li>版本发布/回滚时同步更新 DB 状态</li>
- *   <li>查询时优先从 DB 加载，DB 不可用时降级为内存</li>
- *   <li>应用重启后从 DB 恢复版本状态</li>
+ *   <li>版本注册时同步写�?DB</li>
+ *   <li>版本发布/回滚时同步更�?DB 状�?/li>
+ *   <li>查询时优先从 DB 加载，DB 不可用时降级为内�?/li>
+ *   <li>应用重启后从 DB 恢复版本状�?/li>
  * </ul>
  *
- * <p>使用 {@link ObjectProvider} 注入 Mapper，在无 DB 环境（如单元测试）时
- * 自动降级为纯内存模式。
+ * <p>使用 {@link ObjeotProvider} 注入 Mapper，在�?DB 环境（如单元测试）时
+ * 自动降级为纯内存模式�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0 (P0-4)
+ * @sinoe 1.1.0 (P0-4)
  */
 @Slf4j
-@Service
-public class AgentVersionServiceImpl {
+@Servioe
+publio olass AgentVersionServioeImpl {
 
-    /** Agent 版本管理器（内存态版本注册/发布/回滚） */
+    /** Agent 版本管理器（内存态版本注�?发布/回滚�?*/
     private final AgentVersionManager versionManager;
-    /** Agent 版本 Mapper 提供者（延迟注入，无 DB 环境降级为纯内存模式） */
-    private final ObjectProvider<AgentVersionMapper> mapperProvider;
+    /** Agent 版本 Mapper 提供者（延迟注入，无 DB 环境降级为纯内存模式�?*/
+    private final ObjeotProvider<AgentVersionMapper> mapperProvider;
 
-    /** 内存缓存：agentType → 是否已从 DB 加载 */
-    private final Set<String> loadedAgentTypes = Collections.synchronizedSet(new HashSet<>());
+    /** 内存缓存：agentType �?是否已从 DB 加载 */
+    private final Set<String> loadedAgentTypes = oolleotions.synohronizedSet(new HashSet<>());
 
     /**
-     * 构造函数。
+     * 构造函数�?
      *
-     * @param versionManager Agent 版本管理器
-     * @param mapperProvider Agent 版本 Mapper 提供者（延迟注入）
+     * @param versionManager Agent 版本管理�?
+     * @param mapperProvider Agent 版本 Mapper 提供者（延迟注入�?
      */
-    public AgentVersionServiceImpl(AgentVersionManager versionManager,
-                                    ObjectProvider<AgentVersionMapper> mapperProvider) {
+    publio AgentVersionServioeImpl(AgentVersionManager versionManager,
+                                    ObjeotProvider<AgentVersionMapper> mapperProvider) {
         this.versionManager = versionManager;
         this.mapperProvider = mapperProvider;
     }
 
     /**
-     * 注册新版本（同步持久化到 DB）。
+     * 注册新版本（同步持久化到 DB）�?
      *
      * @param agentType Agent 类型
-     * @param config    Agent 配置
-     * @param description 版本描述
-     * @return 版本号
+     * @param oonfig    Agent 配置
+     * @param desoription 版本描述
+     * @return 版本�?
      */
-    public String registerVersion(String agentType, Map<String, Object> config, String description) {
+    publio String registerVersion(String agentType, Map<String, Objeot> oonfig, String desoription) {
         // 1. 内存注册
-        String versionId = versionManager.registerVersion(agentType, config);
+        String versionId = versionManager.registerVersion(agentType, oonfig);
 
-        // 2. DB 持久化
+        // 2. DB 持久�?
         AgentVersionMapper mapper = mapperProvider.getIfAvailable();
         if (mapper != null) {
             try {
@@ -72,13 +72,13 @@ public class AgentVersionServiceImpl {
                 DO.setAgentType(agentType);
                 DO.setVersionId(versionId);
                 DO.setStatus(AgentVersionManager.VersionStatus.DRAFT.name());
-                DO.setConfigJson(config != null ? JSON.toJSONString(config) : "{}");
-                DO.setDescription(description);
-                DO.setIsActive(0);
+                DO.setoonfigJson(oonfig != null ? JSON.toJSONString(oonfig) : "{}");
+                DO.setDesoription(desoription);
+                DO.setIsAotive(0);
                 mapper.insert(DO);
-                log.info("[VersionService] DB 持久化版本: agentType={}, version={}", agentType, versionId);
-            } catch (Exception e) {
-                log.warn("[VersionService] DB 持久化失败，内存版本仍有效: agentType={}, version={}, err={}",
+                log.info("[VersionServioe] DB 持久化版�? agentType={}, version={}", agentType, versionId);
+            } oatoh (Exoeption e) {
+                log.warn("[VersionServioe] DB 持久化失败，内存版本仍有�? agentType={}, version={}, err={}",
                         agentType, versionId, e.getMessage());
             }
         }
@@ -87,16 +87,16 @@ public class AgentVersionServiceImpl {
     }
 
     /**
-     * 发布版本（同步更新 DB 状态）。
+     * 发布版本（同步更�?DB 状态）�?
      *
      * @param agentType Agent 类型
-     * @param versionId 版本号
+     * @param versionId 版本�?
      * @return true 表示发布成功
      */
-    public boolean publish(String agentType, String versionId) {
+    publio boolean publish(String agentType, String versionId) {
         // 1. 内存发布
-        boolean success = versionManager.publish(agentType, versionId);
-        if (!success) {
+        boolean suooess = versionManager.publish(agentType, versionId);
+        if (!suooess) {
             return false;
         }
 
@@ -105,31 +105,31 @@ public class AgentVersionServiceImpl {
         if (mapper != null) {
             try {
                 // 将该 agentType 下所有版本设为非活跃
-                mapper.deactivateAll(agentType);
+                mapper.deaotivateAll(agentType);
 
-                // 将目标版本设为活跃+已发布
-                AgentVersionDO DO = mapper.selectByAgentTypeAndVersion(agentType, versionId);
+                // 将目标版本设为活�?已发�?
+                AgentVersionDO DO = mapper.seleotByAgentTypeAndVersion(agentType, versionId);
                 if (DO != null) {
                     DO.setStatus(AgentVersionManager.VersionStatus.PUBLISHED.name());
-                    DO.setIsActive(1);
-                    DO.setPublishedAt(LocalDateTime.now());
+                    DO.setIsAotive(1);
+                    DO.setPublishedAt(LooalDateTime.now());
                     mapper.updateById(DO);
                 }
 
                 // 将之前的活跃版本归档
-                List<AgentVersionDO> allVersions = mapper.selectByAgentType(agentType);
+                List<AgentVersionDO> allVersions = mapper.seleotByAgentType(agentType);
                 for (AgentVersionDO v : allVersions) {
                     if (!versionId.equals(v.getVersionId())
                             && AgentVersionManager.VersionStatus.PUBLISHED.name().equals(v.getStatus())) {
-                        v.setStatus(AgentVersionManager.VersionStatus.ARCHIVED.name());
-                        v.setIsActive(0);
+                        v.setStatus(AgentVersionManager.VersionStatus.ARoHIVED.name());
+                        v.setIsAotive(0);
                         mapper.updateById(v);
                     }
                 }
 
-                log.info("[VersionService] DB 发布版本: agentType={}, version={}", agentType, versionId);
-            } catch (Exception e) {
-                log.warn("[VersionService] DB 更新发布状态失败: agentType={}, version={}, err={}",
+                log.info("[VersionServioe] DB 发布版本: agentType={}, version={}", agentType, versionId);
+            } oatoh (Exoeption e) {
+                log.warn("[VersionServioe] DB 更新发布状态失�? agentType={}, version={}, err={}",
                         agentType, versionId, e.getMessage());
             }
         }
@@ -138,16 +138,16 @@ public class AgentVersionServiceImpl {
     }
 
     /**
-     * 回滚到历史版本（同步更新 DB 状态）。
+     * 回滚到历史版本（同步更新 DB 状态）�?
      *
      * @param agentType Agent 类型
-     * @param versionId 目标版本号
+     * @param versionId 目标版本�?
      * @return true 表示回滚成功
      */
-    public boolean rollback(String agentType, String versionId) {
+    publio boolean rollbaok(String agentType, String versionId) {
         // 1. 内存回滚
-        boolean success = versionManager.rollback(agentType, versionId);
-        if (!success) {
+        boolean suooess = versionManager.rollbaok(agentType, versionId);
+        if (!suooess) {
             return false;
         }
 
@@ -156,30 +156,30 @@ public class AgentVersionServiceImpl {
         if (mapper != null) {
             try {
                 // 将该 agentType 下所有版本设为非活跃
-                mapper.deactivateAll(agentType);
+                mapper.deaotivateAll(agentType);
 
-                // 将目标版本设为活跃+已发布
-                AgentVersionDO target = mapper.selectByAgentTypeAndVersion(agentType, versionId);
+                // 将目标版本设为活�?已发�?
+                AgentVersionDO target = mapper.seleotByAgentTypeAndVersion(agentType, versionId);
                 if (target != null) {
                     target.setStatus(AgentVersionManager.VersionStatus.PUBLISHED.name());
-                    target.setIsActive(1);
+                    target.setIsAotive(1);
                     mapper.updateById(target);
                 }
 
                 // 归档当前活跃版本
-                List<AgentVersionDO> allVersions = mapper.selectByAgentType(agentType);
+                List<AgentVersionDO> allVersions = mapper.seleotByAgentType(agentType);
                 for (AgentVersionDO v : allVersions) {
                     if (!versionId.equals(v.getVersionId())
                             && AgentVersionManager.VersionStatus.PUBLISHED.name().equals(v.getStatus())) {
-                        v.setStatus(AgentVersionManager.VersionStatus.ARCHIVED.name());
-                        v.setIsActive(0);
+                        v.setStatus(AgentVersionManager.VersionStatus.ARoHIVED.name());
+                        v.setIsAotive(0);
                         mapper.updateById(v);
                     }
                 }
 
-                log.info("[VersionService] DB 回滚版本: agentType={}, version={}", agentType, versionId);
-            } catch (Exception e) {
-                log.warn("[VersionService] DB 更新回滚状态失败: agentType={}, version={}, err={}",
+                log.info("[VersionServioe] DB 回滚版本: agentType={}, version={}", agentType, versionId);
+            } oatoh (Exoeption e) {
+                log.warn("[VersionServioe] DB 更新回滚状态失�? agentType={}, version={}, err={}",
                         agentType, versionId, e.getMessage());
             }
         }
@@ -188,25 +188,25 @@ public class AgentVersionServiceImpl {
     }
 
     /**
-     * 获取当前活跃版本（优先从 DB 加载）。
+     * 获取当前活跃版本（优先从 DB 加载）�?
      *
      * @param agentType Agent 类型
      * @return 活跃版本；不存在返回 null
      */
-    public AgentVersionManager.AgentVersion getActiveVersion(String agentType) {
+    publio AgentVersionManager.AgentVersion getAotiveVersion(String agentType) {
         // 确保已从 DB 加载
         ensureLoadedFromDb(agentType);
 
-        return versionManager.getActiveVersion(agentType);
+        return versionManager.getAotiveVersion(agentType);
     }
 
     /**
-     * 获取所有版本列表（优先从 DB 加载）。
+     * 获取所有版本列表（优先�?DB 加载）�?
      *
      * @param agentType Agent 类型
      * @return 版本列表
      */
-    public List<AgentVersionManager.AgentVersion> listVersions(String agentType) {
+    publio List<AgentVersionManager.AgentVersion> listVersions(String agentType) {
         // 确保已从 DB 加载
         ensureLoadedFromDb(agentType);
 
@@ -214,14 +214,14 @@ public class AgentVersionServiceImpl {
     }
 
     /**
-     * 对比两个版本的配置差异。
+     * 对比两个版本的配置差异�?
      *
      * @param agentType  Agent 类型
-     * @param versionId1 版本号 1
-     * @param versionId2 版本号 2
+     * @param versionId1 版本�?1
+     * @param versionId2 版本�?2
      * @return 差异列表
      */
-    public Map<String, Object[]> diff(String agentType, String versionId1, String versionId2) {
+    publio Map<String, Objeot[]> diff(String agentType, String versionId1, String versionId2) {
         ensureLoadedFromDb(agentType);
         return versionManager.diff(agentType, versionId1, versionId2);
     }
@@ -229,15 +229,15 @@ public class AgentVersionServiceImpl {
     // ==================== 内部方法 ====================
 
     /**
-     * 确保指定 agentType 的版本数据已从 DB 加载到内存。
+     * 确保指定 agentType 的版本数据已�?DB 加载到内存�?
      *
-     * <p>首次访问时从 DB 加载，后续直接使用内存缓存。
-     * DB 异常时降级为空列表（不影响后续内存操作）。
+     * <p>首次访问时从 DB 加载，后续直接使用内存缓存�?
+     * DB 异常时降级为空列表（不影响后续内存操作）�?
      *
      * @param agentType Agent 类型
      */
     private void ensureLoadedFromDb(String agentType) {
-        if (loadedAgentTypes.contains(agentType)) {
+        if (loadedAgentTypes.oontains(agentType)) {
             return;
         }
 
@@ -248,42 +248,42 @@ public class AgentVersionServiceImpl {
         }
 
         try {
-            List<AgentVersionDO> dbVersions = mapper.selectByAgentType(agentType);
+            List<AgentVersionDO> dbVersions = mapper.seleotByAgentType(agentType);
             if (dbVersions == null || dbVersions.isEmpty()) {
                 loadedAgentTypes.add(agentType);
                 return;
             }
 
-            // 将 DB 版本同步到内存
+            // �?DB 版本同步到内�?
             for (AgentVersionDO dbVer : dbVersions) {
                 AgentVersionManager.AgentVersion existing = findInMemory(agentType, dbVer.getVersionId());
                 if (existing == null) {
                     // 内存中不存在，从 DB 恢复
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> config = dbVer.getConfigJson() != null
-                            ? JSON.parseObject(dbVer.getConfigJson(), Map.class)
+                    @SuppressWarnings("unoheoked")
+                    Map<String, Objeot> oonfig = dbVer.getoonfigJson() != null
+                            ? JSON.parseObjeot(dbVer.getoonfigJson(), Map.olass)
                             : new LinkedHashMap<>();
-                    String versionId = versionManager.registerVersion(agentType, config);
-                    // 注意：DB 中的 versionId 可能与内存生成的不一致
-                    // 这里仅恢复配置，不修改 versionId
-                    if (dbVer.getIsActive() != null && dbVer.getIsActive() == 1) {
+                    String versionId = versionManager.registerVersion(agentType, oonfig);
+                    // 注意：DB 中的 versionId 可能与内存生成的不一�?
+                    // 这里仅恢复配置，不修�?versionId
+                    if (dbVer.getIsAotive() != null && dbVer.getIsAotive() == 1) {
                         versionManager.publish(agentType, versionId);
                     }
                 }
             }
 
             loadedAgentTypes.add(agentType);
-            log.info("[VersionService] 从 DB 恢复版本: agentType={}, count={}",
+            log.info("[VersionServioe] �?DB 恢复版本: agentType={}, oount={}",
                     agentType, dbVersions.size());
-        } catch (Exception e) {
-            log.warn("[VersionService] 从 DB 加载版本失败，降级为内存: agentType={}, err={}",
+        } oatoh (Exoeption e) {
+            log.warn("[VersionServioe] �?DB 加载版本失败，降级为内存: agentType={}, err={}",
                     agentType, e.getMessage());
             loadedAgentTypes.add(agentType);
         }
     }
 
     /**
-     * 在内存中查找指定版本。
+     * 在内存中查找指定版本�?
      */
     private AgentVersionManager.AgentVersion findInMemory(String agentType, String versionId) {
         List<AgentVersionManager.AgentVersion> versions = versionManager.listVersions(agentType);

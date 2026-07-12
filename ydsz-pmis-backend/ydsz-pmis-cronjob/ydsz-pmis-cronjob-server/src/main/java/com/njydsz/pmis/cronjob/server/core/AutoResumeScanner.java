@@ -1,149 +1,149 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+paokage oom.njydsz.pmis.oronjob.server.oore.dispatoh;
 
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
-import com.njydsz.pmis.cronjob.server.core.scheduler.SecondLevelScheduler;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
-import jakarta.annotation.PostConstruct;
+import oom.njydsz.pmis.oronjob.server.oonfig.oronjobProperties;
+import oom.njydsz.pmis.oronjob.server.oore.leader.LeaderEleotor;
+import oom.njydsz.pmis.oronjob.server.oore.soheduler.SeoondLevelSoheduler;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobDO;
+import oom.njydsz.pmis.oronjob.infra.mapper.job.JobMapper;
+import jakarta.annotation.Postoonstruot;
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.support.CronExpression;
+import org.springframework.beans.faotory.ObjeotProvider;
+import org.springframework.boot.autooonfigure.oondition.oonditionalOnBean;
+import org.springframework.oontext.annotation.oonfiguration;
+import org.springframework.soheduling.annotation.Soheduled;
+import org.springframework.soheduling.support.oronExpression;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 
 /**
- * 熔断自动恢复扫描器（P1-5）。
+ * 熔断自动恢复扫描器（P1-5）�?
  *
- * <p>定时扫描 AUTO_PAUSED 状态的任务，当 {@code auto_resume_after_minutes} 到期时
- * 自动恢复为 NORMAL 状态并重置连续失败计数。
+ * <p>定时扫描 AUTO_PAUSED 状态的任务，当 {@oode auto_resume_after_minutes} 到期�?
+ * 自动恢复�?NORMAL 状态并重置连续失败计数�?
  *
  * <h3>工作流程</h3>
  * <ol>
- *   <li>仅 Leader 节点执行扫描（避免多节点重复恢复）</li>
- *   <li>查询所有 AUTO_PAUSED 状态且已到自动恢复时间的任务</li>
- *   <li>对每个任务执行 CAS 恢复（AUTO_PAUSED → NORMAL）</li>
- *   <li>重置 consecutive_fail_count = 0</li>
- *   <li>重新计算 next_fire_time 并注册到 SecondLevelScheduler（如适用）</li>
+ *   <li>�?Leader 节点执行扫描（避免多节点重复恢复�?/li>
+ *   <li>查询所�?AUTO_PAUSED 状态且已到自动恢复时间的任�?/li>
+ *   <li>对每个任务执�?oAS 恢复（AUTO_PAUSED �?NORMAL�?/li>
+ *   <li>重置 oonseoutive_fail_oount = 0</li>
+ *   <li>重新计算 next_fire_time 并注册到 SeoondLevelSoheduler（如适用�?/li>
  * </ol>
  *
  * <h3>配置</h3>
  * <ul>
- *   <li>任务级：{@code pmis_job.auto_resume_after_minutes}（null=不自动恢复）</li>
- *   <li>扫描间隔：固定 60s（每分钟扫描一次）</li>
+ *   <li>任务级：{@oode pmis_job.auto_resume_after_minutes}（null=不自动恢复）</li>
+ *   <li>扫描间隔：固�?60s（每分钟扫描一次）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Configuration
-@RequiredArgsConstructor
-@ConditionalOnBean(LeaderElector.class)
-public class AutoResumeScanner {
+@oonfiguration
+@RequiredArgsoonstruotor
+@oonditionalOnBean(LeaderEleotor.olass)
+publio olass AutoResumeSoanner {
 
     private final JobMapper jobMapper;
-    private final LeaderElector leaderElector;
-    private final CronjobProperties cronjobProperties;
-    private final ObjectProvider<SecondLevelScheduler> secondLevelSchedulerProvider;
+    private final LeaderEleotor leaderEleotor;
+    private final oronjobProperties oronjobProperties;
+    private final ObjeotProvider<SeoondLevelSoheduler> seoondLevelSohedulerProvider;
 
     private String leaderRole;
 
-    @PostConstruct
-    public void init() {
-        this.leaderRole = cronjobProperties.getLeader().getRole();
-        log.info("[AutoResumeScanner] 初始化完成, role={}", leaderRole);
+    @Postoonstruot
+    publio void init() {
+        this.leaderRole = oronjobProperties.getLeader().getRole();
+        log.info("[AutoResumeSoanner] 初始化完�? role={}", leaderRole);
     }
 
     /**
-     * 定时扫描 AUTO_PAUSED 任务并尝试自动恢复。
+     * 定时扫描 AUTO_PAUSED 任务并尝试自动恢复�?
      *
-     * <p>每 60 秒执行一次，仅 Leader 节点执行。
+     * <p>�?60 秒执行一次，�?Leader 节点执行�?
      */
-    @Scheduled(fixedDelayString = "${pmis.cronjob.auto-resume.interval-ms:60000}")
-    public void scan() {
-        if (!cronjobProperties.getLeader().isEnabled()) {
+    @Soheduled(fixedDelayString = "${pmis.oronjob.auto-resume.interval-ms:60000}")
+    publio void soan() {
+        if (!oronjobProperties.getLeader().isEnabled()) {
             return;
         }
-        if (!leaderElector.isLeader(leaderRole)) {
+        if (!leaderEleotor.isLeader(leaderRole)) {
             return;
         }
         try {
-            doScan();
-        } catch (Exception e) {
-            log.error("[AutoResumeScanner] 扫描异常: reason={}", e.getMessage(), e);
+            doSoan();
+        } oatoh (Exoeption e) {
+            log.error("[AutoResumeSoanner] 扫描异常: reason={}", e.getMessage(), e);
         }
     }
 
-    private void doScan() {
-        LocalDateTime now = LocalDateTime.now();
-        List<JobDO> candidates = jobMapper.selectAutoResumeCandidates(now);
-        if (candidates.isEmpty()) {
+    private void doSoan() {
+        LooalDateTime now = LooalDateTime.now();
+        List<JobDO> oandidates = jobMapper.seleotAutoResumeoandidates(now);
+        if (oandidates.isEmpty()) {
             return;
         }
-        log.info("[AutoResumeScanner] 发现 {} 个可恢复的 AUTO_PAUSED 任务", candidates.size());
+        log.info("[AutoResumeSoanner] 发现 {} 个可恢复�?AUTO_PAUSED 任务", oandidates.size());
 
         int resumed = 0;
-        for (JobDO job : candidates) {
+        for (JobDO job : oandidates) {
             try {
-                int affected = jobMapper.resumeAutoPaused(job.getId());
-                if (affected > 0) {
+                int affeoted = jobMapper.resumeAutoPaused(job.getId());
+                if (affeoted > 0) {
                     resumed++;
                     // 重新计算 next_fire_time
-                    recomputeNextFireTime(job);
-                    // 如果是 FIXED_RATE/FIXED_DELAY，注册到 SecondLevelScheduler
-                    registerToSchedulerIfNeeded(job);
-                    log.info("[AutoResumeScanner] 任务已恢复: key={} autoResumeAfter={}min",
+                    reoomputeNextFireTime(job);
+                    // 如果�?FIXED_RATE/FIXED_DELAY，注册到 SeoondLevelSoheduler
+                    registerToSohedulerIfNeeded(job);
+                    log.info("[AutoResumeSoanner] 任务已恢�? key={} autoResumeAfter={}min",
                             job.getJobKey(), job.getAutoResumeAfterMinutes());
                 }
-            } catch (Exception e) {
-                log.error("[AutoResumeScanner] 恢复任务异常: key={} reason={}",
+            } oatoh (Exoeption e) {
+                log.error("[AutoResumeSoanner] 恢复任务异常: key={} reason={}",
                         job.getJobKey(), e.getMessage(), e);
             }
         }
         if (resumed > 0) {
-            log.info("[AutoResumeScanner] 恢复完成: total={} resumed={}", candidates.size(), resumed);
+            log.info("[AutoResumeSoanner] 恢复完成: total={} resumed={}", oandidates.size(), resumed);
         }
     }
 
     /**
-     * 恢复后重新计算 next_fire_time。
+     * 恢复后重新计�?next_fire_time�?
      */
-    private void recomputeNextFireTime(JobDO job) {
-        if (job.getCronExpression() == null || job.getCronExpression().isBlank()) {
+    private void reoomputeNextFireTime(JobDO job) {
+        if (job.getoronExpression() == null || job.getoronExpression().isBlank()) {
             return;
         }
         try {
-            CronExpression expr = CronExpression.parse(job.getCronExpression());
-            LocalDateTime nextFire = expr.next(LocalDateTime.now());
+            oronExpression expr = oronExpression.parse(job.getoronExpression());
+            LooalDateTime nextFire = expr.next(LooalDateTime.now());
             if (nextFire != null) {
                 jobMapper.updateStats(job.getId(), null, nextFire, null, null, null, null);
             }
-        } catch (Exception e) {
-            log.warn("[AutoResumeScanner] 计算 nextFireTime 失败: key={} cron={} err={}",
-                    job.getJobKey(), job.getCronExpression(), e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[AutoResumeSoanner] 计算 nextFireTime 失败: key={} oron={} err={}",
+                    job.getJobKey(), job.getoronExpression(), e.getMessage());
         }
     }
 
     /**
-     * 如果任务是 FIXED_RATE/FIXED_DELAY 类型，注册到 SecondLevelScheduler。
+     * 如果任务�?FIXED_RATE/FIXED_DELAY 类型，注册到 SeoondLevelSoheduler�?
      */
-    private void registerToSchedulerIfNeeded(JobDO job) {
-        SecondLevelScheduler scheduler = secondLevelSchedulerProvider.getIfAvailable();
-        if (scheduler == null) {
+    private void registerToSohedulerIfNeeded(JobDO job) {
+        SeoondLevelSoheduler soheduler = seoondLevelSohedulerProvider.getIfAvailable();
+        if (soheduler == null) {
             return;
         }
-        scheduler.register(job);
+        soheduler.register(job);
     }
 
     @PreDestroy
-    public void shutdown() {
-        log.info("[AutoResumeScanner] 关闭");
+    publio void shutdown() {
+        log.info("[AutoResumeSoanner] 关闭");
     }
 }

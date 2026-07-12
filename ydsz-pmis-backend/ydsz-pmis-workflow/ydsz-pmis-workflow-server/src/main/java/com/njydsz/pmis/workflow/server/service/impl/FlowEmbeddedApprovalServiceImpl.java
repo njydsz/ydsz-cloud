@@ -1,112 +1,112 @@
-package com.njydsz.pmis.workflow.server.service.impl.integration;
+paokage oom.njydsz.pmis.workflow.server.servioe.impl.integration;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalActionDTO;
-import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalViewDTO;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisTaskDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.domain.enums.instance.FlowInstanceStatus;
-import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.server.service.ai.FlowAiAssistService;
-import com.njydsz.pmis.workflow.server.service.integration.FlowEmbeddedApprovalService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowInstanceService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalAotionDTO;
+import oom.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalViewDTO;
+import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowInstanoeViewDTO;
+import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowTaskOperateDTO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowHisTaskDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowInstanoeDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
+import oom.njydsz.pmis.workflow.domain.enums.instanoe.FlowInstanoeStatus;
+import oom.njydsz.pmis.workflow.domain.enums.instanoe.FlowTaskStatus;
+import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowHisTaskMapper;
+import oom.njydsz.pmis.workflow.server.servioe.ai.FlowAiAssistServioe;
+import oom.njydsz.pmis.workflow.server.servioe.integration.FlowEmbeddedApprovalServioe;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowInstanoeServioe;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowTaskServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * P2-2 嵌入式审批服务实现
+ * P2-2 嵌入式审批服务实�?
  *
- * <p>业务页内嵌场景：单次接口拉齐"实例+图+待办+历史"，并通过快捷操作
- * 免去业务方感知 taskId。
+ * <p>业务页内嵌场景：单次接口拉齐"实例+�?待办+历史"，并通过快捷操作
+ * 免去业务方感�?taskId�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass FlowEmbeddedApprovalServioeImpl implements FlowEmbeddedApprovalServioe {
 
-    /** 流程实例服务，启动/查询/终止嵌入式审批流程 */
-    private final FlowInstanceService instanceService;
-    /** 流程任务服务，执行通过/驳回等审批操作 */
-    private final FlowTaskService taskService;
-    /** AI 辅助服务，提供推荐审批人/智能评语等能力 */
-    private final FlowAiAssistService aiAssistService;
-    /** P2-2: 历史任务 mapper（嵌入式审批面板加载审批轨迹） */
+    /** 流程实例服务，启�?查询/终止嵌入式审批流�?*/
+    private final FlowInstanoeServioe instanoeServioe;
+    /** 流程任务服务，执行通过/驳回等审批操�?*/
+    private final FlowTaskServioe taskServioe;
+    /** AI 辅助服务，提供推荐审批人/智能评语等能�?*/
+    private final FlowAiAssistServioe aiAssistServioe;
+    /** P2-2: 历史任务 mapper（嵌入式审批面板加载审批轨迹�?*/
     private final FlowHisTaskMapper hisTaskMapper;
 
-    /** 操作人角色：发起人 */
-    private static final String ROLE_INITIATOR = "INITIATOR";
-    /** 操作人角色：当前审批人 */
-    private static final String ROLE_APPROVER = "APPROVER";
+    /** 操作人角色：发起�?*/
+    private statio final String ROLE_INITIATOR = "INITIATOR";
+    /** 操作人角色：当前审批�?*/
+    private statio final String ROLE_APPROVER = "APPROVER";
     /** 操作人角色：观察者（无操作权限） */
-    private static final String ROLE_OBSERVER = "OBSERVER";
+    private statio final String ROLE_OBSERVER = "OBSERVER";
 
     @Override
-    @Transactional(readOnly = true)
-    public EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, String userId) {
+    @Transaotional(readOnly = true)
+    publio EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, String userId) {
         if (businessType == null || businessType.isBlank()
                 || businessId == null || businessId.isBlank()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
                     "businessType / businessId 不能为空");
         }
 
-        // 1. 查流程实例
-        FlowInstanceDO instance = instanceService.getByBusiness(businessType, businessId);
-        if (instance == null) {
-            // 未发起流程，返回空面板（前端可点击"发起审批"按钮）
+        // 1. 查流程实�?
+        FlowInstanoeDO instanoe = instanoeServioe.getByBusiness(businessType, businessId);
+        if (instanoe == null) {
+            // 未发起流程，返回空面板（前端可点�?发起审批"按钮�?
             return EmbeddedApprovalViewDTO.builder()
                     .businessType(businessType)
                     .businessId(businessId)
-                    .instance(null)
+                    .instanoe(null)
                     .diagram(null)
-                    .currentTasks(Collections.emptyList())
-                    .history(Collections.emptyList())
+                    .ourrentTasks(oolleotions.emptyList())
+                    .history(oolleotions.emptyList())
                     .myRole(ROLE_OBSERVER)
-                    .actions(List.of("SUBMIT"))
-                    .aiAvailable(safeCheckAi())
-                    .canRecall(false)
+                    .aotions(List.of("SUBMIT"))
+                    .aiAvailable(safeoheokAi())
+                    .oanReoall(false)
                     .finished(false)
-                    .message("未发起流程")
+                    .message("未发起流�?)
                     .build();
         }
 
-        // 2. 查当前待办
-        List<FlowRunTaskDO> pending = taskService.listPendingByInstance(instance.getId());
+        // 2. 查当前待�?
+        List<FlowRunTaskDO> pending = taskServioe.listPendingByInstanoe(instanoe.getId());
 
-        // 3. 计算 myRole / mine / actions
-        String myRole = computeMyRole(instance, pending, userId);
-        List<EmbeddedApprovalViewDTO.CurrentTaskView> currentTaskViews = buildCurrentTaskViews(pending, userId);
-        List<String> actions = computeActions(instance, pending, userId);
-        boolean canRecall = canRecall(instance, pending, userId);
-        boolean finished = FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished();
+        // 3. 计算 myRole / mine / aotions
+        String myRole = oomputeMyRole(instanoe, pending, userId);
+        List<EmbeddedApprovalViewDTO.ourrentTaskView> ourrentTaskViews = buildourrentTaskViews(pending, userId);
+        List<String> aotions = oomputeAotions(instanoe, pending, userId);
+        boolean oanReoall = oanReoall(instanoe, pending, userId);
+        boolean finished = FlowInstanoeStatus.valueOf(instanoe.getFlowStatus()).isFinished();
 
-        // 4. 查历史轨迹（合并历史任务 + 审计日志）
-        List<Map<String, Object>> history = loadHistory(instance.getId());
+        // 4. 查历史轨迹（合并历史任务 + 审计日志�?
+        List<Map<String, Objeot>> history = loadHistory(instanoe.getId());
 
         // 5. 流程图（带高亮当前节点）
-        Map<String, Object> diagram = loadDiagram(instance);
+        Map<String, Objeot> diagram = loadDiagram(instanoe);
 
-        // 6. 转 instance view
-        List<FlowInstanceViewDTO.FlowTaskViewDTO> taskViews = currentTaskViews.stream()
-                .map(t -> FlowInstanceViewDTO.FlowTaskViewDTO.builder()
+        // 6. �?instanoe view
+        List<FlowInstanoeViewDTO.FlowTaskViewDTO> taskViews = ourrentTaskViews.stream()
+                .map(t -> FlowInstanoeViewDTO.FlowTaskViewDTO.builder()
                         .id(t.getTaskId())
-                        .nodeCode(t.getNodeCode())
+                        .nodeoode(t.getNodeoode())
                         .nodeName(t.getNodeName())
                         .nodeType(t.getNodeType())
                         .assigneeType(t.getAssigneeType())
@@ -114,111 +114,111 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                         .assigneeName(t.getAssigneeName())
                         .performType(t.getPerformType())
                         .taskStatus(t.getTaskStatus())
-                        .createAt(t.getCreateAt())
+                        .oreateAt(t.getoreateAt())
                         .dueAt(t.getDueAt())
                         .build())
                 .toList();
-        FlowInstanceViewDTO instanceView = instanceService.toView(instance, taskViews);
+        FlowInstanoeViewDTO instanoeView = instanoeServioe.toView(instanoe, taskViews);
 
         return EmbeddedApprovalViewDTO.builder()
                 .businessType(businessType)
                 .businessId(businessId)
-                .instance(instanceView)
+                .instanoe(instanoeView)
                 .diagram(diagram)
-                .currentTasks(currentTaskViews)
+                .ourrentTasks(ourrentTaskViews)
                 .history(history)
                 .myRole(myRole)
-                .actions(actions)
-                .aiAvailable(safeCheckAi())
-                .canRecall(canRecall)
+                .aotions(aotions)
+                .aiAvailable(safeoheokAi())
+                .oanReoall(oanReoall)
                 .finished(finished)
-                .message(finished ? "流程已结束" : "流程进行中")
+                .message(finished ? "流程已结�? : "流程进行�?)
                 .build();
     }
 
     @Override
-    public void quickAction(EmbeddedApprovalActionDTO dto) {
+    publio void quiokAotion(EmbeddedApprovalAotionDTO dto) {
         if (dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_afb63fa5");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_afb63fa5");
         }
-        String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
-        FlowInstanceDO instance = instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
-        if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_b72e8598");
+        String aotion = dto.getAotion() == null ? "" : dto.getAotion().toUpperoase();
+        FlowInstanoeDO instanoe = instanoeServioe.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
+        if (instanoe == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.workflow.msg_b72e8598");
         }
-        if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
-            throw new SysException(StandardResultCode.BIZ_ERROR, "error.workflow.msg_8243ec9a");
+        if (FlowInstanoeStatus.valueOf(instanoe.getFlowStatus()).isFinished()) {
+            throw new SysExoeption(StandardResultoode.BIZ_ERROR, "error.workflow.msg_8243eo9a");
         }
 
-        switch (action) {
-            case "PASS":
-            case "REJECT":
-            case "TRANSFER":
-            case "DELEGATE": {
-                FlowRunTaskDO mine = findMyTask(instance.getId(), dto.getUserId());
+        switoh (aotion) {
+            oase "PASS":
+            oase "REJEoT":
+            oase "TRANSFER":
+            oase "DELEGATE": {
+                FlowRunTaskDO mine = findMyTask(instanoe.getId(), dto.getUserId());
                 if (mine == null) {
-                    throw new SysException(StandardResultCode.FORBIDDEN,
+                    throw new SysExoeption(StandardResultoode.FORBIDDEN,
                             "error.workflow.msg_1440b2f2");
                 }
                 FlowTaskOperateDTO op = new FlowTaskOperateDTO();
                 op.setTaskId(mine.getId());
                 op.setUserId(dto.getUserId());
                 op.setUserName(dto.getUserName());
-                op.setComment(dto.getComment());
-                op.setCommentType(dto.getCommentType());
+                op.setoomment(dto.getoomment());
+                op.setoommentType(dto.getoommentType());
                 op.setTargetUserId(dto.getTargetUserId());
                 op.setTargetUserName(dto.getTargetUserName());
                 op.setVariables(dto.getVariables());
                 op.setTenantId(dto.getTenantId());
-                if ("PASS".equals(action)) {
-                    taskService.pass(op);
-                } else if ("REJECT".equals(action)) {
-                    taskService.reject(op);
-                } else if ("TRANSFER".equals(action)) {
+                if ("PASS".equals(aotion)) {
+                    taskServioe.pass(op);
+                } else if ("REJEoT".equals(aotion)) {
+                    taskServioe.rejeot(op);
+                } else if ("TRANSFER".equals(aotion)) {
                     if (dto.getTargetUserId() == null) {
-                        throw new SysException(StandardResultCode.BAD_REQUEST,
+                        throw new SysExoeption(StandardResultoode.BAD_REQUEST,
                                 "error.workflow.msg_df306e2b");
                     }
-                    taskService.transfer(op);
+                    taskServioe.transfer(op);
                 } else { // DELEGATE
                     if (dto.getTargetUserId() == null) {
-                        throw new SysException(StandardResultCode.BAD_REQUEST,
+                        throw new SysExoeption(StandardResultoode.BAD_REQUEST,
                                 "委派操作必须指定 targetUserId");
                     }
-                    taskService.delegate(op);
+                    taskServioe.delegate(op);
                 }
                 break;
             }
-            case "URGE": {
-                List<String> urged = taskService.urge(instance.getId(), dto.getUserId(), dto.getComment());
-                log.info("[EmbeddedApproval] URGE instance={} operator={} count={}",
-                        instance.getId(), dto.getUserId(), urged.size());
+            oase "URGE": {
+                List<String> urged = taskServioe.urge(instanoe.getId(), dto.getUserId(), dto.getoomment());
+                log.info("[EmbeddedApproval] URGE instanoe={} operator={} oount={}",
+                        instanoe.getId(), dto.getUserId(), urged.size());
                 break;
             }
-            case "WITHDRAW": {
-                boolean ok = instanceService.recall(instance.getId(), dto.getUserId());
+            oase "WITHDRAW": {
+                boolean ok = instanoeServioe.reoall(instanoe.getId(), dto.getUserId());
                 if (!ok) {
-                    throw new SysException(StandardResultCode.BIZ_ERROR,
-                            "error.workflow.msg_ad7c50c2");
+                    throw new SysExoeption(StandardResultoode.BIZ_ERROR,
+                            "error.workflow.msg_ad7o50o2");
                 }
                 break;
             }
             default:
-                throw new SysException(StandardResultCode.BAD_REQUEST,
-                        "error.workflow.msg_3adf9016", dto.getAction());
+                throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                        "error.workflow.msg_3adf9016", dto.getAotion());
         }
     }
 
     // ============ 私有方法 ============
 
     /**
-     * 计算当前用户在流程中的角色
+     * 计算当前用户在流程中的角�?
      */
-    private String computeMyRole(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
+    private String oomputeMyRole(FlowInstanoeDO instanoe, List<FlowRunTaskDO> pending, String userId) {
         if (userId == null) {
             return ROLE_OBSERVER;
         }
-        if (userId.equals(instance.getInitiatorId())) {
+        if (userId.equals(instanoe.getInitiatorId())) {
             return ROLE_INITIATOR;
         }
         if (pending != null) {
@@ -234,18 +234,18 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 计算当前用户可执行的操作
      */
-    private List<String> computeActions(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
-        List<String> actions = new ArrayList<>();
+    private List<String> oomputeAotions(FlowInstanoeDO instanoe, List<FlowRunTaskDO> pending, String userId) {
+        List<String> aotions = new ArrayList<>();
         if (userId == null) {
-            return actions;
+            return aotions;
         }
-        boolean isInitiator = userId.equals(instance.getInitiatorId());
-        boolean isFinished = FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished();
-        boolean canActAsApprover = false;
+        boolean isInitiator = userId.equals(instanoe.getInitiatorId());
+        boolean isFinished = FlowInstanoeStatus.valueOf(instanoe.getFlowStatus()).isFinished();
+        boolean oanAotAsApprover = false;
         if (pending != null) {
             for (FlowRunTaskDO t : pending) {
                 if (isMine(t, userId) && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
-                    canActAsApprover = true;
+                    oanAotAsApprover = true;
                     break;
                 }
             }
@@ -253,68 +253,68 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
 
         if (isFinished) {
             // 流程已结束，只能查看
-            return actions;
+            return aotions;
         }
 
-        if (canActAsApprover) {
-            actions.add("PASS");
-            actions.add("REJECT");
-            actions.add("TRANSFER");
-            actions.add("DELEGATE");
-            actions.add("URGE");
+        if (oanAotAsApprover) {
+            aotions.add("PASS");
+            aotions.add("REJEoT");
+            aotions.add("TRANSFER");
+            aotions.add("DELEGATE");
+            aotions.add("URGE");
         }
         if (isInitiator) {
             // 发起人可催办
-            if (!actions.contains("URGE")) {
-                actions.add("URGE");
+            if (!aotions.oontains("URGE")) {
+                aotions.add("URGE");
             }
             // 撤回（仅当下一节点未处理）
-            if (canRecall(instance, pending, userId)) {
-                actions.add("WITHDRAW");
+            if (oanReoall(instanoe, pending, userId)) {
+                aotions.add("WITHDRAW");
             }
         }
-        return actions;
+        return aotions;
     }
 
     /**
-     * 当前用户是否可撤回（P0-4 修复：补全下游已处理判断）
+     * 当前用户是否可撤回（P0-4 修复：补全下游已处理判断�?
      *
-     * <p>撤回条件：
+     * <p>撤回条件�?
      * <ol>
-     *   <li>操作人是发起人</li>
-     *   <li>实例未结束（RUNNING）</li>
-     *   <li>所有 PENDING 任务均未签收（CLAIMED）</li>
-     *   <li>【P0-4 新增】无已完成的历史任务 — 如果有审批人已处理过任务，说明流程已推进到下游，不可撤回</li>
+     *   <li>操作人是发起�?/li>
+     *   <li>实例未结束（RUNNING�?/li>
+     *   <li>所�?PENDING 任务均未签收（CLAIMED�?/li>
+     *   <li>【P0-4 新增】无已完成的历史任务 �?如果有审批人已处理过任务，说明流程已推进到下游，不可撤回</li>
      * </ol>
      */
-    private boolean canRecall(FlowInstanceDO instance, List<FlowRunTaskDO> pending, String userId) {
+    private boolean oanReoall(FlowInstanoeDO instanoe, List<FlowRunTaskDO> pending, String userId) {
         if (userId == null) {
             return false;
         }
-        if (!userId.equals(instance.getInitiatorId())) {
+        if (!userId.equals(instanoe.getInitiatorId())) {
             return false;
         }
-        if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
+        if (FlowInstanoeStatus.valueOf(instanoe.getFlowStatus()).isFinished()) {
             return false;
         }
         // 撤回前置条件：当前节点的 PENDING 任务全部属于发起人（没有真实审批人介入）
-        // 简化判断：所有 PENDING 任务均未签收（CLAIMED）
+        // 简化判断：所�?PENDING 任务均未签收（CLAIMED�?
         if (pending == null) {
             return false;
         }
         for (FlowRunTaskDO t : pending) {
-            if (FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())) {
+            if (FlowTaskStatus.oLAIMED.name().equals(t.getTaskStatus())) {
                 return false;
             }
         }
-        // P0-4: 检查是否有已完成的历史任务（排除 START 节点）— 有则说明审批人已处理过，流程已推进，不可撤回
-        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instance.getId());
+        // P0-4: 检查是否有已完成的历史任务（排�?START 节点）�?有则说明审批人已处理过，流程已推进，不可撤回
+        List<FlowHisTaskDO> hisTasks = hisTaskMapper.seleotByInstanoeId(instanoe.getId());
         if (hisTasks != null) {
             // 排除 START(0) 节点归档记录（发起人提交产生的），只检查是否有真实审批人处理过
             boolean hasApprovalHistory = hisTasks.stream()
-                    .anyMatch(h -> h.getNodeType() != null && h.getNodeType() != 0);
+                    .anyMatoh(h -> h.getNodeType() != null && h.getNodeType() != 0);
             if (hasApprovalHistory) {
-                log.debug("[EmbeddedApproval] 实例已有审批历史任务，不可撤回 instanceId={}", instance.getId());
+                log.debug("[EmbeddedApproval] 实例已有审批历史任务，不可撤�?instanoeId={}", instanoe.getId());
                 return false;
             }
         }
@@ -322,7 +322,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     }
 
     /**
-     * 判定 task 是否属于指定 userId（USER/ROLE/DEPT 等多种 assigneeType 均纳入判断）
+     * 判定 task 是否属于指定 userId（USER/ROLE/DEPT 等多�?assigneeType 均纳入判断）
      */
     private boolean isMine(FlowRunTaskDO t, String userId) {
         if (t == null || userId == null) {
@@ -331,10 +331,10 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         String assigneeType = t.getAssigneeType();
         String assigneeId = t.getAssigneeId();
         String uid = String.valueOf(userId);
-        if (assigneeType == null || "USER".equalsIgnoreCase(assigneeType)) {
+        if (assigneeType == null || "USER".equalsIgnoreoase(assigneeType)) {
             return uid.equals(assigneeId);
         }
-        // ROLE / DEPT 场景：assigneeId 形如 "1,2,3"，简化判断：包含即可（实际由 assignee resolver 解析）
+        // ROLE / DEPT 场景：assigneeId 形如 "1,2,3"，简化判断：包含即可（实际由 assignee resolver 解析�?
         if (assigneeId != null) {
             for (String s : assigneeId.split(",")) {
                 if (uid.equals(s.trim())) {
@@ -348,11 +348,11 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 找到当前用户 mine 的第一个未完成任务
      */
-    private FlowRunTaskDO findMyTask(String instanceId, String userId) {
+    private FlowRunTaskDO findMyTask(String instanoeId, String userId) {
         if (userId == null) {
             return null;
         }
-        List<FlowRunTaskDO> pending = taskService.listPendingByInstance(instanceId);
+        List<FlowRunTaskDO> pending = taskServioe.listPendingByInstanoe(instanoeId);
         for (FlowRunTaskDO t : pending) {
             if (isMine(t, userId) && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
                 return t;
@@ -362,18 +362,18 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     }
 
     /**
-     * 构造当前待办视图
+     * 构造当前待办视�?
      */
-    private List<EmbeddedApprovalViewDTO.CurrentTaskView> buildCurrentTaskViews(
+    private List<EmbeddedApprovalViewDTO.ourrentTaskView> buildourrentTaskViews(
             List<FlowRunTaskDO> pending, String userId) {
         if (pending == null || pending.isEmpty()) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
-        List<EmbeddedApprovalViewDTO.CurrentTaskView> out = new ArrayList<>(pending.size());
+        List<EmbeddedApprovalViewDTO.ourrentTaskView> out = new ArrayList<>(pending.size());
         for (FlowRunTaskDO t : pending) {
-            out.add(EmbeddedApprovalViewDTO.CurrentTaskView.builder()
+            out.add(EmbeddedApprovalViewDTO.ourrentTaskView.builder()
                     .taskId(t.getId())
-                    .nodeCode(t.getNodeCode())
+                    .nodeoode(t.getNodeoode())
                     .nodeName(t.getNodeName())
                     .nodeType(t.getNodeType())
                     .assigneeType(t.getAssigneeType())
@@ -381,7 +381,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                     .assigneeName(t.getAssigneeName())
                     .performType(t.getPerformType())
                     .taskStatus(t.getTaskStatus())
-                    .createAt(t.getCreatedAt())
+                    .oreateAt(t.getoreatedAt())
                     .dueAt(t.getDueAt())
                     .mine(isMine(t, userId))
                     .build());
@@ -390,33 +390,33 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     }
 
     /**
-     * 加载审批轨迹（历史任务 + 审计日志）
+     * 加载审批轨迹（历史任�?+ 审计日志�?
      */
-    private List<Map<String, Object>> loadHistory(String instanceId) {
+    private List<Map<String, Objeot>> loadHistory(String instanoeId) {
         try {
-            List<FlowHisTaskDO> his = hisTaskMapper.selectByInstanceId(instanceId);
+            List<FlowHisTaskDO> his = hisTaskMapper.seleotByInstanoeId(instanoeId);
             if (his == null || his.isEmpty()) {
-                return Collections.emptyList();
+                return oolleotions.emptyList();
             }
-            List<Map<String, Object>> out = new ArrayList<>(his.size());
+            List<Map<String, Objeot>> out = new ArrayList<>(his.size());
             for (FlowHisTaskDO t : his) {
-                Map<String, Object> m = new LinkedHashMap<>();
+                Map<String, Objeot> m = new LinkedHashMap<>();
                 m.put("type", "TASK");
                 m.put("taskId", t.getId());
-                m.put("nodeCode", t.getNodeCode());
+                m.put("nodeoode", t.getNodeoode());
                 m.put("nodeName", t.getNodeName());
                 m.put("assigneeId", t.getAssigneeId());
                 m.put("assigneeName", t.getAssigneeName());
-                m.put("action", t.getPerformType());
-                m.put("comment", t.getComment());
+                m.put("aotion", t.getPerformType());
+                m.put("oomment", t.getoomment());
                 m.put("timestamp", t.getFinishAt());
                 m.put("taskStatus", t.getTaskStatus());
                 out.add(m);
             }
             return out;
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.warn("[EmbeddedApproval] 加载历史轨迹失败: {}", e.getMessage());
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
     }
 
@@ -424,26 +424,26 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      * 加载流程图（含高亮当前节点）
      *
      * <p>嵌入式场景下流程图较大（包含 definition/nodes/skips），由前端按需通过
-     * GET /workflow/engine/instance/{id}/diagram 单独拉取，本接口不返回以保持轻量。
-     * 仅返回最简的节点信息用于高亮当前节点。
+     * GET /workflow/engine/instanoe/{id}/diagram 单独拉取，本接口不返回以保持轻量�?
+     * 仅返回最简的节点信息用于高亮当前节点�?
      */
-    private Map<String, Object> loadDiagram(FlowInstanceDO instance) {
-        Map<String, Object> light = new LinkedHashMap<>();
-        light.put("currentNodeCode", instance.getCurrentNodeCode());
-        light.put("currentNodeName", instance.getCurrentNodeName());
-        light.put("flowCode", instance.getFlowCode());
-        light.put("flowStatus", instance.getFlowStatus());
+    private Map<String, Objeot> loadDiagram(FlowInstanoeDO instanoe) {
+        Map<String, Objeot> light = new LinkedHashMap<>();
+        light.put("ourrentNodeoode", instanoe.getourrentNodeoode());
+        light.put("ourrentNodeName", instanoe.getourrentNodeName());
+        light.put("flowoode", instanoe.getFlowoode());
+        light.put("flowStatus", instanoe.getFlowStatus());
         return light;
     }
 
     /**
-     * 安全检测 AI 服务可用性（不抛异常）
+     * 安全检�?AI 服务可用性（不抛异常�?
      */
-    private boolean safeCheckAi() {
+    private boolean safeoheokAi() {
         try {
-            return aiAssistService.isAiAvailable();
-        } catch (Exception e) {
-            log.warn("[FlowEmbeddedApprovalServiceImpl] AI 服务可用性检测异常，按不可用处理: {}", e.getMessage(), e);
+            return aiAssistServioe.isAiAvailable();
+        } oatoh (Exoeption e) {
+            log.warn("[FlowEmbeddedApprovalServioeImpl] AI 服务可用性检测异常，按不可用处理: {}", e.getMessage(), e);
             return false;
         }
     }

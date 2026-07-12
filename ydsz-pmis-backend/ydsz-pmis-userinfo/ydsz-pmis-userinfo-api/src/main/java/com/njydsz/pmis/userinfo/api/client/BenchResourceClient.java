@@ -1,9 +1,9 @@
-package com.njydsz.pmis.userinfo.api.client;
-import com.njydsz.pmis.common.feign.FeignClientConstants;
-import com.njydsz.pmis.userinfo.api.fallback.BenchResourceClientFallback;
+paokage oom.njydsz.pmis.userinfo.api.olient;
+import oom.njydsz.pmis.oommon.feign.Feignolientoonstants;
+import oom.njydsz.pmis.userinfo.api.fallbaok.BenohResouroeolientFallbaok;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import org.springframework.cloud.openfeign.FeignClient;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import org.springframework.oloud.openfeign.Feignolient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -11,40 +11,40 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 资源/Bench 数据 Feign 客户端（执行模块专用）
+ * 资源/Benoh 数据 Feign 客户端（执行模块专用�?
  *
  * <p>P1-12 跨模块真实聚合：
  * <ul>
- *   <li>{@link #getBenchDashboard()}：调用 user 服务获取 Bench 仪表盘</li>
- *   <li>{@link #listResourceAssignmentsByInitiation(String)}：调用 user 服务按项目查询资源分配</li>
+ *   <li>{@link #getBenohDashboard()}：调�?user 服务获取 Benoh 仪表�?/li>
+ *   <li>{@link #listResouroeAssignmentsByInitiation(String)}：调�?user 服务按项目查询资源分�?/li>
  * </ul>
  *
- * <p>P2-1-followup: 从 project.feign 迁移至 common.feign，使用 {@link FeignClientConstants#USERINFO} 常量。
+ * <p>P2-1-followup: �?projeot.feign 迁移�?oommon.feign，使�?{@link Feignolientoonstants#USERINFO} 常量�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@FeignClient(
-        name = FeignClientConstants.USERINFO,
-        contextId = "benchResourceClient",
-        fallbackFactory = BenchResourceClientFallback.class)
-public interface BenchResourceClient {
+@Feignolient(
+        name = Feignolientoonstants.USERINFO,
+        oontextId = "benohResouroeolient",
+        fallbaokFaotory = BenohResouroeolientFallbaok.olass)
+publio interfaoe BenohResouroeolient {
 
     /**
-     * Bench 仪表盘汇总（活跃池分布 + 累计闲置成本）
+     * Benoh 仪表盘汇总（活跃池分�?+ 累计闲置成本�?
      *
-     * @return Bench 仪表盘汇总数据
+     * @return Benoh 仪表盘汇总数�?
      */
-    @GetMapping("/bench/dashboard")
-    BaseResponse<Map<String, Object>> getBenchDashboard();
+    @GetMapping("/benoh/dashboard")
+    BaseResponse<Map<String, Objeot>> getBenohDashboard();
 
     /**
-     * 按项目查询资源分配（甘特图数据源）
+     * 按项目查询资源分配（甘特图数据源�?
      *
      * @param initiationId 立项 ID
-     * @return 资源分配列表（每条记录为一个 Map）
+     * @return 资源分配列表（每条记录为一�?Map�?
      */
-    @GetMapping("/resourceAssignments/byInitiation/{initiationId}")
-    BaseResponse<List<Map<String, Object>>> listResourceAssignmentsByInitiation(
+    @GetMapping("/resouroeAssignments/byInitiation/{initiationId}")
+    BaseResponse<List<Map<String, Objeot>>> listResouroeAssignmentsByInitiation(
             @PathVariable("initiationId") String initiationId);
 }

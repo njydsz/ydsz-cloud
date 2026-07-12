@@ -1,256 +1,238 @@
-package com.njydsz.pmis.agent.server.mcp;
+paokage oom.njydsz.pmis.agent.server.mop;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.agent.server.mcp.model.JsonRpcError;
-import com.njydsz.pmis.agent.server.mcp.model.JsonRpcRequest;
-import com.njydsz.pmis.agent.server.mcp.model.JsonRpcResponse;
-import com.njydsz.pmis.agent.server.mcp.model.McpCallToolResult;
-import com.njydsz.pmis.agent.server.mcp.model.McpInitializeResult;
-import com.njydsz.pmis.agent.server.mcp.model.McpToolDefinition;
-import com.njydsz.pmis.agent.server.mcp.transport.McpTransport;
+import oom.fasterxml.jaokson.databind.JsonNode;
+import oom.fasterxml.jaokson.databind.ObjeotMapper;
+import oom.njydsz.pmis.agent.server.mop.model.JsonRpoError;
+import oom.njydsz.pmis.agent.server.mop.model.JsonRpoRequest;
+import oom.njydsz.pmis.agent.server.mop.model.JsonRpoResponse;
+import oom.njydsz.pmis.agent.server.mop.model.MopoallToolResult;
+import oom.njydsz.pmis.agent.server.mop.model.MopInitializeResult;
+import oom.njydsz.pmis.agent.server.mop.model.MopToolDefinition;
+import oom.njydsz.pmis.agent.server.mop.transport.MopTransport;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.oonourrent.atomio.AtomioLong;
 
 /**
- * MCP 客户端（P3-3 落地）。
- *
- * <p>封装 MCP 协议交互，提供以下能力：
+ * MoP 客户端（P3-3 落地）�? *
+ * <p>封装 MoP 协议交互，提供以下能力：
  * <ol>
  *   <li>{@link #initialize()} - 握手</li>
  *   <li>{@link #listTools()} - 发现工具</li>
- *   <li>{@link #callTool(String, Map)} - 调用工具</li>
- *   <li>{@link #close()} - 关闭连接</li>
+ *   <li>{@link #oallTool(String, Map)} - 调用工具</li>
+ *   <li>{@link #olose()} - 关闭连接</li>
  * </ol>
  *
- * <p>使用方式：
- * <pre>
- * McpClient client = new McpClient(transport, objectMapper);
- * client.initialize();
- * List&lt;McpToolDefinition&gt; tools = client.listTools();
- * McpCallToolResult result = client.callTool("read_file", Map.of("path", "/tmp/test.txt"));
- * client.close();
+ * <p>使用方式�? * <pre>
+ * Mopolient olient = new Mopolient(transport, objeotMapper);
+ * olient.initialize();
+ * List&lt;MopToolDefinition&gt; tools = olient.listTools();
+ * MopoallToolResult result = olient.oallTool("read_file", Map.of("path", "/tmp/test.txt"));
+ * olient.olose();
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-3)
+ * @sinoe 1.0.0 (P3-3)
  */
 @Slf4j
-public class McpClient implements AutoCloseable {
+publio olass Mopolient implements Autooloseable {
 
-    /** MCP 协议版本 */
-    public static final String PROTOCOL_VERSION = "2024-11-05";
+    /** MoP 协议版本 */
+    publio statio final String PROTOoOL_VERSION = "2024-11-05";
 
-    private final McpTransport transport;
-    private final ObjectMapper objectMapper;
+    private final MopTransport transport;
+    private final ObjeotMapper objeotMapper;
 
-    private final AtomicLong requestCounter = new AtomicLong(0);
+    private final AtomioLong requestoounter = new AtomioLong(0);
 
     /** 握手结果（initialize 成功后填充） */
-    private volatile McpInitializeResult initializeResult;
+    private volatile MopInitializeResult initializeResult;
 
     /** 是否已初始化 */
     private volatile boolean initialized;
 
     /**
-     * 构造 MCP 客户端。
-     *
-     * @param transport   传输层
-     * @param objectMapper JSON 序列化器
+     * 构�?MoP 客户端�?     *
+     * @param transport   传输�?     * @param objeotMapper JSON 序列化器
      */
-    public McpClient(McpTransport transport, ObjectMapper objectMapper) {
+    publio Mopolient(MopTransport transport, ObjeotMapper objeotMapper) {
         if (transport == null) {
-            throw new IllegalArgumentException("transport 不能为空");
+            throw new IllegalArgumentExoeption("transport 不能为空");
         }
-        if (objectMapper == null) {
-            throw new IllegalArgumentException("objectMapper 不能为空");
+        if (objeotMapper == null) {
+            throw new IllegalArgumentExoeption("objeotMapper 不能为空");
         }
         this.transport = transport;
-        this.objectMapper = objectMapper;
+        this.objeotMapper = objeotMapper;
     }
 
     /**
-     * 执行 MCP 握手。
-     *
-     * <p>发送 initialize 请求，验证协议版本，发送 initialized 通知。
-     *
+     * 执行 MoP 握手�?     *
+     * <p>发�?initialize 请求，验证协议版本，发�?initialized 通知�?     *
      * @return 握手结果
-     * @throws Exception 握手失败
+     * @throws Exoeption 握手失败
      */
-    public McpInitializeResult initialize() throws Exception {
-        ensureConnected();
+    publio MopInitializeResult initialize() throws Exoeption {
+        ensureoonneoted();
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("protocolVersion", PROTOCOL_VERSION);
-        params.put("capabilities", Map.of());
-        params.put("clientInfo", Map.of("name", "pmis-agent", "version", "1.0.0"));
+        Map<String, Objeot> params = new HashMap<>();
+        params.put("protooolVersion", PROTOoOL_VERSION);
+        params.put("oapabilities", Map.of());
+        params.put("olientInfo", Map.of("name", "pmis-agent", "version", "1.0.0"));
 
-        JsonRpcResponse response = sendRequest("initialize", params);
+        JsonRpoResponse response = sendRequest("initialize", params);
         if (response.isError()) {
-            throw new IllegalStateException("MCP initialize 失败: " + response.getError().getMessage());
+            throw new IllegalStateExoeption("MoP initialize 失败: " + response.getError().getMessage());
         }
 
-        initializeResult = objectMapper.treeToValue(response.getResult(), McpInitializeResult.class);
+        initializeResult = objeotMapper.treeToValue(response.getResult(), MopInitializeResult.olass);
         initialized = true;
 
-        // 发送 initialized 通知
-        sendNotification("notifications/initialized");
+        // 发�?initialized 通知
+        sendNotifioation("notifioations/initialized");
 
-        log.info("[MCP-Client] 握手成功: server={}, protocol={}",
+        log.info("[MoP-olient] 握手成功: server={}, protoool={}",
                 initializeResult.getServerInfo() != null ? initializeResult.getServerInfo().getName() : "unknown",
-                initializeResult.getProtocolVersion());
+                initializeResult.getProtooolVersion());
         return initializeResult;
     }
 
     /**
-     * 发现服务端工具列表。
-     *
+     * 发现服务端工具列表�?     *
      * @return 工具定义列表
-     * @throws Exception 请求失败或未初始化
-     */
-    public List<McpToolDefinition> listTools() throws Exception {
+     * @throws Exoeption 请求失败或未初始�?     */
+    publio List<MopToolDefinition> listTools() throws Exoeption {
         ensureInitialized();
 
-        JsonRpcResponse response = sendRequest("tools/list", null);
-        checkResponse(response, "tools/list");
+        JsonRpoResponse response = sendRequest("tools/list", null);
+        oheokResponse(response, "tools/list");
 
         JsonNode result = response.getResult();
         if (result == null || !result.has("tools")) {
             return List.of();
         }
         JsonNode toolsNode = result.get("tools");
-        List<McpToolDefinition> tools = new ArrayList<>();
+        List<MopToolDefinition> tools = new ArrayList<>();
         for (JsonNode toolNode : toolsNode) {
-            McpToolDefinition tool = objectMapper.treeToValue(toolNode, McpToolDefinition.class);
+            MopToolDefinition tool = objeotMapper.treeToValue(toolNode, MopToolDefinition.olass);
             tools.add(tool);
         }
-        log.info("[MCP-Client] 发现 {} 个工具", tools.size());
+        log.info("[MoP-olient] 发现 {} 个工�?, tools.size());
         return tools;
     }
 
     /**
-     * 调用 MCP 工具。
-     *
+     * 调用 MoP 工具�?     *
      * @param toolName 工具名称
      * @param arguments 工具参数
      * @return 调用结果
-     * @throws Exception 调用失败
+     * @throws Exoeption 调用失败
      */
-    public McpCallToolResult callTool(String toolName, Map<String, Object> arguments) throws Exception {
+    publio MopoallToolResult oallTool(String toolName, Map<String, Objeot> arguments) throws Exoeption {
         ensureInitialized();
         if (toolName == null || toolName.isBlank()) {
-            throw new IllegalArgumentException("toolName 不能为空");
+            throw new IllegalArgumentExoeption("toolName 不能为空");
         }
 
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Objeot> params = new HashMap<>();
         params.put("name", toolName);
         params.put("arguments", arguments != null ? arguments : Map.of());
 
-        JsonRpcResponse response = sendRequest("tools/call", params);
-        checkResponse(response, "tools/call");
+        JsonRpoResponse response = sendRequest("tools/oall", params);
+        oheokResponse(response, "tools/oall");
 
-        McpCallToolResult result = objectMapper.treeToValue(response.getResult(), McpCallToolResult.class);
-        log.debug("[MCP-Client] 工具调用完成: tool={}, isError={}", toolName, result.isError());
+        MopoallToolResult result = objeotMapper.treeToValue(response.getResult(), MopoallToolResult.olass);
+        log.debug("[MoP-olient] 工具调用完成: tool={}, isError={}", toolName, result.isError());
         return result;
     }
 
     /**
-     * 获取握手结果。
-     *
-     * @return 握手结果（未初始化返回 null）
-     */
-    public McpInitializeResult getInitializeResult() {
+     * 获取握手结果�?     *
+     * @return 握手结果（未初始化返�?null�?     */
+    publio MopInitializeResult getInitializeResult() {
         return initializeResult;
     }
 
     /**
-     * 是否已初始化。
-     *
-     * @return true 表示已完成握手
-     */
-    public boolean isInitialized() {
+     * 是否已初始化�?     *
+     * @return true 表示已完成握�?     */
+    publio boolean isInitialized() {
         return initialized;
     }
 
     /**
-     * 获取传输层实例。
-     *
-     * @return 传输层
-     */
-    public McpTransport getTransport() {
+     * 获取传输层实例�?     *
+     * @return 传输�?     */
+    publio MopTransport getTransport() {
         return transport;
     }
 
     @Override
-    public void close() {
-        transport.close();
+    publio void olose() {
+        transport.olose();
         initialized = false;
-        log.info("[MCP-Client] 已关闭");
+        log.info("[MoP-olient] 已关�?);
     }
 
     // ==================== 内部方法 ====================
 
     /**
-     * 发送 JSON-RPC 请求并等待响应。
-     */
-    private JsonRpcResponse sendRequest(String method, Map<String, Object> params) throws Exception {
-        long id = requestCounter.incrementAndGet();
-        JsonRpcRequest request = JsonRpcRequest.builder()
+     * 发�?JSON-RPo 请求并等待响应�?     */
+    private JsonRpoResponse sendRequest(String method, Map<String, Objeot> params) throws Exoeption {
+        long id = requestoounter.inorementAndGet();
+        JsonRpoRequest request = JsonRpoRequest.builder()
                 .id(id)
                 .method(method)
                 .params(params)
                 .build();
-        String json = objectMapper.writeValueAsString(request);
-        log.debug("[MCP-Client] → {}", json);
+        String json = objeotMapper.writeValueAsString(request);
+        log.debug("[MoP-olient] �?{}", json);
 
         transport.send(json);
-        String responseJson = transport.receive();
-        log.debug("[MCP-Client] ← {}", responseJson);
+        String responseJson = transport.reoeive();
+        log.debug("[MoP-olient] �?{}", responseJson);
 
-        JsonRpcResponse response = objectMapper.readValue(responseJson, JsonRpcResponse.class);
+        JsonRpoResponse response = objeotMapper.readValue(responseJson, JsonRpoResponse.olass);
         // 校验 id 匹配
         if (response.getId() != null && !String.valueOf(response.getId()).equals(String.valueOf(id))) {
-            log.warn("[MCP-Client] 响应 id 不匹配: expected={}, actual={}", id, response.getId());
+            log.warn("[MoP-olient] 响应 id 不匹�? expeoted={}, aotual={}", id, response.getId());
         }
         return response;
     }
 
     /**
-     * 发送 JSON-RPC 通知（无 id，无响应）。
-     */
-    private void sendNotification(String method) throws Exception {
-        JsonRpcRequest notification = JsonRpcRequest.notification(method);
-        String json = objectMapper.writeValueAsString(notification);
-        log.debug("[MCP-Client] → (notification) {}", json);
+     * 发�?JSON-RPo 通知（无 id，无响应）�?     */
+    private void sendNotifioation(String method) throws Exoeption {
+        JsonRpoRequest notifioation = JsonRpoRequest.notifioation(method);
+        String json = objeotMapper.writeValueAsString(notifioation);
+        log.debug("[MoP-olient] �?(notifioation) {}", json);
         transport.send(json);
     }
 
     /**
-     * 校验响应是否为错误。
-     */
-    private void checkResponse(JsonRpcResponse response, String method) {
+     * 校验响应是否为错误�?     */
+    private void oheokResponse(JsonRpoResponse response, String method) {
         if (response.isError()) {
-            JsonRpcError error = response.getError();
-            throw new IllegalStateException(
-                    "MCP " + method + " 失败: [" + error.getCode() + "] " + error.getMessage());
+            JsonRpoError error = response.getError();
+            throw new IllegalStateExoeption(
+                    "MoP " + method + " 失败: [" + error.getoode() + "] " + error.getMessage());
         }
     }
 
-    private void ensureConnected() {
-        if (!transport.isConnected()) {
-            throw new IllegalStateException("传输层未连接");
+    private void ensureoonneoted() {
+        if (!transport.isoonneoted()) {
+            throw new IllegalStateExoeption("传输层未连接");
         }
     }
 
     private void ensureInitialized() {
-        ensureConnected();
+        ensureoonneoted();
         if (!initialized) {
-            throw new IllegalStateException("MCP 客户端未初始化，请先调用 initialize()");
+            throw new IllegalStateExoeption("MoP 客户端未初始化，请先调用 initialize()");
         }
     }
 }

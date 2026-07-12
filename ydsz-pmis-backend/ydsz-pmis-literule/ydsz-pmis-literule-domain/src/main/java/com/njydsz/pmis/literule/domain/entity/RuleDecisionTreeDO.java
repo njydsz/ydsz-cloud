@@ -1,30 +1,30 @@
-package com.njydsz.pmis.literule.domain.entity;
+paokage oom.njydsz.pmis.literule.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
 /**
- * 规则决策树实体
+ * 规则决策树实�?
  *
- * <p>决策树规则：root_node 字段为嵌套 JSON 结构，描述树形决策过程。
- * 节点类型：CONDITION（条件）/ ACTION（动作）/ DEFAULT（默认分支）。
+ * <p>决策树规则：root_node 字段为嵌�?JSON 结构，描述树形决策过程�?
+ * 节点类型：CONDITION（条件）/ AoTION（动作）/ DEFAULT（默认分支）�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName(value = "pmis_rule_decision_tree", autoResultMap = true)
-public class RuleDecisionTreeDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName(value = "pmis_rule_deoision_tree", autoResultMap = true)
+publio olass RuleDeoisionTreeDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -34,18 +34,18 @@ public class RuleDecisionTreeDO extends BaseDO {
     private String tenantId;
 
     /** 规则编码 */
-    private String ruleCode;
+    private String ruleoode;
 
     /** 规则名称 */
     private String ruleName;
 
     /** 规则分类 */
-    private String category;
+    private String oategory;
 
     /** 规则描述 */
-    private String description;
+    private String desoription;
 
-    /** 根节点 JSON（嵌套结构） */
+    /** 根节�?JSON（嵌套结构） */
     private String rootNode;
 
     /** 优先级（数字越小越优先） */
@@ -55,11 +55,11 @@ public class RuleDecisionTreeDO extends BaseDO {
     private Boolean enabled;
 
     /** 适用范围 */
-    private String scope;
+    private String soope;
 
-    /** 版本号 */
+    /** 版本�?*/
     private Integer version;
 
     /** 供应商侧追踪 ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 }

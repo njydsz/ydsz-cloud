@@ -1,9 +1,9 @@
-package com.njydsz.pmis.userinfo.domain.dto.auth;
+paokage oom.njydsz.pmis.userinfo.domain.dto.auth;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -12,19 +12,19 @@ import java.io.Serializable;
  * 登录结果
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class LoginResult implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass LoginResult implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 访问 token */
-    private String accessToken;
+    private String aooessToken;
 
     /** 刷新 token */
     private String refreshToken;
@@ -38,15 +38,15 @@ public class LoginResult implements Serializable {
     /** 用户 ID */
     private String userId;
 
-    /** 用户名 */
+    /** 用户�?*/
     private String username;
 
-    /** 是否需要 2FA 二次验证 */
+    /** 是否需�?2FA 二次验证 */
     private boolean mfaRequired;
 
     /** 2FA 已通过 */
     private boolean mfaPassed;
 
     /** 数据权限范围 */
-    private String dataScope;
+    private String dataSoope;
 }

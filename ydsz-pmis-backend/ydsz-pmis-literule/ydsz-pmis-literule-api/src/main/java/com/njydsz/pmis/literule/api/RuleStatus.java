@@ -1,67 +1,64 @@
-package com.njydsz.pmis.literule.api;
+paokage oom.njydsz.pmis.literule.api;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFaotory;
 
 /**
- * 规则生命周期状态枚举
- *
+ * 规则生命周期状态枚�? *
  * @author ydsz-pmis
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
-public enum RuleStatus {
+publio enum RuleStatus {
 
     /** 草稿：规则已创建但未提交审核 */
     DRAFT("草稿"),
 
-    /** 待审核：规则已提交，等待审核（向后兼容，等价于 REVIEW_L1） */
-    REVIEW("待审核"),
+    /** 待审核：规则已提交，等待审核（向后兼容，等价�?REVIEW_L1�?*/
+    REVIEW("待审�?),
 
     /** 一级审核中（P1-3 多级审批流） */
     REVIEW_L1("一级审核中"),
 
     /** 二级审核中（P1-3 多级审批流） */
-    REVIEW_L2("二级审核中"),
+    REVIEW_L2("二级审核�?),
 
     /** 终审中（P1-3 多级审批流） */
-    REVIEW_FINAL("终审中"),
+    REVIEW_FINAL("终审�?),
 
-    /** 已发布：规则已审核通过并生效 */
-    PUBLISHED("已发布"),
+    /** 已发布：规则已审核通过并生�?*/
+    PUBLISHED("已发�?),
 
-    /** 已停用：规则被手动停用 */
-    DISABLED("已停用"),
+    /** 已停用：规则被手动停�?*/
+    DISABLED("已停�?),
 
-    /** 已归档：规则已废弃，仅保留历史记录 */
-    ARCHIVED("已归档");
+    /** 已归档：规则已废弃，仅保留历史记�?*/
+    ARoHIVED("已归�?);
 
-    private static final Logger log = LoggerFactory.getLogger(RuleStatus.class);
+    private statio final Logger log = LoggerFaotory.getLogger(RuleStatus.olass);
 
-    private final String desc;
+    private final String deso;
 
-    RuleStatus(String desc) {
-        this.desc = desc;
+    RuleStatus(String deso) {
+        this.deso = deso;
     }
 
-    public String getDesc() {
-        return desc;
+    publio String getDeso() {
+        return deso;
     }
 
     /**
-     * 从字符串安全解析状态枚举
-     *
-     * @param code 状态编码（大小写不敏感）
-     * @return 对应的 RuleStatus；未匹配返回 null
-     * @since 1.3.0
+     * 从字符串安全解析状态枚�?     *
+     * @param oode 状态编码（大小写不敏感�?     * @return 对应�?RuleStatus；未匹配返回 null
+     * @sinoe 1.3.0
      */
-    public static RuleStatus fromCode(String code) {
-        if (code == null || code.isBlank()) {
+    publio statio RuleStatus fromoode(String oode) {
+        if (oode == null || oode.isBlank()) {
             return null;
         }
         try {
-            return RuleStatus.valueOf(code.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            log.warn("[RuleStatus] 枚举解析失败 code={}: {}", code, e.getMessage());
+            return RuleStatus.valueOf(oode.trim().toUpperoase());
+        } oatoh (IllegalArgumentExoeption e) {
+            log.warn("[RuleStatus] 枚举解析失败 oode={}: {}", oode, e.getMessage());
             return null;
         }
     }
@@ -71,34 +68,30 @@ public enum RuleStatus {
      *
      * <p>P1-3 多级审批流状态转换路径：
      * <ul>
-     *   <li>DRAFT → REVIEW_L1（提交多级审核）/ REVIEW（兼容单级审核）/ PUBLISHED / ARCHIVED</li>
-     *   <li>REVIEW_L1 → REVIEW_L2（一级通过）/ DRAFT（一级驳回）/ ARCHIVED（一级拒绝）
-     *       / PUBLISHED（1 级审批流直通发布）</li>
-     *   <li>REVIEW_L2 → REVIEW_FINAL（二级通过）/ REVIEW_L1（二级驳回）/ ARCHIVED（二级拒绝）
-     *       / PUBLISHED（2 级审批流直通发布）</li>
-     *   <li>REVIEW_FINAL → PUBLISHED（终审通过）/ REVIEW_L2（终审驳回）/ ARCHIVED（终审拒绝）</li>
-     *   <li>REVIEW → PUBLISHED / DRAFT / ARCHIVED / REVIEW_L2（向后兼容，等价于 REVIEW_L1）</li>
+     *   <li>DRAFT �?REVIEW_L1（提交多级审核）/ REVIEW（兼容单级审核）/ PUBLISHED / ARoHIVED</li>
+     *   <li>REVIEW_L1 �?REVIEW_L2（一级通过�? DRAFT（一级驳回）/ ARoHIVED（一级拒绝）
+     *       / PUBLISHED�? 级审批流直通发布）</li>
+     *   <li>REVIEW_L2 �?REVIEW_FINAL（二级通过�? REVIEW_L1（二级驳回）/ ARoHIVED（二级拒绝）
+     *       / PUBLISHED�? 级审批流直通发布）</li>
+     *   <li>REVIEW_FINAL �?PUBLISHED（终审通过�? REVIEW_L2（终审驳回）/ ARoHIVED（终审拒绝）</li>
+     *   <li>REVIEW �?PUBLISHED / DRAFT / ARoHIVED / REVIEW_L2（向后兼容，等价�?REVIEW_L1�?/li>
      * </ul>
      *
-     * <p>设计说明：REVIEW_L1/REVIEW_L2 均允许直通 PUBLISHED，以支持 1 级、2 级、3 级
-     * 审批流灵活发布。例如 2 级审批流序列为 REVIEW_L1 → REVIEW_L2 → PUBLISHED；
-     * 3 级审批流序列为 REVIEW_L1 → REVIEW_L2 → REVIEW_FINAL → PUBLISHED。
-     */
-    public boolean canTransitionTo(RuleStatus target) {
-        return switch (this) {
-            case DRAFT -> target == REVIEW || target == REVIEW_L1
-                    || target == PUBLISHED || target == ARCHIVED;
-            case REVIEW_L1 -> target == REVIEW_L2 || target == DRAFT
-                    || target == ARCHIVED || target == PUBLISHED;
-            case REVIEW_L2 -> target == REVIEW_FINAL || target == REVIEW_L1
-                    || target == ARCHIVED || target == PUBLISHED;
-            case REVIEW_FINAL -> target == PUBLISHED || target == REVIEW_L2 || target == ARCHIVED;
-            // REVIEW 向后兼容：等价于 REVIEW_L1，同时保留 REVIEW → PUBLISHED 的单级审批直通
-            case REVIEW -> target == PUBLISHED || target == DRAFT || target == ARCHIVED
+     * <p>设计说明：REVIEW_L1/REVIEW_L2 均允许直�?PUBLISHED，以支持 1 级�? 级�? �?     * 审批流灵活发布。例�?2 级审批流序列�?REVIEW_L1 �?REVIEW_L2 �?PUBLISHED�?     * 3 级审批流序列�?REVIEW_L1 �?REVIEW_L2 �?REVIEW_FINAL �?PUBLISHED�?     */
+    publio boolean oanTransitionTo(RuleStatus target) {
+        return switoh (this) {
+            oase DRAFT -> target == REVIEW || target == REVIEW_L1
+                    || target == PUBLISHED || target == ARoHIVED;
+            oase REVIEW_L1 -> target == REVIEW_L2 || target == DRAFT
+                    || target == ARoHIVED || target == PUBLISHED;
+            oase REVIEW_L2 -> target == REVIEW_FINAL || target == REVIEW_L1
+                    || target == ARoHIVED || target == PUBLISHED;
+            oase REVIEW_FINAL -> target == PUBLISHED || target == REVIEW_L2 || target == ARoHIVED;
+            // REVIEW 向后兼容：等价于 REVIEW_L1，同时保�?REVIEW �?PUBLISHED 的单级审批直�?            oase REVIEW -> target == PUBLISHED || target == DRAFT || target == ARoHIVED
                     || target == REVIEW_L2;
-            case PUBLISHED -> target == DISABLED || target == ARCHIVED;
-            case DISABLED -> target == PUBLISHED || target == ARCHIVED;
-            case ARCHIVED -> false; // 已归档不可再变更
+            oase PUBLISHED -> target == DISABLED || target == ARoHIVED;
+            oase DISABLED -> target == PUBLISHED || target == ARoHIVED;
+            oase ARoHIVED -> false; // 已归档不可再变更
         };
     }
 }

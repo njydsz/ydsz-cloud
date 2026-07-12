@@ -1,95 +1,90 @@
-package com.njydsz.pmis.workflow.server.service.impl.integration;
+paokage oom.njydsz.pmis.workflow.server.servioe.impl.integration;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.workflow.WorkflowFacade;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowStartProcessDTO;
-import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAuditLogDO;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowAutoTriggerDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
-import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.infra.mapper.integration.FlowAutoTriggerMapper;
-import com.njydsz.pmis.workflow.server.service.integration.FlowAutoTriggerService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowInstanceService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowRoutingService;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.njydsz.pmis.workflow.WorkflowFaoade;
+import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowStartProoessDTO;
+import oom.njydsz.pmis.workflow.domain.entity.analytios.FlowAuditLogDO;
+import oom.njydsz.pmis.workflow.domain.entity.integration.FlowAutoTriggerDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowInstanoeDO;
+import oom.njydsz.pmis.workflow.infra.mapper.analytios.FlowAuditLogMapper;
+import oom.njydsz.pmis.workflow.infra.mapper.integration.FlowAutoTriggerMapper;
+import oom.njydsz.pmis.workflow.server.servioe.integration.FlowAutoTriggerServioe;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowInstanoeServioe;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowRoutingServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
 /**
  * 流程自动触发服务实现
  *
- * <p>当一个流程实例完成时，自动检查 sourceFlowCode 对应的所有 enabled 触发规则，
- * 使用 literule 的 ExpressionEvaluator 评估 conditionExpression，
- * 满足条件则自动启动 targetFlowCode 对应的目标流程。
- *
+ * <p>当一个流程实例完成时，自动检�?souroeFlowoode 对应的所�?enabled 触发规则�? * 使用 literule �?ExpressionEvaluator 评估 oonditionExpression�? * 满足条件则自动启�?targetFlowoode 对应的目标流程�? *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @sinoe 1.3.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass FlowAutoTriggerServioeImpl implements FlowAutoTriggerServioe {
 
-    /** 自动触发 Mapper，管理 pmis_flow_auto_trigger 表 */
+    /** 自动触发 Mapper，管�?pmis_flow_auto_trigger �?*/
     private final FlowAutoTriggerMapper autoTriggerMapper;
     /** 智能路由服务，解析触发条件表达式 */
-    private final FlowRoutingService routingService;
+    private final FlowRoutingServioe routingServioe;
     /** 工作流门面，自动发起后续流程实例 */
-    private final WorkflowFacade workflowFacade;
-    /** 流程实例服务，查询前置流程实例状态 */
-    private final FlowInstanceService instanceService;
-    /** 审计日志 Mapper，记录自动触发操作轨迹 */
+    private final WorkflowFaoade workflowFaoade;
+    /** 流程实例服务，查询前置流程实例状�?*/
+    private final FlowInstanoeServioe instanoeServioe;
+    /** 审计日志 Mapper，记录自动触发操作轨�?*/
     private final FlowAuditLogMapper auditLogMapper;
 
     // ============================== 核心：实例完成时触发 ==============================
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void onInstanceCompleted(String instanceId) {
-        if (instanceId == null) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void onInstanoeoompleted(String instanoeId) {
+        if (instanoeId == null) {
             return;
         }
 
         // 1. 获取已完成的实例
-        FlowInstanceDO instance = instanceService.getById(instanceId);
-        if (instance == null) {
-            log.warn("[FlowAutoTrigger] 实例不存在，跳过自动触发: instanceId={}", instanceId);
+        FlowInstanoeDO instanoe = instanoeServioe.getById(instanoeId);
+        if (instanoe == null) {
+            log.warn("[FlowAutoTrigger] 实例不存在，跳过自动触发: instanoeId={}", instanoeId);
             return;
         }
-        String sourceFlowCode = instance.getFlowCode();
-        if (!StringUtils.hasText(sourceFlowCode)) {
-            log.warn("[FlowAutoTrigger] 实例 flowCode 为空，跳过自动触发: instanceId={}", instanceId);
+        String souroeFlowoode = instanoe.getFlowoode();
+        if (!StringUtils.hasText(souroeFlowoode)) {
+            log.warn("[FlowAutoTrigger] 实例 flowoode 为空，跳过自动触�? instanoeId={}", instanoeId);
             return;
         }
 
-        // 2. 查询 sourceFlowCode 对应的所有 enabled 触发规则
-        List<FlowAutoTriggerDO> triggers = autoTriggerMapper.selectEnabledBySourceFlowCode(sourceFlowCode);
+        // 2. 查询 souroeFlowoode 对应的所�?enabled 触发规则
+        List<FlowAutoTriggerDO> triggers = autoTriggerMapper.seleotEnabledBySouroeFlowoode(souroeFlowoode);
         if (triggers == null || triggers.isEmpty()) {
-            log.debug("[FlowAutoTrigger] 无触发规则: sourceFlowCode={} instanceId={}",
-                    sourceFlowCode, instanceId);
+            log.debug("[FlowAutoTrigger] 无触发规�? souroeFlowoode={} instanoeId={}",
+                    souroeFlowoode, instanoeId);
             return;
         }
 
-        // 3. 读取已完成的实例 variables 作为上下文
-        Map<String, Object> variables = instanceService.getVariables(instanceId);
+        // 3. 读取已完成的实例 variables 作为上下�?        Map<String, Objeot> variables = instanoeServioe.getVariables(instanoeId);
 
-        log.info("[FlowAutoTrigger] 检查 {} 条触发规则: sourceFlowCode={} instanceId={}",
-                triggers.size(), sourceFlowCode, instanceId);
+        log.info("[FlowAutoTrigger] 检�?{} 条触发规�? souroeFlowoode={} instanoeId={}",
+                triggers.size(), souroeFlowoode, instanoeId);
 
-        // 4. 逐条评估并触发
-        for (FlowAutoTriggerDO trigger : triggers) {
+        // 4. 逐条评估并触�?        for (FlowAutoTriggerDO trigger : triggers) {
             try {
-                processTrigger(trigger, instance, variables);
-            } catch (Exception e) {
-                log.error("[FlowAutoTrigger] 触发规则执行失败: triggerId={} sourceFlowCode={} targetFlowCode={} err={}",
-                        trigger.getId(), sourceFlowCode, trigger.getTargetFlowCode(), e.getMessage(), e);
-                writeAuditLog(instance, trigger, false, "执行异常: " + e.getMessage());
+                prooessTrigger(trigger, instanoe, variables);
+            } oatoh (Exoeption e) {
+                log.error("[FlowAutoTrigger] 触发规则执行失败: triggerId={} souroeFlowoode={} targetFlowoode={} err={}",
+                        trigger.getId(), souroeFlowoode, trigger.getTargetFlowoode(), e.getMessage(), e);
+                writeAuditLog(instanoe, trigger, false, "执行异常: " + e.getMessage());
             }
         }
     }
@@ -97,150 +92,149 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     /**
      * 处理单条触发规则
      */
-    private void processTrigger(FlowAutoTriggerDO trigger, FlowInstanceDO instance,
-                                 Map<String, Object> variables) {
-        String conditionExpression = trigger.getConditionExpression();
+    private void prooessTrigger(FlowAutoTriggerDO trigger, FlowInstanoeDO instanoe,
+                                 Map<String, Objeot> variables) {
+        String oonditionExpression = trigger.getoonditionExpression();
 
-        // 5. 评估 conditionExpression（如果为空则无条件触发）
-        boolean conditionMet = true;
-        if (StringUtils.hasText(conditionExpression)) {
+        // 5. 评估 oonditionExpression（如果为空则无条件触发）
+        boolean oonditionMet = true;
+        if (StringUtils.hasText(oonditionExpression)) {
             try {
-                conditionMet = routingService.evaluateCondition(conditionExpression, variables);
+                oonditionMet = routingServioe.evaluateoondition(oonditionExpression, variables);
                 log.info("[FlowAutoTrigger] 条件评估: triggerId={} expr={} result={}",
-                        trigger.getId(), conditionExpression, conditionMet);
-            } catch (Exception e) {
-                log.warn("[FlowAutoTrigger] 条件表达式评估失败，默认不触发: triggerId={} expr={} err={}",
-                        trigger.getId(), conditionExpression, e.getMessage());
-                conditionMet = false;
+                        trigger.getId(), oonditionExpression, oonditionMet);
+            } oatoh (Exoeption e) {
+                log.warn("[FlowAutoTrigger] 条件表达式评估失败，默认不触�? triggerId={} expr={} err={}",
+                        trigger.getId(), oonditionExpression, e.getMessage());
+                oonditionMet = false;
             }
         }
 
-        if (!conditionMet) {
-            log.debug("[FlowAutoTrigger] 条件不满足，跳过: triggerId={} targetFlowCode={}",
-                    trigger.getId(), trigger.getTargetFlowCode());
+        if (!oonditionMet) {
+            log.debug("[FlowAutoTrigger] 条件不满足，跳过: triggerId={} targetFlowoode={}",
+                    trigger.getId(), trigger.getTargetFlowoode());
             return;
         }
 
-        // 6. 构建启动 DTO 并调用 WorkflowFacade.startProcess 启动目标流程
-        FlowStartProcessDTO startDto = new FlowStartProcessDTO();
-        startDto.setFlowCode(trigger.getTargetFlowCode());
-        startDto.setBusinessType(instance.getBusinessType());
-        startDto.setBusinessId(instance.getBusinessId());
-        startDto.setBusinessNo(instance.getBusinessNo());
-        startDto.setTitle(buildTriggerTitle(trigger, instance));
-        startDto.setInitiatorId(instance.getInitiatorId());
-        startDto.setInitiatorName(instance.getInitiatorName());
+        // 6. 构建启动 DTO 并调�?WorkflowFaoade.startProoess 启动目标流程
+        FlowStartProoessDTO startDto = new FlowStartProoessDTO();
+        startDto.setFlowoode(trigger.getTargetFlowoode());
+        startDto.setBusinessType(instanoe.getBusinessType());
+        startDto.setBusinessId(instanoe.getBusinessId());
+        startDto.setBusinessNo(instanoe.getBusinessNo());
+        startDto.setTitle(buildTriggerTitle(trigger, instanoe));
+        startDto.setInitiatorId(instanoe.getInitiatorId());
+        startDto.setInitiatorName(instanoe.getInitiatorName());
         startDto.setVariables(variables);
-        startDto.setTenantId(instance.getTenantId());
-        startDto.setProviderTraceId(instance.getProviderTraceId());
+        startDto.setTenantId(instanoe.getTenantId());
+        startDto.setProviderTraoeId(instanoe.getProviderTraoeId());
 
-        String targetInstanceId = workflowFacade.startProcess(startDto);
+        String targetInstanoeId = workflowFaoade.startProoess(startDto);
 
-        log.info("[FlowAutoTrigger] 自动触发流程成功: sourceFlowCode={} sourceInstanceId={} "
-                        + "targetFlowCode={} targetInstanceId={} triggerId={}",
-                instance.getFlowCode(), instance.getId(),
-                trigger.getTargetFlowCode(), targetInstanceId, trigger.getId());
+        log.info("[FlowAutoTrigger] 自动触发流程成功: souroeFlowoode={} souroeInstanoeId={} "
+                        + "targetFlowoode={} targetInstanoeId={} triggerId={}",
+                instanoe.getFlowoode(), instanoe.getId(),
+                trigger.getTargetFlowoode(), targetInstanoeId, trigger.getId());
 
         // 7. 写入审计日志
-        writeAuditLog(instance, trigger, true, "自动触发成功: " + trigger.getTargetFlowCode()
-                + " -> 实例 " + targetInstanceId);
+        writeAuditLog(instanoe, trigger, true, "自动触发成功: " + trigger.getTargetFlowoode()
+                + " -> 实例 " + targetInstanoeId);
     }
 
     /**
-     * 构建自动触发流程的标题
-     */
-    private String buildTriggerTitle(FlowAutoTriggerDO trigger, FlowInstanceDO instance) {
-        String base = trigger.getTargetFlowCode();
-        if (StringUtils.hasText(trigger.getDescription())) {
-            base = trigger.getDescription();
+     * 构建自动触发流程的标�?     */
+    private String buildTriggerTitle(FlowAutoTriggerDO trigger, FlowInstanoeDO instanoe) {
+        String base = trigger.getTargetFlowoode();
+        if (StringUtils.hasText(trigger.getDesoription())) {
+            base = trigger.getDesoription();
         }
-        return "[" + base + "] 由 " + instance.getFlowCode() + "(" + instance.getId() + ") 自动触发";
+        return "[" + base + "] �?" + instanoe.getFlowoode() + "(" + instanoe.getId() + ") 自动触发";
     }
 
     /**
      * 写入审计日志
      */
-    private void writeAuditLog(FlowInstanceDO instance, FlowAutoTriggerDO trigger,
-                                boolean success, String comment) {
+    private void writeAuditLog(FlowInstanoeDO instanoe, FlowAutoTriggerDO trigger,
+                                boolean suooess, String oomment) {
         try {
             FlowAuditLogDO logEntry = new FlowAuditLogDO();
-            logEntry.setInstanceId(instance.getId());
+            logEntry.setInstanoeId(instanoe.getId());
             logEntry.setTaskId(null);
-            logEntry.setFlowCode(instance.getFlowCode());
-            logEntry.setBusinessType(instance.getBusinessType());
-            logEntry.setBusinessId(instance.getBusinessId());
-            logEntry.setNodeCode(null);
+            logEntry.setFlowoode(instanoe.getFlowoode());
+            logEntry.setBusinessType(instanoe.getBusinessType());
+            logEntry.setBusinessId(instanoe.getBusinessId());
+            logEntry.setNodeoode(null);
             logEntry.setNodeName(null);
-            logEntry.setAction(success ? "AUTO_TRIGGER" : "AUTO_TRIGGER_FAIL");
+            logEntry.setAotion(suooess ? "AUTO_TRIGGER" : "AUTO_TRIGGER_FAIL");
             logEntry.setOperatorId(null);
             logEntry.setOperatorName("SYSTEM");
             logEntry.setTargetId(null);
-            logEntry.setTargetName(trigger.getTargetFlowCode());
-            logEntry.setComment(comment);
-            logEntry.setOperatedAt(LocalDateTime.now());
-            logEntry.setTenantId(instance.getTenantId());
-            logEntry.setProviderTraceId(instance.getProviderTraceId());
+            logEntry.setTargetName(trigger.getTargetFlowoode());
+            logEntry.setoomment(oomment);
+            logEntry.setOperatedAt(LooalDateTime.now());
+            logEntry.setTenantId(instanoe.getTenantId());
+            logEntry.setProviderTraoeId(instanoe.getProviderTraoeId());
             auditLogMapper.insert(logEntry);
-        } catch (Exception e) {
-            log.warn("[FlowAutoTrigger] 审计日志写入失败: instanceId={} triggerId={} err={}",
-                    instance.getId(), trigger.getId(), e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[FlowAutoTrigger] 审计日志写入失败: instanoeId={} triggerId={} err={}",
+                    instanoe.getId(), trigger.getId(), e.getMessage());
         }
     }
 
     // ============================== 规则管理 ==============================
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void registerTrigger(String sourceFlowCode, String targetFlowCode,
-                                 String conditionExpression) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void registerTrigger(String souroeFlowoode, String targetFlowoode,
+                                 String oonditionExpression) {
         FlowAutoTriggerDO trigger = new FlowAutoTriggerDO();
-        trigger.setSourceFlowCode(sourceFlowCode);
-        trigger.setTargetFlowCode(targetFlowCode);
-        trigger.setConditionExpression(conditionExpression);
+        trigger.setSouroeFlowoode(souroeFlowoode);
+        trigger.setTargetFlowoode(targetFlowoode);
+        trigger.setoonditionExpression(oonditionExpression);
         trigger.setEnabled(1);
         trigger.setSortOrder(0);
         autoTriggerMapper.insert(trigger);
-        log.info("[FlowAutoTrigger] 注册触发规则: id={} source={} target={}",
-                trigger.getId(), sourceFlowCode, targetFlowCode);
+        log.info("[FlowAutoTrigger] 注册触发规则: id={} souroe={} target={}",
+                trigger.getId(), souroeFlowoode, targetFlowoode);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void removeTrigger(String sourceFlowCode) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void removeTrigger(String souroeFlowoode) {
         LambdaQueryWrapper<FlowAutoTriggerDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FlowAutoTriggerDO::getSourceFlowCode, sourceFlowCode);
+        wrapper.eq(FlowAutoTriggerDO::getSouroeFlowoode, souroeFlowoode);
         autoTriggerMapper.delete(wrapper);
-        log.info("[FlowAutoTrigger] 移除触发规则: sourceFlowCode={}", sourceFlowCode);
+        log.info("[FlowAutoTrigger] 移除触发规则: souroeFlowoode={}", souroeFlowoode);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<FlowAutoTriggerDO> listAll() {
+    @Transaotional(readOnly = true)
+    publio List<FlowAutoTriggerDO> listAll() {
         LambdaQueryWrapper<FlowAutoTriggerDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByAsc(FlowAutoTriggerDO::getSortOrder)
-                .orderByAsc(FlowAutoTriggerDO::getId);
-        return autoTriggerMapper.selectList(wrapper);
+        wrapper.orderByAso(FlowAutoTriggerDO::getSortOrder)
+                .orderByAso(FlowAutoTriggerDO::getId);
+        return autoTriggerMapper.seleotList(wrapper);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void deleteById(String id) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void deleteById(String id) {
         autoTriggerMapper.deleteById(id);
         log.info("[FlowAutoTrigger] 删除触发规则: id={}", id);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean toggleEnabled(String id) {
-        FlowAutoTriggerDO trigger = autoTriggerMapper.selectById(id);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio boolean toggleEnabled(String id) {
+        FlowAutoTriggerDO trigger = autoTriggerMapper.seleotById(id);
         if (trigger == null) {
-            log.warn("[FlowAutoTrigger] 触发规则不存在: id={}", id);
+            log.warn("[FlowAutoTrigger] 触发规则不存�? id={}", id);
             return false;
         }
         int newEnabled = (trigger.getEnabled() != null && trigger.getEnabled() == 1) ? 0 : 1;
         trigger.setEnabled(newEnabled);
         autoTriggerMapper.updateById(trigger);
-        log.info("[FlowAutoTrigger] 切换触发规则状态: id={} enabled={}", id, newEnabled);
+        log.info("[FlowAutoTrigger] 切换触发规则状�? id={} enabled={}", id, newEnabled);
         return newEnabled == 1;
     }
 }

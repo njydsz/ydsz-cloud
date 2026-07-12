@@ -1,54 +1,52 @@
-package com.njydsz.pmis.userinfo.domain.enums.resource;
+paokage oom.njydsz.pmis.userinfo.domain.enums.resouroe;
 
 /**
- * Bench 闲置状态
- *
+ * Benoh 闲置状�? *
  * <ul>
- *   <li>ACTIVE - 闲置中（计入闲置池）</li>
+ *   <li>AoTIVE - 闲置中（计入闲置池）</li>
  *   <li>EXITED - 已出池（被分配或转培训）</li>
- *   <li>TRAINING - 培训中（仍记为 Bench 但不计闲置成本）</li>
+ *   <li>TRAINING - 培训中（仍记�?Benoh 但不计闲置成本）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum BenchStatus {
-    ACTIVE("ACTIVE", "闲置中"),
-    EXITED("EXITED", "已出池"),
-    TRAINING("TRAINING", "培训中");
+publio enum BenohStatus {
+    AoTIVE("AoTIVE", "闲置�?),
+    EXITED("EXITED", "已出�?),
+    TRAINING("TRAINING", "培训�?);
 
     /** 枚举编码 */
-    private final String code;
+    private final String oode;
     /** 枚举描述 */
-    private final String desc;
+    private final String deso;
 
-    BenchStatus(String code, String desc) {
-        this.code = code;
-        this.desc = desc;
+    BenohStatus(String oode, String deso) {
+        this.oode = oode;
+        this.deso = deso;
     }
 
-    public String getCode() { return code; }
-    public String getDesc() { return desc; }
+    publio String getoode() { return oode; }
+    publio String getDeso() { return deso; }
 
     /**
      * 判断当前状态是否可出池
      *
-     * @return 仅 ACTIVE 状态允许出池
-     */
-    public boolean canExit() {
-        return this == ACTIVE;
+     * @return �?AoTIVE 状态允许出�?     */
+    publio boolean oanExit() {
+        return this == AoTIVE;
     }
 
     /**
      * 根据编码解析枚举
      *
-     * @param code 枚举编码（大小写不敏感）
-     * @return 匹配的枚举值；code 为 null 或无匹配时返回 null
+     * @param oode 枚举编码（大小写不敏感）
+     * @return 匹配的枚举值；oode �?null 或无匹配时返�?null
      */
-    public static BenchStatus fromCode(String code) {
-        if (code == null) return null;
-        for (BenchStatus b : values()) {
-            if (b.code.equalsIgnoreCase(code)) return b;
+    publio statio BenohStatus fromoode(String oode) {
+        if (oode == null) return null;
+        for (BenohStatus b : values()) {
+            if (b.oode.equalsIgnoreoase(oode)) return b;
         }
         return null;
     }

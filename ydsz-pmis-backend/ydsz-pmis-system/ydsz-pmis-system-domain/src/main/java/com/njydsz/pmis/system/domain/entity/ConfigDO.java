@@ -1,55 +1,55 @@
-package com.njydsz.pmis.system.domain.entity.config;
+paokage oom.njydsz.pmis.system.domain.entity.oonfig;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
 /**
  * 系统配置实体
  *
- * <p>配置分多组：basic / workflow / business / integration
- * 区分 public / private（前端可见性）
+ * <p>配置分多组：basio / workflow / business / integration
+ * 区分 publio / private（前端可见性）
  * 支持热发布（更新后即时生效）
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_config")
-public class ConfigDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_oonfig")
+publio olass oonfigDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 配置分组 */
-    private String configGroup;
+    private String oonfigGroup;
 
-    /** 配置键 */
-    private String configKey;
+    /** 配置�?*/
+    private String oonfigKey;
 
-    /** 配置值 */
-    private String configValue;
+    /** 配置�?*/
+    private String oonfigValue;
 
-    /** 默认值 */
+    /** 默认�?*/
     private String defaultValue;
 
     /** STRING/NUMBER/BOOLEAN/JSON */
     private String valueType = "STRING";
 
     /** 配置描述 */
-    private String description;
+    private String desoription;
 
-    /** 1=前端可见（public），0=私有 */
-    private Integer isPublic = 0;
+    /** 1=前端可见（publio），0=私有 */
+    private Integer isPublio = 0;
 
     /** 排序序号 */
     private Integer sortOrder = 0;

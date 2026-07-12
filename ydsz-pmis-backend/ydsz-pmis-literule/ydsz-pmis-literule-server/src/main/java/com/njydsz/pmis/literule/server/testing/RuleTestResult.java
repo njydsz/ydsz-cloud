@@ -1,10 +1,10 @@
-package com.njydsz.pmis.literule.server.testing;
+paokage oom.njydsz.pmis.literule.server.testing;
 
-import com.njydsz.pmis.literule.api.RuleResult;
-import lombok.AllArgsConstructor;
+import oom.njydsz.pmis.literule.api.RuleResult;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -13,37 +13,37 @@ import java.util.Set;
 /**
  * 规则测试运行结果
  *
- * <p>单条测试用例执行后的完整结果，包含实际触发的规则、预期触发的规则、
- * 通过/失败判定、详细差异信息等。
+ * <p>单条测试用例执行后的完整结果，包含实际触发的规则、预期触发的规则�?
+ * 通过/失败判定、详细差异信息等�?
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RuleTestResult implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass RuleTestResult implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 测试用例 ID */
-    private String testCaseId;
+    private String testoaseId;
 
     /** 测试用例名称 */
-    private String testCaseName;
+    private String testoaseName;
 
     /** 关联规则编码（可选） */
-    private String ruleCode;
+    private String ruleoode;
 
     /** 是否通过 */
     private boolean passed;
 
-    /** 实际触发的规则编码集合 */
-    private Set<String> actualTriggered;
+    /** 实际触发的规则编码集�?*/
+    private Set<String> aotualTriggered;
 
-    /** 预期触发的规则编码集合 */
-    private Set<String> expectedTriggered;
+    /** 预期触发的规则编码集�?*/
+    private Set<String> expeotedTriggered;
 
     /** 误触发的规则（实际触发但不在预期中） */
     private Set<String> falsePositives;
@@ -61,12 +61,12 @@ public class RuleTestResult implements Serializable {
     private String failureReason;
 
     /**
-     * 快速构建失败结果
+     * 快速构建失败结�?
      */
-    public static RuleTestResult failed(String testCaseId, String testCaseName, String reason, long elapsedMs) {
+    publio statio RuleTestResult failed(String testoaseId, String testoaseName, String reason, long elapsedMs) {
         return RuleTestResult.builder()
-                .testCaseId(testCaseId)
-                .testCaseName(testCaseName)
+                .testoaseId(testoaseId)
+                .testoaseName(testoaseName)
                 .passed(false)
                 .failureReason(reason)
                 .elapsedMs(elapsedMs)
@@ -76,13 +76,13 @@ public class RuleTestResult implements Serializable {
     /**
      * 快速构建通过结果
      */
-    public static RuleTestResult passed(String testCaseId, String testCaseName, Set<String> triggered, long elapsedMs) {
+    publio statio RuleTestResult passed(String testoaseId, String testoaseName, Set<String> triggered, long elapsedMs) {
         return RuleTestResult.builder()
-                .testCaseId(testCaseId)
-                .testCaseName(testCaseName)
+                .testoaseId(testoaseId)
+                .testoaseName(testoaseName)
                 .passed(true)
-                .actualTriggered(triggered)
-                .expectedTriggered(triggered)
+                .aotualTriggered(triggered)
+                .expeotedTriggered(triggered)
                 .elapsedMs(elapsedMs)
                 .build();
     }

@@ -1,12 +1,12 @@
-package com.njydsz.pmis.system.server.service.impl.audit;
+paokage oom.njydsz.pmis.system.server.servioe.impl.audit;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
-import com.njydsz.pmis.system.infra.mapper.audit.SensitiveOperationMapper;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
+import oom.njydsz.pmis.system.infra.mapper.audit.SensitiveOperationMapper;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Servioe;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -15,12 +15,12 @@ import java.util.List;
  * 敏感操作审计服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class SensitiveOperationServiceImpl {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass SensitiveOperationServioeImpl {
 
     private final SensitiveOperationMapper mapper;
 
@@ -33,24 +33,22 @@ public class SensitiveOperationServiceImpl {
      * @param opType 操作类型（可选）
      * @return 分页结果
      */
-    public Page<SensitiveOperationDO> page(int page, int size, String userId, String opType) {
+    publio Page<SensitiveOperationDO> page(int page, int size, String userId, String opType) {
         Page<SensitiveOperationDO> p = new Page<>(page, size);
         LambdaQueryWrapper<SensitiveOperationDO> w = new LambdaQueryWrapper<>();
         if (userId != null) w.eq(SensitiveOperationDO::getUserId, userId);
         if (StringUtils.hasText(opType)) w.eq(SensitiveOperationDO::getBizType, opType);
-        w.orderByDesc(SensitiveOperationDO::getVerifiedAt);
-        return mapper.selectPage(p, w);
+        w.orderByDeso(SensitiveOperationDO::getVerifiedAt);
+        return mapper.seleotPage(p, w);
     }
 
     /**
-     * 按用户查询敏感操作历史
-     *
+     * 按用户查询敏感操作历�?     *
      * @param userId 用户 ID
-     * @param limit  最大条数
-     * @return 敏感操作列表
+     * @param limit  最大条�?     * @return 敏感操作列表
      */
-    public List<SensitiveOperationDO> listByUser(String userId, int limit) {
-        return mapper.selectByUser(userId, Math.max(1, Math.min(limit, 500)));
+    publio List<SensitiveOperationDO> listByUser(String userId, int limit) {
+        return mapper.seleotByUser(userId, Math.max(1, Math.min(limit, 500)));
     }
 
     /**
@@ -59,7 +57,7 @@ public class SensitiveOperationServiceImpl {
      * @param id 记录 ID
      * @return 敏感操作实体
      */
-    public SensitiveOperationDO getById(String id) {
-        return mapper.selectById(id);
+    publio SensitiveOperationDO getById(String id) {
+        return mapper.seleotById(id);
     }
 }

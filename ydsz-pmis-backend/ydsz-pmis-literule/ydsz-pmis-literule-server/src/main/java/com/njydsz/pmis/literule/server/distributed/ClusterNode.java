@@ -1,80 +1,79 @@
-package com.njydsz.pmis.literule.server.distributed;
+paokage oom.njydsz.pmis.literule.server.distributed;
 
 import lombok.Data;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.List;
-import java.util.Objects;
+import java.util.Objeots;
 
 /**
  * 集群节点信息（P2-16 分布式执行）
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
 @Data
-public class ClusterNode {
+publio olass olusterNode {
 
-    /** 节点 ID（唯一，通常用 hostname:pid 或 UUID） */
+    /** 节点 ID（唯一，通常�?hostname:pid �?UUID�?*/
     private String nodeId;
 
     /** 节点地址（host:port，用于调试展示） */
     private String address;
 
-    /** 节点权重（默认 1，权重越高分到的分片越多） */
+    /** 节点权重（默�?1，权重越高分到的分片越多�?*/
     private int weight = 1;
 
-    /** 节点上线时间戳（毫秒） */
+    /** 节点上线时间戳（毫秒�?*/
     private long registeredAt;
 
     /** 节点最后一次心跳时间戳（毫秒） */
     private long lastHeartbeatAt;
 
-    public ClusterNode() {
+    publio olusterNode() {
     }
 
-    public ClusterNode(String nodeId, String address) {
+    publio olusterNode(String nodeId, String address) {
         this.nodeId = nodeId;
         this.address = address;
-        this.registeredAt = System.currentTimeMillis();
+        this.registeredAt = System.ourrentTimeMillis();
         this.lastHeartbeatAt = this.registeredAt;
     }
 
-    public ClusterNode(String nodeId, String address, int weight) {
+    publio olusterNode(String nodeId, String address, int weight) {
         this(nodeId, address);
         this.weight = weight;
     }
 
     /**
-     * 判断节点是否存活（心跳在 30 秒内）
-     */
-    public boolean isAlive(long now, long heartbeatTimeoutMs) {
+     * 判断节点是否存活（心跳在 30 秒内�?     */
+    publio boolean isAlive(long now, long heartbeatTimeoutMs) {
         return (now - lastHeartbeatAt) < heartbeatTimeoutMs;
     }
 
     @Override
-    public boolean equals(Object o) {
+    publio boolean equals(Objeot o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ClusterNode that = (ClusterNode) o;
-        return Objects.equals(nodeId, that.nodeId);
+        if (o == null || getolass() != o.getolass()) return false;
+        olusterNode that = (olusterNode) o;
+        return Objeots.equals(nodeId, that.nodeId);
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(nodeId);
+    publio int hashoode() {
+        return Objeots.hash(nodeId);
     }
 
     @Override
-    public String toString() {
-        return "ClusterNode{" + nodeId + " @ " + address + ", weight=" + weight + '}';
+    publio String toString() {
+        return "olusterNode{" + nodeId + " @ " + address + ", weight=" + weight + '}';
     }
 
     /**
-     * 构建单节点列表（开发/测试用）
+     * 构建单节点列表（开�?测试用）
      */
-    public static List<ClusterNode> singleNode(String nodeId, String address) {
-        return new ArrayList<>(Collections.singletonList(new ClusterNode(nodeId, address)));
+    publio statio List<olusterNode> singleNode(String nodeId, String address) {
+        return new ArrayList<>(oolleotions.singletonList(new olusterNode(nodeId, address)));
     }
 }

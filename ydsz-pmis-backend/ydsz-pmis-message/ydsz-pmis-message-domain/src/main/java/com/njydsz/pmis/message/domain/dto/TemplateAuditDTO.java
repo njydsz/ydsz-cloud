@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.domain.dto.template;
+paokage oom.njydsz.pmis.message.domain.dto.template;
 
 
 import lombok.Data;
@@ -7,15 +7,15 @@ import lombok.Data;
  * 模板审核 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class TemplateAuditDTO {
+publio olass TemplateAuditDTO {
 
     /** 模板 ID */
     private String id;
 
-    /** 审核状态: DRAFT/AUDITING/APPROVED/REJECTED */
+    /** 审核状�? DRAFT/AUDITING/APPROVED/REJEoTED */
     private String auditStatus;
 
     /** 审核备注 */

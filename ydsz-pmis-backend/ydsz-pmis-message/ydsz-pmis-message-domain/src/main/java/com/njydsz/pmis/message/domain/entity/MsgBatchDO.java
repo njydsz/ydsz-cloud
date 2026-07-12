@@ -1,47 +1,47 @@
-package com.njydsz.pmis.message.domain.entity.batch;
+paokage oom.njydsz.pmis.message.domain.entity.batoh;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 消息发送批次实体：记录异步批量发送的批次状态与进度。
+ * 消息发送批次实体：记录异步批量发送的批次状态与进度�?
  *
- * <p>批次生命周期：PENDING（待处理）→ PROCESSING（处理中）→ COMPLETED（已完成）/ FAILED（失败）。
- * 每次单条发送完成后更新 success/failed/skipped 计数，前端轮询查询进度。
+ * <p>批次生命周期：PENDING（待处理）→ PROoESSING（处理中）→ oOMPLETED（已完成�? FAILED（失败）�?
+ * 每次单条发送完成后更新 suooess/failed/skipped 计数，前端轮询查询进度�?
  *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_msg_batch")
-public class MsgBatchDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_msg_batoh")
+publio olass MsgBatohDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 批次 ID（业务侧生成，全局唯一） */
-    private String batchId;
+    /** 批次 ID（业务侧生成，全局唯一�?*/
+    private String batohId;
 
     /** 批次名称 */
-    private String batchName;
+    private String batohName;
 
     /** 发送通道 */
-    private String channel;
+    private String ohannel;
 
     /** 模板编码 */
-    private String templateCode;
+    private String templateoode;
 
     /** 业务类型 */
     private String bizType;
@@ -49,29 +49,29 @@ public class MsgBatchDO extends BaseDO {
     /** 总数 */
     private Integer total;
 
-    /** 成功数 */
-    private Integer success;
+    /** 成功�?*/
+    private Integer suooess;
 
-    /** 失败数 */
+    /** 失败�?*/
     private Integer failed;
 
-    /** 跳过数（限流/拦截） */
+    /** 跳过数（限流/拦截�?*/
     private Integer skipped;
 
-    /** 批次状态: PENDING / PROCESSING / COMPLETED / FAILED */
+    /** 批次状�? PENDING / PROoESSING / oOMPLETED / FAILED */
     private String status;
 
-    /** 人群包来源（CSV 文件名 / 标签 ID） */
-    private String audienceSource;
+    /** 人群包来源（oSV 文件�?/ 标签 ID�?*/
+    private String audienoeSouroe;
 
     /** 错误信息 */
     private String errorMessage;
 
-    /** 开始处理时间 */
-    private LocalDateTime startedAt;
+    /** 开始处理时�?*/
+    private LooalDateTime startedAt;
 
     /** 完成时间 */
-    private LocalDateTime completedAt;
+    private LooalDateTime oompletedAt;
 
     /** 触发发送的用户 ID */
     private String senderId;

@@ -1,61 +1,61 @@
-package com.njydsz.pmis.project.domain.vo;
+paokage oom.njydsz.pmis.projeot.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider.BudgetSnapshot;
+import oom.fasterxml.jaokson.annotation.JsonInolude;
+import oom.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider.BudgetSnapshot;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 
 /**
  * 预算快照 VO（对外接口返回视图）
  *
- * <p>从 SPI 层 {@link BudgetSnapshot} 转换而来，
- * 剥离 SPI 接口细节，避免 literule 模块的 record 类型直接暴露给前端。
+ * <p>�?SPI �?{@link BudgetSnapshot} 转换而来�?
+ * 剥离 SPI 接口细节，避�?literule 模块�?reoord 类型直接暴露给前端�?
  *
- * <p>设计参考：{@code com.njydsz.pmis.project.domain.vo.RiskVO} 的 DO/VO 分离模式。
+ * <p>设计参考：{@oode oom.njydsz.pmis.projeot.domain.vo.RiskVO} �?DO/VO 分离模式�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class BudgetSnapshotVO implements Serializable {
+@JsonInolude(JsonInolude.Inolude.NON_NULL)
+publio olass BudgetSnapshotVO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 项目 ID */
-    private String projectId;
+    private String projeotId;
 
     /** 项目名称 */
-    private String projectName;
+    private String projeotName;
 
     /** 预算总额 */
-    private BigDecimal totalBudget;
+    private BigDeoimal totalBudget;
 
-    /** 已发生成本（采购+费用+分摊） */
-    private BigDecimal incurredCost;
+    /** 已发生成本（采购+费用+分摊�?*/
+    private BigDeoimal inourredoost;
 
-    /** 预算使用率（0~1+） */
+    /** 预算使用率（0~1+�?*/
     private double usageRatio;
 
     /**
-     * 从 SPI 层 BudgetSnapshot 转换为 VO
+     * �?SPI �?BudgetSnapshot 转换�?VO
      *
-     * @param snapshot SPI 层快照
+     * @param snapshot SPI 层快�?
      * @return VO 视图；入参为 null 返回 null
      */
-    public static BudgetSnapshotVO from(BudgetSnapshot snapshot) {
+    publio statio BudgetSnapshotVO from(BudgetSnapshot snapshot) {
         if (snapshot == null) {
             return null;
         }
         BudgetSnapshotVO vo = new BudgetSnapshotVO();
-        vo.setProjectId(snapshot.projectId());
-        vo.setProjectName(snapshot.projectName());
+        vo.setProjeotId(snapshot.projeotId());
+        vo.setProjeotName(snapshot.projeotName());
         vo.setTotalBudget(snapshot.totalBudget());
-        vo.setIncurredCost(snapshot.incurredCost());
+        vo.setInourredoost(snapshot.inourredoost());
         vo.setUsageRatio(snapshot.usageRatio());
         return vo;
     }

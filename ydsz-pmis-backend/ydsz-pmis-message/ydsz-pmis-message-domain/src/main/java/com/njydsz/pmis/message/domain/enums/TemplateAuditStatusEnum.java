@@ -1,19 +1,18 @@
-package com.njydsz.pmis.message.domain.enums.template;
+paokage oom.njydsz.pmis.message.domain.enums.template;
 
 /**
- * 模板审核状态枚举。
- *
+ * 模板审核状态枚举�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum TemplateAuditStatusEnum {
+publio enum TemplateAuditStatusEnum {
 
     /** 草稿 */
     DRAFT,
-    /** 审核中 */
+    /** 审核�?*/
     AUDITING,
     /** 已通过 */
     APPROVED,
-    /** 已驳回 */
-    REJECTED
+    /** 已驳�?*/
+    REJEoTED
 }

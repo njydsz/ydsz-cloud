@@ -1,48 +1,46 @@
-package com.njydsz.pmis.agent.server.engine.eval;
+paokage oom.njydsz.pmis.agent.server.engine.eval;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 /**
- * 评测报告（P4-8 落地）。
- *
- * <p>汇总所有用例的评测结果，提供通过率、平均分等统计指标。
- *
+ * 评测报告（P4-8 落地）�? *
+ * <p>汇总所有用例的评测结果，提供通过率、平均分等统计指标�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P4-8)
+ * @sinoe 1.0.0 (P4-8)
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class EvaluationReport implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass EvaluationReport implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 所有用例的评测结果 */
     private List<EvaluationResult> results;
 
     /** 总用例数 */
-    private int totalCases;
+    private int totaloases;
 
-    /** 通过数 */
-    private int passedCases;
+    /** 通过�?*/
+    private int passedoases;
 
-    /** 失败数 */
-    private int failedCases;
+    /** 失败�?*/
+    private int failedoases;
 
-    /** 通过率（0.0 ~ 1.0） */
+    /** 通过率（0.0 ~ 1.0�?*/
     private double passRate;
 
     /** 平均分数 */
-    private double averageScore;
+    private double averageSoore;
 
     /** 平均耗时（毫秒） */
     private double averageElapsedMs;
@@ -51,16 +49,16 @@ public class EvaluationReport implements Serializable {
     private String summary;
 
     /** 构造空报告 */
-    public static EvaluationReport empty() {
+    publio statio EvaluationReport empty() {
         return EvaluationReport.builder()
                 .results(List.of())
-                .totalCases(0)
-                .passedCases(0)
-                .failedCases(0)
+                .totaloases(0)
+                .passedoases(0)
+                .failedoases(0)
                 .passRate(0)
-                .averageScore(0)
+                .averageSoore(0)
                 .averageElapsedMs(0)
-                .summary("无评测用例")
+                .summary("无评测用�?)
                 .build();
     }
 }

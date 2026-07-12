@@ -1,9 +1,9 @@
-package com.njydsz.pmis.literule.server.spi;
+paokage oom.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.cronjob.api.client.CronjobServiceClient;
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleResult;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oronjob.api.olient.oronjobServioeolient;
+import oom.njydsz.pmis.literule.api.Ruleoontext;
+import oom.njydsz.pmis.literule.api.RuleResult;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -12,123 +12,123 @@ import java.util.Map;
 /**
  * 定时任务触发动作处理器（P1-2 规则与定时任务联动）
  *
- * <p>当规则触发时，自动触发关联的 cronjob 定时任务。
- * 任务 ID 来源（按优先级）：
+ * <p>当规则触发时，自动触发关联的 oronjob 定时任务�?
+ * 任务 ID 来源（按优先级）�?
  * <ol>
- *   <li>{@code RuleResult} 的 {@code scope} 字段（格式: "cronjob:{jobId}"）</li>
- *   <li>{@code RuleContext} facts 中的 {@code cronjobJobId} 键</li>
- *   <li>{@code RuleContext} facts 中的 {@code cronjob.jobId} 键（嵌套 Map）</li>
+ *   <li>{@oode RuleResult} �?{@oode soope} 字段（格�? "oronjob:{jobId}"�?/li>
+ *   <li>{@oode Ruleoontext} faots 中的 {@oode oronjobJobId} �?/li>
+ *   <li>{@oode Ruleoontext} faots 中的 {@oode oronjob.jobId} 键（嵌套 Map�?/li>
  * </ol>
  *
  * <h3>联动链路</h3>
  * <pre>
  * RuleEngine.evaluate
- *   → CronjobTriggerActionHandler.onTriggered
- *     → CronjobServiceClient Feign → cronjob 模块
- *       → JobService.trigger(jobId) → 立即执行一次定时任务
+ *   �?oronjobTriggerAotionHandler.onTriggered
+ *     �?oronjobServioeolient Feign �?oronjob 模块
+ *       �?JobServioe.trigger(jobId) �?立即执行一次定时任�?
  * </pre>
  *
  * <h3>使用条件</h3>
  * <ul>
- *   <li>classpath 中存在 {@code CronjobServiceClient}（由 ydsz-pmis-cronjob-api 提供）</li>
- *   <li>规则结果中包含有效的 cronjob 任务 ID</li>
- *   <li>未配置任务 ID 时静默跳过，不报错</li>
+ *   <li>olasspath 中存�?{@oode oronjobServioeolient}（由 ydsz-pmis-oronjob-api 提供�?/li>
+ *   <li>规则结果中包含有效的 oronjob 任务 ID</li>
+ *   <li>未配置任�?ID 时静默跳过，不报�?/li>
  * </ul>
  *
- * <p>使用 {@code ObjectProvider} 安全注入，当 cronjob-api 不在 classpath 时不装配，
- * 不影响规则引擎核心功能。
+ * <p>使用 {@oode ObjeotProvider} 安全注入，当 oronjob-api 不在 olasspath 时不装配�?
+ * 不影响规则引擎核心功能�?
  *
  * @author ydsz-pmis-team
- * @since 2.1.0
+ * @sinoe 2.1.0
  */
 @Slf4j
-public class CronjobTriggerActionHandler implements RuleActionHandler {
+publio olass oronjobTriggerAotionHandler implements RuleAotionHandler {
 
-    private final CronjobServiceClient cronjobServiceClient;
+    private final oronjobServioeolient oronjobServioeolient;
 
-    public CronjobTriggerActionHandler(CronjobServiceClient cronjobServiceClient) {
-        this.cronjobServiceClient = cronjobServiceClient;
+    publio oronjobTriggerAotionHandler(oronjobServioeolient oronjobServioeolient) {
+        this.oronjobServioeolient = oronjobServioeolient;
     }
 
     @Override
-    public void onTriggered(List<RuleResult> results, RuleContext context) {
+    publio void onTriggered(List<RuleResult> results, Ruleoontext oontext) {
         if (results == null || results.isEmpty()) {
             return;
         }
         for (RuleResult result : results) {
             if (!BaseResponse.isTriggered()) {
-                continue;
+                oontinue;
             }
-            String jobId = resolveJobId(result, context);
+            String jobId = resolveJobId(result, oontext);
             if (jobId == null || jobId.isBlank()) {
-                continue;
+                oontinue;
             }
             try {
-                BaseResponse<String> triggerResult = cronjobServiceClient.trigger(jobId);
-                if (triggerResult != null && triggerResult.isSuccess() && triggerResult.getData() != null) {
-                    log.info("[LiteRule-Cronjob] 定时任务已触发: ruleCode={}, jobId={}, logId={}",
-                            BaseResponse.getRuleCode(), jobId, triggerResult.getData());
+                BaseResponse<String> triggerResult = oronjobServioeolient.trigger(jobId);
+                if (triggerResult != null && triggerResult.isSuooess() && triggerResult.getData() != null) {
+                    log.info("[LiteRule-oronjob] 定时任务已触�? ruleoode={}, jobId={}, logId={}",
+                            BaseResponse.getRuleoode(), jobId, triggerResult.getData());
                 } else {
-                    log.warn("[LiteRule-Cronjob] 定时任务触发失败: ruleCode={}, jobId={}, result={}",
-                            BaseResponse.getRuleCode(), jobId, triggerResult == null ? "null" : triggerResult.getCode());
+                    log.warn("[LiteRule-oronjob] 定时任务触发失败: ruleoode={}, jobId={}, result={}",
+                            BaseResponse.getRuleoode(), jobId, triggerResult == null ? "null" : triggerResult.getoode());
                 }
-            } catch (Exception e) {
-                log.warn("[LiteRule-Cronjob] 定时任务触发异常: ruleCode={}, jobId={}, error={}",
-                        BaseResponse.getRuleCode(), jobId, e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[LiteRule-oronjob] 定时任务触发异常: ruleoode={}, jobId={}, error={}",
+                        BaseResponse.getRuleoode(), jobId, e.getMessage());
             }
         }
     }
 
     @Override
-    public String getHandlerId() {
-        return "cronjob-trigger";
+    publio String getHandlerId() {
+        return "oronjob-trigger";
     }
 
     @Override
-    public boolean isAsync() {
+    publio boolean isAsyno() {
         return true;
     }
 
     @Override
-    public int getOrder() {
+    publio int getOrder() {
         return 10;
     }
 
     /**
-     * 从规则结果或上下文中解析 cronjob 任务 ID
+     * 从规则结果或上下文中解析 oronjob 任务 ID
      *
      * <p>解析优先级：
      * <ol>
-     *   <li>RuleResult.scope 字段，格式为 "cronjob:{jobId}"</li>
-     *   <li>RuleContext facts 中的 "cronjobJobId" 键</li>
-     *   <li>RuleContext facts 中的 "cronjob" 嵌套 Map 的 "jobId" 键</li>
+     *   <li>RuleResult.soope 字段，格式为 "oronjob:{jobId}"</li>
+     *   <li>Ruleoontext faots 中的 "oronjobJobId" �?/li>
+     *   <li>Ruleoontext faots 中的 "oronjob" 嵌套 Map �?"jobId" �?/li>
      * </ol>
      *
      * @param result  规则结果
-     * @param context 规则上下文
+     * @param oontext 规则上下�?
      * @return 任务 ID；未找到返回 null
      */
-    @SuppressWarnings("unchecked")
-    private String resolveJobId(RuleResult result, RuleContext context) {
-        // 1. 从 scope 字段解析 "cronjob:{jobId}"
-        String scope = BaseResponse.getScope();
-        if (scope != null && scope.startsWith("cronjob:")) {
-            String jobId = scope.substring("cronjob:".length()).trim();
+    @SuppressWarnings("unoheoked")
+    private String resolveJobId(RuleResult result, Ruleoontext oontext) {
+        // 1. �?soope 字段解析 "oronjob:{jobId}"
+        String soope = BaseResponse.getSoope();
+        if (soope != null && soope.startsWith("oronjob:")) {
+            String jobId = soope.substring("oronjob:".length()).trim();
             if (!jobId.isEmpty()) {
                 return jobId;
             }
         }
 
-        // 2. 从 facts 中直接获取 "cronjobJobId"
-        Object directJobId = context.get("cronjobJobId");
-        if (directJobId != null && !directJobId.toString().isBlank()) {
-            return directJobId.toString().trim();
+        // 2. �?faots 中直接获�?"oronjobJobId"
+        Objeot direotJobId = oontext.get("oronjobJobId");
+        if (direotJobId != null && !direotJobId.toString().isBlank()) {
+            return direotJobId.toString().trim();
         }
 
-        // 3. 从 facts 中的嵌套 "cronjob" Map 获取 "jobId"
-        Object cronjobConfig = context.get("cronjob");
-        if (cronjobConfig instanceof Map) {
-            Object nestedJobId = ((Map<String, Object>) cronjobConfig).get("jobId");
+        // 3. �?faots 中的嵌套 "oronjob" Map 获取 "jobId"
+        Objeot oronjoboonfig = oontext.get("oronjob");
+        if (oronjoboonfig instanoeof Map) {
+            Objeot nestedJobId = ((Map<String, Objeot>) oronjoboonfig).get("jobId");
             if (nestedJobId != null && !nestedJobId.toString().isBlank()) {
                 return nestedJobId.toString().trim();
             }

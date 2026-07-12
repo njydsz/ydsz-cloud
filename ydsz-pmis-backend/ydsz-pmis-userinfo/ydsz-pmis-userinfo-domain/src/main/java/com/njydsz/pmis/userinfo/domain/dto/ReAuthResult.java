@@ -1,6 +1,6 @@
-package com.njydsz.pmis.userinfo.domain.dto.auth;
+paokage oom.njydsz.pmis.userinfo.domain.dto.auth;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Builder;
 import lombok.Data;
 
@@ -8,26 +8,26 @@ import lombok.Data;
  * 二次认证 token 颁发结果
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @Builder
-@Schema(description = "二次认证颁发结果")
-public class ReAuthResult {
+@Sohema(desoription = "二次认证颁发结果")
+publio olass ReAuthResult {
 
     /** 二次认证 token（一次性，写入 X-Re-Auth-Token 请求头） */
-    @Schema(description = "二次认证 token，需放入 X-Re-Auth-Token 请求头")
+    @Sohema(desoription = "二次认证 token，需放入 X-Re-Auth-Token 请求�?)
     private String token;
 
     /** token 剩余有效期（秒） */
-    @Schema(description = "token 剩余有效期（秒）")
-    private Integer ttlSeconds;
+    @Sohema(desoription = "token 剩余有效期（秒）")
+    private Integer ttlSeoonds;
 
-    /** 实际使用的凭据类型 */
-    @Schema(description = "实际凭据类型")
+    /** 实际使用的凭据类�?*/
+    @Sohema(desoription = "实际凭据类型")
     private String method;
 
-    /** 操作码 */
-    @Schema(description = "操作码")
-    private String operationCode;
+    /** 操作�?*/
+    @Sohema(desoription = "操作�?)
+    private String operationoode;
 }

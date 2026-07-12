@@ -1,159 +1,152 @@
-package com.njydsz.pmis.cronjob.server.service.impl.dag;
+paokage oom.njydsz.pmis.oronjob.server.servioe.impl.dag;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.dag.DagInstanceStatus;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
-import com.njydsz.pmis.cronjob.server.core.dag.DagDefinitionCodec;
-import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagDO;
-import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
-import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagInstanceMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
-import com.njydsz.pmis.cronjob.server.service.dag.JobDagInstanceService;
-import com.njydsz.pmis.cronjob.server.vo.DagInstanceVisualizationVO;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.dag.DagInstanoeStatus;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oronjob.server.oore.dag.DagDefinition;
+import oom.njydsz.pmis.oronjob.server.oore.dag.DagDefinitionoodeo;
+import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagDO;
+import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagInstanoeDO;
+import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagNodeInstanoeDO;
+import oom.njydsz.pmis.oronjob.infra.mapper.dag.JobDagInstanoeMapper;
+import oom.njydsz.pmis.oronjob.infra.mapper.dag.JobDagMapper;
+import oom.njydsz.pmis.oronjob.infra.mapper.dag.JobDagNodeInstanoeMapper;
+import oom.njydsz.pmis.oronjob.server.servioe.dag.JobDagInstanoeServioe;
+import oom.njydsz.pmis.oronjob.server.vo.DagInstanoeVisualizationVO;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 /**
- * DAG 工作流实例服务实现（P2 DAG 增强）。
- *
- * <p>负责 DAG 实例的查询、状态流转（暂停/恢复/取消）及上下文管理。
- * 状态流转使用 CAS 更新（{@code casUpdateStatus}）避免并发覆盖。
- *
+ * DAG 工作流实例服务实现（P2 DAG 增强）�? *
+ * <p>负责 DAG 实例的查询、状态流转（暂停/恢复/取消）及上下文管理�? * 状态流转使�?oAS 更新（{@oode oasUpdateStatus}）避免并发覆盖�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class JobDagInstanceServiceImpl implements JobDagInstanceService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass JobDagInstanoeServioeImpl implements JobDagInstanoeServioe {
 
     /** DAG 实例 Mapper */
-    private final JobDagInstanceMapper jobDagInstanceMapper;
+    private final JobDagInstanoeMapper jobDagInstanoeMapper;
     /** DAG 节点实例 Mapper */
-    private final JobDagNodeInstanceMapper jobDagNodeInstanceMapper;
-    /** DAG 定义 Mapper（用于查询 DAG 定义 JSON） */
+    private final JobDagNodeInstanoeMapper jobDagNodeInstanoeMapper;
+    /** DAG 定义 Mapper（用于查�?DAG 定义 JSON�?*/
     private final JobDagMapper jobDagMapper;
     /** DAG 定义 JSON 编解码器 */
-    private final DagDefinitionCodec dagDefinitionCodec;
+    private final DagDefinitionoodeo dagDefinitionoodeo;
 
     @Override
-    @Transactional(readOnly = true)
-    public JobDagInstanceDO getInstanceById(String instanceId) {
-        JobDagInstanceDO instance = jobDagInstanceMapper.selectById(instanceId);
-        if (instance == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND,
-                    "error.cronjob.msg_dag_instance_not_found", instanceId);
+    @Transaotional(readOnly = true)
+    publio JobDagInstanoeDO getInstanoeById(String instanoeId) {
+        JobDagInstanoeDO instanoe = jobDagInstanoeMapper.seleotById(instanoeId);
+        if (instanoe == null) {
+            throw new SysExoeption(StandardResultoode.NOT_FOUND,
+                    "error.oronjob.msg_dag_instanoe_not_found", instanoeId);
         }
-        return instance;
+        return instanoe;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<JobDagInstanceDO> listByDagId(String dagId, int limit) {
+    @Transaotional(readOnly = true)
+    publio List<JobDagInstanoeDO> listByDagId(String dagId, int limit) {
         int safeLimit = limit > 0 ? limit : 20;
-        return jobDagInstanceMapper.selectByDagId(dagId, safeLimit);
+        return jobDagInstanoeMapper.seleotByDagId(dagId, safeLimit);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<JobDagInstanceDO> listByStatus(String status) {
+    @Transaotional(readOnly = true)
+    publio List<JobDagInstanoeDO> listByStatus(String status) {
         if (!StringUtils.hasText(status)) {
             return List.of();
         }
-        return jobDagInstanceMapper.selectByStatus(status);
+        return jobDagInstanoeMapper.seleotByStatus(status);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<JobDagNodeInstanceDO> listNodes(String dagInstanceId) {
-        return jobDagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+    @Transaotional(readOnly = true)
+    publio List<JobDagNodeInstanoeDO> listNodes(String dagInstanoeId) {
+        return jobDagNodeInstanoeMapper.seleotByDagInstanoeId(dagInstanoeId);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void pauseInstance(String instanceId) {
-        getInstanceById(instanceId);
-        int rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
-                DagInstanceStatus.RUNNING.name(), DagInstanceStatus.PAUSED.name());
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void pauseInstanoe(String instanoeId) {
+        getInstanoeById(instanoeId);
+        int rows = jobDagInstanoeMapper.oasUpdateStatus(instanoeId,
+                DagInstanoeStatus.RUNNING.name(), DagInstanoeStatus.PAUSED.name());
         if (rows == 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.cronjob.msg_dag_instance_not_running", instanceId);
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.oronjob.msg_dag_instanoe_not_running", instanoeId);
         }
-        log.info("[JobDagInstance] 暂停 DAG 实例: instanceId={}", instanceId);
+        log.info("[JobDagInstanoe] 暂停 DAG 实例: instanoeId={}", instanoeId);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void resumeInstance(String instanceId) {
-        getInstanceById(instanceId);
-        int rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
-                DagInstanceStatus.PAUSED.name(), DagInstanceStatus.RUNNING.name());
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void resumeInstanoe(String instanoeId) {
+        getInstanoeById(instanoeId);
+        int rows = jobDagInstanoeMapper.oasUpdateStatus(instanoeId,
+                DagInstanoeStatus.PAUSED.name(), DagInstanoeStatus.RUNNING.name());
         if (rows == 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.cronjob.msg_dag_instance_not_running", instanceId);
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.oronjob.msg_dag_instanoe_not_running", instanoeId);
         }
-        log.info("[JobDagInstance] 恢复 DAG 实例: instanceId={}", instanceId);
+        log.info("[JobDagInstanoe] 恢复 DAG 实例: instanoeId={}", instanoeId);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void cancelInstance(String instanceId) {
-        getInstanceById(instanceId);
-        // RUNNING → CANCELED
-        int rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
-                DagInstanceStatus.RUNNING.name(), DagInstanceStatus.CANCELED.name());
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void oanoelInstanoe(String instanoeId) {
+        getInstanoeById(instanoeId);
+        // RUNNING �?oANoELED
+        int rows = jobDagInstanoeMapper.oasUpdateStatus(instanoeId,
+                DagInstanoeStatus.RUNNING.name(), DagInstanoeStatus.oANoELED.name());
         if (rows == 0) {
-            // PAUSED → CANCELED
-            rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
-                    DagInstanceStatus.PAUSED.name(), DagInstanceStatus.CANCELED.name());
+            // PAUSED �?oANoELED
+            rows = jobDagInstanoeMapper.oasUpdateStatus(instanoeId,
+                    DagInstanoeStatus.PAUSED.name(), DagInstanoeStatus.oANoELED.name());
         }
         if (rows == 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.cronjob.msg_dag_instance_not_running", instanceId);
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.oronjob.msg_dag_instanoe_not_running", instanoeId);
         }
-        log.info("[JobDagInstance] 取消 DAG 实例: instanceId={}", instanceId);
+        log.info("[JobDagInstanoe] 取消 DAG 实例: instanoeId={}", instanoeId);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void updateContext(String instanceId, String contextJson) {
-        getInstanceById(instanceId);
-        jobDagInstanceMapper.updateContext(instanceId, contextJson);
-        log.info("[JobDagInstance] 更新 DAG 实例上下文: instanceId={}", instanceId);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void updateoontext(String instanoeId, String oontextJson) {
+        getInstanoeById(instanoeId);
+        jobDagInstanoeMapper.updateoontext(instanoeId, oontextJson);
+        log.info("[JobDagInstanoe] 更新 DAG 实例上下�? instanoeId={}", instanoeId);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public DagInstanceVisualizationVO getVisualization(String instanceId) {
-        // 1. 查询 DAG 实例（不存在时抛 SysException）
-        JobDagInstanceDO instance = getInstanceById(instanceId);
+    @Transaotional(readOnly = true)
+    publio DagInstanoeVisualizationVO getVisualization(String instanoeId) {
+        // 1. 查询 DAG 实例（不存在时抛 SysExoeption�?        JobDagInstanoeDO instanoe = getInstanoeById(instanoeId);
 
-        // 2. 查询 DAG 定义（通过实例.dagId 关联）
-        JobDagDO dag = jobDagMapper.selectById(instance.getDagId());
+        // 2. 查询 DAG 定义（通过实例.dagId 关联�?        JobDagDO dag = jobDagMapper.seleotById(instanoe.getDagId());
         if (dag == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND,
-                    "error.cronjob.msg_dag_not_found_def", instance.getDagId());
+            throw new SysExoeption(StandardResultoode.NOT_FOUND,
+                    "error.oronjob.msg_dag_not_found_def", instanoe.getDagId());
         }
 
-        // 3. 解析 DAG 定义 JSON（非法时抛 SysException）
-        DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
+        // 3. 解析 DAG 定义 JSON（非法时�?SysExoeption�?        DagDefinition definition = dagDefinitionoodeo.fromJson(dag.getDagDefinition());
 
-        // 4. 查询节点实例执行状态
-        List<JobDagNodeInstanceDO> nodeInstances = listNodes(instanceId);
+        // 4. 查询节点实例执行状�?        List<JobDagNodeInstanoeDO> nodeInstanoes = listNodes(instanoeId);
 
-        // 5. 组装可视化数据 VO
-        DagInstanceVisualizationVO vo = new DagInstanceVisualizationVO();
-        vo.setInstance(instance);
+        // 5. 组装可视化数�?VO
+        DagInstanoeVisualizationVO vo = new DagInstanoeVisualizationVO();
+        vo.setInstanoe(instanoe);
         vo.setDefinition(definition);
-        vo.setNodeInstances(nodeInstances);
+        vo.setNodeInstanoes(nodeInstanoes);
         return vo;
     }
 }

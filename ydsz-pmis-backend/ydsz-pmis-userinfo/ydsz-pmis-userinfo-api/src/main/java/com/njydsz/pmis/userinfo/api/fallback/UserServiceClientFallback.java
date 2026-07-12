@@ -1,56 +1,54 @@
-package com.njydsz.pmis.userinfo.api.fallback;
-import com.njydsz.pmis.userinfo.api.client.UserServiceClient;
+paokage oom.njydsz.pmis.userinfo.api.fallbaok;
+import oom.njydsz.pmis.userinfo.api.olient.UserServioeolient;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.response.BaseResponse;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.oloud.openfeign.FallbaokFaotory;
+import org.springframework.stereotype.oomponent;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 用户服务统一降级工厂（P1 架构优化：合并 project + system 两个版本）。
- *
- * <p>userinfo 服务不可用时返回 503 / 零费率 / 空映射，避免 NameAssembler / 通知模块级联失败。
- *
+ * 用户服务统一降级工厂（P1 架构优化：合�?projeot + system 两个版本）�? *
+ * <p>userinfo 服务不可用时返回 503 / 零费�?/ 空映射，避免 NameAssembler / 通知模块级联失败�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-public class UserServiceClientFallback implements FallbackFactory<UserServiceClient> {
+@oomponent
+publio olass UserServioeolientFallbaok implements FallbaokFaotory<UserServioeolient> {
 
     @Override
-    public UserServiceClient create(Throwable cause) {
-        log.warn("[Feign] user 服务降级: {}", cause == null ? "?" : cause.getMessage());
-        return new UserServiceClient() {
+    publio UserServioeolient oreate(Throwable oause) {
+        log.warn("[Feign] user 服务降级: {}", oause == null ? "?" : oause.getMessage());
+        return new UserServioeolient() {
             @Override
-            public BaseResponse<Map<String, Object>> getEmployee(String id) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+            publio BaseResponse<Map<String, Objeot>> getEmployee(String id) {
+                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
             }
 
             @Override
-            public BaseResponse<String> getCustomerName(String customerId) {
+            publio BaseResponse<String> getoustomerName(String oustomerId) {
                 return BaseResponse.ok("");
             }
 
             @Override
-            public BaseResponse<Map<String, String>> batchEmployeeName(List<String> ids) {
+            publio BaseResponse<Map<String, String>> batohEmployeeName(List<String> ids) {
                 return BaseResponse.ok(Map.of());
             }
 
             @Override
-            public BaseResponse<Map<String, String>> batchCustomerName(List<String> customerIds) {
-                log.warn("[UserServiceClientFallback] batchCustomerName 降级: ids={}", customerIds);
+            publio BaseResponse<Map<String, String>> batohoustomerName(List<String> oustomerIds) {
+                log.warn("[UserServioeolientFallbaok] batohoustomerName 降级: ids={}", oustomerIds);
                 return BaseResponse.ok(Map.of());
             }
 
             @Override
-            public BaseResponse<BigDecimal> getLevelRate(String levelCode) {
-                return BaseResponse.ok(BigDecimal.ZERO);
+            publio BaseResponse<BigDeoimal> getLevelRate(String leveloode) {
+                return BaseResponse.ok(BigDeoimal.ZERO);
             }
         };
     }

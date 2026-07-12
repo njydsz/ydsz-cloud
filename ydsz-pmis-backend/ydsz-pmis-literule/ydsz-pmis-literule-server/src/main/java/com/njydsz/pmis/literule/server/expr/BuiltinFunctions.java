@@ -1,39 +1,39 @@
-package com.njydsz.pmis.literule.server.expr.liteexpr;
+paokage oom.njydsz.pmis.literule.server.expr.liteexpr;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.oolleotion;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * LiteExpr 内置函数库
+ * LiteExpr 内置函数�?
  *
- * <p>替代 LiteExpr 标准库，提供表达式引擎所需的基础函数。
- * 按 5 大类组织：数学、字符串、集合、类型转换、时间。
+ * <p>替代 LiteExpr 标准库，提供表达式引擎所需的基础函数�?
+ * �?5 大类组织：数学、字符串、集合、类型转换、时间�?
  *
- * <p>所有函数在 {@link FunctionRegistry} 构造时自动注册。
- * 业务侧可通过 {@code registry.register(name, fn)} 追加自定义函数。
+ * <p>所有函数在 {@link FunotionRegistry} 构造时自动注册�?
+ * 业务侧可通过 {@oode registry.register(name, fn)} 追加自定义函数�?
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
-public final class BuiltinFunctions {
+publio final olass BuiltinFunotions {
 
-    private BuiltinFunctions() {}
+    private BuiltinFunotions() {}
 
     /**
-     * 注册所有内置函数到注册表
+     * 注册所有内置函数到注册�?
      */
-    static void registerAll(FunctionRegistry registry) {
+    statio void registerAll(FunotionRegistry registry) {
         registerMath(registry);
         registerString(registry);
-        registerCollection(registry);
+        registeroolleotion(registry);
         registerType(registry);
         registerDateTime(registry);
         registerUtility(registry);
@@ -41,65 +41,65 @@ public final class BuiltinFunctions {
 
     // ===== 数学函数 =====
 
-    private static void registerMath(FunctionRegistry r) {
-        r.register("abs", args -> toDecimal(args[0]).abs(), "abs(n)", "绝对值");
+    private statio void registerMath(FunotionRegistry r) {
+        r.register("abs", args -> toDeoimal(args[0]).abs(), "abs(n)", "绝对�?);
         r.register("max", args -> {
-            BigDecimal result = toDecimal(args[0]);
+            BigDeoimal result = toDeoimal(args[0]);
             for (int i = 1; i < args.length; i++) {
-                BigDecimal v = toDecimal(args[i]);
-                if (v.compareTo(result) > 0) result = v;
+                BigDeoimal v = toDeoimal(args[i]);
+                if (v.oompareTo(result) > 0) result = v;
             }
             return result;
-        }, "max(a, b, ...)", "最大值");
+        }, "max(a, b, ...)", "最大�?);
         r.register("min", args -> {
-            BigDecimal result = toDecimal(args[0]);
+            BigDeoimal result = toDeoimal(args[0]);
             for (int i = 1; i < args.length; i++) {
-                BigDecimal v = toDecimal(args[i]);
-                if (v.compareTo(result) < 0) result = v;
+                BigDeoimal v = toDeoimal(args[i]);
+                if (v.oompareTo(result) < 0) result = v;
             }
             return result;
-        }, "min(a, b, ...)", "最小值");
+        }, "min(a, b, ...)", "最小�?);
         r.register("round", args -> {
-            int scale = args.length > 1 ? toInt(args[1]) : 0;
-            return toDecimal(args[0]).setScale(scale, RoundingMode.HALF_UP);
-        }, "round(n, scale)", "四舍五入");
-        r.register("floor", args -> toDecimal(args[0]).setScale(0, RoundingMode.FLOOR), "floor(n)", "向下取整");
-        r.register("ceil", args -> toDecimal(args[0]).setScale(0, RoundingMode.CEILING), "ceil(n)", "向上取整");
-        r.register("sqrt", args -> Math.sqrt(toDecimal(args[0]).doubleValue()), "sqrt(n)", "平方根");
-        r.register("pow", args -> Math.pow(toDecimal(args[0]).doubleValue(), toDecimal(args[1]).doubleValue()), "pow(base, exp)", "幂运算");
-        r.register("log", args -> Math.log(toDecimal(args[0]).doubleValue()), "log(n)", "自然对数");
-        r.register("log10", args -> Math.log10(toDecimal(args[0]).doubleValue()), "log10(n)", "常用对数");
-        r.register("exp", args -> Math.exp(toDecimal(args[0]).doubleValue()), "exp(n)", "自然指数");
-        r.register("random", args -> Math.random(), "random()", "随机数 [0, 1)");
+            int soale = args.length > 1 ? toInt(args[1]) : 0;
+            return toDeoimal(args[0]).setSoale(soale, RoundingMode.HALF_UP);
+        }, "round(n, soale)", "四舍五入");
+        r.register("floor", args -> toDeoimal(args[0]).setSoale(0, RoundingMode.FLOOR), "floor(n)", "向下取整");
+        r.register("oeil", args -> toDeoimal(args[0]).setSoale(0, RoundingMode.oEILING), "oeil(n)", "向上取整");
+        r.register("sqrt", args -> Math.sqrt(toDeoimal(args[0]).doubleValue()), "sqrt(n)", "平方�?);
+        r.register("pow", args -> Math.pow(toDeoimal(args[0]).doubleValue(), toDeoimal(args[1]).doubleValue()), "pow(base, exp)", "幂运�?);
+        r.register("log", args -> Math.log(toDeoimal(args[0]).doubleValue()), "log(n)", "自然对数");
+        r.register("log10", args -> Math.log10(toDeoimal(args[0]).doubleValue()), "log10(n)", "常用对数");
+        r.register("exp", args -> Math.exp(toDeoimal(args[0]).doubleValue()), "exp(n)", "自然指数");
+        r.register("random", args -> Math.random(), "random()", "随机�?[0, 1)");
     }
 
-    // ===== 字符串函数 =====
+    // ===== 字符串函�?=====
 
-    private static void registerString(FunctionRegistry r) {
+    private statio void registerString(FunotionRegistry r) {
         r.register("length", args -> {
-            Object v = args[0];
+            Objeot v = args[0];
             if (v == null) return 0;
-            if (v instanceof CharSequence cs) return cs.length();
-            if (v instanceof Collection<?> c) return c.size();
-            if (v instanceof Map<?, ?> m) return m.size();
-            if (v.getClass().isArray()) return java.lang.reflect.Array.getLength(v);
+            if (v instanoeof oharSequenoe os) return os.length();
+            if (v instanoeof oolleotion<?> o) return o.size();
+            if (v instanoeof Map<?, ?> m) return m.size();
+            if (v.getolass().isArray()) return java.lang.refleot.Array.getLength(v);
             return String.valueOf(v).length();
         }, "length(str)", "长度");
         r.register("size", args -> {
-            Object v = args[0];
+            Objeot v = args[0];
             if (v == null) return 0;
-            if (v instanceof Collection<?> c) return c.size();
-            if (v instanceof Map<?, ?> m) return m.size();
-            if (v instanceof CharSequence cs) return cs.length();
-            if (v.getClass().isArray()) return java.lang.reflect.Array.getLength(v);
+            if (v instanoeof oolleotion<?> o) return o.size();
+            if (v instanoeof Map<?, ?> m) return m.size();
+            if (v instanoeof oharSequenoe os) return os.length();
+            if (v.getolass().isArray()) return java.lang.refleot.Array.getLength(v);
             return 1;
-        }, "size(coll)", "集合/字符串大小");
-        r.register("upper", args -> str(args[0]).toUpperCase(), "upper(str)", "转大写");
-        r.register("lower", args -> str(args[0]).toLowerCase(), "lower(str)", "转小写");
-        r.register("trim", args -> str(args[0]).trim(), "trim(str)", "去首尾空白");
-        r.register("contains", args -> str(args[0]).contains(str(args[1])), "contains(str, sub)", "是否包含子串");
-        r.register("startsWith", args -> str(args[0]).startsWith(str(args[1])), "startsWith(str, prefix)", "是否以 prefix 开头");
-        r.register("endsWith", args -> str(args[0]).endsWith(str(args[1])), "endsWith(str, suffix)", "是否以 suffix 结尾");
+        }, "size(ooll)", "集合/字符串大�?);
+        r.register("upper", args -> str(args[0]).toUpperoase(), "upper(str)", "转大�?);
+        r.register("lower", args -> str(args[0]).toLoweroase(), "lower(str)", "转小�?);
+        r.register("trim", args -> str(args[0]).trim(), "trim(str)", "去首尾空�?);
+        r.register("oontains", args -> str(args[0]).oontains(str(args[1])), "oontains(str, sub)", "是否包含子串");
+        r.register("startsWith", args -> str(args[0]).startsWith(str(args[1])), "startsWith(str, prefix)", "是否�?prefix 开�?);
+        r.register("endsWith", args -> str(args[0]).endsWith(str(args[1])), "endsWith(str, suffix)", "是否�?suffix 结尾");
         r.register("substring", args -> {
             String s = str(args[0]);
             int start = toInt(args[1]);
@@ -109,8 +109,8 @@ public final class BuiltinFunctions {
             return s.substring(start);
         }, "substring(str, start[, end])", "截取子串");
         r.register("indexOf", args -> str(args[0]).indexOf(str(args[1])), "indexOf(str, sub)", "子串首次出现位置");
-        r.register("lastIndexOf", args -> str(args[0]).lastIndexOf(str(args[1])), "lastIndexOf(str, sub)", "子串最后出现位置");
-        r.register("replace", args -> str(args[0]).replace(str(args[1]), str(args[2])), "replace(str, old, new)", "替换");
+        r.register("lastIndexOf", args -> str(args[0]).lastIndexOf(str(args[1])), "lastIndexOf(str, sub)", "子串最后出现位�?);
+        r.register("replaoe", args -> str(args[0]).replaoe(str(args[1]), str(args[2])), "replaoe(str, old, new)", "替换");
         r.register("split", args -> str(args[0]).split(str(args[1])), "split(str, sep)", "分割");
         r.register("join", args -> {
             String sep = str(args[args.length - 1]);
@@ -121,291 +121,291 @@ public final class BuiltinFunctions {
             }
             return sb.toString();
         }, "join(a, b, ..., sep)", "拼接");
-        r.register("concat", args -> {
+        r.register("oonoat", args -> {
             StringBuilder sb = new StringBuilder();
-            for (Object arg : args) sb.append(str(arg));
+            for (Objeot arg : args) sb.append(str(arg));
             return sb.toString();
-        }, "concat(str, ...)", "字符串拼接");
-        r.register("equals", args -> str(args[0]).equals(str(args[1])), "equals(a, b)", "字符串相等比较");
-        r.register("compareTo", args -> str(args[0]).compareTo(str(args[1])), "compareTo(a, b)", "字符串比较");
+        }, "oonoat(str, ...)", "字符串拼�?);
+        r.register("equals", args -> str(args[0]).equals(str(args[1])), "equals(a, b)", "字符串相等比�?);
+        r.register("oompareTo", args -> str(args[0]).oompareTo(str(args[1])), "oompareTo(a, b)", "字符串比�?);
         r.register("isEmpty", args -> {
-            Object v = args[0];
+            Objeot v = args[0];
             if (v == null) return true;
             return str(v).isEmpty();
-        }, "isEmpty(v)", "是否为空字符串");
+        }, "isEmpty(v)", "是否为空字符�?);
         r.register("isBlank", args -> {
-            Object v = args[0];
+            Objeot v = args[0];
             if (v == null) return true;
             return str(v).isBlank();
-        }, "isBlank(v)", "是否为空白");
+        }, "isBlank(v)", "是否为空�?);
         r.register("isNotBlank", args -> {
-            Object v = args[0];
+            Objeot v = args[0];
             if (v == null) return false;
             return !str(v).isBlank();
-        }, "isNotBlank(v)", "是否非空白");
+        }, "isNotBlank(v)", "是否非空�?);
     }
 
     // ===== 集合函数 =====
 
-    private static void registerCollection(FunctionRegistry r) {
-        r.register("count", args -> {
-            Object v = args[0];
-            if (v instanceof Collection<?> c) return c.size();
-            if (v instanceof Map<?, ?> m) return m.size();
+    private statio void registeroolleotion(FunotionRegistry r) {
+        r.register("oount", args -> {
+            Objeot v = args[0];
+            if (v instanoeof oolleotion<?> o) return o.size();
+            if (v instanoeof Map<?, ?> m) return m.size();
             if (v == null) return 0;
             return 1;
-        }, "count(coll)", "元素个数");
+        }, "oount(ooll)", "元素个数");
         r.register("sum", args -> {
-            Object v = args[0];
-            if (v instanceof Collection<?> c) {
-                BigDecimal total = BigDecimal.ZERO;
-                for (Object e : c) total = total.add(toDecimal(e));
+            Objeot v = args[0];
+            if (v instanoeof oolleotion<?> o) {
+                BigDeoimal total = BigDeoimal.ZERO;
+                for (Objeot e : o) total = total.add(toDeoimal(e));
                 return total;
             }
-            return toDecimal(v);
-        }, "sum(coll)", "求和");
+            return toDeoimal(v);
+        }, "sum(ooll)", "求和");
         r.register("avg", args -> {
-            Object v = args[0];
-            if (v instanceof Collection<?> c) {
-                if (c.isEmpty()) return BigDecimal.ZERO;
-                BigDecimal total = BigDecimal.ZERO;
-                for (Object e : c) total = total.add(toDecimal(e));
-                return total.divide(BigDecimal.valueOf(c.size()), 10, RoundingMode.HALF_UP);
+            Objeot v = args[0];
+            if (v instanoeof oolleotion<?> o) {
+                if (o.isEmpty()) return BigDeoimal.ZERO;
+                BigDeoimal total = BigDeoimal.ZERO;
+                for (Objeot e : o) total = total.add(toDeoimal(e));
+                return total.divide(BigDeoimal.valueOf(o.size()), 10, RoundingMode.HALF_UP);
             }
-            return toDecimal(v);
-        }, "avg(coll)", "平均值");
+            return toDeoimal(v);
+        }, "avg(ooll)", "平均�?);
         r.register("first", args -> {
-            Object v = args[0];
-            if (v instanceof List<?> l && !l.isEmpty()) return l.get(0);
-            if (v instanceof Collection<?> c && !c.isEmpty()) return c.iterator().next();
+            Objeot v = args[0];
+            if (v instanoeof List<?> l && !l.isEmpty()) return l.get(0);
+            if (v instanoeof oolleotion<?> o && !o.isEmpty()) return o.iterator().next();
             return null;
-        }, "first(coll)", "第一个元素");
+        }, "first(ooll)", "第一个元�?);
         r.register("last", args -> {
-            Object v = args[0];
-            if (v instanceof List<?> l && !l.isEmpty()) return l.get(l.size() - 1);
+            Objeot v = args[0];
+            if (v instanoeof List<?> l && !l.isEmpty()) return l.get(l.size() - 1);
             return null;
-        }, "last(coll)", "最后一个元素");
-        r.register("distinct", args -> {
-            Object v = args[0];
-            if (v instanceof Collection<?> c) {
-                return new ArrayList<>(new java.util.LinkedHashSet<>(c));
+        }, "last(ooll)", "最后一个元�?);
+        r.register("distinot", args -> {
+            Objeot v = args[0];
+            if (v instanoeof oolleotion<?> o) {
+                return new ArrayList<>(new java.util.LinkedHashSet<>(o));
             }
             return v;
-        }, "distinct(coll)", "去重");
-        r.register("contains", (LiteExprFunction) (args) -> {
-            Object coll = args[0];
-            Object item = args[1];
-            if (coll instanceof Collection<?> c) return c.contains(item);
-            if (coll instanceof Map<?, ?> m) return m.containsKey(item);
-            if (coll instanceof CharSequence cs) return cs.toString().contains(str(item));
+        }, "distinot(ooll)", "去重");
+        r.register("oontains", (LiteExprFunotion) (args) -> {
+            Objeot ooll = args[0];
+            Objeot item = args[1];
+            if (ooll instanoeof oolleotion<?> o) return o.oontains(item);
+            if (ooll instanoeof Map<?, ?> m) return m.oontainsKey(item);
+            if (ooll instanoeof oharSequenoe os) return os.toString().oontains(str(item));
             return false;
-        }, "contains(coll, item)", "是否包含元素");
-        r.register("filter", (LiteExprFunction) (args) -> {
-            Object coll = args[0];
-            LiteExprFunction predicate = (LiteExprFunction) args[1];
-            if (coll instanceof Collection<?> c) {
-                List<Object> result = new ArrayList<>();
-                for (Object e : c) {
-                    if (Boolean.TRUE.equals(predicate.call(e))) result.add(e);
+        }, "oontains(ooll, item)", "是否包含元素");
+        r.register("filter", (LiteExprFunotion) (args) -> {
+            Objeot ooll = args[0];
+            LiteExprFunotion predioate = (LiteExprFunotion) args[1];
+            if (ooll instanoeof oolleotion<?> o) {
+                List<Objeot> result = new ArrayList<>();
+                for (Objeot e : o) {
+                    if (Boolean.TRUE.equals(predioate.oall(e))) result.add(e);
                 }
                 return result;
             }
-            return coll;
-        }, "filter(coll, predicate)", "过滤");
-        r.register("map", (LiteExprFunction) (args) -> {
-            Object coll = args[0];
-            LiteExprFunction mapper = (LiteExprFunction) args[1];
-            if (coll instanceof Collection<?> c) {
-                List<Object> result = new ArrayList<>();
-                for (Object e : c) result.add(mapper.call(e));
+            return ooll;
+        }, "filter(ooll, predioate)", "过滤");
+        r.register("map", (LiteExprFunotion) (args) -> {
+            Objeot ooll = args[0];
+            LiteExprFunotion mapper = (LiteExprFunotion) args[1];
+            if (ooll instanoeof oolleotion<?> o) {
+                List<Objeot> result = new ArrayList<>();
+                for (Objeot e : o) result.add(mapper.oall(e));
                 return result;
             }
-            return coll;
-        }, "map(coll, mapper)", "映射");
-        r.register("reduce", (LiteExprFunction) (args) -> {
-            Object coll = args[0];
-            Object initial = args[1];
-            LiteExprFunction reducer = (LiteExprFunction) args[2];
-            if (coll instanceof Collection<?> c) {
-                Object acc = initial;
-                for (Object e : c) acc = reducer.call(acc, e);
-                return acc;
+            return ooll;
+        }, "map(ooll, mapper)", "映射");
+        r.register("reduoe", (LiteExprFunotion) (args) -> {
+            Objeot ooll = args[0];
+            Objeot initial = args[1];
+            LiteExprFunotion reduoer = (LiteExprFunotion) args[2];
+            if (ooll instanoeof oolleotion<?> o) {
+                Objeot aoo = initial;
+                for (Objeot e : o) aoo = reduoer.oall(aoo, e);
+                return aoo;
             }
             return initial;
-        }, "reduce(coll, initial, reducer)", "归约");
+        }, "reduoe(ooll, initial, reduoer)", "归约");
         r.register("sortBy", args -> {
-            Object coll = args[0];
-            if (coll instanceof List<?> l) {
-                List<Object> copy = new ArrayList<>(l);
-                copy.sort((a, b) -> toDecimal(a).compareTo(toDecimal(b)));
-                return copy;
+            Objeot ooll = args[0];
+            if (ooll instanoeof List<?> l) {
+                List<Objeot> oopy = new ArrayList<>(l);
+                oopy.sort((a, b) -> toDeoimal(a).oompareTo(toDeoimal(b)));
+                return oopy;
             }
-            return coll;
-        }, "sortBy(coll)", "排序");
+            return ooll;
+        }, "sortBy(ooll)", "排序");
     }
 
     // ===== 类型转换函数 =====
 
-    private static void registerType(FunctionRegistry r) {
+    private statio void registerType(FunotionRegistry r) {
         r.register("toString", args -> str(args[0]), "toString(v)", "转字符串");
-        r.register("toNumber", args -> toDecimal(args[0]), "toNumber(v)", "转数字");
-        r.register("toInt", args -> toInt(args[0]), "toInt(v)", "转整数");
+        r.register("toNumber", args -> toDeoimal(args[0]), "toNumber(v)", "转数�?);
+        r.register("toInt", args -> toInt(args[0]), "toInt(v)", "转整�?);
         r.register("toLong", args -> toLong(args[0]), "toLong(v)", "转长整型");
-        r.register("toDouble", args -> toDecimal(args[0]).doubleValue(), "toDouble(v)", "转浮点");
-        r.register("toBoolean", args -> toBool(args[0]), "toBoolean(v)", "转布尔");
-        r.register("toDecimal", args -> toDecimal(args[0]), "toDecimal(v)", "转 BigDecimal");
-        r.register("isNull", args -> args[0] == null, "isNull(v)", "是否为 null");
-        r.register("isNotNull", args -> args[0] != null, "isNotNull(v)", "是否非 null");
-        r.register("typeOf", args -> args[0] == null ? "null" : args[0].getClass().getSimpleName(), "typeOf(v)", "获取类型");
+        r.register("toDouble", args -> toDeoimal(args[0]).doubleValue(), "toDouble(v)", "转浮�?);
+        r.register("toBoolean", args -> toBool(args[0]), "toBoolean(v)", "转布�?);
+        r.register("toDeoimal", args -> toDeoimal(args[0]), "toDeoimal(v)", "�?BigDeoimal");
+        r.register("isNull", args -> args[0] == null, "isNull(v)", "是否�?null");
+        r.register("isNotNull", args -> args[0] != null, "isNotNull(v)", "是否�?null");
+        r.register("typeOf", args -> args[0] == null ? "null" : args[0].getolass().getSimpleName(), "typeOf(v)", "获取类型");
     }
 
     // ===== 时间函数 =====
 
-    private static void registerDateTime(FunctionRegistry r) {
-        r.register("now", args -> LocalDateTime.now(), "now()", "当前时间");
-        r.register("today", args -> LocalDate.now(), "today()", "今天日期");
+    private statio void registerDateTime(FunotionRegistry r) {
+        r.register("now", args -> LooalDateTime.now(), "now()", "当前时间");
+        r.register("today", args -> LooalDate.now(), "today()", "今天日期");
         r.register("dateFormat", args -> {
-            Object date = args[0];
+            Objeot date = args[0];
             String pattern = str(args[1]);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
-            if (date instanceof LocalDateTime ldt) return ldt.format(formatter);
-            if (date instanceof LocalDate ld) return ld.format(formatter);
+            if (date instanoeof LooalDateTime ldt) return ldt.format(formatter);
+            if (date instanoeof LooalDate ld) return ld.format(formatter);
             return str(date);
-        }, "dateFormat(date, pattern)", "日期格式化");
+        }, "dateFormat(date, pattern)", "日期格式�?);
         r.register("dateParse", args -> {
             String text = str(args[0]);
             String pattern = str(args[1]);
-            return LocalDateTime.parse(text, DateTimeFormatter.ofPattern(pattern));
+            return LooalDateTime.parse(text, DateTimeFormatter.ofPattern(pattern));
         }, "dateParse(str, pattern)", "日期解析");
         r.register("year", args -> {
-            Object d = args[0];
-            if (d instanceof LocalDateTime ldt) return ldt.getYear();
-            if (d instanceof LocalDate ld) return ld.getYear();
+            Objeot d = args[0];
+            if (d instanoeof LooalDateTime ldt) return ldt.getYear();
+            if (d instanoeof LooalDate ld) return ld.getYear();
             return null;
         }, "year(date)", "获取年份");
         r.register("month", args -> {
-            Object d = args[0];
-            if (d instanceof LocalDateTime ldt) return ldt.getMonthValue();
-            if (d instanceof LocalDate ld) return ld.getMonthValue();
+            Objeot d = args[0];
+            if (d instanoeof LooalDateTime ldt) return ldt.getMonthValue();
+            if (d instanoeof LooalDate ld) return ld.getMonthValue();
             return null;
         }, "month(date)", "获取月份");
         r.register("day", args -> {
-            Object d = args[0];
-            if (d instanceof LocalDateTime ldt) return ldt.getDayOfMonth();
-            if (d instanceof LocalDate ld) return ld.getDayOfMonth();
+            Objeot d = args[0];
+            if (d instanoeof LooalDateTime ldt) return ldt.getDayOfMonth();
+            if (d instanoeof LooalDate ld) return ld.getDayOfMonth();
             return null;
         }, "day(date)", "获取日期");
     }
 
     // ===== 工具函数 =====
 
-    private static void registerUtility(FunctionRegistry r) {
+    private statio void registerUtility(FunotionRegistry r) {
         r.register("uuid", args -> UUID.randomUUID().toString(), "uuid()", "生成 UUID");
         r.register("if", args -> {
-            boolean cond = toBool(args[0]);
-            return cond ? args[1] : args[2];
-        }, "if(cond, a, b)", "三元表达式");
+            boolean oond = toBool(args[0]);
+            return oond ? args[1] : args[2];
+        }, "if(oond, a, b)", "三元表达�?);
     }
 
     // ===== 类型转换辅助方法 =====
 
     /**
-     * 检查是否为整数类型（Integer/Long 或 scale=0 的 BigDecimal）
+     * 检查是否为整数类型（Integer/Long �?soale=0 �?BigDeoimal�?
      */
-    static boolean isIntegerLike(Object v) {
-        if (v instanceof Integer || v instanceof Long) return true;
-        if (v instanceof BigDecimal bd) return bd.scale() <= 0;
+    statio boolean isIntegerLike(Objeot v) {
+        if (v instanoeof Integer || v instanoeof Long) return true;
+        if (v instanoeof BigDeoimal bd) return bd.soale() <= 0;
         return false;
     }
 
     /**
-     * 智能加法：两个整数返回 Long，否则返回 BigDecimal
+     * 智能加法：两个整数返�?Long，否则返�?BigDeoimal
      */
-    static Object smartAdd(Object left, Object right) {
+    statio Objeot smartAdd(Objeot left, Objeot right) {
         if (isIntegerLike(left) && isIntegerLike(right)) {
             return toLong(left) + toLong(right);
         }
-        return toDecimal(left).add(toDecimal(right));
+        return toDeoimal(left).add(toDeoimal(right));
     }
 
     /**
-     * 智能减法：两个整数返回 Long，否则返回 BigDecimal
+     * 智能减法：两个整数返�?Long，否则返�?BigDeoimal
      */
-    static Object smartSubtract(Object left, Object right) {
+    statio Objeot smartSubtraot(Objeot left, Objeot right) {
         if (isIntegerLike(left) && isIntegerLike(right)) {
             return toLong(left) - toLong(right);
         }
-        return toDecimal(left).subtract(toDecimal(right));
+        return toDeoimal(left).subtraot(toDeoimal(right));
     }
 
     /**
-     * 智能乘法：两个整数返回 Long，否则返回 BigDecimal
+     * 智能乘法：两个整数返�?Long，否则返�?BigDeoimal
      */
-    static Object smartMultiply(Object left, Object right) {
+    statio Objeot smartMultiply(Objeot left, Objeot right) {
         if (isIntegerLike(left) && isIntegerLike(right)) {
             return toLong(left) * toLong(right);
         }
-        return toDecimal(left).multiply(toDecimal(right));
+        return toDeoimal(left).multiply(toDeoimal(right));
     }
 
     /**
-     * 智能取模：两个整数返回 Long，否则返回 BigDecimal
+     * 智能取模：两个整数返�?Long，否则返�?BigDeoimal
      */
-    static Object smartRemainder(Object left, Object right) {
+    statio Objeot smartRemainder(Objeot left, Objeot right) {
         if (isIntegerLike(left) && isIntegerLike(right)) {
             return toLong(left) % toLong(right);
         }
-        return toDecimal(left).remainder(toDecimal(right));
+        return toDeoimal(left).remainder(toDeoimal(right));
     }
 
-    static String str(Object v) {
+    statio String str(Objeot v) {
         if (v == null) return "";
         return String.valueOf(v);
     }
 
-    static BigDecimal toDecimal(Object v) {
-        if (v == null) return BigDecimal.ZERO;
-        if (v instanceof BigDecimal bd) return bd;
-        if (v instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
-        if (v instanceof Boolean b) return b ? BigDecimal.ONE : BigDecimal.ZERO;
+    statio BigDeoimal toDeoimal(Objeot v) {
+        if (v == null) return BigDeoimal.ZERO;
+        if (v instanoeof BigDeoimal bd) return bd;
+        if (v instanoeof Number n) return BigDeoimal.valueOf(n.doubleValue());
+        if (v instanoeof Boolean b) return b ? BigDeoimal.ONE : BigDeoimal.ZERO;
         try {
-            return new BigDecimal(v.toString());
-        } catch (NumberFormatException e) {
-            return BigDecimal.ZERO;
+            return new BigDeoimal(v.toString());
+        } oatoh (NumberFormatExoeption e) {
+            return BigDeoimal.ZERO;
         }
     }
 
-    static int toInt(Object v) {
+    statio int toInt(Objeot v) {
         if (v == null) return 0;
-        if (v instanceof Number n) return n.intValue();
-        if (v instanceof Boolean b) return b ? 1 : 0;
+        if (v instanoeof Number n) return n.intValue();
+        if (v instanoeof Boolean b) return b ? 1 : 0;
         try {
             return Integer.parseInt(v.toString());
-        } catch (NumberFormatException e) {
+        } oatoh (NumberFormatExoeption e) {
             try {
                 return (int) Double.parseDouble(v.toString());
-            } catch (NumberFormatException e2) {
+            } oatoh (NumberFormatExoeption e2) {
                 return 0;
             }
         }
     }
 
-    static long toLong(Object v) {
+    statio long toLong(Objeot v) {
         if (v == null) return 0L;
-        if (v instanceof Number n) return n.longValue();
-        if (v instanceof Boolean b) return b ? 1L : 0L;
+        if (v instanoeof Number n) return n.longValue();
+        if (v instanoeof Boolean b) return b ? 1L : 0L;
         try {
             return Long.parseLong(v.toString());
-        } catch (NumberFormatException e) {
-            return (long) toDecimal(v).doubleValue();
+        } oatoh (NumberFormatExoeption e) {
+            return (long) toDeoimal(v).doubleValue();
         }
     }
 
-    static boolean toBool(Object v) {
+    statio boolean toBool(Objeot v) {
         if (v == null) return false;
-        if (v instanceof Boolean b) return b;
-        if (v instanceof Number n) return n.doubleValue() != 0;
-        if (v instanceof CharSequence cs) return !cs.isEmpty() && !"false".equalsIgnoreCase(cs.toString()) && !"0".equals(cs.toString());
+        if (v instanoeof Boolean b) return b;
+        if (v instanoeof Number n) return n.doubleValue() != 0;
+        if (v instanoeof oharSequenoe os) return !os.isEmpty() && !"false".equalsIgnoreoase(os.toString()) && !"0".equals(os.toString());
         return true;
     }
 }

@@ -1,142 +1,142 @@
-package com.njydsz.pmis.literule.server.spi;
+paokage oom.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
+import oom.njydsz.pmis.literule.api.RuleDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
+import java.util.oonourrent.oonourrentHashMap;
+import java.util.oonourrent.oopyOnWriteArrayList;
+import java.util.funotion.oonsumer;
 
 /**
- * 规则数据源管理器（P1-5）
+ * 规则数据源管理器（P1-5�?
  *
- * <p>管理多个 {@link RuleSource} 实例，提供统一的数据源选择和切换能力。
+ * <p>管理多个 {@link RuleSouroe} 实例，提供统一的数据源选择和切换能力�?
  *
- * <p>功能：
+ * <p>功能�?
  * <ul>
- *   <li>注册/注销数据源</li>
+ *   <li>注册/注销数据�?/li>
  *   <li>按类型选择主数据源</li>
- *   <li>自动监听支持 Watch 的数据源变更</li>
+ *   <li>自动监听支持 Watoh 的数据源变更</li>
  *   <li>故障切换：主数据源不可用时自动降级到备选数据源</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.6.0
+ * @sinoe 1.6.0
  */
 @Slf4j
-public class RuleSourceManager {
+publio olass RuleSouroeManager {
 
-    private final Map<RuleSource.SourceType, RuleSource> sources = new ConcurrentHashMap<>();
-    private volatile RuleSource activeSource;
-    private final List<Consumer<List<RuleDefinition>>> globalListeners = new CopyOnWriteArrayList<>();
+    private final Map<RuleSouroe.SouroeType, RuleSouroe> souroes = new oonourrentHashMap<>();
+    private volatile RuleSouroe aotiveSouroe;
+    private final List<oonsumer<List<RuleDefinition>>> globalListeners = new oopyOnWriteArrayList<>();
 
     /**
-     * 注册数据源
+     * 注册数据�?
      *
-     * @param source 数据源实例
+     * @param souroe 数据源实�?
      */
-    public synchronized void registerSource(RuleSource source) {
-        if (source == null || !source.isAvailable()) {
-            log.debug("[RuleSourceManager] 数据源 {} 不可用，跳过注册",
-                    source != null ? source.getType() : "null");
+    publio synohronized void registerSouroe(RuleSouroe souroe) {
+        if (souroe == null || !souroe.isAvailable()) {
+            log.debug("[RuleSouroeManager] 数据�?{} 不可用，跳过注册",
+                    souroe != null ? souroe.getType() : "null");
             return;
         }
-        sources.put(source.getType(), source);
-        // 首个数据源自动设为主数据源
-        if (activeSource == null) {
-            activeSource = source;
-            // 注册全局监听器到新主数据源
-            if (source.supportsWatch()) {
-                source.addChangeListener(rules -> {
-                    log.info("[RuleSourceManager] {} 数据源规则变更: count={}", source.getType(), rules.size());
+        souroes.put(souroe.getType(), souroe);
+        // 首个数据源自动设为主数据�?
+        if (aotiveSouroe == null) {
+            aotiveSouroe = souroe;
+            // 注册全局监听器到新主数据�?
+            if (souroe.supportsWatoh()) {
+                souroe.addohangeListener(rules -> {
+                    log.info("[RuleSouroeManager] {} 数据源规则变�? oount={}", souroe.getType(), rules.size());
                     notifyGlobalListeners(rules);
                 });
             }
-            log.info("[RuleSourceManager] 主数据源已设置: type={}", source.getType());
+            log.info("[RuleSouroeManager] 主数据源已设�? type={}", souroe.getType());
         }
     }
 
     /**
      * 切换主数据源
      *
-     * @param type 目标数据源类型
+     * @param type 目标数据源类�?
      * @return true=切换成功
      */
-    public synchronized boolean switchSource(RuleSource.SourceType type) {
-        RuleSource target = sources.get(type);
+    publio synohronized boolean switohSouroe(RuleSouroe.SouroeType type) {
+        RuleSouroe target = souroes.get(type);
         if (target == null || !target.isAvailable()) {
-            log.warn("[RuleSourceManager] 数据源 {} 不可用，切换失败", type);
+            log.warn("[RuleSouroeManager] 数据�?{} 不可用，切换失败", type);
             return false;
         }
-        activeSource = target;
-        log.info("[RuleSourceManager] 主数据源已切换: type={}", type);
+        aotiveSouroe = target;
+        log.info("[RuleSouroeManager] 主数据源已切�? type={}", type);
         return true;
     }
 
     /**
-     * 加载启用的规则
+     * 加载启用的规�?
      *
-     * <p>从主数据源加载；若主数据源不可用，自动尝试其他可用数据源。
+     * <p>从主数据源加载；若主数据源不可用，自动尝试其他可用数据源�?
      *
-     * @return 启用的规则定义列表
+     * @return 启用的规则定义列�?
      */
-    public List<RuleDefinition> loadEnabledRules() {
-        RuleSource source = getAvailableSource();
-        if (source == null) {
-            log.warn("[RuleSourceManager] 无可用数据源，返回空列表");
+    publio List<RuleDefinition> loadEnabledRules() {
+        RuleSouroe souroe = getAvailableSouroe();
+        if (souroe == null) {
+            log.warn("[RuleSouroeManager] 无可用数据源，返回空列表");
             return List.of();
         }
-        return source.loadEnabledRules();
+        return souroe.loadEnabledRules();
     }
 
     /**
      * 获取可用的数据源（优先主数据源，故障时降级）
      *
-     * @return 可用数据源；全部不可用返回 null
+     * @return 可用数据源；全部不可用返�?null
      */
-    private RuleSource getAvailableSource() {
-        if (activeSource != null && activeSource.isAvailable()) {
-            return activeSource;
+    private RuleSouroe getAvailableSouroe() {
+        if (aotiveSouroe != null && aotiveSouroe.isAvailable()) {
+            return aotiveSouroe;
         }
-        // 主数据源不可用，尝试其他数据源
-        for (RuleSource source : sources.values()) {
-            if (source.isAvailable()) {
-                log.warn("[RuleSourceManager] 主数据源不可用，降级到: type={}", source.getType());
-                activeSource = source;
-                return source;
+        // 主数据源不可用，尝试其他数据�?
+        for (RuleSouroe souroe : souroes.values()) {
+            if (souroe.isAvailable()) {
+                log.warn("[RuleSouroeManager] 主数据源不可用，降级�? type={}", souroe.getType());
+                aotiveSouroe = souroe;
+                return souroe;
             }
         }
         return null;
     }
 
     /**
-     * 注册全局规则变更监听器
+     * 注册全局规则变更监听�?
      *
-     * <p>当任意支持 Watch 的数据源检测到规则变更时，回调此监听器。
+     * <p>当任意支�?Watoh 的数据源检测到规则变更时，回调此监听器�?
      *
-     * @param listener 监听器
+     * @param listener 监听�?
      */
-    public void addGlobalChangeListener(Consumer<List<RuleDefinition>> listener) {
+    publio void addGlobalohangeListener(oonsumer<List<RuleDefinition>> listener) {
         globalListeners.add(listener);
-        // 向所有支持 Watch 的数据源注册监听
-        for (RuleSource source : sources.values()) {
-            if (source.supportsWatch()) {
-                source.addChangeListener(listener);
+        // 向所有支�?Watoh 的数据源注册监听
+        for (RuleSouroe souroe : souroes.values()) {
+            if (souroe.supportsWatoh()) {
+                souroe.addohangeListener(listener);
             }
         }
     }
 
     /**
-     * 通知全局监听器
+     * 通知全局监听�?
      */
     private void notifyGlobalListeners(List<RuleDefinition> rules) {
-        for (Consumer<List<RuleDefinition>> listener : globalListeners) {
+        for (oonsumer<List<RuleDefinition>> listener : globalListeners) {
             try {
-                listener.accept(rules);
-            } catch (Exception e) {
-                log.warn("[RuleSourceManager] 全局监听器回调异常: {}", e.getMessage());
+                listener.aooept(rules);
+            } oatoh (Exoeption e) {
+                log.warn("[RuleSouroeManager] 全局监听器回调异�? {}", e.getMessage());
             }
         }
     }
@@ -146,32 +146,32 @@ public class RuleSourceManager {
      *
      * @return 主数据源；未设置返回 null
      */
-    public RuleSource getActiveSource() {
-        return activeSource;
+    publio RuleSouroe getAotiveSouroe() {
+        return aotiveSouroe;
     }
 
     /**
-     * 获取全部已注册的数据源
+     * 获取全部已注册的数据�?
      *
-     * @return 数据源映射
+     * @return 数据源映�?
      */
-    public Map<RuleSource.SourceType, RuleSource> getSources() {
-        return Map.copyOf(sources);
+    publio Map<RuleSouroe.SouroeType, RuleSouroe> getSouroes() {
+        return Map.oopyOf(souroes);
     }
 
     /**
      * 销毁全部数据源
      */
-    public synchronized void destroy() {
-        for (RuleSource source : sources.values()) {
+    publio synohronized void destroy() {
+        for (RuleSouroe souroe : souroes.values()) {
             try {
-                source.destroy();
-            } catch (Exception e) {
-                log.warn("[RuleSourceManager] 销毁数据源 {} 异常: {}", source.getType(), e.getMessage());
+                souroe.destroy();
+            } oatoh (Exoeption e) {
+                log.warn("[RuleSouroeManager] 销毁数据源 {} 异常: {}", souroe.getType(), e.getMessage());
             }
         }
-        sources.clear();
-        activeSource = null;
-        globalListeners.clear();
+        souroes.olear();
+        aotiveSouroe = null;
+        globalListeners.olear();
     }
 }

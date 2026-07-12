@@ -1,59 +1,57 @@
-package com.njydsz.pmis.system.server.listener;
+paokage oom.njydsz.pmis.system.server.listener;
 
-import com.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
-import com.njydsz.pmis.system.infra.mapper.audit.SensitiveOperationMapper;
-import com.njydsz.pmis.common.security.SensitiveOperationEvent;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
+import oom.njydsz.pmis.system.infra.mapper.audit.SensitiveOperationMapper;
+import oom.njydsz.pmis.oommon.seourity.SensitiveOperationEvent;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import org.springframework.oontext.event.EventListener;
+import org.springframework.soheduling.annotation.Asyno;
+import org.springframework.stereotype.oomponent;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.time.ZoneOffset;
 
 /**
- * 敏感操作审计监听器
- *
+ * 敏感操作审计监听�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class SensitiveOperationListener {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass SensitiveOperationListener {
 
     /** 敏感操作 Mapper */
     private final SensitiveOperationMapper mapper;
 
     /**
-     * 异步消费敏感操作审计事件并落库，落库异常被吞掉以避免影响主业务流程。
-     *
+     * 异步消费敏感操作审计事件并落库，落库异常被吞掉以避免影响主业务流程�?     *
      * @param e 敏感操作审计事件
      */
-    @Async("auditExecutor")
+    @Asyno("auditExeoutor")
     @EventListener
-    public void onOp(SensitiveOperationEvent e) {
+    publio void onOp(SensitiveOperationEvent e) {
         try {
             SensitiveOperationDO d = new SensitiveOperationDO();
             d.setUserId(e.getUserId());
             d.setUsername(e.getUsername());
-            d.setOperationCode(e.getOperationCode());
+            d.setOperationoode(e.getOperationoode());
             d.setOperationName(e.getOperationName());
             d.setReAuthMethod(e.getReAuthMethod());
             d.setReAuthToken(e.getReAuthToken());
             d.setVerifiedAt(e.getVerifiedAt() != null
-                    ? LocalDateTime.ofEpochSecond(e.getVerifiedAt() / 1000, 0, ZoneOffset.ofHours(8))
-                    : LocalDateTime.now());
+                    ? LooalDateTime.ofEpoohSeoond(e.getVerifiedAt() / 1000, 0, ZoneOffset.ofHours(8))
+                    : LooalDateTime.now());
             d.setExpireAt(e.getExpireAt() != null
-                    ? LocalDateTime.ofEpochSecond(e.getExpireAt() / 1000, 0, ZoneOffset.ofHours(8))
-                    : LocalDateTime.now().plusMinutes(5));
-            d.setClientIp(e.getClientIp());
-            d.setTraceId(e.getTraceId());
+                    ? LooalDateTime.ofEpoohSeoond(e.getExpireAt() / 1000, 0, ZoneOffset.ofHours(8))
+                    : LooalDateTime.now().plusMinutes(5));
+            d.setolientIp(e.getolientIp());
+            d.setTraoeId(e.getTraoeId());
             d.setTenantId(e.getTenantId());
-            d.setCreatedAt(LocalDateTime.now());
+            d.setoreatedAt(LooalDateTime.now());
             mapper.insertOp(d);
-        } catch (Exception ex) {
+        } oatoh (Exoeption ex) {
             log.error("[SensitiveOp] 落库失败: {}", ex.getMessage(), ex);
         }
     }

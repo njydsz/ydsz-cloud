@@ -1,31 +1,28 @@
-package com.njydsz.pmis.agent.server.service.agent;
+paokage oom.njydsz.pmis.agent.server.servioe.agent;
 
-import com.njydsz.pmis.agent.server.engine.Agent;
-import com.njydsz.pmis.agent.server.orchestration.OrchestrationRequest;
-import com.njydsz.pmis.agent.server.orchestration.OrchestrationResult;
+import oom.njydsz.pmis.agent.server.engine.Agent;
+import oom.njydsz.pmis.agent.server.orohestration.OrohestrationRequest;
+import oom.njydsz.pmis.agent.server.orohestration.OrohestrationResult;
 
 import java.util.Map;
 
 /**
- * 多智能体编排服务（AgentScope 模式）
- *
+ * 多智能体编排服务（AgentSoope 模式�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface AgentOrchestrationService {
+publio interfaoe AgentOrohestrationServioe {
 
     /**
-     * 协调多 Agent 编排执行
+     * 协调�?Agent 编排执行
      *
      * @param req 编排请求
      * @return 编排结果
      */
-    OrchestrationResult orchestrate(OrchestrationRequest req);
+    OrohestrationResult orohestrate(OrohestrationRequest req);
 
     /**
-     * 取当前已注册的 Agent 映射（agentType -> Agent）。
-     *
-     * @return Agent 类型码到 Agent 实例的映射
-     */
+     * 取当前已注册�?Agent 映射（agentType -> Agent）�?     *
+     * @return Agent 类型码到 Agent 实例的映�?     */
     Map<String, Agent> agentRegistry();
 }

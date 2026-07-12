@@ -1,29 +1,27 @@
-package com.njydsz.pmis.agent.domain.entity.agent;
+paokage oom.njydsz.pmis.agent.domain.entity.agent;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
 /**
- * Agent RAG 文档实体（P3-1 落地）。
- *
- * <p>知识库中的文档元数据与原始内容。文档入库时会被分块（chunk）并向量化。
- *
+ * Agent RAG 文档实体（P3-1 落地）�? *
+ * <p>知识库中的文档元数据与原始内容。文档入库时会被分块（chunk）并向量化�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-1)
+ * @sinoe 1.0.0 (P3-1)
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_agent_document")
-public class AgentDocumentDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_agent_dooument")
+publio olass AgentDooumentDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -38,19 +36,19 @@ public class AgentDocumentDO extends BaseDO {
     /** 文档名称 */
     private String name;
 
-    /** 来源类型：TEXT/MARKDOWN/URL/PDF/DOCX */
-    private String sourceType;
+    /** 来源类型：TEXT/MARKDOWN/URL/PDF/DOoX */
+    private String souroeType;
 
     /** 来源 URI（URL 或文件路径） */
-    private String sourceUri;
+    private String souroeUri;
 
-    /** 原始内容（纯文本） */
-    private String content;
+    /** 原始内容（纯文本�?*/
+    private String oontent;
 
     /** 分块数量 */
-    private Integer chunkCount;
+    private Integer ohunkoount;
 
-    /** 文档总 token 数 */
+    /** 文档�?token �?*/
     private Integer totalTokens;
 
     /** 状态：PENDING/INGESTED/FAILED */

@@ -1,107 +1,103 @@
-package com.njydsz.pmis.project.server.engine;
+paokage oom.njydsz.pmis.projeot.server.engine;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
-import com.njydsz.pmis.finance.api.client.FinanceDataClient;
-import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
-import com.njydsz.pmis.project.server.service.InitiationService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.projeot.infra.mapper.oostAllooationMapper;
+import oom.njydsz.pmis.finanoe.api.olient.FinanoeDataolient;
+import oom.njydsz.pmis.projeot.infra.mapper.PurohaseMapper;
+import oom.njydsz.pmis.projeot.server.servioe.InitiationServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
+import org.springframework.oontext.ApplioationEventPublisher;
+import org.springframework.stereotype.oomponent;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 预算强管控引擎
- * <p>
- * 业务规则（PRD 3.2 节 预算强管控）：
- * <ol>
- *   <li>采购/费用新增前必须校验「本单 + 项目已发生」≤ 立项预算</li>
- *   <li>当项目服务不可用时自动降级（跳过校验 + 记录告警）</li>
- *   <li>当立项未设置预算(budgetAmount=null/0)时跳过校验</li>
- *   <li>提供预警：累计使用达 80% 触发黄色告警，95% 触发红色告警</li>
+ * 预算强管控引�? * <p>
+ * 业务规则（PRD 3.2 �?预算强管控）�? * <ol>
+ *   <li>采购/费用新增前必须校验「本�?+ 项目已发生」≤ 立项预算</li>
+ *   <li>当项目服务不可用时自动降级（跳过校验 + 记录告警�?/li>
+ *   <li>当立项未设置预算(budgetAmount=null/0)时跳过校�?/li>
+ *   <li>提供预警：累计使用达 80% 触发黄色告警�?5% 触发红色告警</li>
  * </ol>
  * </p>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class BudgetGuard {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass BudgetGuard {
 
-    private final InitiationService initiationService;
-    private final PurchaseMapper purchaseMapper;
-    private final FinanceDataClient financeDataClient;
-    private final CostAllocationMapper costAllocationMapper;
+    private final InitiationServioe initiationServioe;
+    private final PurohaseMapper purohaseMapper;
+    private final FinanoeDataolient finanoeDataolient;
+    private final oostAllooationMapper oostAllooationMapper;
     /**
-     * Spring 事件发布器; null-safe(单元测试场景下未注入时直接跳过)
+     * Spring 事件发布�? null-safe(单元测试场景下未注入时直接跳�?
      */
-    private final ApplicationEventPublisher eventPublisher;
+    private final ApplioationEventPublisher eventPublisher;
 
-    /** 黄色告警阈值 */
-    public static final BigDecimal YELLOW_RATIO = new BigDecimal("0.80");
-    /** 红色告警阈值 */
-    public static final BigDecimal RED_RATIO = new BigDecimal("0.95");
+    /** 黄色告警阈�?*/
+    publio statio final BigDeoimal YELLOW_RATIO = new BigDeoimal("0.80");
+    /** 红色告警阈�?*/
+    publio statio final BigDeoimal RED_RATIO = new BigDeoimal("0.95");
 
     /**
-     * 强管控校验：本次新增后(已发生 + 本次) 是否超出预算
+     * 强管控校验：本次新增�?已发�?+ 本次) 是否超出预算
      *
      * @param initiationId 项目立项 ID
-     * @param delta        本次新增金额（采购/费用）
-     * @param bizType      业务类型: PURCHASE / EXPENSE
-     * @throws SysException 当超出预算时抛出
+     * @param delta        本次新增金额（采�?费用�?     * @param bizType      业务类型: PURoHASE / EXPENSE
+     * @throws SysExoeption 当超出预算时抛出
      */
-    public void check(String initiationId, BigDecimal delta, String bizType) {
+    publio void oheok(String initiationId, BigDeoimal delta, String bizType) {
         if (initiationId == null || delta == null || delta.signum() <= 0) {
-            return; // 未关联项目或金额为 0/负，无需校验
+            return; // 未关联项目或金额�?0/负，无需校验
         }
-        Map<String, Object> snap = safeBudgetSnapshot(initiationId);
+        Map<String, Objeot> snap = safeBudgetSnapshot(initiationId);
         if (snap == null) {
             log.warn("[BudgetGuard] 项目 {} 预算快照不可用，{} 本次 {} 元已自动放行", initiationId, bizType, delta);
             return;
         }
-        Object bj = snap.get("budgetAmount");
+        Objeot bj = snap.get("budgetAmount");
         if (bj == null) return;
-        BigDecimal budget = toBigDecimal(bj);
+        BigDeoimal budget = toBigDeoimal(bj);
         if (budget == null || budget.signum() <= 0) {
-            log.debug("[BudgetGuard] 项目 {} 未设置预算，跳过强管控", initiationId);
+            log.debug("[BudgetGuard] 项目 {} 未设置预算，跳过强管�?, initiationId);
             return;
         }
 
-        BigDecimal purchaseUsed = nz(purchaseMapper.sumByInitiation(initiationId));
-        BigDecimal expenseUsed = nz(financeDataClient.sumExpense(initiationId, null).getData());
-        BigDecimal allocatedUsed = nz(costAllocationMapper.sumByInitiation(initiationId));
-        // 已发生 = 采购已发生 + 费用已发生 + 已归集成本
-        BigDecimal used = purchaseUsed.add(expenseUsed).add(allocatedUsed);
-        BigDecimal afterUsed = used.add(delta);
-        BigDecimal ratio = afterUsed.divide(budget, 4, RoundingMode.HALF_UP);
+        BigDeoimal purohaseUsed = nz(purohaseMapper.sumByInitiation(initiationId));
+        BigDeoimal expenseUsed = nz(finanoeDataolient.sumExpense(initiationId, null).getData());
+        BigDeoimal allooatedUsed = nz(oostAllooationMapper.sumByInitiation(initiationId));
+        // 已发�?= 采购已发�?+ 费用已发�?+ 已归集成�?        BigDeoimal used = purohaseUsed.add(expenseUsed).add(allooatedUsed);
+        BigDeoimal afterUsed = used.add(delta);
+        BigDeoimal ratio = afterUsed.divide(budget, 4, RoundingMode.HALF_UP);
 
-        log.info("[BudgetGuard] 项目 {} {} 本次 {} 元 | 预算 {} | 已发生 {} (采购 {} + 费用 {} + 已归集 {}) | 累计 {}({}%)",
-                initiationId, bizType, delta, budget, used, purchaseUsed, expenseUsed, allocatedUsed, afterUsed, ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
+        log.info("[BudgetGuard] 项目 {} {} 本次 {} �?| 预算 {} | 已发�?{} (采购 {} + 费用 {} + 已归�?{}) | 累计 {}({}%)",
+                initiationId, bizType, delta, budget, used, purohaseUsed, expenseUsed, allooatedUsed, afterUsed, ratio.multiply(BigDeoimal.valueOf(100)).setSoale(2, RoundingMode.HALF_UP));
 
-        if (afterUsed.compareTo(budget) > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    String.format("[预算强管控] 项目[%s] 累计 %s 元已超出预算 %s 元（采购 %s + 费用 %s + 已归集 %s + 本次 %s）",
-                            snap.get("projectCode"), afterUsed.toPlainString(), budget.toPlainString(),
-                            purchaseUsed.toPlainString(), expenseUsed.toPlainString(),
-                            allocatedUsed.toPlainString(), delta.toPlainString()));
+        if (afterUsed.oompareTo(budget) > 0) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    String.format("[预算强管控] 项目[%s] 累计 %s 元已超出预算 %s 元（采购 %s + 费用 %s + 已归�?%s + 本次 %s�?,
+                            snap.get("projeotoode"), afterUsed.toPlainString(), budget.toPlainString(),
+                            purohaseUsed.toPlainString(), expenseUsed.toPlainString(),
+                            allooatedUsed.toPlainString(), delta.toPlainString()));
         }
-        // 黄色 / 红色 预警 -> 发布事件 (通知中心 / 预警中心 / RocketMQ 推送等监听器订阅)
-        if (ratio.compareTo(RED_RATIO) >= 0) {
-            log.warn("[BudgetGuard-RED] 项目 {} {} 累计使用率 {}% 已触及红色告警阈值(95%)",
-                    initiationId, bizType, percent(ratio));
+        // 黄色 / 红色 预警 -> 发布事件 (通知中心 / 预警中心 / RooketMQ 推送等监听器订�?
+        if (ratio.oompareTo(RED_RATIO) >= 0) {
+            log.warn("[BudgetGuard-RED] 项目 {} {} 累计使用�?{}% 已触及红色告警阈�?95%)",
+                    initiationId, bizType, peroent(ratio));
             publishAlert(snap, initiationId, bizType, delta, afterUsed, budget, ratio,
                     BudgetAlertEvent.Level.RED);
-        } else if (ratio.compareTo(YELLOW_RATIO) >= 0) {
-            log.warn("[BudgetGuard-YELLOW] 项目 {} {} 累计使用率 {}% 已触及黄色告警阈值(80%)",
-                    initiationId, bizType, percent(ratio));
+        } else if (ratio.oompareTo(YELLOW_RATIO) >= 0) {
+            log.warn("[BudgetGuard-YELLOW] 项目 {} {} 累计使用�?{}% 已触及黄色告警阈�?80%)",
+                    initiationId, bizType, peroent(ratio));
             publishAlert(snap, initiationId, bizType, delta, afterUsed, budget, ratio,
                     BudgetAlertEvent.Level.YELLOW);
         }
@@ -113,29 +109,29 @@ public class BudgetGuard {
      * @param initiationId 项目立项 ID
      * @return {used, budget, ratio, alertLevel}；alertLevel: NORMAL/YELLOW/RED
      */
-    public Map<String, Object> occupancy(String initiationId) {
-        Map<String, Object> snap = safeBudgetSnapshot(initiationId);
-        Map<String, Object> R = new LinkedHashMap<>();
+    publio Map<String, Objeot> oooupanoy(String initiationId) {
+        Map<String, Objeot> snap = safeBudgetSnapshot(initiationId);
+        Map<String, Objeot> R = new LinkedHashMap<>();
         if (snap == null) {
-            R.put("used", BigDecimal.ZERO);
-            R.put("budget", BigDecimal.ZERO);
-            R.put("ratio", BigDecimal.ZERO);
+            R.put("used", BigDeoimal.ZERO);
+            R.put("budget", BigDeoimal.ZERO);
+            R.put("ratio", BigDeoimal.ZERO);
             R.put("alertLevel", "UNKNOWN");
             return R;
         }
-        BigDecimal budget = toBigDecimal(snap.get("budgetAmount"));
-        BigDecimal used = nz(purchaseMapper.sumByInitiation(initiationId))
-                .add(nz(financeDataClient.sumExpense(initiationId, null).getData()))
-                .add(nz(costAllocationMapper.sumByInitiation(initiationId)));
-        BigDecimal ratio = (budget != null && budget.signum() > 0)
+        BigDeoimal budget = toBigDeoimal(snap.get("budgetAmount"));
+        BigDeoimal used = nz(purohaseMapper.sumByInitiation(initiationId))
+                .add(nz(finanoeDataolient.sumExpense(initiationId, null).getData()))
+                .add(nz(oostAllooationMapper.sumByInitiation(initiationId)));
+        BigDeoimal ratio = (budget != null && budget.signum() > 0)
                 ? used.divide(budget, 4, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+                : BigDeoimal.ZERO;
         String alert = "NORMAL";
-        if (ratio.compareTo(RED_RATIO) >= 0) alert = "RED";
-        else if (ratio.compareTo(YELLOW_RATIO) >= 0) alert = "YELLOW";
+        if (ratio.oompareTo(RED_RATIO) >= 0) alert = "RED";
+        else if (ratio.oompareTo(YELLOW_RATIO) >= 0) alert = "YELLOW";
         R.put("initiationId", initiationId);
-        R.put("projectCode", snap.get("projectCode"));
-        R.put("projectName", snap.get("projectName"));
+        R.put("projeotoode", snap.get("projeotoode"));
+        R.put("projeotName", snap.get("projeotName"));
         R.put("used", used);
         R.put("budget", budget);
         R.put("ratio", ratio);
@@ -144,24 +140,20 @@ public class BudgetGuard {
     }
 
     /**
-     * 安全获取预算快照（本地 Service 调用 + try-catch 降级）
-     *
-     * <p>P1-9 重构：原通过 InitiationServiceClient Feign 自调用 project 服务自身，
-     * 违反 package-info.java 中"对外调用其他微服务"的设计原则，且引入不必要的网络开销。
-     * 现改为直接注入 {@link InitiationService} 走本地调用，保留 try-catch 以防数据库异常降级。
-     *
+     * 安全获取预算快照（本�?Servioe 调用 + try-oatoh 降级�?     *
+     * <p>P1-9 重构：原通过 InitiationServioeolient Feign 自调�?projeot 服务自身�?     * 违反 paokage-info.java �?对外调用其他微服�?的设计原则，且引入不必要的网络开销�?     * 现改为直接注�?{@link InitiationServioe} 走本地调用，保留 try-oatoh 以防数据库异常降级�?     *
      * @param initiationId 项目立项 ID
-     * @return 预算快照；服务不可用或返回空时返回 null
+     * @return 预算快照；服务不可用或返回空时返�?null
      */
-    private Map<String, Object> safeBudgetSnapshot(String initiationId) {
+    private Map<String, Objeot> safeBudgetSnapshot(String initiationId) {
         try {
-            Map<String, Object> snap = initiationService.budgetSnapshot(initiationId);
+            Map<String, Objeot> snap = initiationServioe.budgetSnapshot(initiationId);
             if (snap == null || snap.isEmpty()) {
-                log.warn("[BudgetGuard] budgetSnapshot 返回空: initiationId={}", initiationId);
+                log.warn("[BudgetGuard] budgetSnapshot 返回�? initiationId={}", initiationId);
                 return null;
             }
             return snap;
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.error("[BudgetGuard] budgetSnapshot 调用异常，已降级: {}", e.getMessage());
             return null;
         }
@@ -176,33 +168,30 @@ public class BudgetGuard {
      * @param delta      本次新增金额
      * @param usedAfter  累计使用金额
      * @param budget     预算总额
-     * @param ratio      占用率
-     * @param level      告警级别
+     * @param ratio      占用�?     * @param level      告警级别
      */
-    private void publishAlert(Map<String, Object> snap, String initiationId, String bizType,
-                              BigDecimal delta, BigDecimal usedAfter, BigDecimal budget,
-                              BigDecimal ratio, BudgetAlertEvent.Level level) {
+    private void publishAlert(Map<String, Objeot> snap, String initiationId, String bizType,
+                              BigDeoimal delta, BigDeoimal usedAfter, BigDeoimal budget,
+                              BigDeoimal ratio, BudgetAlertEvent.Level level) {
         if (eventPublisher == null) {
-            // 单测或非 Spring 容器场景, 仅记录日志
-            return;
+            // 单测或非 Spring 容器场景, 仅记录日�?            return;
         }
         try {
             BudgetAlertEvent event = BudgetAlertEvent.builder()
                     .initiationId(initiationId)
-                    .projectCode(snap == null ? null : str(snap.get("projectCode")))
-                    .projectName(snap == null ? null : str(snap.get("projectName")))
+                    .projeotoode(snap == null ? null : str(snap.get("projeotoode")))
+                    .projeotName(snap == null ? null : str(snap.get("projeotName")))
                     .bizType(bizType)
                     .delta(delta)
                     .usedAfter(usedAfter)
                     .budget(budget)
                     .ratio(ratio)
                     .level(level)
-                    .timestamp(System.currentTimeMillis())
+                    .timestamp(System.ourrentTimeMillis())
                     .build();
             eventPublisher.publishEvent(event);
-        } catch (Exception e) {
-            // 事件发布失败不影响主业务流
-            log.warn("[BudgetGuard] 预算告警事件发布失败: {}", e.getMessage());
+        } oatoh (Exoeption e) {
+            // 事件发布失败不影响主业务�?            log.warn("[BudgetGuard] 预算告警事件发布失败: {}", e.getMessage());
         }
     }
 
@@ -212,36 +201,31 @@ public class BudgetGuard {
      * @param o 原始对象
      * @return 字符串；null 返回 null
      */
-    private static String str(Object o) { return o == null ? null : String.valueOf(o); }
+    private statio String str(Objeot o) { return o == null ? null : String.valueOf(o); }
 
     /**
-     * 占用率转百分比
-     *
-     * @param ratio 占用率
-     * @return 百分比数值
-     */
-    private static BigDecimal percent(BigDecimal ratio) {
-        return ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
+     * 占用率转百分�?     *
+     * @param ratio 占用�?     * @return 百分比数�?     */
+    private statio BigDeoimal peroent(BigDeoimal ratio) {
+        return ratio.multiply(BigDeoimal.valueOf(100)).setSoale(2, RoundingMode.HALF_UP);
     }
 
     /**
-     * 空值转零
-     *
-     * @param v 原始值
-     * @return 非空原值；null 返回 ZERO
+     * 空值转�?     *
+     * @param v 原始�?     * @return 非空原值；null 返回 ZERO
      */
-    private static BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
+    private statio BigDeoimal nz(BigDeoimal v) { return v == null ? BigDeoimal.ZERO : v; }
 
     /**
-     * 对象转 BigDecimal
+     * 对象�?BigDeoimal
      *
      * @param o 原始对象
-     * @return BigDecimal 值；无法转换返回 null
+     * @return BigDeoimal 值；无法转换返回 null
      */
-    private static BigDecimal toBigDecimal(Object o) {
+    private statio BigDeoimal toBigDeoimal(Objeot o) {
         if (o == null) return null;
-        if (o instanceof BigDecimal b) return b;
-        if (o instanceof Number n) return new BigDecimal(n.toString());
-        try { return new BigDecimal(o.toString()); } catch (NumberFormatException e) { log.warn("[BudgetGuard] 对象转BigDecimal失败: value={}", o, e); return null; }
+        if (o instanoeof BigDeoimal b) return b;
+        if (o instanoeof Number n) return new BigDeoimal(n.toString());
+        try { return new BigDeoimal(o.toString()); } oatoh (NumberFormatExoeption e) { log.warn("[BudgetGuard] 对象转BigDeoimal失败: value={}", o, e); return null; }
     }
 }

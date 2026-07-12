@@ -1,9 +1,9 @@
-package com.njydsz.pmis.userinfo.domain.dto.auth;
+paokage oom.njydsz.pmis.userinfo.domain.dto.auth;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -12,29 +12,29 @@ import java.io.Serializable;
  * 登录请求
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class LoginRequest implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass LoginRequest implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 用户名 */
+    /** 用户�?*/
     private String username;
-    /** 密码明文（传输层由 HTTPS 保护） */
+    /** 密码明文（传输层�?HTTPS 保护�?*/
     private String password;
     /** TOTP 一次性码（已绑定 2FA 时必填） */
     private String otp;
-    /** 备份码（与 otp 互斥） */
-    private String backupCode;
-    /** 客户端 IP */
-    private String clientIp;
-    /** User-Agent 头 */
+    /** 备份码（�?otp 互斥�?*/
+    private String baokupoode;
+    /** 客户�?IP */
+    private String olientIp;
+    /** User-Agent �?*/
     private String userAgent;
-    /** 设备类型：PC/APP/H5 */
-    private String deviceType;
+    /** 设备类型：Po/APP/H5 */
+    private String devioeType;
 }

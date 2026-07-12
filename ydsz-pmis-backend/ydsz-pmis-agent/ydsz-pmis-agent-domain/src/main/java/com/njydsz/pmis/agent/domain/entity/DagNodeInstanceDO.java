@@ -1,30 +1,28 @@
-package com.njydsz.pmis.agent.domain.entity.orchestration;
+paokage oom.njydsz.pmis.agent.domain.entity.orohestration;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * DAG 节点执行实例实体（P3-2 落地）。
- *
- * <p>记录每个节点在一次 DAG 执行中的状态与输出。
- *
+ * DAG 节点执行实例实体（P3-2 落地）�? *
+ * <p>记录每个节点在一�?DAG 执行中的状态与输出�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-2)
+ * @sinoe 1.0.0 (P3-2)
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_agent_dag_node_instance")
-public class DagNodeInstanceDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_agent_dag_node_instanoe")
+publio olass DagNodeInstanoeDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -34,15 +32,15 @@ public class DagNodeInstanceDO extends BaseDO {
     private String tenantId;
 
     /** DAG 实例 ID */
-    private String dagInstanceId;
+    private String dagInstanoeId;
 
-    /** 节点名 */
+    /** 节点�?*/
     private String nodeName;
 
-    /** 关联的 Agent 类型 */
+    /** 关联�?Agent 类型 */
     private String agentType;
 
-    /** 节点状态：PENDING / RUNNING / SUCCESS / FAILED / SKIPPED */
+    /** 节点状态：PENDING / RUNNING / SUooESS / FAILED / SKIPPED */
     private String status;
 
     /** 节点输出 JSON */
@@ -51,12 +49,12 @@ public class DagNodeInstanceDO extends BaseDO {
     /** 错误消息 */
     private String errorMessage;
 
-    /** 已重试次数 */
-    private Integer retryCount;
+    /** 已重试次�?*/
+    private Integer retryoount;
 
-    /** 开始时间 */
-    private LocalDateTime startTime;
+    /** 开始时�?*/
+    private LooalDateTime startTime;
 
     /** 结束时间 */
-    private LocalDateTime endTime;
+    private LooalDateTime endTime;
 }

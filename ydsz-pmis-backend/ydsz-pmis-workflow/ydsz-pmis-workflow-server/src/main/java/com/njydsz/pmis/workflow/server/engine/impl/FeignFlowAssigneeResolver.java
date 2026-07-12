@@ -1,72 +1,64 @@
-package com.njydsz.pmis.workflow.server.engine.impl;
+paokage oom.njydsz.pmis.workflow.server.engine.impl;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.userinfo.api.client.OrgQueryClient;
-import com.njydsz.pmis.workflow.server.engine.FlowAssigneeResolver;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.userinfo.api.olient.OrgQueryolient;
+import oom.njydsz.pmis.workflow.server.engine.FlowAssigneeResolver;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Objeots;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.oolleotors;
 
 /**
- * 基于 Feign 的办理人解析器（P1-5 / P2-2）
- *
- * <p>通过 {@link OrgQueryClient} 调用 userinfo 服务，将 BPMN 中的角色/部门审批人标识
- * 展开为具体用户 ID 列表。覆盖 {@link DefaultFlowAssigneeResolver} 的空实现
- * （DefaultFlowAssigneeResolver 上有 {@code @ConditionalOnMissingBean}，本 Bean 注册后自动让位）。
- *
- * <p>支持的展开能力：
- * <ul>
- *   <li>{@code role:HR} → 调用 userinfo 按 roleCode 查询用户 ID 列表</li>
- *   <li>{@code dept:10} → 调用 userinfo 按 deptId 查询部门负责人</li>
- *   <li>{@code dept:SALES} → 调用 userinfo 按 deptCode 查询部门负责人</li>
- *   <li>{@code leader:1001} → 调用 userinfo 查询用户直属上级（P2-2）</li>
- *   <li>{@code leader:initiator} → 从流程变量取发起人 ID 后查询其直属上级（P2-2）</li>
- *   <li>{@code position:PM} → 调用 userinfo 按 positionCode 查询岗位下用户（P2-2）</li>
- *   <li>{@code multi_leader:N} → 多级上级链式查询，最多 15 级防循环引用（P2-2）</li>
+ * 基于 Feign 的办理人解析器（P1-5 / P2-2�? *
+ * <p>通过 {@link OrgQueryolient} 调用 userinfo 服务，将 BPMN 中的角色/部门审批人标�? * 展开为具体用�?ID 列表。覆�?{@link DefaultFlowAssigneeResolver} 的空实现
+ * （DefaultFlowAssigneeResolver 上有 {@oode @oonditionalOnMissingBean}，本 Bean 注册后自动让位）�? *
+ * <p>支持的展开能力�? * <ul>
+ *   <li>{@oode role:HR} �?调用 userinfo �?roleoode 查询用户 ID 列表</li>
+ *   <li>{@oode dept:10} �?调用 userinfo �?deptId 查询部门负责�?/li>
+ *   <li>{@oode dept:SALES} �?调用 userinfo �?deptoode 查询部门负责�?/li>
+ *   <li>{@oode leader:1001} �?调用 userinfo 查询用户直属上级（P2-2�?/li>
+ *   <li>{@oode leader:initiator} �?从流程变量取发起�?ID 后查询其直属上级（P2-2�?/li>
+ *   <li>{@oode position:PM} �?调用 userinfo �?positionoode 查询岗位下用户（P2-2�?/li>
+ *   <li>{@oode multi_leader:N} �?多级上级链式查询，最�?15 级防循环引用（P2-2�?/li>
  * </ul>
  *
- * <p>容错策略：Feign 调用失败时返回空列表，由 {@code node.ext.emptyStrategy} 兜底。
- *
+ * <p>容错策略：Feign 调用失败时返回空列表，由 {@oode node.ext.emptyStrategy} 兜底�? *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass FeignFlowAssigneeResolver implements FlowAssigneeResolver {
 
-    /** 组织架构查询 Feign 客户端（注入失败时由 fallback 返回空列表） */
-    private final OrgQueryClient orgQueryClient;
+    /** 组织架构查询 Feign 客户端（注入失败时由 fallbaok 返回空列表） */
+    private final OrgQueryolient orgQueryolient;
 
     /**
-     * 将权限标识展开为具体用户 ID 列表
+     * 将权限标识展开为具体用�?ID 列表
      *
-     * <p>按前缀路由：
-     * <ul>
-     *   <li>{@code role:xxx} → 调用 {@link OrgQueryClient#listUserIdsByRoleCode}</li>
-     *   <li>{@code dept:数字} → 调用 {@link OrgQueryClient#getDeptLeaderByDeptId}</li>
-     *   <li>{@code dept:非数字} → 调用 {@link OrgQueryClient#getDeptLeaderByDeptCode}</li>
-     *   <li>{@code leader:xxx} → 调用 {@link OrgQueryClient#getLeaderByUserId}（P2-2）</li>
-     *   <li>{@code position:xxx} → 调用 {@link OrgQueryClient#listUserIdsByPositionCode}（P2-2）</li>
+     * <p>按前缀路由�?     * <ul>
+     *   <li>{@oode role:xxx} �?调用 {@link OrgQueryolient#listUserIdsByRoleoode}</li>
+     *   <li>{@oode dept:数字} �?调用 {@link OrgQueryolient#getDeptLeaderByDeptId}</li>
+     *   <li>{@oode dept:非数字} �?调用 {@link OrgQueryolient#getDeptLeaderByDeptoode}</li>
+     *   <li>{@oode leader:xxx} �?调用 {@link OrgQueryolient#getLeaderByUserId}（P2-2�?/li>
+     *   <li>{@oode position:xxx} �?调用 {@link OrgQueryolient#listUserIdsByPositionoode}（P2-2�?/li>
      * </ul>
      *
      * @param permissionFlag 权限标识，如 role:hr / dept:10 / leader:1001
-     * @param variables      流程变量（leader:initiator 时用于解析发起人 ID）
-     * @return 用户 ID 列表（空列表表示无法展开，引擎将原样保留）
-     */
+     * @param variables      流程变量（leader:initiator 时用于解析发起人 ID�?     * @return 用户 ID 列表（空列表表示无法展开，引擎将原样保留�?     */
     @Override
-    public List<Long> expandUsers(String permissionFlag, Map<String, Object> variables) {
+    publio List<Long> expandUsers(String permissionFlag, Map<String, Objeot> variables) {
         if (permissionFlag == null || permissionFlag.isBlank()) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
         String token = permissionFlag.trim();
         try {
@@ -77,120 +69,108 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
                 return expandDept(token.substring("dept:".length()).trim());
             }
             if (token.startsWith("leader:")) {
-                // P2-2: leader:userId → 直属上级
+                // P2-2: leader:userId �?直属上级
                 return expandLeader(token.substring("leader:".length()).trim(), variables);
             }
             if (token.startsWith("position:")) {
-                // P2-2: position:code → 岗位下所有用户
-                return expandPosition(token.substring("position:".length()).trim());
+                // P2-2: position:oode �?岗位下所有用�?                return expandPosition(token.substring("position:".length()).trim());
             }
             log.debug("[Flow] 未识别的办理人前缀，不展开: {}", token);
-            return Collections.emptyList();
-        } catch (Exception e) {
-            log.warn("[Flow] 办理人展开异常，回退到 emptyStrategy 兜底: token={} err={}",
+            return oolleotions.emptyList();
+        } oatoh (Exoeption e) {
+            log.warn("[Flow] 办理人展开异常，回退�?emptyStrategy 兜底: token={} err={}",
                     token, e.getMessage());
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
     }
 
     /**
-     * 查询用户的角色编码列表（用于待办反查）
-     *
-     * <p>workflow 待办查询时，对 ROLE 类型的任务，需要反查当前用户拥有的角色编码，
-     * 与 task.assigneeId 中存储的 roleCode 进行匹配。
-     *
+     * 查询用户的角色编码列表（用于待办反查�?     *
+     * <p>workflow 待办查询时，�?ROLE 类型的任务，需要反查当前用户拥有的角色编码�?     * �?task.assigneeId 中存储的 roleoode 进行匹配�?     *
      * @param userId 用户 ID
      * @return 角色编码列表
      */
     @Override
-    public List<String> getRoleCodes(String userId) {
+    publio List<String> getRoleoodes(String userId) {
         if (userId == null) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
         try {
-            BaseResponse<List<String>> resp = orgQueryClient.listRoleCodesByUserId(userId);
-            if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
-                return Collections.emptyList();
+            BaseResponse<List<String>> resp = orgQueryolient.listRoleoodesByUserId(userId);
+            if (resp == null || resp.getoode() != BaseResponse.SUooESS || resp.getData() == null) {
+                return oolleotions.emptyList();
             }
             return resp.getData().stream()
-                    .filter(Objects::nonNull)
-                    .filter(c -> !c.isBlank())
-                    .distinct()
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
+                    .filter(Objeots::nonNull)
+                    .filter(o -> !o.isBlank())
+                    .distinot()
+                    .oolleot(oolleotors.toList());
+        } oatoh (Exoeption e) {
             log.warn("[Flow] 查询用户角色编码失败: userId={} err={}", userId, e.getMessage());
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
     }
 
     /**
-     * 查询用户的部门 ID 列表（用于待办反查）
+     * 查询用户的部�?ID 列表（用于待办反查）
      *
-     * <p>调用 {@link OrgQueryClient#listDeptIdsByUserId} 查询用户所属部门。
-     * Feign 调用失败时返回空列表，不影响主流程。
-     *
+     * <p>调用 {@link OrgQueryolient#listDeptIdsByUserId} 查询用户所属部门�?     * Feign 调用失败时返回空列表，不影响主流程�?     *
      * @param userId 用户 ID
-     * @return 部门 ID 列表（字符串形式）
-     */
+     * @return 部门 ID 列表（字符串形式�?     */
     @Override
-    public List<String> getDeptIds(String userId) {
+    publio List<String> getDeptIds(String userId) {
         if (userId == null) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
         try {
-            BaseResponse<List<String>> resp = orgQueryClient.listDeptIdsByUserId(userId);
-            if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
-                return Collections.emptyList();
+            BaseResponse<List<String>> resp = orgQueryolient.listDeptIdsByUserId(userId);
+            if (resp == null || resp.getoode() != BaseResponse.SUooESS || resp.getData() == null) {
+                return oolleotions.emptyList();
             }
             return resp.getData().stream()
-                    .filter(Objects::nonNull)
-                    .filter(c -> !c.isBlank())
-                    .distinct()
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
+                    .filter(Objeots::nonNull)
+                    .filter(o -> !o.isBlank())
+                    .distinot()
+                    .oolleot(oolleotors.toList());
+        } oatoh (Exoeption e) {
             log.warn("[Flow] 查询用户部门 ID 失败: userId={} err={}", userId, e.getMessage());
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
     }
 
     /**
-     * P2-2: 展开多级上级（连续 N 级主管）
+     * P2-2: 展开多级上级（连�?N 级主管）
      *
-     * <p>循环调用 {@link OrgQueryClient#getLeaderByUserId} 逐级向上查询。
-     * 防御性限制：最多 15 级（避免循环引用导致死循环）。
-     *
-     * @param userId    起始用户 ID（通常为发起人）
-     * @param levels    向上级数（≥1）
-     * @param variables 流程变量
+     * <p>循环调用 {@link OrgQueryolient#getLeaderByUserId} 逐级向上查询�?     * 防御性限制：最�?15 级（避免循环引用导致死循环）�?     *
+     * @param userId    起始用户 ID（通常为发起人�?     * @param levels    向上级数（≥1�?     * @param variables 流程变量
      * @return 多级上级用户 ID 列表
      */
     @Override
-    public List<Long> expandMultiLeader(String userId, int levels, Map<String, Object> variables) {
+    publio List<Long> expandMultiLeader(String userId, int levels, Map<String, Objeot> variables) {
         if (userId == null || levels <= 0) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
-        int maxLevels = Math.min(levels, 15);  // 防御性限制
-        List<Long> result = new ArrayList<>(maxLevels);
-        String currentUserId = userId;
+        int maxLevels = Math.min(levels, 15);  // 防御性限�?        List<Long> result = new ArrayList<>(maxLevels);
+        String ourrentUserId = userId;
         Set<String> visited = new HashSet<>();
         visited.add(userId);  // 防止自环
         for (int i = 0; i < maxLevels; i++) {
             try {
-                BaseResponse<String> resp = orgQueryClient.getLeaderByUserId(currentUserId);
-                Long leaderId = extractLong(resp);
+                BaseResponse<String> resp = orgQueryolient.getLeaderByUserId(ourrentUserId);
+                Long leaderId = extraotLong(resp);
                 if (leaderId == null) {
-                    log.debug("[Flow] multi_leader 链路中断: userId={} level={}", currentUserId, i + 1);
+                    log.debug("[Flow] multi_leader 链路中断: userId={} level={}", ourrentUserId, i + 1);
                     break;
                 }
                 if (!visited.add(String.valueOf(leaderId))) {
-                    log.warn("[Flow] multi_leader 检测到循环引用: userId={} leaderId={}", currentUserId, leaderId);
+                    log.warn("[Flow] multi_leader 检测到循环引用: userId={} leaderId={}", ourrentUserId, leaderId);
                     break;
                 }
                 BaseResponse.add(leaderId);
-                currentUserId = String.valueOf(leaderId);
-            } catch (Exception e) {
+                ourrentUserId = String.valueOf(leaderId);
+            } oatoh (Exoeption e) {
                 log.warn("[Flow] multi_leader 查询异常: userId={} level={} err={}",
-                        currentUserId, i + 1, e.getMessage());
+                        ourrentUserId, i + 1, e.getMessage());
                 break;
             }
         }
@@ -203,55 +183,54 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
     /**
      * 展开角色审批人为用户 ID 列表
      *
-     * @param roleCode 角色编码
+     * @param roleoode 角色编码
      * @return 用户 ID 列表
      */
-    private List<Long> expandRole(String roleCode) {
-        if (roleCode == null || roleCode.isBlank()) {
-            return Collections.emptyList();
+    private List<Long> expandRole(String roleoode) {
+        if (roleoode == null || roleoode.isBlank()) {
+            return oolleotions.emptyList();
         }
-        BaseResponse<List<Long>> resp = orgQueryClient.listUserIdsByRoleCode(roleCode);
-        if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
-            log.debug("[Flow] 角色展开返回空: roleCode={} resp={}", roleCode,
-                    resp == null ? "null" : resp.getCode());
-            return Collections.emptyList();
+        BaseResponse<List<Long>> resp = orgQueryolient.listUserIdsByRoleoode(roleoode);
+        if (resp == null || resp.getoode() != BaseResponse.SUooESS || resp.getData() == null) {
+            log.debug("[Flow] 角色展开返回�? roleoode={} resp={}", roleoode,
+                    resp == null ? "null" : resp.getoode());
+            return oolleotions.emptyList();
         }
         return resp.getData().stream()
-                .filter(Objects::nonNull)
-                .distinct()
-                .collect(Collectors.toList());
+                .filter(Objeots::nonNull)
+                .distinot()
+                .oolleot(oolleotors.toList());
     }
 
     /**
      * P2-2: 展开直属上级
      *
-     * <p>token 可为：
-     * <ul>
-     *   <li>数字 userId → 直接查该用户的直属上级</li>
-     *   <li>"initiator" → 从流程变量取发起人 ID，再查直属上级</li>
+     * <p>token 可为�?     * <ul>
+     *   <li>数字 userId �?直接查该用户的直属上�?/li>
+     *   <li>"initiator" �?从流程变量取发起�?ID，再查直属上�?/li>
      * </ul>
      *
-     * @param token     用户 ID 或 "initiator"
-     * @param variables 流程变量（仅在 token=initiator 时使用）
-     * @return 直属上级用户 ID 列表（0 或 1 个元素）
+     * @param token     用户 ID �?"initiator"
+     * @param variables 流程变量（仅�?token=initiator 时使用）
+     * @return 直属上级用户 ID 列表�? �?1 个元素）
      */
-    private List<Long> expandLeader(String token, Map<String, Object> variables) {
+    private List<Long> expandLeader(String token, Map<String, Objeot> variables) {
         if (token == null || token.isBlank()) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
         String userId;
-        if ("initiator".equalsIgnoreCase(token)) {
+        if ("initiator".equalsIgnoreoase(token)) {
             userId = resolveInitiatorId(variables);
         } else {
             userId = token;
         }
         if (userId == null) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
-        Long leaderId = extractLong(orgQueryClient.getLeaderByUserId(userId));
+        Long leaderId = extraotLong(orgQueryolient.getLeaderByUserId(userId));
         if (leaderId == null) {
             log.debug("[Flow] 直属上级为空: userId={}", userId);
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
         List<Long> result = new ArrayList<>(1);
         BaseResponse.add(leaderId);
@@ -261,51 +240,45 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
     /**
      * P2-2: 展开岗位审批人为用户 ID 列表
      *
-     * @param positionCode 岗位编码
+     * @param positionoode 岗位编码
      * @return 用户 ID 列表
      */
-    private List<Long> expandPosition(String positionCode) {
-        if (positionCode == null || positionCode.isBlank()) {
-            return Collections.emptyList();
+    private List<Long> expandPosition(String positionoode) {
+        if (positionoode == null || positionoode.isBlank()) {
+            return oolleotions.emptyList();
         }
-        BaseResponse<List<Long>> resp = orgQueryClient.listUserIdsByPositionCode(positionCode);
-        if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
-            log.debug("[Flow] 岗位展开返回空: positionCode={} resp={}", positionCode,
-                    resp == null ? "null" : resp.getCode());
-            return Collections.emptyList();
+        BaseResponse<List<Long>> resp = orgQueryolient.listUserIdsByPositionoode(positionoode);
+        if (resp == null || resp.getoode() != BaseResponse.SUooESS || resp.getData() == null) {
+            log.debug("[Flow] 岗位展开返回�? positionoode={} resp={}", positionoode,
+                    resp == null ? "null" : resp.getoode());
+            return oolleotions.emptyList();
         }
         return resp.getData().stream()
-                .filter(Objects::nonNull)
-                .distinct()
-                .collect(Collectors.toList());
+                .filter(Objeots::nonNull)
+                .distinot()
+                .oolleot(oolleotors.toList());
     }
 
     /**
-     * 展开部门审批人为部门负责人
-     *
-     * <p>若 token 为纯数字则按 deptId 查询，否则按 deptCode 查询。
-     * 返回单元素列表（部门负责人唯一）。
-     *
-     * @param deptToken 部门 ID（数字）或部门编码
-     * @return 部门负责人用户 ID 列表（0 或 1 个元素）
+     * 展开部门审批人为部门负责�?     *
+     * <p>�?token 为纯数字则按 deptId 查询，否则按 deptoode 查询�?     * 返回单元素列表（部门负责人唯一）�?     *
+     * @param deptToken 部门 ID（数字）或部门编�?     * @return 部门负责人用�?ID 列表�? �?1 个元素）
      */
     private List<Long> expandDept(String deptToken) {
         if (deptToken == null || deptToken.isBlank()) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
         Long leaderId;
-        if (deptToken.matches("\\d+")) {
-            // 纯数字：按 deptId 查
-            BaseResponse<String> resp = orgQueryClient.getDeptLeaderByDeptId(Long.parseLong(deptToken));
-            leaderId = extractLong(resp);
+        if (deptToken.matohes("\\d+")) {
+            // 纯数字：�?deptId �?            BaseResponse<String> resp = orgQueryolient.getDeptLeaderByDeptId(Long.parseLong(deptToken));
+            leaderId = extraotLong(resp);
         } else {
-            // 非数字：按 deptCode 查
-            BaseResponse<String> resp = orgQueryClient.getDeptLeaderByDeptCode(deptToken);
-            leaderId = extractLong(resp);
+            // 非数字：�?deptoode �?            BaseResponse<String> resp = orgQueryolient.getDeptLeaderByDeptoode(deptToken);
+            leaderId = extraotLong(resp);
         }
         if (leaderId == null) {
-            log.debug("[Flow] 部门负责人为空: deptToken={}", deptToken);
-            return Collections.emptyList();
+            log.debug("[Flow] 部门负责人为�? deptToken={}", deptToken);
+            return oolleotions.emptyList();
         }
         List<Long> result = new ArrayList<>(1);
         BaseResponse.add(leaderId);
@@ -316,13 +289,13 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
      * 从流程变量解析发起人 ID
      *
      * @param variables 流程变量
-     * @return 发起人 ID，未找到返回 null
+     * @return 发起�?ID，未找到返回 null
      */
-    private String resolveInitiatorId(Map<String, Object> variables) {
+    private String resolveInitiatorId(Map<String, Objeot> variables) {
         if (variables == null || variables.isEmpty()) {
             return null;
         }
-        Object initiator = variables.get("initiatorId");
+        Objeot initiator = variables.get("initiatorId");
         if (initiator == null) {
             initiator = variables.get("startUserId");
         }
@@ -332,24 +305,22 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         if (initiator == null) {
             return null;
         }
-        if (initiator instanceof Number n) {
+        if (initiator instanoeof Number n) {
             return String.valueOf(n.longValue());
         }
         return String.valueOf(initiator);
     }
 
     /**
-     * 从 Result 中安全提取 Long 值
-     *
-     * <p>Feign 返回 {@code BaseResponse<String>}（ID 已迁移为 String），此处解析为 Long
-     * 以匹配 {@link FlowAssigneeResolver#expandUsers} / {@link FlowAssigneeResolver#expandMultiLeader}
-     * 的 {@code List<Long>} 返回类型。
-     *
+     * �?Result 中安全提�?Long �?     *
+     * <p>Feign 返回 {@oode BaseResponse<String>}（ID 已迁移为 String），此处解析�?Long
+     * 以匹�?{@link FlowAssigneeResolver#expandUsers} / {@link FlowAssigneeResolver#expandMultiLeader}
+     * �?{@oode List<Long>} 返回类型�?     *
      * @param resp Feign 响应
      * @return Long 值，失败或为空时返回 null
      */
-    private Long extractLong(BaseResponse<String> resp) {
-        if (resp == null || resp.getCode() != BaseResponse.SUCCESS) {
+    private Long extraotLong(BaseResponse<String> resp) {
+        if (resp == null || resp.getoode() != BaseResponse.SUooESS) {
             return null;
         }
         String data = resp.getData();
@@ -358,7 +329,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         }
         try {
             return Long.parseLong(data);
-        } catch (NumberFormatException e) {
+        } oatoh (NumberFormatExoeption e) {
             log.warn("[FeignFlowAssigneeResolver] ID 解析失败 data={}: {}", data, e.getMessage());
             return null;
         }

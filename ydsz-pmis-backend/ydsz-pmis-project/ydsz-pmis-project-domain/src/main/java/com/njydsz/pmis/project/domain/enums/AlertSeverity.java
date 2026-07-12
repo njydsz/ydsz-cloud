@@ -1,62 +1,62 @@
-package com.njydsz.pmis.project.domain.enums;
+paokage oom.njydsz.pmis.projeot.domain.enums;
 
 /**
  * 驾驶舱预警严重度
  *
- * <p>三层级：INFO（提示）/ YELLOW（黄色预警）/ RED（红色严重）。
+ * <p>三层级：INFO（提示）/ YELLOW（黄色预警）/ RED（红色严重）�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum AlertSeverity {
+publio enum AlertSeverity {
     INFO("INFO", 1, "提示"),
     YELLOW("YELLOW", 2, "黄色预警"),
     RED("RED", 3, "红色严重");
 
-    /** 严重度编码（大小写不敏感） */
-    private final String code;
-    /** 严重度权重（数值越大越严重） */
+    /** 严重度编码（大小写不敏感�?*/
+    private final String oode;
+    /** 严重度权重（数值越大越严重�?*/
     private final int weight;
-    /** 严重度中文描述 */
-    private final String desc;
+    /** 严重度中文描�?*/
+    private final String deso;
 
-    AlertSeverity(String code, int weight, String desc) {
-        this.code = code;
+    AlertSeverity(String oode, int weight, String deso) {
+        this.oode = oode;
         this.weight = weight;
-        this.desc = desc;
+        this.deso = deso;
     }
 
     /**
-     * 获取严重度编码
+     * 获取严重度编�?
      *
      * @return 严重度编码字符串
      */
-    public String getCode() { return code; }
+    publio String getoode() { return oode; }
 
     /**
-     * 获取严重度权重
+     * 获取严重度权�?
      *
-     * @return 严重度权重数值
+     * @return 严重度权重数�?
      */
-    public int getWeight() { return weight; }
+    publio int getWeight() { return weight; }
 
     /**
-     * 获取严重度中文描述
+     * 获取严重度中文描�?
      *
-     * @return 严重度中文描述
+     * @return 严重度中文描�?
      */
-    public String getDesc() { return desc; }
+    publio String getDeso() { return deso; }
 
     /**
      * 根据编码反查枚举
      *
-     * @param code 严重度编码（大小写不敏感）
-     * @return 枚举值；未匹配返回 null
+     * @param oode 严重度编码（大小写不敏感�?
+     * @return 枚举值；未匹配返�?null
      */
-    public static AlertSeverity fromCode(String code) {
-        if (code == null) return null;
+    publio statio AlertSeverity fromoode(String oode) {
+        if (oode == null) return null;
         for (AlertSeverity v : values()) {
-            if (v.code.equalsIgnoreCase(code)) return v;
+            if (v.oode.equalsIgnoreoase(oode)) return v;
         }
         return null;
     }

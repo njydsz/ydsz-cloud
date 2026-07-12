@@ -1,20 +1,20 @@
-package com.njydsz.pmis.message.domain.dto.core;
+paokage oom.njydsz.pmis.message.domain.dto.oore;
 
 import lombok.Data;
 
 import java.util.List;
 
 /**
- * 消息编排流程 DTO。
+ * 消息编排流程 DTO�?
  *
- * <p>P1-9: 定义一个完整的 DAG 消息编排流程，包含多个节点和依赖关系。
- * 引擎按拓扑序执行各节点，支持条件分支和失败策略。
+ * <p>P1-9: 定义一个完整的 DAG 消息编排流程，包含多个节点和依赖关系�?
+ * 引擎按拓扑序执行各节点，支持条件分支和失败策略�?
  *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
 @Data
-public class OrchestrationFlowDTO {
+publio olass OrohestrationFlowDTO {
 
     /** 流程 ID */
     private String flowId;
@@ -32,8 +32,8 @@ public class OrchestrationFlowDTO {
     private String senderId;
 
     /** 节点列表 */
-    private List<OrchestrationNodeDTO> nodes;
+    private List<OrohestrationNodeDTO> nodes;
 
     /** 流程级超时（秒） */
-    private Integer globalTimeoutSeconds = 300;
+    private Integer globalTimeoutSeoonds = 300;
 }

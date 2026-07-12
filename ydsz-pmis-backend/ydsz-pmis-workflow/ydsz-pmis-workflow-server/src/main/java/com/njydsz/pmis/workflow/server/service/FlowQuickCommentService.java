@@ -1,59 +1,59 @@
-package com.njydsz.pmis.workflow.server.service.notification;
+paokage oom.njydsz.pmis.workflow.server.servioe.notifioation;
 
-import com.njydsz.pmis.workflow.domain.dto.notification.FlowQuickCommentDTO;
-import com.njydsz.pmis.workflow.domain.entity.notification.FlowQuickCommentDO;
+import oom.njydsz.pmis.workflow.domain.dto.notifioation.FlowQuiokoommentDTO;
+import oom.njydsz.pmis.workflow.domain.entity.notifioation.FlowQuiokoommentDO;
 
 import java.util.List;
 
 /**
- * 审批常用语服务接口
+ * 审批常用语服务接�?
  *
- * <p>P1-2: 对标钉钉/飞书审批的"常用语"能力。
+ * <p>P1-2: 对标钉钉/飞书审批�?常用�?能力�?
  *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
-public interface FlowQuickCommentService {
+publio interfaoe FlowQuiokoommentServioe {
 
     /**
      * 查询用户的常用语列表（含系统预设 + 用户自定义）
      *
      * @param userId   用户 ID
      * @param tenantId 租户 ID
-     * @return 常用语列表（按 sortNum, useCount 排序）
+     * @return 常用语列表（�?sortNum, useoount 排序�?
      */
-    List<FlowQuickCommentDO> listByUser(String userId, String tenantId);
+    List<FlowQuiokoommentDO> listByUser(String userId, String tenantId);
 
     /**
-     * 新增用户常用语
+     * 新增用户常用�?
      *
-     * @param dto     常用语 DTO
+     * @param dto     常用�?DTO
      * @param userId  用户 ID
      * @param tenantId 租户 ID
      * @return 新建的常用语 ID
      */
-    String create(FlowQuickCommentDTO dto, String userId, String tenantId);
+    String oreate(FlowQuiokoommentDTO dto, String userId, String tenantId);
 
     /**
-     * 编辑用户常用语
+     * 编辑用户常用�?
      *
-     * @param dto     常用语 DTO（id 必传）
+     * @param dto     常用�?DTO（id 必传�?
      * @param userId  用户 ID（校验归属）
      */
-    void update(FlowQuickCommentDTO dto, String userId);
+    void update(FlowQuiokoommentDTO dto, String userId);
 
     /**
-     * 删除用户常用语
+     * 删除用户常用�?
      *
-     * @param id     常用语 ID
-     * @param userId 用户 ID（校验归属，系统预设不可删除）
+     * @param id     常用�?ID
+     * @param userId 用户 ID（校验归属，系统预设不可删除�?
      */
     void delete(String id, String userId);
 
     /**
-     * 增加使用次数（审批时调用）
+     * 增加使用次数（审批时调用�?
      *
-     * @param id     常用语 ID
+     * @param id     常用�?ID
      */
-    void incrementUseCount(String id);
+    void inorementUseoount(String id);
 }

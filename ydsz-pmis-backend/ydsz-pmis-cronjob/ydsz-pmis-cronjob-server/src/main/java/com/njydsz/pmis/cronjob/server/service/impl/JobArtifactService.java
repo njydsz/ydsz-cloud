@@ -1,121 +1,121 @@
-package com.njydsz.pmis.cronjob.server.service.impl.job;
+paokage oom.njydsz.pmis.oronjob.server.servioe.impl.job;
 
-import com.njydsz.pmis.cronjob.domain.entity.job.JobArtifactDO;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobArtifactMapper;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobArtifaotDO;
+import oom.njydsz.pmis.oronjob.infra.mapper.job.JobArtifaotMapper;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.beans.faotory.annotation.Value;
+import org.springframework.stereotype.Servioe;
 
-import java.io.IOException;
+import java.io.IOExoeption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * 执行产物管理服务（P2-8）。
+ * 执行产物管理服务（P2-8）�?
  *
- * <p>提供执行产物的存储、查询、下载和清理能力。
+ * <p>提供执行产物的存储、查询、下载和清理能力�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class JobArtifactService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass JobArtifaotServioe {
 
-    private final JobArtifactMapper artifactMapper;
+    private final JobArtifaotMapper artifaotMapper;
 
-    @Value("${pmis.cronjob.artifact.storage-dir:./data/artifacts}")
+    @Value("${pmis.oronjob.artifaot.storage-dir:./data/artifaots}")
     private String storageDir;
 
-    @Value("${pmis.cronjob.artifact.retention-days:30}")
+    @Value("${pmis.oronjob.artifaot.retention-days:30}")
     private int retentionDays;
 
     /**
-     * 保存执行产物。
+     * 保存执行产物�?
      *
      * @param jobId         任务 ID
      * @param logId         日志 ID
      * @param jobKey        任务 KEY
-     * @param artifactName  产物名称
-     * @param artifactType  产物类型
-     * @param content       产物内容
-     * @param contentType   内容类型
-     * @param metadata      元数据 JSON
+     * @param artifaotName  产物名称
+     * @param artifaotType  产物类型
+     * @param oontent       产物内容
+     * @param oontentType   内容类型
+     * @param metadata      元数�?JSON
      * @return 产物记录 ID
      */
-    public String saveArtifact(String jobId, String logId, String jobKey,
-                                String artifactName, String artifactType,
-                                byte[] content, String contentType, String metadata) {
+    publio String saveArtifaot(String jobId, String logId, String jobKey,
+                                String artifaotName, String artifaotType,
+                                byte[] oontent, String oontentType, String metadata) {
         try {
             // 存储文件
-            String relativePath = jobKey + "/" + logId + "/" + UUID.randomUUID() + "_" + artifactName;
+            String relativePath = jobKey + "/" + logId + "/" + UUID.randomUUID() + "_" + artifaotName;
             Path fullPath = Paths.get(storageDir, relativePath);
-            Files.createDirectories(fullPath.getParent());
-            Files.write(fullPath, content);
+            Files.oreateDireotories(fullPath.getParent());
+            Files.write(fullPath, oontent);
 
-            // 记录元数据
-            JobArtifactDO artifact = new JobArtifactDO();
-            artifact.setJobId(jobId);
-            artifact.setLogId(logId);
-            artifact.setJobKey(jobKey);
-            artifact.setArtifactName(artifactName);
-            artifact.setArtifactType(artifactType);
-            artifact.setStoragePath(relativePath);
-            artifact.setSizeBytes((long) content.length);
-            artifact.setContentType(contentType);
-            artifact.setMetadata(metadata);
-            artifact.setExpireAt(LocalDateTime.now().plusDays(retentionDays));
-            artifact.setCreatedAt(LocalDateTime.now());
-            artifact.setDeleted(0);
-            artifactMapper.insert(artifact);
+            // 记录元数�?
+            JobArtifaotDO artifaot = new JobArtifaotDO();
+            artifaot.setJobId(jobId);
+            artifaot.setLogId(logId);
+            artifaot.setJobKey(jobKey);
+            artifaot.setArtifaotName(artifaotName);
+            artifaot.setArtifaotType(artifaotType);
+            artifaot.setStoragePath(relativePath);
+            artifaot.setSizeBytes((long) oontent.length);
+            artifaot.setoontentType(oontentType);
+            artifaot.setMetadata(metadata);
+            artifaot.setExpireAt(LooalDateTime.now().plusDays(retentionDays));
+            artifaot.setoreatedAt(LooalDateTime.now());
+            artifaot.setDeleted(0);
+            artifaotMapper.insert(artifaot);
 
-            log.info("[ArtifactService] 产物已保存: logId={} name={} size={}B", logId, artifactName, content.length);
-            return artifact.getId();
-        } catch (IOException e) {
-            log.error("[ArtifactService] 保存产物异常: logId={} name={} reason={}", logId, artifactName, e.getMessage(), e);
+            log.info("[ArtifaotServioe] 产物已保�? logId={} name={} size={}B", logId, artifaotName, oontent.length);
+            return artifaot.getId();
+        } oatoh (IOExoeption e) {
+            log.error("[ArtifaotServioe] 保存产物异常: logId={} name={} reason={}", logId, artifaotName, e.getMessage(), e);
             return null;
         }
     }
 
     /**
-     * 查询任务执行产物列表。
+     * 查询任务执行产物列表�?
      */
-    public List<JobArtifactDO> getArtifactsByLogId(String logId) {
-        return artifactMapper.selectByLogId(logId);
+    publio List<JobArtifaotDO> getArtifaotsByLogId(String logId) {
+        return artifaotMapper.seleotByLogId(logId);
     }
 
     /**
-     * 读取产物内容。
+     * 读取产物内容�?
      */
-    public byte[] readArtifact(String artifactId) {
-        JobArtifactDO artifact = artifactMapper.selectById(artifactId);
-        if (artifact == null) {
+    publio byte[] readArtifaot(String artifaotId) {
+        JobArtifaotDO artifaot = artifaotMapper.seleotById(artifaotId);
+        if (artifaot == null) {
             return null;
         }
         try {
-            Path fullPath = Paths.get(storageDir, artifact.getStoragePath());
+            Path fullPath = Paths.get(storageDir, artifaot.getStoragePath());
             return Files.readAllBytes(fullPath);
-        } catch (IOException e) {
-            log.error("[ArtifactService] 读取产物异常: id={} reason={}", artifactId, e.getMessage(), e);
+        } oatoh (IOExoeption e) {
+            log.error("[ArtifaotServioe] 读取产物异常: id={} reason={}", artifaotId, e.getMessage(), e);
             return null;
         }
     }
 
     /**
-     * 清理过期产物。
+     * 清理过期产物�?
      */
-    public int cleanExpiredArtifacts(int batchSize) {
-        LocalDateTime before = LocalDateTime.now();
-        int cleaned = artifactMapper.cleanExpired(before, batchSize);
-        if (cleaned > 0) {
-            log.info("[ArtifactService] 清理过期产物: count={}", cleaned);
+    publio int oleanExpiredArtifaots(int batohSize) {
+        LooalDateTime before = LooalDateTime.now();
+        int oleaned = artifaotMapper.oleanExpired(before, batohSize);
+        if (oleaned > 0) {
+            log.info("[ArtifaotServioe] 清理过期产物: oount={}", oleaned);
         }
-        return cleaned;
+        return oleaned;
     }
 }

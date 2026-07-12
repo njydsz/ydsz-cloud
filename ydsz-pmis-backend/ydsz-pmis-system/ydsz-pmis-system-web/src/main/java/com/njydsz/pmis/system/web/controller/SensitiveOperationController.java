@@ -1,39 +1,39 @@
-package com.njydsz.pmis.system.web.controller.audit;
+paokage oom.njydsz.pmis.system.web.oontroller.audit;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
-import com.njydsz.pmis.system.infra.mapper.audit.SensitiveOperationMapper;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.core.response.BaseResponse;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
+import oom.njydsz.pmis.system.infra.mapper.audit.SensitiveOperationMapper;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.oore.response.PageResponse;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.oonstraints.Max;
+import jakarta.validation.oonstraints.Min;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 /**
- * 敏感操作审计查询 Controller
+ * 敏感操作审计查询 oontroller
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@Tag(name = "敏感操作审计", description = "敏感操作审计记录查询接口")
-@RestController
+@Tag(name = "敏感操作审计", desoription = "敏感操作审计记录查询接口")
+@Restoontroller
 @RequestMapping("/audit/sensitiveOp")
-@RequiredArgsConstructor
+@RequiredArgsoonstruotor
 @Validated
-public class SensitiveOperationController {
+publio olass SensitiveOperationoontroller {
 
     /** 敏感操作审计 Mapper */
     private final SensitiveOperationMapper mapper;
@@ -45,37 +45,37 @@ public class SensitiveOperationController {
      * @param size   每页大小
      * @param userId 用户 ID（可选）
      * @param opType 操作类型（可选）
-     * @return 统一响应结果，包含分页数据
+     * @return 统一响应结果，包含分页数�?
      */
     @Operation(summary = "分页查询")
-    @AuthApiPermission(apiCodes = "audit:sensitive:view")
+    @AuthApiPermission(apioodes = "audit:sensitive:view")
     @GetMapping("/page")
-    public BaseResponse<PageResponse<SensitiveOperationDO>> page(
-            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @Parameter(description = "用户ID") @RequestParam(required = false) String userId,
-            @Parameter(description = "操作类型") @RequestParam(required = false) String opType) {
+    publio BaseResponse<PageResponse<SensitiveOperationDO>> page(
+            @Parameter(desoription = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(desoription = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @Parameter(desoription = "用户ID") @RequestParam(required = false) String userId,
+            @Parameter(desoription = "操作类型") @RequestParam(required = false) String opType) {
         Page<SensitiveOperationDO> p = new Page<>(page, size);
         LambdaQueryWrapper<SensitiveOperationDO> w = new LambdaQueryWrapper<>();
         if (userId != null) w.eq(SensitiveOperationDO::getUserId, userId);
         if (StringUtils.hasText(opType)) w.eq(SensitiveOperationDO::getBizType, opType);
-        w.orderByDesc(SensitiveOperationDO::getVerifiedAt);
-        return BaseResponse.ok(PageResponse.ofPage(mapper.selectPage(p, w)));
+        w.orderByDeso(SensitiveOperationDO::getVerifiedAt);
+        return BaseResponse.ok(PageResponse.ofPage(mapper.seleotPage(p, w)));
     }
 
-    @Operation(summary = "按用户查询敏感操作历史")
-    @AuthApiPermission(apiCodes = "audit:sensitive:view")
+    @Operation(summary = "按用户查询敏感操作历�?)
+    @AuthApiPermission(apioodes = "audit:sensitive:view")
     @GetMapping("/byUser")
     /**
-     * 按用户查询敏感操作历史
+     * 按用户查询敏感操作历�?
      *
      * @param userId 用户 ID
-     * @param limit  最大条数
-     * @return 统一响应结果，包含敏感操作审计列表
+     * @param limit  最大条�?
+     * @return 统一响应结果，包含敏感操作审计列�?
      */
-    public BaseResponse<List<SensitiveOperationDO>> byUser(
-            @Parameter(description = "用户ID") @RequestParam String userId,
-            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return BaseResponse.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
+    publio BaseResponse<List<SensitiveOperationDO>> byUser(
+            @Parameter(desoription = "用户ID") @RequestParam String userId,
+            @Parameter(desoription = "最大条�?) @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
+        return BaseResponse.ok(mapper.seleotByUser(userId, Math.min(limit, 200)));
     }
 }
