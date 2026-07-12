@@ -1,6 +1,5 @@
 package com.njydsz.pmis.project.server.service;
 
-import com.njydsz.pmis.project.web.controller.common.ImportExportController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -23,7 +22,7 @@ public interface ImportService {
      * @param bizType 业务类型 rate-card / rate-internal / time-entry / employee / initiation
      * @return 模板包（headClass 用于前端预解析，bytes 为 xlsx 流，filename 中文友好）
      */
-    ImportExportController.TemplateBundle buildTemplate(String bizType);
+    TemplateBundle buildTemplate(String bizType);
 
     /**
      * 导入文件
@@ -33,6 +32,12 @@ public interface ImportService {
      * @return 导入结果（成功行数 / 失败行数 / 失败原因明细）
      */
     ImportResult importFile(String bizType, MultipartFile file) throws IOException;
+
+    /**
+     * 模板包（DTO 类 + 字节流 + 文件名）
+     */
+    record TemplateBundle(Class<?> headClass, byte[] bytes, String filename) {
+    }
 
     /**
      * 导入结果

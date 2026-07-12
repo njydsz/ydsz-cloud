@@ -4,7 +4,6 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.excel.ExcelTemplate;
 import com.njydsz.pmis.common.excel.ExcelUtil;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.project.web.controller.common.ImportExportController;
 import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
 import com.njydsz.pmis.project.domain.dto.RateCardImportDTO;
 import com.njydsz.pmis.project.server.service.ImportService;
@@ -50,7 +49,7 @@ public class ImportServiceImpl implements ImportService {
     private final RateCardService rateCardService;
 
     @Override
-    public ImportExportController.TemplateBundle buildTemplate(String bizType) {
+    public ImportService.TemplateBundle buildTemplate(String bizType) {
         if ("rate-card".equals(bizType)) {
             List<RateCardImportDTO> sample = new ArrayList<>();
             RateCardImportDTO demo = new RateCardImportDTO();
@@ -69,7 +68,7 @@ public class ImportServiceImpl implements ImportService {
                     .addRequiredMark("level", "customerType", "projectType", "unitPrice", "effectiveDate")
                     .sheetName("费率卡")
                     .build();
-            return new ImportExportController.TemplateBundle(RateCardImportDTO.class, bytes, "费率卡_导入模板.xlsx");
+            return new ImportService.TemplateBundle(RateCardImportDTO.class, bytes, "费率卡_导入模板.xlsx");
         }
         throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
     }

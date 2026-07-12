@@ -1,2 +1,2 @@
-com.remisoft.comm.lock.config.DistributedLockAutoConfiguration
-com.remisoft.comm.lock.metrics.LockMetricsConfiguration
+com.njydsz.pmis.common.lock.config.DistributedLockAutoConfiguration
+com.njydsz.pmis.common.lock.metrics.LockMetricsConfiguration

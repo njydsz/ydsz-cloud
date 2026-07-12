@@ -63,7 +63,7 @@ public class ImportExportController {
         if (!ALLOWED_BIZ_TYPES.contains(bizType)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_f7d2a1b3", bizType);
         }
-        TemplateBundle bundle = importService.buildTemplate(bizType);
+        ImportService.TemplateBundle bundle = importService.buildTemplate(bizType);
 
         String filename = URLEncoder.encode(bundle.filename(), StandardCharsets.UTF_8).replace("+", "%20");
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -101,9 +101,4 @@ public class ImportExportController {
         return Result.ok(R);
     }
 
-    /**
-     * 模板包（DTO 类 + 字节流 + 文件名）
-     */
-    public record TemplateBundle(Class<?> headClass, byte[] bytes, String filename) {
-    }
 }
