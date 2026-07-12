@@ -4,9 +4,9 @@ import com.alibaba.fastjson2.JSON;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.constant.CommonConstants;
-import com.njydsz.pmis.common.util.IpUtils;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
+import com.njydsz.pmis.gateway.config.GatewayIpUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -81,7 +81,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        String clientIp = IpUtils.getClientIp(request);
+        String clientIp = GatewayIpUtils.getClientIp(request);
 
         // 无法获取 IP 则放行
         if (clientIp.isEmpty()) {
@@ -126,11 +126,11 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
      * @return 完成信号 Mono
      */
     private Mono<Void> forbidden(ServerWebExchange exchange, String clientIp) {
-        String traceId = TraceIdUtil.generate();
+        String traceId = TraceIdGenerator.generate();
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.FORBIDDEN);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        response.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+        response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
         BaseResponse<Void> body = BaseResponse.failed("403", "error.IP_BLACKLISTED");
         body.setTraceId(traceId);

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.gateway.filter;
 
-import com.njydsz.pmis.common.constant.CommonConstants;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -63,11 +63,11 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
         // 注入 traceparent 和 X-Trace-Id（兼容）
         ServerHttpRequest mutated = request.mutate()
                 .header(HEADER_TRACEPARENT, traceparent)
-                .header(CommonConstants.HEADER_TRACE_ID, traceId)
+                .header(GatewayConstants.HEADER_TRACE_ID, traceId)
                 .build();
 
         // 同时写入响应头
-        exchange.getResponse().getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+        exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
         exchange.getResponse().getHeaders().add(HEADER_TRACEPARENT, traceparent);
 
         return chain.filter(exchange.mutate().request(mutated).build());

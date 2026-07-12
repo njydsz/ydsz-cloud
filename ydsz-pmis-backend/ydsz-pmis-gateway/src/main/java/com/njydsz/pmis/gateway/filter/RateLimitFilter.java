@@ -2,7 +2,7 @@ package com.njydsz.pmis.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.constant.CommonConstants;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
 import com.njydsz.pmis.gateway.config.RateLimitProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -137,7 +137,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         }
 
         String clientIp = extractClientIp(request);
-        String userId = request.getHeaders().getFirst(CommonConstants.HEADER_USER_ID);
+        String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
         String tenantId = request.getHeaders().getFirst("X-Tenant-Id");
 
         // 依次检查各维度限流
@@ -248,7 +248,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
      * 根据用户角色解析 QPS 限制
      */
     private int resolveUserQps(ServerWebExchange exchange) {
-        String rolesHeader = exchange.getRequest().getHeaders().getFirst(CommonConstants.HEADER_USER_ROLES);
+        String rolesHeader = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_USER_ROLES);
         if (rolesHeader != null && !rolesHeader.isEmpty() && properties.getPerUser().getRoleLimits() != null) {
             String[] roles = rolesHeader.split(",");
             // 取用户拥有的最高权限角色的 QPS

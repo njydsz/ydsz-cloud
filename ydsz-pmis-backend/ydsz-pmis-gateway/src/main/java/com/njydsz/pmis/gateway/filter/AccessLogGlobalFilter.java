@@ -1,7 +1,7 @@
 package com.njydsz.pmis.gateway.filter;
 
-import com.njydsz.pmis.common.constant.CommonConstants;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
 import com.njydsz.pmis.gateway.config.GatewayMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,9 +76,9 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         long startTime = System.currentTimeMillis();
-        String traceId = exchange.getRequest().getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
+        String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
         if (traceId == null || traceId.isBlank()) {
-            traceId = TraceIdUtil.generate();
+            traceId = TraceIdGenerator.generate();
         }
 
         final String finalTraceId = traceId;
@@ -86,7 +86,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         exchange.getAttributes().put(ATTR_TRACE_ID, finalTraceId);
 
         // 确保响应头携带 traceId
-        exchange.getResponse().getHeaders().add(CommonConstants.HEADER_TRACE_ID, finalTraceId);
+        exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, finalTraceId);
 
         return chain.filter(exchange).doFinally(signalType -> {
             long duration = System.currentTimeMillis() - startTime;
@@ -116,7 +116,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         if (userAgent != null && userAgent.length() > MAX_UA_LENGTH) {
             userAgent = userAgent.substring(0, MAX_UA_LENGTH) + "...";
         }
-        String userId = request.getHeaders().getFirst(CommonConstants.HEADER_USER_ID);
+        String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
 
         // 获取路由信息
         Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);

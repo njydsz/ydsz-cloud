@@ -2,9 +2,9 @@ package com.njydsz.pmis.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.constant.CommonConstants;
-import com.njydsz.pmis.common.util.IpUtils;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
+import com.njydsz.pmis.gateway.config.GatewayIpUtils;
 import com.njydsz.pmis.gateway.config.IpWhitelistProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +87,7 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
         }
 
         // 4) 解析客户端真实 IP
-        String clientIp = IpUtils.getClientIp(request);
+        String clientIp = GatewayIpUtils.getClientIp(request);
         if (clientIp.isEmpty()) {
             // 无法获取客户端 IP（如 UNIX domain socket），保守放行交由后续过滤器处理
             log.warn("[IpWhitelist] 无法解析客户端 IP，路径={}, 放行交由后续过滤器", path);
@@ -95,7 +95,7 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
         }
 
         // 5) 命中白名单则放行
-        if (IpUtils.isAllowed(clientIp, whitelist)) {
+        if (GatewayIpUtils.isAllowed(clientIp, whitelist)) {
             return chain.filter(exchange);
         }
 
@@ -166,11 +166,11 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
      */
     private Mono<Void> forbidden(ServerWebExchange exchange) {
         // 复用 TraceIdUtil 生成链路追踪 ID，便于日志关联
-        String traceId = TraceIdUtil.generate();
+        String traceId = TraceIdGenerator.generate();
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.FORBIDDEN);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        response.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+        response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
         BaseResponse<Void> body = BaseResponse.failed("403", "error.IP_FORBIDDEN");
         body.setTraceId(traceId);

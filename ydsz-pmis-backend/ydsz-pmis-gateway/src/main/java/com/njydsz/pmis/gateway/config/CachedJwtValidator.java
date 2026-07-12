@@ -2,8 +2,8 @@ package com.njydsz.pmis.gateway.config;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.njydsz.pmis.common.token.JwtTokenProvider;
-import io.jsonwebtoken.Claims;
+import com.njydsz.pmis.common.auth.model.UserInfo;
+import com.njydsz.pmis.common.auth.token.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,12 +14,12 @@ import java.util.Optional;
  * JWT 校验结果缓存（P1-7）
  *
  * <p>使用 Caffeine 本地缓存 JWT 解析结果，避免每个请求重复执行
- * {@code jwtParser.parseSignedClaims(token)} 的 CPU 开销。
+ * {@code tokenService.parseAccessToken(token)} 的 CPU 开销。
  *
  * <h3>缓存策略</h3>
  * <ul>
  *   <li>缓存键: JWT Token 字符串</li>
- *   <li>缓存值: Claims 解析结果（或 INVALID 标记）</li>
+ *   <li>缓存值: UserInfo 解析结果（或 INVALID 标记）</li>
  *   <li>TTL: 5 秒（平衡性能与黑名单生效延迟）</li>
  *   <li>最大容量: 10,000 条（防止内存溢出）</li>
  * </ul>
@@ -45,22 +45,19 @@ public class CachedJwtValidator {
     /** 缓存最大容量 */
     private static final long CACHE_MAX_SIZE = 10_000;
 
-    /** 无效 Token 的缓存标记 */
-    private static final Claims INVALID_CLAIMS = null;
-
     /** Caffeine 缓存实例 */
-    private final Cache<String, Optional<Claims>> claimsCache;
+    private final Cache<String, Optional<UserInfo>> claimsCache;
 
-    /** JWT Token 工具 */
-    private final JwtTokenProvider jwtTokenProvider;
+    /** Token 服务 */
+    private final TokenService tokenService;
 
     /**
      * 构造 JWT 缓存校验器
      *
-     * @param jwtTokenProvider JWT Token 工具
+     * @param tokenService Token 服务
      */
-    public CachedJwtValidator(JwtTokenProvider jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
+    public CachedJwtValidator(TokenService tokenService) {
+        this.tokenService = tokenService;
         this.claimsCache = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofSeconds(CACHE_TTL_SECONDS))
                 .maximumSize(CACHE_MAX_SIZE)
@@ -75,31 +72,31 @@ public class CachedJwtValidator {
      * <p>优先从 Caffeine 缓存读取解析结果；缓存未命中时执行实际解析并写入缓存。
      *
      * @param jwt JWT Token 字符串
-     * @return Claims 解析结果，Token 无效时返回 null
+     * @return UserInfo 解析结果，Token 无效时返回 null
      */
-    public Claims validateAndParse(String jwt) {
+    public UserInfo validateAndParse(String jwt) {
         if (jwt == null || jwt.isBlank()) {
             return null;
         }
 
-        Optional<Claims> cached = claimsCache.getIfPresent(jwt);
+        Optional<UserInfo> cached = claimsCache.getIfPresent(jwt);
         if (cached != null) {
             return cached.orElse(null);
         }
 
         // 缓存未命中，执行实际校验
-        Claims claims = null;
-        if (jwtTokenProvider.validateToken(jwt)) {
+        UserInfo userInfo = null;
+        if (tokenService.validateAccessToken(jwt)) {
             try {
-                claims = jwtTokenProvider.parseClaims(jwt);
+                userInfo = tokenService.parseAccessToken(jwt);
             } catch (Exception e) {
                 log.warn("[JwtCache] 解析 JWT 失败: {}", e.getMessage());
             }
         }
 
         // 写入缓存（null 也缓存，避免无效 Token 重复解析）
-        claimsCache.put(jwt, Optional.ofNullable(claims));
-        return claims;
+        claimsCache.put(jwt, Optional.ofNullable(userInfo));
+        return userInfo;
     }
 
     /**

@@ -2,8 +2,7 @@ package com.njydsz.pmis.gateway.config;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.constant.CommonConstants;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -81,9 +80,9 @@ public class GatewayErrorConfig {
             int bizCode = resolveBizCode(httpStatus);
             String message = resolveMessage(ex, httpStatus);
 
-            String traceId = exchange.getRequest().getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
+            String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
             if (traceId == null || traceId.isBlank()) {
-                traceId = TraceIdUtil.generate();
+                traceId = TraceIdGenerator.generate();
             }
 
             BaseResponse<Void> body = BaseResponse.failed(String.valueOf(bizCode), message);
@@ -95,7 +94,7 @@ public class GatewayErrorConfig {
 
             exchange.getResponse().setStatusCode(httpStatus);
             exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
-            exchange.getResponse().getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+            exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
             byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);

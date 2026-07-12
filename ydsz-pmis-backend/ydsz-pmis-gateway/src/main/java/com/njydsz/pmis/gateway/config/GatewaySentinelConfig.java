@@ -8,8 +8,7 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.constant.CommonConstants;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -49,7 +48,7 @@ public class GatewaySentinelConfig {
     @PostConstruct
     public void init() {
         BlockRequestHandler handler = (exchange, ex) -> {
-            String traceId = TraceIdUtil.generate();
+            String traceId = TraceIdGenerator.generate();
 
             HttpStatus httpStatus;
             int bizCode;
@@ -88,7 +87,7 @@ public class GatewaySentinelConfig {
             return ServerResponse.status(httpStatus)
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE + ";charset=" + StandardCharsets.UTF_8)
-                    .header(CommonConstants.HEADER_TRACE_ID, traceId)
+                    .header(GatewayConstants.HEADER_TRACE_ID, traceId)
                     .bodyValue(JSON.toJSONString(body));
         };
         GatewayCallbackManager.setBlockHandler(handler);

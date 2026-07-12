@@ -1,10 +1,9 @@
 package com.njydsz.pmis.gateway.filter;
 
-import com.njydsz.pmis.common.constant.CommonConstants;
-import com.njydsz.pmis.common.token.JwtTokenProvider;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.auth.model.UserInfo;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 import com.njydsz.pmis.gateway.config.CachedJwtValidator;
-import io.jsonwebtoken.Claims;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -14,8 +13,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 /**
  * WebSocket 认证过滤器（P2-12）
@@ -88,46 +85,33 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
         }
 
         // 校验 Token（使用 Caffeine 缓存）
-        Claims claims = cachedJwtValidator.validateAndParse(jwt);
-        if (claims == null) {
+        UserInfo userInfo = cachedJwtValidator.validateAndParse(jwt);
+        if (userInfo == null) {
             log.warn("[WsAuth] WebSocket 握手 Token 无效 path={}", path);
             return chain.filter(exchange); // 交给 AuthGlobalFilter 返回 401
         }
 
-        String type = claims.get("type", String.class);
-        if (!"access".equals(type)) {
-            log.warn("[WsAuth] WebSocket 握手 Token 类型错误 type={}", type);
-            return chain.filter(exchange);
-        }
-
         // 提取用户信息
-        String userId = claims.getSubject();
-        String username = claims.get("username", String.class);
-        @SuppressWarnings("unchecked")
-        List<String> roles = (List<String>) claims.get("roles");
-        @SuppressWarnings("unchecked")
-        List<String> permissions = (List<String>) claims.get("permissions");
+        String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
+        String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
+        String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
+        String permsStr = "";
 
-        String userIdStr = String.valueOf(userId);
-        String usernameStr = username == null ? "" : username;
-        String rolesStr = roles == null ? "" : String.join(",", roles);
-        String permsStr = permissions == null ? "" : String.join(",", permissions);
-
-        String traceId = TraceIdUtil.generate();
+        String traceId = TraceIdGenerator.generate();
 
         // 注入用户信息头 + 标记已认证
         ServerHttpRequest mutated = request.mutate()
                 .headers(h -> {
-                    h.set(CommonConstants.HEADER_TRACE_ID, traceId);
-                    h.set(CommonConstants.HEADER_USER_ID, userIdStr);
-                    h.set(CommonConstants.HEADER_USERNAME, usernameStr);
-                    h.set(CommonConstants.HEADER_USER_ROLES, rolesStr);
-                    h.set(CommonConstants.HEADER_USER_PERMISSIONS, permsStr);
+                    h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
+                    h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
+                    h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
+                    h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
+                    h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
                 })
                 .build();
 
         exchange.getAttributes().put(ATTR_WS_AUTHENTICATED, true);
-        exchange.getResponse().getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+        exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
         log.info("[WsAuth] WebSocket 认证成功 userId={} path={}", userIdStr, path);
 

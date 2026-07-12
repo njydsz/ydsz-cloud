@@ -14,10 +14,14 @@ import com.njydsz.pmis.common.auth.service.DataPermissionResolver;
 import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
 import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
+import com.njydsz.pmis.common.auth.service.TokenBlacklistService;
 import com.njydsz.pmis.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.service.impl.RedisRbacUserInfoService;
 import com.njydsz.pmis.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.njydsz.pmis.common.auth.service.impl.RedisRolePermissionLoader;
+import com.njydsz.pmis.common.auth.token.JwtTokenService;
+import com.njydsz.pmis.common.auth.token.TokenProperties;
+import com.njydsz.pmis.common.auth.token.TokenService;
 import com.njydsz.pmis.common.auth.strategy.CacheKeyStrategy;
 import com.njydsz.pmis.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.pmis.common.redis.service.RedisService;
@@ -27,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -56,7 +61,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "remi.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties({AuthProperties.class, KeyspaceNotificationProperties.class})
+@EnableConfigurationProperties({AuthProperties.class, KeyspaceNotificationProperties.class, TokenProperties.class})
 public class AuthConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(AuthConfiguration.class);
@@ -289,6 +294,36 @@ public class AuthConfiguration {
             RbacPermissionEvaluator evaluator,
             KeyspaceNotificationProperties keyspaceProperties) {
         return new PermissionKeyspaceNotificationListener(evaluator);
+    }
+
+    /**
+     * 创建 Token 黑名单服务。
+     *
+     * @param redisStringOps Redis String 操作
+     * @param authProperties 认证配置属性
+     * @return Token 黑名单服务实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(RedisStringOps.class)
+    public TokenBlacklistService tokenBlacklistService(RedisStringOps redisStringOps, AuthProperties authProperties) {
+        return new TokenBlacklistService(redisStringOps, authProperties);
+    }
+
+    /**
+     * 创建 JWT Token 服务。
+     *
+     * @param tokenProperties           Token 配置属性
+     * @param tokenBlacklistServiceProvider Token 黑名单服务（可选）
+     * @return Token 服务实例
+     */
+    @Bean
+    @ConditionalOnClass(name = "io.jsonwebtoken.Jwts")
+    @ConditionalOnProperty(prefix = "remi.auth.token", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnMissingBean(TokenService.class)
+    public TokenService jwtTokenService(TokenProperties tokenProperties,
+                                         ObjectProvider<TokenBlacklistService> tokenBlacklistServiceProvider) {
+        return new JwtTokenService(tokenProperties, tokenBlacklistServiceProvider.getIfAvailable());
     }
 
     /**

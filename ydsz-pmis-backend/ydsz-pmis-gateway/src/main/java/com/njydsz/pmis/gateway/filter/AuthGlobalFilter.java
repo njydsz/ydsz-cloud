@@ -1,14 +1,13 @@
 package com.njydsz.pmis.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.constant.CommonConstants;
-import com.njydsz.pmis.common.token.JwtTokenProvider;
-import com.njydsz.pmis.common.util.InternalHeaderSigner;
-import com.njydsz.pmis.common.util.PathGuard;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 import com.njydsz.pmis.gateway.config.CachedJwtValidator;
-import io.jsonwebtoken.Claims;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
+import com.njydsz.pmis.gateway.config.InternalHeaderSigner;
+import com.njydsz.pmis.gateway.config.PathGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +25,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -72,8 +70,6 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/workflow/third-party/wecom/callback"
     );
 
-    /** JWT Token 生成与校验工具 */
-    private final JwtTokenProvider jwtTokenProvider;
     /** P1-7: JWT 校验结果缓存（Caffeine TTL=5s） */
     private final CachedJwtValidator cachedJwtValidator;
     /** Redis 响应式模板（用于 Token 黑名单检查） */
@@ -120,17 +116,17 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         }
 
         // 链路追踪 ID（网关层强制重新生成，剥离客户端伪造的 X-Trace-Id）
-        final String traceId = TraceIdUtil.generate();
+        final String traceId = TraceIdGenerator.generate();
 
         // 统一写入 traceId 到响应头，确保所有响应（成功/失败/OPTIONS/白名单）都携带链路追踪 ID
-        exchange.getResponse().getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+        exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
         // 跨域预检直接放行（先剥离内部头再透传）
         if ("OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
             return withSecurityHeaders(exchange, chain.filter(exchange.mutate()
                     .request(r -> {
                         stripInternalHeaders(r);
-                        r.header(CommonConstants.HEADER_TRACE_ID, traceId);
+                        r.header(GatewayConstants.HEADER_TRACE_ID, traceId);
                         String acceptLang = request.getHeaders().getFirst("Accept-Language");
                         if (acceptLang != null && !acceptLang.isEmpty()) {
                             r.header("Accept-Language", acceptLang);
@@ -144,7 +140,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return withSecurityHeaders(exchange, chain.filter(exchange.mutate()
                     .request(r -> {
                         stripInternalHeaders(r);
-                        r.header(CommonConstants.HEADER_TRACE_ID, traceId);
+                        r.header(GatewayConstants.HEADER_TRACE_ID, traceId);
                         String acceptLang = request.getHeaders().getFirst("Accept-Language");
                         if (acceptLang != null && !acceptLang.isEmpty()) {
                             r.header("Accept-Language", acceptLang);
@@ -160,9 +156,9 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         }
         String jwt = authHeader.substring(7);
 
-        // 验证 Token + 解析 Claims（P1-7: 使用 Caffeine 缓存）
-        Claims parsedClaims = cachedJwtValidator.validateAndParse(jwt);
-        if (parsedClaims == null) {
+        // 验证 Token + 解析 UserInfo（P1-7: 使用 Caffeine 缓存）
+        UserInfo userInfo = cachedJwtValidator.validateAndParse(jwt);
+        if (userInfo == null) {
             return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
         }
 
@@ -172,25 +168,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     if (Boolean.TRUE.equals(blacklisted)) {
                         return unauthorized(exchange, traceId, "error.TOKEN_EXPIRED");
                     }
-                    // 使用缓存的 Claims
-                    final Claims claims = parsedClaims;
 
-                    String type = claims.get("type", String.class);
-                    if (!"access".equals(type)) {
-                        return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
-                    }
-
-                    String userId =claims.getSubject();
-                    String username = claims.get("username", String.class);
-                    @SuppressWarnings("unchecked")
-                    List<String> roles = (List<String>) claims.get("roles");
-                    @SuppressWarnings("unchecked")
-                    List<String> permissions = (List<String>) claims.get("permissions");
-
-                    String userIdStr = String.valueOf(userId);
-                    String usernameStr = username == null ? "" : username;
-                    String rolesStr = roles == null ? "" : String.join(",", roles);
-                    String permsStr = permissions == null ? "" : String.join(",", permissions);
+                    String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
+                    String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
+                    String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
+                    String permsStr = "";
 
                     // P0-C5: 生成内部头签名（防伪造 + 防重放）
                     long tsSeconds = System.currentTimeMillis() / 1000L;
@@ -204,13 +186,13 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                                 // 剥离所有客户端伪造的内部头
                                 stripInternalHeaders(h);
                                 // 注入网关签发的内部头
-                                h.set(CommonConstants.HEADER_TRACE_ID, traceId);
-                                h.set(CommonConstants.HEADER_USER_ID, userIdStr);
-                                h.set(CommonConstants.HEADER_USERNAME, usernameStr);
-                                h.set(CommonConstants.HEADER_USER_ROLES, rolesStr);
-                                h.set(CommonConstants.HEADER_USER_PERMISSIONS, permsStr);
-                                h.set(CommonConstants.HEADER_INTERNAL_SIG, sig);
-                                h.set(CommonConstants.HEADER_INTERNAL_TS, String.valueOf(tsSeconds));
+                                h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
+                                h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
+                                h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
+                                h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
+                                h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
+                                h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
+                                h.set(GatewayConstants.HEADER_INTERNAL_TS, String.valueOf(tsSeconds));
                                 h.set("Authorization", authHeader);
                                 h.set("Accept-Language",
                                         acceptLang != null && !acceptLang.isEmpty() ? acceptLang : "zh-CN");
