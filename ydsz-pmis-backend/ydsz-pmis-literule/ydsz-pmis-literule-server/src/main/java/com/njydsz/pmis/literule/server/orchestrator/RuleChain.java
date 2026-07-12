@@ -1,6 +1,5 @@
 package com.njydsz.pmis.literule.server.orchestrator;
 
-import com.njydsz.pmis.literule.server.agent.AgentRuleNode;
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
@@ -331,24 +330,6 @@ public class RuleChain {
     public static RuleChain breakChain() {
         return new RuleChain(RuleChainType.BREAK,
                 null, null, null, null, null, null, null, null, null, 0);
-    }
-
-    /**
-     * 构建 AI Agent 执行链（AGENT，P3-5）
-     *
-     * <p>将 {@link AgentRuleNode} 包装为 SINGLE 节点，执行 ReAct 推理循环。
-     * Agent 节点可通过 {@code RuleNode.of(agentRuleNode)} 嵌入任意 THEN/WHEN/IF 链，
-     * 本工厂方法用于将 Agent 作为独立链执行的便捷入口。
-     *
-     * @param agentRuleNode AI Agent 节点
-     * @return AGENT 类型规则链
-     * @since 1.8.0
-     */
-    public static RuleChain agent(AgentRuleNode agentRuleNode) {
-        Objects.requireNonNull(agentRuleNode, "agentRuleNode 不能为 null");
-        List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(agentRuleNode));
-        return new RuleChain(RuleChainType.AGENT,
-                nodeList, null, null, null, null, null, null, null, null, 0);
     }
 
     // ============================== 编排容错工厂方法 (2.0.0) ==============================
