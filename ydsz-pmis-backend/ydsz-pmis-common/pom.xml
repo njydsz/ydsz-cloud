@@ -148,12 +148,6 @@
                 <artifactId>ydsz-pmis-common-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!-- 聚合 -->
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-all</artifactId>
-                <version>${project.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 

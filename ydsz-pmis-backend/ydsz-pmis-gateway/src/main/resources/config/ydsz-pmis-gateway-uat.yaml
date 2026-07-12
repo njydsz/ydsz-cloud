@@ -10,6 +10,11 @@
 server:
   port: 9000
   max-http-request-header-size: 16KB
+  # P1-10: 响应压缩（节省 60-80% 带宽）
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain,text/css,application/javascript
+    min-response-size: 1024
 
 spring:
   profiles: uat
@@ -33,7 +38,12 @@ spring:
             maxAge: 3600
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        # P0-4: 请求体大小限制 10MB（防 DoS）
+        - RequestSize=10485760
+      # P0-3: 连接超时 + 响应超时（防雪崩）
       httpclient:
+        connect-timeout: 3000
+        response-timeout: 30s
         websocket:
           max-frame-payload-length: 65536
     sentinel:

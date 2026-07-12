@@ -332,9 +332,14 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
     /**
      * 过滤器顺序：在认证过滤器之后执行（需要 X-User-ID 头）
+     *
+     * <p>P1-9: 原为 +20，与 {@link GrayLoadBalancerRequestFilter} 冲突，
+     * 调整为 +30，确保灰度标识注入（+20）在限流之前完成。
+     *
+     * @return 顺序值
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 20;
+        return Ordered.HIGHEST_PRECEDENCE + 30;
     }
 }

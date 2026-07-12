@@ -7,6 +7,7 @@ import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.util.InternalHeaderSigner;
 import com.njydsz.pmis.common.util.PathGuard;
 import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.gateway.config.CachedJwtValidator;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +74,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     /** JWT Token 生成与校验工具 */
     private final JwtTokenProvider jwtTokenProvider;
+    /** P1-7: JWT 校验结果缓存（Caffeine TTL=5s） */
+    private final CachedJwtValidator cachedJwtValidator;
     /** Redis 响应式模板（用于 Token 黑名单检查） */
     private final ReactiveStringRedisTemplate redisTemplate;
 
@@ -152,8 +155,9 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         }
         String jwt = authHeader.substring(7);
 
-        // 验证 Token
-        if (!jwtTokenProvider.validateToken(jwt)) {
+        // 验证 Token + 解析 Claims（P1-7: 使用 Caffeine 缓存）
+        Claims parsedClaims = cachedJwtValidator.validateAndParse(jwt);
+        if (parsedClaims == null) {
             return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
         }
 
@@ -163,14 +167,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     if (Boolean.TRUE.equals(blacklisted)) {
                         return unauthorized(exchange, traceId, "error.TOKEN_EXPIRED");
                     }
-                    // 解析 Claims
-                    Claims claims;
-                    try {
-                        claims = jwtTokenProvider.parseClaims(jwt);
-                    } catch (Exception e) {
-                        log.warn("[AuthFilter] 解析 JWT 失败: {}", e.getMessage());
-                        return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
-                    }
+                    // 使用缓存的 Claims
+                    final Claims claims = parsedClaims;
 
                     String type = claims.get("type", String.class);
                     if (!"access".equals(type)) {
@@ -334,6 +332,9 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             // Permissions-Policy: 禁用不需要的浏览器 API
             response.getHeaders().add("Permissions-Policy",
                 "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()");
+            // P1-10: HSTS — 强制 HTTPS（生产环境必须）
+            response.getHeaders().add("Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains; preload");
         }));
     }
 

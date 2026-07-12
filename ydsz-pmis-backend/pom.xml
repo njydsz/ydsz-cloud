@@ -201,11 +201,6 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-all</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-feign</artifactId>
                 <version>${project.version}</version>
             </dependency>

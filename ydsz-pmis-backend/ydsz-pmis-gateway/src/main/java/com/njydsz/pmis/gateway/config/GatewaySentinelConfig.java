@@ -2,9 +2,17 @@ package com.njydsz.pmis.gateway.config;
 
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.BlockRequestHandler;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
+import com.alibaba.csp.sentinel.adapter.gateway.sc.exception.SentinelGatewayFlowException;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
+import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.constant.CommonConstants;
+import com.njydsz.pmis.common.util.TraceIdUtil;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,28 +21,83 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 网关 Sentinel 配置
+ * 网关 Sentinel 配置（P1-8 增强）
  *
- * <p>自定义网关层限流/熔断响应，统一返回 R 格式 JSON。
+ * <p>自定义网关层限流/熔断响应，统一返回 {@link Result} 格式 JSON。
+ *
+ * <h3>P1-8 增强：区分限流与熔断响应</h3>
+ * <ul>
+ *   <li>限流（FlowException / SentinelGatewayFlowException）→ 429 + error.RATE_LIMIT</li>
+ *   <li>熔断（DegradeException）→ 503 + error.SERVICE_DEGRADED</li>
+ *   <li>系统自适应保护（SystemBlockException）→ 503 + error.SYSTEM_PROTECTED</li>
+ * </ul>
+ *
+ * <p>所有响应均注入 traceId，便于排障关联。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @since 2.2.0
  */
+@Slf4j
 @Configuration
 public class GatewaySentinelConfig {
 
     /**
-     * 初始化网关限流响应处理器
+     * 初始化网关限流/熔断响应处理器
+     *
+     * <p>P1-8: 根据异常类型区分限流与熔断，返回不同 HTTP 状态码与业务错误码。
      */
     @PostConstruct
     public void init() {
         BlockRequestHandler handler = (exchange, ex) -> {
-            Result<?> body = Result.failed(429, "Gateway rate limited: " + ex.getClass().getSimpleName());
-            return ServerResponse.status(HttpStatus.TOO_MANY_REQUESTS)
+            String traceId = TraceIdUtil.generate();
+
+            HttpStatus httpStatus;
+            int bizCode;
+            String message;
+
+            if (ex instanceof DegradeException) {
+                // 熔断降级
+                httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
+                bizCode = 50300;
+                message = "error.SERVICE_DEGRADED";
+            } else if (ex instanceof SystemBlockException) {
+                // 系统自适应保护
+                httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
+                bizCode = 50301;
+                message = "error.SYSTEM_PROTECTED";
+            } else if (ex instanceof FlowException || ex instanceof SentinelGatewayFlowException) {
+                // 限流
+                httpStatus = HttpStatus.TOO_MANY_REQUESTS;
+                bizCode = 42900;
+                message = "error.RATE_LIMIT";
+            } else if (ex instanceof BlockException) {
+                // 其他 Sentinel 阻断
+                httpStatus = HttpStatus.TOO_MANY_REQUESTS;
+                bizCode = 42900;
+                message = "error.RATE_LIMIT";
+            } else {
+                // 非 Sentinel 异常
+                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+                bizCode = 50000;
+                message = "error.INTERNAL_ERROR";
+            }
+
+            Result<Void> body = Result.failed(bizCode, message);
+            body.setTraceId(traceId);
+
+            log.warn("[SentinelBlock] status={} bizCode={} traceId={} path={} ex={}",
+                    httpStatus.value(), bizCode, traceId,
+                    exchange.getRequest().getURI().getPath(),
+                    ex.getClass().getSimpleName());
+
+            return ServerResponse.status(httpStatus)
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE + ";charset=" + StandardCharsets.UTF_8)
+                    .header(CommonConstants.HEADER_TRACE_ID, traceId)
                     .bodyValue(JSON.toJSONString(body));
         };
         GatewayCallbackManager.setBlockHandler(handler);
+
+        log.info("[SentinelConfig] 限流/熔断响应处理器初始化完成（P1-8: 区分限流(429)/熔断(503)/系统保护(503)）");
     }
 }

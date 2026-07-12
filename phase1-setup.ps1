@@ -45,7 +45,6 @@ $newModules = @(
     "ydsz-pmis-common-doc",
     "ydsz-pmis-common-base",
     "ydsz-pmis-common-app",
-    "ydsz-pmis-common-all"
 )
 foreach ($m in $newModules) { New-Module $m }
 
