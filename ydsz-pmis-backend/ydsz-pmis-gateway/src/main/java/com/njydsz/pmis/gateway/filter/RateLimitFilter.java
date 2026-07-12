@@ -231,10 +231,10 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         return redisTemplate.execute(tokenBucketScript, keys, args)
                 .next()
                 .map(result -> {
-                    if (result == null || BaseResponse.size() < 1) {
+                    if (result == null || result.size() < 1) {
                         return true; // Redis 异常时降级放行
                     }
-                    Long allowed = BaseResponse.get(0);
+                    Long allowed = result.get(0);
                     return allowed != null && allowed == 1L;
                 })
                 .onErrorResume(e -> {
@@ -280,7 +280,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             response.getHeaders().add("Retry-After", String.valueOf(properties.getResponseHeaders().getRetryAfter()));
         }
 
-        BaseResponse<Void> body = BaseResponse.failed(429, "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
+        BaseResponse<Void> body = BaseResponse.failed("429", "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
         byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 

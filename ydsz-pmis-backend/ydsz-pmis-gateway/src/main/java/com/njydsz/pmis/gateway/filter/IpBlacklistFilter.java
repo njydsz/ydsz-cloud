@@ -132,7 +132,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         response.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
 
-        BaseResponse<Void> body = BaseResponse.failed(403, "error.IP_BLACKLISTED");
+        BaseResponse<Void> body = BaseResponse.failed("403", "error.IP_BLACKLISTED");
         body.setTraceId(traceId);
         byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);

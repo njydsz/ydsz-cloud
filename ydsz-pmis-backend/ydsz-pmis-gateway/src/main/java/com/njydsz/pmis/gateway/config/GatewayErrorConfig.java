@@ -86,7 +86,7 @@ public class GatewayErrorConfig {
                 traceId = TraceIdUtil.generate();
             }
 
-            BaseResponse<Void> body = BaseResponse.failed(bizCode, message);
+            BaseResponse<Void> body = BaseResponse.failed(String.valueOf(bizCode), message);
             body.setTraceId(traceId);
 
             log.warn("[GatewayError] status={} bizCode={} traceId={} path={} error={}",

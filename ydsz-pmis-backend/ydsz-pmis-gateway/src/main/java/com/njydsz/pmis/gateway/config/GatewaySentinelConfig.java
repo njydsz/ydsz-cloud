@@ -77,7 +77,7 @@ public class GatewaySentinelConfig {
                 message = "error.INTERNAL_ERROR";
             }
 
-            BaseResponse<Void> body = BaseResponse.failed(bizCode, message);
+            BaseResponse<Void> body = BaseResponse.failed(String.valueOf(bizCode), message);
             body.setTraceId(traceId);
 
             log.warn("[SentinelBlock] status={} bizCode={} traceId={} path={} ex={}",
