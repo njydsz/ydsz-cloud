@@ -60,7 +60,7 @@
         <!-- baomidou 动态数据源（读写分离 P2-3） -->
         <dynamic-datasource.version>4.3.1</dynamic-datasource.version>
         <hutool.version>5.8.46</hutool.version>
-        <resilience4j.version>2.3.0</resilience4j.version>
+        <resilience4j.version>2.4.0</resilience4j.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok.version>1.18.42</lombok.version>
         <fastjson2.version>2.0.62</fastjson2.version>
@@ -1006,6 +1006,7 @@
                                 <exclude>io.grpc:grpc-stub</exclude>
                                 <exclude>io.grpc:grpc-api</exclude>
                                 <exclude>com.google.code.gson:gson</exclude>
+                                <exclude>org.springdoc:springdoc-openapi-starter-webmvc-ui</exclude>
                             </excludes>
                         </requireUpperBoundDeps>
                         <dependencyConvergence>

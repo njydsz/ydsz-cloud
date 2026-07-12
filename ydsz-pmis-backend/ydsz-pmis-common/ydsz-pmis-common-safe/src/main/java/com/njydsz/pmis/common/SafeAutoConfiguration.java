@@ -21,8 +21,8 @@ import org.springframework.context.annotation.Import;
  *
  * <p>包含：
  * <ul>
- *   <li>3 类 AOP 切面：幂等/限流/二次认证</li>
- *   <li>3 类过滤器：链路追踪/XSS/请求日志</li>
+ * <li>3 类 AOP 切面：幂等/限流/二次认证</li>
+ * <li>3 类过滤器：链路追踪/XSS/请求日志</li>
  *   <li>安全组件：Nonce 校验/Token 黑名单/安全事件</li>
  *   <li>审计字段填充器 {@link AuditFieldFiller}</li>
  * </ul>
