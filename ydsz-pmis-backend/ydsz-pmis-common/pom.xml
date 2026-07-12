@@ -13,31 +13,53 @@
     <artifactId>ydsz-pmis-common</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-common</name>
-    <description>DDD Module</description>
+    <description>PMIS Common - 公共依赖聚合模块</description>
 
     <modules>
+        <!-- L1 基础设施层 -->
         <module>ydsz-pmis-common-core</module>
+        <!-- L2 工具模块层 -->
         <module>ydsz-pmis-common-util</module>
+        <!-- L3 基础服务层 -->
         <module>ydsz-pmis-common-domain</module>
-        <module>ydsz-pmis-common-data</module>
-        <module>ydsz-pmis-common-security</module>
+        <module>ydsz-pmis-common-exception</module>
+        <!-- L4 基础数据层 -->
+        <module>ydsz-pmis-common-jdbc</module>
+        <module>ydsz-pmis-common-redis</module>
+        <module>ydsz-pmis-common-lock</module>
+        <!-- L5 业务服务层 -->
+        <module>ydsz-pmis-common-auth</module>
+        <module>ydsz-pmis-common-safe</module>
         <module>ydsz-pmis-common-feign</module>
-        <module>ydsz-pmis-common-web</module>
+        <module>ydsz-pmis-common-audit</module>
+        <module>ydsz-pmis-common-file</module>
+        <module>ydsz-pmis-common-notify</module>
+        <module>ydsz-pmis-common-queue</module>
+        <module>ydsz-pmis-common-doc</module>
         <module>ydsz-pmis-common-infra</module>
+        <!-- L6 应用层 -->
+        <module>ydsz-pmis-common-base</module>
+        <module>ydsz-pmis-common-web</module>
+        <module>ydsz-pmis-common-app</module>
+        <!-- 聚合 -->
+        <module>ydsz-pmis-common-all</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
+            <!-- L1 -->
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- L2 -->
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-util</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- L3 -->
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-domain</artifactId>
@@ -45,12 +67,34 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-data</artifactId>
+                <artifactId>ydsz-pmis-common-exception</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- L4 -->
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-jdbc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-security</artifactId>
+                <artifactId>ydsz-pmis-common-redis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-lock</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- L5 -->
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-auth</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-safe</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -60,12 +104,54 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-web</artifactId>
+                <artifactId>ydsz-pmis-common-audit</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-notify</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-queue</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-doc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- L6 -->
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- 聚合 -->
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-all</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

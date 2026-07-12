@@ -77,6 +77,8 @@
         <spring-ai.version>1.0.0-M6</spring-ai.version>
         <jtokkit.version>1.1.0</jtokkit.version>
         <ttl.version>2.14.5</ttl.version>
+        <disruptor.version>3.4.4</disruptor.version>
+        <tika.version>2.9.2</tika.version>
 
         <!-- 测试 -->
         <springdoc.version>2.8.13</springdoc.version>
@@ -134,12 +136,72 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-data</artifactId>
+                <artifactId>ydsz-pmis-common-exception</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-security</artifactId>
+                <artifactId>ydsz-pmis-common-jdbc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-redis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-lock</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-auth</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-safe</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-audit</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-notify</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-queue</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-doc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-all</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -499,6 +561,20 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>transmittable-thread-local</artifactId>
                 <version>${ttl.version}</version>
+            </dependency>
+
+            <!-- LMAX Disruptor (高性能无锁队列) -->
+            <dependency>
+                <groupId>com.lmax</groupId>
+                <artifactId>disruptor</artifactId>
+                <version>${disruptor.version}</version>
+            </dependency>
+
+            <!-- Apache Tika (文件类型检测) -->
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-core</artifactId>
+                <version>${tika.version}</version>
             </dependency>
 
             <!-- Jasypt 配置加密（P0-4） -->

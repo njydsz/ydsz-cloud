@@ -25,11 +25,19 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-security</artifactId>
+            <artifactId>ydsz-pmis-common-auth</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-data</artifactId>
+            <artifactId>ydsz-pmis-common-safe</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-redis</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
@@ -44,14 +52,8 @@
             <artifactId>spring-tx</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.6.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
-            <version>${knife4j.version}</version>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-doc</artifactId>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
