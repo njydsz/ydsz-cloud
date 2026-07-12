@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.concurrent;
+package com.njydsz.pmis.common.util.concurrent;
 
 import lombok.extern.slf4j.Slf4j;
 

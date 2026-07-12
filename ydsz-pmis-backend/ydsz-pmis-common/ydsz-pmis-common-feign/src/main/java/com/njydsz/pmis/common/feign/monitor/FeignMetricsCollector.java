@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.monitor;
+package com.njydsz.pmis.common.feign.monitor;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;

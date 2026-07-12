@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.metrics;
+package com.njydsz.pmis.common.redis.metrics;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;

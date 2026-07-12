@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.core;
+package com.njydsz.pmis.common.audit.core;
 
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.util;
+package com.njydsz.pmis.common.auth.util;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.util.auth.AuthInfoUtils;

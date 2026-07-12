@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.mq.active;
+package com.njydsz.pmis.common.queue.mq.active;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import lombok.Data;

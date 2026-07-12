@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.circuitbreaker;
+package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import com.njydsz.pmis.common.redis.service.RedisService;
 import org.slf4j.Logger;

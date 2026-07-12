@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.core;
+package com.njydsz.pmis.common.notify.core;
 
 import com.njydsz.pmis.common.exception.custom.InfrastructureException;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;

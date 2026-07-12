@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.config;
+package com.njydsz.pmis.common.audit.config;
 
 import com.njydsz.pmis.common.audit.core.AuditRecorder;
 import com.njydsz.pmis.common.audit.domain.AuditLog;

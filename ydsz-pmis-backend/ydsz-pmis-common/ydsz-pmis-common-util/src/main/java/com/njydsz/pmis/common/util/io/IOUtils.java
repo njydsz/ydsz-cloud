@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.io;
+package com.njydsz.pmis.common.util.io;
 
 import lombok.extern.slf4j.Slf4j;
 

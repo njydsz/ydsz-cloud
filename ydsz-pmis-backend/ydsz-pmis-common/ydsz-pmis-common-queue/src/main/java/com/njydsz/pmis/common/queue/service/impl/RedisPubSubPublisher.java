@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.service.impl;
+package com.njydsz.pmis.common.queue.service.impl;
 
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 import org.springframework.data.redis.core.RedisTemplate;

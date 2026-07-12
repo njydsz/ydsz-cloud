@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.reflect;
+package com.njydsz.pmis.common.util.reflect;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;

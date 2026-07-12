@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.id;
+package com.njydsz.pmis.common.util.id;
 
 import java.security.SecureRandom;
 import java.util.Base64;

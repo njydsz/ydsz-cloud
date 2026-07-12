@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.scheduler;
+package com.njydsz.pmis.common.lock.scheduler;
 
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 import lombok.extern.slf4j.Slf4j;

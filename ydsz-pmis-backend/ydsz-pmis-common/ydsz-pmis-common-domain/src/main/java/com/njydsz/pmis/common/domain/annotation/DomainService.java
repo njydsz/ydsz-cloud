@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.annotation;
+package com.njydsz.pmis.common.domain.annotation;
 
 import org.springframework.stereotype.Component;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.config;
+package com.njydsz.pmis.common.jdbc.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

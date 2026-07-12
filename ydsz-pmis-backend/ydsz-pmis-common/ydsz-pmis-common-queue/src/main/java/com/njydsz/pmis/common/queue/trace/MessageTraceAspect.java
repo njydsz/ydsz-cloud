@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.trace;
+package com.njydsz.pmis.common.queue.trace;
 
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;

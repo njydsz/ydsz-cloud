@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.core;
+package com.njydsz.pmis.common.notify.core;
 
 /**
  * 消息发送结果统一封装

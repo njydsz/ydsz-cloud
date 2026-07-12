@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.captcha.config;
+package com.njydsz.pmis.common.safe.captcha.config;
 
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaGenerator;
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaRateLimiter;

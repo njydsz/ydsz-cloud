@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.captcha.validator;
+package com.njydsz.pmis.common.safe.captcha.validator;
 
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
 import com.njydsz.pmis.common.safe.captcha.exception.CaptchaException;

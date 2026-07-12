@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.channel;
+package com.njydsz.pmis.common.notify.channel;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;

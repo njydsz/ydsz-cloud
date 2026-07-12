@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.email.enums;
+package com.njydsz.pmis.common.email.enums;
 
 /**
  * 邮件类型枚举

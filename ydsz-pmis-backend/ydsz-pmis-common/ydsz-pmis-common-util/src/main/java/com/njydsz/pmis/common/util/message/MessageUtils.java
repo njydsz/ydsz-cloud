@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.message;
+package com.njydsz.pmis.common.util.message;
 
 import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
 import com.njydsz.pmis.common.util.spring.SpringBeanUtils;

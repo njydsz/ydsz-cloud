@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.validator;
+package com.njydsz.pmis.common.file.validator;
 
 import com.njydsz.pmis.common.file.exception.FileValidationException;
 import com.njydsz.pmis.common.file.util.FileTypeValidator;

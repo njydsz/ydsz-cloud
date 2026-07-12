@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.cluster;
+package com.njydsz.pmis.common.redis.cluster;
 
 import java.util.ArrayList;
 import java.util.HashMap;

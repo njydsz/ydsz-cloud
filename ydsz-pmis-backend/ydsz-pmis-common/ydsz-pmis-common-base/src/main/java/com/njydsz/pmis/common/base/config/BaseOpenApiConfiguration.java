@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.config;
+package com.njydsz.pmis.common.base.config;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import io.swagger.v3.oas.models.Components;

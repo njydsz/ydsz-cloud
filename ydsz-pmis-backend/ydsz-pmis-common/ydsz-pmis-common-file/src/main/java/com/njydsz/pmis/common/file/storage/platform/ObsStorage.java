@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.storage.platform;
+package com.njydsz.pmis.common.file.storage.platform;
 
 import com.obs.services.ObsClient;
 import com.obs.services.ObsConfiguration;

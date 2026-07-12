@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.id;
+package com.njydsz.pmis.common.util.id;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;

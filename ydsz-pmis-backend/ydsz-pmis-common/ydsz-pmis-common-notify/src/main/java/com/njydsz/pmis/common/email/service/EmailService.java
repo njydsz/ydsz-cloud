@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.email.service;
+package com.njydsz.pmis.common.email.service;
 
 import com.njydsz.pmis.common.email.config.EmailProperties;
 import com.njydsz.pmis.common.email.domain.Email;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.repository;
+package com.njydsz.pmis.common.domain.repository;
 
 import com.njydsz.pmis.common.domain.entity.AggregateRoot;
 import com.njydsz.pmis.common.domain.query.PageQuery;

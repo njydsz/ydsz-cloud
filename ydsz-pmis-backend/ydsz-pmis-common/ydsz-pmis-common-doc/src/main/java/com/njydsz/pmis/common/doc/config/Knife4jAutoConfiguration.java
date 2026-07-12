@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.doc.config;
+package com.njydsz.pmis.common.doc.config;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

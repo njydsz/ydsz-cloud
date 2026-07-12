@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.model;
+package com.njydsz.pmis.common.auth.model;
 
 /**
  * 数据权限可注入标记接口。

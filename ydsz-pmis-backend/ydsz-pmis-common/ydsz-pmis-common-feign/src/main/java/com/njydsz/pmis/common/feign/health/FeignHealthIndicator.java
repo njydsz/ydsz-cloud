@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.health;
+package com.njydsz.pmis.common.feign.health;
 
 import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
 import com.njydsz.pmis.common.feign.config.FeignProperties;

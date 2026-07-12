@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.compress;
+package com.njydsz.pmis.common.feign.compress;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 import feign.RequestInterceptor;

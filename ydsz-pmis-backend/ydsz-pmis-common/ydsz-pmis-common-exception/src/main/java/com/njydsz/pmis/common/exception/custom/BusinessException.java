@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.custom;
+package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;

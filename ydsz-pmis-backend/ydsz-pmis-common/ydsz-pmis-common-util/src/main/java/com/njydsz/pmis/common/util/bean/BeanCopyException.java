@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.bean;
+package com.njydsz.pmis.common.util.bean;
 
 /**
  * Bean 拷贝异常

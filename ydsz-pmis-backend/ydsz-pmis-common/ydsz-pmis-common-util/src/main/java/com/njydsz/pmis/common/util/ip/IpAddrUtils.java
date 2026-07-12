@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.ip;
+package com.njydsz.pmis.common.util.ip;
 
 /**
  * IP 地址工具类 - 支持 IPv4/IPv6 地址解析、校验、范围判断、本地 IP 枚举等

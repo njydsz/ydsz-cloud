@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.listener;
+package com.njydsz.pmis.common.auth.listener;
 
 import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.pmis.common.util.string.StringUtils;

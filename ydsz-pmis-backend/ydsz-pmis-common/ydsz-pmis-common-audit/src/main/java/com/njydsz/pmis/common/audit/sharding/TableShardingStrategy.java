@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.sharding;
+package com.njydsz.pmis.common.audit.sharding;
 
 import java.time.LocalDateTime;
 

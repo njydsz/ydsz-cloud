@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.model;
+package com.njydsz.pmis.common.exception.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;

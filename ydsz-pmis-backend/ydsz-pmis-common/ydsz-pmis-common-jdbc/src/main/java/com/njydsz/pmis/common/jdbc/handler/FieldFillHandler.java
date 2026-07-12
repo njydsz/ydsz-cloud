@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.handler;
+package com.njydsz.pmis.common.jdbc.handler;
 
 import net.sf.jsqlparser.expression.Expression;
 

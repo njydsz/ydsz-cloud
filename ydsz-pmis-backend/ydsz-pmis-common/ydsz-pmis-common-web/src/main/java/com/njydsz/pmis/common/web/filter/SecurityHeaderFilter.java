@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.filter;
+package com.njydsz.pmis.common.web.filter;
 
 import com.njydsz.pmis.common.safe.filter.BaseSecurityHeaderFilter;
 import com.njydsz.pmis.common.safe.config.SecurityHeaderProperties;

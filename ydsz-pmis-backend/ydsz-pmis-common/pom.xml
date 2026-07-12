@@ -34,12 +34,13 @@
         <db2-jdbc.version>11.5.0.0</db2-jdbc.version>
         <knife4j.version>4.5.0</knife4j.version>
         <swagger.version>2.2.30</swagger.version>
+        <swagger-jakarta.version>2.2.47</swagger-jakarta.version>
         <springdoc.version>3.0.3</springdoc.version>
         <jetbrains-annotations.version>24.1.0</jetbrains-annotations.version>
         <spotbugs-annotations.version>4.8.6</spotbugs-annotations.version>
         <mybatis-starter.version>4.0.1</mybatis-starter.version>
         <mybatis.version>3.5.19</mybatis.version>
-        <commons-lang3.version>3.17.0</commons-lang3.version>
+        <commons-lang3.version>3.20.0</commons-lang3.version>
         <commons-codec.version>1.17.1</commons-codec.version>
         <commons-logging.version>1.3.5</commons-logging.version>
         <dom4j.version>2.1.4</dom4j.version>
@@ -515,20 +516,6 @@
                 <version>${resilience4j.version}</version>
             </dependency>
 
-            <!-- Spring Boot Web -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-web</artifactId>
-                <version>${spring-boot.version}</version>
-            </dependency>
-
-            <!-- Spring Boot Actuator -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-actuator</artifactId>
-                <version>${spring-boot.version}</version>
-            </dependency>
-
             <!-- jetbrains annotations -->
             <dependency>
                 <groupId>org.jetbrains</groupId>
@@ -541,6 +528,20 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-annotations</artifactId>
                 <version>${spotbugs-annotations.version}</version>
+            </dependency>
+
+            <!-- swagger-annotations-jakarta 版本覆盖（springdoc 3.0.3 要求 2.2.47） -->
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger-jakarta.version}</version>
+            </dependency>
+
+            <!-- jjwt-orgjson（remi-comm auth 模块使用 orgjson 而非 jackson） -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-orgjson</artifactId>
+                <version>${jjwt.version}</version>
             </dependency>
 
             <!-- mybatis-plus-boot-starter（remi-comm 使用此 artifact，与 PMIS 父 POM 的 mybatis-plus-spring-boot4-starter 等效） -->

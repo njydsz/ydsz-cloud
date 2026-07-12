@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.config;
+package com.njydsz.pmis.common.domain.config;
 
 import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

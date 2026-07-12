@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.email.domain;
+package com.njydsz.pmis.common.email.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

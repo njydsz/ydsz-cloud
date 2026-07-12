@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.id;
+package com.njydsz.pmis.common.util.id;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

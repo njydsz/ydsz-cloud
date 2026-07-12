@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.query;
+package com.njydsz.pmis.common.domain.query;
 
 import lombok.Builder;
 import lombok.Data;

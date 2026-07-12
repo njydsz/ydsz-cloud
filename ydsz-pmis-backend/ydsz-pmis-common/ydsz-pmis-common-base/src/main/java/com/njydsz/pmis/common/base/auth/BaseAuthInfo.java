@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.auth;
+package com.njydsz.pmis.common.base.auth;
 
 import com.njydsz.pmis.common.util.auth.RemiAuthInfo;
 

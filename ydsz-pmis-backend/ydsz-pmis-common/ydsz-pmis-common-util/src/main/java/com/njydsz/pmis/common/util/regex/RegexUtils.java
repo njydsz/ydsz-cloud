@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.regex;
+package com.njydsz.pmis.common.util.regex;
 
 import java.util.ArrayList;
 import java.util.List;

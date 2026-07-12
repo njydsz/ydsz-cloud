@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.ftp;
+package com.njydsz.pmis.common.util.ftp;
 
 /**
  * FTP 文件操作工具类

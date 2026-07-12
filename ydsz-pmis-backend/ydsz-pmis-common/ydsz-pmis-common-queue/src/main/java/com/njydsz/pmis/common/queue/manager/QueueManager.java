@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.manager;
+package com.njydsz.pmis.common.queue.manager;
 
 import com.njydsz.pmis.common.queue.metrics.MessageMetrics;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.url;
+package com.njydsz.pmis.common.util.url;
 
 import com.njydsz.pmis.common.util.collection.CollectionUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;

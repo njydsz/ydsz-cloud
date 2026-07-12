@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.mq.kafka;
+package com.njydsz.pmis.common.queue.mq.kafka;
 
 import com.njydsz.pmis.common.exception.custom.InfrastructureException;
 import com.njydsz.pmis.common.queue.domain.QueueMessage;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.config;
+package com.njydsz.pmis.common.notify.config;
 
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.NotifyService;

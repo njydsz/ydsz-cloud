@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.mq.kafka;
+package com.njydsz.pmis.common.queue.mq.kafka;
 
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;

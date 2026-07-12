@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.doc.core;
+package com.njydsz.pmis.common.doc.core;
 
 /**
  * OpenAPI 文档常量类

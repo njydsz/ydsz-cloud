@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service;
+package com.njydsz.pmis.common.auth.service;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 

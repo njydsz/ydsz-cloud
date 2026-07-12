@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.collection;
+package com.njydsz.pmis.common.util.collection;
 
 import java.util.*;
 import java.util.function.Function;

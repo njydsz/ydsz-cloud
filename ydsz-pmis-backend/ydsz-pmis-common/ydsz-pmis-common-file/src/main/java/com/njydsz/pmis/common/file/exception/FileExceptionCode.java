@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.exception;
+package com.njydsz.pmis.common.file.exception;
 
 import com.njydsz.pmis.common.exception.enums.ExceptionCode;
 

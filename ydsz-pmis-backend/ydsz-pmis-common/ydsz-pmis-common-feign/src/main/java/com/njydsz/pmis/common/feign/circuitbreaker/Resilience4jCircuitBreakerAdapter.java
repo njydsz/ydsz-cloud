@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.circuitbreaker;
+package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import com.njydsz.pmis.common.feign.config.FeignProperties;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;

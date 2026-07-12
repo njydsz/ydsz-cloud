@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.aspect;
+package com.njydsz.pmis.common.auth.aspect;
 
 import com.njydsz.pmis.common.auth.annotation.AuthRowPermission;
 import com.njydsz.pmis.common.auth.model.DataScopeAware;

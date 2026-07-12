@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.entity;
+package com.njydsz.pmis.common.jdbc.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

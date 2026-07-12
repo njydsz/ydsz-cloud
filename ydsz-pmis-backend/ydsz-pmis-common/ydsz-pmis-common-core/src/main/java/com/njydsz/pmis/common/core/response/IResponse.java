@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.response;
+package com.njydsz.pmis.common.core.response;
 
 /**
  * 统一响应接口

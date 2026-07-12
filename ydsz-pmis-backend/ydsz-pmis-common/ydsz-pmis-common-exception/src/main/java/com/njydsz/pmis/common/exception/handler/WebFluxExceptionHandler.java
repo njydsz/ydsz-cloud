@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.handler;
+package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.custom.BusinessException;

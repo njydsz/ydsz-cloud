@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.security;
+package com.njydsz.pmis.common.util.security;
 
 import java.io.File;
 import java.io.IOException;

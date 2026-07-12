@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.aspect;
+package com.njydsz.pmis.common.safe.aspect;
 
 import com.njydsz.pmis.common.safe.annotation.Xss;
 import com.njydsz.pmis.common.util.string.StringUtils;

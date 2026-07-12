@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.string;
+package com.njydsz.pmis.common.util.string;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;

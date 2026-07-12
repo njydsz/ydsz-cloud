@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.health;
+package com.njydsz.pmis.common.audit.health;
 
 import com.njydsz.pmis.common.audit.config.AuditProperties;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.mq.rocket;
+package com.njydsz.pmis.common.queue.mq.rocket;
 
 import com.njydsz.pmis.common.exception.custom.InfrastructureException;
 import com.njydsz.pmis.common.queue.domain.QueueMessage;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.request;
+package com.njydsz.pmis.common.core.request;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

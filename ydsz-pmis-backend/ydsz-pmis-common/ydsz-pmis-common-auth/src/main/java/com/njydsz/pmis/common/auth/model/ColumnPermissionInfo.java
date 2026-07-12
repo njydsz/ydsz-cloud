@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.model;
+package com.njydsz.pmis.common.auth.model;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.captcha.properties;
+package com.njydsz.pmis.common.safe.captcha.properties;
 
 import com.njydsz.pmis.common.safe.captcha.enums.CaptchaStoreType;
 import com.njydsz.pmis.common.safe.captcha.enums.CaptchaType;

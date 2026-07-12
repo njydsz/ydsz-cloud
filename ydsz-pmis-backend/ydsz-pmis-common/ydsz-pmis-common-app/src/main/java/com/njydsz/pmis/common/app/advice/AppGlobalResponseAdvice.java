@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.app.advice;
+package com.njydsz.pmis.common.app.advice;
 
 import com.njydsz.pmis.common.base.advice.BaseGlobalResponseAdvice;
 import com.njydsz.pmis.common.core.response.BaseResponse;

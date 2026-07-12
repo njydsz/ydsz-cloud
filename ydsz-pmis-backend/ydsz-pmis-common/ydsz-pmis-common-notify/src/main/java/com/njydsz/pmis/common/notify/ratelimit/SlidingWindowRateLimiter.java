@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.ratelimit;
+package com.njydsz.pmis.common.notify.ratelimit;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.config;
+package com.njydsz.pmis.common.jdbc.config;
 
 import com.njydsz.pmis.common.jdbc.domain.InterceptConfig;
 import lombok.Getter;

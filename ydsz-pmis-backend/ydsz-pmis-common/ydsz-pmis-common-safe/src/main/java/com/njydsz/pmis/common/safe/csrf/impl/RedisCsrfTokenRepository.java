@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.csrf.impl;
+package com.njydsz.pmis.common.safe.csrf.impl;
 
 import com.njydsz.pmis.common.exception.custom.RemiSecurityException;
 import com.njydsz.pmis.common.redis.service.RedisService;

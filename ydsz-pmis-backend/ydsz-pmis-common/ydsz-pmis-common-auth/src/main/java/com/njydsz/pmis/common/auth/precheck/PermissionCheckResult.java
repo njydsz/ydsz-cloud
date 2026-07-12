@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.precheck;
+package com.njydsz.pmis.common.auth.precheck;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

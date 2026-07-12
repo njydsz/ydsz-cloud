@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.enums;
+package com.njydsz.pmis.common.jdbc.enums;
 
 /**
  * 字段填充策略枚举，定义字段在何时进行填充

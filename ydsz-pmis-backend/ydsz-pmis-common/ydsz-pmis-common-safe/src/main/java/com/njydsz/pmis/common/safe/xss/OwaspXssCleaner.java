@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.xss;
+package com.njydsz.pmis.common.safe.xss;
 
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;

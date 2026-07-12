@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.config;
+package com.njydsz.pmis.common.file.config;
 
 import com.njydsz.pmis.common.file.storage.StorageType;
 import jakarta.validation.constraints.Max;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.annotation;
+package com.njydsz.pmis.common.safe.annotation;
 
 import com.njydsz.pmis.common.safe.config.SafeConfiguration;
 import org.springframework.context.annotation.Import;

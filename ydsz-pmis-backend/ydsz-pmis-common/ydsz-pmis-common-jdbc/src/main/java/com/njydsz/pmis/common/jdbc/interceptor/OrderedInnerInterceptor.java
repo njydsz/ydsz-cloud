@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.interceptor;
+package com.njydsz.pmis.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import org.apache.ibatis.executor.Executor;

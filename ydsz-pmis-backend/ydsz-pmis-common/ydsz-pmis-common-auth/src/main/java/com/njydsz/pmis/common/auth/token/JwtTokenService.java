@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.token;
+package com.njydsz.pmis.common.auth.token;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.service.TokenBlacklistService;

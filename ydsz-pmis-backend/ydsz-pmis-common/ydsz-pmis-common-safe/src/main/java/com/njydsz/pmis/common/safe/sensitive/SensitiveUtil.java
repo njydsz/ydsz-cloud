@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.sensitive;
+package com.njydsz.pmis.common.safe.sensitive;
 
 /**
  * 敏感数据脱敏工具类

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.callback;
+package com.njydsz.pmis.common.file.callback;
 
 /**
  * 文件上传进度回调接口

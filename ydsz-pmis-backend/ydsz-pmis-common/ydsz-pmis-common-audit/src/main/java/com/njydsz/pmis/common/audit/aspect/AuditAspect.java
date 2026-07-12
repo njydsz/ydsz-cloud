@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.aspect;
+package com.njydsz.pmis.common.audit.aspect;
 
 import com.njydsz.pmis.common.audit.annotation.Audit;
 import com.njydsz.pmis.common.audit.config.AuditProperties;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.enums;
+package com.njydsz.pmis.common.core.enums;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.core.constant.TokenConstants;

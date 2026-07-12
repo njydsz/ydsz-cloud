@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.core;
+package com.njydsz.pmis.common.exception.core;
 
 import com.njydsz.pmis.common.exception.enums.ExceptionCode;
 import lombok.Getter;

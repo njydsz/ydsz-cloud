@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.app.auth;
+package com.njydsz.pmis.common.app.auth;
 
 import com.njydsz.pmis.common.base.auth.BaseAuthInfo;
 import com.njydsz.pmis.common.core.enums.ServiceType;

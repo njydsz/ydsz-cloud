@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.annotation;
+package com.njydsz.pmis.common.lock.annotation;
 
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;

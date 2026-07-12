@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.saml;
+package com.njydsz.pmis.common.util.saml;
 
 import com.njydsz.pmis.common.util.security.Base64Utils;
 import com.njydsz.pmis.common.util.string.StringUtils;

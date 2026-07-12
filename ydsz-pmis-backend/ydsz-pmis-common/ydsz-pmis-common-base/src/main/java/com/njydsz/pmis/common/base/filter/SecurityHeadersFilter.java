@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.filter;
+package com.njydsz.pmis.common.base.filter;
 
 import com.njydsz.pmis.common.base.config.BaseSecurityHeadersProperties;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;

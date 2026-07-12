@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.service;
+package com.njydsz.pmis.common.queue.service;
 
 import com.njydsz.pmis.common.exception.custom.InfrastructureException;
 import com.njydsz.pmis.common.queue.domain.QueueMessage;

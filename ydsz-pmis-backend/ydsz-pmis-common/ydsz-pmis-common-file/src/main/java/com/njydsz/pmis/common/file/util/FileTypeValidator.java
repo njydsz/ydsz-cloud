@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.util;
+package com.njydsz.pmis.common.file.util;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;

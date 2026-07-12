@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.tree;
+package com.njydsz.pmis.common.domain.tree;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;

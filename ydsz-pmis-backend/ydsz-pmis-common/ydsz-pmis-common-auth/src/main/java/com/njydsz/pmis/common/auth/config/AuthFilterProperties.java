@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.config;
+package com.njydsz.pmis.common.auth.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

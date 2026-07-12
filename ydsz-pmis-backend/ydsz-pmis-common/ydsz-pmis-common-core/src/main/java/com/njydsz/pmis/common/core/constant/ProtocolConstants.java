@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.constant;
+package com.njydsz.pmis.common.core.constant;
 
 /**
  * 协议常量

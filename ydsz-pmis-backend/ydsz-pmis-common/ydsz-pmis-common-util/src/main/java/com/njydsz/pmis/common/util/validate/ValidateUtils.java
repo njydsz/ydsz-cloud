@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.validate;
+package com.njydsz.pmis.common.util.validate;
 
 import java.util.*;
 import java.util.regex.Pattern;

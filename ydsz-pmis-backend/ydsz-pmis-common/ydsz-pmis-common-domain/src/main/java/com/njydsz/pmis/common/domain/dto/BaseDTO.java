@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.dto;
+package com.njydsz.pmis.common.domain.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.object;
+package com.njydsz.pmis.common.util.object;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 

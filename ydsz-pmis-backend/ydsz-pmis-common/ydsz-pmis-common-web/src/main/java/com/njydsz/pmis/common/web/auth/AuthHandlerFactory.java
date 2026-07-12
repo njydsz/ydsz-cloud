@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.auth;
+package com.njydsz.pmis.common.web.auth;
 
 import com.njydsz.pmis.common.core.enums.ServiceType;
 import com.njydsz.pmis.common.auth.handler.AuthHandler;

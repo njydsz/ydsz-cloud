@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.aspect;
+package com.njydsz.pmis.common.feign.aspect;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.core.enums.DataScopeType;

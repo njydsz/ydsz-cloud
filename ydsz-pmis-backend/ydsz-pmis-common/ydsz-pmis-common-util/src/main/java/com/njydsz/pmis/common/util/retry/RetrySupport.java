@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.retry;
+package com.njydsz.pmis.common.util.retry;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;

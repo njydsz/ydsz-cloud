@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.cache;
+package com.njydsz.pmis.common.auth.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

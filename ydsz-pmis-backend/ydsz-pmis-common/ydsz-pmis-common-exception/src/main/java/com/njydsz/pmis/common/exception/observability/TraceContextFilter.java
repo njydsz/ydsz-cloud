@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.observability;
+package com.njydsz.pmis.common.exception.observability;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

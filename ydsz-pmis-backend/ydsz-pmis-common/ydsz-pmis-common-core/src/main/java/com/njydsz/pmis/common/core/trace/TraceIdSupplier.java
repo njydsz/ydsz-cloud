@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.trace;
+package com.njydsz.pmis.common.core.trace;
 
 /**
  * TraceId 供应器

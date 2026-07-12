@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.alert;
+package com.njydsz.pmis.common.safe.alert;
 
 import java.io.Serializable;
 import java.time.Instant;

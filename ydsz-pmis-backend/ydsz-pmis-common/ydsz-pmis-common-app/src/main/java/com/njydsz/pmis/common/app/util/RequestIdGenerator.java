@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.app.util;
+package com.njydsz.pmis.common.app.util;
 
 import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 

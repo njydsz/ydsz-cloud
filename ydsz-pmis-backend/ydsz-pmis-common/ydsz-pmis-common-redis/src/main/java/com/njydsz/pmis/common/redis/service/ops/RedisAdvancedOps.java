@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.service.ops;
+package com.njydsz.pmis.common.redis.service.ops;
 
 import com.njydsz.pmis.common.redis.config.RedisProperties;
 import lombok.extern.slf4j.Slf4j;

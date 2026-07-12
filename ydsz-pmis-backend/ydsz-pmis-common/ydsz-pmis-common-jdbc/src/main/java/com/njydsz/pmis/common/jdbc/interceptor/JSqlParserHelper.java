@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.interceptor;
+package com.njydsz.pmis.common.jdbc.interceptor;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.config;
+package com.njydsz.pmis.common.jdbc.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.annotation.TableName;

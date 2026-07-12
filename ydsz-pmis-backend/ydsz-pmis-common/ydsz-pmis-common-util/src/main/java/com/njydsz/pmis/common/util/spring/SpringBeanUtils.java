@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.spring;
+package com.njydsz.pmis.common.util.spring;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;

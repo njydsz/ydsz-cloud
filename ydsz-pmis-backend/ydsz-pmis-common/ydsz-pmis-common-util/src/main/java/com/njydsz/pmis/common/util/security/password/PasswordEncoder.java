@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.security.password;
+package com.njydsz.pmis.common.util.security.password;
 
 /**
  * 密码编码器抽象 SPI

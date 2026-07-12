@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.xss;
+package com.njydsz.pmis.common.safe.xss;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.circuitbreaker;
+package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;

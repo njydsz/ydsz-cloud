@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.csrf;
+package com.njydsz.pmis.common.safe.csrf;
 
 import java.time.Instant;
 

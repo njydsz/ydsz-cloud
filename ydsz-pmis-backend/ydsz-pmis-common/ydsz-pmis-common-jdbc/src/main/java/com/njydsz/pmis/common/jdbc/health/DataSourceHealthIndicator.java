@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.health;
+package com.njydsz.pmis.common.jdbc.health;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.boot.health.contributor.Health;

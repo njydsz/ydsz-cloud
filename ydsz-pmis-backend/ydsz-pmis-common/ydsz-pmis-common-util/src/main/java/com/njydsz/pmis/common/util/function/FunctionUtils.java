@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.function;
+package com.njydsz.pmis.common.util.function;
 
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 

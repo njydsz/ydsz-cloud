@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.xss;
+package com.njydsz.pmis.common.safe.xss;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

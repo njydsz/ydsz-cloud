@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.response;
+package com.njydsz.pmis.common.core.response;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;

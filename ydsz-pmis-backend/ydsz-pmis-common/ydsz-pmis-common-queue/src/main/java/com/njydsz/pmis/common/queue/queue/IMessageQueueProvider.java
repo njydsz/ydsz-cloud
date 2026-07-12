@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.queue;
+package com.njydsz.pmis.common.queue.queue;
 
 import com.njydsz.pmis.common.queue.enums.QueueType;
 

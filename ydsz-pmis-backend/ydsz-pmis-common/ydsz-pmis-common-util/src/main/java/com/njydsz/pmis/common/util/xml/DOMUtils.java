@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.xml;
+package com.njydsz.pmis.common.util.xml;
 
 import com.njydsz.pmis.common.util.collection.MapUtils;
 import com.njydsz.pmis.common.util.json.JsonUtils;

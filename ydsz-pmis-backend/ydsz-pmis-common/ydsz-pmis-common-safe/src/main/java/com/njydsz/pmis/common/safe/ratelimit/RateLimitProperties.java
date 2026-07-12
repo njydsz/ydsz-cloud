@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.ratelimit;
+package com.njydsz.pmis.common.safe.ratelimit;
 
 import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;

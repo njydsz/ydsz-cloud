@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.id;
+package com.njydsz.pmis.common.util.id;
 
 /**
  * WorkerId 注册中心 SPI

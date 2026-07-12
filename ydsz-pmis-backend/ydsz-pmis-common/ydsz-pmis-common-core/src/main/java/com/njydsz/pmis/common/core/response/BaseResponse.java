@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.response;
+package com.njydsz.pmis.common.core.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.interceptor;
+package com.njydsz.pmis.common.base.interceptor;
 
 import com.njydsz.pmis.common.base.config.BaseTraceProperties;
 import com.njydsz.pmis.common.util.string.StringUtils;

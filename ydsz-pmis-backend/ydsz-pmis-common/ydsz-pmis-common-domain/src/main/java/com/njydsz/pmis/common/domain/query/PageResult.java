@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.query;
+package com.njydsz.pmis.common.domain.query;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

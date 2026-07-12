@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.enums;
+package com.njydsz.pmis.common.audit.enums;
 
 /**
  * 审计操作行为枚举

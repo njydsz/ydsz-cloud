@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.captcha.store;
+package com.njydsz.pmis.common.safe.captcha.store;
 
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
 import org.springframework.data.redis.core.StringRedisTemplate;

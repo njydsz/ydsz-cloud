@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.desensitize;
+package com.njydsz.pmis.common.safe.desensitize;
 
 import lombok.Getter;
 

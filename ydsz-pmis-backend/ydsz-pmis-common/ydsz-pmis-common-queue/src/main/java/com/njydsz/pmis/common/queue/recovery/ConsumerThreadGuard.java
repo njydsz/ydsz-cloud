@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.recovery;
+package com.njydsz.pmis.common.queue.recovery;
 
 import lombok.extern.slf4j.Slf4j;
 

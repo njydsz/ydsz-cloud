@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.alert;
+package com.njydsz.pmis.common.safe.alert;
 
 /**
  * 安全事件告警监听器 SPI 接口

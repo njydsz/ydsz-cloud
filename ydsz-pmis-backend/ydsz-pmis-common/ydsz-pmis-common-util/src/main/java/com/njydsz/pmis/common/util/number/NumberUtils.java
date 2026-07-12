@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.number;
+package com.njydsz.pmis.common.util.number;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

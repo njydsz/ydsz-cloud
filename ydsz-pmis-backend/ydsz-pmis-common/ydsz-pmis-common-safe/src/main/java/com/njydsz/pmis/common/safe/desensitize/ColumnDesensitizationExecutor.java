@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.desensitize;
+package com.njydsz.pmis.common.safe.desensitize;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;

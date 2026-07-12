@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.event;
+package com.njydsz.pmis.common.auth.event;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 import lombok.RequiredArgsConstructor;

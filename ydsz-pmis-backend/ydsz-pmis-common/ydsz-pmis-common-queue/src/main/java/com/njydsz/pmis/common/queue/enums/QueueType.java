@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.enums;
+package com.njydsz.pmis.common.queue.enums;
 
 /**
  * 消息队列类型枚举

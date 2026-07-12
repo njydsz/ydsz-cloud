@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.strategy;
+package com.njydsz.pmis.common.auth.strategy;
 
 /**
  * 缓存 Key 生成策略接口。

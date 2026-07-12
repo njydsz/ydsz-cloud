@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.exception;
+package com.njydsz.pmis.common.jdbc.exception;
 
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.custom.RemiSecurityException;

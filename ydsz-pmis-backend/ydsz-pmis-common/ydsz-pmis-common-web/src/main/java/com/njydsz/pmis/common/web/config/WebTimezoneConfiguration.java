@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.config;
+package com.njydsz.pmis.common.web.config;
 
 import com.njydsz.pmis.common.base.config.BaseTimezoneConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

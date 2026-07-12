@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.security;
+package com.njydsz.pmis.common.util.security;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

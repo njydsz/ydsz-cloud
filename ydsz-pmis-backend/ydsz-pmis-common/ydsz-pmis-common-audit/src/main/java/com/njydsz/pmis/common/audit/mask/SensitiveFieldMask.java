@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.mask;
+package com.njydsz.pmis.common.audit.mask;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

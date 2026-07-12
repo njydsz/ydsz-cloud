@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.enums;
+package com.njydsz.pmis.common.redis.enums;
 
 /**
  * 限流器故障处理策略枚举

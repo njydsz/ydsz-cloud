@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.enums;
+package com.njydsz.pmis.common.redis.enums;
 
 /**
  * Redis 操作异常

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.query;
+package com.njydsz.pmis.common.domain.query;
 
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import lombok.Builder;

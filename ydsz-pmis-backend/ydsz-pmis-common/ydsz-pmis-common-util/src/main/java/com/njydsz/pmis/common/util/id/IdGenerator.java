@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.id;
+package com.njydsz.pmis.common.util.id;
 
 /**
  * 分布式 ID 生成器抽象 SPI

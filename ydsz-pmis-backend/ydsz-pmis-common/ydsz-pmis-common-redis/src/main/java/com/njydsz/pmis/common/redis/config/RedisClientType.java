@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.config;
+package com.njydsz.pmis.common.redis.config;
 
 /**
  * Redis 客户端类型枚举

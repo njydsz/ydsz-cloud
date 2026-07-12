@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.config;
+package com.njydsz.pmis.common.web.config;
 
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

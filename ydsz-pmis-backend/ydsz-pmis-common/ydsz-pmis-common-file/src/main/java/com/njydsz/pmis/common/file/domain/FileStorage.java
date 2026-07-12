@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.domain;
+package com.njydsz.pmis.common.file.domain;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.constant.FileConstant;

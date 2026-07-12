@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.interceptor;
+package com.njydsz.pmis.common.redis.interceptor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInterceptor;

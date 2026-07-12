@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.annotation;
+package com.njydsz.pmis.common.audit.annotation;
 
 import com.njydsz.pmis.common.audit.enums.AuditAction;
 import com.njydsz.pmis.common.audit.enums.AuditType;

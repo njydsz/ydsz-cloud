@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.domain;
+package com.njydsz.pmis.common.file.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

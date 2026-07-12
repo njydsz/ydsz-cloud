@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.config;
+package com.njydsz.pmis.common.web.config;
 
 import com.njydsz.pmis.common.base.config.BaseI18nConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

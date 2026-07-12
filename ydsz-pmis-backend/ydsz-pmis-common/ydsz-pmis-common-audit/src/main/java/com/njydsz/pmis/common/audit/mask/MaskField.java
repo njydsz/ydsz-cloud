@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.mask;
+package com.njydsz.pmis.common.audit.mask;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.storage.platform;
+package com.njydsz.pmis.common.file.storage.platform;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.config.FileProperties;

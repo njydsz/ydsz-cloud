@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.security;
+package com.njydsz.pmis.common.util.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

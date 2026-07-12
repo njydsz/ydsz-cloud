@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.domain;
+package com.njydsz.pmis.common.jdbc.domain;
 
 import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;
 import lombok.Data;

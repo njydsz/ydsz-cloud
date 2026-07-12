@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.filter;
+package com.njydsz.pmis.common.safe.filter;
 
 import com.njydsz.pmis.common.safe.alert.SecurityEvent;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;

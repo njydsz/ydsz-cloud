@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.bytes;
+package com.njydsz.pmis.common.util.bytes;
 
 /**
  * 十六进制编码/解码工具类（纯 JDK 实现，零第三方依赖）

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.util;
+package com.njydsz.pmis.common.auth.util;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 import org.slf4j.Logger;

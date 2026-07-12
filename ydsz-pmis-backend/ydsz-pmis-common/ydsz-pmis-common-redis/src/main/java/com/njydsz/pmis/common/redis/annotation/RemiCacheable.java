@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.annotation;
+package com.njydsz.pmis.common.redis.annotation;
 
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;

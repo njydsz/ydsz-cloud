@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.storage;
+package com.njydsz.pmis.common.file.storage;
 
 /**
  * 文件存储提供者接口

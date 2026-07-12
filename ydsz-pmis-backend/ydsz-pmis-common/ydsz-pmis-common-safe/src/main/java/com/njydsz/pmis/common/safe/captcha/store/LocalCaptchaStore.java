@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.captcha.store;
+package com.njydsz.pmis.common.safe.captcha.store;
 
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;

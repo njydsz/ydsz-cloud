@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.captcha.enums;
+package com.njydsz.pmis.common.safe.captcha.enums;
 
 /**
  * 验证码类型枚举

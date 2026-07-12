@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.enums;
+package com.njydsz.pmis.common.core.enums;
 
 import java.util.Arrays;
 import java.util.Collections;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.circuitbreaker;
+package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;

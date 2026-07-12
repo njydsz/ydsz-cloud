@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.file;
+package com.njydsz.pmis.common.util.file;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 import org.springframework.web.multipart.MultipartFile;

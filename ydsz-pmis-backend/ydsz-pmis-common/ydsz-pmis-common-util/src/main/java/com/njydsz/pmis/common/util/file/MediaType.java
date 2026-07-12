@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.file;
+package com.njydsz.pmis.common.util.file;
 
 import java.util.Collections;
 import java.util.HashMap;

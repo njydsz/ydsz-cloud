@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.enums;
+package com.njydsz.pmis.common.redis.enums;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 

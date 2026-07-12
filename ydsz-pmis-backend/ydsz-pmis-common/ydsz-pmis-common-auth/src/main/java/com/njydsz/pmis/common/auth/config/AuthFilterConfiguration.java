@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.config;
+package com.njydsz.pmis.common.auth.config;
 
 import com.njydsz.pmis.common.core.constant.FilterIgnoreConstant;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;

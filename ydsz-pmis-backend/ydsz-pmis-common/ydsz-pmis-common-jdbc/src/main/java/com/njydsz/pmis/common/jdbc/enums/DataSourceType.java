@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.enums;
+package com.njydsz.pmis.common.jdbc.enums;
 
 /**
  * 数据源类型枚举，区分主从数据库

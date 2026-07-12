@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.enums;
+package com.njydsz.pmis.common.redis.enums;
 
 /**
  * Redis 故障处理策略统一接口

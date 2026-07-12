@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.event;
+package com.njydsz.pmis.common.auth.event;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.njydsz.pmis.common.util.json.JsonUtils;

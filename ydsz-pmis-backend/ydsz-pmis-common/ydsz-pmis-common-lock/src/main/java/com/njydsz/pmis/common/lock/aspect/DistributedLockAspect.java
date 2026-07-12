@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.aspect;
+package com.njydsz.pmis.common.lock.aspect;
 
 import com.njydsz.pmis.common.lock.annotation.RemiLock;
 import com.njydsz.pmis.common.lock.annotation.LockType;

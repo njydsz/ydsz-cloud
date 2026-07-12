@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.config;
+package com.njydsz.pmis.common.auth.config;
 
 import com.njydsz.pmis.common.auth.cache.LocalPermissionCache;
 import com.njydsz.pmis.common.auth.aspect.AuthPermissionAspect;

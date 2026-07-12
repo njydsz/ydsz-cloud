@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.entity;
+package com.njydsz.pmis.common.jdbc.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.baomidou.mybatisplus.annotation.FieldFill;

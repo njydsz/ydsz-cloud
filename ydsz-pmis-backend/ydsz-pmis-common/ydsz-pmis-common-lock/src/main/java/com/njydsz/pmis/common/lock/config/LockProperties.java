@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.config;
+package com.njydsz.pmis.common.lock.config;
 
 import jakarta.validation.constraints.Min;
 import lombok.Data;

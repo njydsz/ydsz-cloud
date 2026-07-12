@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.aspect;
+package com.njydsz.pmis.common.feign.aspect;
 
 import com.njydsz.pmis.common.feign.config.FeignProperties;
 import com.njydsz.pmis.common.feign.exception.BadRequestException;

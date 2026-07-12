@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.captcha.exception;
+package com.njydsz.pmis.common.safe.captcha.exception;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.enums.ExceptionLevel;

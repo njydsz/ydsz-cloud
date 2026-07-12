@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.monitor;
+package com.njydsz.pmis.common.feign.monitor;
 
 import com.njydsz.pmis.common.feign.interceptor.FeignResponseInterceptor;
 import io.micrometer.core.instrument.MeterRegistry;

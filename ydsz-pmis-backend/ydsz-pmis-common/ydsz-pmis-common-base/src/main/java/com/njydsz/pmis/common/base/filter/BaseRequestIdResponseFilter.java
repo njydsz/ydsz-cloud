@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.filter;
+package com.njydsz.pmis.common.base.filter;
 
 import com.njydsz.pmis.common.base.config.BaseTraceProperties;
 import com.njydsz.pmis.common.core.constant.HeaderConstants;

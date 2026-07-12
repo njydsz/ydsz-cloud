@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.exception;
+package com.njydsz.pmis.common.auth.exception;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.custom.BusinessException;

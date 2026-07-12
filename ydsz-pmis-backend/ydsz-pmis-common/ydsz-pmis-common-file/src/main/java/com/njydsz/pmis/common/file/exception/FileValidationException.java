@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.exception;
+package com.njydsz.pmis.common.file.exception;
 
 /**
  * 文件校验异常。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.filter;
+package com.njydsz.pmis.common.safe.filter;
 
 import com.njydsz.pmis.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;

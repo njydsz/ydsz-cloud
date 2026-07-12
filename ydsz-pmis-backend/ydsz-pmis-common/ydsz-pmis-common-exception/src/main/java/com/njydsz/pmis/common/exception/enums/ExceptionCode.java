@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.enums;
+package com.njydsz.pmis.common.exception.enums;
 
 /**
  * 异常码接口

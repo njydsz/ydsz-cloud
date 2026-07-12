@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.handler;
+package com.njydsz.pmis.common.jdbc.handler;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import org.apache.ibatis.type.BaseTypeHandler;

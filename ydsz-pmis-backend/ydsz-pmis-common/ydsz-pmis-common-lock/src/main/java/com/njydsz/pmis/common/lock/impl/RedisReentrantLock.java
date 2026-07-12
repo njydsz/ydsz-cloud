@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.impl;
+package com.njydsz.pmis.common.lock.impl;
 
 import com.njydsz.pmis.common.lock.core.AbstractRedisDistributedLock;
 import lombok.extern.slf4j.Slf4j;

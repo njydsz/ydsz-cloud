@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.app.interceptor;
+package com.njydsz.pmis.common.app.interceptor;
 
 import com.njydsz.pmis.common.app.config.AppTraceProperties;
 import com.njydsz.pmis.common.app.util.RequestIdGenerator;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.entity;
+package com.njydsz.pmis.common.domain.entity;
 
 import java.time.LocalDateTime;
 

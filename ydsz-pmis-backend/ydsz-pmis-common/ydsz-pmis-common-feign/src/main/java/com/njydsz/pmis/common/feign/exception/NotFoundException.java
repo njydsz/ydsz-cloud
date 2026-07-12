@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.exception;
+package com.njydsz.pmis.common.feign.exception;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

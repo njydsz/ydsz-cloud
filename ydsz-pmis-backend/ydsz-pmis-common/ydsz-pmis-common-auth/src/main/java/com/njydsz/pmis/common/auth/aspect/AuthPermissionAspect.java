@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.aspect;
+package com.njydsz.pmis.common.auth.aspect;
 
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.auth.annotation.AuthMenuPermission;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.doc.exporter;
+package com.njydsz.pmis.common.doc.exporter;
 
 import com.njydsz.pmis.common.doc.config.DocProperties;
 import org.junit.jupiter.api.BeforeEach;

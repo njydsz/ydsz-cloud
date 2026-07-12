@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.classloader;
+package com.njydsz.pmis.common.util.classloader;
 
 import java.io.File;
 import java.io.IOException;

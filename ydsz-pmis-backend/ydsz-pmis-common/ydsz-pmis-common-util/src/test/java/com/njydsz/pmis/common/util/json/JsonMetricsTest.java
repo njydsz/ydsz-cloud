@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.json;
+package com.njydsz.pmis.common.util.json;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;

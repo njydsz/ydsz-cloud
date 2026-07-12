@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.config;
+package com.njydsz.pmis.common.audit.config;
 
 import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;

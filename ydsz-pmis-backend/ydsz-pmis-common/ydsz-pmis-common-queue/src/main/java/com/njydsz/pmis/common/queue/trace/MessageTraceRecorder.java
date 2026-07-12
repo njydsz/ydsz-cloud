@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.trace;
+package com.njydsz.pmis.common.queue.trace;
 
 import java.util.List;
 

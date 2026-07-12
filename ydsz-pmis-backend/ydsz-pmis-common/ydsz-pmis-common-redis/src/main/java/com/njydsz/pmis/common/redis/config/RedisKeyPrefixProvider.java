@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.config;
+package com.njydsz.pmis.common.redis.config;
 
 /**
  * Redis Key 前缀提供者接口

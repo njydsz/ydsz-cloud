@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.config;
+package com.njydsz.pmis.common.jdbc.config;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;

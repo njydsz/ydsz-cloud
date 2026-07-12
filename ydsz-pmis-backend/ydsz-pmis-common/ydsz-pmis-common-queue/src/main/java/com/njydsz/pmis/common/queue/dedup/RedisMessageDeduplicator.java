@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.dedup;
+package com.njydsz.pmis.common.queue.dedup;
 
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
 

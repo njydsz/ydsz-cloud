@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.interceptor;
+package com.njydsz.pmis.common.jdbc.interceptor;
 
 import com.njydsz.pmis.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;

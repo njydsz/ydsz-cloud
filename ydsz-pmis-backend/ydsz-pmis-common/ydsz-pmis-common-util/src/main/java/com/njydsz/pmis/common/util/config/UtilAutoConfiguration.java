@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.config;
+package com.njydsz.pmis.common.util.config;
 
 import com.njydsz.pmis.common.util.http.OkHttpProperties;
 import com.njydsz.pmis.common.util.http.OkHttpUtils;

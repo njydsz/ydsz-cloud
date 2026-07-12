@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.metrics;
+package com.njydsz.pmis.common.lock.metrics;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.exception;
+package com.njydsz.pmis.common.audit.exception;
 
 /**
  * 审计模块统一异常

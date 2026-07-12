@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "name": "com.njydsz.pmis.common.redis.serializer.JacksonRedisSerializer",
     "allDeclaredConstructors": true,

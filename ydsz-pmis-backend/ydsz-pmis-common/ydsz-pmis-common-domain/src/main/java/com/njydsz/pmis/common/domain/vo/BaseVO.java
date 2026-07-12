@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.vo;
+package com.njydsz.pmis.common.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

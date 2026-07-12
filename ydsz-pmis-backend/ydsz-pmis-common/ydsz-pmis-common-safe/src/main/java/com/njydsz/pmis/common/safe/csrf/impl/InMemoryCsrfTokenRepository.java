@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.csrf.impl;
+package com.njydsz.pmis.common.safe.csrf.impl;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

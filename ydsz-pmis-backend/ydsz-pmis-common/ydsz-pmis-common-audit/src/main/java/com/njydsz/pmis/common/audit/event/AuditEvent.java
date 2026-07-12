@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.event;
+package com.njydsz.pmis.common.audit.event;
 
 import com.njydsz.pmis.common.audit.domain.AuditLog;
 import org.springframework.context.ApplicationEvent;

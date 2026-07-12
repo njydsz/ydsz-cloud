@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.health;
+package com.njydsz.pmis.common.lock.health;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;

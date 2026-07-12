@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.tree;
+package com.njydsz.pmis.common.domain.tree;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

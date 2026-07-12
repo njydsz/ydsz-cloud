@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.hash;
+package com.njydsz.pmis.common.util.hash;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;

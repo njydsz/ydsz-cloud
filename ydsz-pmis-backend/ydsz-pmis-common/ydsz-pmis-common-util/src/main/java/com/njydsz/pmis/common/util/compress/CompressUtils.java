@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.compress;
+package com.njydsz.pmis.common.util.compress;
 
 import java.util.ArrayList;
 import java.util.List;

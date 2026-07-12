@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.bytes;
+package com.njydsz.pmis.common.util.bytes;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

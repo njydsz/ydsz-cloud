@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.core;
+package com.njydsz.pmis.common.notify.core;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;

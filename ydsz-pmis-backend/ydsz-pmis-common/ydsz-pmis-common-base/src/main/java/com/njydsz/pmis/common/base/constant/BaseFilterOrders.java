@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.constant;
+package com.njydsz.pmis.common.base.constant;
 
 /**
  * Base 模块横切点执行顺序常量

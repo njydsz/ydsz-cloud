@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.asserts;
+package com.njydsz.pmis.common.util.asserts;
 
 import com.njydsz.pmis.common.util.collection.CollectionUtils;
 import com.njydsz.pmis.common.util.object.ObjectUtils;

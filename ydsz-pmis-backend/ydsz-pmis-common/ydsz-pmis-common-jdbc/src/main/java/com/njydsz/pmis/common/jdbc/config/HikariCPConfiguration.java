@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.config;
+package com.njydsz.pmis.common.jdbc.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.code;
+package com.njydsz.pmis.common.util.code;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

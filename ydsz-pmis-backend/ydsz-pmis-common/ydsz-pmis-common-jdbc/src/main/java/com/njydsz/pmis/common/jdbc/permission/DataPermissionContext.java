@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.permission;
+package com.njydsz.pmis.common.jdbc.permission;
 
 /**
  * 数据权限上下文。

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.config;
+package com.njydsz.pmis.common.exception.config;
 
 import com.njydsz.pmis.common.exception.observability.TraceContextFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

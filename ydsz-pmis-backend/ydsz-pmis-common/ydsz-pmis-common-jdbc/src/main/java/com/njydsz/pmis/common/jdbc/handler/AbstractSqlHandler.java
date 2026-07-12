@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.handler;
+package com.njydsz.pmis.common.jdbc.handler;
 
 import com.njydsz.pmis.common.jdbc.domain.InterceptConfig;
 import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.precheck;
+package com.njydsz.pmis.common.auth.precheck;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.RolePermissions;

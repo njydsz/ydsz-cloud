@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.ip;
+package com.njydsz.pmis.common.util.ip;
 
 /**
  * MAC 地址获取工具类

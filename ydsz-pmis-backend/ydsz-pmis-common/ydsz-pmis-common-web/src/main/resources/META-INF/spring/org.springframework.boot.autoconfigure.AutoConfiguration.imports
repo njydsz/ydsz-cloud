@@ -1,4 +1,4 @@
-﻿com.njydsz.pmis.common.web.config.WebMvcConfiguration
+com.njydsz.pmis.common.web.config.WebMvcConfiguration
 com.njydsz.pmis.common.web.config.UserAgentConfiguration
 com.njydsz.pmis.common.web.config.WebSecurityConfiguration
 com.njydsz.pmis.common.web.config.WebOpenApiConfiguration

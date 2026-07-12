@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.bean;
+package com.njydsz.pmis.common.util.bean;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

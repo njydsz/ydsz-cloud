@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.desensitize;
+package com.njydsz.pmis.common.auth.desensitize;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.UserInfo;

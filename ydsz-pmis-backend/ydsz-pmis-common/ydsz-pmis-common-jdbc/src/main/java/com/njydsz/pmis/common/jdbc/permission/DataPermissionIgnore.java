@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.permission;
+package com.njydsz.pmis.common.jdbc.permission;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

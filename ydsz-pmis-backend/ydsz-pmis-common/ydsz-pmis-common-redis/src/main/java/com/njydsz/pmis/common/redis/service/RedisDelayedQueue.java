@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.service;
+package com.njydsz.pmis.common.redis.service;
 
 import com.njydsz.pmis.common.redis.config.RedisProperties;
 import com.njydsz.pmis.common.redis.metrics.RedisMetricsCollector;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.config;
+package com.njydsz.pmis.common.exception.config;
 
 import com.njydsz.pmis.common.exception.handler.JdbcExceptionHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

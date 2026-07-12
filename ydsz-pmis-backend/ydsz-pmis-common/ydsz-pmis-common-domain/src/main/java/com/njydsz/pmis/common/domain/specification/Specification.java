@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.specification;
+package com.njydsz.pmis.common.domain.specification;
 
 /**
  * 规约模式接口

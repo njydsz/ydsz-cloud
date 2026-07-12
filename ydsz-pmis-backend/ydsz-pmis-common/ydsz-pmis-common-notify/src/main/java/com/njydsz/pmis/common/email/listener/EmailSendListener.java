@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.email.listener;
+package com.njydsz.pmis.common.email.listener;
 
 import com.njydsz.pmis.common.email.domain.Email;
 import com.njydsz.pmis.common.email.domain.SendResult;

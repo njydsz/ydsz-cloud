@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.service;
+package com.njydsz.pmis.common.redis.service;
 
 import java.io.Serializable;
 import java.util.Objects;

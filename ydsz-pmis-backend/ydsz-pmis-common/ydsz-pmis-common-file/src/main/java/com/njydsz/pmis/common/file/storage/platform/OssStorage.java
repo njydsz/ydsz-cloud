@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.storage.platform;
+package com.njydsz.pmis.common.file.storage.platform;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;

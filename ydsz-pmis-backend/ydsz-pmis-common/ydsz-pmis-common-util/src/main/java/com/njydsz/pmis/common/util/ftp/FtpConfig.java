@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.ftp;
+package com.njydsz.pmis.common.util.ftp;
 
 import lombok.Builder;
 import lombok.Getter;

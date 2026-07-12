@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.valueobject;
+package com.njydsz.pmis.common.domain.valueobject;
 
 import java.io.Serializable;
 import java.util.Arrays;

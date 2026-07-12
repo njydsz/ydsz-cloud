@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.string;
+package com.njydsz.pmis.common.util.string;
 
 import java.text.DecimalFormat;
 import java.time.LocalDate;

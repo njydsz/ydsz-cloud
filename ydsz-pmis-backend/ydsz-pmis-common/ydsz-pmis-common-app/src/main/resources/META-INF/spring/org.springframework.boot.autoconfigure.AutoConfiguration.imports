@@ -1,4 +1,4 @@
-﻿com.njydsz.pmis.common.app.config.AppMvcConfiguration
+com.njydsz.pmis.common.app.config.AppMvcConfiguration
 com.njydsz.pmis.common.app.config.AppTimezoneConfiguration
 com.njydsz.pmis.common.app.config.AppI18nConfiguration
 com.njydsz.pmis.common.app.config.AppOpenApiConfiguration

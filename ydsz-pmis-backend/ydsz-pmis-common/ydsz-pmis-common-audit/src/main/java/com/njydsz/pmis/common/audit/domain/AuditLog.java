@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.domain;
+package com.njydsz.pmis.common.audit.domain;
 
 import lombok.Data;
 

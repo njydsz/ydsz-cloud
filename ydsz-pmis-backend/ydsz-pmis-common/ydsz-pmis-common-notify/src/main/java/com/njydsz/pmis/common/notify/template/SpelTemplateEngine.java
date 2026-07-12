@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.template;
+package com.njydsz.pmis.common.notify.template;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

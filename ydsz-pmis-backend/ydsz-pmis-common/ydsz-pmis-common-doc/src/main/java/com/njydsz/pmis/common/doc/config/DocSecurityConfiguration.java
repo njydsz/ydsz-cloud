@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.doc.config;
+package com.njydsz.pmis.common.doc.config;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

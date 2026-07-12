@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.json;
+package com.njydsz.pmis.common.util.json;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

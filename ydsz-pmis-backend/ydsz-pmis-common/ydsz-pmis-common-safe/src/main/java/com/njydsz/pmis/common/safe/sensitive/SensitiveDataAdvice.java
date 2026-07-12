@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.sensitive;
+package com.njydsz.pmis.common.safe.sensitive;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

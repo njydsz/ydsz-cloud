@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.service.impl;
+package com.njydsz.pmis.common.queue.service.impl;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import com.njydsz.pmis.common.queue.domain.QueueMessage;

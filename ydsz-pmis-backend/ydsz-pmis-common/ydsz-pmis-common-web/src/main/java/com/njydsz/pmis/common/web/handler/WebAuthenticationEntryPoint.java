@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.handler;
+package com.njydsz.pmis.common.web.handler;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.core.response.BaseResponse;

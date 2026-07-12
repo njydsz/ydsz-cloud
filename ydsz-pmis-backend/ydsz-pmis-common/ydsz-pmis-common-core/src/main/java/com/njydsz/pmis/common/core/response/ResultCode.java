@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.response;
+package com.njydsz.pmis.common.core.response;
 
 /**
  * 统一结果码接口

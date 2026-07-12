@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.security;
+package com.njydsz.pmis.common.util.security;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;

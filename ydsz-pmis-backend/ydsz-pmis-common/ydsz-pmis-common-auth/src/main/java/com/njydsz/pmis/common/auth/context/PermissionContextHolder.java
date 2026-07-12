@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.context;
+package com.njydsz.pmis.common.auth.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.merge;
+package com.njydsz.pmis.common.util.merge;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

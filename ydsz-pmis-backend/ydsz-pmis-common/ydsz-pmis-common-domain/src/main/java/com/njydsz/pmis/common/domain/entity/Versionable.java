@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.entity;
+package com.njydsz.pmis.common.domain.entity;
 
 /**
  * 乐观锁版本号接口

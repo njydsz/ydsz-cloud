@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.security.password;
+package com.njydsz.pmis.common.util.security.password;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.handler;
+package com.njydsz.pmis.common.exception.handler;
 
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

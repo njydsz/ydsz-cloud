@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.entity;
+package com.njydsz.pmis.common.domain.entity;
 
 import com.njydsz.pmis.common.domain.annotation.*;
 import org.springframework.util.ReflectionUtils;

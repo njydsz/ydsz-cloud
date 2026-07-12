@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.domain;
+package com.njydsz.pmis.common.queue.domain;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.id.TracerUtils;

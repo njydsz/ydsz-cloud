@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.trace;
+package com.njydsz.pmis.common.core.trace;
 
 import java.util.UUID;
 

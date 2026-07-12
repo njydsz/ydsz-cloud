@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.storage.platform;
+package com.njydsz.pmis.common.file.storage.platform;
 
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Client;

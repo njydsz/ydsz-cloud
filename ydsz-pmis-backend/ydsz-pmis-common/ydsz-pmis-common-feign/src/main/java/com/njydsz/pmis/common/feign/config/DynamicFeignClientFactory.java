@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.config;
+package com.njydsz.pmis.common.feign.config;
 
 import feign.Feign;
 import feign.Retryer;

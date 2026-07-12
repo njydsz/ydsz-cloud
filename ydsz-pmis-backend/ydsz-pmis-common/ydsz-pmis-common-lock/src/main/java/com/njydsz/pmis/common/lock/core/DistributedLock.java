@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.core;
+package com.njydsz.pmis.common.lock.core;
 
 import java.util.concurrent.TimeUnit;
 

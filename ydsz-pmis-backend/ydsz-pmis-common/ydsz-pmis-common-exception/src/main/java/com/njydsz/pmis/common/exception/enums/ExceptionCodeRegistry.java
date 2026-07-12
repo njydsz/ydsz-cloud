@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.enums;
+package com.njydsz.pmis.common.exception.enums;
 
 import java.util.Collections;
 import java.util.Map;

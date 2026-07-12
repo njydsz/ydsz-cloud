@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.interceptor;
+package com.njydsz.pmis.common.feign.interceptor;
 
 import feign.Response;
 import lombok.extern.slf4j.Slf4j;

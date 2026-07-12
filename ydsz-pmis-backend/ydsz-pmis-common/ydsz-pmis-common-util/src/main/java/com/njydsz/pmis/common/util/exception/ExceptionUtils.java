@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.exception;
+package com.njydsz.pmis.common.util.exception;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

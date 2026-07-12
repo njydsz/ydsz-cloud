@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.captcha.core;
+package com.njydsz.pmis.common.safe.captcha.core;
 
 /**
  * 验证码生成器接口

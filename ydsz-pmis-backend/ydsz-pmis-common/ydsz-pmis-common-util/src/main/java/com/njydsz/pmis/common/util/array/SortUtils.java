@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.array;
+package com.njydsz.pmis.common.util.array;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;

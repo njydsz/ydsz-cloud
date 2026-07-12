@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.exception;
+package com.njydsz.pmis.common.notify.exception;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;

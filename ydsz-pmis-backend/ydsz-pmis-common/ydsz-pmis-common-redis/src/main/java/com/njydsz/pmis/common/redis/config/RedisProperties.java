@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.config;
+package com.njydsz.pmis.common.redis.config;
 
 import jakarta.validation.constraints.Min;
 import lombok.Data;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.sensitive;
+package com.njydsz.pmis.common.safe.sensitive;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;

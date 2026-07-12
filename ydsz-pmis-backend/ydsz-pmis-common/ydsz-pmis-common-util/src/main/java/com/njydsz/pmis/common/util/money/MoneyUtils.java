@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.money;
+package com.njydsz.pmis.common.util.money;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

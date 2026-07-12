@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.metrics;
+package com.njydsz.pmis.common.lock.metrics;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;

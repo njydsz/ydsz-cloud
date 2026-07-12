@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.serializer;
+package com.njydsz.pmis.common.redis.serializer;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import org.springframework.data.redis.serializer.RedisSerializer;

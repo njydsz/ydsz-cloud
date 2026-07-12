@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service.impl;
+package com.njydsz.pmis.common.auth.service.impl;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;

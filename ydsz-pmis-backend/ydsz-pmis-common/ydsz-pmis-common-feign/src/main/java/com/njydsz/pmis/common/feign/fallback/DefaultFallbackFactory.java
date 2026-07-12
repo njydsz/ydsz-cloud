@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.fallback;
+package com.njydsz.pmis.common.feign.fallback;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.util.id.TracerUtils;

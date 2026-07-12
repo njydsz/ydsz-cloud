@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.enums;
+package com.njydsz.pmis.common.core.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

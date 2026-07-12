@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.exception;
+package com.njydsz.pmis.common.lock.exception;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;

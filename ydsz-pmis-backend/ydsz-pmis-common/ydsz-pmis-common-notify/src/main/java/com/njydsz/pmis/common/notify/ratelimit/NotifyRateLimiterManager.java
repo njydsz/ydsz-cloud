@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.ratelimit;
+package com.njydsz.pmis.common.notify.ratelimit;
 
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;

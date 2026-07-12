@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.dedup;
+package com.njydsz.pmis.common.queue.dedup;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;

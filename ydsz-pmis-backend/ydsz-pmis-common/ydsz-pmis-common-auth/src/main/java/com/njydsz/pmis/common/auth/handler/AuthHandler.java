@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.handler;
+package com.njydsz.pmis.common.auth.handler;
 
 import com.njydsz.pmis.common.util.auth.AuthInfo;
 

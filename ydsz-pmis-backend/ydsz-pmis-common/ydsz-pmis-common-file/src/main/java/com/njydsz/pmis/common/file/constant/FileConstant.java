@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.constant;
+package com.njydsz.pmis.common.file.constant;
 
 /**
  * 全局公共常量

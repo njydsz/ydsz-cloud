@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.system;
+package com.njydsz.pmis.common.util.system;
 
 import java.io.File;
 import java.util.Properties;

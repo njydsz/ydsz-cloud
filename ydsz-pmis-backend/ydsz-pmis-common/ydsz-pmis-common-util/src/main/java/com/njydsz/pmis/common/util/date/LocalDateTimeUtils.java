@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.date;
+package com.njydsz.pmis.common.util.date;
 
 import java.time.DayOfWeek;
 import java.time.Instant;

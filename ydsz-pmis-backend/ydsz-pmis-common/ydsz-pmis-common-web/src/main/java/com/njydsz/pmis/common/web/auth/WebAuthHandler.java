@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.auth;
+package com.njydsz.pmis.common.web.auth;
 
 import com.njydsz.pmis.common.auth.handler.AbstractAuthHandler;
 import com.njydsz.pmis.common.util.auth.RemiAuthInfo;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.strategy;
+package com.njydsz.pmis.common.auth.strategy;
 
 import java.util.Set;
 import java.util.TreeSet;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.ip;
+package com.njydsz.pmis.common.util.ip;
 
 /**
  * IP 信息查询工具类

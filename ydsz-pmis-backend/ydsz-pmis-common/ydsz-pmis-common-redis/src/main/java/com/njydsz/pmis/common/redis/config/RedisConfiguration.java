@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.config;
+package com.njydsz.pmis.common.redis.config;
 
 import com.njydsz.pmis.common.redis.annotation.RemiCacheableAspect;
 import com.njydsz.pmis.common.redis.health.RedisHealthIndicator;

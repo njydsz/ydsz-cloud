@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.template;
+package com.njydsz.pmis.common.notify.template;
 
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 

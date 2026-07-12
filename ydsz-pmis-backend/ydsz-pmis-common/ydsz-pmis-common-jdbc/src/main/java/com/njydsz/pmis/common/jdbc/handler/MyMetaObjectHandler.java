@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.handler;
+package com.njydsz.pmis.common.jdbc.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.njydsz.pmis.common.util.auth.AuthInfoUtils;

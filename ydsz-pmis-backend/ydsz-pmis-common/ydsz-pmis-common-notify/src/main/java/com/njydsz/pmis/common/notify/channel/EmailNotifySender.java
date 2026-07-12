@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.channel;
+package com.njydsz.pmis.common.notify.channel;
 
 import com.njydsz.pmis.common.email.domain.Email;
 import com.njydsz.pmis.common.email.domain.SendResult;

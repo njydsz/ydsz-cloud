@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.config;
+package com.njydsz.pmis.common.base.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.MessageSource;

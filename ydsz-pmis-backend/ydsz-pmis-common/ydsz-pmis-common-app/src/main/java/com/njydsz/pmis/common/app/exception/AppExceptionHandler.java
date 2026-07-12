@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.app.exception;
+package com.njydsz.pmis.common.app.exception;
 
 import com.njydsz.pmis.common.exception.handler.BaseExceptionHandler;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.core;
+package com.njydsz.pmis.common.safe.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

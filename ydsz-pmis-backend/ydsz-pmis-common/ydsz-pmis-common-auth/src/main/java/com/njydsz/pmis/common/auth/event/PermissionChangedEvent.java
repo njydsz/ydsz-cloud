@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.event;
+package com.njydsz.pmis.common.auth.event;
 
 import java.io.Serializable;
 import java.util.Set;

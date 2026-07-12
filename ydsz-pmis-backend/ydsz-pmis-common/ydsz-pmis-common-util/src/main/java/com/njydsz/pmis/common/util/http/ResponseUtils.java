@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.http;
+package com.njydsz.pmis.common.util.http;
 
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;

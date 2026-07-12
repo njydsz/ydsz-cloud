@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.retry;
+package com.njydsz.pmis.common.queue.retry;
 
 /**
  * 统一重试策略接口

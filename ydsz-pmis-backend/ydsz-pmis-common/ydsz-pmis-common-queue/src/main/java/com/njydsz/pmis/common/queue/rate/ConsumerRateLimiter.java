@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.rate;
+package com.njydsz.pmis.common.queue.rate;
 
 import lombok.extern.slf4j.Slf4j;
 

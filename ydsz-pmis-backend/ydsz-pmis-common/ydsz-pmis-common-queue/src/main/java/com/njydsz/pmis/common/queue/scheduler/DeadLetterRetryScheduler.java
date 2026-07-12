@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.scheduler;
+package com.njydsz.pmis.common.queue.scheduler;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import com.njydsz.pmis.common.queue.service.DeadLetterQueueService;

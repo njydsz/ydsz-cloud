@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.annotation;
+package com.njydsz.pmis.common.lock.annotation;
 
 /**
  * 锁类型枚举
