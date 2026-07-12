@@ -1,7 +1,7 @@
-package com.njydsz.pmis.common.web.auth;
+﻿package com.njydsz.pmis.common.web.auth;
 
 import com.njydsz.pmis.common.auth.handler.AbstractAuthHandler;
-import com.njydsz.pmis.common.util.auth.RemiAuthInfo;
+import com.njydsz.pmis.common.util.auth.YdszAuthInfo;
 import org.springframework.stereotype.Component;
 
 /**
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 public class WebAuthHandler extends AbstractAuthHandler {
 
     @Override
-    protected RemiAuthInfo createAuthInfo() {
+    protected YdszAuthInfo createAuthInfo() {
         return new WebAuthInfo();
     }
 }

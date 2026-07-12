@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.exception.metrics;
+﻿package com.njydsz.pmis.common.exception.metrics;
 
-import com.njydsz.pmis.common.exception.custom.AbstractRemiException;
+import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -109,8 +109,8 @@ public class ExceptionMetrics {
 			String category = "UNKNOWN";
 			String code = "N/A";
 
-			if (throwable instanceof AbstractRemiException) {
-				AbstractRemiException ex = (AbstractRemiException) throwable;
+			if (throwable instanceof AbstractYdszException) {
+				AbstractYdszException ex = (AbstractYdszException) throwable;
 				if (ex.getLevel() != null) {
 					level = ex.getLevel().name();
 				}
@@ -171,8 +171,8 @@ public class ExceptionMetrics {
 			String category = "UNKNOWN";
 			String code = "N/A";
 
-			if (throwable instanceof AbstractRemiException) {
-				AbstractRemiException ex = (AbstractRemiException) throwable;
+			if (throwable instanceof AbstractYdszException) {
+				AbstractYdszException ex = (AbstractYdszException) throwable;
 				if (ex.getLevel() != null) {
 					level = ex.getLevel().name();
 				}

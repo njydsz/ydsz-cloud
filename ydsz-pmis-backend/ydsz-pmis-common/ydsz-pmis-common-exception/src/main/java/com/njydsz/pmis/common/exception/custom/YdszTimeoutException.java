@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -16,9 +16,9 @@ import lombok.ToString;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * throw new RemiTimeoutException(UnifiedExceptionCode.EXTERNAL_SERVICE_TIMEOUT);
- * throw new RemiTimeoutException("external.service.timeout", new Object[]{serviceName});
- * throw RemiTimeoutException.of(UnifiedExceptionCode.EXTERNAL_SERVICE_TIMEOUT).build();
+ * throw new YdszTimeoutException(UnifiedExceptionCode.EXTERNAL_SERVICE_TIMEOUT);
+ * throw new YdszTimeoutException("external.service.timeout", new Object[]{serviceName});
+ * throw YdszTimeoutException.of(UnifiedExceptionCode.EXTERNAL_SERVICE_TIMEOUT).build();
  * }</pre>
  *
  * @author Marvin Lee
@@ -29,18 +29,18 @@ import lombok.ToString;
  * @see ExceptionCategory#TIMEOUT
  */
 @ToString(callSuper = true)
-public class RemiTimeoutException extends AbstractRemiException {
+public class YdszTimeoutException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
-    public RemiTimeoutException() {
+    public YdszTimeoutException() {
         super();
         this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
         this.level = ExceptionLevel.ERROR;
         this.category = ExceptionCategory.TIMEOUT;
     }
 
-    public RemiTimeoutException(String key) {
+    public YdszTimeoutException(String key) {
         super();
         this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
         this.level = ExceptionLevel.ERROR;
@@ -53,7 +53,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiTimeoutException(ExceptionCode exceptionCode) {
+    public YdszTimeoutException(ExceptionCode exceptionCode) {
         super();
         this.httpStatus = exceptionCode.getHttpStatus();
         this.level = ExceptionLevel.ERROR;
@@ -66,7 +66,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiTimeoutException(String key, Object[] params) {
+    public YdszTimeoutException(String key, Object[] params) {
         super();
         this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
         this.level = ExceptionLevel.ERROR;
@@ -79,7 +79,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiTimeoutException(ExceptionCode exceptionCode, Object[] params) {
+    public YdszTimeoutException(ExceptionCode exceptionCode, Object[] params) {
         super();
         this.httpStatus = exceptionCode.getHttpStatus();
         this.level = ExceptionLevel.ERROR;
@@ -92,7 +92,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiTimeoutException(String code, String key) {
+    public YdszTimeoutException(String code, String key) {
         super();
         this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
         this.level = ExceptionLevel.ERROR;
@@ -105,7 +105,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiTimeoutException(String code, String key, Object[] params) {
+    public YdszTimeoutException(String code, String key, Object[] params) {
         super();
         this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
         this.level = ExceptionLevel.ERROR;
@@ -118,7 +118,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiTimeoutException(Throwable cause) {
+    public YdszTimeoutException(Throwable cause) {
         super(cause);
         this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
         this.level = ExceptionLevel.ERROR;
@@ -126,7 +126,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.code = UnifiedExceptionCode.FAIL.getCode();
     }
 
-    public RemiTimeoutException(String code, Throwable cause) {
+    public YdszTimeoutException(String code, Throwable cause) {
         super(cause);
         this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
         this.level = ExceptionLevel.ERROR;
@@ -134,7 +134,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.code = code;
     }
 
-    public RemiTimeoutException(ExceptionCode exceptionCode, Throwable cause) {
+    public YdszTimeoutException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
         this.httpStatus = exceptionCode.getHttpStatus();
         this.level = ExceptionLevel.ERROR;
@@ -147,7 +147,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiTimeoutException(String code, String key, Throwable cause) {
+    public YdszTimeoutException(String code, String key, Throwable cause) {
         super(null, cause);
         this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
         this.level = ExceptionLevel.ERROR;
@@ -160,7 +160,7 @@ public class RemiTimeoutException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiTimeoutException(String code, String key, Object[] params, Throwable cause) {
+    public YdszTimeoutException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
         this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
         this.level = ExceptionLevel.ERROR;
@@ -177,28 +177,28 @@ public class RemiTimeoutException extends AbstractRemiException {
         return buildExceptionInfo();
     }
 
-    public static RemiTimeoutExceptionBuilder builder() {
-        return new RemiTimeoutExceptionBuilder();
+    public static YdszTimeoutExceptionBuilder builder() {
+        return new YdszTimeoutExceptionBuilder();
     }
 
-    public static RemiTimeoutException of(String key) {
-        return new RemiTimeoutException(key);
+    public static YdszTimeoutException of(String key) {
+        return new YdszTimeoutException(key);
     }
 
-    public static RemiTimeoutException of(ExceptionCode exceptionCode) {
-        return new RemiTimeoutException(exceptionCode);
+    public static YdszTimeoutException of(ExceptionCode exceptionCode) {
+        return new YdszTimeoutException(exceptionCode);
     }
 
-    public static RemiTimeoutException of(String code, String key) {
-        return new RemiTimeoutException(code, key);
+    public static YdszTimeoutException of(String code, String key) {
+        return new YdszTimeoutException(code, key);
     }
 
     /**
      * 超时异常构建器，预置默认的错误码、HTTP状态码、级别和分类
      */
-    public static class RemiTimeoutExceptionBuilder extends RemiExceptionBuilder<RemiTimeoutException, RemiTimeoutExceptionBuilder> {
+    public static class YdszTimeoutExceptionBuilder extends YdszExceptionBuilder<YdszTimeoutException, YdszTimeoutExceptionBuilder> {
 
-        public RemiTimeoutExceptionBuilder() {
+        public YdszTimeoutExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.FAIL.getCode();
             this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
@@ -207,14 +207,14 @@ public class RemiTimeoutException extends AbstractRemiException {
         }
 
         @Override
-        protected RemiTimeoutException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected YdszTimeoutException doBuild(String code, String key, Object[] params, int httpStatus,
                                                ExceptionLevel level, ExceptionCategory category,
                                                Throwable cause, String path, Object extData, String message) {
-            RemiTimeoutException exception;
+            YdszTimeoutException exception;
             if (cause != null) {
-                exception = new RemiTimeoutException(code, key, params, cause);
+                exception = new YdszTimeoutException(code, key, params, cause);
             } else {
-                exception = new RemiTimeoutException(code, key, params);
+                exception = new YdszTimeoutException(code, key, params);
             }
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);

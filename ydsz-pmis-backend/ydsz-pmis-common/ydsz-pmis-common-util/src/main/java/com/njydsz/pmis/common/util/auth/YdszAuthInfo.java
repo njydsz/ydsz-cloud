@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.auth;
+﻿package com.njydsz.pmis.common.util.auth;
 
 import com.njydsz.pmis.common.core.enums.ServiceType;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
@@ -53,7 +53,7 @@ import java.util.Set;
  * @version 3.5.0
  */
 @Data
-public abstract class RemiAuthInfo implements AuthInfo {
+public abstract class YdszAuthInfo implements AuthInfo {
 
     /**
      * 用户系统语言。

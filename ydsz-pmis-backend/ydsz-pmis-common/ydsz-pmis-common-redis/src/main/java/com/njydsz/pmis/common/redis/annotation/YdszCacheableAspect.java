@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.annotation;
+﻿package com.njydsz.pmis.common.redis.annotation;
 
 import com.njydsz.pmis.common.redis.service.RedisService;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- * {@link RemiCacheable} 注解的 AOP 切面实现
+ * {@link YdszCacheable} 注解的 AOP 切面实现
  *
  * <p>提供三重缓存防护：
  * <ul>
@@ -43,9 +43,9 @@ import java.util.concurrent.locks.LockSupport;
  * @since 3.0.0
  */
 @Aspect
-public class RemiCacheableAspect {
+public class YdszCacheableAspect {
 
-    private static final Logger log = LoggerFactory.getLogger(RemiCacheableAspect.class);
+    private static final Logger log = LoggerFactory.getLogger(YdszCacheableAspect.class);
 
     /**
      * 空值标记的序列化字符串，标识缓存中存放的是空值占位
@@ -80,12 +80,12 @@ public class RemiCacheableAspect {
      *
      * @param redisService Redis 服务（用于读写缓存、释放锁等）
      */
-    public RemiCacheableAspect(RedisService redisService) {
+    public YdszCacheableAspect(RedisService redisService) {
         this.redisService = redisService;
     }
 
     /**
-     * 环绕通知：拦截 {@link RemiCacheable} 注解方法
+     * 环绕通知：拦截 {@link YdszCacheable} 注解方法
      *
      * <p>执行流程：</p>
      * <ol>
@@ -99,11 +99,11 @@ public class RemiCacheableAspect {
      * @return 方法返回值（可能为 null）
      * @throws Throwable 原方法或缓存操作抛出的异常
      */
-    @Around("@annotation(com.njydsz.pmis.common.redis.annotation.RemiCacheable)")
+    @Around("@annotation(com.njydsz.pmis.common.redis.annotation.YdszCacheable)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
-        RemiCacheable annotation = method.getAnnotation(RemiCacheable.class);
+        YdszCacheable annotation = method.getAnnotation(YdszCacheable.class);
 
         String cacheKey = resolveKey(annotation.key(), signature, joinPoint.getArgs());
 
@@ -113,10 +113,10 @@ public class RemiCacheableAspect {
         Object cachedValue = redisService.get(cacheKey);
         if (cachedValue != null) {
             if (NULL_VALUE_MARKER.equals(cachedValue)) {
-                log.debug("【RemiCacheable】缓存命中空值标记 key={}", cacheKey);
+                log.debug("【YdszCacheable】缓存命中空值标记 key={}", cacheKey);
                 return null;
             }
-            log.debug("【RemiCacheable】缓存命中 key={}", cacheKey);
+            log.debug("【YdszCacheable】缓存命中 key={}", cacheKey);
             return cachedValue;
         }
 
@@ -133,7 +133,7 @@ public class RemiCacheableAspect {
      * 防击穿逻辑：使用 Redis SETNX 互斥锁保护数据加载
      */
     private Object handleWithStampedePrevention(ProceedingJoinPoint joinPoint,
-                                                 RemiCacheable annotation,
+                                                 YdszCacheable annotation,
                                                  String cacheKey,
                                                  long ttl) throws Throwable {
         String lockKey = LOCK_KEY_PREFIX + cacheKey;
@@ -149,10 +149,10 @@ public class RemiCacheableAspect {
                 Object cachedValue = redisService.get(cacheKey);
                 if (cachedValue != null) {
                     if (NULL_VALUE_MARKER.equals(cachedValue)) {
-                        log.debug("【RemiCacheable】防击穿双重检查命中空值标记 key={}", cacheKey);
+                        log.debug("【YdszCacheable】防击穿双重检查命中空值标记 key={}", cacheKey);
                         return null;
                     }
-                    log.debug("【RemiCacheable】防击穿双重检查命中 key={}", cacheKey);
+                    log.debug("【YdszCacheable】防击穿双重检查命中 key={}", cacheKey);
                     return cachedValue;
                 }
 
@@ -174,7 +174,7 @@ public class RemiCacheableAspect {
      * 超时后降级执行数据加载（不缓存结果）。
      */
     private Object spinWaitForCache(ProceedingJoinPoint joinPoint,
-                                     RemiCacheable annotation,
+                                     YdszCacheable annotation,
                                      String cacheKey,
                                      long ttl) throws Throwable {
         long waitNanos = TimeUnit.MILLISECONDS.toNanos(50);
@@ -188,10 +188,10 @@ public class RemiCacheableAspect {
             Object cachedValue = redisService.get(cacheKey);
             if (cachedValue != null) {
                 if (NULL_VALUE_MARKER.equals(cachedValue)) {
-                    log.debug("【RemiCacheable】防击穿等待命中空值标记 key={}", cacheKey);
+                    log.debug("【YdszCacheable】防击穿等待命中空值标记 key={}", cacheKey);
                     return null;
                 }
-                log.debug("【RemiCacheable】防击穿等待命中 key={} waitMs={}", cacheKey,
+                log.debug("【YdszCacheable】防击穿等待命中 key={} waitMs={}", cacheKey,
                         TimeUnit.NANOSECONDS.toMillis(totalWaitNanos));
                 return cachedValue;
             }
@@ -209,7 +209,7 @@ public class RemiCacheableAspect {
         }
 
         // 超时降级：直接执行数据加载，不缓存结果
-        log.warn("【RemiCacheable】防击穿等待超时，降级执行 key={} timeout={}s",
+        log.warn("【YdszCacheable】防击穿等待超时，降级执行 key={} timeout={}s",
                 cacheKey, annotation.lockWaitTimeout());
         return joinPoint.proceed();
     }
@@ -218,7 +218,7 @@ public class RemiCacheableAspect {
      * 执行数据加载并回填缓存
      */
     private Object loadAndCache(ProceedingJoinPoint joinPoint,
-                                 RemiCacheable annotation,
+                                 YdszCacheable annotation,
                                  String cacheKey,
                                  long ttl) throws Throwable {
         Object result = joinPoint.proceed();
@@ -226,14 +226,14 @@ public class RemiCacheableAspect {
         if (result == null && annotation.preventPenetration()) {
             Duration nullTtl = Duration.of(annotation.nullValueTtl(), annotation.timeUnit().toChronoUnit());
             redisService.set(cacheKey, NULL_VALUE_MARKER, nullTtl);
-            log.debug("【RemiCacheable】缓存空值防穿透 key={} ttl={}s", cacheKey, annotation.nullValueTtl());
+            log.debug("【YdszCacheable】缓存空值防穿透 key={} ttl={}s", cacheKey, annotation.nullValueTtl());
             return null;
         }
 
         if (result != null) {
             Duration ttlDuration = Duration.of(ttl, annotation.timeUnit().toChronoUnit());
             redisService.set(cacheKey, result, ttlDuration);
-            log.debug("【RemiCacheable】缓存写入成功 key={} ttl={}s", cacheKey, ttl);
+            log.debug("【YdszCacheable】缓存写入成功 key={} ttl={}s", cacheKey, ttl);
         }
 
         return result;
@@ -246,7 +246,7 @@ public class RemiCacheableAspect {
         try {
             redisService.executeScript(UNLOCK_LUA, Collections.singletonList(lockKey), Long.class, lockValue);
         } catch (Exception e) {
-            log.error("【RemiCacheable】释放防击穿锁失败 | lockKey={} | error={}", lockKey, e.getMessage());
+            log.error("【YdszCacheable】释放防击穿锁失败 | lockKey={} | error={}", lockKey, e.getMessage());
         }
     }
 

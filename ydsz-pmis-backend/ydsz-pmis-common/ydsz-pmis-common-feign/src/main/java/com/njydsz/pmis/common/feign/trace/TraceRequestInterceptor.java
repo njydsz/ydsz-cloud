@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.trace;
+﻿package com.njydsz.pmis.common.feign.trace;
 
 import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -19,7 +19,7 @@ import feign.RequestTemplate;
  *
  * <p><b>使用方式：</b>
  * <pre>{@code
- * 1. 通过 @EnableRemiFeign 启用时自动生效
+ * 1. 通过 @EnableYdszFeign 启用时自动生效
  * 2. 配合 FeignTraceHandler 实现完整的追踪能力
  * }</pre>
  *

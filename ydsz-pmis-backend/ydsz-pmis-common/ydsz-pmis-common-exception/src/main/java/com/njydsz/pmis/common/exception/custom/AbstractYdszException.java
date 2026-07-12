@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
@@ -27,10 +27,10 @@ import java.util.concurrent.atomic.AtomicReference;
  * @version 3.5.0
  * @since 3.0.0
  */
-public abstract class AbstractRemiException extends RuntimeException {
+public abstract class AbstractYdszException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = LoggerFactory.getLogger(AbstractRemiException.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractYdszException.class);
 
     /**
      * 由 I18nConfiguration 注入，用于异常消息国际化解析
@@ -75,17 +75,17 @@ public abstract class AbstractRemiException extends RuntimeException {
     protected String path;
     protected transient Object extData;
 
-    protected AbstractRemiException() {
+    protected AbstractYdszException() {
         super();
         this.timestamp = LocalDateTime.now();
     }
 
-    protected AbstractRemiException(String message) {
+    protected AbstractYdszException(String message) {
         super(message);
         this.timestamp = LocalDateTime.now();
     }
 
-    protected AbstractRemiException(String message, Throwable cause) {
+    protected AbstractYdszException(String message, Throwable cause) {
         super(message, cause);
         this.timestamp = LocalDateTime.now();
     }
@@ -95,12 +95,12 @@ public abstract class AbstractRemiException extends RuntimeException {
      *
      * @param cause 异常原因
      */
-    protected AbstractRemiException(Throwable cause) {
+    protected AbstractYdszException(Throwable cause) {
         super(cause);
         this.timestamp = LocalDateTime.now();
     }
 
-    protected AbstractRemiException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    protected AbstractYdszException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
         this.timestamp = LocalDateTime.now();
     }

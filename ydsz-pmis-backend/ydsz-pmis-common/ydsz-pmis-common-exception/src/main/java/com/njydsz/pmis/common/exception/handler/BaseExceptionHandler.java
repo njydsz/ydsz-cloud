@@ -1,8 +1,8 @@
-package com.njydsz.pmis.common.exception.handler;
+﻿package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
-import com.njydsz.pmis.common.exception.custom.AbstractRemiException;
+import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import lombok.extern.slf4j.Slf4j;
@@ -113,8 +113,8 @@ public abstract class BaseExceptionHandler {
         }
         info.setTimestamp(LocalDateTime.now());
 
-        if (throwable instanceof AbstractRemiException) {
-            AbstractRemiException ex = (AbstractRemiException) throwable;
+        if (throwable instanceof AbstractYdszException) {
+            AbstractYdszException ex = (AbstractYdszException) throwable;
             info.setCode(ex.getCode());
             info.setKey(ex.getKey());
             info.setMessage(ex.getMessage());

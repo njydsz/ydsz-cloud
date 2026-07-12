@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.safe.captcha.generator;
+﻿package com.njydsz.pmis.common.safe.captcha.generator;
 
-import com.njydsz.pmis.common.exception.custom.RemiSecurityException;
+import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaGenerator;
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaResult;
 import org.slf4j.Logger;
@@ -265,7 +265,7 @@ public class ImageCaptchaGenerator implements CaptchaGenerator {
             byte[] bytes = baos.toByteArray();
             return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
         } catch (Exception e) {
-            throw new RemiSecurityException("图片转换失败", e);
+            throw new YdszSecurityException("图片转换失败", e);
         }
     }
 }

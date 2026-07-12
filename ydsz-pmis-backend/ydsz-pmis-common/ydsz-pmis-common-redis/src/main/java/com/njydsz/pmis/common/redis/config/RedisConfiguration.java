@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.redis.config;
+﻿package com.njydsz.pmis.common.redis.config;
 
-import com.njydsz.pmis.common.redis.annotation.RemiCacheableAspect;
+import com.njydsz.pmis.common.redis.annotation.YdszCacheableAspect;
 import com.njydsz.pmis.common.redis.health.RedisHealthIndicator;
 import com.njydsz.pmis.common.redis.interceptor.RedisRetryInterceptor;
 import com.njydsz.pmis.common.redis.serializer.JacksonRedisSerializer;
@@ -234,15 +234,15 @@ public class RedisConfiguration {
     }
 
     /**
-     * 注册 RemiCacheable 注解切面
+     * 注册 YdszCacheable 注解切面
      *
      * @param redisService Redis 服务
-     * @return RemiCacheableAspect 实例
+     * @return YdszCacheableAspect 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public RemiCacheableAspect remiCacheableAspect(RedisService redisService) {
-        return new RemiCacheableAspect(redisService);
+    public YdszCacheableAspect YdszCacheableAspect(RedisService redisService) {
+        return new YdszCacheableAspect(redisService);
     }
 
 }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.config;
+﻿package com.njydsz.pmis.common.core.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +40,9 @@ import java.util.concurrent.ThreadFactory;
 @AutoConfiguration
 @EnableScheduling
 @ConditionalOnProperty(prefix = "remi.scheduling", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class RemiSchedulingAutoConfiguration {
+public class YdszSchedulingAutoConfiguration {
 
-    private static final Logger log = LoggerFactory.getLogger(RemiSchedulingAutoConfiguration.class);
+    private static final Logger log = LoggerFactory.getLogger(YdszSchedulingAutoConfiguration.class);
 
     /**
      * 注册基于 Virtual Thread 的 TaskScheduler Bean。

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.codec;
+﻿package com.njydsz.pmis.common.feign.codec;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import feign.RequestTemplate;
@@ -19,9 +19,9 @@ import java.nio.charset.StandardCharsets;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-public class RemiJsonEncoder implements Encoder {
+public class YdszJsonEncoder implements Encoder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RemiJsonEncoder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(YdszJsonEncoder.class);
 
     private static final String CONTENT_TYPE = "application/json;charset=UTF-8";
 

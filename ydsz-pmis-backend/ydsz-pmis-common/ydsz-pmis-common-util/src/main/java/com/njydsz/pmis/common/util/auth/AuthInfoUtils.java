@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.auth;
+﻿package com.njydsz.pmis.common.util.auth;
 
 import com.njydsz.pmis.common.core.enums.IdentityType;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
@@ -34,7 +34,7 @@ import java.util.Set;
  * </ul>
  *
  * @see AuthInfo
- * @see RemiAuthInfo
+ * @see YdszAuthInfo
  * @see RequestHolder
   *
  * @author Marvin Lee
@@ -203,7 +203,7 @@ public class AuthInfoUtils {
      * @version 3.5.0
      */
     public static Set<String> getHasPermissionCompanyIds() {
-        RemiAuthInfo auth = getRemiAuthInfo();
+        YdszAuthInfo auth = getYdszAuthInfo();
         return (auth != null && auth.getHasPermissionCompanyIds() != null)
                 ? auth.getHasPermissionCompanyIds() : Collections.emptySet();
     }
@@ -219,7 +219,7 @@ public class AuthInfoUtils {
      * @version 3.5.0
      */
     public static Set<String> getHasPermissionDeptIds() {
-        RemiAuthInfo auth = getRemiAuthInfo();
+        YdszAuthInfo auth = getYdszAuthInfo();
         return (auth != null && auth.getHasPermissionDeptIds() != null)
                 ? auth.getHasPermissionDeptIds() : Collections.emptySet();
     }
@@ -235,7 +235,7 @@ public class AuthInfoUtils {
      * @version 3.5.0
      */
     public static Set<String> getHasPermissionProjectIds() {
-        RemiAuthInfo auth = getRemiAuthInfo();
+        YdszAuthInfo auth = getYdszAuthInfo();
         return (auth != null && auth.getHasPermissionProjectIds() != null)
                 ? auth.getHasPermissionProjectIds() : Collections.emptySet();
     }
@@ -251,7 +251,7 @@ public class AuthInfoUtils {
      * @version 3.5.0
      */
     public static Set<String> getHasPermissionRegionIds() {
-        RemiAuthInfo auth = getRemiAuthInfo();
+        YdszAuthInfo auth = getYdszAuthInfo();
         return (auth != null && auth.getHasPermissionRegionIds() != null)
                 ? auth.getHasPermissionRegionIds() : Collections.emptySet();
     }
@@ -259,16 +259,16 @@ public class AuthInfoUtils {
     /**
      * 获取公司级认证信息。
      *
-     * <p>类型转换为 RemiAuthInfo，以访问行级权限维度ID集合（companyIds/deptIds/projectIds/regionIds）。
+     * <p>类型转换为 YdszAuthInfo，以访问行级权限维度ID集合（companyIds/deptIds/projectIds/regionIds）。
      *
-     * @return RemiAuthInfo；若非该类型或未写入则返回 null
-     * @see RemiAuthInfo
+     * @return YdszAuthInfo；若非该类型或未写入则返回 null
+     * @see YdszAuthInfo
      * @author Marvin Lee
      * @email limw1888@126.com
      * @version 3.5.0
      */
-    public static RemiAuthInfo getRemiAuthInfo() {
-        return RequestHolder.getRemiAuthInfo();
+    public static YdszAuthInfo getYdszAuthInfo() {
+        return RequestHolder.getYdszAuthInfo();
     }
 
     /**

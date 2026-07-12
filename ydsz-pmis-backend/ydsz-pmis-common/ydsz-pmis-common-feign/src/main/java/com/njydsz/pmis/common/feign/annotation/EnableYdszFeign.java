@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.annotation;
+﻿package com.njydsz.pmis.common.feign.annotation;
 
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.core.annotation.AliasFor;
@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
  * <p><b>使用示例：</b>
  * <pre>{@code
  * @SpringBootApplication
- * @EnableRemiFeign(basePackages = "com.njydsz.pmis.order.client")
+ * @EnableYdszFeign(basePackages = "com.njydsz.pmis.order.client")
  * public class OrderApplication {
  *     public static void main(String[] args) {
  *         SpringApplication.run(OrderApplication.class, args);
@@ -36,7 +36,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @EnableFeignClients
-public @interface EnableRemiFeign {
+public @interface EnableYdszFeign {
 
     /**
      * 等同于 {@link #basePackages}，指定 Feign 客户端扫描包路径。

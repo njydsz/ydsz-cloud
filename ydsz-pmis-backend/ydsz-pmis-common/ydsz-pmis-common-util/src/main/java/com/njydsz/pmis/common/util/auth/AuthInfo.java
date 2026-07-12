@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.auth;
+﻿package com.njydsz.pmis.common.util.auth;
 
 
 import com.njydsz.pmis.common.core.enums.DataScopeType;
@@ -19,9 +19,9 @@ import java.util.Set;
  * </ul>
  *
  * <p>实现类应通过 {@link RequestHolder} 写入 ThreadLocal，供全链路下游读取。
- * 推荐使用实现类 {@link RemiAuthInfo}。
+ * 推荐使用实现类 {@link YdszAuthInfo}。
  *
- * @see RemiAuthInfo
+ * @see YdszAuthInfo
  * @see RequestHolder
  * @see AuthInfoUtils
  *

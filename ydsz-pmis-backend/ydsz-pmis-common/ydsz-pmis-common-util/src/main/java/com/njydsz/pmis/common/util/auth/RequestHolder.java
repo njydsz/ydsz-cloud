@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.auth;
+﻿package com.njydsz.pmis.common.util.auth;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import lombok.extern.slf4j.Slf4j;
@@ -101,8 +101,8 @@ public class RequestHolder {
     /**
      * 获取瑞米统一认证上下文信息。
      */
-    public static RemiAuthInfo getRemiAuthInfo() {
-        return getAuthInfo(RemiAuthInfo.class);
+    public static YdszAuthInfo getYdszAuthInfo() {
+        return getAuthInfo(YdszAuthInfo.class);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -16,9 +16,9 @@ import lombok.ToString;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * throw new RemiSecurityException(UnifiedExceptionCode.FORBIDDEN);
- * throw new RemiSecurityException("forbidden", new Object[]{resourceId});
- * throw RemiSecurityException.of(UnifiedExceptionCode.ACCESS_DENIED).build();
+ * throw new YdszSecurityException(UnifiedExceptionCode.FORBIDDEN);
+ * throw new YdszSecurityException("forbidden", new Object[]{resourceId});
+ * throw YdszSecurityException.of(UnifiedExceptionCode.ACCESS_DENIED).build();
  * }</pre>
  *
  * @author Marvin Lee
@@ -29,19 +29,19 @@ import lombok.ToString;
  * @see ExceptionCategory#SECURITY
  */
 @ToString(callSuper = true)
-public class RemiSecurityException extends AbstractRemiException {
+public class YdszSecurityException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
     /** 默认构造函数，初始化为 403 Forbidden / WARN / SECURITY */
-    public RemiSecurityException() {
+    public YdszSecurityException() {
         super();
         this.httpStatus = HttpStatus.FORBIDDEN.value();
         this.level = ExceptionLevel.WARN;
         this.category = ExceptionCategory.SECURITY;
     }
 
-    public RemiSecurityException(String key) {
+    public YdszSecurityException(String key) {
         super();
         this.httpStatus = HttpStatus.FORBIDDEN.value();
         this.level = ExceptionLevel.WARN;
@@ -54,7 +54,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiSecurityException(ExceptionCode exceptionCode) {
+    public YdszSecurityException(ExceptionCode exceptionCode) {
         super();
         this.httpStatus = exceptionCode.getHttpStatus();
         this.level = ExceptionLevel.WARN;
@@ -67,7 +67,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiSecurityException(String key, Object[] params) {
+    public YdszSecurityException(String key, Object[] params) {
         super();
         this.httpStatus = HttpStatus.FORBIDDEN.value();
         this.level = ExceptionLevel.WARN;
@@ -80,7 +80,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiSecurityException(ExceptionCode exceptionCode, Object[] params) {
+    public YdszSecurityException(ExceptionCode exceptionCode, Object[] params) {
         super();
         this.httpStatus = exceptionCode.getHttpStatus();
         this.level = ExceptionLevel.WARN;
@@ -93,7 +93,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiSecurityException(String code, String key) {
+    public YdszSecurityException(String code, String key) {
         super();
         this.httpStatus = HttpStatus.FORBIDDEN.value();
         this.level = ExceptionLevel.WARN;
@@ -106,7 +106,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiSecurityException(String code, String key, Object[] params) {
+    public YdszSecurityException(String code, String key, Object[] params) {
         super();
         this.httpStatus = HttpStatus.FORBIDDEN.value();
         this.level = ExceptionLevel.WARN;
@@ -119,7 +119,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiSecurityException(Throwable cause) {
+    public YdszSecurityException(Throwable cause) {
         super(cause);
         this.httpStatus = HttpStatus.FORBIDDEN.value();
         this.level = ExceptionLevel.WARN;
@@ -127,7 +127,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.code = UnifiedExceptionCode.FORBIDDEN.getCode();
     }
 
-    public RemiSecurityException(String code, Throwable cause) {
+    public YdszSecurityException(String code, Throwable cause) {
         super(cause);
         this.httpStatus = HttpStatus.FORBIDDEN.value();
         this.level = ExceptionLevel.WARN;
@@ -135,7 +135,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.code = code;
     }
 
-    public RemiSecurityException(ExceptionCode exceptionCode, Throwable cause) {
+    public YdszSecurityException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
         this.httpStatus = exceptionCode.getHttpStatus();
         this.level = ExceptionLevel.WARN;
@@ -148,7 +148,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiSecurityException(String code, String key, Throwable cause) {
+    public YdszSecurityException(String code, String key, Throwable cause) {
         super(null, cause);
         this.httpStatus = HttpStatus.FORBIDDEN.value();
         this.level = ExceptionLevel.WARN;
@@ -161,7 +161,7 @@ public class RemiSecurityException extends AbstractRemiException {
         this.messageParams = this.params;
     }
 
-    public RemiSecurityException(String code, String key, Object[] params, Throwable cause) {
+    public YdszSecurityException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
         this.httpStatus = HttpStatus.FORBIDDEN.value();
         this.level = ExceptionLevel.WARN;
@@ -178,28 +178,28 @@ public class RemiSecurityException extends AbstractRemiException {
         return buildExceptionInfo();
     }
 
-    public static RemiSecurityExceptionBuilder builder() {
-        return new RemiSecurityExceptionBuilder();
+    public static YdszSecurityExceptionBuilder builder() {
+        return new YdszSecurityExceptionBuilder();
     }
 
-    public static RemiSecurityException of(String key) {
-        return new RemiSecurityException(key);
+    public static YdszSecurityException of(String key) {
+        return new YdszSecurityException(key);
     }
 
-    public static RemiSecurityException of(ExceptionCode exceptionCode) {
-        return new RemiSecurityException(exceptionCode);
+    public static YdszSecurityException of(ExceptionCode exceptionCode) {
+        return new YdszSecurityException(exceptionCode);
     }
 
-    public static RemiSecurityException of(String code, String key) {
-        return new RemiSecurityException(code, key);
+    public static YdszSecurityException of(String code, String key) {
+        return new YdszSecurityException(code, key);
     }
 
     /**
      * 安全异常构建器，预置默认的错误码、HTTP状态码、级别和分类
      */
-    public static class RemiSecurityExceptionBuilder extends RemiExceptionBuilder<RemiSecurityException, RemiSecurityExceptionBuilder> {
+    public static class YdszSecurityExceptionBuilder extends YdszExceptionBuilder<YdszSecurityException, YdszSecurityExceptionBuilder> {
 
-        public RemiSecurityExceptionBuilder() {
+        public YdszSecurityExceptionBuilder() {
             super();
             this.code = UnifiedExceptionCode.FORBIDDEN.getCode();
             this.httpStatus = HttpStatus.FORBIDDEN.value();
@@ -208,14 +208,14 @@ public class RemiSecurityException extends AbstractRemiException {
         }
 
         @Override
-        protected RemiSecurityException doBuild(String code, String key, Object[] params, int httpStatus,
+        protected YdszSecurityException doBuild(String code, String key, Object[] params, int httpStatus,
                                                 ExceptionLevel level, ExceptionCategory category,
                                                 Throwable cause, String path, Object extData, String message) {
-            RemiSecurityException exception;
+            YdszSecurityException exception;
             if (cause != null) {
-                exception = new RemiSecurityException(code, key, params, cause);
+                exception = new YdszSecurityException(code, key, params, cause);
             } else {
-                exception = new RemiSecurityException(code, key, params);
+                exception = new YdszSecurityException(code, key, params);
             }
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);

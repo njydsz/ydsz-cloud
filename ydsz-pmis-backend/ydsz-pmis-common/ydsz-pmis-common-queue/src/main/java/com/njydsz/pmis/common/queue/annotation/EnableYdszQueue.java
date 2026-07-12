@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.annotation;
+﻿package com.njydsz.pmis.common.queue.annotation;
 
 import com.njydsz.pmis.common.queue.config.QueueConfiguration;
 import org.springframework.context.annotation.Import;
@@ -23,5 +23,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import(QueueConfiguration.class)
-public @interface EnableRemiQueue {
+public @interface EnableYdszQueue {
 }

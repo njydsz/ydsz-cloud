@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.config;
+﻿package com.njydsz.pmis.common.exception.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -30,7 +30,7 @@ import java.util.Map;
  * <ul>
  *   <li>{@link MessageSource} 多环境适配：开发环境实时加载，生产环境缓存</li>
  *   <li>{@link Validator} 关联 Hibernate Validator 与 i18n 消息</li>
- *   <li>异常模块的 {@link com.njydsz.pmis.common.exception.custom.AbstractRemiException#setMessageResolver} 注入</li>
+ *   <li>异常模块的 {@link com.njydsz.pmis.common.exception.custom.AbstractYdszException#setMessageResolver} 注入</li>
  * </ul>
  *
  * <p>Web MVC 相关（LocaleResolver/LocaleChangeInterceptor）由 {@link WebI18nConfiguration} 条件装配，
@@ -163,7 +163,7 @@ public class I18nConfiguration {
     }
 
     public void setExceptionMessageResolver(MessageSource messageSource) {
-        com.njydsz.pmis.common.exception.custom.AbstractRemiException.setMessageResolver(
+        com.njydsz.pmis.common.exception.custom.AbstractYdszException.setMessageResolver(
                 (key, params) -> messageSource.getMessage(key, params, key, LocaleContextHolder.getLocale())
         );
     }

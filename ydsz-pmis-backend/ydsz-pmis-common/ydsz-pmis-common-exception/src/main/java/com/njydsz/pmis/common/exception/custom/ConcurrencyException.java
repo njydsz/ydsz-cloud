@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -26,7 +26,7 @@ import lombok.ToString;
  * @since 3.0.0
  */
 @ToString(callSuper = true)
-public class ConcurrencyException extends AbstractRemiException {
+public class ConcurrencyException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
@@ -99,7 +99,7 @@ public class ConcurrencyException extends AbstractRemiException {
     /**
      * 并发冲突异常构建器
      */
-    public static class ConcurrencyExceptionBuilder extends RemiExceptionBuilder<ConcurrencyException, ConcurrencyExceptionBuilder> {
+    public static class ConcurrencyExceptionBuilder extends YdszExceptionBuilder<ConcurrencyException, ConcurrencyExceptionBuilder> {
 
         public ConcurrencyExceptionBuilder() {
             super();

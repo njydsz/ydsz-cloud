@@ -1,7 +1,7 @@
-package com.njydsz.pmis.common.auth.handler;
+﻿package com.njydsz.pmis.common.auth.handler;
 
 import com.njydsz.pmis.common.util.auth.AuthInfo;
-import com.njydsz.pmis.common.util.auth.RemiAuthInfo;
+import com.njydsz.pmis.common.util.auth.YdszAuthInfo;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,7 +41,7 @@ public abstract class AbstractAuthHandler implements AuthHandler {
      *
      * @return 空的 AuthInfo 实例
      */
-    protected abstract RemiAuthInfo createAuthInfo();
+    protected abstract YdszAuthInfo createAuthInfo();
 
     /**
      * 解析请求头并构建认证信息（模板方法）
@@ -57,20 +57,20 @@ public abstract class AbstractAuthHandler implements AuthHandler {
         ParsedAuthHeaders h = ParsedAuthHeaders.parse(request, this);
 
         AuthInfo info = createAuthInfo();
-        if (info instanceof RemiAuthInfo remiAuthInfo) {
-            remiAuthInfo.setUserLanguage(h.getLanguage());
-            remiAuthInfo.setDistinctId(h.getDistinctId());
-            remiAuthInfo.setAccessToken(h.getAuthToken());
-            remiAuthInfo.setDataScope(h.getDataScope());
-            remiAuthInfo.setHasPermissionCompanyIds(h.getCompanyIds());
-            remiAuthInfo.setHasPermissionDeptIds(h.getDeptIds());
-            remiAuthInfo.setUniqueId(h.getUserId());
-            remiAuthInfo.setTenantId(h.getTenantId());
-            remiAuthInfo.setHasPermissionProjectIds(h.getProjectIds());
-            remiAuthInfo.setHasPermissionRegionIds(h.getRegionIds());
-            remiAuthInfo.setRequestSource(h.getRequestSource());
-            remiAuthInfo.setVisibleColumnsByTable(h.getVisibleColumns());
-            remiAuthInfo.setEditableColumnsByTable(h.getEditableColumns());
+        if (info instanceof YdszAuthInfo YdszAuthInfo) {
+            YdszAuthInfo.setUserLanguage(h.getLanguage());
+            YdszAuthInfo.setDistinctId(h.getDistinctId());
+            YdszAuthInfo.setAccessToken(h.getAuthToken());
+            YdszAuthInfo.setDataScope(h.getDataScope());
+            YdszAuthInfo.setHasPermissionCompanyIds(h.getCompanyIds());
+            YdszAuthInfo.setHasPermissionDeptIds(h.getDeptIds());
+            YdszAuthInfo.setUniqueId(h.getUserId());
+            YdszAuthInfo.setTenantId(h.getTenantId());
+            YdszAuthInfo.setHasPermissionProjectIds(h.getProjectIds());
+            YdszAuthInfo.setHasPermissionRegionIds(h.getRegionIds());
+            YdszAuthInfo.setRequestSource(h.getRequestSource());
+            YdszAuthInfo.setVisibleColumnsByTable(h.getVisibleColumns());
+            YdszAuthInfo.setEditableColumnsByTable(h.getEditableColumns());
         }
 
         return info;

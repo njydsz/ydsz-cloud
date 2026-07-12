@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.constant;
+﻿package com.njydsz.pmis.common.core.constant;
 
 import com.njydsz.pmis.common.core.enums.IdentityType;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
@@ -16,7 +16,7 @@ import com.njydsz.pmis.common.core.enums.ServiceType;
  *
  * <p>与各模块对应关系：
  * <ul>
- *   <li>ydsz-pmis-common-web：解析请求头，构建 {@link com.njydsz.pmis.common.util.auth.RemiAuthInfo}</li>
+ *   <li>ydsz-pmis-common-web：解析请求头，构建 {@link com.njydsz.pmis.common.util.auth.YdszAuthInfo}</li>
  *   <li>ydsz-pmis-common-auth：{@code @RbacDataScope} 切面写入 extra headers</li>
  *   <li>ydsz-pmis-common-feign：透传请求头到下游服务</li>
  *   <li>ydsz-pmis-common-jdbc：SQL 拦截器读取并改写 SQL</li>

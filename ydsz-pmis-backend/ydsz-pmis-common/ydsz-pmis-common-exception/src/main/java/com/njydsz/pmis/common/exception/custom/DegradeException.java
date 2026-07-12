@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -39,7 +39,7 @@ import lombok.ToString;
  * @see ExceptionLevel#WARN
  */
 @ToString(callSuper = true)
-public class DegradeException extends AbstractRemiException {
+public class DegradeException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
@@ -209,7 +209,7 @@ public class DegradeException extends AbstractRemiException {
         return new DegradeException(code, key);
     }
 
-    public static class DegradeExceptionBuilder extends RemiExceptionBuilder<DegradeException, DegradeExceptionBuilder> {
+    public static class DegradeExceptionBuilder extends YdszExceptionBuilder<DegradeException, DegradeExceptionBuilder> {
 
         public DegradeExceptionBuilder() {
             super();

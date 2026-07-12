@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -30,7 +30,7 @@ import lombok.ToString;
  * @see ExceptionCategory#EXTERNAL
  */
 @ToString(callSuper = true)
-public class ExternalException extends AbstractRemiException {
+public class ExternalException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
@@ -197,7 +197,7 @@ public class ExternalException extends AbstractRemiException {
     /**
      * 外部服务异常构建器，预置默认的错误码、HTTP状态码、级别和分类
      */
-    public static class ExternalExceptionBuilder extends RemiExceptionBuilder<ExternalException, ExternalExceptionBuilder> {
+    public static class ExternalExceptionBuilder extends YdszExceptionBuilder<ExternalException, ExternalExceptionBuilder> {
 
         public ExternalExceptionBuilder() {
             super();

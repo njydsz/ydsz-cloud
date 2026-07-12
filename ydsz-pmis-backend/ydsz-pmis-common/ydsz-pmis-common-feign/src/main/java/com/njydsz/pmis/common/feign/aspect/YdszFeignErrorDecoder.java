@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.aspect;
+﻿package com.njydsz.pmis.common.feign.aspect;
 
 import com.njydsz.pmis.common.feign.config.FeignProperties;
 import com.njydsz.pmis.common.feign.exception.BadRequestException;
@@ -52,14 +52,14 @@ import java.nio.charset.StandardCharsets;
  * @see NotFoundException
  * @see OpenFeignException
  */
-public class RemiFeignErrorDecoder implements ErrorDecoder {
+public class YdszFeignErrorDecoder implements ErrorDecoder {
 
-    private static final Logger log = LoggerFactory.getLogger(RemiFeignErrorDecoder.class);
+    private static final Logger log = LoggerFactory.getLogger(YdszFeignErrorDecoder.class);
 
     private final ErrorDecoder defaultErrorDecoder = new Default();
     private final FeignProperties feignProperties;
 
-    public RemiFeignErrorDecoder() {
+    public YdszFeignErrorDecoder() {
         this(new FeignProperties());
     }
 
@@ -68,7 +68,7 @@ public class RemiFeignErrorDecoder implements ErrorDecoder {
      *
      * @param feignProperties Feign 配置属性
      */
-    public RemiFeignErrorDecoder(FeignProperties feignProperties) {
+    public YdszFeignErrorDecoder(FeignProperties feignProperties) {
         this.feignProperties = feignProperties;
     }
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.annotation;
+﻿package com.njydsz.pmis.common.audit.annotation;
 
 import org.springframework.context.annotation.Import;
 
@@ -15,7 +15,7 @@ import java.lang.annotation.*;
  * <p><b>使用示例：</b></p>
  * <pre>{@code
  * @SpringBootApplication
- * @EnableRemiAudit
+ * @EnableYdszAudit
  * public class Application {
  *     public static void main(String[] args) {
  *         SpringApplication.run(Application.class, args);
@@ -34,7 +34,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Import(com.njydsz.pmis.common.audit.config.AuditAutoConfiguration.class)
-public @interface EnableRemiAudit {
+public @interface EnableYdszAudit {
 
     /**
      * 是否启用审计功能

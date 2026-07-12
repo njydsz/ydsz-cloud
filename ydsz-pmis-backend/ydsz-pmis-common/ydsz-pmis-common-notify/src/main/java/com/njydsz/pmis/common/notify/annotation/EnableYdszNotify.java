@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.annotation;
+﻿package com.njydsz.pmis.common.notify.annotation;
 
 import com.njydsz.pmis.common.notify.config.NotifyConfiguration;
 import org.springframework.context.annotation.Import;
@@ -25,5 +25,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import(NotifyConfiguration.class)
-public @interface EnableRemiNotify {
+public @interface EnableYdszNotify {
 }

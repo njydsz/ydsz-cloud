@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.codec;
+﻿package com.njydsz.pmis.common.feign.codec;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.response.IResponse;
@@ -47,7 +47,7 @@ import java.lang.reflect.Type;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see RemiJsonDecoder
+ * @see YdszJsonDecoder
  */
 public class ResponseUnwrapDecoder implements Decoder {
 
@@ -69,10 +69,10 @@ public class ResponseUnwrapDecoder implements Decoder {
     }
 
     /**
-     * 使用默认的 {@link RemiJsonDecoder} 构造
+     * 使用默认的 {@link YdszJsonDecoder} 构造
      */
     public ResponseUnwrapDecoder() {
-        this(new RemiJsonDecoder());
+        this(new YdszJsonDecoder());
     }
 
     @Override

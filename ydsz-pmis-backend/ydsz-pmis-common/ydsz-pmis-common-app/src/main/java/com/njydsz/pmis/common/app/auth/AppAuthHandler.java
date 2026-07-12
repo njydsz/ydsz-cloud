@@ -1,7 +1,7 @@
-package com.njydsz.pmis.common.app.auth;
+﻿package com.njydsz.pmis.common.app.auth;
 
 import com.njydsz.pmis.common.auth.handler.AbstractAuthHandler;
-import com.njydsz.pmis.common.util.auth.RemiAuthInfo;
+import com.njydsz.pmis.common.util.auth.YdszAuthInfo;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,7 +32,7 @@ public class AppAuthHandler extends AbstractAuthHandler {
      * @return 新的 {@link AppAuthInfo} 实例
      */
     @Override
-    protected RemiAuthInfo createAuthInfo() {
+    protected YdszAuthInfo createAuthInfo() {
         return new AppAuthInfo();
     }
 }

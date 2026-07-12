@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.base.auth;
+﻿package com.njydsz.pmis.common.base.auth;
 
-import com.njydsz.pmis.common.util.auth.RemiAuthInfo;
+import com.njydsz.pmis.common.util.auth.YdszAuthInfo;
 
 /**
  * 认证上下文信息基类（Web/App 共享）
@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.util.auth.RemiAuthInfo;
  * <p>定义认证上下文的统一抽象，子类覆盖 {@link #getServiceTypeCode()} 返回具体的服务类型编码
  * （例如 "WEB" 或 "APP"），用于业务层区分请求来源。
  *
- * <p>本类继承自 {@link RemiAuthInfo}，具备完整的认证信息能力，包括：
+ * <p>本类继承自 {@link YdszAuthInfo}，具备完整的认证信息能力，包括：
  * <ul>
  *   <li>用户ID、登录账号、姓名等基础信息</li>
  *   <li>租户ID、公司ID、部门ID、项目ID、区域ID 等多维度隔离信息</li>
@@ -30,9 +30,9 @@ import com.njydsz.pmis.common.util.auth.RemiAuthInfo;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 3.5.0
- * @see RemiAuthInfo
+ * @see YdszAuthInfo
  */
-public abstract class BaseAuthInfo extends RemiAuthInfo {
+public abstract class BaseAuthInfo extends YdszAuthInfo {
 
     /**
      * 获取当前服务类型编码

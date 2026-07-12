@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 3.0.0
  */
 @ToString(callSuper = true)
-public class BusinessException extends AbstractRemiException {
+public class BusinessException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
@@ -116,7 +116,7 @@ public class BusinessException extends AbstractRemiException {
     /**
      * 业务异常构建器，预置默认的错误码、HTTP状态码、级别和分类
      */
-    public static class BusinessExceptionBuilder extends RemiExceptionBuilder<BusinessException, BusinessExceptionBuilder> {
+    public static class BusinessExceptionBuilder extends YdszExceptionBuilder<BusinessException, BusinessExceptionBuilder> {
 
         public BusinessExceptionBuilder() {
             super();

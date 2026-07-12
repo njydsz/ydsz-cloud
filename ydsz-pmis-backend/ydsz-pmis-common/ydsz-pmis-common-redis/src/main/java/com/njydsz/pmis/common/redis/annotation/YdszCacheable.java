@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.annotation;
+﻿package com.njydsz.pmis.common.redis.annotation;
 
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>使用示例：</b>
  * <pre>
- * &#64;RemiCacheable(key = "'user:' + #userId", ttl = 300, timeUnit = TimeUnit.SECONDS)
+ * &#64;YdszCacheable(key = "'user:' + #userId", ttl = 300, timeUnit = TimeUnit.SECONDS)
  * public User getUserById(Long userId) {
  *     return userMapper.selectById(userId);
  * }
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface RemiCacheable {
+public @interface YdszCacheable {
 
     /**
      * SpEL 缓存键表达式

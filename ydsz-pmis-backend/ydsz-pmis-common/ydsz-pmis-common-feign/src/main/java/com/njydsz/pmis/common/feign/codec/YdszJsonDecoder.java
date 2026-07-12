@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.codec;
+﻿package com.njydsz.pmis.common.feign.codec;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import feign.Response;
@@ -30,11 +30,11 @@ import java.nio.charset.StandardCharsets;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see RemiJsonEncoder
+ * @see YdszJsonEncoder
  */
-public class RemiJsonDecoder implements Decoder {
+public class YdszJsonDecoder implements Decoder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RemiJsonDecoder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(YdszJsonDecoder.class);
 
     /** 默认最大响应体字节数（10MB） */
     private static final int DEFAULT_MAX_BODY_BYTES = 10 * 1024 * 1024;
@@ -45,7 +45,7 @@ public class RemiJsonDecoder implements Decoder {
     /**
      * 使用默认最大响应体大小（10MB）构造解码器。
      */
-    public RemiJsonDecoder() {
+    public YdszJsonDecoder() {
         this(DEFAULT_MAX_BODY_BYTES);
     }
 
@@ -54,7 +54,7 @@ public class RemiJsonDecoder implements Decoder {
      *
      * @param maxBodyBytes 最大响应体字节数，小于等于 0 时使用默认值
      */
-    public RemiJsonDecoder(int maxBodyBytes) {
+    public YdszJsonDecoder(int maxBodyBytes) {
         this.maxBodyBytes = maxBodyBytes > 0 ? maxBodyBytes : DEFAULT_MAX_BODY_BYTES;
     }
 

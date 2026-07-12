@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.sensitive.remi;
+﻿package com.njydsz.pmis.common.safe.sensitive.remi;
 
 import com.njydsz.pmis.common.safe.sensitive.SensitiveDataProcessor;
 import com.njydsz.pmis.common.util.json.JsonUtils;
@@ -13,7 +13,7 @@ import com.njydsz.pmis.common.util.json.JsonUtils;
  * // 手动序列化
  * UserDTO user = new UserDTO();
  * user.setPhone("13800138000");
- * String json = RemiSensitiveSerializer.serialize(user);
+ * String json = YdszSensitiveSerializer.serialize(user);
  * }</pre>
  *
  * @author Marvin Lee
@@ -21,9 +21,9 @@ import com.njydsz.pmis.common.util.json.JsonUtils;
  * @version 4.0.0
  * @see SensitiveDataProcessor
  */
-public final class RemiSensitiveSerializer {
+public final class YdszSensitiveSerializer {
 
-    private RemiSensitiveSerializer() {
+    private YdszSensitiveSerializer() {
     }
 
     /**

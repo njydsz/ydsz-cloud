@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.safe.csrf.impl;
+﻿package com.njydsz.pmis.common.safe.csrf.impl;
 
-import com.njydsz.pmis.common.exception.custom.RemiSecurityException;
+import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
 import com.njydsz.pmis.common.safe.csrf.CsrfToken;
 import com.njydsz.pmis.common.safe.csrf.CsrfTokenGenerator;
 import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
@@ -68,7 +68,7 @@ public class DefaultCsrfTokenGenerator implements CsrfTokenGenerator {
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new RemiSecurityException("SHA-256 algorithm not available", e);
+            throw new YdszSecurityException("SHA-256 algorithm not available", e);
         }
     }
 

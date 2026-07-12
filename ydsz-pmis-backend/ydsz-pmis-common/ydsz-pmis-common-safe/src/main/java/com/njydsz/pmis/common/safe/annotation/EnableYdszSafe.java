@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.annotation;
+﻿package com.njydsz.pmis.common.safe.annotation;
 
 import com.njydsz.pmis.common.safe.config.SafeConfiguration;
 import org.springframework.context.annotation.Import;
@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * <p><b>使用示例：</b></p>
  * <pre>{@code
  * @SpringBootApplication
- * @EnableRemiSafe
+ * @EnableYdszSafe
  * public class Application {
  *     public static void main(String[] args) {
  *         SpringApplication.run(Application.class, args);
@@ -44,5 +44,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import(SafeConfiguration.class)
-public @interface EnableRemiSafe {
+public @interface EnableYdszSafe {
 }

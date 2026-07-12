@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -30,7 +30,7 @@ import lombok.ToString;
  * @see ExceptionCategory#INFRASTRUCTURE
  */
 @ToString(callSuper = true)
-public class InfrastructureException extends AbstractRemiException {
+public class InfrastructureException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
@@ -200,7 +200,7 @@ public class InfrastructureException extends AbstractRemiException {
         return new InfrastructureException(code, key);
     }
 
-    public static class InfrastructureExceptionBuilder extends RemiExceptionBuilder<InfrastructureException, InfrastructureExceptionBuilder> {
+    public static class InfrastructureExceptionBuilder extends YdszExceptionBuilder<InfrastructureException, InfrastructureExceptionBuilder> {
 
         public InfrastructureExceptionBuilder() {
             super();

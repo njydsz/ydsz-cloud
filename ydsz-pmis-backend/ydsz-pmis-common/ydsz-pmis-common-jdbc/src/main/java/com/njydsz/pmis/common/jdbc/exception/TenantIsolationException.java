@@ -1,7 +1,7 @@
-package com.njydsz.pmis.common.jdbc.exception;
+﻿package com.njydsz.pmis.common.jdbc.exception;
 
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
-import com.njydsz.pmis.common.exception.custom.RemiSecurityException;
+import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
 
 /**
  * 租户隔离异常
@@ -16,7 +16,7 @@ import com.njydsz.pmis.common.exception.custom.RemiSecurityException;
  * @version 3.5.0
  * @see com.njydsz.pmis.common.jdbc.interceptor.TenantIsolationInterceptor
  */
-public class TenantIsolationException extends RemiSecurityException {
+public class TenantIsolationException extends YdszSecurityException {
 
     private static final long serialVersionUID = 1L;
 

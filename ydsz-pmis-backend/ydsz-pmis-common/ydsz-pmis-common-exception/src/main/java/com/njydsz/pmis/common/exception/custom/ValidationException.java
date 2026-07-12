@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -29,7 +29,7 @@ import lombok.ToString;
  * @see ExceptionCategory#VALIDATION
  */
 @ToString(callSuper = true)
-public class ValidationException extends AbstractRemiException {
+public class ValidationException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
@@ -199,7 +199,7 @@ public class ValidationException extends AbstractRemiException {
         return new ValidationException(code, key);
     }
 
-    public static class ValidationExceptionBuilder extends RemiExceptionBuilder<ValidationException, ValidationExceptionBuilder> {
+    public static class ValidationExceptionBuilder extends YdszExceptionBuilder<ValidationException, ValidationExceptionBuilder> {
 
         public ValidationExceptionBuilder() {
             super();

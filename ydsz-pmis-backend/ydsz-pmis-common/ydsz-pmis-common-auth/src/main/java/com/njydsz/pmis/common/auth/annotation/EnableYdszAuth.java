@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.annotation;
+﻿package com.njydsz.pmis.common.auth.annotation;
 
 import com.njydsz.pmis.common.auth.config.AuthConfiguration;
 import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;
@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
  * <p><b>使用示例：</b>
  * <pre>
  * @SpringBootApplication
- * @EnableRemiAuth
+ * @EnableYdszAuth
  * public class Application {
  *     public static void main(String[] args) {
  *         SpringApplication.run(Application.class, args);
@@ -39,5 +39,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import({AuthConfiguration.class, AuthFilterConfiguration.class})
-public @interface EnableRemiAuth {
+public @interface EnableYdszAuth {
 }

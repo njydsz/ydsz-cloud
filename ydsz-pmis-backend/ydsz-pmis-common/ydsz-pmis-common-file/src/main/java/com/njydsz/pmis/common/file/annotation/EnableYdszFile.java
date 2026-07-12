@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.annotation;
+﻿package com.njydsz.pmis.common.file.annotation;
 
 import com.njydsz.pmis.common.file.config.FileConfiguration;
 import org.springframework.context.annotation.Import;
@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * <p><b>使用示例：</b></p>
  * <pre>{@code
  * @SpringBootApplication
- * @EnableRemiFile
+ * @EnableYdszFile
  * public class Application {
  *     public static void main(String[] args) {
  *         SpringApplication.run(Application.class, args);
@@ -43,5 +43,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import(FileConfiguration.class)
-public @interface EnableRemiFile {
+public @interface EnableYdszFile {
 }

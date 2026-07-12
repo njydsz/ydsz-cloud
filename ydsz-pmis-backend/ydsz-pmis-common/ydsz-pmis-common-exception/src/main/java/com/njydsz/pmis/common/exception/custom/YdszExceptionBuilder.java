@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
 import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
@@ -12,7 +12,7 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  * <p><b>使用方式：</b>
  * <pre>{@code
  * // 子类 Builder 继承此类，仅需声明各自特有的默认值
- * public class BusinessExceptionBuilder extends RemiExceptionBuilder<BusinessException, BusinessExceptionBuilder> {
+ * public class BusinessExceptionBuilder extends YdszExceptionBuilder<BusinessException, BusinessExceptionBuilder> {
  *     public BusinessExceptionBuilder() {
  *         defaultCode(UnifiedExceptionCode.FAIL.getCode());
  *         defaultHttpStatus(HttpStatus.BAD_REQUEST.value());
@@ -36,7 +36,7 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  * @version 3.5.0
  * @since 3.0.0
  */
-public abstract class RemiExceptionBuilder<T extends AbstractRemiException, B extends RemiExceptionBuilder<T, B>> {
+public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B extends YdszExceptionBuilder<T, B>> {
 
     protected String code;
     protected String key;

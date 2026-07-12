@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.handler;
+﻿package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
@@ -7,8 +7,8 @@ import com.njydsz.pmis.common.exception.custom.DuplicateException;
 import com.njydsz.pmis.common.exception.custom.ExternalException;
 import com.njydsz.pmis.common.exception.custom.InfrastructureException;
 import com.njydsz.pmis.common.exception.custom.RateLimitException;
-import com.njydsz.pmis.common.exception.custom.RemiSecurityException;
-import com.njydsz.pmis.common.exception.custom.RemiTimeoutException;
+import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
+import com.njydsz.pmis.common.exception.custom.YdszTimeoutException;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.exception.custom.ValidationException;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -162,9 +162,9 @@ public class WebFluxExceptionHandler {
     /**
      * 处理安全异常
      */
-    @ExceptionHandler(RemiSecurityException.class)
+    @ExceptionHandler(YdszSecurityException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public BaseResponse<?> handleSecurityException(RemiSecurityException e, ServerWebExchange exchange) {
+    public BaseResponse<?> handleSecurityException(YdszSecurityException e, ServerWebExchange exchange) {
         recordExceptionMetrics(e);
         String path = exchange.getRequest().getPath().value();
         log.warn("【全局】安全异常 | 路径: {} | 错误码: {} | 消息: {}",
@@ -192,9 +192,9 @@ public class WebFluxExceptionHandler {
     /**
      * 处理超时异常
      */
-    @ExceptionHandler(RemiTimeoutException.class)
+    @ExceptionHandler(YdszTimeoutException.class)
     @ResponseStatus(HttpStatus.GATEWAY_TIMEOUT)
-    public BaseResponse<?> handleTimeoutException(RemiTimeoutException e, ServerWebExchange exchange) {
+    public BaseResponse<?> handleTimeoutException(YdszTimeoutException e, ServerWebExchange exchange) {
         recordExceptionMetrics(e);
         String path = exchange.getRequest().getPath().value();
         log.error("【全局】超时异常 | 路径: {} | 错误码: {} | 消息: {}",

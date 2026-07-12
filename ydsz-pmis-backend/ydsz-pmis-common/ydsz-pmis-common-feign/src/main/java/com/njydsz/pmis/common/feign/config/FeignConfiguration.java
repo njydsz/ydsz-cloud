@@ -1,8 +1,8 @@
-package com.njydsz.pmis.common.feign.config;
+﻿package com.njydsz.pmis.common.feign.config;
 
 import com.njydsz.pmis.common.feign.aspect.FeignRequestInterceptor;
-import com.njydsz.pmis.common.feign.aspect.RemiFeignErrorDecoder;
-import com.njydsz.pmis.common.feign.aspect.RemiFeignLogger;
+import com.njydsz.pmis.common.feign.aspect.YdszFeignErrorDecoder;
+import com.njydsz.pmis.common.feign.aspect.YdszFeignLogger;
 import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerMetricsExporter;
 import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
 import com.njydsz.pmis.common.feign.compress.GzipRequestCompressInterceptor;
@@ -60,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
  * @version 3.5.0
  * @see FeignProperties
  * @see FeignRequestInterceptor
- * @see RemiFeignErrorDecoder
+ * @see YdszFeignErrorDecoder
  */
 @Slf4j
 @AutoConfiguration
@@ -75,12 +75,12 @@ public class FeignConfiguration {
      * 相比 Feign 默认日志处理器，提供了更丰富的上下文信息，
      * 包括请求耗时、响应状态等，便于问题排查。
      *
-     * @return RemiFeignLogger 实例
+     * @return YdszFeignLogger 实例
      */
     @Bean
     @ConditionalOnMissingBean
     public Logger feignLogger() {
-        return new RemiFeignLogger();
+        return new YdszFeignLogger();
     }
 
     /**
@@ -138,7 +138,7 @@ public class FeignConfiguration {
     @Bean
     @ConditionalOnMissingBean(ErrorDecoder.class)
     public ErrorDecoder errorDecoder(FeignProperties feignProperties) {
-        return new RemiFeignErrorDecoder(feignProperties);
+        return new YdszFeignErrorDecoder(feignProperties);
     }
 
     /**

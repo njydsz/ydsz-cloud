@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.aspect;
+﻿package com.njydsz.pmis.common.feign.aspect;
 
 import feign.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-public class RemiFeignLogger extends Logger {
+public class YdszFeignLogger extends Logger {
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger("com.njydsz.pmis.feign");
 

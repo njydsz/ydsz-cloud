@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.custom;
+﻿package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -30,7 +30,7 @@ import lombok.ToString;
  * @see ExceptionCategory#INFRASTRUCTURE
  */
 @ToString(callSuper = true)
-public class CircuitBreakerException extends AbstractRemiException {
+public class CircuitBreakerException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
@@ -200,7 +200,7 @@ public class CircuitBreakerException extends AbstractRemiException {
         return new CircuitBreakerException(code, key);
     }
 
-    public static class CircuitBreakerExceptionBuilder extends RemiExceptionBuilder<CircuitBreakerException, CircuitBreakerExceptionBuilder> {
+    public static class CircuitBreakerExceptionBuilder extends YdszExceptionBuilder<CircuitBreakerException, CircuitBreakerExceptionBuilder> {
 
         public CircuitBreakerExceptionBuilder() {
             super();
