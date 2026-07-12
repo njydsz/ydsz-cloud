@@ -30,7 +30,7 @@ jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQ
 // ❌ LiteRuleAutoConfiguration.java — new 表达式使用行内 FQN
 new com.njydsz.pmis.literule.server.replay.ExecutionReplayService(...);
 
-// ❌ ReAuthService.java / JobService.java / JobDagService.java 等 8 个文件 — Javadoc @throws 使用行内 FQN
+// ❌ JobService.java / JobDagService.java 等 8 个文件 — Javadoc @throws 使用行内 FQN
 * @throws com.njydsz.pmis.common.exception.SysException 当任务不存在时抛出
 
 // ❌ IFileStorage.java / LogicalDeleteConfiguration.java 等 10 个文件 — Javadoc @see 使用行内 FQN

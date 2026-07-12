@@ -9,7 +9,7 @@
  *   <li>CSRF 安全策略（{@code CsrfSecurityPolicy}）</li>
  *   <li>密码策略（{@code PasswordPolicy}）与 TOTP（{@code TotpUtil}）</li>
  *   <li>登录状态（{@code LoginStatus}）与账号锁定信息（{@code AccountLockInfo}）</li>
- *   <li>审计事件（登录审计 / 敏感操作 / 数据导出 / 账号锁定）</li>
+ *   <li>审计事件（登录审计 / 数据导出 / 账号锁定）</li>
  * </ul>
  *
  * <h3>设计原则</h3>

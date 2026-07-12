@@ -29,7 +29,7 @@ public final class PermissionCodeValidator {
             "toggle", "reset-password", "act", "recompute", "terminate",
             "status", "scan", "follow-up", "evaluate", "dispatch", "aggregate",
             "submit", "check",
-            // P0-3 扩充: 资源/2FA/会话/敏感操作/项目/执行/财务 等业务动作
+            // P0-3 扩充: 资源/2FA/会话/项目/执行/财务 等业务动作
             "into", "out", "kick",
             "bind-2fa", "verify-2fa",
             "session-list", "session-kick",

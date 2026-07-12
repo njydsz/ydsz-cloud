@@ -17,7 +17,7 @@
 
 | 业务域 | 说明 |
 |---|---|
-| **登录认证** | 账号密码 + 图形验证码 + 二次认证 + TOTP 2FA |
+| **登录认证** | 账号密码 + 图形验证码 + TOTP 2FA |
 | **Token 管理** | JWT 签发 / 刷新 / 失效 |
 | **会话管理** | 在线用户、强制下线、会话审计 |
 | **登录审计** | 登录成功/失败/锁定/异地登录记录 |
@@ -33,8 +33,7 @@
 | 路径前缀 | 作用 |
 |---|---|
 | `/auth/login` | 登录（密码 + 验证码 + 2FA 校验） |
-| `/auth/2fa` | 二次认证 |
-| `/auth/reauth` | 敏感操作再认证 |
+| `/auth/2fa` | TOTP 2FA 二次认证 |
 | `/user` | 用户 CRUD |
 | `/role` / `/permission` | RBAC |
 | `/dept` | 部门 |
@@ -55,7 +54,7 @@
 |---|---|---|
 | **登录认证** | `pmis_user_account` | 用户账号（密码哈希、状态、最后登录时间） |
 | | `pmis_user_session` | 在线会话（token、IP、UA、过期时间） |
-| | `pmis_user_2fa` | TOTP 2FA 二次认证密钥 |
+| | `pmis_user_2fa` | TOTP 2FA 密钥 |
 | | `pmis_login_audit` | 登录审计（成功/失败/锁定/异地） |
 | **RBAC** | `pmis_role` | 角色 |
 | | `pmis_permission` | 权限码（`pmis:user:add` 等） |
