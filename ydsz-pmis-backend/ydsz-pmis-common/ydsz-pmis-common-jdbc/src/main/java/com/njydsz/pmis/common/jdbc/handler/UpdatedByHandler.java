@@ -2,8 +2,8 @@ package com.njydsz.pmis.common.jdbc.handler;
 
 import com.njydsz.pmis.common.jdbc.config.FieldFillConfiguration;
 import com.njydsz.pmis.common.jdbc.enums.FieldFillStrategyEnum;
-import com.njydsz.pmis.common.util.auth.AuthInfo;
-import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
+import com.njydsz.pmis.common.security.AuthInfo;
+import com.njydsz.pmis.common.security.AuthInfoUtils;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.StringValue;
 

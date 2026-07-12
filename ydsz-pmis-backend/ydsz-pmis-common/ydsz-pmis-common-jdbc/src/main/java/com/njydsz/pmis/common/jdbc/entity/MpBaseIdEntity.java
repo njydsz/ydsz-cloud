@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.jdbc.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.njydsz.pmis.common.domain.entity.BaseIdEntity;
+import com.njydsz.pmis.common.entity.BaseIdEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -12,7 +12,7 @@ package com.njydsz.pmis.common.jdbc.permission;
  * 
  */
 
-import com.njydsz.pmis.common.core.enums.DataScopeType;
+import com.njydsz.pmis.common.enums.DataScopeType;
 import lombok.Data;
 
 import java.util.Collections;

@@ -330,7 +330,7 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
             return null;
         }
         Expression out = null;
-        com.njydsz.pmis.common.core.enums.DataScopeType scope = context.getDataScope();
+        com.njydsz.pmis.common.enums.DataScopeType scope = context.getDataScope();
         if (scope == null) {
             if (shouldApplyTenantIsolation(table)) {
                 out = and(out, equals(table, config.getTenantColumn(), context.getTenantId()));

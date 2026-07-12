@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.jdbc.exception;
 
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.jdbc.interceptor.TenantIsolationInterceptor;
-import com.njydsz.pmis.common.exception.custom.RemiSecurityException;
+import com.njydsz.pmis.common.exception.custom.SecurityException;
 
 /**
  * 租户隔离异常
@@ -17,7 +17,7 @@ import com.njydsz.pmis.common.exception.custom.RemiSecurityException;
  * 
  * @see TenantIsolationInterceptor
  */
-public class TenantIsolationException extends RemiSecurityException {
+public class TenantIsolationException extends SecurityException {
 
     private static final long serialVersionUID = 1L;
 

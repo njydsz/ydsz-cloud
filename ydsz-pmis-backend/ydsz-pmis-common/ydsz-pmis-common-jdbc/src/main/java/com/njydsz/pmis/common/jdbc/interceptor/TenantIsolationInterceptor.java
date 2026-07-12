@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.pmis.common.jdbc.config.TenantIsolationProperties;
 import com.njydsz.pmis.common.jdbc.exception.TenantIsolationException;
-import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
+import com.njydsz.pmis.common.security.AuthInfoUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.StringValue;

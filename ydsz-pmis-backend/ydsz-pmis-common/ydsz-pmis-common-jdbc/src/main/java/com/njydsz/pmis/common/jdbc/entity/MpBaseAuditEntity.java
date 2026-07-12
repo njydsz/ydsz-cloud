@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.jdbc.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.njydsz.pmis.common.domain.entity.BaseAuditEntity;
+import com.njydsz.pmis.common.entity.BaseAuditEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;

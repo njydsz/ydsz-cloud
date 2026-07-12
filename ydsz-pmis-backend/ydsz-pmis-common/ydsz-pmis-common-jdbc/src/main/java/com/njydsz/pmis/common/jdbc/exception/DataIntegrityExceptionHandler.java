@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.jdbc.exception;
 
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.core.ExceptionInfo;
+import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.exception.ExceptionInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -55,7 +55,7 @@ public class DataIntegrityExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public BaseResponse<?> handleDataIntegrityViolationException(
+    public Result<?> handleDataIntegrityViolationException(
             DataIntegrityViolationException e, HttpServletRequest request) {
         Throwable rootCause = getRootCause(e);
         String rootMessage = rootCause != null ? rootCause.getMessage() : e.getMessage();
@@ -79,7 +79,7 @@ public class DataIntegrityExceptionHandler {
                 HttpStatus.CONFLICT.value()
         );
         info.setPath(request.getRequestURI());
-        return BaseResponse.error(
+        return Result.error(
                 UnifiedExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode(),
                 message,
                 info

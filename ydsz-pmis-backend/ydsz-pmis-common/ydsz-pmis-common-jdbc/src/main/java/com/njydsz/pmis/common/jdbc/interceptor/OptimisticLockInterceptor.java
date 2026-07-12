@@ -182,7 +182,7 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
             }
             Class<?> current = parameterType;
             while (current != null) {
-                if ("com.njydsz.pmis.common.domain.entity.BaseEntity".equals(current.getName())) {
+                if ("com.njydsz.pmis.common.entity.BaseEntity".equals(current.getName())) {
                     return true;
                 }
                 current = current.getSuperclass();
@@ -200,7 +200,7 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
     }
 
     private boolean isBaseEntityInterface(Class<?> iface) {
-        if ("com.njydsz.pmis.common.domain.entity.BaseEntity".equals(iface.getName())) {
+        if ("com.njydsz.pmis.common.entity.BaseEntity".equals(iface.getName())) {
             return true;
         }
         for (Class<?> parent : iface.getInterfaces()) {
