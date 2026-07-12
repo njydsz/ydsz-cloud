@@ -2,7 +2,7 @@ package com.njydsz.pmis.system.web.controller.file;
 
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.RateLimit;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.system.server.service.file.FileEnhanceService;
 import io.swagger.v3.oas.annotations.Operation;

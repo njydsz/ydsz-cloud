@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.analytics;
 
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.workflow.server.service.analytics.FlowHistoryArchiveService;
 import jakarta.validation.constraints.Max;

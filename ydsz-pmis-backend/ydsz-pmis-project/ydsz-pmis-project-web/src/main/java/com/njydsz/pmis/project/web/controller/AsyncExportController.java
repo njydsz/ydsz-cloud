@@ -2,8 +2,8 @@ package com.njydsz.pmis.project.web.controller.report;
 
 import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.annotation.RateLimit;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.project.server.service.AsyncExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

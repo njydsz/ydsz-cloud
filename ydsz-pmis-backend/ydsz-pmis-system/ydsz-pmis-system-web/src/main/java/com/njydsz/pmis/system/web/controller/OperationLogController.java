@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 import com.njydsz.pmis.system.domain.entity.audit.OperationLogDO;
 import com.njydsz.pmis.system.server.service.audit.OperationLogServiceImpl;
 import com.njydsz.pmis.system.server.util.DiffCalculator;
-import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;

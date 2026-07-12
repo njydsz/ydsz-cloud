@@ -3,7 +3,7 @@ package com.njydsz.pmis.literule.server.orchestrator;
 /**
  * 规则链类型枚举
  *
- * <p>定义规则编排的十一种核心语义：
+ * <p>定义规则编排的十种核心语义：
  * <ul>
  *   <li>{@link #THEN} - 顺序执行：节点依次串行执行，收集触发结果</li>
  *   <li>{@link #WHEN} - 并行执行：节点并发执行（基于 CompletableFuture），收集触发结果</li>

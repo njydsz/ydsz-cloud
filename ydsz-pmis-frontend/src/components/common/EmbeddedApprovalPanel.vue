@@ -123,37 +123,6 @@
         </el-button>
       </div>
 
-      <!-- AI 智能辅助（推荐审批人 / 起草意见） -->
-      <div v-if="view.aiAvailable && showAiPanel" class="panel-ai">
-        <el-divider>
-          <span class="ai-title">
-            <el-icon><MagicStick /></el-icon>
-            AI 智能辅助
-          </span>
-        </el-divider>
-        <div class="ai-actions">
-          <el-button
-            size="small"
-            :icon="MagicStick"
-            :loading="aiLoading === 'recommend'"
-            @click="handleAiRecommend"
-          >
-            推荐审批人
-          </el-button>
-          <el-button
-            size="small"
-            :icon="EditPen"
-            :loading="aiLoading === 'draft'"
-            @click="handleAiDraft"
-          >
-            起草意见
-          </el-button>
-        </div>
-        <div v-if="aiResult" class="ai-result">
-          <pre>{{ aiResult }}</pre>
-        </div>
-      </div>
-
       <!-- 审批轨迹时间线 -->
       <div v-if="view.history.length > 0" class="panel-section">
         <div class="section-title">
@@ -242,8 +211,6 @@ import {
   Avatar,
   User,
   Timer,
-  MagicStick,
-  EditPen,
   Clock,
   Check,
   Close,
@@ -255,8 +222,6 @@ import {
 import {
   loadEmbeddedPanel,
   embeddedQuickAction,
-  recommendApprovers,
-  draftComment,
   type EmbeddedApprovalView as EmbeddedApprovalViewType,
 } from '@/api/workflow'
 import { CommentEditor, UserPicker } from '@/components/common'
@@ -274,8 +239,6 @@ const props = withDefaults(
     showStartButton?: boolean
     /** 紧凑模式：缩小间距与字号 */
     compact?: boolean
-    /** 是否显示 AI 智能辅助区 */
-    showAiPanel?: boolean
     /** 预置常用语 */
     phrases?: string[]
   }>(),
@@ -283,7 +246,6 @@ const props = withDefaults(
     onStart: undefined,
     showStartButton: false,
     compact: false,
-    showAiPanel: true,
     phrases: undefined,
   },
 )
@@ -298,9 +260,6 @@ const loading = ref(false)
 const starting = ref(false)
 const view = ref<EmbeddedApprovalViewType | null>(null)
 const actionLoading = ref<string | null>(null)
-const aiLoading = ref<string | null>(null)
-const aiResult = ref<string>('')
-
 // 意见弹窗
 const commentDialogVisible = ref(false)
 const commentDialogTitle = ref('请输入审批意见')
@@ -513,67 +472,6 @@ const doAction = async (action: string, comment: string) => {
   }
 }
 
-const handleAiRecommend = async () => {
-  if (!view.value?.currentTasks.length) {
-    ElMessage.warning('当前没有待办任务')
-    return
-  }
-  aiLoading.value = 'recommend'
-  try {
-    const mine = view.value.currentTasks.find((t) => t.mine) || view.value.currentTasks[0]
-    const resp = await recommendApprovers({
-      flowCode: view.value.instance?.flowCode as string,
-      nodeCode: mine.nodeCode,
-      businessType: view.value.businessType,
-      businessId: Number(view.value.businessId),
-      topN: 3,
-      candidates: view.value.currentTasks.map((t) => ({
-        userId: Number(t.assigneeId) || 0,
-        name: t.assigneeName,
-      })),
-    })
-    const data = (resp as unknown as { data?: Array<Record<string, unknown>> }).data
-    const list = data ?? (resp as unknown as Array<Record<string, unknown>>)
-    aiResult.value = list && list.length
-      ? list
-          .map((c, i) => `${i + 1}. ${c.realName || c.name || c.username} (得分: ${(c._score as number)?.toFixed?.(3) || c._score})`)
-          .join('\n')
-      : '暂无推荐'
-  } catch (e) {
-    aiResult.value = '推荐失败：' + ((e as Error).message || '未知错误')
-  } finally {
-    aiLoading.value = null
-  }
-}
-
-const handleAiDraft = async () => {
-  if (!commentAction.value) {
-    ElMessage.warning('请先选择操作类型（通过/驳回）')
-    return
-  }
-  aiLoading.value = 'draft'
-  try {
-    const resp = await draftComment({
-      action: commentAction.value as 'PASS' | 'REJECT' | 'TRANSFER' | 'DELEGATE' | 'URGE',
-      flowName: view.value?.instance?.flowName as string,
-      nodeName: view.value?.diagram?.currentNodeName as string,
-      title: view.value?.instance?.title as string,
-    })
-    const data = (resp as unknown as { data?: { primary: string; alternatives: string[] } }).data
-    const result = data ?? (resp as unknown as { primary: string; alternatives: string[] })
-    if (result?.primary) {
-      commentDraft.value = result.primary
-      aiResult.value = `主意见：${result.primary}\n\n备选：\n${(result.alternatives || []).map((s, i) => `${i + 1}. ${s}`).join('\n')}`
-    } else {
-      aiResult.value = '未生成意见'
-    }
-  } catch (e) {
-    aiResult.value = '起草失败：' + ((e as Error).message || '未知错误')
-  } finally {
-    aiLoading.value = null
-  }
-}
-
 const actionLabel = (action?: string) => {
   const map: Record<string, string> = {
     PASS: '通过',
@@ -776,32 +674,6 @@ defineExpose({ loadPanel, view })
     padding: 8px 0;
     border-top: 1px dashed var(--el-border-color-lighter);
     border-bottom: 1px dashed var(--el-border-color-lighter);
-  }
-
-  .panel-ai {
-    .ai-title {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: #8e44ad;
-    }
-
-    .ai-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .ai-result {
-      margin-top: 8px;
-      padding: 10px;
-      background: #faf5ff;
-      border: 1px solid #e9d8fd;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
   }
 
   .history-item {

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.web.controller.report;
 
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.annotation.RateLimit;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;

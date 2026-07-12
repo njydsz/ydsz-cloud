@@ -2,9 +2,9 @@ package com.njydsz.pmis.userinfo.web.controller.org;
 
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.annotation.RateLimit;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;

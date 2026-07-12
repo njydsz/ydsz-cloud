@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.web.controller.common;
 
-import com.njydsz.pmis.common.annotation.RateLimit;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.project.domain.dto.CockpitKpiVO;
 import com.njydsz.pmis.project.domain.dto.ProjectDetailAggregateVO;

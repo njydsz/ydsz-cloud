@@ -2,7 +2,7 @@ package com.njydsz.pmis.literule.web;
 
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.server.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.server.expr.VariableDefinition;

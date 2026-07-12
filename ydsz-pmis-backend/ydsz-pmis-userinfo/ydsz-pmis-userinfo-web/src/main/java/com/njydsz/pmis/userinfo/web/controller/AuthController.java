@@ -6,7 +6,7 @@ import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
-import com.njydsz.pmis.common.annotation.RateLimit;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;

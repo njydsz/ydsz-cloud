@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.common;
 
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
-import com.njydsz.pmis.common.annotation.RateLimit;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.util.SortBy;
 import com.njydsz.pmis.project.domain.query.ProjectSearchVO;

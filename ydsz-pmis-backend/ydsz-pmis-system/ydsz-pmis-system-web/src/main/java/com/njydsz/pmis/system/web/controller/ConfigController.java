@@ -3,9 +3,9 @@ package com.njydsz.pmis.system.web.controller.config;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.annotation.RateLimit;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.system.domain.dto.config.ConfigFormDTO;
 import com.njydsz.pmis.system.domain.dto.config.ConfigQueryDTO;

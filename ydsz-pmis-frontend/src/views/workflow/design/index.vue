@@ -21,7 +21,7 @@
  */
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { CopyDocument, VideoPlay, Refresh, Search, Files, MagicStick, Upload } from '@element-plus/icons-vue'
+import { CopyDocument, VideoPlay, Refresh, Search, Files, Upload } from '@element-plus/icons-vue'
 import FlowDesigner from '../components/FlowDesigner.vue'
 import BpmnDesigner from '../components/BpmnDesigner.vue'
 import {
@@ -33,7 +33,6 @@ import {
   listFlowTemplates,
   importFlowTemplate,
   exportAsTemplate,
-  generateBpmn,
   batchDeployByZip,
 } from '@/api/workflow'
 import type {
@@ -359,46 +358,7 @@ function categoryTagType(cat?: string): 'info' | 'primary' | 'success' | 'warnin
   }
 }
 
-// ==================== P0-3: AI 一句话生成流程 ====================
-const aiGenerateDialog = ref(false)
-const aiGenerating = ref(false)
-const aiDescription = ref('')
-const aiExamples = [
-  '请假审批：直属领导审批 → 3天以上部门经理审批 → 人事备案',
-  '采购申请：部门经理审批 → 财务审核 → 总经理审批（1万元以上）→ 采购执行',
-  '出差申请：直属领导审批 → 部门经理审批 → 行政订票',
-  '报销审批：直属领导审批 → 财务审核 → 出纳付款',
-]
-
-function openAiGenerateDialog() {
-  aiDescription.value = ''
-  aiGenerateDialog.value = true
-}
-
-async function doAiGenerate() {
-  if (!aiDescription.value.trim()) {
-    ElMessage.warning('请输入流程描述')
-    return
-  }
-  aiGenerating.value = true
-  try {
-    const res = await generateBpmn(aiDescription.value.trim())
-    if (res.data?.code === 0 && res.data.data?.bpmnXml) {
-      ElMessage.success('流程生成成功，已加载到设计器')
-      aiGenerateDialog.value = false
-      // 将生成的 BPMN XML 加载到 BPMN 设计器（通过 ref 调用）
-      ;(bpmnDesignerRef.value as unknown as { importXml: (xml: string) => void } | null)?.importXml(res.data.data.bpmnXml)
-    } else {
-      ElMessage.error(res.data?.message || '生成失败')
-    }
-  } catch (e) {
-    ElMessage.error('AI 生成失败：' + ((e as Error)?.message ?? '未知错误'))
-  } finally {
-    aiGenerating.value = false
-  }
-}
-
-/** BPMN 设计器 ref（用于 AI 生成后导入 XML） */
+/** BPMN 设计器 ref */
 const bpmnDesignerRef = ref<InstanceType<typeof BpmnDesigner> | null>(null)
 
 // ==================== 初始化 ====================
@@ -460,10 +420,6 @@ onMounted(() => {
       <el-button :icon="CopyDocument" @click="openVersionDrawer">版本管理</el-button>
       <el-button type="primary" :icon="VideoPlay" @click="openSimulateDialog">
         模拟运行
-      </el-button>
-      <!-- P0-3: AI 一句话生成流程 -->
-      <el-button type="warning" :icon="MagicStick" @click="openAiGenerateDialog">
-        AI 生成
       </el-button>
     </div>
 
@@ -738,56 +694,6 @@ onMounted(() => {
       </template>
     </el-dialog>
 
-    <!-- P0-3: AI 一句话生成流程对话框 -->
-    <el-dialog
-      v-model="aiGenerateDialog"
-      title="AI 智能生成流程"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <el-alert
-        type="info"
-        :closable="false"
-        show-icon
-        style="margin-bottom: 16px"
-      >
-        输入流程描述，AI 将自动生成 BPMN 流程图。例如："请假审批：直属领导审批 → 3天以上部门经理审批 → 人事备案"
-      </el-alert>
-
-      <el-input
-        v-model="aiDescription"
-        type="textarea"
-        :rows="4"
-        placeholder="请输入流程描述..."
-        maxlength="500"
-        show-word-limit
-      />
-
-      <div class="ai-examples">
-        <span class="ai-examples__label">示例：</span>
-        <el-tag
-          v-for="(ex, i) in aiExamples"
-          :key="i"
-          class="ai-example-tag"
-          effect="plain"
-          @click="aiDescription = ex"
-        >
-          {{ ex }}
-        </el-tag>
-      </div>
-
-      <template #footer>
-        <el-button @click="aiGenerateDialog = false">取消</el-button>
-        <el-button
-          type="warning"
-          :icon="MagicStick"
-          :loading="aiGenerating"
-          @click="doAiGenerate"
-        >
-          {{ aiGenerating ? '生成中...' : '生成流程' }}
-        </el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 

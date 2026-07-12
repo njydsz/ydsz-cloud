@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
-import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 
@@ -660,7 +660,7 @@ public class RuleAdminController {
      * 审批通过（1.4.0 起支持）
      *
      * <p>将规则从 DRAFT/REVIEW 状态变更为 PUBLISHED，并记录审批人、审批时间、审批意见。
-     * 主要用于 AI 生成规则的闭环：AI 生成 → DRAFT → 人工审批 → PUBLISHED。
+     * 主要用于规则审批闭环：新建 → DRAFT → 人工审批 → PUBLISHED。
      *
      * @param ruleCode 规则编码
      * @param request  请求体，包含 comment（审批意见）
@@ -702,7 +702,7 @@ public class RuleAdminController {
      * 审批驳回（1.4.0 起支持）
      *
      * <p>将规则从 DRAFT/REVIEW 状态变更为 ARCHIVED，并记录驳回理由。
-     * 主要用于 AI 生成规则的闭环：AI 生成 → DRAFT → 人工驳回 → ARCHIVED。
+     * 主要用于规则审批闭环：新建 → DRAFT → 人工驳回 → ARCHIVED。
      *
      * @param ruleCode 规则编码
      * @param request  请求体，包含 reason（驳回理由，必填）

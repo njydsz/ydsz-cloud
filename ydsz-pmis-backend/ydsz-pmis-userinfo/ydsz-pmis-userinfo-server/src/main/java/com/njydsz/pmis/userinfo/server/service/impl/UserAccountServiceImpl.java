@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.user;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.DataScope;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;

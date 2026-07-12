@@ -3,10 +3,10 @@ package com.njydsz.pmis.userinfo.web.controller.user;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.annotation.RequireReAuth;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
+import com.njydsz.pmis.common.auth.annotation.RequireReAuth;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
