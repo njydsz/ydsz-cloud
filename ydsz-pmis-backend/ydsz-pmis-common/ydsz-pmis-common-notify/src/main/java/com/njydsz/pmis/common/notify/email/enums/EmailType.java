@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.email.enums;
+package com.njydsz.pmis.common.email.enums;
 
 /**
  * 邮件类型枚举
@@ -8,7 +8,7 @@ package com.njydsz.pmis.common.notify.email.enums;
  *
  * @author ydsz-pmis-team
  * 
- * @since 1.0.0
+ * 
  * @since 1.0.0
  */
 public enum EmailType {

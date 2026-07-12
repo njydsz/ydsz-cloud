@@ -1,13 +1,13 @@
-package com.njydsz.pmis.common.notify.email.listener;
+package com.njydsz.pmis.common.email.listener;
 
-import com.njydsz.pmis.common.notify.email.domain.Email;
-import com.njydsz.pmis.common.notify.email.domain.SendResult;
+import com.njydsz.pmis.common.email.domain.Email;
+import com.njydsz.pmis.common.email.domain.SendResult;
 
 /**
  * 邮件发送监听器接口
  *
  * <p>提供邮件发送过程的关键节点回调，支持在发送前验证、发送后记录等场景。
- * 可通过 {@link com.njydsz.pmis.common.notify.email.service.EmailService#registerListener} 注册多个监听器。</p>
+ * 可通过 {@link com.njydsz.pmis.common.email.service.EmailService#registerListener} 注册多个监听器。</p>
  *
  * <h3>使用示例</h3>
  * <pre>{@code
@@ -35,7 +35,7 @@ import com.njydsz.pmis.common.notify.email.domain.SendResult;
  *
  * @author ydsz-pmis-team
  * 
- * @since 1.0.0
+ * 
  * @since 1.0.0
  */
 public interface EmailSendListener {

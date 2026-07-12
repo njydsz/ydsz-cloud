@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.email.domain;
+package com.njydsz.pmis.common.email.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,7 +32,7 @@ import java.io.File;
  *
  * @author ydsz-pmis-team
  * 
- * @since 1.0.0
+ * 
  * @since 1.0.0
  */
 @Data

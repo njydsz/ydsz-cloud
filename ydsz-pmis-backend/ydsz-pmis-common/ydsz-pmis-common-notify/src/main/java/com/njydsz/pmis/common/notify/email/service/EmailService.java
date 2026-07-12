@@ -1,12 +1,12 @@
-package com.njydsz.pmis.common.notify.email.service;
+package com.njydsz.pmis.common.email.service;
 
-import com.njydsz.pmis.common.notify.email.config.EmailProperties;
-import com.njydsz.pmis.common.notify.email.domain.Email;
-import com.njydsz.pmis.common.notify.email.domain.EmailAttachment;
-import com.njydsz.pmis.common.notify.email.domain.EmailInlineResource;
-import com.njydsz.pmis.common.notify.email.domain.SendResult;
-import com.njydsz.pmis.common.notify.email.enums.EmailType;
-import com.njydsz.pmis.common.notify.email.listener.EmailSendListener;
+import com.njydsz.pmis.common.email.config.EmailProperties;
+import com.njydsz.pmis.common.email.domain.Email;
+import com.njydsz.pmis.common.email.domain.EmailAttachment;
+import com.njydsz.pmis.common.email.domain.EmailInlineResource;
+import com.njydsz.pmis.common.email.domain.SendResult;
+import com.njydsz.pmis.common.email.enums.EmailType;
+import com.njydsz.pmis.common.email.listener.EmailSendListener;
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 import freemarker.template.Configuration;
@@ -69,7 +69,7 @@ import java.util.concurrent.Executor;
  *
  * @author ydsz-pmis-team
  * 
- * @since 1.0.0
+ * 
  * @since 1.0.0
  */
 @Service

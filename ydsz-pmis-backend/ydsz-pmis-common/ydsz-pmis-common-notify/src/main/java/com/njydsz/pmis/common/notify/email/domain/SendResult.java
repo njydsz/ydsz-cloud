@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.email.domain;
+package com.njydsz.pmis.common.email.domain;
 
 import java.time.LocalDateTime;
 
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
  *
  * @author ydsz-pmis-team
  * 
- * @since 1.0.0
+ * 
  * @since 1.0.0
  */
 public class SendResult {

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.email.config;
+package com.njydsz.pmis.common.email.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Min;
  * 邮件配置属性类
  *
  * <p>封装邮件发送所需的全部配置信息，支持通过 application.yml 配置。
- * 配置项以 {@code pmis.notify.email} 为前缀。</p>
+ * 配置项以 {@code remi.notify.email} 为前缀。</p>
  *
  * <h3>配置示例</h3>
  * <pre>{@code
@@ -38,11 +38,11 @@ import jakarta.validation.constraints.Min;
  *
  * @author ydsz-pmis-team
  * 
- * @since 1.0.0
+ * 
  * @since 1.0.0
  */
 @Validated
-@ConfigurationProperties(prefix = "pmis.notify.email")
+@ConfigurationProperties(prefix = "remi.notify.email")
 public class EmailProperties {
 
     /** 是否启用邮件模块（默认 true），关闭后 EmailConfiguration 不会自动注册 JavaMailSender 和 EmailService */

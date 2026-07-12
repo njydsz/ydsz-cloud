@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.notify.email.domain;
+package com.njydsz.pmis.common.email.domain;
 
-import com.njydsz.pmis.common.notify.email.enums.EmailType;
+import com.njydsz.pmis.common.email.enums.EmailType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -60,7 +60,7 @@ import java.util.Map;
  *
  * @author ydsz-pmis-team
  * 
- * @since 1.0.0
+ * 
  * @since 1.0.0
  */
 @Data

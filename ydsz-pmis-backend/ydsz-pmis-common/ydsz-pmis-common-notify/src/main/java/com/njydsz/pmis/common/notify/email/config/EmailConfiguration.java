@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.email.config;
+package com.njydsz.pmis.common.email.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,14 +49,14 @@ import java.util.Properties;
  *
  * @author ydsz-pmis-team
  * 
- * @since 1.0.0
+ * 
  * @since 1.0.0
  * @see JavaMailSenderImpl
  * @see EmailProperties
  */
 @AutoConfiguration
 @EnableConfigurationProperties(EmailProperties.class)
-@ConditionalOnProperty(prefix = "pmis.notify.email", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "remi.notify.email", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass(JavaMailSenderImpl.class)
 public class EmailConfiguration {
 
