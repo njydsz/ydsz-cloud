@@ -1,0 +1,36 @@
+# =====================================================================
+#  YDSZ PMIS · Finance · DEV 环境配置（Nacos DataId）
+#  DataId:    ydsz-pmis-finance-dev.yaml
+#  Group:     dev
+#  端口:      9011
+#  职责:      发票 / 回款 / 费用 / 收入 / 利润 / 对账 / 信用
+# =====================================================================
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.njydsz.pmis.finance.entity
+
+# Seata 分布式事务（AT 模式）
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: pmis-tx-group
+  enable-auto-data-source-proxy: true
+  registry:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      namespace: pmis
+      group: SEATA_GROUP
+  config:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      namespace: pmis
+      group: SEATA_GROUP
+      data-id: seata-client.properties
+  service:
+    vgroup-mapping:
+      pmis-tx-group: default
+    grouplist:
+      default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
