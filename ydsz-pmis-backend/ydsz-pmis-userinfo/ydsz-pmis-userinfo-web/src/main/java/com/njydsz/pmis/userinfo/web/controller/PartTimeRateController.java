@@ -108,8 +108,8 @@ public class PartTimeRateController {
     @GetMapping
     public BaseResponse<Page<PartTimeRateDO>> page(@Valid PartTimeRatePageDTO query) {
         return BaseResponse.ok(partTimeRateService.page(
-                (int) query.getPage(),
-                (int) Math.min(query.getSize(), 200),
+                query.getPageNum(),
+                Math.min(query.getPageSize(), 200),
                 query.getKeyword(),
                 query.getLevelSegment(),
                 query.getStatus()));

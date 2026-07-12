@@ -117,8 +117,8 @@ public class EmployeeController {
     @GetMapping
     public BaseResponse<Page<EmployeeVO>> page(@Valid @ModelAttribute EmployeePageDTO query) {
         Page<EmployeeDO> doPage = employeeService.page(
-                (int) query.getPage(),
-                (int) query.getSize(),
+                query.getPageNum(),
+                Math.min(query.getPageSize(), 200),
                 query.getKeyword(),
                 query.getDepartmentId(),
                 query.getEmployeeType(),

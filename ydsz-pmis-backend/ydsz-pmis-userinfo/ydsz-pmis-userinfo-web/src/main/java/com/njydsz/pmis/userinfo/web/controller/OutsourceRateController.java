@@ -108,8 +108,8 @@ public class OutsourceRateController {
     @GetMapping
     public BaseResponse<Page<OutsourceRateDO>> page(@Valid OutsourceRatePageDTO query) {
         return BaseResponse.ok(outsourceRateService.page(
-                (int) query.getPage(),
-                (int) Math.min(query.getSize(), 200),
+                query.getPageNum(),
+                Math.min(query.getPageSize(), 200),
                 query.getKeyword(),
                 query.getLevelSegment(),
                 query.getStatus()));
