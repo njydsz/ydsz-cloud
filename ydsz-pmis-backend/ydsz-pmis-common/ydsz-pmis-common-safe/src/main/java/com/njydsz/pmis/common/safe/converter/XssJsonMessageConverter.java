@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.converter;
+package com.njydsz.pmis.common.safe.converter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;

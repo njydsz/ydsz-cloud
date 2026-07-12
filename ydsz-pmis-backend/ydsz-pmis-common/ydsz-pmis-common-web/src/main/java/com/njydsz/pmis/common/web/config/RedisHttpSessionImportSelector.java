@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.config;
+package com.njydsz.pmis.common.web.config;
 
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.type.AnnotationMetadata;

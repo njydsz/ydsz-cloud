@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.ratelimit;
+package com.njydsz.pmis.common.safe.ratelimit;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;

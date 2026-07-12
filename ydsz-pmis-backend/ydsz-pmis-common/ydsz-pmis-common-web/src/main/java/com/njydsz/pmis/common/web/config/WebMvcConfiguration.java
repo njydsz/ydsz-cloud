@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.web.config;
+package com.njydsz.pmis.common.web.config;
 
 import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

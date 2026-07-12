@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.captcha.core;
+package com.njydsz.pmis.common.safe.captcha.core;
 
 import com.njydsz.pmis.common.safe.captcha.exception.CaptchaException;
 import org.slf4j.Logger;

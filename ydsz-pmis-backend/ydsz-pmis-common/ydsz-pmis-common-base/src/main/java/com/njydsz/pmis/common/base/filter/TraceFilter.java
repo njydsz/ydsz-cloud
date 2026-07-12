@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.filter;
+package com.njydsz.pmis.common.base.filter;
 
 import com.njydsz.pmis.common.core.context.RequestContext;
 import com.njydsz.pmis.common.core.trace.TraceIdGenerator;

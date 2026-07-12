@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.impl;
+package com.njydsz.pmis.common.lock.impl;
 
 import com.njydsz.pmis.common.lock.core.AbstractRedisDistributedLock;
 import com.njydsz.pmis.common.lock.core.DistributedLock;
