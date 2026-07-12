@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.lock.health;
+﻿package com.njydsz.pmis.common.lock.health;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 @Slf4j
 @Configuration
 @ConditionalOnClass(RedisConnectionFactory.class)
-@ConditionalOnProperty(prefix = "remi.lock", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ydsz.lock", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class LockHealthIndicator implements HealthIndicator {
 
     @Resource

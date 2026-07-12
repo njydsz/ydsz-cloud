@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.config;
+﻿package com.njydsz.pmis.common.queue.config;
 
 import com.njydsz.pmis.common.queue.manager.QueueManager;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
@@ -30,7 +30,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * 消息队列自动配置类
  *
  * <p>提供消息队列模块的 Spring Boot 自动配置能力。
- * 当配置项 {@code remi.queue.enabled=true} 时自动启用。
+ * 当配置项 {@code ydsz.queue.enabled=true} 时自动启用。
  *
  * <p><b>Redis 连接复用：</b>
  * 优先使用 ydsz-pmis-common-redis 的 {@link RedisService} 复用 Redis 连接，
@@ -44,7 +44,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  *     redis:
  *       host: 127.0.0.1
  *       port: 6379
- * remi:
+ * ydsz:
  *   queue:
  *     enabled: true
  *     stream-group: remi-group
@@ -59,7 +59,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @AutoConfiguration
 @EnableConfigurationProperties(QueueProperties.class)
 @EnableScheduling
-@ConditionalOnProperty(prefix = "remi.queue", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.queue", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class QueueConfiguration {
 
     private final QueueProperties queueProperties;
@@ -211,7 +211,7 @@ public class QueueConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(MessageTraceRecorder.class)
-    @ConditionalOnProperty(prefix = "remi.queue.trace", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(prefix = "ydsz.queue.trace", name = "enabled", havingValue = "true")
     public MessageTraceRecorder messageTraceRecorder() {
         String backend = queueProperties.getTrace().resolvedBackend();
         int ttlMinutes = queueProperties.getTrace().getTtlMinutes();
@@ -239,7 +239,7 @@ public class QueueConfiguration {
      * @return AOP 切面实例
      */
     @Bean
-    @ConditionalOnProperty(prefix = "remi.queue.trace", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(prefix = "ydsz.queue.trace", name = "enabled", havingValue = "true")
     public MessageTraceAspect messageTraceAspect(MessageTraceRecorder traceRecorder) {
         log.info("[Queue] 注册消息轨迹 AOP 切面");
         return new MessageTraceAspect(traceRecorder);

@@ -80,7 +80,7 @@ public class I18nConfiguration {
         MessageSource messageSource = createMessageSource(cacheSeconds);
         // fail-fast：启动时校验所有已注册 ExceptionCode 的 i18n key 都能被 MessageSource 解析
         boolean validateEnabled = environment == null
-                || environment.getProperty("remi.i18n.validate-on-startup", Boolean.class, true);
+                || environment.getProperty("ydsz.i18n.validate-on-startup", Boolean.class, true);
         if (validateEnabled) {
             validateExceptionCodeKeys(messageSource);
         }
@@ -99,7 +99,7 @@ public class I18nConfiguration {
      *   <li>{@link ExceptionCodeRegistry#allRegistered()} 中其他模块注册的 ExceptionCode（如有）</li>
      * </ul>
      *
-     * <p>可通过 {@code remi.i18n.validate-on-startup=false} 关闭校验（不推荐）。
+     * <p>可通过 {@code ydsz.i18n.validate-on-startup=false} 关闭校验（不推荐）。
      *
      * @param messageSource 已创建的 MessageSource 实例
      * @throws IllegalStateException 如果存在无法解析的 key
@@ -129,7 +129,7 @@ public class I18nConfiguration {
             String errorMsg = String.format(
                     "i18n 启动校验失败：以下 %d 个 ExceptionCode 的 key 在 messages.properties 中缺失，"
                     + "请检查 src/main/resources/i18n/messages.properties 及对应语言文件：\n  - %s\n"
-                    + "如需关闭校验，可设置 remi.i18n.validate-on-startup=false（不推荐）。",
+                    + "如需关闭校验，可设置 ydsz.i18n.validate-on-startup=false（不推荐）。",
                     missingKeys.size(), String.join("\n  - ", missingKeys));
             log.error(errorMsg);
             throw new IllegalStateException(errorMsg);

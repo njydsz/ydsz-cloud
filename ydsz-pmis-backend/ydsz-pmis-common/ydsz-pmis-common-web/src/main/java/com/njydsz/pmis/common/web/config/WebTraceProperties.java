@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.web.config;
+﻿package com.njydsz.pmis.common.web.config;
 
 import com.njydsz.pmis.common.base.config.BaseTraceProperties;
 import lombok.Data;
@@ -8,11 +8,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Web 端请求追踪/日志配置属性
  *
- * <p>继承 {@link BaseTraceProperties}，配置前缀：{@code remi.web.trace}
+ * <p>继承 {@link BaseTraceProperties}，配置前缀：{@code ydsz.web.trace}
  *
  * <p><b>配置示例（YAML）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   web:
  *     trace:
  *       enabled: true
@@ -27,7 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ConfigurationProperties(prefix = "remi.web.trace")
+@ConfigurationProperties(prefix = "ydsz.web.trace")
 public class WebTraceProperties extends BaseTraceProperties {
 
     /**

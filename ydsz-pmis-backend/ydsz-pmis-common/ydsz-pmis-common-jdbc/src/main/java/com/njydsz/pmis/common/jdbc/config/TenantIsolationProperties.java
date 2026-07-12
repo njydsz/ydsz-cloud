@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.config;
+﻿package com.njydsz.pmis.common.jdbc.config;
 
 import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,7 +17,7 @@ import java.util.Set;
  *
  * <p>配置示例：
  * <pre>
- * remi:
+ * ydsz:
  *   jdbc:
  *     tenant-isolation:
  *       enabled: true
@@ -34,8 +34,8 @@ import java.util.Set;
  */
 @Data
 @Configuration
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
-@ConfigurationProperties(prefix = "remi.jdbc.tenant-isolation")
+@ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
+@ConfigurationProperties(prefix = "ydsz.jdbc.tenant-isolation")
 public class TenantIsolationProperties {
 
     /**

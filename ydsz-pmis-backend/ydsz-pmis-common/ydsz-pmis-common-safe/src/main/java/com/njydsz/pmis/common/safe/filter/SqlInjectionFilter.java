@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.filter;
+﻿package com.njydsz.pmis.common.safe.filter;
 
 import com.njydsz.pmis.common.safe.alert.SecurityEvent;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
@@ -58,10 +58,10 @@ import java.util.regex.Pattern;
  *
  * <p><b>配置项：</b></p>
  * <ul>
- *   <li>{@code remi.safe.sql-injection.enabled} - 是否启用（默认 true）</li>
- *   <li>{@code remi.safe.sql-injection.block-on-detect} - 检测到攻击时是否阻断（默认 true）</li>
- *   <li>{@code remi.safe.sql-injection.whitelist-paths} - 排除检测的 URL 模式</li>
- *   <li>{@code remi.safe.sql-injection.whitelist-params} - 白名单参数名（其值不检测）</li>
+ *   <li>{@code ydsz.safe.sql-injection.enabled} - 是否启用（默认 true）</li>
+ *   <li>{@code ydsz.safe.sql-injection.block-on-detect} - 检测到攻击时是否阻断（默认 true）</li>
+ *   <li>{@code ydsz.safe.sql-injection.whitelist-paths} - 排除检测的 URL 模式</li>
+ *   <li>{@code ydsz.safe.sql-injection.whitelist-params} - 白名单参数名（其值不检测）</li>
  * </ul>
  *
  * <p><b>误报控制：</b>不匹配裸 SQL 关键字（避免正常业务查询"select user"等被误判），

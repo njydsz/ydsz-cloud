@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.interceptor;
+﻿package com.njydsz.pmis.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
@@ -67,7 +67,7 @@ import java.util.Properties;
  * <p>配置说明：
  * <pre>
  * # application.yml
- * remi:
+ * ydsz:
  *   sql-intercept:
  *     logical-delete:
  *       enable: true                       # 是否启用

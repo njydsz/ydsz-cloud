@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.doc.exporter;
+﻿package com.njydsz.pmis.common.doc.exporter;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -30,8 +30,8 @@ import java.util.Map;
  *
  * <p><b>激活条件：</b>
  * <ul>
- *   <li>{@code remi.doc.export.enabled=true}（默认 true）</li>
- *   <li>{@code remi.doc.exporter=markdown}（显式指定）</li>
+ *   <li>{@code ydsz.doc.export.enabled=true}（默认 true）</li>
+ *   <li>{@code ydsz.doc.exporter=markdown}（显式指定）</li>
  * </ul>
  *
  * <p><b>降级策略：</b>当 OpenAPI 文档解析失败时，自动降级为简单格式（仅输出标题与原始 JSON）。
@@ -45,8 +45,8 @@ import java.util.Map;
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "remi.doc.export", name = "enabled", havingValue = "true", matchIfMissing = true)
-@ConditionalOnProperty(prefix = "remi.doc", name = "exporter", havingValue = "markdown")
+@ConditionalOnProperty(prefix = "ydsz.doc.export", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.doc", name = "exporter", havingValue = "markdown")
 public class MarkdownDocExporter implements DocExporter {
 
     private static final Logger logger = LoggerFactory.getLogger(MarkdownDocExporter.class);
@@ -61,7 +61,7 @@ public class MarkdownDocExporter implements DocExporter {
     /**
      * 应用版本号
      *
-     * <p>从 {@code spring.application.version} 配置注入，用于文档版本回退（无 {@code remi.doc.doc-version} 时使用）。
+     * <p>从 {@code spring.application.version} 配置注入，用于文档版本回退（无 {@code ydsz.doc.doc-version} 时使用）。
      */
     @Value("${spring.application.version:}")
     private String applicationVersion;

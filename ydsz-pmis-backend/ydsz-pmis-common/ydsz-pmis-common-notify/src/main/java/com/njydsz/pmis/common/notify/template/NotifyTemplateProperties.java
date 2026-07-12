@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.template;
+﻿package com.njydsz.pmis.common.notify.template;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,9 +8,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>配置项：
  * <ul>
- *   <li>remi.notify.template.enabled - 是否启用模板引擎（默认 true）</li>
- *   <li>remi.notify.template.base-path - 模板文件基础路径（默认 classpath:notify-templates/）</li>
- *   <li>remi.notify.template.cache-enabled - 是否启用模板缓存（默认 true）</li>
+ *   <li>ydsz.notify.template.enabled - 是否启用模板引擎（默认 true）</li>
+ *   <li>ydsz.notify.template.base-path - 模板文件基础路径（默认 classpath:notify-templates/）</li>
+ *   <li>ydsz.notify.template.cache-enabled - 是否启用模板缓存（默认 true）</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.notify.template")
+@ConfigurationProperties(prefix = "ydsz.notify.template")
 public class NotifyTemplateProperties {
 
     /** 是否启用模板引擎 */

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.web.config;
+﻿package com.njydsz.pmis.common.web.config;
 
 import com.njydsz.pmis.common.base.config.BaseCorsProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -6,11 +6,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Web 端 CORS 跨域配置属性
  *
- * <p>继承 {@link BaseCorsProperties}，配置前缀：{@code remi.web.cors}
+ * <p>继承 {@link BaseCorsProperties}，配置前缀：{@code ydsz.web.cors}
  *
  * <p><b>配置示例（YAML）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   web:
  *     cors:
  *       allowed-origins: "http://localhost:3000,https://admin.example.com"
@@ -25,6 +25,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version 3.5.0
  * @see BaseCorsProperties
  */
-@ConfigurationProperties(prefix = "remi.web.cors")
+@ConfigurationProperties(prefix = "ydsz.web.cors")
 public class WebCorsProperties extends BaseCorsProperties {
 }

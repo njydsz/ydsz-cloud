@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 启用瑞米系统安全模块注解
+ * 启用ydsz系统安全模块注解
  * <p>
  * 在 Spring Boot 应用主类上添加此注解，即可启用以下安全防护能力：
  * <ul>

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.ops;
+﻿package com.njydsz.pmis.common.redis.ops;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Redis ZSet (Sorted Set) 操作组件 —— 封装有序集合操作。
  * <p>
- * 对标 remi-comm ZSetOps，提供排行榜、延迟队列等场景支持。
+ * 对标 ydsz-common ZSetOps，提供排行榜、延迟队列等场景支持。
  * </p>
  *
  * @author njydsz

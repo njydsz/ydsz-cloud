@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.enums;
+﻿package com.njydsz.pmis.common.core.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  * 身份类型枚举
  *
  * <p>定义系统中用户的身份类型，用于区分不同级别的用户访问权限。
- * 支持瑞米软件账号、集团公司账户、游客体验账号三种类型。
+ * 支持ydsz软件账号、集团公司账户、游客体验账号三种类型。
  *
  * <p><b>使用场景：</b>
  * <ul>
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public enum IdentityType implements TypeEnum<String> {
 
-    REMISOFT("remisoft", "瑞米软件账号"),
+    YDSZ("YDSZ", "ydsz软件账号"),
     COMPANY("company", "集团公司账户"),
     VISITOR("visitor", "游客体验账号");
 

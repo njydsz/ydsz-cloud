@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.config;
+﻿package com.njydsz.pmis.common.auth.config;
 
 import com.njydsz.pmis.common.auth.cache.LocalPermissionCache;
 import com.njydsz.pmis.common.auth.aspect.AuthPermissionAspect;
@@ -60,7 +60,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  * @version 3.5.0
  */
 @AutoConfiguration
-@ConditionalOnProperty(prefix = "remi.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties({AuthProperties.class, KeyspaceNotificationProperties.class, TokenProperties.class})
 public class AuthConfiguration {
 
@@ -289,7 +289,7 @@ public class AuthConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "remi.auth.keyspace-notification", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.auth.keyspace-notification", name = "enabled", havingValue = "true", matchIfMissing = true)
     public PermissionKeyspaceNotificationListener permissionKeyspaceNotificationListener(
             RbacPermissionEvaluator evaluator,
             KeyspaceNotificationProperties keyspaceProperties) {
@@ -319,7 +319,7 @@ public class AuthConfiguration {
      */
     @Bean
     @ConditionalOnClass(name = "io.jsonwebtoken.Jwts")
-    @ConditionalOnProperty(prefix = "remi.auth.token", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.auth.token", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(TokenService.class)
     public TokenService jwtTokenService(TokenProperties tokenProperties,
                                          ObjectProvider<TokenBlacklistService> tokenBlacklistServiceProvider) {
@@ -341,7 +341,7 @@ public class AuthConfiguration {
      * <p>每分钟检查一次 Redis 连通状态，Redis 不可用时自动降级到本地缓存，
      * 并通知 RbacPermissionEvaluator 切换降级策略（ALLOW/DENY）。
      */
-    @Scheduled(fixedRateString = "${remi.auth.health-check-interval:60000}")
+    @Scheduled(fixedRateString = "${ydsz.auth.health-check-interval:60000}")
     public void checkRedisHealth() {
         boolean redisOk = true;
         RedisService redisService = redisServiceProvider.getIfAvailable();

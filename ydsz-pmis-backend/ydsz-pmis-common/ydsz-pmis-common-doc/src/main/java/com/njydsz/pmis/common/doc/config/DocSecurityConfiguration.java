@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.doc.config;
+﻿package com.njydsz.pmis.common.doc.config;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,19 +27,19 @@ import org.springframework.context.annotation.Bean;
  *
  * <p>为 API 文档（Swagger/Knife4j）提供生产环境访问控制：
  * <ul>
- *   <li>生产环境默认关闭文档访问（{@code remi.doc.production-enabled=false}）</li>
- *   <li>开启时自动启用 Basic 认证保护（可通过 {@code remi.doc.basic-auth.enabled=false} 关闭）</li>
- *   <li>用户名/密码可通过 {@code remi.doc.basic-auth.username} 和 {@code remi.doc.basic-auth.password} 配置</li>
+ *   <li>生产环境默认关闭文档访问（{@code ydsz.doc.production-enabled=false}）</li>
+ *   <li>开启时自动启用 Basic 认证保护（可通过 {@code ydsz.doc.basic-auth.enabled=false} 关闭）</li>
+ *   <li>用户名/密码可通过 {@code ydsz.doc.basic-auth.username} 和 {@code ydsz.doc.basic-auth.password} 配置</li>
  * </ul>
  *
  * <p><b>配置示例：</b>
  * <pre>
  * # 生产环境开启文档访问
- * remi.doc.production-enabled: true
+ * ydsz.doc.production-enabled: true
  * # Basic 认证配置
- * remi.doc.basic-auth.enabled: true
- * remi.doc.basic-auth.username: admin
- * remi.doc.basic-auth.password: your-secure-password
+ * ydsz.doc.basic-auth.enabled: true
+ * ydsz.doc.basic-auth.username: admin
+ * ydsz.doc.basic-auth.password: your-secure-password
  * </pre>
  *
  * @author Marvin Lee
@@ -50,7 +50,7 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration
 @EnableConfigurationProperties(DocProperties.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnProperty(prefix = "remi.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ydsz.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class DocSecurityConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(DocSecurityConfiguration.class);
@@ -87,11 +87,11 @@ public class DocSecurityConfiguration {
                 System.getenv("SPRING_PROFILES_ACTIVE"));
         if (activeProfile != null && (activeProfile.contains("prod") || activeProfile.contains("production"))) {
             if (!props.isProductionEnabled()) {
-                logger.warn("【文档安全】生产环境检测到 remi.doc.enabled=true 但 production-enabled=false，"
+                logger.warn("【文档安全】生产环境检测到 ydsz.doc.enabled=true 但 production-enabled=false，"
                         + "文档功能已启用但生产环境访问控制未开启，请确认是否符合安全要求");
             } else if (!props.getBasicAuth().isEnabled()) {
                 logger.warn("【文档安全】生产环境文档访问控制已开启，但 Basic 认证已关闭，"
-                        + "存在安全风险！建议设置 remi.doc.basic-auth.enabled=true");
+                        + "存在安全风险！建议设置 ydsz.doc.basic-auth.enabled=true");
             } else {
                 logger.warn("【文档安全】生产环境文档功能已启用，请确保仅在必要时开启并配置强密码保护");
             }
@@ -106,7 +106,7 @@ public class DocSecurityConfiguration {
      * @return FilterRegistrationBean 实例
      */
     @Bean
-    @ConditionalOnProperty(prefix = "remi.doc", name = "production-enabled", havingValue = "true")
+    @ConditionalOnProperty(prefix = "ydsz.doc", name = "production-enabled", havingValue = "true")
     public FilterRegistrationBean<Filter> docBasicAuthFilter() {
         DocProperties.BasicAuth basicAuth = docProperties.getBasicAuth();
 

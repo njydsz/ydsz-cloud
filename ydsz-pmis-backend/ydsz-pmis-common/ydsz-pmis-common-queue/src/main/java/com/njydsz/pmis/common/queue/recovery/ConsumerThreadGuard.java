@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.recovery;
+﻿package com.njydsz.pmis.common.queue.recovery;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -118,7 +118,7 @@ public class ConsumerThreadGuard {
             currentFuture = executor.submit(() -> runWithRecovery(task));
             log.info("[ConsumerGuard] 消费者任务已提交到线程池，name={}", name);
         } else {
-            Thread t = new Thread(() -> runWithRecovery(task), "remi-queue-guard-" + name);
+            Thread t = new Thread(() -> runWithRecovery(task), "ydsz-queue-guard-" + name);
             t.setDaemon(true);
             fallbackThread = t;
             t.start();

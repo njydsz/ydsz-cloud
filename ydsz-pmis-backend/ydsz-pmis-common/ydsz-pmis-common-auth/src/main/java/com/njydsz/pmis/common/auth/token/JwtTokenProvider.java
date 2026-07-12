@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.token;
+﻿package com.njydsz.pmis.common.auth.token;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import io.jsonwebtoken.Claims;
@@ -29,7 +29,7 @@ import io.jsonwebtoken.security.Keys;
  */
 @Service
 @ConditionalOnClass(name = "io.jsonwebtoken.Jwts")
-@ConditionalOnProperty(prefix = "remi.auth.token", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.auth.token", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class JwtTokenProvider {
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
@@ -43,7 +43,7 @@ public class JwtTokenProvider {
         this.tokenProperties = tokenProperties;
         String secretKeyRaw = tokenProperties.getSecretKey();
         if (secretKeyRaw == null || secretKeyRaw.isBlank()) {
-            throw new IllegalStateException("remi.auth.token.secret-key 不能为空");
+            throw new IllegalStateException("ydsz.auth.token.secret-key 不能为空");
         }
         this.secretKey = Keys.hmacShaKeyFor(secretKeyRaw.getBytes(StandardCharsets.UTF_8));
     }

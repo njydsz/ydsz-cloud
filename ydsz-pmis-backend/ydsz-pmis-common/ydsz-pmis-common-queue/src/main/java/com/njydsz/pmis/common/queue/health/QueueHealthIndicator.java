@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.health;
+﻿package com.njydsz.pmis.common.queue.health;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import com.njydsz.pmis.common.queue.enums.QueueType;
@@ -29,7 +29,7 @@ import java.util.Map;
 @Slf4j
 @Configuration
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-@ConditionalOnProperty(prefix = "remi.queue", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ydsz.queue", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class QueueHealthIndicator implements HealthIndicator {
 
     private static final int HEALTH_CHECK_TIMEOUT_MS = 2000;

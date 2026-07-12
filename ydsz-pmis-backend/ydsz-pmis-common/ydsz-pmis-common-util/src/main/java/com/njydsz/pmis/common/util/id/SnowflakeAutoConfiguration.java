@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.id;
+﻿package com.njydsz.pmis.common.util.id;
 
 import com.njydsz.pmis.common.util.id.SnowflakeProperties.WorkerIdSource;
 import lombok.extern.slf4j.Slf4j;
@@ -138,7 +138,7 @@ public class SnowflakeAutoConfiguration {
             }
         }
 
-        String dcProp = environment.getProperty("remi.snowflake.datacenterId");
+        String dcProp = environment.getProperty("ydsz.snowflake.datacenterId");
         if (dcProp != null && !dcProp.isEmpty()) {
             try {
                 long id = Long.parseLong(dcProp);

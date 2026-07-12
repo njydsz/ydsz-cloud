@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.trace;
+﻿package com.njydsz.pmis.common.queue.trace;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.redis.service.RedisService;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * <p>使用 Redis Hash 存储消息轨迹数据。
  * <p>存储结构：
  * <ul>
- *   <li>Hash key: remi:queue:trace:{traceId}</li>
+ *   <li>Hash key: ydsz:queue:trace:{traceId}</li>
  *   <li>Hash field: messageId</li>
  *   <li>Hash value: MessageTrace JSON 字符串</li>
  * </ul>
@@ -29,8 +29,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RedisMessageTraceRecorder implements MessageTraceRecorder {
 
-    private static final String TRACE_KEY_PREFIX = "remi:queue:trace:";
-    private static final String INDEX_KEY_PREFIX = "remi:queue:trace:index:";
+    private static final String TRACE_KEY_PREFIX = "ydsz:queue:trace:";
+    private static final String INDEX_KEY_PREFIX = "ydsz:queue:trace:index:";
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final long ttlMinutes;

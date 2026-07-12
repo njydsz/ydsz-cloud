@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -13,10 +13,10 @@
     <artifactId>ydsz-pmis-common</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-common</name>
-    <description>PMIS Common - 公共依赖聚合模块（从 remi-comm 一比一迁移）</description>
+    <description>PMIS Common - 公共依赖聚合模块（从 ydsz-common 一比一迁移）</description>
 
     <properties>
-        <!-- remi-comm 第三方依赖版本（父 POM 未管理的部分） -->
+        <!-- ydsz-common 第三方依赖版本（父 POM 未管理的部分） -->
         <commons-text.version>1.13.0</commons-text.version>
         <commons-validator.version>1.9.0</commons-validator.version>
         <commons-net.version>3.11.1</commons-net.version>
@@ -528,7 +528,7 @@
                 <version>${swagger-jakarta.version}</version>
             </dependency>
 
-            <!-- jjwt-orgjson（remi-comm auth 模块使用 orgjson 而非 jackson） -->
+            <!-- jjwt-orgjson（ydsz-common auth 模块使用 orgjson 而非 jackson） -->
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-orgjson</artifactId>

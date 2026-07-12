@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.config;
+﻿package com.njydsz.pmis.common.jdbc.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.njydsz.pmis.common.jdbc.interceptor.SqlTraceInnerInterceptor;
@@ -23,7 +23,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  *
  * <p>触发条件（满足任一即生效）：
  * <pre>{@code
- * remi:
+ * ydsz:
  *   jdbc:
  *     enabled: true
  *     slow-sql:
@@ -33,7 +33,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * }</pre>
  *
  * <p>配置项沿用 {@link JdbcProperties.SlowSql} 与 {@link JdbcProperties.SqlAudit}，
- * 对已有 {@code remi.jdbc.slow-sql.*} 和 {@code remi.jdbc.sql-audit.*} 配置完全兼容。
+ * 对已有 {@code ydsz.jdbc.slow-sql.*} 和 {@code ydsz.jdbc.sql-audit.*} 配置完全兼容。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -45,7 +45,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @Slf4j
 @AutoConfiguration
 @ConditionalOnClass(MybatisPlusInterceptor.class)
-@ConditionalOnExpression("${remi.jdbc.enabled:true} and (${remi.jdbc.slow-sql.enabled:true} or ${remi.jdbc.sql-audit.enabled:true})")
+@ConditionalOnExpression("${ydsz.jdbc.enabled:true} and (${ydsz.jdbc.slow-sql.enabled:true} or ${ydsz.jdbc.sql-audit.enabled:true})")
 @EnableConfigurationProperties(JdbcProperties.class)
 public class SqlTraceAutoConfiguration {
 

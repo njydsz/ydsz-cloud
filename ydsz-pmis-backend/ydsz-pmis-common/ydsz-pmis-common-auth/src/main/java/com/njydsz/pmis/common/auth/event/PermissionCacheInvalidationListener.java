@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.event;
+﻿package com.njydsz.pmis.common.auth.event;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.njydsz.pmis.common.util.json.JsonUtils;
@@ -39,7 +39,7 @@ public class PermissionCacheInvalidationListener {
     /**
      * Redis Pub/Sub 频道名称
      */
-    public static final String CACHE_INVALIDATION_CHANNEL = "remi-auth:permission:changed";
+    public static final String CACHE_INVALIDATION_CHANNEL = "ydsz-auth:permission:changed";
 
     private final RbacPermissionEvaluator permissionEvaluator;
 

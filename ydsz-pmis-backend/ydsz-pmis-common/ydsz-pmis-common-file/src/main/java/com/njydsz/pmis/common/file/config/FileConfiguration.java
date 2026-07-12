@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.config;
+﻿package com.njydsz.pmis.common.file.config;
 
 import com.njydsz.pmis.common.file.health.FileHealthIndicator;
 import com.njydsz.pmis.common.file.service.DedupCleanupScheduler;
@@ -49,7 +49,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  */
 @AutoConfiguration
 @EnableConfigurationProperties({FileProperties.class, FileUploadProperties.class})
-@ConditionalOnProperty(prefix = "remi.file", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.file", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class FileConfiguration {
 
     /** 分片上传上下文过期时间（分钟） */

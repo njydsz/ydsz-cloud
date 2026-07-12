@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.event;
+﻿package com.njydsz.pmis.common.auth.event;
 
 import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.service.DataPermissionResolver;
@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PermissionChangeCacheInvalidator {
 
-    private static final String PERMISSION_CHANGE_CHANNEL = "remi-auth:permission:changed";
+    private static final String PERMISSION_CHANGE_CHANNEL = "ydsz-auth:permission:changed";
 
     private final RolePermissionLoader rolePermissionLoader;
     private final DataPermissionResolver dataPermissionResolver;

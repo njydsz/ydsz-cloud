@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.config;
+﻿package com.njydsz.pmis.common.base.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.util.json.JsonUtils;
@@ -79,8 +79,8 @@ public abstract class BaseMvcConfiguration implements WebMvcConfigurer {
      */
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilter() {
-        // 通过子类绑定的配置属性（remi.web.cors / remi.app.cors）的 enabled 字段控制，
-        // 不再使用 @ConditionalOnProperty(prefix = "remi.cors")，避免前缀与子类配置不匹配
+        // 通过子类绑定的配置属性（ydsz.web.cors / ydsz.app.cors）的 enabled 字段控制，
+        // 不再使用 @ConditionalOnProperty(prefix = "ydsz.cors")，避免前缀与子类配置不匹配
         if (!corsProperties.isEnabled()) {
             return null;
         }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.service.impl;
+﻿package com.njydsz.pmis.common.queue.service.impl;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.queue.config.QueueProperties;
@@ -28,8 +28,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
 
-    private static final String DLQ_KEY_PREFIX = "remi:queue:dlq:";
-    private static final String DLQ_RETRY_KEY_PREFIX = "remi:queue:dlq:retry:";
+    private static final String DLQ_KEY_PREFIX = "ydsz:queue:dlq:";
+    private static final String DLQ_RETRY_KEY_PREFIX = "ydsz:queue:dlq:retry:";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     private final RedisTemplate<String, Object> redisTemplate;

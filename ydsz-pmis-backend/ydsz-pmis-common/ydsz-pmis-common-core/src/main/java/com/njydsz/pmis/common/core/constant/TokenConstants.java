@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.constant;
+﻿package com.njydsz.pmis.common.core.constant;
 
 /**
  * Token相关常量类
@@ -9,7 +9,7 @@ package com.njydsz.pmis.common.core.constant;
  * <p><b>主要常量分类：</b>
  * <ul>
  *   <li>令牌标识：Authentication、补充令牌标识</li>
- *   <li>令牌前缀：如 "Remi" 用于标识系统</li>
+ *   <li>令牌前缀：如 "ydsz" 用于标识系统</li>
  *   <li>回调URL参数名</li>
  *   <li>Token过期时间：AccessToken 24小时，RefreshToken 7天</li>
  * </ul>
@@ -50,9 +50,9 @@ public final class TokenConstants {
 
     /**
      * 令牌前缀
-     * <p>用于标识本系统发布的Token，如 "Remi" + Token
+     * <p>用于标识本系统发布的Token，如 "ydsz" + Token
      */
-    public static final String PREFIX = "Remi";
+    public static final String PREFIX = "ydsz";
 
     // ==================== 回调URL参数常量 ====================
 

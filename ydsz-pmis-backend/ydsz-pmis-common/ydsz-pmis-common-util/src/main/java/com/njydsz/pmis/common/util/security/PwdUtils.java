@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.security;
+﻿package com.njydsz.pmis.common.util.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -21,17 +21,17 @@ public class PwdUtils {
     /**
      * 默认密码（从系统属性或环境变量读取，禁止硬编码）
      *
-     * <p>读取优先级：系统属性 {@code remi.default.password} > 环境变量 {@code REMI_DEFAULT_PASSWORD}
+     * <p>读取优先级：系统属性 {@code ydsz.default.password} > 环境变量 {@code YDSZ_DEFAULT_PASSWORD}
      * <p>若均未配置，使用随机生成的强密码（每次启动不同，需通过日志获取）
      */
     private static final String DEFAULT_PASS = resolveDefaultPassword();
 
     private static String resolveDefaultPassword() {
-        String password = System.getProperty("remi.default.password");
+        String password = System.getProperty("ydsz.default.password");
         if (password != null && !password.isEmpty()) {
             return password;
         }
-        password = System.getenv("REMI_DEFAULT_PASSWORD");
+        password = System.getenv("YDSZ_DEFAULT_PASSWORD");
         if (password != null && !password.isEmpty()) {
             return password;
         }
@@ -39,7 +39,7 @@ public class PwdUtils {
         new SecureRandom().nextBytes(randomBytes);
         String generated = HexUtils.bytesToHex(randomBytes);
         System.getLogger(PwdUtils.class.getName()).log(System.Logger.Level.WARNING,
-                "未配置默认密码(remi.default.password/REMI_DEFAULT_PASSWORD)，已随机生成，请通过getDefaultPassEncryption()获取哈希值");
+                "未配置默认密码(ydsz.default.password/YDSZ_DEFAULT_PASSWORD)，已随机生成，请通过getDefaultPassEncryption()获取哈希值");
         return generated;
     }
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.config;
+﻿package com.njydsz.pmis.common.redis.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -7,11 +7,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Redis 客户端配置属性类
  *
  * <p>提供 Redis 客户端选择及相关配置，支持通过 application.yml 中的
- * {@code remi.redis.client} 前缀注入配置。
+ * {@code ydsz.redis.client} 前缀注入配置。
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   redis:
  *     client:
  *       type: jedis
@@ -31,7 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.redis.client")
+@ConfigurationProperties(prefix = "ydsz.redis.client")
 public class RedisClientProperties {
 
     /**

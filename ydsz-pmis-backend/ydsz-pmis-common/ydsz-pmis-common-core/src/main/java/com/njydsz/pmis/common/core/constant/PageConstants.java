@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.constant;
+﻿package com.njydsz.pmis.common.core.constant;
 
 /**
  * 分页参数常量
@@ -9,8 +9,8 @@ package com.njydsz.pmis.common.core.constant;
  *
  * <p><b>配置覆盖：</b>
  * <ul>
- *   <li>{@code remi.core.max-page-size} 覆盖 {@link #MAX_PAGE_SIZE}</li>
- *   <li>{@code remi.core.default-page-size} 覆盖 {@link #DEFAULT_PAGE_SIZE}</li>
+ *   <li>{@code ydsz.core.max-page-size} 覆盖 {@link #MAX_PAGE_SIZE}</li>
+ *   <li>{@code ydsz.core.default-page-size} 覆盖 {@link #DEFAULT_PAGE_SIZE}</li>
  * </ul>
  *
  * @author Marvin Lee

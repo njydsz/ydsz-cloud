@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.lock.config;
+﻿package com.njydsz.pmis.common.lock.config;
 
 import com.njydsz.pmis.common.lock.aspect.DistributedLockAspect;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
@@ -33,10 +33,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * <p><b>配置项：</b>
  * <ul>
- *   <li>remi.lock.enabled - 是否启用分布式锁（默认 true）</li>
- *   <li>remi.lock.fallback-enabled - 是否启用降级策略</li>
- *   <li>remi.lock.watchdog-enabled - 是否启用看门狗自动续期</li>
- *   <li>remi.lock.max-renew-times - 最大续期次数</li>
+ *   <li>ydsz.lock.enabled - 是否启用分布式锁（默认 true）</li>
+ *   <li>ydsz.lock.fallback-enabled - 是否启用降级策略</li>
+ *   <li>ydsz.lock.watchdog-enabled - 是否启用看门狗自动续期</li>
+ *   <li>ydsz.lock.max-renew-times - 最大续期次数</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @AutoConfiguration
 @ConditionalOnClass({StringRedisTemplate.class})
 @ConditionalOnBean(StringRedisTemplate.class)
-@ConditionalOnProperty(prefix = "remi.lock", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.lock", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties({LockProperties.class})
 public class DistributedLockAutoConfiguration {
 
@@ -146,7 +146,7 @@ public class DistributedLockAutoConfiguration {
                 pool.getCoreSize(), pool.getMaxSize(), 60L, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(pool.getQueueCapacity()),
                 r -> {
-                    Thread t = new Thread(r, "remi-lock-acquire-" + threadNumber.getAndIncrement());
+                    Thread t = new Thread(r, "ydsz-lock-acquire-" + threadNumber.getAndIncrement());
                     t.setDaemon(true);
                     return t;
                 },
@@ -165,7 +165,7 @@ public class DistributedLockAutoConfiguration {
     public TaskScheduler lockWatchDogScheduler(LockProperties lockProperties) {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(lockProperties.getSchedulerPoolSize());
-        scheduler.setThreadNamePrefix("remi-lock-watchdog-");
+        scheduler.setThreadNamePrefix("ydsz-lock-watchdog-");
         scheduler.setDaemon(true);
         scheduler.afterPropertiesSet();
         return scheduler;

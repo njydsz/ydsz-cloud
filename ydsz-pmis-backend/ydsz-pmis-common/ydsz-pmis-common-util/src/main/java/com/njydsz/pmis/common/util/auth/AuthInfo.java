@@ -49,7 +49,7 @@ public interface AuthInfo {
     /**
      * 获取身份类型
      *
-     * @return 身份类型枚举，如公司用户、访客用户、瑞米用户
+     * @return 身份类型枚举，如公司用户、访客用户、ydsz用户
      * @see IdentityType
      */
     IdentityType getIdentityTypeEnum();

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.compress;
+﻿package com.njydsz.pmis.common.feign.compress;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 import feign.RequestInterceptor;
@@ -24,13 +24,13 @@ import java.util.zip.GZIPOutputStream;
  *
  * <p><b>使用方式：</b>
  * <ul>
- *   <li>通过 {@code remi.feign.compress.enabled=true} 启用</li>
+ *   <li>通过 {@code ydsz.feign.compress.enabled=true} 启用</li>
  *   <li>需要服务端支持 GZIP 解压缩</li>
  * </ul>
  *
  * <p><b>配置示例（YAML）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   feign:
  *     compress:
  *       enabled: true

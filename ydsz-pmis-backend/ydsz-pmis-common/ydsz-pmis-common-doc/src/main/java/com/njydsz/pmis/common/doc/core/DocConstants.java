@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.doc.core;
+﻿package com.njydsz.pmis.common.doc.core;
 
 /**
  * OpenAPI 文档常量类
@@ -82,5 +82,5 @@ public final class DocConstants {
     /**
      * REMI 文档配置属性前缀
      */
-    public static final String REMI_DOC_PREFIX = "remi.doc";
+    public static final String REMI_DOC_PREFIX = "ydsz.doc";
 }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.config;
+﻿package com.njydsz.pmis.common.file.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.file.upload")
+@ConfigurationProperties(prefix = "ydsz.file.upload")
 public class FileUploadProperties {
 
     /**

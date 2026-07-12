@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.config;
+﻿package com.njydsz.pmis.common.core.config;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -14,24 +14,24 @@ import java.util.List;
  *
  * <p><b>配置前缀规范：</b>
  * <ul>
- *   <li>所有 ydsz-pmis-common 模块的配置前缀统一使用 {@code remi.*} 格式</li>
+ *   <li>所有 ydsz-pmis-common 模块的配置前缀统一使用 {@code ydsz.*} 格式</li>
  *   <li>当前版本保留历史前缀作为兼容，下个大版本统一迁移</li>
  *   <li>模块前缀映射：
  *     <ul>
- *       <li>{@code remi.core} → 核心配置</li>
- *       <li>{@code remi.jdbc} → 数据库配置</li>
- *       <li>{@code remi.redis} → 缓存配置</li>
- *       <li>{@code remi.lock} → 分布式锁配置</li>
- *       <li>{@code remi.auth} → 权限配置</li>
- *       <li>{@code remi.safe} → 安全配置</li>
- *       <li>{@code remi.file} → 文件配置</li>
- *       <li>{@code remi.notify} → 通知配置</li>
- *       <li>{@code remi.audit} → 审计配置</li>
- *       <li>{@code remi.queue} → 队列配置</li>
- *       <li>{@code remi.feign} → Feign配置</li>
- *       <li>{@code remi.job} → 任务配置</li>
- *       <li>{@code remi.gateway} → 网关配置</li>
- *       <li>{@code remi.doc} → 文档配置</li>
+ *       <li>{@code ydsz.core} → 核心配置</li>
+ *       <li>{@code ydsz.jdbc} → 数据库配置</li>
+ *       <li>{@code ydsz.redis} → 缓存配置</li>
+ *       <li>{@code ydsz.lock} → 分布式锁配置</li>
+ *       <li>{@code ydsz.auth} → 权限配置</li>
+ *       <li>{@code ydsz.safe} → 安全配置</li>
+ *       <li>{@code ydsz.file} → 文件配置</li>
+ *       <li>{@code ydsz.notify} → 通知配置</li>
+ *       <li>{@code ydsz.audit} → 审计配置</li>
+ *       <li>{@code ydsz.queue} → 队列配置</li>
+ *       <li>{@code ydsz.feign} → Feign配置</li>
+ *       <li>{@code ydsz.job} → 任务配置</li>
+ *       <li>{@code ydsz.gateway} → 网关配置</li>
+ *       <li>{@code ydsz.doc} → 文档配置</li>
  *     </ul>
  *   </li>
  * </ul>
@@ -41,7 +41,7 @@ import java.util.List;
  * @version 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.core")
+@ConfigurationProperties(prefix = "ydsz.core")
 @Validated
 public class CoreProperties {
 

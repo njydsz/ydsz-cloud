@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.safe.sensitive.SensitiveDataProcessor;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**
- * RemiJson 脱敏序列化器
+ * YdszJson 脱敏序列化器
  *
  * <p>使用 Jackson 进行序列化前，先对敏感数据进行脱敏处理。
  *

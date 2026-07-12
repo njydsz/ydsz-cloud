@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.web.config;
+﻿package com.njydsz.pmis.common.web.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -14,13 +14,13 @@ import org.springframework.context.annotation.Import;
  * <p><b>前置条件：</b>
  * <ol>
  *   <li>添加依赖：{@code spring-session-data-redis}</li>
- *   <li>配置启用：{@code remi.web.session.enabled=true}</li>
+ *   <li>配置启用：{@code ydsz.web.session.enabled=true}</li>
  *   <li>Redis 已正确配置</li>
  * </ol>
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   web:
  *     session:
  *       enabled: true
@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Import;
  * spring:
  *   session:
  *     redis:
- *       namespace: remi:session
+ *       namespace: ydsz:session
  *       flush-mode: on_save
  * }</pre>
  *
@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Import;
  */
 @AutoConfiguration
 @ConditionalOnClass(name = "org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession")
-@ConditionalOnProperty(prefix = "remi.web.session", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "ydsz.web.session", name = "enabled", havingValue = "true")
 @Import(RedisHttpSessionImportSelector.class)
 public class WebSessionAutoConfiguration {
 }

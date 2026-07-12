@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.health;
+﻿package com.njydsz.pmis.common.jdbc.health;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.boot.health.contributor.Health;
@@ -28,7 +28,7 @@ import javax.sql.DataSource;
  */
 @Component
 @ConditionalOnClass({HealthIndicator.class, HikariDataSource.class})
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
 @SuppressWarnings("resource")
 public class DataSourceHealthIndicator implements HealthIndicator {
 

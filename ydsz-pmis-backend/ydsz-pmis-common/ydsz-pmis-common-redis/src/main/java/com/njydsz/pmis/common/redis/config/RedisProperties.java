@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.config;
+﻿package com.njydsz.pmis.common.redis.config;
 
 import jakarta.validation.constraints.Min;
 import lombok.Data;
@@ -10,11 +10,11 @@ import java.util.Collection;
  * Redis 配置属性类
  *
  * <p>提供对 Redis 配置的强类型访问，支持单机模式、集群模式和哨兵模式。
- * 配置值通过 application.yml 中的 remi.redis 前缀注入。
+ * 配置值通过 application.yml 中的 ydsz.redis 前缀注入。
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   redis:
  *     # 单机模式
  *     host: localhost
@@ -51,7 +51,7 @@ import java.util.Collection;
  */
 @Data
 @Validated
-@ConfigurationProperties(prefix = "remi.redis")
+@ConfigurationProperties(prefix = "ydsz.redis")
 public class RedisProperties {
 
     /**

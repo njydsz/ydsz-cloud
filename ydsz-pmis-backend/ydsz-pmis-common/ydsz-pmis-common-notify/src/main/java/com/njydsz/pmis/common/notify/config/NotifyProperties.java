@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.config;
+﻿package com.njydsz.pmis.common.notify.config;
 
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import jakarta.validation.constraints.Max;
@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * 通知模块配置属性类
  *
- * <p>绑定 application.yml 中 remi.notify 前缀的配置项，
+ * <p>绑定 application.yml 中 ydsz.notify 前缀的配置项，
  * 支持邮件、短信、企业微信、钉钉、飞书、站内信等多种通知渠道的配置。</p>
  *
  * @author Marvin Lee
@@ -23,7 +23,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.notify")
+@ConfigurationProperties(prefix = "ydsz.notify")
 public class NotifyProperties {
 
 	/** 是否启用通知模块 */
@@ -270,7 +270,7 @@ public class NotifyProperties {
 	 *
 	 * <p><b>配置示例（application.yml）：</b>
 	 * <pre>{@code
-	 * remi:
+	 * ydsz:
 	 *   notify:
 	 *     rate-limit:
 	 *       enabled: true

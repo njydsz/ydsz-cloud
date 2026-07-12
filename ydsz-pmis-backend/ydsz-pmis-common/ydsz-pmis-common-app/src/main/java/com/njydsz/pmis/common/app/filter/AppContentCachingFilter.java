@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.app.filter;
+﻿package com.njydsz.pmis.common.app.filter;
 
 import com.njydsz.pmis.common.base.filter.AbstractContentCachingFilter;
 import org.springframework.beans.factory.annotation.Value;
@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 /**
  * App 端请求体缓存过滤器
  *
- * <p>通过配置 {@code remi.app.content-cache.max-size} 控制最大缓存大小（字节），
+ * <p>通过配置 {@code ydsz.app.content-cache.max-size} 控制最大缓存大小（字节），
  * 默认 2MB，防止大文件上传场景下的 OOM。
  *
  * @author Marvin Lee
@@ -22,7 +22,7 @@ public class AppContentCachingFilter extends AbstractContentCachingFilter {
      *
      * <p>防止大文件上传场景下的 OOM 风险；超过此值的内容将被截断丢弃。
      */
-    @Value("${remi.app.content-cache.max-size:2097152}")
+    @Value("${ydsz.app.content-cache.max-size:2097152}")
     private int maxCacheSize;
 
     /**

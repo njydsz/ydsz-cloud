@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.concurrent;
+﻿package com.njydsz.pmis.common.util.concurrent;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +31,7 @@ public class ExecutorUtils {
     private static final int DEFAULT_MAX_POOL_SIZE = Math.max(CPU_CORES * 4, 64);
     private static final int DEFAULT_QUEUE_CAPACITY = 1024;
 
-    private static final String THREAD_NAME_PREFIX = "remi-";
+    private static final String THREAD_NAME_PREFIX = "ydsz-";
     private static final AtomicInteger POOL_NUMBER = new AtomicInteger(1);
 
     private ExecutorUtils() {

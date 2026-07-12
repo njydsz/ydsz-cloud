@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.health;
+﻿package com.njydsz.pmis.common.feign.health;
 
 import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
 import com.njydsz.pmis.common.feign.config.FeignProperties;
@@ -27,7 +27,7 @@ import org.springframework.beans.factory.ObjectProvider;
  */
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)
-@ConditionalOnProperty(prefix = "remi.feign", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.feign", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class FeignHealthIndicator implements HealthIndicator {
 
     private final FeignProperties feignProperties;

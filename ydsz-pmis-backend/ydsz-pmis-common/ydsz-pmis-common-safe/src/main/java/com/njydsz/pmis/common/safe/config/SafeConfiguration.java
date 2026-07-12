@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.config;
+﻿package com.njydsz.pmis.common.safe.config;
 
 import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.safe.csrf.CsrfTokenGenerator;
@@ -93,7 +93,7 @@ public class SafeConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(name = "securityHeaderFilter")
-    @ConditionalOnProperty(prefix = "remi.safe.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.safe.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<SecurityHeaderFilter> securityHeaderFilterRegistration(SecurityHeaderProperties properties) {
         FilterRegistrationBean<SecurityHeaderFilter> registrationBean = new FilterRegistrationBean<>(new SecurityHeaderFilter(properties));
         registrationBean.setName("securityHeaderFilter");
@@ -242,7 +242,7 @@ public class SafeConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(name = "csrfFilterRegistration")
-    @ConditionalOnProperty(prefix = "remi.safe.csrf", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.safe.csrf", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<CsrfFilter> csrfFilterRegistration(CsrfProperties properties, CsrfTokenRepository tokenRepository, CsrfTokenGenerator tokenGenerator) {
         FilterRegistrationBean<CsrfFilter> registrationBean = new FilterRegistrationBean<>(new CsrfFilter(properties, tokenRepository));
         registrationBean.setName("csrfFilter");
@@ -255,7 +255,7 @@ public class SafeConfiguration {
      * 注册敏感数据脱敏 AOP 拦截器
      *
      * <p>对 Controller 返回值进行敏感数据脱敏处理。
-     * 仅在 {@code remi.safe.sensitive.enabled=true} 时生效。
+     * 仅在 {@code ydsz.safe.sensitive.enabled=true} 时生效。
      *
      * @param configuration 敏感数据脱敏配置
      * @return 敏感数据脱敏 AOP 拦截器实例
@@ -271,7 +271,7 @@ public class SafeConfiguration {
      * 注册限流过滤器
      *
      * <p>基于 Redis 令牌桶的全局限流 Filter，支持按 IP/用户/全局维度。
-     * 仅在 {@code remi.safe.ratelimit.enabled=true} 时注册。
+     * 仅在 {@code ydsz.safe.ratelimit.enabled=true} 时注册。
      *
      * @param properties      限流配置属性
      * @param redisService    Redis 服务
@@ -282,7 +282,7 @@ public class SafeConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "rateLimitFilterRegistration")
     @ConditionalOnBean(RedisService.class)
-    @ConditionalOnProperty(prefix = "remi.safe.ratelimit", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(prefix = "ydsz.safe.ratelimit", name = "enabled", havingValue = "true")
     public FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(
             RateLimitProperties properties,
             RedisService redisService,
@@ -300,12 +300,12 @@ public class SafeConfiguration {
      * 注册 SQL 注入防护过滤器
      *
      * <p>检测并拦截 HTTP 请求中的 SQL 注入攻击，保护应用安全。
-     * 仅在 {@code remi.safe.sql-injection.enabled=true} 时注册。
+     * 仅在 {@code ydsz.safe.sql-injection.enabled=true} 时注册。
      *
      * <p>支持白名单配置：
      * <ul>
-     *   <li>{@code remi.safe.sql-injection.whitelist-paths} - 白名单路径（Ant 风格，逗号分隔）</li>
-     *   <li>{@code remi.safe.sql-injection.whitelist-params} - 白名单参数名（逗号分隔）</li>
+     *   <li>{@code ydsz.safe.sql-injection.whitelist-paths} - 白名单路径（Ant 风格，逗号分隔）</li>
+     *   <li>{@code ydsz.safe.sql-injection.whitelist-params} - 白名单参数名（逗号分隔）</li>
      * </ul>
      *
      * @param eventPublisher  安全事件发布器
@@ -315,11 +315,11 @@ public class SafeConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(name = "sqlInjectionFilterRegistration")
-    @ConditionalOnProperty(prefix = "remi.safe.sql-injection", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.safe.sql-injection", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<SqlInjectionFilter> sqlInjectionFilterRegistration(
             SecurityEventPublisher eventPublisher,
-            @org.springframework.beans.factory.annotation.Value("${remi.safe.sql-injection.whitelist-paths:}") List<String> whitelistPaths,
-            @org.springframework.beans.factory.annotation.Value("${remi.safe.sql-injection.whitelist-params:}") List<String> whitelistParams) {
+            @org.springframework.beans.factory.annotation.Value("${ydsz.safe.sql-injection.whitelist-paths:}") List<String> whitelistPaths,
+            @org.springframework.beans.factory.annotation.Value("${ydsz.safe.sql-injection.whitelist-params:}") List<String> whitelistParams) {
         FilterRegistrationBean<SqlInjectionFilter> registrationBean = new FilterRegistrationBean<>(
                 new SqlInjectionFilter(true, eventPublisher, whitelistPaths, whitelistParams));
         registrationBean.setName("sqlInjectionFilter");

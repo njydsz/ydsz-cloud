@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.mq.rocket;
+﻿package com.njydsz.pmis.common.queue.mq.rocket;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import lombok.Data;
@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   queue:
  *     rocketmq:
  *       namesrv-addr: localhost:9876
@@ -38,12 +38,12 @@ public class RocketMQProperties extends QueueProperties {
     /**
      * 消费者组ID
      */
-    private String groupId = "remi-consumer-group";
+    private String groupId = "ydsz-consumer-group";
 
     /**
      * 默认主题
      */
-    private String topic = "remi-rocketmq-topic";
+    private String topic = "ydsz-rocketmq-topic";
 
     /**
      * 消息标签
@@ -92,14 +92,14 @@ public class RocketMQProperties extends QueueProperties {
      * 解析获取 groupId
      */
     public String resolvedGroupId() {
-        return isNotBlank(groupId) ? groupId : "remi-consumer-group";
+        return isNotBlank(groupId) ? groupId : "ydsz-consumer-group";
     }
 
     /**
      * 解析获取 topic
      */
     public String resolvedTopic() {
-        return isNotBlank(topic) ? topic : "remi-rocketmq-topic";
+        return isNotBlank(topic) ? topic : "ydsz-rocketmq-topic";
     }
 
     private boolean isNotBlank(String str) {

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.id;
+﻿package com.njydsz.pmis.common.util.id;
 
 /**
  * WorkerId 注册中心 SPI
@@ -8,7 +8,7 @@ package com.njydsz.pmis.common.util.id;
  *
  * <p><b>使用示例：</b></p>
  * <pre>{@code
- * WorkerIdRegistry registry = new RedisWorkerIdRegistry(redisTemplate, "remi:snowflake:workerId");
+ * WorkerIdRegistry registry = new RedisWorkerIdRegistry(redisTemplate, "ydsz:snowflake:workerId");
  * long workerId = registry.acquire("192.168.1.1", 300_000L);
  * registry.heartbeat(workerId, "192.168.1.1");
  * registry.release(workerId, "192.168.1.1");

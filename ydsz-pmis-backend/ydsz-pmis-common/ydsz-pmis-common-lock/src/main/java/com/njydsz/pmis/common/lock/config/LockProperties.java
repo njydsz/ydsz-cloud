@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.lock.config;
+﻿package com.njydsz.pmis.common.lock.config;
 
 import jakarta.validation.constraints.Min;
 import lombok.Data;
@@ -8,11 +8,11 @@ import org.springframework.validation.annotation.Validated;
 /**
  * 分布式锁配置属性类
  *
- * <p>配置值通过 application.yml 中的 remi.lock 前缀注入。
+ * <p>配置值通过 application.yml 中的 ydsz.lock 前缀注入。
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   lock:
  *     enabled: true
  *     fallback-enabled: true
@@ -25,8 +25,8 @@ import org.springframework.validation.annotation.Validated;
  * }</pre>
  *
  * <p><b>兼容性说明：</b>
- * 当前配置前缀为 {@code remi.lock}，历史版本曾使用 {@code remi.distributed-lock} 前缀，
- * 已统一迁移至 {@code remi.lock}，旧前缀不再支持。
+ * 当前配置前缀为 {@code ydsz.lock}，历史版本曾使用 {@code ydsz.distributed-lock} 前缀，
+ * 已统一迁移至 {@code ydsz.lock}，旧前缀不再支持。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -35,7 +35,7 @@ import org.springframework.validation.annotation.Validated;
  */
 @Data
 @Validated
-@ConfigurationProperties(prefix = "remi.lock")
+@ConfigurationProperties(prefix = "ydsz.lock")
 public class LockProperties {
 
     /**

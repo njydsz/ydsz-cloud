@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.sensitive;
+﻿package com.njydsz.pmis.common.safe.sensitive;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>拦截所有带有 {@link SensitiveData} 注解字段的方法返回值</li>
  *   <li>支持全局脱敏规则（通过字段名匹配）</li>
  *   <li>在序列化前调用 {@link SensitiveDataProcessor} 进行脱敏</li>
- *   <li>支持配置开关 {@code remi.safe.sensitive.enabled} 控制是否启用</li>
+ *   <li>支持配置开关 {@code ydsz.safe.sensitive.enabled} 控制是否启用</li>
  *   <li>使用缓存机制避免重复检查同一个类</li>
  * </ul>
  *
@@ -57,7 +57,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p><b>配置开关：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   safe:
  *     sensitive:
  *       enabled: true  # 默认启用

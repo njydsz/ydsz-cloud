@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.config;
+﻿package com.njydsz.pmis.common.safe.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,7 +16,7 @@ import java.util.Set;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   safe:
  *     xss:
  *       enabled: true
@@ -45,7 +45,7 @@ import java.util.Set;
  * @version 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.safe.xss")
+@ConfigurationProperties(prefix = "ydsz.safe.xss")
 public class SafeXssProperties {
 
     /**

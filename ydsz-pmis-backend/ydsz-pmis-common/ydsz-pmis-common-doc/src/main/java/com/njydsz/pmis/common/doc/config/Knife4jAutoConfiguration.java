@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.doc.config;
+﻿package com.njydsz.pmis.common.doc.config;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ import jakarta.annotation.PostConstruct;
 @EnableConfigurationProperties(DocProperties.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass(name = "com.github.xiaoymin.knife4j.spring.extension.Knife4jOpenApiCustomizer")
-@ConditionalOnProperty(prefix = "remi.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ydsz.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class Knife4jAutoConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(Knife4jAutoConfiguration.class);

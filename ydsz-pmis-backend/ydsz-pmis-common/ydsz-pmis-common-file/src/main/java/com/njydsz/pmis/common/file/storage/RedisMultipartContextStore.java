@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.storage;
+﻿package com.njydsz.pmis.common.file.storage;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RedisMultipartContextStore implements MultipartContextStore {
 
     /** Redis 键前缀 */
-    private static final String REDIS_KEY_PREFIX = "remi:file:multipart:";
+    private static final String REDIS_KEY_PREFIX = "ydsz:file:multipart:";
     /** SCAN 命令匹配模式 */
     private static final String SCAN_PATTERN = REDIS_KEY_PREFIX + "*";
 

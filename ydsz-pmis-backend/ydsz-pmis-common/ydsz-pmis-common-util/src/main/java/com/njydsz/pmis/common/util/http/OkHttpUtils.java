@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.http;
+﻿package com.njydsz.pmis.common.util.http;
 
 import com.njydsz.pmis.common.util.classloader.ClassUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -50,11 +50,11 @@ public class OkHttpUtils {
     // Fallback defaults when not running in Spring context.
     // In Spring context, OkHttpProperties is used instead (see UtilAutoConfiguration).
     private static final long FALLBACK_CONNECT_TIMEOUT_SECONDS = Long.getLong(
-            "remi.http.connectTimeout", DEFAULT_CONNECT_TIMEOUT_SECONDS);
+            "ydsz.http.connectTimeout", DEFAULT_CONNECT_TIMEOUT_SECONDS);
     private static final long FALLBACK_READ_TIMEOUT_SECONDS = Long.getLong(
-            "remi.http.readTimeout", DEFAULT_READ_TIMEOUT_SECONDS);
+            "ydsz.http.readTimeout", DEFAULT_READ_TIMEOUT_SECONDS);
     private static final long FALLBACK_WRITE_TIMEOUT_SECONDS = Long.getLong(
-            "remi.http.writeTimeout", DEFAULT_WRITE_TIMEOUT_SECONDS);
+            "ydsz.http.writeTimeout", DEFAULT_WRITE_TIMEOUT_SECONDS);
 
     private static volatile OkHttpClient client;
     private static volatile OkHttpClient insecureClient;
@@ -121,7 +121,7 @@ public class OkHttpUtils {
      * 构建忽略 SSL 验证的客户端（仅非生产环境使用）
      *
      * <p>安全约束：
-     * 1. 必须显式启用：系统属性 remi.http.insecure-enabled=true
+     * 1. 必须显式启用：系统属性 ydsz.http.insecure-enabled=true
      * 2. 禁止在生产环境（prod）使用
      * 3. 未设置 spring.profiles.active 时默认拒绝
      * </p>
@@ -131,10 +131,10 @@ public class OkHttpUtils {
      */
     public static OkHttpClient buildInsecureClient() {
         // 必须显式启用不安全模式
-        boolean insecureEnabled = Boolean.getBoolean("remi.http.insecure-enabled");
+        boolean insecureEnabled = Boolean.getBoolean("ydsz.http.insecure-enabled");
         if (!insecureEnabled) {
             throw new IllegalStateException(
-                    "buildInsecureClient() requires remi.http.insecure-enabled=true. "
+                    "buildInsecureClient() requires ydsz.http.insecure-enabled=true. "
                     + "This is disabled by default for security reasons.");
         }
         String profile = System.getProperty("spring.profiles.active",

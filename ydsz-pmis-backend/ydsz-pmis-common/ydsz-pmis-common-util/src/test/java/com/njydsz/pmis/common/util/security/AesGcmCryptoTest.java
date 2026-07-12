@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.security;
+﻿package com.njydsz.pmis.common.util.security;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -226,7 +226,7 @@ class AesGcmCryptoTest {
         @Test
         @DisplayName("中文字符加解密")
         void shouldEncryptAndDecryptChinese() {
-            String plaintext = "瑞米软件·加密测试——你好，世界！";
+            String plaintext = "ydsz软件·加密测试——你好，世界！";
             String ciphertext = crypto.encrypt(plaintext, "cn");
             assertEquals(plaintext, crypto.decrypt(ciphertext, "cn"));
         }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.util;
+﻿package com.njydsz.pmis.common.file.util;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
@@ -34,7 +34,7 @@ import java.util.Set;
  * <p><b>配置方法：</b></p>
  * <ul>
  *   <li>通过 {@link #init(boolean)} 配置开关（由 Spring 自动注入配置值）</li>
- *   <li>配置文件: {@code remi.file.check-magic-number=true|false}</li>
+ *   <li>配置文件: {@code ydsz.file.check-magic-number=true|false}</li>
  *   <li>默认启用，关闭后仅基于后缀名白名单校验</li>
  * </ul>
  *
@@ -50,7 +50,7 @@ public final class FileTypeValidator {
     }
 
     /**
-     * 是否启用 Magic Number 校验（默认启用，由配置文件 remi.file.check-magic-number 控制）
+     * 是否启用 Magic Number 校验（默认启用，由配置文件 ydsz.file.check-magic-number 控制）
      */
     private static volatile boolean checkMagicNumber = true;
 

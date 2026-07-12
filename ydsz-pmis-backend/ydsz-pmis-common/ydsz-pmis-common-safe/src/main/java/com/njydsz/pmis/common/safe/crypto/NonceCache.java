@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.crypto;
+﻿package com.njydsz.pmis.common.safe.crypto;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -245,10 +245,10 @@ public class NonceCache {
      *
      * <p>Caffeine 的 TTL 是懒清理（访问时触发），此定时任务
      * 主动触发清理，确保不占用内存。
-     * 执行频率默认 60 秒，可通过 {@code remi.safe.nonce-clean-interval} 配置。
+     * 执行频率默认 60 秒，可通过 {@code ydsz.safe.nonce-clean-interval} 配置。
      */
-    @Scheduled(fixedRateString = "${remi.safe.nonce-clean-interval:60000}",
-            initialDelayString = "${remi.safe.nonce-clean-initial-delay:60000}")
+    @Scheduled(fixedRateString = "${ydsz.safe.nonce-clean-interval:60000}",
+            initialDelayString = "${ydsz.safe.nonce-clean-initial-delay:60000}")
     public void cleanExpiredNonces() {
         long before = cache.estimatedSize();
         cache.cleanUp();

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.config;
+﻿package com.njydsz.pmis.common.auth.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -22,7 +22,7 @@ import java.util.List;
  * @version 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.auth")
+@ConfigurationProperties(prefix = "ydsz.auth")
 public class AuthProperties {
     /**
      * 是否启用 RBAC 权限校验，默认 true。
@@ -45,7 +45,7 @@ public class AuthProperties {
      * <p>占位符 {@code {}} 会被替换为角色编码，例如：
      * {@code remi-auth:role-menu:admin}
      */
-    private String roleMenuKey = "remi-auth:role-menu:{}";
+    private String roleMenuKey = "ydsz-auth:role-menu:{}";
 
     /**
      * 角色接口权限的 Redis Key 模板。
@@ -53,7 +53,7 @@ public class AuthProperties {
      * <p>占位符 {@code {}} 会被替换为角色编码，例如：
      * {@code remi-auth:role-api:admin}
      */
-    private String roleApiKey = "remi-auth:role-api:{}";
+    private String roleApiKey = "ydsz-auth:role-api:{}";
 
     /**
      * 角色行级数据权限的 Redis Key 模板。
@@ -61,7 +61,7 @@ public class AuthProperties {
      * <p>占位符 {@code {}} 会被替换为角色编码，例如：
      * {@code remi-auth:role-row:admin}
      */
-    private String roleRowKey = "remi-auth:role-row:{}";
+    private String roleRowKey = "ydsz-auth:role-row:{}";
 
     /**
      * 角色列级权限的 Redis Key 模板。
@@ -69,7 +69,7 @@ public class AuthProperties {
      * <p>占位符 {@code {}} 会被替换为角色编码，例如：
      * {@code remi-auth:role-col:admin}
      */
-    private String roleColKey = "remi-auth:role-col:{}";
+    private String roleColKey = "ydsz-auth:role-col:{}";
 
     /**
      * 忽略权限校验的角色列表，多个角色以逗号分隔。

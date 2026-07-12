@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.config;
+﻿package com.njydsz.pmis.common.base.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,13 +11,13 @@ import java.util.List;
  * CORS 跨域配置属性（Web/App 共享基类）
  *
  * <p>子类通过 {@code @ConfigurationProperties} 的 prefix 属性指定具体前缀，
- * 例如 Web 端使用 {@code remi.web.cors}，App 端使用 {@code remi.app.cors}。
+ * 例如 Web 端使用 {@code ydsz.web.cors}，App 端使用 {@code ydsz.app.cors}。
  *
  * <p>本类为抽象基类，定义 CORS 通用配置项，不直接注册为 Spring Bean。
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   web:
  *     cors:
  *       enabled: true

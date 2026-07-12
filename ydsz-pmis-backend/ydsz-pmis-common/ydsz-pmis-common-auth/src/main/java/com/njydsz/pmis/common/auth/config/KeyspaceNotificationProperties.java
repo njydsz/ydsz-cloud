@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.config;
+﻿package com.njydsz.pmis.common.auth.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -15,7 +15,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.auth.keyspace-notification")
+@ConfigurationProperties(prefix = "ydsz.auth.keyspace-notification")
 public class KeyspaceNotificationProperties {
 
     /**
@@ -29,5 +29,5 @@ public class KeyspaceNotificationProperties {
      * 当匹配前缀的 key 发生变更时，触发缓存失效。
      * 默认监听 remi-auth:role-* 相关 key。
      */
-    private String keyPrefixPattern = "remi-auth:role*";
+    private String keyPrefixPattern = "ydsz-auth:role*";
 }

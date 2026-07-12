@@ -37,17 +37,17 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  *
  * <p><b>主要功能：</b>
  * <ul>
- *   <li>使用 RemiJson 作为高性能序列化器</li>
+ *   <li>使用 YdszJson 作为高性能序列化器</li>
  *   <li>支持连接池配置（commons-pool2）</li>
  *   <li>支持 SSL 配置</li>
- *   <li>客户端自动选择（通过 remi.redis.client.type 配置）</li>
+ *   <li>客户端自动选择（通过 ydsz.redis.client.type 配置）</li>
  *   <li>Lettuce 自动重连 + 集群拓扑自适应刷新</li>
  *   <li>空闲连接驱逐策略</li>
  * </ul>
  *
  * <p><b>客户端配置示例（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   redis:
  *     client:
  *       type: jedis  # jedis 或 lettuce（默认 lettuce）
@@ -100,12 +100,12 @@ public class RedisConfiguration {
      * <p>默认重试 3 次，指数退避（初始 100ms，最大 2s）
      * 仅针对读操作重试（write=false），避免写操作重复执行导致数据不一致。
      *
-     * <p>重试参数可通过 {@code remi.redis.retry.*} 配置覆盖。
+     * <p>重试参数可通过 {@code ydsz.redis.retry.*} 配置覆盖。
      *
      * @return RedisRetryInterceptor 实例
      */
     @Bean
-    @ConditionalOnProperty(name = "remi.redis.retry.enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(name = "ydsz.redis.retry.enabled", havingValue = "true", matchIfMissing = true)
     public RedisRetryInterceptor redisRetryInterceptor() {
         RedisProperties.Retry retry = redisProperties.getRetry();
         return new RedisRetryInterceptor(
@@ -118,13 +118,13 @@ public class RedisConfiguration {
     /**
      * 创建 Jackson 序列化器（默认）
      *
-     * <p>当 {@code remi.redis.serializer=jackson} 或未配置时启用。
+     * <p>当 {@code ydsz.redis.serializer=jackson} 或未配置时启用。
      * 使用 Jackson ObjectMapper 作为 Redis 值的序列化引擎，
      * 支持 Java 8 时间类型（JavaTimeModule）。
      *
      * <p><b>配置示例：</b>
      * <pre>{@code
-     * remi:
+     * ydsz:
      *   redis:
      *     serializer: jackson
      * }</pre>
@@ -134,7 +134,7 @@ public class RedisConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(com.fasterxml.jackson.databind.ObjectMapper.class)
-    @ConditionalOnProperty(name = "remi.redis.serializer", havingValue = "jackson", matchIfMissing = true)
+    @ConditionalOnProperty(name = "ydsz.redis.serializer", havingValue = "jackson", matchIfMissing = true)
     public JacksonRedisSerializer jacksonRedisSerializer() {
         return new JacksonRedisSerializer(Object.class);
     }
@@ -145,17 +145,17 @@ public class RedisConfiguration {
      * <p>配置序列化方式：
      * <ul>
      *   <li>Key：使用 StringRedisSerializer，确保可读性</li>
-     *   <li>Value：根据 {@code remi.redis.serializer} 配置选择序列化器（默认 jackson）</li>
+     *   <li>Value：根据 {@code ydsz.redis.serializer} 配置选择序列化器（默认 jackson）</li>
      *   <li>Hash Key：使用 StringRedisSerializer</li>
      *   <li>Hash Value：使用与 Value 相同的序列化器</li>
      * </ul>
      *
      * <p>自 3.5.0 起，RedisTemplate 不再默认被 AOP 代理包装，以保持其作为基础数据访问 Bean 的纯净性。
-     * 如需重试能力，请注入 {@code retryableRedisTemplate}，或将 {@code remi.redis.retry.proxy-template}
+     * 如需重试能力，请注入 {@code retryableRedisTemplate}，或将 {@code ydsz.redis.retry.proxy-template}
      * 设置为 {@code true} 恢复旧行为。
      *
      * @param connectionFactory Redis 连接工厂
-     * @param valueSerializer   Redis 值序列化器（由 {@code remi.redis.serializer} 配置决定）
+     * @param valueSerializer   Redis 值序列化器（由 {@code ydsz.redis.serializer} 配置决定）
      * @return 未代理的 RedisTemplate 实例
      */
     @Bean
@@ -184,7 +184,7 @@ public class RedisConfiguration {
      * <p>使用 ProxyFactory 包装普通 RedisTemplate，使其方法调用经过
      * {@link RedisRetryInterceptor}，从而为 Redis 操作提供自动重试能力。
      *
-     * <p>该 Bean 默认不创建；需要时设置 {@code remi.redis.retry.proxy-template=true}。
+     * <p>该 Bean 默认不创建；需要时设置 {@code ydsz.redis.retry.proxy-template=true}。
      * 注入方式：
      * <pre>{@code
      * @Resource(name = "retryableRedisTemplate")
@@ -197,7 +197,7 @@ public class RedisConfiguration {
      */
     @Bean("retryableRedisTemplate")
     @ConditionalOnBean(RedisRetryInterceptor.class)
-    @ConditionalOnProperty(name = "remi.redis.retry.proxy-template", havingValue = "true")
+    @ConditionalOnProperty(name = "ydsz.redis.retry.proxy-template", havingValue = "true")
     @ConditionalOnMissingBean(name = "retryableRedisTemplate")
     @SuppressWarnings("unchecked")
     public RedisTemplate<String, Object> retryableRedisTemplate(RedisTemplate<String, Object> redisTemplate,

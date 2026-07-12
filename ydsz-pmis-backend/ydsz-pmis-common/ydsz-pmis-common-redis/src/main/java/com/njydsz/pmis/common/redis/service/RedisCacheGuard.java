@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.service;
+﻿package com.njydsz.pmis.common.redis.service;
 
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
 import lombok.extern.slf4j.Slf4j;
@@ -153,7 +153,7 @@ public class RedisCacheGuard {
         this.redisTemplate = redisService.getRedisTemplate();
         this.nullValueTtlSeconds = nullValueTtlSeconds;
         this.watchDogScheduler = Executors.newScheduledThreadPool(1, r -> {
-            Thread t = new Thread(r, "remi-cache-guard-watchdog");
+            Thread t = new Thread(r, "ydsz-cache-guard-watchdog");
             t.setDaemon(true);
             return t;
         });

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.health;
+﻿package com.njydsz.pmis.common.safe.health;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @ConditionalOnClass(HealthIndicator.class)
-@ConditionalOnProperty(prefix = "remi.safe", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.safe", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SafeHealthIndicator implements HealthIndicator {
 
     private final RedisConnectionFactory redisConnectionFactory;

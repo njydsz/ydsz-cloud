@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.circuitbreaker;
+﻿package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import com.njydsz.pmis.common.feign.config.FeignProperties;
 import com.njydsz.pmis.common.feign.config.FeignConfiguration;
@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Bean;
  * <p><b>生效条件：</b>
  * <ul>
  *   <li>classpath 中存在 {@code io.github.resilience4j.circuitbreaker.CircuitBreaker}</li>
- *   <li>{@code remi.feign.circuit-breaker.enabled=true}</li>
+ *   <li>{@code ydsz.feign.circuit-breaker.enabled=true}</li>
  *   <li>尚未注册其他 {@link FeignCircuitBreakerStrategy} Bean</li>
  * </ul>
  *
@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Bean;
  *
  * <p><b>配置示例（YAML）：</b>
  * <pre>
- * remi:
+ * ydsz:
  *   feign:
  *     circuit-breaker:
  *       enabled: true
@@ -50,7 +50,7 @@ import org.springframework.context.annotation.Bean;
  */
 @AutoConfiguration(after = FeignConfiguration.class)
 @ConditionalOnClass(io.github.resilience4j.circuitbreaker.CircuitBreaker.class)
-@ConditionalOnProperty(prefix = "remi.feign.circuit-breaker", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "ydsz.feign.circuit-breaker", name = "enabled", havingValue = "true")
 public class Resilience4jFeignConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(Resilience4jFeignConfiguration.class);

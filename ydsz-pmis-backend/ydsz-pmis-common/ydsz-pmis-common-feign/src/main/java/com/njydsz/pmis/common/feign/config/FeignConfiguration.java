@@ -38,7 +38,7 @@ import feign.Feign;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * RemiFeign 自动配置类。
+ * YdszFeign 自动配置类。
  *
  * <p>提供 Feign 客户端的全局默认配置，包括：
  * <ul>
@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>配置生效条件：
  * <ul>
  *   <li>classpath 中存在 {@code Feign} 类</li>
- *   <li>配置项 {@code remi.feign.enabled=true}（默认为 true）</li>
+ *   <li>配置项 {@code ydsz.feign.enabled=true}（默认为 true）</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -66,11 +66,11 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfiguration
 @ConditionalOnClass(Feign.class)
 @EnableConfigurationProperties(FeignProperties.class)
-@ConditionalOnProperty(prefix = "remi.feign", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.feign", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class FeignConfiguration {
 
     /**
-     * 创建 RemiFeign 日志处理器。
+     * 创建 YdszFeign 日志处理器。
      * <p>
      * 相比 Feign 默认日志处理器，提供了更丰富的上下文信息，
      * 包括请求耗时、响应状态等，便于问题排查。
@@ -163,7 +163,7 @@ public class FeignConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "remi.feign.retry", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.feign.retry", name = "enabled", havingValue = "true", matchIfMissing = true)
     public Retryer feignRetryer(FeignProperties feignProperties) {
         FeignProperties.Retry retryConfig = feignProperties.getRetry();
         long period = retryConfig.getBackoff().getDelay();
@@ -211,14 +211,14 @@ public class FeignConfiguration {
      * 创建 GZIP 请求压缩拦截器。
      * <p>
      * 对 Feign 请求体进行 GZIP 压缩，减少网络传输量。
-     * 仅当 {@code remi.feign.compress.enabled=true} 时生效。
+     * 仅当 {@code ydsz.feign.compress.enabled=true} 时生效。
      *
      * @param feignProperties Feign 配置属性
      * @return GzipRequestCompressInterceptor 实例
      */
     @Bean
     @ConditionalOnMissingBean(GzipRequestCompressInterceptor.class)
-    @ConditionalOnProperty(prefix = "remi.feign.compress", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(prefix = "ydsz.feign.compress", name = "enabled", havingValue = "true")
     public RequestInterceptor gzipRequestCompressInterceptor(FeignProperties feignProperties) {
         FeignProperties.Compress compressConfig = feignProperties.getCompress();
         return new GzipRequestCompressInterceptor(
@@ -238,14 +238,14 @@ public class FeignConfiguration {
      *   <li>异常响应统一处理</li>
      * </ul>
      * <p>
-     * 仅当 {@code remi.feign.response-interceptor.enabled=true} 时生效。
+     * 仅当 {@code ydsz.feign.response-interceptor.enabled=true} 时生效。
      *
      * @param feignProperties Feign 配置属性
      * @return FeignResponseInterceptor 实例
      */
     @Bean
     @ConditionalOnMissingBean(FeignResponseInterceptor.class)
-    @ConditionalOnProperty(prefix = "remi.feign.response-interceptor", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.feign.response-interceptor", name = "enabled", havingValue = "true", matchIfMissing = true)
     public ResponseInterceptor feignResponseInterceptor(FeignProperties feignProperties,
                                                           ObjectProvider<MeterRegistry> meterRegistryProvider) {
         boolean logEnabled = feignProperties.getResponseInterceptor().isLogEnabled();
@@ -339,7 +339,7 @@ public class FeignConfiguration {
     /**
      * 创建动态 Feign 客户端工厂。
      *
-     * <p>当启用动态配置刷新时（remi.feign.refresh.enabled=true），
+     * <p>当启用动态配置刷新时（ydsz.feign.refresh.enabled=true），
      * 通过该工厂管理 Feign 客户端实例的生命周期，支持配置热更新。
      *
      * @param feignProperties        Feign 配置属性

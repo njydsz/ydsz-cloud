@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.config;
+﻿package com.njydsz.pmis.common.exception.config;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,11 +7,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 国际化配置属性
  *
- * <p>配置前缀：{@code remi.i18n}
+ * <p>配置前缀：{@code ydsz.i18n}
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   i18n:
  *     basename: "classpath:i18n/messages"
  *     encoding: "UTF-8"
@@ -31,7 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "remi.i18n")
+@ConfigurationProperties(prefix = "ydsz.i18n")
 public class I18nProperties {
 
     /**

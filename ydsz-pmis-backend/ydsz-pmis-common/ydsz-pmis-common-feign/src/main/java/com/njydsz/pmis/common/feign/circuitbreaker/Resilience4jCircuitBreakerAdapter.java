@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.circuitbreaker;
+﻿package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import com.njydsz.pmis.common.feign.config.FeignProperties;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -33,7 +33,7 @@ import java.util.function.Supplier;
  *
  * <p><b>配置示例（YAML）：</b>
  * <pre>
- * remi:
+ * ydsz:
  *   feign:
  *     circuit-breaker:
  *       enabled: true

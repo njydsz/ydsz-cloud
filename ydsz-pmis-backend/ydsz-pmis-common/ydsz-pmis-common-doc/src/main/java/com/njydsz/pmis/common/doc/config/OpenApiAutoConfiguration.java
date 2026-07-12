@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.doc.config;
+﻿package com.njydsz.pmis.common.doc.config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +24,8 @@ import io.swagger.v3.oas.models.info.License;
  * <p>当 classpath 中存在 springdoc-openapi 时自动激活，提供 OpenAPI 3.0 规范支持。
  * 支持单分组模式和多分组模式：
  * <ul>
- *   <li><b>单分组模式：</b>未配置 {@code remi.doc.groups} 时，使用全局配置生成默认分组（匹配全部路径）</li>
- *   <li><b>多分组模式：</b>配置了 {@code remi.doc.groups} 时，为每个 group 创建独立的 {@link GroupedOpenApi} Bean</li>
+ *   <li><b>单分组模式：</b>未配置 {@code ydsz.doc.groups} 时，使用全局配置生成默认分组（匹配全部路径）</li>
+ *   <li><b>多分组模式：</b>配置了 {@code ydsz.doc.groups} 时，为每个 group 创建独立的 {@link GroupedOpenApi} Bean</li>
  * </ul>
  *
  * <p><b>线程安全性：</b>无状态配置类，线程安全。
@@ -39,7 +39,7 @@ import io.swagger.v3.oas.models.info.License;
 @RequiredArgsConstructor
 @EnableConfigurationProperties(DocProperties.class)
 @ConditionalOnClass(name = "org.springdoc.core.configuration.SpringDocConfiguration")
-@ConditionalOnProperty(prefix = "remi.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ydsz.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class OpenApiAutoConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenApiAutoConfiguration.class);
@@ -53,7 +53,7 @@ public class OpenApiAutoConfiguration {
      * <p>将 {@link DocProperties#getInfo()} 中配置的标题、描述、版本、联系方式、许可证
      * 转换为 OpenAPI 3.0 规范的 {@link OpenAPI} Bean。
      *
-     * <p>版本号解析优先级：{@code remi.doc.doc-version} &gt; {@link DocProperties.OpenApiInfo#getVersion()}。
+     * <p>版本号解析优先级：{@code ydsz.doc.doc-version} &gt; {@link DocProperties.OpenApiInfo#getVersion()}。
      *
      * @return OpenAPI 实例，包含文档标题、描述、版本、联系方式和许可证等信息
      */

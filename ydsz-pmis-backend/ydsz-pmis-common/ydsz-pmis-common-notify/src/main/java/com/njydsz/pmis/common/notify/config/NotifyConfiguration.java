@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.config;
+﻿package com.njydsz.pmis.common.notify.config;
 
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.NotifyService;
@@ -46,7 +46,7 @@ import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 @RequiredArgsConstructor
 @EnableConfigurationProperties(NotifyProperties.class)
 @ConditionalOnClass(name = "org.apache.hc.client5.http.classic.HttpClient")
-@ConditionalOnProperty(prefix = "remi.notify", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.notify", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class NotifyConfiguration {
 
 	private final Logger log = LoggerFactory.getLogger(NotifyConfiguration.class);
@@ -75,7 +75,7 @@ public class NotifyConfiguration {
 	/**
 	 * 创建渠道限流管理器，用于控制各通知渠道的发送频率。
 	 *
-	 * <p>当 {@code remi.notify.rate-limit.enabled=true}（默认）时生效，
+	 * <p>当 {@code ydsz.notify.rate-limit.enabled=true}（默认）时生效，
 	 * 为每个渠道维护独立的滑动窗口限流器，防止单渠道过载。
 	 *
 	 * @param properties 通知配置属性
@@ -135,10 +135,10 @@ public class NotifyConfiguration {
 	/**
 	 * 创建通知重试队列，用于管理发送失败通知的重试调度。
 	 *
-	 * <p>当 {@code remi.notify.retryQueue.persistent=true} 时，使用 Redis 持久化队列
+	 * <p>当 {@code ydsz.notify.retryQueue.persistent=true} 时，使用 Redis 持久化队列
 	 * （支持多实例共享、重启不丢失），Redis 不可用时降级为内存队列。
 	 * 当 {@code persistent=false} 时，直接使用内存队列。
-	 * 队列容量、批量大小等参数可通过 {@code remi.notify.retryQueue} 配置。
+	 * 队列容量、批量大小等参数可通过 {@code ydsz.notify.retryQueue} 配置。
 	 *
 	 * @param properties         通知配置属性
 	 * @param redisTemplateProvider Redis 模板提供者（可选）

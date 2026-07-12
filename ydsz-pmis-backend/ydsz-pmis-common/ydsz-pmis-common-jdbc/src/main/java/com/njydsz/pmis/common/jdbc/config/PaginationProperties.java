@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.config;
+﻿package com.njydsz.pmis.common.jdbc.config;
 
 import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>配置示例：
  * <pre>
  * # application.yml
- * remi:
+ * ydsz:
  *   sql-intercept:
  *     pagination:
  *       db-type: mysql          # 数据库类型（可选，不配置则自动检测）
@@ -35,8 +35,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Data
 @Configuration
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
-@ConfigurationProperties(prefix = "remi.jdbc.pagination")
+@ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
+@ConfigurationProperties(prefix = "ydsz.jdbc.pagination")
 public class PaginationProperties {
 
     /**

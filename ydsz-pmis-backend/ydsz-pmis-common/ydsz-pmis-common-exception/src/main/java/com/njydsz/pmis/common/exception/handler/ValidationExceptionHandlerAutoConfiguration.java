@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.handler;
+﻿package com.njydsz.pmis.common.exception.handler;
 
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean;
  * Validation 异常处理器自动配置
  *
  * <p>仅在 Web 应用且类路径存在 {@link jakarta.validation} 时装配。
- * 通过 {@code remi.exception.global-handler-enabled=true}（默认启用）控制是否启用。</p>
+ * 通过 {@code ydsz.exception.global-handler-enabled=true}（默认启用）控制是否启用。</p>
  *
  * <p><b>设计说明：</b>将 {@code @AutoConfiguration} 与 {@code @RestControllerAdvice} 解耦，
  * 与 {@link MvcExceptionHandlerAutoConfiguration} 配合使用。</p>
@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration(after = MvcExceptionHandlerAutoConfiguration.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass({ConstraintViolationException.class, ValidationExceptionHandler.class})
-@ConditionalOnProperty(prefix = "remi.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
 public class ValidationExceptionHandlerAutoConfiguration {
 
     @Bean

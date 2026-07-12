@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.config;
+﻿package com.njydsz.pmis.common.jdbc.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -22,15 +22,15 @@ import javax.sql.DataSource;
  * <p>配置 HikariCP 数据库连接池，支持两种配置方式：
  * <ol>
  *   <li>Spring Boot 标准配置：{@code spring.datasource.hikari.*}</li>
- *   <li>项目自定义配置：{@code remi.jdbc.hikari.*}（推荐）</li>
+ *   <li>项目自定义配置：{@code ydsz.jdbc.hikari.*}（推荐）</li>
  * </ol>
  *
- * <p><b>配置优先级：</b> 若配置了 {@code remi.jdbc.hikari.*}，则使用项目配置；
+ * <p><b>配置优先级：</b> 若配置了 {@code ydsz.jdbc.hikari.*}，则使用项目配置；
  * 否则使用 Spring Boot 默认配置。
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   jdbc:
  *     hikari:
  *       minimum-idle: 5
@@ -50,7 +50,7 @@ import javax.sql.DataSource;
  */
 @AutoConfiguration
 @AutoConfigureBefore(DataSourceAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
 @EnableConfigurationProperties({HikariCPProperties.class, JdbcProperties.class})
 public class HikariCPConfiguration {
 
@@ -59,7 +59,7 @@ public class HikariCPConfiguration {
     /**
      * 创建 HikariCP 配置
      *
-     * <p>优先使用 remi.comm.jdbc.hikari 配置，若未配置则使用 Spring Boot 默认配置。
+     * <p>优先使用 ydsz.comm.jdbc.hikari 配置，若未配置则使用 Spring Boot 默认配置。
      *
      * @param properties 项目自定义的 HikariCP 配置属性
      * @return HikariConfig 实例

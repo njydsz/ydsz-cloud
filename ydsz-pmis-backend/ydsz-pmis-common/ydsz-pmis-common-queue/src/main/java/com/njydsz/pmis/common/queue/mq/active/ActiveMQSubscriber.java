@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.mq.active;
+﻿package com.njydsz.pmis.common.queue.mq.active;
 
 import com.njydsz.pmis.common.exception.custom.InfrastructureException;
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
@@ -118,7 +118,7 @@ public class ActiveMQSubscriber implements IMessageSubscriber {
             threadGuard.start(() -> consumeLoop(handler));
             log.info("[ActiveMQ] 异步消费已启动（线程池托管），queue={}", queueName);
         } else {
-            consumerThread = new Thread(() -> consumeLoop(handler), "remi-queue-activemq-" + queueName);
+            consumerThread = new Thread(() -> consumeLoop(handler), "ydsz-queue-activemq-" + queueName);
             consumerThread.setDaemon(true);
             consumerThread.start();
             log.warn("[ActiveMQ] 异步消费已启动（裸线程，不推荐），queue={}", queueName);

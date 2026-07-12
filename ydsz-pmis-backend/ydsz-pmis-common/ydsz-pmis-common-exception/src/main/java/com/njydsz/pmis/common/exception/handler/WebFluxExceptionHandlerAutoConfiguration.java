@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.handler;
+﻿package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 import org.springframework.beans.factory.ObjectProvider;
@@ -14,7 +14,7 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
  * WebFlux 全局异常处理器自动配置
  *
  * <p>仅在 WebFlux 应用且类路径存在 {@link WebFluxExceptionHandler} 时装配。
- * 通过 {@code remi.exception.global-handler-enabled=true}（默认启用）控制是否启用。</p>
+ * 通过 {@code ydsz.exception.global-handler-enabled=true}（默认启用）控制是否启用。</p>
  *
  * <p><b>设计说明：</b>将 {@code @AutoConfiguration} 与 {@code @RestControllerAdvice} 解耦，
  * 避免在 Advice 类上叠加 Spring Boot 自动配置语义，提升可测试性与可读性。</p>
@@ -28,7 +28,7 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
 @AutoConfiguration(after = com.njydsz.pmis.common.exception.config.I18nConfiguration.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 @ConditionalOnClass({WebFluxConfigurer.class, WebFluxExceptionHandler.class})
-@ConditionalOnProperty(prefix = "remi.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
 public class WebFluxExceptionHandlerAutoConfiguration {
 
     @Bean

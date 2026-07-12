@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.app.config;
+﻿package com.njydsz.pmis.common.app.config;
 
 import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -144,17 +144,17 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     /**
      * 注册 App 端请求签名校验过滤器
      *
-     * <p>仅在 {@code remi.app.signature.enabled=true} 时激活。
-     * 启用时必须配置 {@code remi.app.signature.app-secret}，否则启动失败。
+     * <p>仅在 {@code ydsz.app.signature.enabled=true} 时激活。
+     * 启用时必须配置 {@code ydsz.app.signature.app-secret}，否则启动失败。
      *
      * @return FilterRegistrationBean 实例
      * @throws IllegalStateException 当启用签名校验但未配置 app-secret 时抛出
      */
     @Bean
-    @ConditionalOnProperty(prefix = "remi.app.signature", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(prefix = "ydsz.app.signature", name = "enabled", havingValue = "true")
     public FilterRegistrationBean<AppSignatureFilter> appSignatureFilter() {
         if (appSignatureProperties.getAppSecret() == null || appSignatureProperties.getAppSecret().isBlank()) {
-            throw new IllegalStateException("启用签名验证时必须配置 remi.app.signature.app-secret");
+            throw new IllegalStateException("启用签名验证时必须配置 ydsz.app.signature.app-secret");
         }
         AppSignatureFilter filter = new AppSignatureFilter(
                 appSignatureProperties.getAppSecret(),
@@ -206,14 +206,14 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     /**
      * 注册安全响应头过滤器
      *
-     * <p>默认开启（{@code remi.safe.security-headers.enabled=true}），通过 {@link SecurityHeaderProperties}
+     * <p>默认开启（{@code ydsz.safe.security-headers.enabled=true}），通过 {@link SecurityHeaderProperties}
      * 控制具体响应头策略。
      *
      * @param securityHeaderProperties 安全响应头配置
      * @return FilterRegistrationBean 实例
      */
     @Bean
-    @ConditionalOnProperty(prefix = "remi.safe.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.safe.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<AppSecurityHeaderFilter> securityHeaderFilter(SecurityHeaderProperties securityHeaderProperties) {
         AppSecurityHeaderFilter securityHeaderFilter = new AppSecurityHeaderFilter(securityHeaderProperties);
         FilterRegistrationBean<AppSecurityHeaderFilter> bean = new FilterRegistrationBean<>(securityHeaderFilter);
@@ -226,13 +226,13 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     /**
      * 注册请求 ID 响应过滤器
      *
-     * <p>默认开启（{@code remi.app.trace.enabled=true}），将当前请求的 RequestId 写入响应头
+     * <p>默认开启（{@code ydsz.app.trace.enabled=true}），将当前请求的 RequestId 写入响应头
      * {@code X-Request-Id}，便于客户端关联日志。
      *
      * @return FilterRegistrationBean 实例
      */
     @Bean
-    @ConditionalOnProperty(prefix = "remi.app.trace", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.app.trace", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<AppRequestIdResponseFilter> requestIdResponseFilter() {
         AppRequestIdResponseFilter requestIdResponseFilter = new AppRequestIdResponseFilter(appTraceProperties);
         FilterRegistrationBean<AppRequestIdResponseFilter> bean = new FilterRegistrationBean<>(requestIdResponseFilter);

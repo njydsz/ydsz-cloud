@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.enums;
+﻿package com.njydsz.pmis.common.redis.enums;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  *
  * <p><b>设计原则：</b>
  * <ul>
- *   <li>统一前缀：所有 Key 使用 "remi:" 作为基础前缀</li>
+ *   <li>统一前缀：所有 Key 使用 "ydsz:" 作为基础前缀</li>
  *   <li>模板化：使用占位符 {} 定义 Key 结构，便于维护</li>
  *   <li>分组管理：按业务模块分组，同一模块的 Key 集中定义</li>
  *   <li>过期时间：每个 Key 都有默认过期时间，便于内存管理</li>
@@ -372,7 +372,7 @@ public enum RedisKeysEnum {
     /**
      * Redis Key 基础前缀
      */
-    private static final String BASE_PREFIX = "remi:";
+    private static final String BASE_PREFIX = "ydsz:";
 
     /**
      * Redis Key 模板（使用 {} 作为占位符）

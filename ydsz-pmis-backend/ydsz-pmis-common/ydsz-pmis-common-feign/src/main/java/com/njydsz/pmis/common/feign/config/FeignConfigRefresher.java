@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.config;
+﻿package com.njydsz.pmis.common.feign.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
@@ -33,7 +33,7 @@ import java.util.Set;
 @Order(100)
 public class FeignConfigRefresher implements ApplicationListener<EnvironmentChangeEvent> {
 
-    private static final String FEIGN_CONFIG_PREFIX = "remi.feign";
+    private static final String FEIGN_CONFIG_PREFIX = "ydsz.feign";
 
     private final ApplicationContext applicationContext;
     private final DynamicFeignClientFactory clientFactory;

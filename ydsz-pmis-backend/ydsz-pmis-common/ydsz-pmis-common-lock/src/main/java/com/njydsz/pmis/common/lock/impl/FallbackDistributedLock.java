@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.lock.impl;
+﻿package com.njydsz.pmis.common.lock.impl;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -21,14 +21,14 @@ import java.util.concurrent.locks.ReentrantLock;
  * <ul>
  *   <li>tryLock 时先尝试 Redis 锁，捕获异常后降级为本地锁</li>
  *   <li>unlock 时先尝试 Redis 释放，失败则释放本地锁</li>
- *   <li>通过配置开关 remi.lock.fallback-enabled 控制是否启用降级（默认 true）</li>
+ *   <li>通过配置开关 ydsz.lock.fallback-enabled 控制是否启用降级（默认 true）</li>
  * </ul>
  *
  * <p><b>自动恢复：</b>
  * <ul>
  *   <li>连续失败达到阈值后，全局标记 Redis 不可用，直接走本地锁</li>
  *   <li>Redis 恢复后，自动探测并切换回分布式锁模式</li>
- *   <li>通过 {@code remi.lock.fallback-recovery-threshold} 控制探测间隔</li>
+ *   <li>通过 {@code ydsz.lock.fallback-recovery-threshold} 控制探测间隔</li>
  * </ul>
  *
  * <p><b>注意事项：</b>

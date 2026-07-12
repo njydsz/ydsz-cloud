@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.config;
+﻿package com.njydsz.pmis.common.safe.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,7 +13,7 @@ import java.util.List;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   safe:
  *     security-headers:
  *       enabled: true
@@ -42,7 +42,7 @@ import java.util.List;
  * @version 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.safe.security-headers")
+@ConfigurationProperties(prefix = "ydsz.safe.security-headers")
 public class SecurityHeaderProperties {
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.config;
+﻿package com.njydsz.pmis.common.jdbc.config;
 
 import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>配置示例：
  * <pre>
  * # application.yml
- * remi:
+ * ydsz:
  *   jdbc:
  *     optimistic-lock:
  *       enable: true                           # 是否启用乐观锁拦截
@@ -36,8 +36,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Data
 @Configuration
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
-@ConfigurationProperties(prefix = "remi.jdbc.optimistic-lock")
+@ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
+@ConfigurationProperties(prefix = "ydsz.jdbc.optimistic-lock")
 public class OptimisticLockConfiguration {
 
     /**

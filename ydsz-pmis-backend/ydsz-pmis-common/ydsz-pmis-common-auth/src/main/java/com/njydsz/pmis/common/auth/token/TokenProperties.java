@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.token;
+﻿package com.njydsz.pmis.common.auth.token;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
  * @version 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.auth.token")
+@ConfigurationProperties(prefix = "ydsz.auth.token")
 public class TokenProperties {
 
     /**
@@ -46,7 +46,7 @@ public class TokenProperties {
     /**
      * Token 主题（subject）
      */
-    private String subject = "remi-user";
+    private String subject = "ydsz-user";
 
     /**
      * 校验密钥配置
@@ -58,7 +58,7 @@ public class TokenProperties {
     public void validate() {
         if (secretKey == null || secretKey.isBlank()) {
             throw new IllegalStateException(
-                    "JWT secretKey 未配置，请在配置文件中设置 remi.auth.token.secret-key（建议 32 字节以上的随机字符串）");
+                    "JWT secretKey 未配置，请在配置文件中设置 ydsz.auth.token.secret-key（建议 32 字节以上的随机字符串）");
         }
         if (secretKey.getBytes(StandardCharsets.UTF_8).length < 32) {
             throw new IllegalStateException(

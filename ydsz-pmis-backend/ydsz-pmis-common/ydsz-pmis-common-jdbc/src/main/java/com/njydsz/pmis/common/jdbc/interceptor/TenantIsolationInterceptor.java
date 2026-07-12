@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.interceptor;
+﻿package com.njydsz.pmis.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
@@ -56,7 +56,7 @@ import java.util.Set;
  * <p><b>安全设计原则：</b>当无法获取租户 ID 时（如定时任务、异步线程未设置上下文），
  * 拦截器将抛出 {@link TenantIsolationException} 拒绝执行 SQL，遵循 fail-closed 原则，
  * 避免因上下文缺失导致跨租户数据泄露。对于确需跨租户的场景（如系统初始化、数据迁移），
- * 请将相关表加入 {@code remi.jdbc.tenant-isolation.ignore-tables} 配置。
+ * 请将相关表加入 {@code ydsz.jdbc.tenant-isolation.ignore-tables} 配置。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -304,7 +304,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         if (tenantId == null || tenantId.isEmpty()) {
             throw new TenantIsolationException(
                 "无法获取当前租户 ID，已拒绝执行 SQL 以避免跨租户数据泄露。"
-                + "请检查认证上下文是否设置，或将相关表加入 remi.jdbc.tenant-isolation.ignore-tables 配置。");
+                + "请检查认证上下文是否设置，或将相关表加入 ydsz.jdbc.tenant-isolation.ignore-tables 配置。");
         }
         return tenantId;
     }

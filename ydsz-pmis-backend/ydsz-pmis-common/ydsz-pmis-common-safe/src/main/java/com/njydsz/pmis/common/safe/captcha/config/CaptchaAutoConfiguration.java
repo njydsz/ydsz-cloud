@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.captcha.config;
+﻿package com.njydsz.pmis.common.safe.captcha.config;
 
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaGenerator;
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaRateLimiter;
@@ -28,7 +28,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  */
 @AutoConfiguration
 @EnableConfigurationProperties(CaptchaProperties.class)
-@ConditionalOnProperty(prefix = "remi.safe.captcha", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.safe.captcha", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class CaptchaAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(CaptchaAutoConfiguration.class);

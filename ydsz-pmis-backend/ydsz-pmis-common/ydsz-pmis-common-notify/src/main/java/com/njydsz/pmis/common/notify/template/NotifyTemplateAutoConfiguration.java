@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.template;
+﻿package com.njydsz.pmis.common.notify.template;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -16,13 +16,13 @@ import java.util.List;
 /**
  * 通知模板引擎自动配置
  *
- * <p>当 remi.notify.template.enabled=true（默认）时生效，自动创建模板引擎和模板管理器 Bean。
+ * <p>当 ydsz.notify.template.enabled=true（默认）时生效，自动创建模板引擎和模板管理器 Bean。
  *
  * <p>支持的配置项：
  * <ul>
- *   <li>remi.notify.template.enabled - 是否启用模板引擎（默认 true）</li>
- *   <li>remi.notify.template.base-path - 模板文件基础路径（默认 classpath:notify-templates/）</li>
- *   <li>remi.notify.template.cache-enabled - 是否启用模板缓存（默认 true）</li>
+ *   <li>ydsz.notify.template.enabled - 是否启用模板引擎（默认 true）</li>
+ *   <li>ydsz.notify.template.base-path - 模板文件基础路径（默认 classpath:notify-templates/）</li>
+ *   <li>ydsz.notify.template.cache-enabled - 是否启用模板缓存（默认 true）</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -33,7 +33,7 @@ import java.util.List;
 @AutoConfiguration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(NotifyTemplateProperties.class)
-@ConditionalOnProperty(prefix = "remi.notify.template", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.notify.template", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class NotifyTemplateAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(NotifyTemplateAutoConfiguration.class);

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.ops;
+﻿package com.njydsz.pmis.common.redis.ops;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Redis String 操作组件 —— 封装最常用的 KV 操作。
  * <p>
- * 对标 remi-comm ValueOps，提供类型安全的 String 操作封装，
+ * 对标 ydsz-common ValueOps，提供类型安全的 String 操作封装，
  * 统一序列化策略和异常处理。
  * </p>
  *

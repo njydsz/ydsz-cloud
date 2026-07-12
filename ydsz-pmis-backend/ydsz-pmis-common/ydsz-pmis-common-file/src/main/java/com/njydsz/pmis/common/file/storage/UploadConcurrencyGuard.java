@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.storage;
+﻿package com.njydsz.pmis.common.file.storage;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.config.FileProperties.ConcurrencyControl;
@@ -41,7 +41,7 @@ public class UploadConcurrencyGuard {
     /**
      * Redis 锁键前缀
      */
-    private static final String LOCK_KEY_PREFIX = "remi:file:upload:lock:";
+    private static final String LOCK_KEY_PREFIX = "ydsz:file:upload:lock:";
 
     /**
      * 锁的过期时间（秒），防止业务异常导致锁无法释放

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.config;
+﻿package com.njydsz.pmis.common.jdbc.config;
 
 import jakarta.validation.constraints.Min;
 import lombok.Data;
@@ -11,11 +11,11 @@ import java.util.List;
 /**
  * JDBC 模块统一配置属性类
  *
- * <p>提供 remi.jdbc 前缀的全局配置，包括模块开关、Mapper 扫描包、慢 SQL 监控等。
+ * <p>提供 ydsz.jdbc 前缀的全局配置，包括模块开关、Mapper 扫描包、慢 SQL 监控等。
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   jdbc:
  *     enabled: true
  *     mapper-scan-packages: com.njydsz.pmis.**.mapper
@@ -32,7 +32,7 @@ import java.util.List;
  */
 @Data
 @Validated
-@ConfigurationProperties(prefix = "remi.jdbc")
+@ConfigurationProperties(prefix = "ydsz.jdbc")
 public class JdbcProperties {
 
     /**

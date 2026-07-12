@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.lock.core;
+﻿package com.njydsz.pmis.common.lock.core;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -138,7 +138,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLock {
     /**
      * 对锁键添加应用命名空间前缀
      *
-     * <p>当配置了 {@code remi.lock.namespace} 时，锁键自动变为：
+     * <p>当配置了 {@code ydsz.lock.namespace} 时，锁键自动变为：
      * {@code ${namespace}:lock:${userKey}}，用于多应用共享 Redis 时的隔离。</p>
      *
      * @param userKey 用户传入的锁键

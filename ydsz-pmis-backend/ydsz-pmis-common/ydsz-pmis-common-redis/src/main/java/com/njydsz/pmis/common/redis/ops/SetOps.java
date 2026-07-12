@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.ops;
+﻿package com.njydsz.pmis.common.redis.ops;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Redis Set 操作组件 —— 封装集合操作。
  * <p>
- * 对标 remi-comm SetOps，提供类型安全的 Set 操作。
+ * 对标 ydsz-common SetOps，提供类型安全的 Set 操作。
  * </p>
  *
  * @author njydsz

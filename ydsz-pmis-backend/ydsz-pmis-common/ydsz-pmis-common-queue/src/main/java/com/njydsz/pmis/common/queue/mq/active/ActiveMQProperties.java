@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.mq.active;
+﻿package com.njydsz.pmis.common.queue.mq.active;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import lombok.Data;
@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   queue:
  *     activemq:
  *       broker-url: tcp://localhost:61616
@@ -55,7 +55,7 @@ public class ActiveMQProperties extends QueueProperties {
     /**
      * 默认队列名称
      */
-    private String queueName = "remi-activemq-queue";
+    private String queueName = "ydsz-activemq-queue";
 
     /**
      * 是否使用 Artemis（推荐）
@@ -109,7 +109,7 @@ public class ActiveMQProperties extends QueueProperties {
      * 解析获取 queueName
      */
     public String resolvedQueueName() {
-        return isNotBlank(queueName) ? queueName : "remi-activemq-queue";
+        return isNotBlank(queueName) ? queueName : "ydsz-activemq-queue";
     }
 
     private boolean isNotBlank(String str) {

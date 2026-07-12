@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.config;
+﻿package com.njydsz.pmis.common.domain.config;
 
 import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -18,7 +18,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * @version 3.5.0
  */
 @AutoConfiguration
-@ConditionalOnProperty(prefix = "remi.domain", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.domain", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(TreeLazyConfig.class)
 public class DomainAutoConfiguration {
 }

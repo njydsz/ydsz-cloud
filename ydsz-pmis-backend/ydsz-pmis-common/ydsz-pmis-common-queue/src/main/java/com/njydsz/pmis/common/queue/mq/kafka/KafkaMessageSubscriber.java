@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.mq.kafka;
+﻿package com.njydsz.pmis.common.queue.mq.kafka;
 
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
@@ -132,7 +132,7 @@ public class KafkaMessageSubscriber implements IMessageSubscriber {
             threadGuard.start(() -> consumeLoop(handler));
             log.info("[Kafka] 异步消费已启动（线程池托管），topic={}, groupId={}", topic, groupId);
         } else {
-            consumerThread = new Thread(() -> consumeLoop(handler), "remi-queue-kafka-" + groupId);
+            consumerThread = new Thread(() -> consumeLoop(handler), "ydsz-queue-kafka-" + groupId);
             consumerThread.setDaemon(true);
             consumerThread.start();
             log.warn("[Kafka] 异步消费已启动（裸线程，不推荐），topic={}, groupId={}", topic, groupId);

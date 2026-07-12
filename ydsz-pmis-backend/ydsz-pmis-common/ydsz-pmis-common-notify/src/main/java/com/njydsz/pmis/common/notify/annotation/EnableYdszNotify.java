@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 启用瑞米统一消息通知模块
+ * 启用ydsz统一消息通知模块
  *
  * <p>在 Spring Boot 应用的启动类或配置类上添加此注解，
  * 即可启用通知模块的全部功能（包括定时重试消费）。

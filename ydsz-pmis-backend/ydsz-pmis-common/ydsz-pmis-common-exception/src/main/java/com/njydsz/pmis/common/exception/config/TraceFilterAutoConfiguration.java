@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.config;
+﻿package com.njydsz.pmis.common.exception.config;
 
 import com.njydsz.pmis.common.exception.observability.TraceContextFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * TraceId 过滤器自动配置
  *
- * <p>通过 {@code remi.exception.trace-enabled=true}（默认启用）控制是否注册。
+ * <p>通过 {@code ydsz.exception.trace-enabled=true}（默认启用）控制是否注册。
  * 过滤器顺序设为最高优先级，确保 traceId 在所有业务过滤器之前注入。
  *
  * @author Marvin Lee
@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(name = "jakarta.servlet.Filter")
-@ConditionalOnProperty(prefix = "remi.exception", name = "trace-enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.exception", name = "trace-enabled", havingValue = "true", matchIfMissing = true)
 public class TraceFilterAutoConfiguration {
 
     /**

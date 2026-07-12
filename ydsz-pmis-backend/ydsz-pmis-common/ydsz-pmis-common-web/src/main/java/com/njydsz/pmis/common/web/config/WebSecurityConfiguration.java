@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.web.config;
+﻿package com.njydsz.pmis.common.web.config;
 
 import com.njydsz.pmis.common.web.handler.WebAccessDeniedHandler;
 import com.njydsz.pmis.common.web.handler.WebAuthenticationEntryPoint;
@@ -28,7 +28,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
  *
  * <p><b>配置开关：</b>
  * <ul>
- *   <li>{@code remi.web.security.enabled=false} 可完全禁用此配置</li>
+ *   <li>{@code ydsz.web.security.enabled=false} 可完全禁用此配置</li>
  *   <li>默认启用（matchIfMissing = true）</li>
  * </ul>
  *
@@ -38,7 +38,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
  */
 @AutoConfiguration
 @ConditionalOnClass(AccessDeniedHandler.class)
-@ConditionalOnProperty(prefix = "remi.web.security", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.web.security", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebSecurityConfiguration {
 
     /**

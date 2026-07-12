@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.ratelimit;
+﻿package com.njydsz.pmis.common.safe.ratelimit;
 
 import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -10,14 +10,14 @@ import java.util.List;
 /**
  * 限流配置属性。
  *
- * <p>配置前缀 {@code remi.safe.ratelimit}，支持按 IP/用户/全局维度进行限流。
+ * <p>配置前缀 {@code ydsz.safe.ratelimit}，支持按 IP/用户/全局维度进行限流。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
  */
 @Validated
-@ConfigurationProperties(prefix = "remi.safe.ratelimit")
+@ConfigurationProperties(prefix = "ydsz.safe.ratelimit")
 public class RateLimitProperties {
 
     /**

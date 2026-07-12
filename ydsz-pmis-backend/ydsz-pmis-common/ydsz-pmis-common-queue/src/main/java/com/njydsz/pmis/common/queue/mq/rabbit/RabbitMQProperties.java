@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.mq.rabbit;
+﻿package com.njydsz.pmis.common.queue.mq.rabbit;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import lombok.Data;
@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   queue:
  *     rabbitmq:
  *       host: localhost
@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
  *       virtual-host: /
  *       queue-name: remi-queue
  *       exchange-name: remi-exchange
- *       routing-key: remi.routing.key
+ *       routing-key: ydsz.routing.key
  * }</pre>
  *
  * @author Marvin Lee
@@ -66,17 +66,17 @@ public class RabbitMQProperties extends QueueProperties {
     /**
      * 默认队列名称
      */
-    private String queueName = "remi-rabbitmq-queue";
+    private String queueName = "ydsz-rabbitmq-queue";
 
     /**
      * 交换机名称
      */
-    private String exchangeName = "remi-exchange";
+    private String exchangeName = "ydsz-exchange";
 
     /**
      * 路由键
      */
-    private String routingKey = "remi.routing.key";
+    private String routingKey = "ydsz.routing.key";
 
     /**
      * 是否启用消息确认（ACK）
@@ -144,7 +144,7 @@ public class RabbitMQProperties extends QueueProperties {
      * 解析获取 queueName
      */
     public String resolvedQueueName() {
-        return isNotBlank(queueName) ? queueName : "remi-rabbitmq-queue";
+        return isNotBlank(queueName) ? queueName : "ydsz-rabbitmq-queue";
     }
 
     private boolean isNotBlank(String str) {

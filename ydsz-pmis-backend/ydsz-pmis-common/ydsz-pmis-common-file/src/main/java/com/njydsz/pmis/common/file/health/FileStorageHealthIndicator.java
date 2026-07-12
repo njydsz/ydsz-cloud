@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.health;
+﻿package com.njydsz.pmis.common.file.health;
 
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.storage.IFileStorage;
@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 @ConditionalOnClass(IStorageFactory.class)
-@ConditionalOnProperty(prefix = "remi.file", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ydsz.file", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class FileStorageHealthIndicator implements HealthIndicator {
 
     /** 文件存储配置 */

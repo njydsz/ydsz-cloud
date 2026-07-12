@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * RemiFeign 日志增强处理器。
+ * YdszFeign 日志增强处理器。
  *
  * <p>相比 Feign 默认的日志处理器，本类提供了更友好的日志输出格式。
  *

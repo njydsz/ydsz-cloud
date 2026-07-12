@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.tree;
+﻿package com.njydsz.pmis.common.domain.tree;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Min;
  *
  * <p><b>配置项（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   tree:
  *     lazy:
  *       max-lazy-depth: 10
@@ -27,7 +27,7 @@ import jakarta.validation.constraints.Min;
  */
 @Data
 @Validated
-@ConfigurationProperties(prefix = "remi.tree.lazy")
+@ConfigurationProperties(prefix = "ydsz.tree.lazy")
 public class TreeLazyConfig {
 
     /** 最大懒加载深度 */

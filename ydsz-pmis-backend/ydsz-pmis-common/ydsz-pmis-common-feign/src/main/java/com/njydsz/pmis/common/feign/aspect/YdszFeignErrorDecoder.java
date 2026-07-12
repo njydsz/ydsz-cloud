@@ -17,7 +17,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
- * RemiFeign 错误解码器。
+ * YdszFeign 错误解码器。
  *
  * <p>将 Feign 调用返回的 HTTP 响应状态码转换为对应的业务异常，
  * 提供更友好的错误信息和可读性。
@@ -41,8 +41,8 @@ import java.nio.charset.StandardCharsets;
  *
  * <p>可通过配置控制是否在异常信息中包含响应体：
  * <ul>
- *   {@code remi.feign.error.include-body=true} - 包含响应体（默认）</li>
- *   {@code remi.feign.error.include-body=false} - 不包含响应体</li>
+ *   {@code ydsz.feign.error.include-body=true} - 包含响应体（默认）</li>
+ *   {@code ydsz.feign.error.include-body=false} - 不包含响应体</li>
  * </ul>
  *
  * @author Marvin Lee

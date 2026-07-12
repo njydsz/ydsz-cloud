@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.request;
+﻿package com.njydsz.pmis.common.core.request;
 
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import jakarta.validation.constraints.Max;
@@ -88,7 +88,7 @@ public class PageRequest extends BaseRequest {
     /**
      * 每页记录数
      * <p>每页返回的记录数量，默认为 PageConstants.DEFAULT_PAGE_SIZE
-     * <p>最大值受 {@code remi.core.max-page-size} 配置控制（默认 1000）
+     * <p>最大值受 {@code ydsz.core.max-page-size} 配置控制（默认 1000）
      */
     @Min(1)
     @Max(PageConstants.MAX_PAGE_SIZE)

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.sensitive;
+﻿package com.njydsz.pmis.common.safe.sensitive;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,7 +13,7 @@ import java.util.List;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   safe:
  *     sensitive:
  *       enabled: true
@@ -47,7 +47,7 @@ import java.util.List;
  * @version 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.safe.sensitive")
+@ConfigurationProperties(prefix = "ydsz.safe.sensitive")
 public class SensitiveDataConfiguration {
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.advice;
+﻿package com.njydsz.pmis.common.safe.advice;
 
 import com.njydsz.pmis.common.safe.config.SafeXssProperties;
 import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;
@@ -31,7 +31,7 @@ import java.nio.charset.StandardCharsets;
  * @version 3.5.0
  */
 @Component
-@ConditionalOnProperty(prefix = "remi.safe.xss", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.safe.xss", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class XssRequestBodyAdvice extends RequestBodyAdviceAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(XssRequestBodyAdvice.class);

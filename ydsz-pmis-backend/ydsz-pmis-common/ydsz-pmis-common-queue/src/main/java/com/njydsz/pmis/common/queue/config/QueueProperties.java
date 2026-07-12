@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.config;
+﻿package com.njydsz.pmis.common.queue.config;
 
 import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.MessageQueueFactory;
@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * 消息队列配置类
  *
- * <p>支持通过 Nacos 进行动态配置，配置前缀为 {@code remi.queue}。
+ * <p>支持通过 Nacos 进行动态配置，配置前缀为 {@code ydsz.queue}。
  * 支持通过 {@link MessageQueueFactory} 创建消息队列实例，复用 ydsz-pmis-common-redis 连接。
  *
  * <p><b>连接复用：</b>
@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @Slf4j
 @Data
-@ConfigurationProperties(prefix = "remi.queue")
+@ConfigurationProperties(prefix = "ydsz.queue")
 public class QueueProperties {
 
     /**
@@ -295,7 +295,7 @@ public class QueueProperties {
         /**
          * 线程名前缀
          */
-        private String threadNamePrefix = "remi-queue-consumer-";
+        private String threadNamePrefix = "ydsz-queue-consumer-";
 
         /**
          * 优雅停机等待秒数（默认 30）

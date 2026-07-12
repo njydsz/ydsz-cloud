@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.channel;
+﻿package com.njydsz.pmis.common.notify.channel;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.njydsz.pmis.common.util.json.JsonUtils;
@@ -32,14 +32,14 @@ import java.util.concurrent.ExecutorService;
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   notify:
  *     sms:
  *       enabled: true
  *       endpoint: https://api.example.com/sms/send
  *       access-key: your-access-key
  *       secret-key: your-secret-key
- *       sign-name: 瑞米科技
+ *       sign-name: ydsz科技
  *       template-code: SMS_123456
  * }</pre>
  *
@@ -49,7 +49,7 @@ import java.util.concurrent.ExecutorService;
  * @since 1.0.0
  */
 @Component
-@ConditionalOnProperty(prefix = "remi.notify.sms", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "ydsz.notify.sms", name = "enabled", havingValue = "true")
 public class SmsNotifySender implements NotifyChannelStrategy {
 
 	private static final Logger log = LoggerFactory.getLogger(SmsNotifySender.class);
@@ -277,11 +277,11 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 	/**
 	 * 短信通知配置属性
 	 *
-	 * <p>配置前缀: {@code remi.notify.sms}
+	 * <p>配置前缀: {@code ydsz.notify.sms}
 	 */
 	@Data
 	@Component
-	@ConfigurationProperties(prefix = "remi.notify.sms")
+	@ConfigurationProperties(prefix = "ydsz.notify.sms")
 	public static class SmsNotifyProperties {
 
 		/**

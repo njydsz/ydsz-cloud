@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 瑞米系统统一认证上下文信息抽象基类。
+ * ydsz系统统一认证上下文信息抽象基类。
  *
  * <p>承载请求维度的全量身份与权限数据，在 {@link com.njydsz.pmis.common.web.filter.WebAuthFilter}
  * / {@link com.njydsz.pmis.common.app.filter.AppAuthFilter} 解析请求头后写入 {@link RequestHolder}，

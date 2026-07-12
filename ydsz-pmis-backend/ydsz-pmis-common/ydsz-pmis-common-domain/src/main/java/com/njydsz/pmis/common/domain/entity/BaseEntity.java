@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.entity;
+﻿package com.njydsz.pmis.common.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
@@ -104,7 +104,7 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      * private Integer revision;
      *
      * // 方式2：配置方式（参考 ydsz-pmis-common-jdbc 模块）
-     * remi:
+     * ydsz:
      *   sql-intercept:
      *     optimistic-lock:
      *       enable: true
@@ -133,7 +133,7 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      * private Integer deleted;
      *
      * // 方式2：配置方式（参考 ydsz-pmis-common-jdbc 模块）
-     * remi:
+     * ydsz:
      *   sql-intercept:
      *     logical-delete:
      *       enable: true

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.config;
+﻿package com.njydsz.pmis.common.exception.config;
 
 import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Bean;
  * 异常指标自动配置
  *
  * <p>当项目中存在 Micrometer MeterRegistry 时，自动注册 {@link ExceptionMetrics} Bean。
- * 通过 {@code remi.exception.metrics-enabled=true}（默认启用）控制是否注册。
+ * 通过 {@code ydsz.exception.metrics-enabled=true}（默认启用）控制是否注册。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)
 @ConditionalOnBean(MeterRegistry.class)
-@ConditionalOnProperty(prefix = "remi.exception", name = "metrics-enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.exception", name = "metrics-enabled", havingValue = "true", matchIfMissing = true)
 public class ExceptionMetricsAutoConfiguration {
 
 	/**

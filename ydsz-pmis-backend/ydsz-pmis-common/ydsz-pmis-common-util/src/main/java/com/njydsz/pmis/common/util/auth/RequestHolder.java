@@ -99,7 +99,7 @@ public class RequestHolder {
     }
 
     /**
-     * 获取瑞米统一认证上下文信息。
+     * 获取ydsz统一认证上下文信息。
      */
     public static YdszAuthInfo getYdszAuthInfo() {
         return getAuthInfo(YdszAuthInfo.class);

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.lifecycle;
+﻿package com.njydsz.pmis.common.file.lifecycle;
 
 import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IStorageFactory;
@@ -22,7 +22,7 @@ import java.util.List;
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   file:
  *     lifecycle:
  *       enabled: true
@@ -47,7 +47,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "remi.file.lifecycle", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "ydsz.file.lifecycle", name = "enabled", havingValue = "true")
 public class FileLifecycleManager {
 
 	private final FileLifecycleProperties lifecycleProperties;
@@ -59,7 +59,7 @@ public class FileLifecycleManager {
 	 *
 	 * <p>根据配置的 cron 表达式定时触发，遍历所有规则并执行过期文件清理。
 	 */
-	@Scheduled(cron = "${remi.file.lifecycle.cron:0 0 2 * * ?}")
+	@Scheduled(cron = "${ydsz.file.lifecycle.cron:0 0 2 * * ?}")
 	public void executeCleanup() {
 		if (!lifecycleProperties.isEnabled()) {
 			log.debug("文件生命周期清理未启用，跳过执行");
@@ -308,11 +308,11 @@ public class FileLifecycleManager {
 	/**
 	 * 文件生命周期规则配置
 	 *
-	 * <p>配置前缀: {@code remi.file.lifecycle}
+	 * <p>配置前缀: {@code ydsz.file.lifecycle}
 	 */
 	@Data
 	@Component
-	@ConfigurationProperties(prefix = "remi.file.lifecycle")
+	@ConfigurationProperties(prefix = "ydsz.file.lifecycle")
 	public static class FileLifecycleProperties {
 
 		/**

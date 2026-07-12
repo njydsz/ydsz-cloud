@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.channel;
+﻿package com.njydsz.pmis.common.notify.channel;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
@@ -40,10 +40,10 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 
 	private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
 
-	@Value("${remi.notify.dingtalk.webhook:}")
+	@Value("${ydsz.notify.dingtalk.webhook:}")
 	private String webhook;
 
-	@Value("${remi.notify.dingtalk.secret:}")
+	@Value("${ydsz.notify.dingtalk.secret:}")
 	private String secret;
 
 	private final RestTemplate restTemplate;

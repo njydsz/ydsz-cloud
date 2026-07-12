@@ -11,7 +11,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 启用瑞米权限管控模块注解
+ * 启用ydsz权限管控模块注解
  *
  * <p>在 Spring Boot 应用主类上添加此注解，启用 RBAC 权限、数据权限、列级权限等能力。
  * 该注解通过 {@link Import} 导入 {@link AuthConfiguration} 和 {@link AuthFilterConfiguration} 配置类，

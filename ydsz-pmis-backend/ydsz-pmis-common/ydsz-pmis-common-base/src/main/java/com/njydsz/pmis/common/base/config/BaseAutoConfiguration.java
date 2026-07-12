@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.config;
+﻿package com.njydsz.pmis.common.base.config;
 
 import com.njydsz.pmis.common.base.constant.BaseFilterOrders;
 import com.njydsz.pmis.common.base.filter.RequestContextCleanupFilter;
@@ -38,7 +38,7 @@ import org.springframework.core.Ordered;
  */
 @AutoConfiguration
 @ConditionalOnWebApplication
-@ConditionalOnProperty(prefix = "remi.base", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.base", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(BaseSecurityHeadersProperties.class)
 public class BaseAutoConfiguration {
 
@@ -52,7 +52,7 @@ public class BaseAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(name = "traceFilter")
-    @ConditionalOnProperty(prefix = "remi.base.trace", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.base.trace", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<TraceFilter> traceFilter() {
         FilterRegistrationBean<TraceFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new TraceFilter());
@@ -77,7 +77,7 @@ public class BaseAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(name = "securityHeaderFilter")
-    @ConditionalOnProperty(prefix = "remi.base.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.base.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<SecurityHeadersFilter> securityHeaderFilter(BaseSecurityHeadersProperties properties) {
         FilterRegistrationBean<SecurityHeadersFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new SecurityHeadersFilter(properties));

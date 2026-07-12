@@ -60,7 +60,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @AutoConfiguration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(AuditProperties.class)
-@ConditionalOnProperty(prefix = "remi.audit", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableAsync
 public class AuditAutoConfiguration {
 
@@ -89,7 +89,7 @@ public class AuditAutoConfiguration {
      * @return 分表策略，若未启用分表则返回 null
      */
     @Bean
-    @ConditionalOnProperty(prefix = "remi.audit.sharding", name = "enabled", havingValue = "true")
+    @ConditionalOnProperty(prefix = "ydsz.audit.sharding", name = "enabled", havingValue = "true")
     @ConditionalOnMissingBean(TableShardingStrategy.class)
     public TableShardingStrategy tableShardingStrategy(AuditProperties properties) {
         String type = properties.getShardingType();
@@ -197,7 +197,7 @@ public class AuditAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(AuditRecorder.class)
-    @ConditionalOnProperty(prefix = "remi.audit", name = "async", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.audit", name = "async", havingValue = "true", matchIfMissing = true)
     @ConditionalOnBean(DataSource.class)
     @ConditionalOnClass(name = "com.fasterxml.jackson.databind.ObjectMapper")
     public AuditRecorder asyncAuditRecorder(DataSource dataSource, AuditProperties properties,
@@ -245,7 +245,7 @@ public class AuditAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(AuditRecorder.class)
-    @ConditionalOnProperty(prefix = "remi.audit", name = "async", havingValue = "false", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "ydsz.audit", name = "async", havingValue = "false", matchIfMissing = false)
     public AuditRecorder auditRecorder(AuditStorage auditStorage) {
         log.info("初始化默认审计记录器: DefaultAuditRecorder");
         return new DefaultAuditRecorder(auditStorage);
@@ -283,7 +283,7 @@ public class AuditAutoConfiguration {
     @Bean
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     @ConditionalOnBean(DataSource.class)
-    @ConditionalOnProperty(prefix = "remi.audit", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.audit", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(name = "auditHealthIndicator")
     public AuditHealthIndicator auditHealthIndicator(DataSource dataSource, AuditProperties properties) {
         log.info("初始化审计健康检查指示器: AuditHealthIndicator");

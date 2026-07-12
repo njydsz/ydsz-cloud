@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.config;
+﻿package com.njydsz.pmis.common.jdbc.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -86,7 +86,7 @@ import java.util.List;
     TenantIsolationProperties.class,
     PaginationProperties.class
 })
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
 public class MybatisPlusConfiguration {
 
     private final FieldFillConfiguration fieldFillConfiguration;
@@ -189,7 +189,7 @@ public class MybatisPlusConfiguration {
      *
      * <p>每个填充处理器都需要在配置文件中设置 enable=true 才会生效：
      * <pre>
-     * remi:
+     * ydsz:
      *   jdbc:
      *     field-fill:
      *       created-by-intercept:
@@ -237,7 +237,7 @@ public class MybatisPlusConfiguration {
      *
      * <p>数据权限配置示例：
      * <pre>
-     * remi:
+     * ydsz:
      *   sql-intercept:
      *     data-permission:
      *       enabled: true

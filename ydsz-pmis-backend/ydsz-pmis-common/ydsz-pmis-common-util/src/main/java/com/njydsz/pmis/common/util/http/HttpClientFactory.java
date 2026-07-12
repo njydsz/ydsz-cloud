@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.http;
+﻿package com.njydsz.pmis.common.util.http;
 
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 import okhttp3.ConnectionPool;
@@ -104,7 +104,7 @@ public final class HttpClientFactory {
     }
 
     private static Dispatcher newDispatcher() {
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) ExecutorUtils.newCachedThreadPool("remi-okhttp-");
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) ExecutorUtils.newCachedThreadPool("ydsz-okhttp-");
         return new Dispatcher(executor);
     }
 }

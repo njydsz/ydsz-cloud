@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.constant;
+﻿package com.njydsz.pmis.common.core.constant;
 
 import java.util.Collections;
 import java.util.Set;
@@ -60,15 +60,15 @@ public final class FilterIgnoreConstant {
 
     /** 认证过滤器忽略的服务名称 */
     private static final Set<String> AUTH_FILTER_IGNORE_SERVICE_NAME = Collections.unmodifiableSet(Set.of(
-            "remi-gateway",
-            "remi-sys-web",
-            "remi-iam-web",
-            "remi-idm-web",
-            "remi-pms-web",
-            "remi-sso-web",
-            "remi-wfe-web",
-            "remi-bie-web",
-            "remi-lce-web"
+            "ydsz-gateway",
+            "ydsz-sys-web",
+            "ydsz-iam-web",
+            "ydsz-idm-web",
+            "ydsz-pms-web",
+            "ydsz-sso-web",
+            "ydsz-wfe-web",
+            "ydsz-bie-web",
+            "ydsz-lce-web"
     ));
 
     /** 安全相关的排除URL模式（登录、认证、验证码等） */

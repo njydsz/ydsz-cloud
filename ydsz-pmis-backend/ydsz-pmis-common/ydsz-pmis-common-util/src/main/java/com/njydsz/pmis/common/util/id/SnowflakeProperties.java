@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.id;
+﻿package com.njydsz.pmis.common.util.id;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -9,11 +9,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Snowflake ID 生成器配置属性
  *
- * <p>配置前缀：{@code remi.util.snowflake}
+ * <p>配置前缀：{@code ydsz.util.snowflake}
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   util:
  *     snowflake:
  *       worker-id: 1
@@ -42,7 +42,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "remi.util.snowflake")
+@ConfigurationProperties(prefix = "ydsz.util.snowflake")
 public class SnowflakeProperties {
 
     /**

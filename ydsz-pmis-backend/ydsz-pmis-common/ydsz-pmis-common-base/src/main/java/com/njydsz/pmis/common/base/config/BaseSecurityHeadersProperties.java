@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.config;
+﻿package com.njydsz.pmis.common.base.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -14,7 +14,7 @@ import java.util.List;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   base:
  *     security-headers:
  *       enabled: true
@@ -31,7 +31,7 @@ import java.util.List;
  *
  * <p><b>与 safe 模块的关系：</b>
  * 当项目中同时存在 safe/web/app 模块时，本配置不会被使用，
- * 安全响应头由 safe 模块的 {@code SecurityHeaderProperties}（前缀 {@code remi.safe.security-headers}）统一管理。
+ * 安全响应头由 safe 模块的 {@code SecurityHeaderProperties}（前缀 {@code ydsz.safe.security-headers}）统一管理。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -39,7 +39,7 @@ import java.util.List;
  * @since 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.base.security-headers")
+@ConfigurationProperties(prefix = "ydsz.base.security-headers")
 public class BaseSecurityHeadersProperties {
 
     /**

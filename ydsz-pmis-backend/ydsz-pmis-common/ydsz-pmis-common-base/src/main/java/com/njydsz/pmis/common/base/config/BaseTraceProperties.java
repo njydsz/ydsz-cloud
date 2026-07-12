@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.config;
+﻿package com.njydsz.pmis.common.base.config;
 
 import lombok.Data;
 
@@ -10,7 +10,7 @@ import lombok.Data;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   web:
  *     trace:
  *       enabled: true

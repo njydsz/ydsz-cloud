@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.config;
+﻿package com.njydsz.pmis.common.jdbc.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>配置示例：
  * <pre>
  * # application.yml
- * remi:
+ * ydsz:
  *   jdbc:
  *     logical-delete:
  *       enable: true                       # 是否启用逻辑删除拦截
@@ -40,7 +40,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @see com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor
  */
 @Data
-@ConfigurationProperties(prefix = "remi.jdbc.logical-delete")
+@ConfigurationProperties(prefix = "ydsz.jdbc.logical-delete")
 public class LogicalDeleteConfiguration {
 
     /**

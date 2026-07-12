@@ -1,18 +1,18 @@
-package com.njydsz.pmis.common.util.http;
+﻿package com.njydsz.pmis.common.util.http;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * OkHttp 配置属性
  *
- * <p>配置前缀：{@code remi.util.okhttp}
+ * <p>配置前缀：{@code ydsz.util.okhttp}
  *
  * <p>提供 OkHttp 客户端的连接池、超时时间等配置。
  * 通过 {@link UtilAutoConfiguration#okHttpClient(OkHttpProperties)} 自动装配到 Spring 容器。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   util:
  *     okhttp:
  *       max-idle-connections: 50
@@ -27,7 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version 3.5.0
  * @since 1.0.0
  */
-@ConfigurationProperties(prefix = "remi.util.okhttp")
+@ConfigurationProperties(prefix = "ydsz.util.okhttp")
 public class OkHttpProperties {
 
     /**

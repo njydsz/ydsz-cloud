@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.health;
+﻿package com.njydsz.pmis.common.notify.health;
 
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @ConditionalOnClass(HealthIndicator.class)
-@ConditionalOnProperty(prefix = "remi.notify", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.notify", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class NotifyHealthIndicator implements HealthIndicator {
 
     private final NotifyProperties notifyProperties;

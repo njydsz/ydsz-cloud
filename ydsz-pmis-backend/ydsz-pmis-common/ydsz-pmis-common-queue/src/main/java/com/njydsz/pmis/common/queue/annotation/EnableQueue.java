@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.annotation;
+﻿package com.njydsz.pmis.common.queue.annotation;
 
 import com.njydsz.pmis.common.queue.config.QueueConfiguration;
 import org.springframework.context.annotation.Import;
@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 启用瑞米消息队列模块
+ * 启用ydsz消息队列模块
  * <p>在Spring Boot应用主类上添加此注解，启用多消息中间件适配能力
  *
  * @author ydsz-pmis-team

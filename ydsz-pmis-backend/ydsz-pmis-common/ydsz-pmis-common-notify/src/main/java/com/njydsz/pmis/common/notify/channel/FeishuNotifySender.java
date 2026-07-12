@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.channel;
+﻿package com.njydsz.pmis.common.notify.channel;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
@@ -32,7 +32,7 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 	private static final Logger log = LoggerFactory.getLogger(FeishuNotifySender.class);
 
 	/** 飞书群机器人 Webhook 地址 */
-	@Value("${remi.notify.feishu.webhook:}")
+	@Value("${ydsz.notify.feishu.webhook:}")
 	private String webhook;
 
 	/** HTTP 请求客户端 */

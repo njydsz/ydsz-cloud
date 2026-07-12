@@ -12,7 +12,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * 瑞米统一调度自动配置
+ * ydsz统一调度自动配置
  *
  * <p>集中管理 {@link EnableScheduling}，避免各子模块重复声明导致创建多套调度基础设施。
  * 所有子模块（auth、notify、file、queue、audit 等）的 {@code @Scheduled} 定时任务
@@ -26,10 +26,10 @@ import java.util.concurrent.ThreadFactory;
  * <p><b>配置示例：</b>
  * <pre>{@code
  * # 禁用统一调度（默认启用），将导致所有 @Scheduled 任务不执行
- * remi.scheduling.enabled=false
+ * ydsz.scheduling.enabled=false
  *
  * # 自定义调度线程池大小（默认 = max(2, CPU核心数)）
- * remi.scheduling.pool-size=4
+ * ydsz.scheduling.pool-size=4
  * }</pre>
  *
  * @author Marvin Lee
@@ -39,7 +39,7 @@ import java.util.concurrent.ThreadFactory;
  */
 @AutoConfiguration
 @EnableScheduling
-@ConditionalOnProperty(prefix = "remi.scheduling", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.scheduling", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class YdszSchedulingAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(YdszSchedulingAutoConfiguration.class);
@@ -59,12 +59,12 @@ public class YdszSchedulingAutoConfiguration {
         int poolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(poolSize);
-        scheduler.setThreadNamePrefix("remi-sched-");
+        scheduler.setThreadNamePrefix("ydsz-sched-");
         // 设置虚拟线程执行器，@Scheduled 任务在 Virtual Thread 上执行
         // 注意：Executors.newVirtualThreadPerTaskExecutor() 创建的线程不占用平台线程
         // 配置 Virtual Thread 工厂：调度线程触发后，任务在虚拟线程中执行
         ThreadFactory virtualThreadFactory = Thread.ofVirtual()
-                .name("remi-sched-vt-", 0)
+                .name("ydsz-sched-vt-", 0)
                 .factory();
         scheduler.setThreadFactory(virtualThreadFactory);
         // 等待任务完成再关闭
@@ -74,7 +74,7 @@ public class YdszSchedulingAutoConfiguration {
         scheduler.setErrorHandler(t ->
                 log.error("【统一调度】@Scheduled 任务执行异常", t));
         scheduler.setRemoveOnCancelPolicy(true);
-        log.info("瑞米统一调度已启用，TaskScheduler 线程池大小={}, 使用 Virtual Thread 执行任务", poolSize);
+        log.info("ydsz统一调度已启用，TaskScheduler 线程池大小={}, 使用 Virtual Thread 执行任务", poolSize);
         return scheduler;
     }
 }

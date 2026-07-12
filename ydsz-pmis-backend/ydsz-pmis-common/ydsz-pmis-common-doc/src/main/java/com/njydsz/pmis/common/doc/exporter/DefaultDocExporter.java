@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.doc.exporter;
+﻿package com.njydsz.pmis.common.doc.exporter;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -30,12 +30,12 @@ import java.util.Map;
  *
  * <p><b>激活条件：</b>同时满足以下两个条件时本 Bean 才会被注册：
  * <ul>
- *   <li>{@code remi.doc.export.enabled=true}（默认 true）</li>
- *   <li>{@code remi.doc.exporter=default}（默认 default）</li>
+ *   <li>{@code ydsz.doc.export.enabled=true}（默认 true）</li>
+ *   <li>{@code ydsz.doc.exporter=default}（默认 default）</li>
  * </ul>
  *
  * <p><b>版本号注入：</b>
- * 文档版本优先从 {@code remi.doc.doc-version} 配置读取，
+ * 文档版本优先从 {@code ydsz.doc.doc-version} 配置读取，
  * 若未配置则自动从 {@code ${spring.application.version}} 或项目打包版本注入。
  *
  * <p><b>线程安全性：</b>无状态 Bean，{@link DocProperties} 与 {@code applicationVersion}
@@ -63,7 +63,7 @@ public class DefaultDocExporter implements DocExporter {
     /**
      * 应用版本号
      *
-     * <p>从 {@code spring.application.version} 配置注入，用于文档版本回退（无 {@code remi.doc.doc-version} 时使用）。
+     * <p>从 {@code spring.application.version} 配置注入，用于文档版本回退（无 {@code ydsz.doc.doc-version} 时使用）。
      */
     @Value("${spring.application.version:}")
     private String applicationVersion;
@@ -376,8 +376,8 @@ public class DefaultDocExporter implements DocExporter {
      *
      * <p>同时满足以下两个条件：
      * <ul>
-     *   <li>{@code remi.doc.export.enabled=true}（默认 true）</li>
-     *   <li>{@code remi.doc.exporter=default}（默认 default）</li>
+     *   <li>{@code ydsz.doc.export.enabled=true}（默认 true）</li>
+     *   <li>{@code ydsz.doc.exporter=default}（默认 default）</li>
      * </ul>
      *
      * @author Marvin Lee
@@ -388,10 +388,10 @@ public class DefaultDocExporter implements DocExporter {
             super(ConfigurationPhase.PARSE_CONFIGURATION);
         }
 
-        @ConditionalOnProperty(prefix = "remi.doc.export", name = "enabled", havingValue = "true", matchIfMissing = true)
+        @ConditionalOnProperty(prefix = "ydsz.doc.export", name = "enabled", havingValue = "true", matchIfMissing = true)
         static class OnExportEnabled {}
 
-        @ConditionalOnProperty(prefix = "remi.doc", name = "exporter", havingValue = "default", matchIfMissing = true)
+        @ConditionalOnProperty(prefix = "ydsz.doc", name = "exporter", havingValue = "default", matchIfMissing = true)
         static class OnExporterType {}
     }
 }

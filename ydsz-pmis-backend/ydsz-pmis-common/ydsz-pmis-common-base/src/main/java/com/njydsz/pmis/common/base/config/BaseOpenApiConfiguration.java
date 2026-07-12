@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.config;
+﻿package com.njydsz.pmis.common.base.config;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import io.swagger.v3.oas.models.Components;
@@ -29,7 +29,7 @@ import java.util.Map;
  *   <li>设置统一的联系信息和外部文档链接</li>
  * </ul>
  *
- * <p><b>激活条件：</b>需要通过配置 {@code remi.doc.enabled=true} 显式开启。
+ * <p><b>激活条件：</b>需要通过配置 {@code ydsz.doc.enabled=true} 显式开启。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -64,7 +64,7 @@ public abstract class BaseOpenApiConfiguration {
      * @return OpenAPI 文档实例
      */
     @Bean
-    @ConditionalOnProperty(prefix = "remi.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "ydsz.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .info(createInfo())

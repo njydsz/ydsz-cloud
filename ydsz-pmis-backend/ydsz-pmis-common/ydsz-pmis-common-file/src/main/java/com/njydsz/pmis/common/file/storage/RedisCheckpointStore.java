@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.storage;
+﻿package com.njydsz.pmis.common.file.storage;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import java.time.Duration;
 public class RedisCheckpointStore implements CheckpointStore {
 
     /** Redis 键前缀 */
-    private static final String REDIS_KEY_PREFIX = "remi:file:checkpoint:";
+    private static final String REDIS_KEY_PREFIX = "ydsz:file:checkpoint:";
 
     /** Redis 操作模板 */
     private final StringRedisTemplate stringRedisTemplate;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.id;
+﻿package com.njydsz.pmis.common.util.id;
 
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.pmis.common.util.security.DigestUtils;
@@ -215,7 +215,7 @@ public final class SnowflakeUtils {
      */
     private static int initShardCount() {
         int defaultShardCount = Math.max(8, Runtime.getRuntime().availableProcessors());
-        int configuredShardCount = Integer.getInteger("remi.snowflake.shardCount", defaultShardCount);
+        int configuredShardCount = Integer.getInteger("ydsz.snowflake.shardCount", defaultShardCount);
         int normalizedShardCount = Math.max(1, configuredShardCount);
         int powerOfTwoShardCount = 1;
         while (powerOfTwoShardCount < normalizedShardCount) {
@@ -323,7 +323,7 @@ public final class SnowflakeUtils {
     /**
      * 计算工作节点 ID，支持通过系统属性或环境变量覆盖
      * <ul>
-     *   <li>系统属性：remi.snowflake.workerId</li>
+     *   <li>系统属性：ydsz.snowflake.workerId</li>
      *   <li>环境变量：SNOWFLAKE_WORKER_ID</li>
      *   <li>默认：通过 IP 地址哈希自动计算</li>
      * </ul>
@@ -331,7 +331,7 @@ public final class SnowflakeUtils {
      * @return 计算得到的节点 ID
      */
     private static long computeWorkerId() {
-        String configured = System.getProperty("remi.snowflake.workerId",
+        String configured = System.getProperty("ydsz.snowflake.workerId",
                 System.getenv("SNOWFLAKE_WORKER_ID"));
         if (configured != null && !configured.isEmpty()) {
             try {
@@ -356,7 +356,7 @@ public final class SnowflakeUtils {
     /**
      * 计算数据中心 ID，支持通过系统属性或环境变量覆盖
      * <ul>
-     *   <li>系统属性：remi.snowflake.datacenterId</li>
+     *   <li>系统属性：ydsz.snowflake.datacenterId</li>
      *   <li>环境变量：SNOWFLAKE_DATACENTER_ID</li>
      *   <li>默认：通过主机名哈希自动计算</li>
      * </ul>
@@ -364,7 +364,7 @@ public final class SnowflakeUtils {
      * @return 计算得到的数据中心 ID
      */
     private static long getDataCenterId() {
-        String configured = System.getProperty("remi.snowflake.datacenterId",
+        String configured = System.getProperty("ydsz.snowflake.datacenterId",
                 System.getenv("SNOWFLAKE_DATACENTER_ID"));
         if (configured != null && !configured.isEmpty()) {
             try {

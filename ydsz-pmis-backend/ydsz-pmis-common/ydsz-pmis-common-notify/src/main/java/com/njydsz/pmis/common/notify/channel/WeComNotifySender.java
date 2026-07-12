@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.channel;
+﻿package com.njydsz.pmis.common.notify.channel;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,7 +29,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Component
-@ConditionalOnProperty(prefix = "remi.notify.wecom", name = "webhook")
+@ConditionalOnProperty(prefix = "ydsz.notify.wecom", name = "webhook")
 public class WeComNotifySender implements NotifyChannelStrategy {
 
 	private static final Logger log = LoggerFactory.getLogger(WeComNotifySender.class);
@@ -39,7 +39,7 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 	private final TemplateEngine templateEngine;
 
 	public WeComNotifySender(
-			@Value("${remi.notify.wecom.webhook:}") String webhook,
+			@Value("${ydsz.notify.wecom.webhook:}") String webhook,
 			RestTemplate restTemplate,
 			TemplateEngine templateEngine) {
 		this.webhook = webhook;

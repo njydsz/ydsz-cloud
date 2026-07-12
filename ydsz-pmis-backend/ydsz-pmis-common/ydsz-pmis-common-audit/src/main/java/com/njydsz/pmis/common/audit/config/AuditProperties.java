@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.config;
+﻿package com.njydsz.pmis.common.audit.config;
 
 import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -7,13 +7,13 @@ import org.springframework.validation.annotation.Validated;
 /**
  * 审计模块配置属性
  * <p>
- * 从 {@code application.yml/properties} 中读取 {@code remi.audit} 前缀的配置。
+ * 从 {@code application.yml/properties} 中读取 {@code ydsz.audit} 前缀的配置。
  * 支持嵌套配置（{@link AsyncProperties}）和默认敏感词列表。
  * </p>
  *
  * <p>配置示例：</p>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   audit:
  *     enabled: true
  *     storage-type: LOCAL
@@ -33,7 +33,7 @@ import org.springframework.validation.annotation.Validated;
  * @since 1.0.0
  */
 @Validated
-@ConfigurationProperties(prefix = "remi.audit")
+@ConfigurationProperties(prefix = "ydsz.audit")
 public class AuditProperties {
 
     /**

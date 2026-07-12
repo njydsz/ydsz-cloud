@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.warmup;
+﻿package com.njydsz.pmis.common.auth.warmup;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
@@ -32,9 +32,9 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>配置项：</b>
  * <ul>
- *   <li>{@code remi.auth.warmUpEnabled}：是否启用预热（默认 true）</li>
- *   <li>{@code remi.auth.warmUpRoleIds}：需要预热的角色 ID 列表</li>
- *   <li>{@code remi.auth.warmUpDelay}：预热延迟时间（毫秒，默认 3000）</li>
+ *   <li>{@code ydsz.auth.warmUpEnabled}：是否启用预热（默认 true）</li>
+ *   <li>{@code ydsz.auth.warmUpRoleIds}：需要预热的角色 ID 列表</li>
+ *   <li>{@code ydsz.auth.warmUpDelay}：预热延迟时间（毫秒，默认 3000）</li>
  * </ul>
  *
  * @author Marvin Lee

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.alert;
+﻿package com.njydsz.pmis.common.safe.alert;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   safe:
  *     alert:
  *       enabled: true
@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version 3.5.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.safe.alert")
+@ConfigurationProperties(prefix = "ydsz.safe.alert")
 public class SafeAlertProperties {
 
     /**

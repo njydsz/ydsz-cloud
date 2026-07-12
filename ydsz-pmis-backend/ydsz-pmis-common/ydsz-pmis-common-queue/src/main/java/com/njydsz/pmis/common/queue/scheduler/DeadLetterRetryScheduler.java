@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.scheduler;
+﻿package com.njydsz.pmis.common.queue.scheduler;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import com.njydsz.pmis.common.queue.service.DeadLetterQueueService;
@@ -20,7 +20,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  *
  * <p><b>配置项：</b>
  * <pre>{@code
- * remi.queue:
+ * ydsz.queue:
  *   deadLetterRetryEnabled: true    # 是否启用自动重试
  *   deadLetterMaxRetries: 3         # 最大重试次数
  *   deadLetterRetryInterval: 60000  # 重试间隔（毫秒）
@@ -47,8 +47,8 @@ public class DeadLetterRetryScheduler {
      * 定时扫描并重试死信队列中的消息
      * <p>执行间隔由 queueProperties.deadLetterRetryInterval 配置决定
      */
-    @Scheduled(fixedDelayString = "${remi.queue.deadLetterRetryInterval:60000}",
-               initialDelayString = "${remi.queue.deadLetterRetryInterval:60000}")
+    @Scheduled(fixedDelayString = "${ydsz.queue.deadLetterRetryInterval:60000}",
+               initialDelayString = "${ydsz.queue.deadLetterRetryInterval:60000}")
     public void scanAndRetry() {
         if (!queueProperties.resolvedDeadLetterRetryEnabled()) {
             log.debug("[DeadLetterRetryScheduler] 死信队列自动重试已禁用，跳过扫描");

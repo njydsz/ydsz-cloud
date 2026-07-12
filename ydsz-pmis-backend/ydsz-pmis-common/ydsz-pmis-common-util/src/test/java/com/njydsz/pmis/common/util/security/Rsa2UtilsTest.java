@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.security;
+﻿package com.njydsz.pmis.common.util.security;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -168,7 +168,7 @@ class Rsa2UtilsTest {
     @Test
     @DisplayName("公钥加密中文内容并私钥解密应正确还原")
     void shouldEncryptAndDecryptChineseTextByPublicKey() {
-        String plain = "瑞米软件 RSA2 加解密测试 —— 中文、标点、Emoji 😀";
+        String plain = "ydsz软件 RSA2 加解密测试 —— 中文、标点、Emoji 😀";
 
         String encrypted = Rsa2Utils.encryptByPublicKey(plain, publicKeyBase64);
         String decrypted = Rsa2Utils.decryptByPrivateKey(encrypted, privateKeyBase64);
@@ -226,7 +226,7 @@ class Rsa2UtilsTest {
         // 构造超长字符串（含中文，每字符 3 字节），确保触发多次分段
         StringBuilder sb = new StringBuilder(2048);
         for (int i = 0; i < 100; i++) {
-            sb.append("瑞米加密段-").append(i).append(";");
+            sb.append("ydsz加密段-").append(i).append(";");
         }
         String longPlain = sb.toString();
         assertTrue(longPlain.getBytes().length > 190 * 3, "测试数据应足够长以触发分段加密");
@@ -328,7 +328,7 @@ class Rsa2UtilsTest {
     @Test
     @DisplayName("中文内容签名与验签")
     void shouldSignAndVerifyChineseContent() {
-        String data = "瑞米软件 RSA2 中文签名测试 😀";
+        String data = "ydsz软件 RSA2 中文签名测试 😀";
 
         String signStr = Rsa2Utils.sign(data, privateKeyBase64);
         assertTrue(Rsa2Utils.verify(data, publicKeyBase64, signStr));

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.app.config;
+﻿package com.njydsz.pmis.common.app.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @version 3.5.0
  * @since 1.0.0
  */
-@ConfigurationProperties(prefix = "remi.app.signature")
+@ConfigurationProperties(prefix = "ydsz.app.signature")
 public class AppSignatureProperties {
 
     /**

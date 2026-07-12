@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.app.filter;
+﻿package com.njydsz.pmis.common.app.filter;
 
 import com.njydsz.pmis.common.util.security.DigestUtils;
 import jakarta.servlet.FilterChain;
@@ -33,9 +33,9 @@ import java.io.IOException;
  *
  * <p><b>配置开关：</b>
  * <ul>
- *   <li>{@code remi.app.signature.enabled=false} 可禁用签名验证</li>
- *   <li>{@code remi.app.signature.app-secret} 配置签名密钥（必填）</li>
- *   <li>{@code remi.app.signature.timestamp-tolerance} 时间戳容差（毫秒，默认 5 分钟）</li>
+ *   <li>{@code ydsz.app.signature.enabled=false} 可禁用签名验证</li>
+ *   <li>{@code ydsz.app.signature.app-secret} 配置签名密钥（必填）</li>
+ *   <li>{@code ydsz.app.signature.timestamp-tolerance} 时间戳容差（毫秒，默认 5 分钟）</li>
  * </ul>
  *
  * @author Marvin Lee

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.guard;
+﻿package com.njydsz.pmis.common.redis.guard;
 
 import com.njydsz.pmis.common.redis.ops.ValueOps;
 import org.slf4j.Logger;
@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 /**
  * Redis 缓存防护组件 —— 防穿透 + 防击穿 + 防雪崩。
  * <p>
- * 对标 remi-comm RedisCacheGuard，三大防护策略：
+ * 对标 ydsz-common RedisCacheGuard，三大防护策略：
  * <ul>
  *   <li>防穿透：查询不存在数据时缓存空值（短 TTL），防止恶意频繁查询 DB</li>
  *   <li>防击穿：热点 Key 过期时加分布式锁，仅一个线程回源 DB，其余等待</li>

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.circuitbreaker;
+﻿package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import com.njydsz.pmis.common.redis.service.RedisService;
 import org.slf4j.Logger;
@@ -15,8 +15,8 @@ import java.time.Duration;
  *
  * <p><b>Redis 存储格式：</b>
  * <pre>
- * remi:feign:circuit:{serviceName} -> "OPEN|1716624000000"
- * remi:feign:circuit:ttl -> 3600（秒）
+ * ydsz:feign:circuit:{serviceName} -> "OPEN|1716624000000"
+ * ydsz:feign:circuit:ttl -> 3600（秒）
  * </pre>
  *
  * @author Marvin Lee
@@ -28,7 +28,7 @@ public class CircuitBreakerStatePersistence {
 
     private static final Logger log = LoggerFactory.getLogger(CircuitBreakerStatePersistence.class);
 
-    private static final String KEY_PREFIX = "remi:feign:circuit:";
+    private static final String KEY_PREFIX = "ydsz:feign:circuit:";
     private static final Duration DEFAULT_TTL = Duration.ofHours(1);
 
     private final RedisService redisService;

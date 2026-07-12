@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.event;
+﻿package com.njydsz.pmis.common.auth.event;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +45,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class PermissionChangePublisher {
 
-    private static final String PERMISSION_CHANGE_CHANNEL = "remi-auth:permission:changed";
+    private static final String PERMISSION_CHANGE_CHANNEL = "ydsz-auth:permission:changed";
 
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RedisTemplate<String, Object> redisTemplate;

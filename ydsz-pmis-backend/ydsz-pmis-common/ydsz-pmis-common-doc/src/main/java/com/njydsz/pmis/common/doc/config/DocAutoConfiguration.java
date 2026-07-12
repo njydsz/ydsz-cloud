@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.doc.config;
+﻿package com.njydsz.pmis.common.doc.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,7 +23,7 @@ import com.njydsz.pmis.common.doc.exporter.MarkdownDocExporter;
  * <p><b>环境控制：</b>
  * 默认仅在 {@code dev} / {@code test} Profile 下自动激活；
  * 生产环境应避免暴露 API 文档，业务方可通过显式配置
- * {@code remi.doc.enabled=true} 配合 Profile 强制开启。
+ * {@code ydsz.doc.enabled=true} 配合 Profile 强制开启。
  *
  * <p><b>线程安全性：</b>本类仅包含 Spring 注解与导入语句，无可变状态，线程安全。
  *
@@ -34,7 +34,7 @@ import com.njydsz.pmis.common.doc.exporter.MarkdownDocExporter;
  */
 @AutoConfiguration
 @Profile({"dev", "test"})
-@ConditionalOnProperty(prefix = "remi.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ydsz.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
 @EnableConfigurationProperties(DocProperties.class)
 @Import({
     OpenApiAutoConfiguration.class,

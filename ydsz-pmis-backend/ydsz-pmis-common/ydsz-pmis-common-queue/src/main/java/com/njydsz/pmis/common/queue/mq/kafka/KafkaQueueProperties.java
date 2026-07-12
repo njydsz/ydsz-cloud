@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.mq.kafka;
+﻿package com.njydsz.pmis.common.queue.mq.kafka;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import lombok.Data;
@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   queue:
  *     kafka:
  *       bootstrap-servers: localhost:9092
@@ -39,12 +39,12 @@ public class KafkaQueueProperties extends QueueProperties {
     /**
      * 消费者组ID
      */
-    private String groupId = "remi-consumer-group";
+    private String groupId = "ydsz-consumer-group";
 
     /**
      * 默认主题
      */
-    private String topic = "remi-kafka-topic";
+    private String topic = "ydsz-kafka-topic";
 
     /**
      * 是否自动提交偏移量
@@ -103,14 +103,14 @@ public class KafkaQueueProperties extends QueueProperties {
      * 解析获取 group-id
      */
     public String resolvedGroupId() {
-        return isNotBlank(groupId) ? groupId : "remi-consumer-group";
+        return isNotBlank(groupId) ? groupId : "ydsz-consumer-group";
     }
 
     /**
      * 解析获取 topic
      */
     public String resolvedTopic() {
-        return isNotBlank(topic) ? topic : "remi-kafka-topic";
+        return isNotBlank(topic) ? topic : "ydsz-kafka-topic";
     }
 
     private boolean isNotBlank(String str) {

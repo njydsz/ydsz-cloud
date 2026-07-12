@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.doc.config;
+﻿package com.njydsz.pmis.common.doc.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * 文档配置属性类
  *
- * <p>用于外部化配置 OpenAPI 与 Knife4j 相关参数，前缀 {@code remi.doc}。
+ * <p>用于外部化配置 OpenAPI 与 Knife4j 相关参数，前缀 {@code ydsz.doc}。
  * 通过 {@code application.yml} 即可灵活调整文档模块的行为：
  * <ul>
  *   <li>基础信息：标题、描述、版本、联系方式、许可证</li>
@@ -20,7 +20,7 @@ import java.util.List;
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   doc:
  *     enabled: true
  *     api-docs-path: /v3/api-docs
@@ -46,13 +46,13 @@ import java.util.List;
  * @since 1.0.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.doc")
+@ConfigurationProperties(prefix = "ydsz.doc")
 public class DocProperties {
 
     /**
      * 是否启用文档功能，默认为 false
      *
-     * <p>出于安全考虑，文档模块默认不启用。需在 application.yml 中显式配置 {@code remi.doc.enabled=true} 才会加载
+     * <p>出于安全考虑，文档模块默认不启用。需在 application.yml 中显式配置 {@code ydsz.doc.enabled=true} 才会加载
      * OpenAPI/Knife4j 相关 Bean。生产环境建议保持关闭或配合 {@code basicAuth} 认证保护。
      */
     private boolean enabled = false;

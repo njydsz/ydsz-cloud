@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.config;
+﻿package com.njydsz.pmis.common.feign.config;
 
 import com.njydsz.pmis.common.util.string.StringUtils;
 import feign.Logger;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * RemiFeign 模块配置属性类。
+ * YdszFeign 模块配置属性类。
  *
  * <p>提供对 Feign 客户端各项行为的细粒度配置控制：
  * <ul>
@@ -28,11 +28,11 @@ import java.util.Set;
  *   <li>{@code client}：HTTP 客户端配置</li>
  * </ul>
  *
- * <p>配置前缀：{@code remi.feign}
+ * <p>配置前缀：{@code ydsz.feign}
  *
  * <p>配置示例（YAML）：
  * <pre>
- * remi:
+ * ydsz:
  *   feign:
  *     enabled: true
  *     logger-level: BASIC
@@ -67,7 +67,7 @@ import java.util.Set;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "remi.feign")
+@ConfigurationProperties(prefix = "ydsz.feign")
 @RefreshScope
 public class FeignProperties {
 

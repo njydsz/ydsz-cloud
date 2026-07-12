@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.config;
+﻿package com.njydsz.pmis.common.jdbc.config;
 
 import com.njydsz.pmis.common.jdbc.domain.InterceptConfig;
 import lombok.Getter;
@@ -15,7 +15,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "remi.jdbc.field-fill")
+@ConfigurationProperties(prefix = "ydsz.jdbc.field-fill")
 public class FieldFillConfiguration {
 
     /**

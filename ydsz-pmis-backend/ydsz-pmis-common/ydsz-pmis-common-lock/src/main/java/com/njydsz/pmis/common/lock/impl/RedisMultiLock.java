@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.lock.impl;
+﻿package com.njydsz.pmis.common.lock.impl;
 
 import com.njydsz.pmis.common.lock.core.DistributedLock;
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
@@ -47,7 +47,7 @@ public class RedisMultiLock implements DistributedLock {
 	 * 共享的 WatchDog 续期调度线程池（避免每个 MultiLock 创建独立线程导致线程爆炸）
 	 */
 	private static final ScheduledExecutorService RENEWAL_EXECUTOR =
-			ExecutorUtils.newScheduledThreadPool(2, "remi-lock-multi-watchdog-");
+			ExecutorUtils.newScheduledThreadPool(2, "ydsz-lock-multi-watchdog-");
 
 	/**
 	 * 关闭多锁续期线程池

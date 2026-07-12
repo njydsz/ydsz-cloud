@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.token;
+﻿package com.njydsz.pmis.common.auth.token;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.service.TokenBlacklistService;
@@ -41,7 +41,7 @@ import java.util.Map;
  */
 @Service
 @ConditionalOnClass(name = "io.jsonwebtoken.Jwts")
-@ConditionalOnProperty(prefix = "remi.auth.token", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.auth.token", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class JwtTokenService implements TokenService {
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenService.class);
@@ -66,7 +66,7 @@ public class JwtTokenService implements TokenService {
         // 校验密钥非空，避免 NPE 或签名失败
         String secretKeyRaw = tokenProperties.getSecretKey();
         if (secretKeyRaw == null || secretKeyRaw.isBlank()) {
-            throw new IllegalStateException("remi.auth.token.secret-key 不能为空，请在配置文件中设置 JWT 签名密钥");
+            throw new IllegalStateException("ydsz.auth.token.secret-key 不能为空，请在配置文件中设置 JWT 签名密钥");
         }
         this.secretKey = Keys.hmacShaKeyFor(secretKeyRaw.getBytes(StandardCharsets.UTF_8));
     }

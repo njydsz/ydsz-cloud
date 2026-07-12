@@ -54,7 +54,7 @@ import org.springframework.web.server.ServerWebExchange;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 @ConditionalOnClass(name = "org.springframework.web.server.ServerWebExchange")
-@ConditionalOnProperty(prefix = "remi.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
 public class WebFluxExceptionHandler {
 
     private final MessageSource messageSource;

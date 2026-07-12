@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 启用瑞米文件存储模块注解
+ * 启用ydsz文件存储模块注解
  * <p>
  * 在 Spring Boot 应用主类上添加此注解，启用统一文件存储能力：
  * <ul>

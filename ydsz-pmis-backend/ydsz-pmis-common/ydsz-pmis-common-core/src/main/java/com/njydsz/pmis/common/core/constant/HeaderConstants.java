@@ -69,7 +69,7 @@ public final class HeaderConstants {
     /**
      * 身份类型。
      *
-     * <p>用于区分公司用户、访客用户、瑞米用户等身份类型。
+     * <p>用于区分公司用户、访客用户、ydsz用户等身份类型。
      *
      * @author Marvin Lee
      * @email limw1888@126.com

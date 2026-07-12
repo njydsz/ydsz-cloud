@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.config;
+﻿package com.njydsz.pmis.common.core.config;
 
 import com.njydsz.pmis.common.core.trace.TraceIdSupplier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Bean;
  * @since 1.0.0
  */
 @AutoConfiguration
-@ConditionalOnProperty(prefix = "remi.core.trace", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.core.trace", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class TraceAutoConfiguration {
 
     /**

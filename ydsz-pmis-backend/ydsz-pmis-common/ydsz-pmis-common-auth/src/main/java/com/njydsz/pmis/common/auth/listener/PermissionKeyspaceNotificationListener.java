@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.listener;
+﻿package com.njydsz.pmis.common.auth.listener;
 
 import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -41,7 +41,7 @@ public class PermissionKeyspaceNotificationListener {
      * Key 格式示例：remi-auth:role-menu:admin, remi-auth:role-api:admin
      */
     private static final Pattern ROLE_KEY_PATTERN = Pattern.compile(
-            "remi-auth:role-(?:menu|api|row|col):([^:]+)");
+            "ydsz-auth:role-(?:menu|api|row|col):([^:]+)");
 
     private final RbacPermissionEvaluator permissionEvaluator;
 

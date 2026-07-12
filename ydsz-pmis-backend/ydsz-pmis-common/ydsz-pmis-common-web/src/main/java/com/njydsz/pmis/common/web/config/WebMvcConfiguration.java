@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.web.config;
+﻿package com.njydsz.pmis.common.web.config;
 
 import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -129,7 +129,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "remi.safe.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.safe.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<SecurityHeaderFilter> securityHeaderFilter(SecurityHeaderProperties securityHeaderProperties) {
         SecurityHeaderFilter securityHeaderFilter = new SecurityHeaderFilter(securityHeaderProperties);
         FilterRegistrationBean<SecurityHeaderFilter> bean = new FilterRegistrationBean<>(securityHeaderFilter);
@@ -140,7 +140,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "remi.web.trace", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.web.trace", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<TraceIdResponseFilter> traceIdResponseFilter() {
         TraceIdResponseFilter traceIdResponseFilter = new TraceIdResponseFilter(webTraceProperties);
         FilterRegistrationBean<TraceIdResponseFilter> bean = new FilterRegistrationBean<>(traceIdResponseFilter);

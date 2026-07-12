@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.config;
+﻿package com.njydsz.pmis.common.file.config;
 
 import com.njydsz.pmis.common.file.storage.StorageType;
 import jakarta.validation.constraints.Max;
@@ -19,7 +19,7 @@ import java.util.List;
  *
  * <p><b>配置示例（application.yml）：</b></p>
  * <pre>{@code
- * remi:
+ * ydsz:
  *   file:
  *     type: minio
  *     endpoint: http://localhost:9000
@@ -46,7 +46,7 @@ import java.util.List;
  */
 @Data
 @Validated
-@ConfigurationProperties(prefix = "remi.file")
+@ConfigurationProperties(prefix = "ydsz.file")
 public class FileProperties {
 
     /**

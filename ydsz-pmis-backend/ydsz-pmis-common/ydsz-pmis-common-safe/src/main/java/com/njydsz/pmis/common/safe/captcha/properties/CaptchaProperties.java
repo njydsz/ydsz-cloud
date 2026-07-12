@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.captcha.properties;
+﻿package com.njydsz.pmis.common.safe.captcha.properties;
 
 import com.njydsz.pmis.common.safe.captcha.enums.CaptchaStoreType;
 import com.njydsz.pmis.common.safe.captcha.enums.CaptchaType;
@@ -6,13 +6,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 验证码配置属性类
- * 用于读取 application.yml 中的 remi.safe.captcha.* 配置项
+ * 用于读取 application.yml 中的 ydsz.safe.captcha.* 配置项
  *
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@ConfigurationProperties(prefix = "remi.safe.captcha")
+@ConfigurationProperties(prefix = "ydsz.safe.captcha")
 public class CaptchaProperties {
 
     /**
