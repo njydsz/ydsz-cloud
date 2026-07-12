@@ -1,5 +1,13 @@
 package com.njydsz.pmis.common.file.storage;
 
+import com.njydsz.pmis.common.file.storage.platform.CosStorage;
+import com.njydsz.pmis.common.file.storage.platform.LocalStorage;
+import com.njydsz.pmis.common.file.storage.platform.MinioStorage;
+import com.njydsz.pmis.common.file.storage.platform.ObsStorage;
+import com.njydsz.pmis.common.file.storage.platform.OssStorage;
+import com.njydsz.pmis.common.file.storage.platform.QiniuStorage;
+import com.njydsz.pmis.common.file.storage.platform.S3Storage;
+
 /**
  * 文件存储统一抽象接口
  * <p>
@@ -35,13 +43,13 @@ package com.njydsz.pmis.common.file.storage;
  * 
  * @since 1.0.0
  * @see IFileStorageProvider
- * @see com.njydsz.pmis.common.file.storage.platform.LocalStorage
- * @see com.njydsz.pmis.common.file.storage.platform.MinioStorage
- * @see com.njydsz.pmis.common.file.storage.platform.S3Storage
- * @see com.njydsz.pmis.common.file.storage.platform.OssStorage
- * @see com.njydsz.pmis.common.file.storage.platform.CosStorage
- * @see com.njydsz.pmis.common.file.storage.platform.QiniuStorage
- * @see com.njydsz.pmis.common.file.storage.platform.ObsStorage
+ * @see LocalStorage
+ * @see MinioStorage
+ * @see S3Storage
+ * @see OssStorage
+ * @see CosStorage
+ * @see QiniuStorage
+ * @see ObsStorage
  */
 public interface IFileStorage extends FileUploader, FileDownloader, FileManager {
 

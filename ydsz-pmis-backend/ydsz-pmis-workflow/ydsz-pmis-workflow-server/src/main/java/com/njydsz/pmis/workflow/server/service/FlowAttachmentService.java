@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.integration;
 
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentDTO;
 import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentPreviewVO;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowAttachmentDO;
@@ -70,7 +71,7 @@ public interface FlowAttachmentService {
      *
      * @param attachmentId 附件 ID
      * @return 预览 VO（含 previewType / previewUrl / downloadUrl / previewable）
-     * @throws com.njydsz.pmis.common.exception.BizException 附件不存在时抛 NOT_FOUND
+     * @throws BizException 附件不存在时抛 NOT_FOUND
      * @since 1.7.0
      */
     FlowAttachmentPreviewVO previewAttachment(String attachmentId);

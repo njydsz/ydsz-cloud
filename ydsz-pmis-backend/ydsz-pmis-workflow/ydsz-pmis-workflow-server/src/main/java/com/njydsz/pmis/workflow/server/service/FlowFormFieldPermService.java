@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.integration;
 
+import com.njydsz.pmis.common.exception.BizException;
+
 import java.util.Map;
 
 /**
@@ -44,7 +46,7 @@ public interface FlowFormFieldPermService {
      * @param fieldPerms       字段权限映射
      * @param submittedVars    提交的表单变量
      * @param existingVars     已有变量（用于判断 READONLY 字段是否变化，可空）
-     * @throws com.njydsz.pmis.common.exception.BizException 校验失败时抛出
+     * @throws BizException 校验失败时抛出
      */
     void validateFieldPerms(Map<String, String> fieldPerms,
                             Map<String, Object> submittedVars,

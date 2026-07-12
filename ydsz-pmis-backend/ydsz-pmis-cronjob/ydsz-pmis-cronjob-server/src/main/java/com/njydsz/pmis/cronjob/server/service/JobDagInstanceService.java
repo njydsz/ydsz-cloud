@@ -1,5 +1,6 @@
 package com.njydsz.pmis.cronjob.server.service.dag;
 
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
 import com.njydsz.pmis.cronjob.server.vo.DagInstanceVisualizationVO;
@@ -21,7 +22,7 @@ public interface JobDagInstanceService {
      *
      * @param instanceId 实例 ID
      * @return DAG 实例
-     * @throws com.njydsz.pmis.common.exception.BizException 当实例不存在时抛出
+     * @throws BizException 当实例不存在时抛出
      */
     JobDagInstanceDO getInstanceById(String instanceId);
 
@@ -54,7 +55,7 @@ public interface JobDagInstanceService {
      * 暂停 DAG 实例（RUNNING → PAUSED）。
      *
      * @param instanceId 实例 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当实例不存在或状态非 RUNNING 时抛出
+     * @throws BizException 当实例不存在或状态非 RUNNING 时抛出
      */
     void pauseInstance(String instanceId);
 
@@ -62,7 +63,7 @@ public interface JobDagInstanceService {
      * 恢复 DAG 实例（PAUSED → RUNNING）。
      *
      * @param instanceId 实例 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当实例不存在或状态非 PAUSED 时抛出
+     * @throws BizException 当实例不存在或状态非 PAUSED 时抛出
      */
     void resumeInstance(String instanceId);
 
@@ -70,7 +71,7 @@ public interface JobDagInstanceService {
      * 取消 DAG 实例（RUNNING/PAUSED → CANCELED）。
      *
      * @param instanceId 实例 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当实例不存在或已为终态时抛出
+     * @throws BizException 当实例不存在或已为终态时抛出
      */
     void cancelInstance(String instanceId);
 
@@ -79,7 +80,7 @@ public interface JobDagInstanceService {
      *
      * @param instanceId  实例 ID
      * @param contextJson 上下文 JSON
-     * @throws com.njydsz.pmis.common.exception.BizException 当实例不存在时抛出
+     * @throws BizException 当实例不存在时抛出
      */
     void updateContext(String instanceId, String contextJson);
 
@@ -88,7 +89,7 @@ public interface JobDagInstanceService {
      *
      * @param instanceId 实例 ID
      * @return 可视化数据 VO
-     * @throws com.njydsz.pmis.common.exception.BizException 当实例不存在或 DAG 定义非法时抛出
+     * @throws BizException 当实例不存在或 DAG 定义非法时抛出
      */
     DagInstanceVisualizationVO getVisualization(String instanceId);
 }

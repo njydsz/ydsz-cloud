@@ -77,7 +77,7 @@ public class DefaultCheckpointService implements CheckpointService {
         try {
             String json = checkpointStore.get(bucketName, objectName);
             if (json != null) {
-                return JsonUtils.fromJson(json, UploadCheckpoint.class);
+                return JsonUtils.parseObject(json, UploadCheckpoint.class);
             }
         } catch (Exception e) {
             log.warn("[Storage] loadCheckpoint failed, bucket={}, object={}, message={}",

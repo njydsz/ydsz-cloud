@@ -1,5 +1,6 @@
 package com.njydsz.pmis.cronjob.server.service.job;
 
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobRelationDO;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public interface JobRelationService {
      * @param childJobId   后继任务 ID
      * @param failStrategy 失败传播策略（null 默认 FAIL_FAST）
      * @return 新建的依赖关系 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在、自依赖或形成环时抛出
+     * @throws BizException 当任务不存在、自依赖或形成环时抛出
      */
     String addRelation(String parentJobId, String childJobId, String failStrategy);
 
@@ -31,7 +32,7 @@ public interface JobRelationService {
      * 删除依赖关系。
      *
      * @param relationId 依赖关系 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当依赖关系不存在时抛出
+     * @throws BizException 当依赖关系不存在时抛出
      */
     void removeRelation(String relationId);
 

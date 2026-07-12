@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 /**
  * 文件工具类
@@ -15,6 +16,30 @@ public final class FileUtils {
 
     private FileUtils() {
     }
+
+    private static final Set<String> IMAGE_EXTENSIONS = Set.of(
+            "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "ico", "tiff"
+    );
+    private static final Set<String> VIDEO_EXTENSIONS = Set.of(
+            "mp4", "avi", "mov", "wmv", "flv", "mkv", "webm", "m4v", "mpg", "mpeg"
+    );
+    private static final Set<String> AUDIO_EXTENSIONS = Set.of(
+            "mp3", "wav", "flac", "aac", "ogg", "wma", "m4a", "opus"
+    );
+    private static final Set<String> OFFICE_EXTENSIONS = Set.of(
+            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf", "csv", "rtf", "odt", "ods", "odp"
+    );
+    private static final Set<String> CODE_EXTENSIONS = Set.of(
+            "java", "py", "js", "ts", "html", "css", "xml", "json", "yaml", "yml", "sql", "sh", "bat", "go", "rs", "c", "cpp", "h", "kt", "swift", "rb", "php"
+    );
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+            "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "ico",
+            "mp4", "avi", "mov", "wmv", "flv", "mkv", "webm",
+            "mp3", "wav", "flac", "aac", "ogg",
+            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf", "csv", "txt", "md",
+            "zip", "rar", "7z", "tar", "gz",
+            "java", "py", "js", "ts", "html", "css", "xml", "json", "yaml", "yml", "sql"
+    );
 
     /**
      * 判断文件是否存在
@@ -154,5 +179,59 @@ public final class FileUtils {
      */
     public static File createTempFile(String prefix, String suffix) throws IOException {
         return File.createTempFile(prefix, suffix);
+    }
+
+    // ==================== 文件类型检测 ====================
+
+    /**
+     * 获取文件类型（扩展名）
+     *
+     * @param fileName 文件名
+     * @return 文件扩展名（小写，不含点），如 "jpg"
+     */
+    public static String getFileType(String fileName) {
+        return getExtension(fileName);
+    }
+
+    /**
+     * 判断扩展名是否在允许列表中
+     */
+    public static boolean isAllowedExtension(String ext) {
+        return ext != null && ALLOWED_EXTENSIONS.contains(ext.toLowerCase());
+    }
+
+    /**
+     * 判断是否为图片扩展名
+     */
+    public static boolean isImageExtension(String ext) {
+        return ext != null && IMAGE_EXTENSIONS.contains(ext.toLowerCase());
+    }
+
+    /**
+     * 判断是否为视频扩展名
+     */
+    public static boolean isVideoExtension(String ext) {
+        return ext != null && VIDEO_EXTENSIONS.contains(ext.toLowerCase());
+    }
+
+    /**
+     * 判断是否为音频扩展名
+     */
+    public static boolean isAudioExtension(String ext) {
+        return ext != null && AUDIO_EXTENSIONS.contains(ext.toLowerCase());
+    }
+
+    /**
+     * 判断是否为办公文档扩展名
+     */
+    public static boolean isOfficeExtension(String ext) {
+        return ext != null && OFFICE_EXTENSIONS.contains(ext.toLowerCase());
+    }
+
+    /**
+     * 判断是否为代码文件扩展名
+     */
+    public static boolean isCodeExtension(String ext) {
+        return ext != null && CODE_EXTENSIONS.contains(ext.toLowerCase());
     }
 }

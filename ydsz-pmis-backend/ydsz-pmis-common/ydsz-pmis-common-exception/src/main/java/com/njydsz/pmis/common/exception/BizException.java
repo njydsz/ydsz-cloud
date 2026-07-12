@@ -109,6 +109,18 @@ public class BizException extends RuntimeException {
     /**
      * 根据 ExceptionCode 构造异常
      *
+     * @param code 异常码
+     */
+    public BizException(ExceptionCode code) {
+        super(code.getKey());
+        this.code = code.getHttpStatus();
+        this.errorMessage = code.getKey();
+        this.args = null;
+    }
+
+    /**
+     * 根据 ExceptionCode 构造异常
+     *
      * @param code    异常码
      * @param message 提示信息
      */

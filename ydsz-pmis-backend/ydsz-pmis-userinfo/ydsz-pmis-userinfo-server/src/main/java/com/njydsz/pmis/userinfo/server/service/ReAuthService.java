@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.server.service.auth;
 
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.domain.dto.auth.ReAuthRequest;
 import com.njydsz.pmis.userinfo.domain.dto.auth.ReAuthResult;
 
@@ -20,7 +21,7 @@ public interface ReAuthService {
      * @param userId   当前用户 ID
      * @param request  二次认证请求（operationCode + 凭据）
      * @return token + 剩余有效期（秒）
-     * @throws com.njydsz.pmis.common.exception.BizException 凭据错误时抛出
+     * @throws BizException 凭据错误时抛出
      */
     ReAuthResult issueToken(String userId, ReAuthRequest request);
 }

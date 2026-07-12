@@ -78,7 +78,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
             if (json == null) {
                 return null;
             }
-            return JsonUtils.fromJson(json, MultipartContextData.class);
+            return JsonUtils.parseObject(json, MultipartContextData.class);
         } catch (Exception e) {
             log.warn("[Storage] RedisMultipartContextStore get failed, uploadId={}, message={}",
                     uploadId, e.getMessage());
@@ -124,7 +124,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
                     String json = values.get(i);
                     if (json != null) {
                         String uploadId = extractUploadId(keys.get(i));
-                        MultipartContextData context = JsonUtils.fromJson(json, MultipartContextData.class);
+                        MultipartContextData context = JsonUtils.parseObject(json, MultipartContextData.class);
                         result.put(uploadId, context);
                     }
                 }
@@ -158,7 +158,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
                 String json = values.get(i);
                 if (json != null) {
                     try {
-                        MultipartContextData context = JsonUtils.fromJson(json, MultipartContextData.class);
+                        MultipartContextData context = JsonUtils.parseObject(json, MultipartContextData.class);
                         if (context != null && context.lastAccessTime() < cutoffTime) {
                             expiredKeys.add(keys.get(i));
                         }

@@ -1,1 +1,6 @@
-com.njydsz.pmis.common.config.JdbcAutoConfiguration
+com.remisoft.comm.jdbc.config.MybatisPlusConfiguration
+com.remisoft.comm.jdbc.config.MapperScanConfiguration
+com.remisoft.comm.jdbc.config.DynamicDataSourceConfiguration
+com.remisoft.comm.jdbc.config.HikariCPConfiguration
+com.remisoft.comm.jdbc.config.SqlTraceAutoConfiguration
+com.remisoft.comm.jdbc.exception.DataIntegrityExceptionHandler

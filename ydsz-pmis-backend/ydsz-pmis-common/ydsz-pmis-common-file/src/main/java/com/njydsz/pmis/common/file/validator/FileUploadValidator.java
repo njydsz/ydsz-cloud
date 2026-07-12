@@ -66,7 +66,7 @@ public class FileUploadValidator {
         if (magicNumberCheckEnabled) {
             try {
                 FileTypeValidator.validate(file);
-            } catch (com.njydsz.pmis.common.exception.custom.BizException e) {
+            } catch (com.njydsz.pmis.common.exception.BizException e) {
                 throw new FileValidationException("Magic Number 校验失败: " + e.getMessage());
             }
         }

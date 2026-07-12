@@ -37,7 +37,7 @@ import java.lang.annotation.Target;
  * 
  * 
  * @since 1.0.0
- * @see com.njydsz.pmis.common.file.config.FileConfiguration
+ * @see FileConfiguration
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

@@ -1,6 +1,7 @@
 package com.njydsz.pmis.cronjob.server.service.job;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 
@@ -21,7 +22,7 @@ public interface JobService {
      *
      * @param job 任务定义
      * @return 新增任务 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当 jobKey 已存在或参数非法时抛出
+     * @throws BizException 当 jobKey 已存在或参数非法时抛出
      */
     String create(JobDO job);
 
@@ -29,7 +30,7 @@ public interface JobService {
      * 更新任务
      *
      * @param job 任务定义
-     * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在或 cron 表达式非法时抛出
+     * @throws BizException 当任务不存在或 cron 表达式非法时抛出
      */
     void update(JobDO job);
 
@@ -37,7 +38,7 @@ public interface JobService {
      * 删除任务
      *
      * @param id 任务 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
+     * @throws BizException 当任务不存在时抛出
      */
     void delete(String id);
 
@@ -45,7 +46,7 @@ public interface JobService {
      * 暂停任务
      *
      * @param id 任务 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
+     * @throws BizException 当任务不存在时抛出
      */
     void pause(String id);
 
@@ -53,7 +54,7 @@ public interface JobService {
      * 恢复任务
      *
      * @param id 任务 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
+     * @throws BizException 当任务不存在时抛出
      */
     void resume(String id);
 
@@ -65,7 +66,7 @@ public interface JobService {
      *
      * @param id 任务 ID
      * @return 执行日志 ID
-     * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
+     * @throws BizException 当任务不存在时抛出
      */
     String trigger(String id);
 
@@ -78,7 +79,7 @@ public interface JobService {
      * @param id       任务 ID
      * @param holdLock 是否抢占分布式锁（true 时与其他实例互斥执行）
      * @return 执行日志 ID；当 holdLock=true 且锁被持有时返回 null
-     * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
+     * @throws BizException 当任务不存在时抛出
      */
     String trigger(String id, boolean holdLock);
 
@@ -151,7 +152,7 @@ public interface JobService {
      *
      * @param id 任务 ID
      * @return 任务定义
-     * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
+     * @throws BizException 当任务不存在时抛出
      */
     JobDO getById(String id);
 

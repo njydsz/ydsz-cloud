@@ -41,6 +41,23 @@ public final class StringUtils {
     }
 
     /**
+     * 移除字符串前缀（如果存在）
+     *
+     * @param str    原始字符串
+     * @param prefix 要移除的前缀
+     * @return 移除前缀后的字符串
+     */
+    public static String removeStart(String str, String prefix) {
+        if (str == null || prefix == null) {
+            return str;
+        }
+        if (str.startsWith(prefix)) {
+            return str.substring(prefix.length());
+        }
+        return str;
+    }
+
+    /**
      * 驼峰转下划线（camelCase → snake_case）
      */
     public static String camelToSnake(String camelCase) {
