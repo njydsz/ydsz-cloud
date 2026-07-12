@@ -84,12 +84,12 @@ public class DataPermissionContextResolver {
     public DataPermissionContext resolve() {
         HttpServletRequest request = ServletUtils.getRequest();
         if (request == null) {
-            request = RequestHolder.getCurrentRequest();
+            request = RequestHolder.getRequest();
         }
         DataPermissionContext context = new DataPermissionContext();
         context.setDataScope(resolveDataScope(resolveHeader(request, HeaderConstants.X_DATA_SCOPE)));
         context.setTenantId(trimToNull(resolveHeader(request, HeaderConstants.X_TENANT_ID)));
-        context.setUserId(trimToNull(resolveHeader(request, HeaderConstants.X_UNIQUE_ID)));
+        context.setUserId(trimToNull(resolveHeader(request, HeaderConstants.X_USER_ID)));
         context.setCompanyIds(splitCsv(resolveHeader(request, HeaderConstants.X_COMPANY_IDS)));
         context.setDeptIds(splitCsv(resolveHeader(request, HeaderConstants.X_DEPT_IDS)));
         context.setProjectIds(splitCsv(resolveHeader(request, HeaderConstants.X_PROJECT_IDS)));
@@ -153,9 +153,13 @@ public class DataPermissionContextResolver {
             return null;
         }
         try {
-            return DataScopeType.codeOf(code);
-        } catch (RuntimeException ignored) {
-            return null;
+            return DataScopeType.fromCode(Integer.parseInt(code));
+        } catch (NumberFormatException ignored) {
+            try {
+                return DataScopeType.valueOf(code.toUpperCase());
+            } catch (IllegalArgumentException ignored2) {
+                return null;
+            }
         }
     }
 

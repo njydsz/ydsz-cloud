@@ -62,7 +62,7 @@ public class UpdatedByHandler extends AbstractFieldFillHandler {
     protected Expression doGetFieldFillValue() {
         AuthInfo authInfo = AuthInfoUtils.getAuthInfo();
         String uniqueId = Optional.ofNullable(authInfo)
-                .map(AuthInfo::getUniqueId).orElse("系统更新");
+                .map(AuthInfo::getUserId).orElse("系统更新");
         return new StringValue(uniqueId);
     }
 

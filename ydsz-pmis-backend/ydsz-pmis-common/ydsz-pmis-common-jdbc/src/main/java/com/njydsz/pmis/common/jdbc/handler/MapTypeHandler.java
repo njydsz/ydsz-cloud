@@ -122,6 +122,6 @@ public class MapTypeHandler extends BaseTypeHandler<Map<String, Object>> {
         if (json == null || json.isEmpty()) {
             return null;
         }
-        return JsonUtils.fromJsonToMap(json, String.class, Object.class);
+        return JsonUtils.parseMap(json);
     }
 }

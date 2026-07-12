@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * MyBatis-Plus 增强版审计基础实体
@@ -47,8 +47,8 @@ public class MpBaseAuditEntity<T extends Serializable> extends BaseAuditEntity<T
      * <p>框架在 INSERT 操作时自动填充。
      */
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Instant createdAt;
 
     /**
      * 更新人ID
@@ -62,7 +62,7 @@ public class MpBaseAuditEntity<T extends Serializable> extends BaseAuditEntity<T
      * <p>框架在 INSERT/UPDATE 操作时自动填充。
      */
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Instant updatedAt;
 
 }

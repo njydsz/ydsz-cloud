@@ -125,6 +125,6 @@ public class ListTypeHandler extends BaseTypeHandler<List<Object>> {
         if (json == null || json.isEmpty()) {
             return null;
         }
-        return JsonUtils.fromJsonToList(json, Object.class);
+        return JsonUtils.parseList(json);
     }
 }

@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.njydsz.pmis.common.entity.BaseEntity;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * MyBatis-Plus 增强版基础实体
@@ -66,8 +66,8 @@ public class MpBaseEntity<T extends java.io.Serializable> extends BaseEntity<T> 
      * <p>框架在 INSERT 操作时自动填充。
      */
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Instant createdAt;
 
     /**
      * 更新人ID
@@ -81,8 +81,8 @@ public class MpBaseEntity<T extends java.io.Serializable> extends BaseEntity<T> 
      * <p>框架在 INSERT/UPDATE 操作时自动填充。
      */
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Instant updatedAt;
 
     /**
      * 乐观锁版本号
@@ -90,7 +90,6 @@ public class MpBaseEntity<T extends java.io.Serializable> extends BaseEntity<T> 
      */
     @TableField("revision")
     @Version
-    @Builder.Default
     private Integer revision = 0;
 
     /**

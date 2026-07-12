@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.jdbc.exception;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.jdbc.interceptor.TenantIsolationInterceptor;
 import com.njydsz.pmis.common.exception.custom.SecurityException;
+import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
+import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
 
 /**
  * 租户隔离异常
@@ -27,10 +29,12 @@ public class TenantIsolationException extends SecurityException {
      * @param message 异常详细信息
      */
     public TenantIsolationException(String message) {
-        super(UnifiedExceptionCode.ACCESS_DENIED);
-        // 保留原始 message 便于日志排查
-        this.message = message;
-        this.messageKey = UnifiedExceptionCode.ACCESS_DENIED.getKey();
-        this.messageParams = new Object[0];
+        super(message);
+        this.code = UnifiedExceptionCode.SECURITY_ACCESS_DENIED.getCode();
+        this.key = UnifiedExceptionCode.SECURITY_ACCESS_DENIED.getKey();
+        this.params = new Object[0];
+        this.httpStatus = UnifiedExceptionCode.SECURITY_ACCESS_DENIED.getHttpStatus();
+        this.level = ExceptionLevel.WARN;
+        this.category = ExceptionCategory.SECURITY;
     }
 }

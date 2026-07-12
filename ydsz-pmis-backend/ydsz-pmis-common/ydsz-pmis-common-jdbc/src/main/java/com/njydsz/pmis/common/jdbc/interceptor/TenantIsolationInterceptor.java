@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.pmis.common.jdbc.config.TenantIsolationProperties;
 import com.njydsz.pmis.common.jdbc.exception.TenantIsolationException;
 import com.njydsz.pmis.common.context.AuthInfoUtils;
+import com.njydsz.pmis.common.context.RequestHolder;
+import com.njydsz.pmis.common.constant.HeaderConstants;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.StringValue;
@@ -48,7 +50,7 @@ import java.util.Set;
  *   <li>INSERT 语句自动填充 tenant_id 字段</li>
  *   <li>UPDATE/DELETE 语句自动添加 WHERE tenant_id = ? 条件</li>
  *   <li>支持忽略特定表（如系统配置表）</li>
- *   <li>从 {@link AuthInfoUtils}/{@link com.njydsz.pmis.common.core.context.RequestContext} 获取当前租户 ID</li>
+ * <li>从 {@link AuthInfoUtils}/{@link RequestHolder} 获取当前租户 ID</li>
  *   <li>fail-closed：无法获取租户 ID 时抛异常拒绝执行，避免数据泄露</li>
  *   <li>JOIN 场景自动追加表别名前缀，避免列名歧义</li>
  * </ul>
@@ -276,7 +278,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
     /**
      * 获取当前租户 ID，优先从 {@link AuthInfoUtils} 获取，回退到
-     * {@link com.njydsz.pmis.common.core.context.RequestContext}。
+     * {@link RequestHolder} extra headers。
      *
      * @return 租户 ID；若上下文未设置返回 null
      */
@@ -286,8 +288,8 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         if (tenantId != null && !tenantId.isEmpty()) {
             return tenantId;
         }
-        // 回退到 RequestContext（TTL 上下文，支持线程池透传）
-        return com.njydsz.pmis.common.core.context.RequestContext.getTenantId();
+        // 回退到 RequestHolder extra headers（TTL 上下文，支持线程池透传）
+        return RequestHolder.getExtraHeader(HeaderConstants.X_TENANT_ID);
     }
 
     /**

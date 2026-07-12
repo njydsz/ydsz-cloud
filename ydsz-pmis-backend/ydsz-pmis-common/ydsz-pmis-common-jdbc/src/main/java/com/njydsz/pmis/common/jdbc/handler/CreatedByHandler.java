@@ -58,7 +58,7 @@ public class CreatedByHandler extends AbstractFieldFillHandler {
     protected Expression doGetFieldFillValue() {
         AuthInfo authInfo = AuthInfoUtils.getAuthInfo();
         String uniqueId = Optional.ofNullable(authInfo)
-                .map(AuthInfo::getUniqueId).orElse("系统创建");
+                .map(AuthInfo::getUserId).orElse("系统创建");
         return new StringValue(uniqueId);
     }
 

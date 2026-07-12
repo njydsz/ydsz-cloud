@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * MyBatis-Plus 元对象处理器
@@ -64,10 +64,10 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         log.debug("开始 INSERT 字段填充...");
-        this.strictInsertFill(metaObject, "createdAt", LocalDateTime.class, LocalDateTime.now());
-        this.strictInsertFill(metaObject, "createdBy", String.class, AuthInfoUtils.getUniqueId());
-        this.strictInsertFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
-        this.strictInsertFill(metaObject, "updatedBy", String.class, AuthInfoUtils.getUniqueId());
+        this.strictInsertFill(metaObject, "createdAt", Instant.class, Instant.now());
+        this.strictInsertFill(metaObject, "createdBy", String.class, AuthInfoUtils.getUserId());
+        this.strictInsertFill(metaObject, "updatedAt", Instant.class, Instant.now());
+        this.strictInsertFill(metaObject, "updatedBy", String.class, AuthInfoUtils.getUserId());
     }
 
     /**
@@ -78,7 +78,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void updateFill(MetaObject metaObject) {
         log.debug("开始 UPDATE 字段填充...");
-        this.strictUpdateFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
-        this.strictUpdateFill(metaObject, "updatedBy", String.class, AuthInfoUtils.getUniqueId());
+        this.strictUpdateFill(metaObject, "updatedAt", Instant.class, Instant.now());
+        this.strictUpdateFill(metaObject, "updatedBy", String.class, AuthInfoUtils.getUserId());
     }
 }

@@ -1,8 +1,6 @@
 package com.njydsz.pmis.common.jdbc.exception;
 
-import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.exception.ExceptionInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -72,18 +70,7 @@ public class DataIntegrityExceptionHandler {
         String message = messageSource.getMessage(messageKey, null, messageKey, LocaleContextHolder.getLocale());
         log.error("数据完整性异常 | 路径: {} | 消息: {}", request.getRequestURI(), rootMessage, e);
 
-        ExceptionInfo info = new ExceptionInfo(
-                UnifiedExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode(),
-                UnifiedExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getKey(),
-                message,
-                HttpStatus.CONFLICT.value()
-        );
-        info.setPath(request.getRequestURI());
-        return Result.error(
-                UnifiedExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode(),
-                message,
-                info
-        );
+        return Result.failed(HttpStatus.CONFLICT.value(), message);
     }
 
     /**
