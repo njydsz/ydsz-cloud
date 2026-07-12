@@ -11,7 +11,7 @@ package com.njydsz.pmis.common.notify.core;
 public interface NotifySendResult {
 
 	/**
-	 * 是否发送成�?
+	 * 是否发送成功
 	 */
 	boolean isSuccess();
 
@@ -26,7 +26,7 @@ public interface NotifySendResult {
 	String getErrorMessage();
 
 	/**
-	 * 获取发送渠�?
+	 * 获取发送渠道
 	 */
 	String getChannel();
 

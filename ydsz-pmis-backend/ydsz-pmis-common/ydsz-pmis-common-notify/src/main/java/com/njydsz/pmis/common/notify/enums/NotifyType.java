@@ -15,8 +15,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum NotifyType {
 
-	TEXT(1, "纯文�?),
-	HTML(2, "富文�?),
+	TEXT(1, "纯文本"),
+	HTML(2, "富文本"),
 	TEMPLATE(3, "模板消息"),
 	MARKDOWN(4, "Markdown"),
 	CARD(5, "卡片消息");

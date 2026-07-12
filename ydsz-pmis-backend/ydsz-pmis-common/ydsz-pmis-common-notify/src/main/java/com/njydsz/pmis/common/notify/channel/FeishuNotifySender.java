@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * 飞书通知发送器
  *
- * <p>通过飞书群机器人 Webhook 发送消息�?
+ * <p>通过飞书群机器人 Webhook 发送消息。
  *
  * @author ydsz-pmis-team
  * 
@@ -35,7 +35,7 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 	@Value("${remi.notify.feishu.webhook:}")
 	private String webhook;
 
-	/** HTTP 请求客户�?*/
+	/** HTTP 请求客户端 */
 	private final RestTemplate restTemplate;
 	/** 模板引擎 */
 	private final TemplateEngine templateEngine;
@@ -43,7 +43,7 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 	/**
 	 * 构造飞书通知发送器
 	 *
-	 * @param restTemplate     HTTP 请求客户�?
+	 * @param restTemplate     HTTP 请求客户端
 	 * @param templateEngine   模板引擎
 	 */
 	public FeishuNotifySender(RestTemplate restTemplate, TemplateEngine templateEngine) {
@@ -59,7 +59,7 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 	@Override
 	public NotifySendResult send(String receiver, String title, String content) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("飞书通知未启�?, channelName());
+			return NotifySendResult.failure("飞书通知未启用", channelName());
 		}
 		try {
 			Map<String, Object> body = Map.of(
@@ -71,10 +71,10 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 			);
 			String json = JsonUtils.toJson(body);
 			String response = restTemplate.postForObject(webhook, new HttpEntity<>(json, jsonHeaders()), String.class);
-			log.debug("飞书通知发送成�? {}", title);
+			log.debug("飞书通知发送成功: {}", title);
 			return NotifySendResult.success(response, channelName());
 		} catch (Exception e) {
-			log.error("飞书通知发送失�? {}", e.getMessage(), e);
+			log.error("飞书通知发送失败: {}", e.getMessage(), e);
 			return NotifySendResult.failure(e.getMessage(), channelName());
 		}
 	}
@@ -90,10 +90,10 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 	/**
 	 * 批量发送飞书通知
 	 *
-	 * @param receivers 接收者列�?
+	 * @param receivers 接收者列表
 	 * @param title     消息标题
 	 * @param content   消息内容
-	 * @return 发送结�?
+	 * @return 发送结果
 	 */
 	@Override
 	public NotifySendResult batchSend(List<String> receivers, String title, String content) {
@@ -103,7 +103,7 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 	/**
 	 * 判断飞书渠道是否启用
 	 *
-	 * @return 启用返回 true，否则返�?false
+	 * @return 启用返回 true，否则返回 false
 	 */
 	@Override
 	public boolean isEnabled() {
@@ -120,9 +120,9 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 	}
 
     /**
-     * 构建 JSON 请求�?
+     * 构建 JSON 请求头
      *
-     * @return Content-Type �?application/json �?HTTP 请求�?
+     * @return Content-Type 为 application/json 的 HTTP 请求头
      */
     private HttpHeaders jsonHeaders() {
 		HttpHeaders headers = new HttpHeaders();

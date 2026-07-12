@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 /**
  * 邮件发送结果封装类
  *
- * <p>封装邮件发送的结果信息，包括发送状态、消息ID、发送时间、收件人列表等�?
- * 用于向调用方返回详细的发送结果，支持链式构建�?/p>
+ * <p>封装邮件发送的结果信息，包括发送状态、消息ID、发送时间、收件人列表等。
+ * 用于向调用方返回详细的发送结果，支持链式构建。</p>
  *
  * <h3>使用示例</h3>
  * <pre>{@code
@@ -25,15 +25,15 @@ import java.time.LocalDateTime;
  */
 public class SendResult {
 
-    /** 是否发送成�?*/
+    /** 是否发送成功 */
     private boolean success;
     /** 错误信息 */
     private String errorMessage;
     /** 消息ID */
     private String messageId;
-    /** 发送时�?*/
+    /** 发送时间 */
     private LocalDateTime sentAt;
-    /** 收件人数�?*/
+    /** 收件人数组 */
     private String[] recipients;
     /** 抄送人数组 */
     private String[] ccRecipients;
@@ -166,8 +166,8 @@ public class SendResult {
     /**
      * 创建成功结果
      *
-     * @param recipients 收件人数�?
-     * @return 成功的发送结�?
+     * @param recipients 收件人数组
+     * @return 成功的发送结果
      */
     public static SendResult success(String[] recipients) {
         return builder()
@@ -181,8 +181,8 @@ public class SendResult {
      * 创建失败结果
      *
      * @param errorMessage 错误信息
-     * @param recipients   收件人数�?
-     * @return 失败的发送结�?
+     * @param recipients   收件人数组
+     * @return 失败的发送结果
      */
     public static SendResult failure(String errorMessage, String[] recipients) {
         return builder()

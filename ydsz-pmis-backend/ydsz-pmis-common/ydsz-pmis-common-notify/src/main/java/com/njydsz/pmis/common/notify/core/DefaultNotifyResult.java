@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 默认的消息发送结果实�?
+ * 默认的消息发送结果实现
  *
  * @author ydsz-pmis-team
  * 

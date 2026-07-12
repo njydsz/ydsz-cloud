@@ -3,8 +3,8 @@ package com.njydsz.pmis.common.email.enums;
 /**
  * 邮件类型枚举
  *
- * <p>定义了系统支持的各种邮件发送类型，包括文本邮件、HTML邮件、附件邮件�?
- * 内嵌资源邮件以及模板邮件（Thymeleaf/Freemarker）等�?/p>
+ * <p>定义了系统支持的各种邮件发送类型，包括文本邮件、HTML邮件、附件邮件、
+ * 内嵌资源邮件以及模板邮件（Thymeleaf/Freemarker）等。</p>
  *
  * @author ydsz-pmis-team
  * 
@@ -13,11 +13,11 @@ package com.njydsz.pmis.common.email.enums;
  */
 public enum EmailType {
 
-    /** 纯文本邮�?*/
+    /** 纯文本邮件 */
     TEXT("text", "文本邮件"),
     /** HTML 格式邮件 */
     HTML("html", "HTML邮件"),
-    /** 带附件邮�?*/
+    /** 带附件邮件 */
     ATTACHMENT("attachment", "附件邮件"),
     /** 内嵌资源邮件 */
     INLINE("inline", "内嵌资源邮件"),

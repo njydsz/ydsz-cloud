@@ -9,17 +9,17 @@ import java.util.Map;
 /**
  * 通知消息模板定义
  *
- * <p>描述一个可复用的通知模板，包含模�?ID、名称、内容（支持 Velocity / SpEL / MessageFormat 等多种模板语法）、适用渠道及变量定义�?
+ * <p>描述一个可复用的通知模板，包含模板 ID、名称、内容（支持 Velocity / SpEL / MessageFormat 等多种模板语法）、适用渠道及变量定义。
  *
- * <p><b>示例�?/b>
+ * <p><b>示例：</b>
  * <pre>{@code
  * NotifyTemplate template = new NotifyTemplate()
  *     .setTemplateId("order_shipped")
  *     .setName("订单发货通知")
- *     .setContent("尊敬�?${userName}，您的订�?${orderNo} 已发货�?)
+ *     .setContent("尊敬的 ${userName}，您的订单 ${orderNo} 已发货。")
  *     .setChannelType(NotifyChannel.EMAIL)
- *     .setVariable("userName", "用户�?)
- *     .setVariable("orderNo", "订单�?);
+ *     .setVariable("userName", "用户名")
+ *     .setVariable("orderNo", "订单号");
  * }</pre>
  *
  * @author ydsz-pmis-team
@@ -37,7 +37,7 @@ public class NotifyTemplate implements Serializable {
     /** 模板名称 */
     private String name;
 
-    /** 模板内容（支�?Velocity / SpEL / MessageFormat 等多种模板语法） */
+    /** 模板内容（支持 Velocity / SpEL / MessageFormat 等多种模板语法） */
     private String content;
 
     /** 适用渠道 */
@@ -81,7 +81,7 @@ public class NotifyTemplate implements Serializable {
     /**
      * 设置模板内容
      *
-     * @param content 模板内容（支�?Velocity / SpEL / MessageFormat 等多种模板语法）
+     * @param content 模板内容（支持 Velocity / SpEL / MessageFormat 等多种模板语法）
      * @return this
      */
     public NotifyTemplate setContent(String content) {
@@ -103,7 +103,7 @@ public class NotifyTemplate implements Serializable {
     /**
      * 添加模板变量定义
      *
-     * @param name        变量�?
+     * @param name        变量名
      * @param description 变量描述
      * @return this
      */
@@ -133,7 +133,7 @@ public class NotifyTemplate implements Serializable {
     /**
      * 获取模板内容
      *
-     * @return 模板内容字符�?
+     * @return 模板内容字符串
      */
     public String getContent() {
         return content;

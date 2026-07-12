@@ -12,14 +12,14 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * 统一消息通知服务实现�?
+ * 统一消息通知服务实现。
  *
- * <p>整合邮件、企业微信、钉钉、飞书等多种通知渠道，提供统一的发送接口�?
- * 使用策略模式实现渠道自动分发，所有渠道（包括邮件）均通过 {@link NotifyChannelStrategy} 统一处理�?
+ * <p>整合邮件、企业微信、钉钉、飞书等多种通知渠道，提供统一的发送接口。
+ * 使用策略模式实现渠道自动分发，所有渠道（包括邮件）均通过 {@link NotifyChannelStrategy} 统一处理。
  *
- * <p><b>限流保护�?/b>
+ * <p><b>限流保护：</b>
  * <ul>
- *   <li>每个渠道独立限流，防止单个渠道过�?/li>
+ *   <li>每个渠道独立限流，防止单个渠道过载</li>
  *   <li>基于滑动窗口算法，平滑控制请求速率</li>
  *   <li>限流触发时返回失败结果，不阻塞调用方</li>
  * </ul>
@@ -65,51 +65,51 @@ public class NotifyServiceImpl implements NotifyService {
 
 	@Override
 	public NotifySendResult send(NotifyChannel channel, String receiver, String title, String content) {
-		// 限流检�?
+		// 限流检查
 		if (!tryAcquireRateLimit(channel)) {
 			return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
 		}
 
 		NotifyChannelStrategy strategy = channelStrategies.get(channel);
 		if (strategy == null) {
-			return NotifySendResult.failure("通知渠道未配�? " + channel.getName(), channel.getName());
+			return NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName());
 		}
 		return strategy.send(receiver, title, content);
 	}
 
 	@Override
 	public NotifySendResult sendTemplate(NotifyChannel channel, String receiver, String templateCode, Object templateParams) {
-		// 限流检�?
+		// 限流检查
 		if (!tryAcquireRateLimit(channel)) {
 			return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
 		}
 
 		NotifyChannelStrategy strategy = channelStrategies.get(channel);
 		if (strategy == null) {
-			return NotifySendResult.failure("通知渠道未配�? " + channel.getName(), channel.getName());
+			return NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName());
 		}
 		return strategy.sendTemplate(receiver, templateCode, templateParams);
 	}
 
 	/**
-	 * 批量发送通知消息到多个接收�?
+	 * 批量发送通知消息到多个接收者
 	 *
 	 * @param channel   通知渠道
-	 * @param receivers 接收者标识列�?
+	 * @param receivers 接收者标识列表
 	 * @param title     消息标题
 	 * @param content   消息内容
-	 * @return 发送结�?
+	 * @return 发送结果
 	 */
 	@Override
 	public NotifySendResult batchSend(NotifyChannel channel, List<String> receivers, String title, String content) {
-		// 限流检�?
+		// 限流检查
 		if (!tryAcquireRateLimit(channel)) {
 			return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
 		}
 
 		NotifyChannelStrategy strategy = channelStrategies.get(channel);
 		if (strategy == null) {
-			return NotifySendResult.failure("通知渠道未配�? " + channel.getName(), channel.getName());
+			return NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName());
 		}
 		return strategy.batchSend(receivers, title, content);
 	}
@@ -117,7 +117,7 @@ public class NotifyServiceImpl implements NotifyService {
 	@Override
 	public CompletableFuture<NotifySendResult> parallelBatchSend(NotifyChannel channel, List<String> receivers,
 																  String title, String content) {
-		// 限流检�?
+		// 限流检查
 		if (!tryAcquireRateLimit(channel)) {
 			return CompletableFuture.completedFuture(
 				NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName())
@@ -127,16 +127,16 @@ public class NotifyServiceImpl implements NotifyService {
 		NotifyChannelStrategy strategy = channelStrategies.get(channel);
 		if (strategy == null) {
 			return CompletableFuture.completedFuture(
-				NotifySendResult.failure("通知渠道未配�? " + channel.getName(), channel.getName())
+				NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName())
 			);
 		}
 
-		// 如果没有配置并行线程池，降级为串行发�?
+		// 如果没有配置并行线程池，降级为串行发送
 		if (parallelExecutor == null) {
 			return CompletableFuture.completedFuture(strategy.batchSend(receivers, title, content));
 		}
 
-		// 并行发送：为每个接收者创建异步任�?
+		// 并行发送：为每个接收者创建异步任务
 		List<CompletableFuture<NotifySendResult>> futures = receivers.stream()
 			.map(receiver -> CompletableFuture.supplyAsync(
 				() -> strategy.send(receiver, title, content),
@@ -144,7 +144,7 @@ public class NotifyServiceImpl implements NotifyService {
 			))
 			.collect(Collectors.toList());
 
-		// 等待所有任务完成，汇总结�?
+		// 等待所有任务完成，汇总结果
 		CompletableFuture<Void> allFutures = CompletableFuture.allOf(
 
 			futures.toArray(new CompletableFuture<?>[0])
@@ -168,7 +168,7 @@ public class NotifyServiceImpl implements NotifyService {
 					return NotifySendResult.success("parallel-batch:" + successCount, channel.getName());
 				}
 				return NotifySendResult.failure(
-					"并行批量发送部分失�? 成功" + successCount + "/" + receivers.size(),
+					"并行批量发送部分失败: 成功" + successCount + "/" + receivers.size(),
 					channel.getName()
 				);
 			});
@@ -178,20 +178,20 @@ public class NotifyServiceImpl implements NotifyService {
 	 * 尝试获取渠道限流许可
 	 *
 	 * @param channel 通知渠道
-	 * @return true 表示允许发送，false 表示被限�?
+	 * @return true 表示允许发送，false 表示被限流
 	 */
 	private boolean tryAcquireRateLimit(NotifyChannel channel) {
 		if (rateLimiterManager == null) {
-			return true; // 未配置限流管理器，直接放�?
+			return true; // 未配置限流管理器，直接放行
 		}
 		return rateLimiterManager.tryAcquire(channel);
 	}
 
 	/**
-	 * 校验邮箱格式是否合法�?
+	 * 校验邮箱格式是否合法。
 	 *
 	 * @param email 邮箱地址
-	 * @return 格式合法返回 true，否则返�?false
+	 * @return 格式合法返回 true，否则返回 false
 	 */
 	public static boolean isValidEmail(String email) {
 		if (email == null || email.isBlank()) {

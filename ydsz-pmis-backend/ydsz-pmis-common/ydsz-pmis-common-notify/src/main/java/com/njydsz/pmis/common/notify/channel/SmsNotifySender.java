@@ -27,8 +27,8 @@ import java.util.concurrent.ExecutorService;
 /**
  * 短信通知发送器
  *
- * <p>实现 {@link NotifyChannelStrategy} 接口，通过 HTTP API 调用第三方短信服务发送短信�?
- * 支持单条发送、模板发送和批量发送�?
+ * <p>实现 {@link NotifyChannelStrategy} 接口，通过 HTTP API 调用第三方短信服务发送短信。
+ * 支持单条发送、模板发送和批量发送。
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
@@ -79,10 +79,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 	@Override
 	public NotifySendResult send(String receiver, String title, String content) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("短信通知未启�?, channelName());
+			return NotifySendResult.failure("短信通知未启用", channelName());
 		}
 		if (receiver == null || receiver.isEmpty()) {
-			return NotifySendResult.failure("手机号为�?, channelName());
+			return NotifySendResult.failure("手机号为空", channelName());
 		}
 		try {
 			Map<String, Object> body = new HashMap<>();
@@ -101,10 +101,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 					String.class
 			);
 
-			log.debug("短信通知发送成�? phone={}", receiver);
+			log.debug("短信通知发送成功: phone={}", receiver);
 			return parseSmsResponse(response);
 		} catch (Exception e) {
-			log.error("短信通知发送失�? phone={}, error={}", receiver, e.getMessage(), e);
+			log.error("短信通知发送失败: phone={}, error={}", receiver, e.getMessage(), e);
 			return NotifySendResult.failure(e.getMessage(), channelName());
 		}
 	}
@@ -112,10 +112,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 	@Override
 	public NotifySendResult sendTemplate(String receiver, String templateCode, Object templateParams) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("短信通知未启�?, channelName());
+			return NotifySendResult.failure("短信通知未启用", channelName());
 		}
 		if (receiver == null || receiver.isEmpty()) {
-			return NotifySendResult.failure("手机号为�?, channelName());
+			return NotifySendResult.failure("手机号为空", channelName());
 		}
 		try {
 			@SuppressWarnings("unchecked")
@@ -139,10 +139,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 					String.class
 			);
 
-			log.debug("短信模板通知发送成�? phone={}, template={}", receiver, templateCode);
+			log.debug("短信模板通知发送成功: phone={}, template={}", receiver, templateCode);
 			return parseSmsResponse(response);
 		} catch (Exception e) {
-			log.error("短信模板通知发送失�? phone={}, template={}, error={}",
+			log.error("短信模板通知发送失败: phone={}, template={}, error={}",
 					receiver, templateCode, e.getMessage(), e);
 			return NotifySendResult.failure(e.getMessage(), channelName());
 		}
@@ -151,10 +151,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 	@Override
 	public NotifySendResult batchSend(List<String> receivers, String title, String content) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("短信通知未启�?, channelName());
+			return NotifySendResult.failure("短信通知未启用", channelName());
 		}
 		if (receivers == null || receivers.isEmpty()) {
-			return NotifySendResult.failure("手机号列表为�?, channelName());
+			return NotifySendResult.failure("手机号列表为空", channelName());
 		}
 		int successCount = 0;
 		int failureCount = 0;
@@ -170,7 +170,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			return NotifySendResult.success("batch:" + successCount, channelName());
 		}
 		return NotifySendResult.failure(
-				"部分发送失�? 成功" + successCount + "/" + receivers.size(), channelName());
+				"部分发送失败: 成功" + successCount + "/" + receivers.size(), channelName());
 	}
 
 	@Override
@@ -184,9 +184,9 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 	}
 
 	/**
-	 * 构建请求�?
+	 * 构建请求头
 	 *
-	 * @return Content-Type �?application/json �?HTTP 请求�?
+	 * @return Content-Type 为 application/json 的 HTTP 请求头
 	 */
 	private HttpHeaders jsonHeaders() {
 		HttpHeaders headers = new HttpHeaders();
@@ -197,10 +197,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 构建授权签名
-	 * <p>accessKey 仅通过 Authorization Header �?HMAC 签名传递，不放入请求体
+	 * <p>accessKey 仅通过 Authorization Header 的 HMAC 签名传递，不放入请求体
 	 *
-	 * @param payload 请求�?JSON
-	 * @return 授权签名值（格式: AccessKey:Base64(HMAC-SHA256(SecretKey, payload))�?
+	 * @param payload 请求体 JSON
+	 * @return 授权签名值（格式: AccessKey:Base64(HMAC-SHA256(SecretKey, payload))）
 	 */
 	private String buildAuthorization(String payload) {
 		String accessKey = smsProperties.getAccessKey();
@@ -208,7 +208,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 		if (secretKey == null || secretKey.isEmpty()) {
 			return "";
 		}
-		// 简�?HMAC-SHA256 签名（可根据实际短信服务�?API 调整�?
+		// 简单 HMAC-SHA256 签名（可根据实际短信服务商 API 调整）
 		try {
 			javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
 			mac.init(new javax.crypto.spec.SecretKeySpec(
@@ -224,10 +224,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 	}
 
 	/**
-	 * 解析短信服务商响�?
+	 * 解析短信服务商响应
 	 *
-	 * @param response 响应 JSON 字符�?
-	 * @return 发送结�?
+	 * @param response 响应 JSON 字符串
+	 * @return 发送结果
 	 */
 	private NotifySendResult parseSmsResponse(String response) {
 		if (response == null || response.isEmpty()) {
@@ -241,41 +241,41 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 				return NotifySendResult.success(messageId != null ? messageId : "sent", channelName());
 			}
 			String errorMsg = json.has("message") ? json.get("message").asText() : null;
-			return NotifySendResult.failure(errorMsg != null ? errorMsg : "发送失�?, channelName());
+			return NotifySendResult.failure(errorMsg != null ? errorMsg : "发送失败", channelName());
 		} catch (Exception e) {
 			log.warn("解析短信响应失败: {}", e.getMessage());
 			return NotifySendResult.success("sent", channelName());
 		}
 	}
 
-	// ==================== 异步短信发�?====================
+	// ==================== 异步短信发送 ====================
 
 	/**
-	 * 异步发送短�?
+	 * 异步发送短信
 	 *
 	 * @param receiver 接收者手机号
 	 * @param title    标题
 	 * @param content  内容
-	 * @return 异步发送结�?
+	 * @return 异步发送结果
 	 */
 	public CompletableFuture<NotifySendResult> sendSmsAsync(String receiver, String title, String content) {
 		return CompletableFuture.supplyAsync(() -> send(receiver, title, content), virtualThreadExecutor);
 	}
 
 	/**
-	 * 批量异步发送短�?
+	 * 批量异步发送短信
 	 *
 	 * @param receivers 接收者手机号列表
 	 * @param title     标题
 	 * @param content   内容
-	 * @return 异步发送结�?
+	 * @return 异步发送结果
 	 */
 	public CompletableFuture<NotifySendResult> batchSendSmsAsync(List<String> receivers, String title, String content) {
 		return CompletableFuture.supplyAsync(() -> batchSend(receivers, title, content), virtualThreadExecutor);
 	}
 
 	/**
-	 * 短信通知配置属�?
+	 * 短信通知配置属性
 	 *
 	 * <p>配置前缀: {@code remi.notify.sms}
 	 */
@@ -315,7 +315,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 		private String templateCode = "";
 
 		/**
-		 * 发送超时时间（毫秒�?
+		 * 发送超时时间（毫秒）
 		 */
 		private int timeoutMs = 10000;
 

@@ -9,8 +9,8 @@ import jakarta.validation.constraints.Min;
 /**
  * 邮件配置属性类
  *
- * <p>封装邮件发送所需的全部配置信息，支持通过 application.yml 配置�?
- * 配置项以 {@code remi.notify.email} 为前缀�?/p>
+ * <p>封装邮件发送所需的全部配置信息，支持通过 application.yml 配置。
+ * 配置项以 {@code remi.notify.email} 为前缀。</p>
  *
  * <h3>配置示例</h3>
  * <pre>{@code
@@ -45,7 +45,7 @@ import jakarta.validation.constraints.Min;
 @ConfigurationProperties(prefix = "remi.notify.email")
 public class EmailProperties {
 
-    /** 是否启用邮件模块（默�?true），关闭�?EmailConfiguration 不会自动注册 JavaMailSender �?EmailService */
+    /** 是否启用邮件模块（默认 true），关闭后 EmailConfiguration 不会自动注册 JavaMailSender 和 EmailService */
     private boolean enabled = true;
     private String protocol = "smtp";
     private String smtpHost;
@@ -220,7 +220,7 @@ public class EmailProperties {
         private Integer sslPort;
         /** SSL 协议版本 */
         private String protocols = "TLSv1.2";
-        /** 是否校验服务器身�?*/
+        /** 是否校验服务器身份 */
         private boolean checkServerIdentity = true;
         /** 信任存储路径 */
         private String trustStorePath;

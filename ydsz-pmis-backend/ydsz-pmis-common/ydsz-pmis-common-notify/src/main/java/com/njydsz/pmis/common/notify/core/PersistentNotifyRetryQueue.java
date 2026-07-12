@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 持久化重试队列（优先 Redis，自动降级内存）
  *
- * <p>内部优先使用 Redis；当 Redis 不可用时自动降级到内置内存队列，保障服务可用性�?
+ * <p>内部优先使用 Redis；当 Redis 不可用时自动降级到内置内存队列，保障服务可用性。
  *
  * @author ydsz-pmis-team
  * 
@@ -31,11 +31,11 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
     private volatile boolean redisAvailable;
 
     /**
-     * 创建持久化重试队�?
+     * 创建持久化重试队列
      *
      * @param redisTemplate     Redis 模板（为 null 时直接使用内存队列）
-     * @param maxRetries        最大重试次�?
-     * @param capacity          内存队列容量（降级时使用�?
+     * @param maxRetries        最大重试次数
+     * @param capacity          内存队列容量（降级时使用）
      * @param batchSize         批量处理大小
      */
     public PersistentNotifyRetryQueue(StringRedisTemplate redisTemplate,
@@ -44,11 +44,11 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
     }
 
     /**
-     * 创建持久化重试队�?
+     * 创建持久化重试队列
      *
      * @param redisTemplate     Redis 模板（为 null 时直接使用内存队列）
-     * @param maxRetries        最大重试次�?
-     * @param capacity          内存队列容量（降级时使用�?
+     * @param maxRetries        最大重试次数
+     * @param capacity          内存队列容量（降级时使用）
      * @param batchSize         批量处理大小
      * @param redisKeyPrefix    Redis Key 前缀
      */
@@ -78,29 +78,29 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
         try {
             var connectionFactory = redisTemplate.getConnectionFactory();
             if (connectionFactory == null) {
-                log.warn("[PersistentNotifyRetryQueue] Redis ConnectionFactory �?null，使用内存队列（降级�?);
+                log.warn("[PersistentNotifyRetryQueue] Redis ConnectionFactory 为 null，使用内存队列（降级）");
                 return false;
             }
             connectionFactory.getConnection().ping();
             log.info("[PersistentNotifyRetryQueue] Redis 连接正常，使用持久化队列");
             return true;
         } catch (Exception e) {
-            log.warn("[PersistentNotifyRetryQueue] Redis 连接测试失败，使用内存队列（降级�? error={}", e.getMessage());
+            log.warn("[PersistentNotifyRetryQueue] Redis 连接测试失败，使用内存队列（降级）, error={}", e.getMessage());
             return false;
         }
     }
 
     /**
-     * 获取当前实际使用的队列实�?
+     * 获取当前实际使用的队列实例
      */
     private NotifyRetryQueue delegate() {
         if (redisAvailable) {
             try {
-                // 每次操作前轻量探�?Redis 可用�?
+                // 每次操作前轻量探测 Redis 可用性
                 primary.getQueueSize();
                 return primary;
             } catch (Exception e) {
-                log.warn("[PersistentNotifyRetryQueue] Redis 运行时异常，降级到内存队�? error={}", e.getMessage());
+                log.warn("[PersistentNotifyRetryQueue] Redis 运行时异常，降级到内存队列, error={}", e.getMessage());
                 redisAvailable = false;
             }
         }
@@ -159,14 +159,14 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
     }
 
     /**
-     * 当前是否使用 Redis 持久化队�?
+     * 当前是否使用 Redis 持久化队列
      */
     public boolean isRedisAvailable() {
         return redisAvailable;
     }
 
     /**
-     * 内置内存降级队列实现（不对外暴露，仅用于 PersistentNotifyRetryQueue 内部降级�?
+     * 内置内存降级队列实现（不对外暴露，仅用于 PersistentNotifyRetryQueue 内部降级）
      */
     private static class InMemoryFallbackRetryQueue implements NotifyRetryQueue {
 
@@ -196,7 +196,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
             entry.nextRetryTime = System.currentTimeMillis();
             if (!queue.offer(entry)) {
                 droppedCount.incrementAndGet();
-                log.warn("[NotifyRetryQueue] 队列已满，丢弃消�? channel={}, receiver={}",
+                log.warn("[NotifyRetryQueue] 队列已满，丢弃消息, channel={}, receiver={}",
                         channel.getName(), receiver);
                 return;
             }
@@ -215,7 +215,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
             if (entry.nextRetryTime > System.currentTimeMillis()) {
                 if (!queue.offer(entry)) {
                     droppedCount.incrementAndGet();
-                    log.warn("[NotifyRetryQueue] 队列已满，丢弃延迟重试消�? channel={}, receiver={}",
+                    log.warn("[NotifyRetryQueue] 队列已满，丢弃延迟重试消息, channel={}, receiver={}",
                             entry.channel.getName(), entry.receiver);
                 }
                 return;
@@ -250,7 +250,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
                 if (entry.nextRetryTime > now) {
                     if (!queue.offer(entry)) {
                         droppedCount.incrementAndGet();
-                        log.warn("[NotifyRetryQueue] 队列已满，丢弃延迟重试消�? channel={}, receiver={}",
+                        log.warn("[NotifyRetryQueue] 队列已满，丢弃延迟重试消息, channel={}, receiver={}",
                                 entry.channel.getName(), entry.receiver);
                     }
                     continue;
@@ -273,7 +273,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
             }
 
             if (processed > 0) {
-                log.debug("[NotifyRetryQueue] 批量重试完成, 处理消息�?{}", processed);
+                log.debug("[NotifyRetryQueue] 批量重试完成, 处理消息数={}", processed);
             }
             return processed;
         }
@@ -299,11 +299,11 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
 
             if (!queue.offer(entry)) {
                 droppedCount.incrementAndGet();
-                log.warn("[NotifyRetryQueue] 队列已满，丢弃重试消�? channel={}, receiver={}",
+                log.warn("[NotifyRetryQueue] 队列已满，丢弃重试消息, channel={}, receiver={}",
                         entry.channel.getName(), entry.receiver);
                 return;
             }
-            log.warn("[NotifyRetryQueue] 重试失败，重新入�?({}/{}), channel={}, receiver={}, nextRetryIn={}ms",
+            log.warn("[NotifyRetryQueue] 重试失败，重新入队 ({}/{}), channel={}, receiver={}, nextRetryIn={}ms",
                     entry.retryCount, maxRetries, entry.channel.getName(), entry.receiver, backoffMs);
         }
 

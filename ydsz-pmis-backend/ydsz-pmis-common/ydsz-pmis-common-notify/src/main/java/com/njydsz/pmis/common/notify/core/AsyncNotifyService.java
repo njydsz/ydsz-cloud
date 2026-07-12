@@ -11,11 +11,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 /**
- * 异步通知发送服�?
+ * 异步通知发送服务
  *
- * <p>使用共享的虚拟线程池异步发送通知消息，避免大附件等场景阻�?HTTP 线程�?
+ * <p>使用共享的虚拟线程池异步发送通知消息，避免大附件等场景阻塞 HTTP 线程。
  *
- * <p>发送失败自动重�?3 次，指数退�?
+ * <p>发送失败自动重试 3 次，指数退避
  *
  * @author ydsz-pmis-team
  * 
@@ -52,9 +52,9 @@ public class AsyncNotifyService {
                                                           String title, String content) {
         return CompletableFuture.supplyAsync(() -> sendWithRetry(channel, receiver, title, content), executor)
                 .exceptionally(ex -> {
-                    log.error("[AsyncNotify] 异步发送异�? channel={}, receiver={}: {}",
+                    log.error("[AsyncNotify] 异步发送异常, channel={}, receiver={}: {}",
                             channel.getName(), receiver, ex.getMessage(), ex);
-                    return NotifySendResult.failure("异步发送异�? " + ex.getMessage(), channel.getName());
+                    return NotifySendResult.failure("异步发送异常: " + ex.getMessage(), channel.getName());
                 });
     }
 
@@ -73,10 +73,10 @@ public class AsyncNotifyService {
             }
             return successCount == receivers.size()
                     ? NotifySendResult.success(null, channel.getName())
-                    : NotifySendResult.failure(successCount + "/" + receivers.size() + " 发送成�?, channel.getName());
+                    : NotifySendResult.failure(successCount + "/" + receivers.size() + " 发送成功", channel.getName());
         }, executor).exceptionally(ex -> {
-            log.error("[AsyncNotify] 异步批量发送异�? {}", ex.getMessage(), ex);
-            return NotifySendResult.failure("异步批量发送异�? " + ex.getMessage(), channel.getName());
+            log.error("[AsyncNotify] 异步批量发送异常: {}", ex.getMessage(), ex);
+            return NotifySendResult.failure("异步批量发送异常: " + ex.getMessage(), channel.getName());
         });
     }
 
@@ -101,25 +101,25 @@ public class AsyncNotifyService {
                         retryQueue.offer(channel, receiver, title, content, errorMsg);
                     }
                     return NotifySendResult.failure(
-                            "发送失败，已重�?" + MAX_RETRIES + " �? " + errorMsg, channel.getName());
+                            "发送失败，已重试 " + MAX_RETRIES + " 次: " + errorMsg, channel.getName());
                 }
 
                 long backoffMs = BASE_BACKOFF_MS * (1L << (nextAttempt - 1));
-                log.warn("[AsyncNotify] 发送失败，将在 {}ms 后进行第 {} 次重�?({}/{}), channel={}, receiver={}",
+                log.warn("[AsyncNotify] 发送失败，将在 {}ms 后进行第 {} 次重试 ({}/{}), channel={}, receiver={}",
                         backoffMs, nextAttempt, nextAttempt, MAX_RETRIES, channel.getName(), receiver);
 
                 try {
                     Thread.sleep(backoffMs);
                 } catch (InterruptedException ie) {
-                    // 中断时设置中断标志，并将消息放入 retryQueue 等待后续处理，避免消息丢�?
+                    // 中断时设置中断标志，并将消息放入 retryQueue 等待后续处理，避免消息丢失
                     Thread.currentThread().interrupt();
                     String errorMsg = extractMessage(e);
                     if (retryQueue != null) {
-                        retryQueue.offer(channel, receiver, title, content, "重试被中�? " + errorMsg);
-                        log.warn("[AsyncNotify] 重试被中断，消息已放入重试队�? channel={}, receiver={}",
+                        retryQueue.offer(channel, receiver, title, content, "重试被中断: " + errorMsg);
+                        log.warn("[AsyncNotify] 重试被中断，消息已放入重试队列: channel={}, receiver={}",
                                 channel.getName(), receiver);
                     }
-                    return NotifySendResult.failure("重试被中�? " + errorMsg, channel.getName());
+                    return NotifySendResult.failure("重试被中断: " + errorMsg, channel.getName());
                 }
                 attempts = nextAttempt;
             }
@@ -138,7 +138,7 @@ public class AsyncNotifyService {
     }
 
     /**
-     * 关闭线程�?
+     * 关闭线程池
      */
     public void shutdown() {
         if (executor != null) {

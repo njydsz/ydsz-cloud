@@ -16,13 +16,13 @@ import java.util.List;
 /**
  * 通知模板引擎自动配置
  *
- * <p>�?remi.notify.template.enabled=true（默认）时生效，自动创建模板引擎和模板管理器 Bean�?
+ * <p>当 remi.notify.template.enabled=true（默认）时生效，自动创建模板引擎和模板管理器 Bean。
  *
- * <p>支持的配置项�?
+ * <p>支持的配置项：
  * <ul>
- *   <li>remi.notify.template.enabled - 是否启用模板引擎（默�?true�?/li>
- *   <li>remi.notify.template.base-path - 模板文件基础路径（默�?classpath:notify-templates/�?/li>
- *   <li>remi.notify.template.cache-enabled - 是否启用模板缓存（默�?true�?/li>
+ *   <li>remi.notify.template.enabled - 是否启用模板引擎（默认 true）</li>
+ *   <li>remi.notify.template.base-path - 模板文件基础路径（默认 classpath:notify-templates/）</li>
+ *   <li>remi.notify.template.cache-enabled - 是否启用模板缓存（默认 true）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -44,7 +44,7 @@ public class NotifyTemplateAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(TemplateEngine.class)
     public TemplateEngine templateEngine(NotifyTemplateProperties properties) {
-        log.info("[NotifyTemplateAutoConfiguration] 初始�?SpEL 模板引擎");
+        log.info("[NotifyTemplateAutoConfiguration] 初始化 SpEL 模板引擎");
         return new SpelTemplateEngine();
     }
 

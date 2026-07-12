@@ -19,9 +19,9 @@ import java.util.concurrent.ExecutorService;
 /**
  * 邮件通知发送器
  *
- * <p>实现 {@link NotifyChannelStrategy} 接口，负责通过邮件渠道发送通知消息�?
- * 基于 pmis-common-notify 模块�?{@link EmailService} 实现邮件发送，
- * 支持普通文本、模板消息和批量发送。仅�?EmailService Bean 存在时自动注册�?/p>
+ * <p>实现 {@link NotifyChannelStrategy} 接口，负责通过邮件渠道发送通知消息。
+ * 基于 pmis-common-notify 模块的 {@link EmailService} 实现邮件发送，
+ * 支持普通文本、模板消息和批量发送。仅在 EmailService Bean 存在时自动注册。</p>
  *
  * @author ydsz-pmis-team
  * 
@@ -51,7 +51,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     @Override
     public NotifySendResult send(String receiver, String title, String content) {
         if (!isEnabled()) {
-            return NotifySendResult.failure("邮件通知未启�?, channelName());
+            return NotifySendResult.failure("邮件通知未启用", channelName());
         }
         try {
             Email email = Email.builder()
@@ -65,7 +65,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
             }
             return NotifySendResult.failure(result.getErrorMessage(), channelName());
         } catch (Exception e) {
-            log.error("邮件通知发送失�? receiver={}, error={}", receiver, e.getMessage(), e);
+            log.error("邮件通知发送失败: receiver={}, error={}", receiver, e.getMessage(), e);
             return NotifySendResult.failure(e.getMessage(), channelName());
         }
     }
@@ -74,7 +74,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     @SuppressWarnings("unchecked")
     public NotifySendResult sendTemplate(String receiver, String templateCode, Object templateParams) {
         if (!isEnabled()) {
-            return NotifySendResult.failure("邮件通知未启�?, channelName());
+            return NotifySendResult.failure("邮件通知未启用", channelName());
         }
         try {
             Email email = Email.builder()
@@ -89,7 +89,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
             }
             return NotifySendResult.failure(result.getErrorMessage(), channelName());
         } catch (Exception e) {
-            log.error("邮件模板通知发送失�? receiver={}, template={}, error={}", receiver, templateCode, e.getMessage(), e);
+            log.error("邮件模板通知发送失败: receiver={}, template={}, error={}", receiver, templateCode, e.getMessage(), e);
             return NotifySendResult.failure(e.getMessage(), channelName());
         }
     }
@@ -97,18 +97,18 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     /**
      * 批量发送邮件通知
      *
-     * @param receivers 接收者邮箱列�?
+     * @param receivers 接收者邮箱列表
      * @param title     邮件主题
      * @param content   邮件内容
-     * @return 发送结�?
+     * @return 发送结果
      */
     @Override
     public NotifySendResult batchSend(List<String> receivers, String title, String content) {
         if (!isEnabled()) {
-            return NotifySendResult.failure("邮件通知未启�?, channelName());
+            return NotifySendResult.failure("邮件通知未启用", channelName());
         }
         if (receivers == null || receivers.isEmpty()) {
-            return NotifySendResult.failure("收件人列表为�?, channelName());
+            return NotifySendResult.failure("收件人列表为空", channelName());
         }
         try {
             List<Email> emails = new ArrayList<>(receivers.size());
@@ -125,9 +125,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
                 return NotifySendResult.success("batch:" + successCount, channelName());
             }
             return NotifySendResult.failure(
-                    "部分发送失�? 成功" + successCount + "/" + receivers.size(), channelName());
+                    "部分发送失败: 成功" + successCount + "/" + receivers.size(), channelName());
         } catch (Exception e) {
-            log.error("邮件批量通知发送失�? count={}, error={}", receivers.size(), e.getMessage(), e);
+            log.error("邮件批量通知发送失败: count={}, error={}", receivers.size(), e.getMessage(), e);
             return NotifySendResult.failure(e.getMessage(), channelName());
         }
     }
@@ -135,7 +135,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     /**
      * 判断邮件渠道是否启用
      *
-     * @return 启用返回 true，否则返�?false
+     * @return 启用返回 true，否则返回 false
      */
     @Override
     public boolean isEnabled() {
@@ -146,27 +146,27 @@ public class EmailNotifySender implements NotifyChannelStrategy {
         return "邮件";
     }
 
-    // ==================== 异步邮件发�?====================
+    // ==================== 异步邮件发送 ====================
 
     /**
-     * 异步发送邮件，返回 CompletableFuture�?
+     * 异步发送邮件，返回 CompletableFuture。
      *
-     * @param receiver 接收�?
+     * @param receiver 接收者
      * @param title    标题
      * @param content  内容
-     * @return 异步发送结�?
+     * @return 异步发送结果
      */
     public CompletableFuture<NotifySendResult> sendEmailAsync(String receiver, String title, String content) {
         return CompletableFuture.supplyAsync(() -> send(receiver, title, content), virtualThreadExecutor);
     }
 
     /**
-     * 批量异步发送邮件，使用 VirtualThread 并行处理�?
+     * 批量异步发送邮件，使用 VirtualThread 并行处理。
      *
-     * @param receivers 接收者列�?
+     * @param receivers 接收者列表
      * @param title     标题
      * @param content   内容
-     * @return 异步发送结�?
+     * @return 异步发送结果
      */
     public CompletableFuture<NotifySendResult> batchSendEmailAsync(List<String> receivers, String title, String content) {
         return CompletableFuture.supplyAsync(() -> batchSend(receivers, title, content), virtualThreadExecutor);

@@ -24,9 +24,9 @@ import java.util.Map;
 /**
  * 钉钉通知发送器
  *
- * <p>通过钉钉群机器人 Webhook 发送消息�?
- * <p>支持安全设置：当配置�?secret 时，自动使用 HMAC-SHA256 签名校验�?
- * �?{@code timestamp} �?{@code sign} 参数拼接�?webhook URL 中�?
+ * <p>通过钉钉群机器人 Webhook 发送消息。
+ * <p>支持安全设置：当配置了 secret 时，自动使用 HMAC-SHA256 签名校验，
+ * 将 {@code timestamp} 和 {@code sign} 参数拼接到 webhook URL 中。
  *
  * @author ydsz-pmis-team
  * 
@@ -62,7 +62,7 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 	@Override
 	public NotifySendResult send(String receiver, String title, String content) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("钉钉通知未启�?, channelName());
+			return NotifySendResult.failure("钉钉通知未启用", channelName());
 		}
 		try {
 			Map<String, Object> body = Map.of(
@@ -75,18 +75,18 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 			String json = JsonUtils.toJson(body);
 			String signedUrl = signWebhookUrl(webhook);
 			String response = restTemplate.postForObject(signedUrl, new HttpEntity<>(json, jsonHeaders()), String.class);
-			log.debug("钉钉通知发送成�? {}", title);
+			log.debug("钉钉通知发送成功: {}", title);
 			return NotifySendResult.success(response, channelName());
 		} catch (Exception e) {
-			log.error("钉钉通知发送失�? {}", e.getMessage(), e);
+			log.error("钉钉通知发送失败: {}", e.getMessage(), e);
 			return NotifySendResult.failure(e.getMessage(), channelName());
 		}
 	}
 
 	/**
-	 * �?webhook URL 进行签名（当配置�?secret 时）
-	 * <p>钉钉 API 要求：将 timestamp �?sign 拼接�?URL 查询参数中�?
-	 * <p>签名算法：HMAC-SHA256，待签名字符串为 {@code timestamp + "\n" + secret}�?
+	 * 对 webhook URL 进行签名（当配置了 secret 时）
+	 * <p>钉钉 API 要求：将 timestamp 和 sign 拼接到 URL 查询参数中。
+	 * <p>签名算法：HMAC-SHA256，待签名字符串为 {@code timestamp + "\n" + secret}。
 	 *
 	 * @param url 原始 webhook URL
 	 * @return 带签名参数的 URL
@@ -119,10 +119,10 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 	/**
 	 * 批量发送钉钉通知
 	 *
-	 * @param receivers 接收者列�?
+	 * @param receivers 接收者列表
 	 * @param title     消息标题
 	 * @param content   消息内容
-	 * @return 发送结�?
+	 * @return 发送结果
 	 */
 	@Override
 	public NotifySendResult batchSend(List<String> receivers, String title, String content) {
@@ -132,7 +132,7 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 	/**
 	 * 判断钉钉渠道是否启用
 	 *
-	 * @return 启用返回 true，否则返�?false
+	 * @return 启用返回 true，否则返回 false
 	 */
 	@Override
 	public boolean isEnabled() {
@@ -144,9 +144,9 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 	}
 
     /**
-     * 构建 JSON 请求�?
+     * 构建 JSON 请求头
      *
-     * @return Content-Type �?application/json �?HTTP 请求�?
+     * @return Content-Type 为 application/json 的 HTTP 请求头
      */
     private HttpHeaders jsonHeaders() {
 		HttpHeaders headers = new HttpHeaders();

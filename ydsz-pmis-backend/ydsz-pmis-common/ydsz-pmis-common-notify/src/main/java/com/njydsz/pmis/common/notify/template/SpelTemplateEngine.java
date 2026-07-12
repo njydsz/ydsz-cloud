@@ -13,12 +13,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 基于 Spring Expression Language (SpEL) 的模板引�?
+ * 基于 Spring Expression Language (SpEL) 的模板引擎
  *
  * <p>使用 SpEL 语法（如 #{name}, #{order.amount}）渲染模板，
- * 支持属性访问、方法调用、三元运算等高级特性�?
+ * 支持属性访问、方法调用、三元运算等高级特性。
  *
- * <p><b>示例�?/b>
+ * <p><b>示例：</b>
  * <pre>{@code
  * render("Hello #{name}, your balance is #{balance > 100 ? 'VIP' : 'Normal'}",
  *        Map.of("name", "Alice", "balance", 200))
@@ -44,26 +44,26 @@ public class SpelTemplateEngine implements TemplateEngine {
     private final Map<String, NotifyTemplate> templates = new ConcurrentHashMap<>();
 
     /**
-     * 渲染模板，根�?templateId 查找模板并使用变量渲�?
+     * 渲染模板，根据 templateId 查找模板并使用变量渲染
      *
      * @param templateId 模板 ID
      * @param variables  模板变量
      * @return 渲染后的内容
-     * @throws IllegalArgumentException 如果模板不存�?
+     * @throws IllegalArgumentException 如果模板不存在
      */
     @Override
     public String render(String templateId, Map<String, Object> variables) {
         NotifyTemplate template = templates.get(templateId);
         if (template == null) {
-            throw new IllegalArgumentException("模板不存�? " + templateId);
+            throw new IllegalArgumentException("模板不存在: " + templateId);
         }
         return renderTemplate(template.getContent(), variables);
     }
 
     /**
-     * 直接渲染模板字符串（便捷方法�?
+     * 直接渲染模板字符串（便捷方法）
      *
-     * @param template  模板字符�?
+     * @param template  模板字符串
      * @param variables 模板变量
      * @return 渲染后的内容
      */
@@ -89,7 +89,7 @@ public class SpelTemplateEngine implements TemplateEngine {
                     String replacement = value != null ? String.valueOf(value) : "";
                     matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
                 } catch (Exception e) {
-                    log.debug("[SpelTemplateEngine] 表达式解析失�? {}, error={}", expressionStr, e.getMessage());
+                    log.debug("[SpelTemplateEngine] 表达式解析失败: {}, error={}", expressionStr, e.getMessage());
                     matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group()));
                 }
             }
@@ -104,7 +104,7 @@ public class SpelTemplateEngine implements TemplateEngine {
     @Override
     public void register(NotifyTemplate template) {
         if (template == null || template.getTemplateId() == null) {
-            throw new IllegalArgumentException("模板�?templateId 不能为空");
+            throw new IllegalArgumentException("模板及 templateId 不能为空");
         }
         templates.put(template.getTemplateId(), template);
     }
@@ -122,7 +122,7 @@ public class SpelTemplateEngine implements TemplateEngine {
     @Override
     public void unregister(String templateId) {
         templates.remove(templateId);
-        log.info("[SpelTemplateEngine] 模板已移�? {}", templateId);
+        log.info("[SpelTemplateEngine] 模板已移除: {}", templateId);
     }
 
     @Override

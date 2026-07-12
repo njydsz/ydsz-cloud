@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.exception.code.ExceptionCode;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 
 /**
- * 通知发送异�?
+ * 通知发送异常
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

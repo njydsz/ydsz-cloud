@@ -9,12 +9,12 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * 基于滑动窗口的限流器
  *
- * <p>使用滑动窗口算法实现限流控制，适用于通知发送等场景的频率限制�?
- * 相比固定窗口，滑动窗口能更平滑地控制请求速率，避免窗口边界处的突发流量�?
+ * <p>使用滑动窗口算法实现限流控制，适用于通知发送等场景的频率限制。
+ * 相比固定窗口，滑动窗口能更平滑地控制请求速率，避免窗口边界处的突发流量。
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
- * // 创建一个每分钟最�?100 次请求的限流�?
+ * // 创建一个每分钟最多 100 次请求的限流器
  * SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(100, 60_000);
  *
  * if (limiter.tryAcquire()) {
@@ -43,17 +43,17 @@ public class SlidingWindowRateLimiter {
     private final int maxRequests;
 
     /**
-     * 子窗口数量（将窗口划分为多个子窗口，提高精度�?
+     * 子窗口数量（将窗口划分为多个子窗口，提高精度）
      */
     private final int subWindowCount;
 
     /**
-     * 子窗口大小（毫秒�?
+     * 子窗口大小（毫秒）
      */
     private final long subWindowSizeMillis;
 
     /**
-     * 子窗口计数数�?
+     * 子窗口计数数组
      */
     private final AtomicInteger[] subWindowCounts;
 
@@ -77,7 +77,7 @@ public class SlidingWindowRateLimiter {
      *
      * @param maxRequests     窗口内最大请求数
      * @param windowSizeMillis 窗口大小（毫秒）
-     * @param subWindowCount  子窗口数量（建议 10-20�?
+     * @param subWindowCount  子窗口数量（建议 10-20）
      */
     public SlidingWindowRateLimiter(int maxRequests, long windowSizeMillis, int subWindowCount) {
         if (maxRequests <= 0) {
@@ -105,24 +105,24 @@ public class SlidingWindowRateLimiter {
     }
 
     /**
-     * 同步锁，保证 tryAcquire �?check-then-act 原子�?
+     * 同步锁，保证 tryAcquire 的 check-then-act 原子性
      */
     private final Object acquireLock = new Object();
 
     /**
-     * 尝试获取一个许�?
+     * 尝试获取一个许可
      *
      * <p>使用 synchronized 保证"检查总数 + 增加计数"的原子性，
-     * 避免高并发下多线程同时通过检查导致限流失效�?
+     * 避免高并发下多线程同时通过检查导致限流失效。
      *
-     * @return true 表示获取成功（未限流），false 表示被限�?
+     * @return true 表示获取成功（未限流），false 表示被限流
      */
     public boolean tryAcquire() {
         long now = Instant.now().toEpochMilli();
         int currentIndex = (int) ((now / subWindowSizeMillis) % subWindowCount);
 
         synchronized (acquireLock) {
-            // 清理过期子窗�?
+            // 清理过期子窗口
             cleanExpiredSubWindows(now, currentIndex);
 
             // 计算当前窗口内的总请求数
@@ -143,9 +143,9 @@ public class SlidingWindowRateLimiter {
     }
 
     /**
-     * 获取当前窗口内的请求�?
+     * 获取当前窗口内的请求数
      *
-     * @return 当前请求�?
+     * @return 当前请求数
      */
     public int getCurrentRequestCount() {
         long now = Instant.now().toEpochMilli();
@@ -153,7 +153,7 @@ public class SlidingWindowRateLimiter {
     }
 
     /**
-     * 获取限流器配置信�?
+     * 获取限流器配置信息
      *
      * @return 配置描述
      */
@@ -171,7 +171,7 @@ public class SlidingWindowRateLimiter {
         for (int i = 0; i < subWindowCount; i++) {
             long timestamp = subWindowTimestamps[i].get();
             if (timestamp < windowStart) {
-                // 子窗口已过期，重置计�?
+                // 子窗口已过期，重置计数
                 subWindowCounts[i].set(0);
                 subWindowTimestamps[i].set(0);
             }
