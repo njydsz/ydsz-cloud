@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.server.engine;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
@@ -32,7 +33,7 @@ public class FlowClusterLockHelper {
     private final RedissonClient redissonClient;
 
     public FlowClusterLockHelper(
-            org.springframework.beans.factory.ObjectProvider<RedissonClient> redissonClientProvider) {
+            ObjectProvider<RedissonClient> redissonClientProvider) {
         this.redissonClient = redissonClientProvider.getIfAvailable();
         if (this.redissonClient == null) {
             log.info("[FlowClusterLock] RedissonClient 不可用，定时任务将以单节点模式运行（不加锁）");

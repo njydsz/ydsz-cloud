@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.server.service;
 
 import com.njydsz.pmis.project.web.controller.common.ImportExportController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,7 +32,7 @@ public interface ImportService {
      * @param file    上传的 xlsx 文件
      * @return 导入结果（成功行数 / 失败行数 / 失败原因明细）
      */
-    ImportResult importFile(String bizType, org.springframework.web.multipart.MultipartFile file) throws IOException;
+    ImportResult importFile(String bizType, MultipartFile file) throws IOException;
 
     /**
      * 导入结果

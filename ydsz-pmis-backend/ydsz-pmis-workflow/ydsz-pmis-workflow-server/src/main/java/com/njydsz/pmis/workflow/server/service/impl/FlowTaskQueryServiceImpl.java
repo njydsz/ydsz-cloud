@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.common.security.SecurityContext;
@@ -231,8 +232,8 @@ public class FlowTaskQueryServiceImpl {
      */
     public long countPending(String tenantId) {
         String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowRunTaskDO> wrapper =
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        LambdaQueryWrapper<FlowRunTaskDO> wrapper =
+                new LambdaQueryWrapper<>();
         wrapper.eq(FlowRunTaskDO::getTenantId, tid)
                 .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED");
         return taskMapper.selectCount(wrapper);

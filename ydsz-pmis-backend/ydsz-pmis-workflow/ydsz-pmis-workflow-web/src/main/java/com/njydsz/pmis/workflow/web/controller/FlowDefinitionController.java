@@ -78,7 +78,7 @@ public class FlowDefinitionController {
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public Result<Map<String, Object>> batchDeployFromZip(
             @RequestParam("file")
-            org.springframework.web.multipart.MultipartFile file) {
+            MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return Result.fail("zip 文件不能为空");
         }

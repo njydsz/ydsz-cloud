@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.notification;
 
+import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -41,14 +43,14 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
         // 查询：用户自定义 + 系统预设（isSystem=1）
         List<FlowQuickCommentDO> list = quickCommentMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowQuickCommentDO>()
+                new LambdaQueryWrapper<FlowQuickCommentDO>()
                         .eq(FlowQuickCommentDO::getUserId, userId)
                         .eq(FlowQuickCommentDO::getTenantId, tid)
                         .eq(FlowQuickCommentDO::getDeleted, 0)
         );
         // 系统预设（全局）
         List<FlowQuickCommentDO> systemList = quickCommentMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowQuickCommentDO>()
+                new LambdaQueryWrapper<FlowQuickCommentDO>()
                         .eq(FlowQuickCommentDO::getIsSystem, 1)
                         .eq(FlowQuickCommentDO::getTenantId, tid)
                         .eq(FlowQuickCommentDO::getDeleted, 0)

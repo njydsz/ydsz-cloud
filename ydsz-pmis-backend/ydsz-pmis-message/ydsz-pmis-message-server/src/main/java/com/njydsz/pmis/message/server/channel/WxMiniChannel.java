@@ -7,6 +7,7 @@ import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -48,10 +49,10 @@ public class WxMiniChannel implements MessageChannel {
 
     private final MessageProperties messageProperties;
     private final RestTemplate restTemplate;
-    private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     public WxMiniChannel(MessageProperties messageProperties,
-                         org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
+                         StringRedisTemplate redisTemplate) {
         this.messageProperties = messageProperties;
         this.redisTemplate = redisTemplate;
         this.restTemplate = new RestTemplate();

@@ -85,6 +85,10 @@
         <!-- 质量与安全扫描（P0-3：CI 质量门禁） -->
         <!-- 默认 false 由 CI 显式启用；本地构建可 -DskipDependencyCheck=true 跳过以加速 -->
         <skipDependencyCheck>false</skipDependencyCheck>
+
+        <!-- Maven Enforcer（P2-8：构建规则约束） -->
+        <enforcer.version>3.5.0</enforcer.version>
+        <skipEnforcer>false</skipEnforcer>
     </properties>
 
     <dependencyManagement>
@@ -755,6 +759,85 @@
                     <skip>${skipDependencyCheck}</skip>
                 </configuration>
             </plugin>
+            <!-- Maven Enforcer（P2-8：构建规则约束） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${enforcer.version}</version>
+                <configuration>
+                    <skip>${skipEnforcer}</skip>
+                    <rules>
+                        <requireJavaVersion>
+                            <version>[21,)</version>
+                            <message>PMIS 要求 JDK 21+，当前环境不满足。</message>
+                        </requireJavaVersion>
+                        <requireMavenVersion>
+                            <version>[3.9,)</version>
+                            <message>PMIS 要求 Maven 3.9+，当前环境不满足。</message>
+                        </requireMavenVersion>
+                        <requireUpperBoundDeps>
+                            <excludes combine.children="append">
+                                <!-- 排除已知安全的多版本共存依赖 -->
+                                <exclude>com.google.guava:guava</exclude>
+                                <exclude>commons-io:commons-io</exclude>
+                            </excludes>
+                        </requireUpperBoundDeps>
+                        <dependencyConvergence>
+                            <excludes combine.children="append">
+                                <!-- 排除已知不可避免的版本收敛冲突 -->
+                                <exclude>com.google.guava:guava</exclude>
+                                <exclude>org.slf4j:slf4j-api</exclude>
+                                <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
+                            </excludes>
+                        </dependencyConvergence>
+                        <bannedDependencies>
+                            <excludes>
+                                <!-- 禁止 fastjson 1.x（历史安全漏洞），允许 fastjson2 -->
+                                <exclude>com.alibaba:fastjson</exclude>
+                                <!-- 禁止 commons-collections 3.x（反序列化漏洞），允许 commons-collections4 -->
+                                <exclude>commons-collections:commons-collections</exclude>
+                                <exclude>org.apache.commons:commons-collections</exclude>
+                                <!-- 禁止 Jackson 1.x -->
+                                <exclude>org.codehaus.jackson:*</exclude>
+                                <!-- 禁止 javax.*（Spring Boot 4 使用 jakarta.*） -->
+                                <exclude>javax.servlet:*</exclude>
+                                <exclude>javax.validation:*</exclude>
+                                <exclude>javax.persistence:*</exclude>
+                                <exclude>javax.annotation:*</exclude>
+                                <exclude>javax.ws.rs:*</exclude>
+                                <!-- 禁止 log4j 1.x / log4j-core（安全漏洞 CVE-2021-44228） -->
+                                <exclude>log4j:log4j</exclude>
+                                <exclude>org.apache.logging.log4j:log4j-core</exclude>
+                                <!-- 禁止 slf4j-log4j12 绑定 -->
+                                <exclude>org.slf4j:slf4j-log4j12</exclude>
+                            </excludes>
+                            <message>禁止使用 fastjson 1.x / commons-collections 3.x / Jackson 1.x / javax.* / log4j 等历史不安全或不兼容依赖，请使用 fastjson2 / commons-collections4 / Jackson 2.x / jakarta.* / logback。</message>
+                        </bannedDependencies>
+                        <requireNoRepositories>
+                            <allowedRepositories>
+                                <id>aliyun-public</id>
+                                <id>aliyun-spring</id>
+                                <id>central</id>
+                            </allowedRepositories>
+                            <allowedPluginRepositories>
+                                <id>aliyun-public</id>
+                                <id>central</id>
+                            </allowedPluginRepositories>
+                            <message>禁止子模块私自声明 Maven 仓库，统一使用 parent POM 中声明的 aliyun / central 仓库。</message>
+                        </requireNoRepositories>
+                    </rules>
+                    <fail>true</fail>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>enforce-rules</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- SpotBugs 静态分析（P3-25：安全漏洞与代码缺陷检测，含 FindSecBugs） -->
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
@@ -784,11 +867,15 @@
         </plugins>
     </pluginManagement>
 
-    <!-- 显式启用 lombok/mapstruct 注解处理（所有子模块继承生效） -->
+    <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则（所有子模块继承生效） -->
     <plugins>
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
         </plugin>
     </plugins>
     </build>
