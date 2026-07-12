@@ -35,9 +35,9 @@
         </dependency>
         <!-- Jackson 由 ydsz-pmis-common-util 传递依赖引入，无需显式声明 -->
         
-        <!-- mybatis-plus -->
+        <!-- mybatis-plus (Spring Boot 4.x) -->
         <dependency>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <groupId>com.baomidou</groupId>
         </dependency>
         <!-- jsqlparser -->

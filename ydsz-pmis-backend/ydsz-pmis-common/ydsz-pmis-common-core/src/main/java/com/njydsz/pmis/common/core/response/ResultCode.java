@@ -52,4 +52,16 @@ public interface ResultCode {
      * @return 结果消息描述
      */
     String getMsg();
+
+    /**
+     * 获取国际化消息 key
+     *
+     * <p>默认实现返回 {@code "error." + 枚举名称}。
+     * 实现类可覆盖此方法以自定义 key 格式。
+     *
+     * @return 形如 "error.BAD_REQUEST" 的国际化 key
+     */
+    default String getMessageKey() {
+        return "error." + ((Enum<?>) this).name();
+    }
 }
