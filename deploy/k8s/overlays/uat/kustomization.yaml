@@ -24,8 +24,6 @@ images:
     newTag: v1.3.0-rc.2
   - name: ydsz-pmis/workflow
     newTag: v1.3.0-rc.2
-  - name: ydsz-pmis/agent
-    newTag: v1.3.0-rc.2
 
 # P2-12: UAT 环境 30% 采样
 configMapGenerator:

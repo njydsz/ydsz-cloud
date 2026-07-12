@@ -34,7 +34,7 @@ import com.njydsz.pmis.workflow.infra.mapper.instance.FlowSkipMapper;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.server.service.integration.FlowAutoTriggerService;
-import com.njydsz.pmis.workflow.server.service.ai.FlowCanaryService;
+import com.njydsz.pmis.workflow.server.service.FlowCanaryService;
 import com.njydsz.pmis.workflow.server.service.notification.FlowCcService;
 import com.njydsz.pmis.workflow.server.service.definition.FlowDefinitionService;
 import com.njydsz.pmis.workflow.server.service.integration.FlowEventSubscriptionService;

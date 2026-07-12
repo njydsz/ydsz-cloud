@@ -275,7 +275,7 @@ public class AlertDispatcher {
      * message module routes to specific channel implementation.
      */
     private void sendViaMessageCenter(AlertChannel channel, AlertContext context,
-                                          JobAlertRuleDO rule, List<String> receivers) throws AlertSendException {
+                                          JobAlertRuleDO rule, List<String> receivers) {
         String title = buildTitle(context, rule);
         String content = buildContent(context, rule);
         MessageRequest request = new MessageRequest();

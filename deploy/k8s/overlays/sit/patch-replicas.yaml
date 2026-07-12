@@ -39,10 +39,3 @@ metadata:
   name: ydsz-pmis-workflow
 spec:
   replicas: 2
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ydsz-pmis-agent
-spec:
-  replicas: 1

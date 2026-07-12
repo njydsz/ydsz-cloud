@@ -6,7 +6,7 @@ import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.server.service.ai.FlowCanaryService;
+import com.njydsz.pmis.workflow.server.service.FlowCanaryService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -13,7 +13,6 @@ package com.njydsz.pmis.literule.server.orchestrator;
  *   <li>{@link #FOR} - 循环执行：遍历集合，对每个元素执行规则链</li>
  *   <li>{@link #WHILE} - 条件循环：条件满足时持续执行规则链</li>
  *   <li>{@link #BREAK} - 终止执行：在循环中终止当前链的执行</li>
- *   <li>{@link #AGENT} - AI Agent 执行：执行单个 ReAct Agent 节点（P3-5）</li>
  *   <li>{@link #CATCH} - 异常捕获：执行主节点，异常时执行补偿节点（2.0.0）</li>
  *   <li>{@link #RETRY} - 重试执行：执行节点失败时自动重试，达到上限后执行回滚（2.0.0）</li>
  * </ul>
@@ -46,9 +45,6 @@ public enum RuleChainType {
 
     /** 终止执行 */
     BREAK("终止"),
-
-    /** AI Agent 执行（P3-5，执行单个 ReAct Agent 节点） */
-    AGENT("Agent"),
 
     /** 异常捕获：执行主节点，异常时执行补偿节点（2.0.0 编排容错增强） */
     CATCH("异常捕获"),

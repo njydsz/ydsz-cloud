@@ -1,5 +1,7 @@
 package com.njydsz.pmis.literule.domain.model;
 
+import com.njydsz.pmis.common.exception.custom.InfrastructureException;
+
 /**
  * 模型调用异常（P3-1 规则+模型融合）
  *
@@ -10,10 +12,12 @@ package com.njydsz.pmis.literule.domain.model;
  * <p>典型场景：业务要求"模型必须可用"，模型异常时不应继续评估规则，
  * 避免基于缺失模型输出的规则误判。
  *
+ * <p>继承 {@link InfrastructureException}，纳入 common-exception 统一异常体系。
+ *
  * @author ydsz-pmis-team
  * @since 1.8.0
  */
-public class ModelInvocationException extends RuntimeException {
+public class ModelInvocationException extends InfrastructureException {
 
     private static final long serialVersionUID = 1L;
 
@@ -24,7 +28,8 @@ public class ModelInvocationException extends RuntimeException {
      * @param cause   原始异常
      */
     public ModelInvocationException(String message, Throwable cause) {
-        super(message, cause);
+        super(message);
+        this.initCause(cause);
     }
 
     /**

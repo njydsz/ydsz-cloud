@@ -1,15 +1,19 @@
 package com.njydsz.pmis.literule.server.expr.liteexpr;
 
+import com.njydsz.pmis.common.exception.custom.BusinessException;
+
 /**
  * LiteExpr 表达式引擎异常
  *
  * <p>词法/语法分析阶段抛出，携带精确的行列位置信息，
  * 供 {@link com.njydsz.pmis.literule.server.expr.ExpressionValidationResult} 渲染错误位置。
  *
+ * <p>继承 {@link BusinessException}，纳入 common-exception 统一异常体系。
+ *
  * @author ydsz-pmis-team
  * @since 2.0.0
  */
-public class LiteExprException extends RuntimeException {
+public class LiteExprException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
 
@@ -19,15 +23,18 @@ public class LiteExprException extends RuntimeException {
     private final int column;
 
     public LiteExprException(String message, int line, int column) {
-        super(message + " (line " + line + ":" + column + ")");
+        super();
+        this.setMessage(message + " (line " + line + ":" + column + ")");
         this.line = line;
         this.column = column;
     }
 
     public LiteExprException(String message, int line, int column, Throwable cause) {
-        super(message + " (line " + line + ":" + column + ")", cause);
+        super();
+        this.setMessage(message + " (line " + line + ":" + column + ")");
         this.line = line;
         this.column = column;
+        this.initCause(cause);
     }
 
     public int getLine() { return line; }

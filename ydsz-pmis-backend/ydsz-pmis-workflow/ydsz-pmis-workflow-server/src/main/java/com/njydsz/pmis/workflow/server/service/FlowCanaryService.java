@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.ai;
+package com.njydsz.pmis.workflow.server.service;
 
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowDefinitionDO;
 
@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * 灰度发布服务
  *
- * <p>P3-1 落地：支持流程定义的 canary release（灰度发布）能力。
+ * <p>支持流程定义的 canary release（灰度发布）能力。
  *
  * <p>核心能力：
  * <ul>
