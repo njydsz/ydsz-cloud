@@ -2,7 +2,6 @@ package com.njydsz.pmis.gateway.config;
 
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.BlockRequestHandler;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
-import com.alibaba.csp.sentinel.adapter.gateway.sc.exception.SentinelGatewayFlowException;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
@@ -27,9 +26,10 @@ import java.nio.charset.StandardCharsets;
  *
  * <h3>P1-8 增强：区分限流与熔断响应</h3>
  * <ul>
- *   <li>限流（FlowException / SentinelGatewayFlowException）→ 429 + error.RATE_LIMIT</li>
+ *   <li>限流（FlowException）→ 429 + error.RATE_LIMIT</li>
  *   <li>熔断（DegradeException）→ 503 + error.SERVICE_DEGRADED</li>
  *   <li>系统自适应保护（SystemBlockException）→ 503 + error.SYSTEM_PROTECTED</li>
+ *   <li>其他 Sentinel 阻断 → 429 + error.RATE_LIMIT</li>
  * </ul>
  *
  * <p>所有响应均注入 traceId，便于排障关联。
@@ -56,27 +56,22 @@ public class GatewaySentinelConfig {
             String message;
 
             if (ex instanceof DegradeException) {
-                // 熔断降级
                 httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
                 bizCode = 50300;
                 message = "error.SERVICE_DEGRADED";
             } else if (ex instanceof SystemBlockException) {
-                // 系统自适应保护
                 httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
                 bizCode = 50301;
                 message = "error.SYSTEM_PROTECTED";
-            } else if (ex instanceof FlowException || ex instanceof SentinelGatewayFlowException) {
-                // 限流
+            } else if (ex instanceof FlowException) {
                 httpStatus = HttpStatus.TOO_MANY_REQUESTS;
                 bizCode = 42900;
                 message = "error.RATE_LIMIT";
             } else if (ex instanceof BlockException) {
-                // 其他 Sentinel 阻断
                 httpStatus = HttpStatus.TOO_MANY_REQUESTS;
                 bizCode = 42900;
                 message = "error.RATE_LIMIT";
             } else {
-                // 非 Sentinel 异常
                 httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
                 bizCode = 50000;
                 message = "error.INTERNAL_ERROR";

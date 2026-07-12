@@ -1,13 +1,14 @@
 package com.njydsz.pmis.finance.server.engine;
 
-import com.njydsz.pmis.project.entity.execution.CostAllocationDO;
-import com.njydsz.pmis.project.entity.execution.TimeEntryDO;
-import com.njydsz.pmis.project.enums.execution.CostType;
+import com.njydsz.pmis.project.domain.entity.CostAllocationDO;
+import com.njydsz.pmis.project.domain.entity.TimeEntryDO;
+import com.njydsz.pmis.project.domain.enums.CostType;
 import com.njydsz.pmis.finance.domain.enums.ReconcileLevel;
 import com.njydsz.pmis.finance.domain.enums.ReconcileType;
-import com.njydsz.pmis.project.enums.execution.TimeEntryStatus;
-import com.njydsz.pmis.project.mapper.execution.CostAllocationMapper;
-import com.njydsz.pmis.project.mapper.execution.TimeEntryMapper;
+import com.njydsz.pmis.project.domain.enums.TimeEntryStatus;
+import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
+import com.njydsz.pmis.project.infra.mapper.TimeEntryMapper;
+import com.njydsz.pmis.project.server.engine.TimeEntryValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

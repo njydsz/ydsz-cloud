@@ -7,7 +7,7 @@ import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.sales.domain.dto.ContractCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.ContractStatusDTO;
-import com.njydsz.pmis.project.entity.contract.ContractDO;
+import com.njydsz.pmis.sales.domain.entity.ContractDO;
 import com.njydsz.pmis.sales.server.service.contract.ContractService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

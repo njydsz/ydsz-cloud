@@ -1,7 +1,7 @@
 package com.njydsz.pmis.finance.server.service.finance;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.project.dto.common.ApprovalDTO;
+import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
 import com.njydsz.pmis.finance.domain.dto.ExpenseCreateDTO;
 import com.njydsz.pmis.finance.domain.entity.ExpenseDO;
 

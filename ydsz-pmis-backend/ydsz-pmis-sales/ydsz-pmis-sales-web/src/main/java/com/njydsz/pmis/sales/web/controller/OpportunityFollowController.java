@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.sales.domain.dto.OpportunityFollowDTO;
-import com.njydsz.pmis.project.entity.opportunity.OpportunityFollowDO;
+import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
 import com.njydsz.pmis.sales.server.service.opportunity.OpportunityFollowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.sales.server.engine;
 
 import com.njydsz.pmis.sales.domain.entity.ContractDO;
-import com.njydsz.pmis.project.enums.execution.RiskLevel;
+import com.njydsz.pmis.sales.domain.enums.RiskLevel;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;

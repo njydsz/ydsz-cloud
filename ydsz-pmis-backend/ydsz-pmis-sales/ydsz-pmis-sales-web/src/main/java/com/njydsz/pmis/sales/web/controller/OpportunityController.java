@@ -7,7 +7,7 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.sales.domain.dto.OpportunityCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.OpportunityStatusDTO;
 import com.njydsz.pmis.sales.domain.dto.OpportunityUpdateDTO;
-import com.njydsz.pmis.project.entity.opportunity.OpportunityDO;
+import com.njydsz.pmis.sales.domain.entity.OpportunityDO;
 import com.njydsz.pmis.sales.server.service.opportunity.OpportunityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

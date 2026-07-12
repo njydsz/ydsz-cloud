@@ -14,6 +14,7 @@
     <dependencies>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-infra</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-web</artifactId></dependency>
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-lock</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-server</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-api</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-api</artifactId><version>${project.version}</version></dependency>
@@ -23,5 +24,10 @@
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-redis</artifactId></dependency>
                 <dependency><groupId>org.springframework.cloud</groupId><artifactId>spring-cloud-starter-openfeign</artifactId></dependency>
         <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><scope>provided</scope></dependency>
+        <dependency>
+            <groupId>com.googlecode.aviator</groupId>
+            <artifactId>aviator</artifactId>
+            <version>5.4.3</version>
+        </dependency>
     </dependencies>
 </project>

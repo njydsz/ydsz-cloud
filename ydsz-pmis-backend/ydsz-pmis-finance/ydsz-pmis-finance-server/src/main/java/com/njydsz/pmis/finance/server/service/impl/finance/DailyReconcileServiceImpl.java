@@ -2,13 +2,13 @@ package com.njydsz.pmis.finance.server.service.impl.finance;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.finance.domain.entity.DailyReconcileDO;
-import com.njydsz.pmis.project.mapper.execution.CostAllocationMapper;
+import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
 import com.njydsz.pmis.finance.infra.mapper.DailyReconcileMapper;
 import com.njydsz.pmis.finance.infra.mapper.InvoiceMapper;
 import com.njydsz.pmis.finance.infra.mapper.PaymentMapper;
 import com.njydsz.pmis.finance.infra.mapper.ProfitSnapshotMapper;
 import com.njydsz.pmis.finance.infra.mapper.RevenueMapper;
-import com.njydsz.pmis.project.mapper.execution.TimeEntryMapper;
+import com.njydsz.pmis.project.infra.mapper.TimeEntryMapper;
 import com.njydsz.pmis.finance.server.service.finance.DailyReconcileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

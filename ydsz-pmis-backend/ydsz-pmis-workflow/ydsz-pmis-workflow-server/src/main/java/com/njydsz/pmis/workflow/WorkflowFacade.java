@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.web;
+package com.njydsz.pmis.workflow;
 
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;

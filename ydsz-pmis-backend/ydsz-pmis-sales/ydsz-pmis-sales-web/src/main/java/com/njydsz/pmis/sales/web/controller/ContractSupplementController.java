@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.sales.domain.dto.ContractSupplementDTO;
-import com.njydsz.pmis.project.entity.contract.ContractSupplementDO;
+import com.njydsz.pmis.sales.domain.entity.ContractSupplementDO;
 import com.njydsz.pmis.sales.server.service.contract.ContractSupplementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

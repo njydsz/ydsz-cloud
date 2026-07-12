@@ -1,0 +1,1567 @@
+﻿=== FILE: com\remisoft\comm\base\advice\BaseGlobalResponseAdvice.java ===
+package com.remisoft.comm.base.advice;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.remisoft.comm.util.json.JsonUtils;
+import com.remisoft.comm.core.response.BaseResponse;
+
+import java.io.Serializable;
+import org.springframework.core.MethodParameter;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
+
+/**
+ * 鍏ㄥ眬鍝嶅簲鍖呰鍩虹被锛圵eb/App 鍏变韩锛?
+ *
+ * <p>鑷姩灏嗛潪 {@link BaseResponse} 绫诲瀷鐨勮繑鍥炲€煎寘瑁呬负 {@link BaseResponse#success(Object)} 鏍煎紡銆?
+ *
+ * <p>瀛愮被瑕嗙洊 {@link #wrapStringBody(String)} 澶勭悊 String 绫诲瀷杩斿洖鍊肩殑宸紓锛?
+ * Web 绔皟鐢?{@code BaseResponse.success(msg)}锛孉pp 绔皟鐢?{@code BaseResponse.successMsg(msg)}銆?
+ *
+ * <p><b>浼樺寲璇存槑锛?/b>
+ * <p>鏀寔閫氳繃鏋勯€犲櫒娉ㄥ叆鑷畾涔?ObjectMapper锛屾彁鍗囧彲娴嬭瘯鎬у拰鐏垫椿鎬с€?
+ * 鑻ユ湭娉ㄥ叆锛屽垯浣跨敤 JsonUtils 鐨勯粯璁?ObjectMapper銆?
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ */
+public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Object> {
+
+    /**
+     * JSON 搴忓垪鍖栧櫒锛堝彲閫夋敞鍏ワ級
+     */
+    private final ObjectMapper objectMapper;
+
+    /**
+     * 榛樿鏋勯€犲櫒锛堜娇鐢?JsonUtils 鐨勯粯璁?ObjectMapper锛?
+     */
+    protected BaseGlobalResponseAdvice() {
+        this.objectMapper = null;
+    }
+
+    /**
+     * 鏋勯€犲櫒娉ㄥ叆鑷畾涔?ObjectMapper
+     *
+     * @param objectMapper JSON 搴忓垪鍖栧櫒
+     */
+    protected BaseGlobalResponseAdvice(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public boolean supports(@NonNull MethodParameter returnType, @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
+        return !returnType.getParameterType().equals(BaseResponse.class);
+    }
+
+    @Override
+    public @Nullable Object beforeBodyWrite(@Nullable Object body,
+                                             @NonNull MethodParameter returnType,
+                                             @NonNull MediaType selectedContentType,
+                                             @NonNull Class<? extends HttpMessageConverter<?>> selectedConverterType,
+                                             @NonNull ServerHttpRequest request, @NonNull ServerHttpResponse response) {
+        if (body instanceof BaseResponse) {
+            return body;
+        }
+        if (body instanceof String) {
+            BaseResponse<String> result = wrapStringBody((String) body);
+            try {
+                ObjectMapper mapper = objectMapper != null ? objectMapper : JsonUtils.getMapper();
+                return mapper.writeValueAsString(result);
+            } catch (Exception e) {
+                return result;
+            }
+        }
+        return BaseResponse.success((Serializable) body);
+    }
+
+    /**
+     * 瀛愮被瑕嗙洊姝ゆ柟娉曞鐞?String 绫诲瀷杩斿洖鍊肩殑鍖呰宸紓
+     */
+    protected abstract BaseResponse<String> wrapStringBody(String body);
+}
+
+
+=== FILE: com\remisoft\comm\base\auth\BaseAuthInfo.java ===
+package com.remisoft.comm.base.auth;
+
+import com.remisoft.comm.util.auth.RemiAuthInfo;
+
+/**
+ * 璁よ瘉涓婁笅鏂囦俊鎭熀绫伙紙Web/App 鍏变韩锛?
+ *
+ * <p>瀹氫箟璁よ瘉涓婁笅鏂囩殑缁熶竴鎶借薄锛屽瓙绫昏鐩?{@link #getServiceTypeCode()} 杩斿洖鍏蜂綋鐨勬湇鍔＄被鍨嬬紪鐮?
+ * 锛堜緥濡?"WEB" 鎴?"APP"锛夛紝鐢ㄤ簬涓氬姟灞傚尯鍒嗚姹傛潵婧愩€?
+ *
+ * <p>鏈被缁ф壙鑷?{@link RemiAuthInfo}锛屽叿澶囧畬鏁寸殑璁よ瘉淇℃伅鑳藉姏锛屽寘鎷細
+ * <ul>
+ *   <li>鐢ㄦ埛ID銆佺櫥褰曡处鍙枫€佸鍚嶇瓑鍩虹淇℃伅</li>
+ *   <li>绉熸埛ID銆佸叕鍙窱D銆侀儴闂↖D銆侀」鐩甀D銆佸尯鍩烮D 绛夊缁村害闅旂淇℃伅</li>
+ *   <li>鏁版嵁鏉冮檺鑼冨洿銆佸彲瑙佸垪銆佸彲缂栬緫鍒?绛夋潈闄愮浉鍏冲瓧娈?/li>
+ *   <li>Token銆佸埛鏂癟oken銆佽繃鏈熸椂闂寸瓑浼氳瘽淇℃伅</li>
+ * </ul>
+ *
+ * <p><b>浣跨敤绀轰緥锛?/b>
+ * <pre>{@code
+ * public class WebAuthInfo extends BaseAuthInfo {
+ *     &#64;Override
+ *     public String getServiceTypeCode() {
+ *         return "WEB";
+ *     }
+ * }
+ * }</pre>
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ * @see RemiAuthInfo
+ */
+public abstract class BaseAuthInfo extends RemiAuthInfo {
+
+    /**
+     * 鑾峰彇褰撳墠鏈嶅姟绫诲瀷缂栫爜
+     *
+     * <p>鐢ㄤ簬鏍囪瘑褰撳墠璇锋眰鎵€灞炵殑鏈嶅姟绫诲瀷锛屽尯鍒?Web銆丄pp銆丄PI 绛変笉鍚屽叆鍙ｃ€?
+     *
+     * @return 鏈嶅姟绫诲瀷缂栫爜锛屼緥濡?"WEB" / "APP" / "API"
+     */
+    @Override
+    public abstract String getServiceTypeCode();
+}
+
+
+=== FILE: com\remisoft\comm\base\config\BaseAutoConfiguration.java ===
+package com.remisoft.comm.base.config;
+
+import com.remisoft.comm.base.constant.BaseFilterOrders;
+import com.remisoft.comm.base.filter.RequestContextCleanupFilter;
+import com.remisoft.comm.base.filter.SecurityHeadersFilter;
+import com.remisoft.comm.base.filter.TraceFilter;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.Ordered;
+
+/**
+ * Base 妯″潡鑷姩閰嶇疆
+ *
+ * <p>鎻愪緵 Web/App 鍏叡鍩哄骇灞傜殑鑷姩瑁呴厤鑳藉姏锛屽寘鎷細
+ * <ul>
+ *   <li>RequestContext 娓呯悊杩囨护鍣?/li>
+ *   <li>閾捐矾杩借釜杩囨护鍣紙TraceFilter锛?/li>
+ *   <li>瀹夊叏鍝嶅簲澶磋繃婊ゅ櫒锛圫ecurityHeadersFilter锛?/li>
+ *   <li>CORS 璺ㄥ煙閰嶇疆灞炴€х粦瀹?/li>
+ *   <li>Trace 杩借釜閰嶇疆灞炴€х粦瀹?/li>
+ * </ul>
+ *
+ * <p>娉ㄦ剰锛欱aseCorsProperties 鍜?BaseTraceProperties 涓烘娊璞″熀绫伙紝
+ * 瀹為檯閰嶇疆鐢?Web/App 瀛愭ā鍧楅€氳繃 {@code @ConfigurationProperties} 娉ㄨВ鎻愪緵鍏蜂綋鍓嶇紑銆? * 鑻ヤ笟鍔℃柟鐩存帴浣跨敤 base 妯″潡锛岃缁ф壙杩欎簺鍩虹被骞舵寚瀹氳嚜宸辩殑鍓嶇紑銆? *
+ * <p>妯垏鐐规墽琛岄『搴忓弬鑰?{@code docs/BASE_INTERCEPTOR_ORDER.md}銆? *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+@AutoConfiguration
+@ConditionalOnWebApplication
+@ConditionalOnProperty(prefix = "remi.base", name = "enabled", havingValue = "true", matchIfMissing = true)
+@EnableConfigurationProperties(BaseSecurityHeadersProperties.class)
+public class BaseAutoConfiguration {
+
+    /**
+     * 閾捐矾杩借釜杩囨护鍣?     *
+     * <p>鐢熸垚鎴栨彁鍙?traceId锛屾敞鍏?MDC 鍜?RequestContext銆?     * 鎵ц椤哄簭锛欻IGH_PRECEDENCE + 10
+     *
+     * @return FilterRegistrationBean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "traceFilter")
+    @ConditionalOnProperty(prefix = "remi.base.trace", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public FilterRegistrationBean<TraceFilter> traceFilter() {
+        FilterRegistrationBean<TraceFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new TraceFilter());
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
+        registration.addUrlPatterns("/*");
+        registration.setName("traceFilter");
+        return registration;
+    }
+
+    /**
+     * 瀹夊叏鍝嶅簲澶磋繃婊ゅ櫒锛坆ase 妯″潡鍏滃簳瀹炵幇锛?     *
+     * <p>娣诲姞瀹夊叏鐩稿叧鐨?HTTP 鍝嶅簲澶达紝闃叉甯歌瀹夊叏婕忔礊銆?     * 鎵ц椤哄簭锛歿@link BaseFilterOrders#SECURITY_HEADER_FILTER}銆?     *
+     * <p><b>涓?web/app/safe 妯″潡鐨勫叧绯伙細</b>
+     * Bean 鍚嶇粺涓€涓?{@code securityHeaderFilter}锛岄€氳繃 {@code @ConditionalOnMissingBean} 淇濊瘉锛?     * 褰撻」鐩腑宸插瓨鍦?web/app/safe 妯″潡娉ㄥ唽鐨勫悓鍚嶅畨鍏ㄥご杩囨护鍣ㄦ椂锛屾湰鍏滃簳瀹炵幇鑷姩閫€鍑猴紝閬垮厤閲嶅娉ㄥ唽銆?     *
+     * @param properties 瀹夊叏鍝嶅簲澶撮厤缃睘鎬?     * @return FilterRegistrationBean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "securityHeaderFilter")
+    @ConditionalOnProperty(prefix = "remi.base.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public FilterRegistrationBean<SecurityHeadersFilter> securityHeaderFilter(BaseSecurityHeadersProperties properties) {
+        FilterRegistrationBean<SecurityHeadersFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new SecurityHeadersFilter(properties));
+        registration.setOrder(BaseFilterOrders.SECURITY_HEADER_FILTER);
+        registration.addUrlPatterns("/*");
+        registration.setName("securityHeaderFilter");
+        return registration;
+    }
+
+    /**
+     * RequestContext 娓呯悊杩囨护鍣?     *
+     * <p>纭繚姣忎釜 HTTP 璇锋眰缁撴潫鍚庤嚜鍔ㄦ竻鐞?RequestContext锛岄槻姝?ThreadLocal 鍐呭瓨娉勬紡銆?     * 璇ヨ繃婊ゅ櫒浠?{@link Ordered#LOWEST_PRECEDENCE} 浼樺厛绾ф敞鍐岋紝淇濊瘉鍦ㄤ笟鍔￠€昏緫鎵ц瀹屾瘯鍚庡啀娓呯悊銆?     *
+     * @return FilterRegistrationBean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "requestContextCleanupFilter")
+    public FilterRegistrationBean<RequestContextCleanupFilter> requestContextCleanupFilter() {
+        FilterRegistrationBean<RequestContextCleanupFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new RequestContextCleanupFilter());
+        registration.setOrder(Ordered.LOWEST_PRECEDENCE);
+        registration.addUrlPatterns("/*");
+        registration.setName("requestContextCleanupFilter");
+        return registration;
+    }
+}
+
+=== FILE: com\remisoft\comm\base\config\BaseCorsProperties.java ===
+package com.remisoft.comm.base.config;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * CORS 璺ㄥ煙閰嶇疆灞炴€э紙Web/App 鍏变韩鍩虹被锛?
+ *
+ * <p>瀛愮被閫氳繃 {@code @ConfigurationProperties} 鐨?prefix 灞炴€ф寚瀹氬叿浣撳墠缂€锛?
+ * 渚嬪 Web 绔娇鐢?{@code remi.web.cors}锛孉pp 绔娇鐢?{@code remi.app.cors}銆?
+ *
+ * <p>鏈被涓烘娊璞″熀绫伙紝瀹氫箟 CORS 閫氱敤閰嶇疆椤癸紝涓嶇洿鎺ユ敞鍐屼负 Spring Bean銆?
+ *
+ * <p><b>閰嶇疆绀轰緥锛?/b>
+ * <pre>{@code
+ * remi:
+ *   web:
+ *     cors:
+ *       enabled: true
+ *       allow-credentials: true
+ *       allowed-origin-patterns:
+ *         - "https://*.example.com"
+ *       allowed-headers:
+ *         - "*"
+ *       allowed-methods:
+ *         - GET
+ *         - POST
+ *       max-age: 3600
+ *       path-pattern: "/**"
+ * }</pre>
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+@Data
+@ConfigurationProperties
+public abstract class BaseCorsProperties {
+
+    /**
+     * 鏄惁鍚敤 CORS 璺ㄥ煙鏀寔
+     *
+     * <p>榛樿鍊间负 true锛屼笟鍔℃柟鍙€氳繃瀛愮被閰嶇疆鍏抽棴銆?
+     */
+    private boolean enabled = true;
+
+    /**
+     * 鏄惁鍏佽鍙戦€?Cookie 绛夊嚟璇佷俊鎭?
+     *
+     * <p>榛樿鍊间负 false銆傝涓?true 鏃?allowedOriginPatterns 涓嶈兘鍖呭惈 "*"锛?
+     * 娴忚鍣ㄤ細鎷掔粷杩欑涓嶅畨鍏ㄧ粍鍚堛€?
+     */
+    private boolean allowCredentials = false;
+
+    /**
+     * 鍏佽鐨勮法鍩熸潵婧愭ā寮忓垪琛?
+     *
+     * <p>鏀寔閫氶厤绗︽ā寮忥紝渚嬪 "https://*.example.com"銆?
+     * 鎺ㄨ崘鏄庣‘鎸囧畾鍏佽鐨勫煙鍚嶏紝閬垮厤浣跨敤 "*" 甯︽潵鐨勫畨鍏ㄩ闄┿€?
+     */
+    private List<String> allowedOriginPatterns = new ArrayList<>();
+
+    /**
+     * 鍏佽鐨?HTTP 璇锋眰澶村垪琛?
+     *
+     * <p>榛樿鍊间负 ["*"]锛岃〃绀哄厑璁告墍鏈夎姹傚ご銆?
+     */
+    private List<String> allowedHeaders = new ArrayList<>(Arrays.asList("*"));
+
+    /**
+     * 鍏佽鐨?HTTP 璇锋眰鏂规硶鍒楄〃
+     *
+     * <p>榛樿鍊间负 ["*"]锛岃〃绀哄厑璁告墍鏈夋柟娉曘€?
+     * 鐢熶骇鐜寤鸿鏄惧紡鍒楀嚭 GET/POST/PUT/DELETE 绛夈€?
+     */
+    private List<String> allowedMethods = new ArrayList<>(Arrays.asList("*"));
+
+    /**
+     * 棰勬璇锋眰锛圤PTIONS锛夌紦瀛樻椂闂达紙绉掞級
+     *
+     * <p>娴忚鍣ㄥ湪鎸囧畾鏃堕棿鍐呬笉浼氶噸澶嶅彂璧烽妫€璇锋眰锛屽彲闄嶄綆璺ㄥ煙寮€閿€銆?
+     * 榛樿 3600 绉掞紙1 灏忔椂锛夈€?
+     */
+    private long maxAge = 3600L;
+
+    /**
+     * CORS 閰嶇疆鐢熸晥鐨?URL 璺緞妯″紡
+     *
+     * <p>榛樿鍊间负 "/**"锛屽嵆鎵€鏈夎矾寰勯兘搴旂敤 CORS 閰嶇疆銆?
+     */
+    private String pathPattern = "/**";
+
+    /**
+     * 杩囨护鍣ㄦ敞鍐岄『搴?
+     *
+     * <p>鍊艰秺灏忎紭鍏堢骇瓒婇珮銆傞粯璁?0锛岀敱 WebMvcConfigurer 娉ㄥ唽涓?CorsFilter銆?
+     */
+    private int order = 0;
+}
+
+
+=== FILE: com\remisoft\comm\base\config\BaseI18nConfiguration.java ===
+package com.remisoft.comm.base.config;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
+
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * 鍥介檯鍖栭厤缃熀绫伙紙Web/App 鍏变韩锛?
+ *
+ * <p>鎻愪緵鍩轰簬 {@link ResourceBundleMessageSource} 鐨勫浗闄呭寲鏀寔銆?
+ * 瀛愮被瑕嗙洊 {@link #getBasenames()} 鍗冲彲鎺ュ叆涓嶅悓鐨?i18n 璧勬簮鏂囦欢銆?
+ *
+ * <p><b>鐗规€э細</b>
+ * <ul>
+ *   <li>鏀寔鍩轰簬 {@code Accept-Language} 璇锋眰澶寸殑璇█瑙ｆ瀽</li>
+ *   <li>榛樿鏀寔绠€浣撲腑鏂囷紙zh_CN锛夊拰缇庡紡鑻辫锛坋n_US锛?/li>
+ *   <li>榛樿缂栫爜 UTF-8锛岀己澶?key 鏃跺洖閫€鍒?code 鑰岄潪鎶涘嚭寮傚父</li>
+ * </ul>
+ *
+ * <p><b>璧勬簮鏂囦欢鍛藉悕瑙勮寖锛?/b>
+ * <pre>{@code
+ * messages.properties          // 榛樿
+ * messages_zh_CN.properties    // 绠€浣撲腑鏂?
+ * messages_en_US.properties    // 缇庡紡鑻辫
+ * }</pre>
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+public abstract class BaseI18nConfiguration {
+
+    /**
+     * 瀛愮被瑕嗙洊姝ゆ柟娉曟彁渚涗笉鍚岀殑 i18n 璧勬簮鏂囦欢鍚?
+     *
+     * <p>杩斿洖鍊间负 {@link ResourceBundleMessageSource} 鎺ュ彈鐨?basename 鍒楄〃锛?
+     * 渚嬪 {@code new String[]{"messages", "i18n/messages"}}銆?
+     *
+     * @return 璧勬簮鏂囦欢 basename 鏁扮粍
+     */
+    protected abstract String[] getBasenames();
+
+    /**
+     * 娉ㄥ唽 LocaleResolver
+     *
+     * <p>鍩轰簬 {@link AcceptHeaderLocaleResolver} 浠?HTTP 璇锋眰澶?{@code Accept-Language} 瑙ｆ瀽璇█銆?
+     * 榛樿璇█涓虹畝浣撲腑鏂囷紝鏀寔 zh_CN 鍜?en_US銆?
+     *
+     * @return LocaleResolver 瀹炰緥
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public LocaleResolver localeResolver() {
+        AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
+        resolver.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);
+        resolver.setSupportedLocales(List.of(Locale.SIMPLIFIED_CHINESE, Locale.US));
+        return resolver;
+    }
+
+    /**
+     * 娉ㄥ唽 MessageSource
+     *
+     * <p>浣跨敤 {@link ResourceBundleMessageSource} 鍔犺浇澶氳瑷€璧勬簮鏂囦欢锛?
+     * 璁剧疆榛樿缂栫爜 UTF-8锛屽紑鍚?{@code useCodeAsDefaultMessage} 浠ヤ究鍦ㄧ己澶?key 鏃?
+     * 杩斿洖 code 鑰岄潪鎶涘嚭 NoSuchMessageException銆?
+     *
+     * @return MessageSource 瀹炰緥
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public MessageSource messageSource() {
+        ResourceBundleMessageSource source = new ResourceBundleMessageSource();
+        source.setBasenames(getBasenames());
+        source.setDefaultEncoding("UTF-8");
+        source.setUseCodeAsDefaultMessage(true);
+        return source;
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\config\BaseMvcConfiguration.java ===
+package com.remisoft.comm.base.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.remisoft.comm.util.json.JsonUtils;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+/**
+ * MVC 鍩虹閰嶇疆锛圵eb/App 鍏变韩锛? *
+ * <p>瀛愮被鎻愪緵鍏蜂綋鐨?{@link BaseCorsProperties} 鍜?{@link BaseTraceProperties} 瀹炵幇锛? * 浠ュ強娉ㄥ唽鑷繁鐨勬嫤鎴櫒鍜岃繃婊ゅ櫒 Bean銆? *
+ * <p>JSON 搴忓垪鍖栫粺涓€浣跨敤 Jackson锛堝ぇ鍘傛爣鍑嗭級锛岄€氳繃 {@link MappingJackson2HttpMessageConverter} 澶勭悊銆? * ObjectMapper 浼樺厛浣跨敤 Spring 瀹瑰櫒涓敞鍏ョ殑瀹炰緥锛岃嫢涓嶅瓨鍦ㄥ垯浣跨敤 JsonUtils 鐨勫叏灞€瀹炰緥銆? *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 4.0.0
+ * @since 3.5.0
+ */
+public abstract class BaseMvcConfiguration implements WebMvcConfigurer {
+
+    /**
+     * CORS 璺ㄥ煙閰嶇疆灞炴€?     */
+    private final BaseCorsProperties corsProperties;
+
+    /**
+     * 鏋勯€?MVC 鍩虹閰嶇疆
+     *
+     * @param corsProperties CORS 閰嶇疆灞炴€?     */
+    protected BaseMvcConfiguration(BaseCorsProperties corsProperties) {
+        this.corsProperties = corsProperties;
+    }
+
+    /**
+     * 鑾峰彇 CORS 閰嶇疆灞炴€?     *
+     * @return CORS 閰嶇疆灞炴€у疄渚?     */
+    protected BaseCorsProperties getCorsProperties() {
+        return corsProperties;
+    }
+
+    /**
+     * 娉ㄥ唽 HTTP 娑堟伅杞崲鍣?     *
+     * <p>浣跨敤 {@link MappingJackson2HttpMessageConverter} 缁熶竴 JSON 搴忓垪鍖栬涓恒€?     * ObjectMapper 浼樺厛浠?Spring 瀹瑰櫒鑾峰彇锛屼笟鍔℃柟鍙€氳繃鑷畾涔?Bean 鎺ョ搴忓垪鍖栭厤缃€?     *
+     * @param objectMapperProvider ObjectMapper 鎻愪緵鍣?     * @return HttpMessageConverters 瀹炰緥
+     */
+    @Bean
+    public HttpMessageConverters httpMessageConverters(ObjectProvider<ObjectMapper> objectMapperProvider) {
+        // 浼樺厛浣跨敤 Spring 瀹瑰櫒涓敞鍏ョ殑 ObjectMapper锛岃嫢涓嶅瓨鍦ㄥ垯浣跨敤 JsonUtils 鐨勫叏灞€瀹炰緥
+        ObjectMapper mapper = objectMapperProvider.getIfAvailable(JsonUtils::getMapper);
+
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
+        return new HttpMessageConverters(converter);
+    }
+
+    /**
+     * 娉ㄥ唽 CORS 杩囨护鍣?     *
+     * <p>閫氳繃 {@link BaseCorsProperties#isEnabled()} 鎺у埗鏄惁鐢熸晥锛?     * 閰嶇疆鐢卞瓙绫婚€氳繃 {@code @ConfigurationProperties} 缁戝畾鍏蜂綋鍓嶇紑銆?     *
+     * @return CORS 杩囨护鍣ㄦ敞鍐屽櫒锛岀鐢ㄦ椂杩斿洖 null
+     */
+    @Bean
+    public FilterRegistrationBean<CorsFilter> corsFilter() {
+        // 閫氳繃瀛愮被缁戝畾鐨勯厤缃睘鎬э紙remi.web.cors / remi.app.cors锛夌殑 enabled 瀛楁鎺у埗锛?        // 涓嶅啀浣跨敤 @ConditionalOnProperty(prefix = "remi.cors")锛岄伩鍏嶅墠缂€涓庡瓙绫婚厤缃笉鍖归厤
+        if (!corsProperties.isEnabled()) {
+            return null;
+        }
+
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.setAllowCredentials(corsProperties.isAllowCredentials());
+        corsProperties.getAllowedOriginPatterns().forEach(corsConfig::addAllowedOriginPattern);
+        corsProperties.getAllowedHeaders().forEach(corsConfig::addAllowedHeader);
+        corsProperties.getAllowedMethods().forEach(corsConfig::addAllowedMethod);
+        corsConfig.setMaxAge(corsProperties.getMaxAge());
+
+        UrlBasedCorsConfigurationSource configSource = new UrlBasedCorsConfigurationSource();
+        String pathPattern = corsProperties.getPathPattern();
+        configSource.registerCorsConfiguration(pathPattern != null ? pathPattern : "/**", corsConfig);
+
+        FilterRegistrationBean<CorsFilter> corsBean = new FilterRegistrationBean<>(new CorsFilter(configSource));
+        corsBean.setName("corsFilter");
+        corsBean.setOrder(corsProperties.getOrder());
+        return corsBean;
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\config\BaseOpenApiConfiguration.java ===
+package com.remisoft.comm.base.config;
+
+import com.remisoft.comm.core.constant.HeaderConstants;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.ExternalDocumentation;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.headers.Header;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * OpenAPI 鏂囨。閰嶇疆鍩虹被锛圵eb/App 鍏变韩锛?
+ *
+ * <p>鍩轰簬 springdoc-openapi 鐢熸垚 Swagger 3.0 瑙勮寖鐨?API 鏂囨。銆?
+ * 瀛愮被瑕嗙洊 {@link #getTitle()}銆亄@link #getDescription()} 鎻愪緵涓嶅悓鐨勬枃妗ｆ爣棰樺拰鎻忚堪銆?
+ *
+ * <p><b>榛樿琛屼负锛?/b>
+ * <ul>
+ *   <li>娉ㄥ唽鎵€鏈夊叕鍏辫姹傚ご锛圶-User-Id銆乆-Tenant-Id銆乆-Access-Token 绛夛級</li>
+ *   <li>娉ㄥ唽 JWT Bearer Token 璁よ瘉鏂规</li>
+ *   <li>璁剧疆缁熶竴鐨勮仈绯讳俊鎭拰澶栭儴鏂囨。閾炬帴</li>
+ * </ul>
+ *
+ * <p><b>婵€娲绘潯浠讹細</b>闇€瑕侀€氳繃閰嶇疆 {@code remi.doc.enabled=true} 鏄惧紡寮€鍚€?
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+public abstract class BaseOpenApiConfiguration {
+
+    /**
+     * API 鏂囨。鏍囬
+     *
+     * <p>瀛愮被蹇呴』瑕嗙洊浠ユ彁渚涘叿浣撲笟鍔＄郴缁熺殑鍚嶇О锛屼緥濡?"REMI 绠＄悊绯荤粺 API"銆?
+     *
+     * @return API 鏂囨。鏍囬
+     */
+    protected abstract String getTitle();
+
+    /**
+     * API 鏂囨。鎻忚堪
+     *
+     * <p>瀛愮被蹇呴』瑕嗙洊浠ユ彁渚涘叿浣撲笟鍔＄郴缁熺殑绠€瑕佽鏄庛€?
+     *
+     * @return API 鏂囨。鎻忚堪
+     */
+    protected abstract String getDescription();
+
+    /**
+     * 鏋勫缓 OpenAPI 鏂囨。
+     *
+     * <p>鏁村悎 Info銆丆omponents锛圚eaders + SecuritySchemes锛夈€丒xternalDocs銆丼ecurityRequirements銆?
+     *
+     * @return OpenAPI 鏂囨。瀹炰緥
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "remi.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
+    public OpenAPI openAPI() {
+        return new OpenAPI()
+                .info(createInfo())
+                .components(createComponents())
+                .externalDocs(createExternalDocs())
+                .security(createSecurityRequirements());
+    }
+
+    /**
+     * 鏋勫缓 API 鍩烘湰淇℃伅锛堟爣棰樸€佹弿杩般€佺増鏈€佽仈绯讳俊鎭級
+     */
+    private Info createInfo() {
+        return new Info()
+                .title(getTitle())
+                .description(getDescription())
+                .version("3.5.0")
+                .contact(new Contact()
+                        .name("Marvin Lee")
+                        .email("limw1888@126.com")
+                        .url("https://remisoft.com.cn"));
+    }
+
+    /**
+     * 鏋勫缓 OpenAPI 缁勪欢锛堣姹傚ご銆佸畨鍏ㄦ柟妗堬級
+     */
+    private Components createComponents() {
+        return new Components()
+                .headers(createHeaderParams())
+                .securitySchemes(createSecuritySchemes());
+    }
+
+    /**
+     * 鏋勫缓璇锋眰澶村弬鏁版槧灏勶紙鐢ㄤ簬鏂囨。灞曠ず锛?
+     */
+    private Map<String, Header> createHeaderParams() {
+        Map<String, Header> headers = new LinkedHashMap<>();
+
+        headers.put(HeaderConstants.X_SERVICE_TYPE, createHeader("鏈嶅姟绫诲瀷", false));
+        headers.put(HeaderConstants.X_USER_LANGUAGE, createHeader("鐢ㄦ埛绯荤粺璇█", false));
+        headers.put(HeaderConstants.X_UNIQUE_ID, createHeader("鐢ㄦ埛鍞竴ID", false));
+        headers.put(HeaderConstants.X_ACCESS_TOKEN, createHeader("鐢ㄦ埛閴存潈Token", false));
+        headers.put(HeaderConstants.X_DISTINCT_ID, createHeader("璁惧鍞竴鏍囪瘑", false));
+        headers.put(HeaderConstants.X_DATA_SCOPE, createHeader("鏁版嵁鏉冮檺鑼冨洿绫诲瀷", false));
+        headers.put(HeaderConstants.X_TENANT_ID, createHeader("绉熸埛ID", false));
+        headers.put(HeaderConstants.X_COMPANY_IDS, createHeader("鍏徃ID闆嗗悎", false));
+        headers.put(HeaderConstants.X_DEPT_IDS, createHeader("閮ㄩ棬ID闆嗗悎", false));
+        headers.put(HeaderConstants.X_PROJECT_IDS, createHeader("椤圭洰ID闆嗗悎", false));
+        headers.put(HeaderConstants.X_REGION_IDS, createHeader("鍖哄煙ID闆嗗悎", false));
+        headers.put(HeaderConstants.X_VISIBLE_COLUMNS, createHeader("鍒楀彲瑙佽鍒?, false));
+        headers.put(HeaderConstants.X_EDITABLE_COLUMNS, createHeader("鍒楀彲缂栬緫瑙勫垯", false));
+        headers.put(HeaderConstants.X_REQUEST_SOURCE, createHeader("璇锋眰鏉ユ簮鏍囪瘑", false));
+        headers.put(HeaderConstants.X_FORWARDED_FOR, createHeader("璇锋眰鏉ユ簮IP", false));
+
+        return headers;
+    }
+
+    /**
+     * 鏋勫缓瀹夊叏鏂规鏄犲皠
+     */
+    private Map<String, SecurityScheme> createSecuritySchemes() {
+        Map<String, SecurityScheme> schemes = new LinkedHashMap<>();
+        schemes.put("Bearer", new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .description("JWT Bearer Token 璁よ瘉"));
+        return schemes;
+    }
+
+    /**
+     * 鏋勫缓鍏ㄥ眬瀹夊叏瑕佹眰
+     */
+    private List<SecurityRequirement> createSecurityRequirements() {
+        return List.of(new SecurityRequirement().addList("Bearer"));
+    }
+
+    /**
+     * 鏋勫缓澶栭儴鏂囨。寮曠敤
+     */
+    private ExternalDocumentation createExternalDocs() {
+        return new ExternalDocumentation()
+                .description("REMI 鍏叡妗嗘灦鏂囨。")
+                .url("https://remisoft.com.cn");
+    }
+
+    /**
+     * 鍒涘缓 OpenAPI Header 鎻忚堪瀵硅薄
+     *
+     * @param description 鎻忚堪
+     * @param required    鏄惁蹇呭～
+     * @return Header 瀹炰緥
+     */
+    private Header createHeader(String description, boolean required) {
+        Header header = new Header();
+        header.setDescription(description);
+        header.setRequired(required);
+        return header;
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\config\BaseSecurityHeadersProperties.java ===
+package com.remisoft.comm.base.config;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Base 妯″潡瀹夊叏鍝嶅簲澶撮厤缃睘鎬? *
+ * <p>鐢ㄤ簬閰嶇疆 HTTP 鍝嶅簲鐨勫畨鍏ㄧ浉鍏冲ご閮紝闃叉甯歌 Web 瀹夊叏濞佽儊銆? * 浠呭湪涓氬姟鏂圭洿鎺ヤ娇鐢?base 妯″潡锛堟湭寮曞叆 web/app/safe 妯″潡锛夋椂鐢熸晥銆? *
+ * <p><b>閰嶇疆绀轰緥锛?/b>
+ * <pre>{@code
+ * remi:
+ *   base:
+ *     security-headers:
+ *       enabled: true
+ *       xss-protection: "1; mode=block"
+ *       content-type-options: "nosniff"
+ *       frame-options: "DENY"
+ *       hsts: "max-age=31536000; includeSubDomains"
+ *       csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+ *       referrer-policy: "strict-origin-when-cross-origin"
+ *       excludes:
+ *         - /error
+ *         - /actuator/**
+ * }</pre>
+ *
+ * <p><b>涓?safe 妯″潡鐨勫叧绯伙細</b>
+ * 褰撻」鐩腑鍚屾椂瀛樺湪 safe/web/app 妯″潡鏃讹紝鏈厤缃笉浼氳浣跨敤锛? * 瀹夊叏鍝嶅簲澶寸敱 safe 妯″潡鐨?{@code SecurityHeaderProperties}锛堝墠缂€ {@code remi.safe.security-headers}锛夌粺涓€绠＄悊銆? *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+@Data
+@ConfigurationProperties(prefix = "remi.base.security-headers")
+public class BaseSecurityHeadersProperties {
+
+    /**
+     * 鏄惁鍚敤瀹夊叏鍝嶅簲澶?     *
+     * <p>榛樿鍊间负 true锛屽嵆鍚敤鎵€鏈夐厤缃殑瀹夊叏鍝嶅簲澶淬€?     */
+    private boolean enabled = true;
+
+    /**
+     * XSS 闃叉姢澶撮儴
+     *
+     * <p>鍚敤娴忚鍣ㄧ殑 XSS 杩囨护鍣ㄣ€?     * 鎺ㄨ崘鍊硷細"1; mode=block" - 鍙戠幇 XSS 鏃堕樆姝㈤〉闈㈡覆鏌?     */
+    private String xssProtection = "1; mode=block";
+
+    /**
+     * 鍐呭绫诲瀷閫夐」澶撮儴
+     *
+     * <p>闃叉娴忚鍣?MIME 绫诲瀷鍡呮帰銆?     * 鎺ㄨ崘鍊硷細"nosniff" - 涓嶇寽娴嬪唴瀹圭被鍨?     */
+    private String contentTypeOptions = "nosniff";
+
+    /**
+     * 甯ч€夐」澶撮儴
+     *
+     * <p>闃叉椤甸潰琚祵鍏ュ埌 iframe 涓紝闃叉鐐瑰嚮鍔寔鏀诲嚮銆?     * <ul>
+     *   <li>DENY锛氱姝㈡墍鏈夐〉闈㈠祵鍏?/li>
+     *   <li>SAMEORIGIN锛氫粎鍏佽鍚屾簮椤甸潰宓屽叆</li>
+     * </ul>
+     */
+    private String frameOptions = "DENY";
+
+    /**
+     * 涓ユ牸浼犺緭瀹夊叏澶撮儴
+     *
+     * <p>寮哄埗娴忚鍣ㄤ娇鐢?HTTPS 杩炴帴銆?     */
+    private String hsts = "max-age=31536000; includeSubDomains";
+
+    /**
+     * 鍐呭瀹夊叏绛栫暐澶撮儴
+     *
+     * <p>闃叉 XSS銆佹暟鎹敞鍏ョ瓑鏀诲嚮锛岄檺鍒惰祫婧愬姞杞芥潵婧愩€?     */
+    private String csp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'";
+
+    /**
+     * 寮曠敤绛栫暐澶撮儴
+     *
+     * <p>鎺у埗 Referer 澶寸殑鍙戦€佺瓥鐣ャ€?     */
+    private String referrerPolicy = "strict-origin-when-cross-origin";
+
+    /**
+     * 鎺掗櫎璺緞鍒楄〃
+     *
+     * <p>杩欎簺璺緞鐨勫搷搴斾笉浼氭坊鍔犲畨鍏ㄥご閮紝鏀寔 Ant 椋庢牸璺緞鍖归厤銆?     * 閫氬父鐢ㄤ簬闈欐€佽祫婧愩€佹枃浠朵笅杞界瓑涓嶉渶瑕佸畨鍏ㄥご閮ㄧ殑绔偣銆?     */
+    private List<String> excludes = new ArrayList<>();
+}
+
+
+=== FILE: com\remisoft\comm\base\config\BaseTimezoneConfiguration.java ===
+package com.remisoft.comm.base.config;
+
+import jakarta.annotation.PostConstruct;
+import java.util.TimeZone;
+
+/**
+ * 鏃跺尯閰嶇疆鍩虹被锛圵eb/App 鍏变韩锛?
+ *
+ * <p>閫氳繃 {@link PostConstruct} 鍦?Bean 鍒濆鍖栨椂寮哄埗灏?JVM 榛樿鏃跺尯璁剧疆涓?
+ * {@code Asia/Shanghai}锛圲TC+8锛夛紝淇濊瘉鍏ㄥ眬鏃堕棿涓€鑷存€с€?
+ *
+ * <p><b>娉ㄦ剰锛?/b>鏈厤缃細褰卞搷鏁翠釜 JVM 鐨?{@link TimeZone#getDefault()}锛?
+ * 闇€纭繚鎵€鏈夋椂闂寸浉鍏虫搷浣滐紙{@code new Date()}銆亄@code System.currentTimeMillis()} 鏍煎紡鍖栫瓑锛?
+ * 鍧囧熀浜庢璁剧疆銆?
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+public abstract class BaseTimezoneConfiguration {
+
+    /**
+     * 鍒濆鍖栨椂鍖?
+     *
+     * <p>鍦?Bean 鍒濆鍖栧畬鎴愬悗绔嬪嵆鎵ц锛岀‘淇濆簲鐢ㄥ惎鍔ㄥ悗鎵€鏈夌嚎绋?
+     * 浣跨敤鐨勯兘鏄?Asia/Shanghai 鏃跺尯銆?
+     */
+    @PostConstruct
+    public void defaultTimeZone() {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Shanghai"));
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\config\BaseTraceProperties.java ===
+package com.remisoft.comm.base.config;
+
+import lombok.Data;
+
+/**
+ * 璇锋眰杩借釜/鏃ュ織閰嶇疆灞炴€э紙Web/App 鍏变韩鍩虹被锛?
+ *
+ * <p>瀛愮被閫氳繃 {@code @ConfigurationProperties} 鐨?prefix 灞炴€ф寚瀹氬叿浣撳墠缂€銆?
+ * 鎻愪緵閾捐矾杩借釜銆佽姹傛棩蹇椼€侀噰鏍风巼銆佸搷搴斿ご绛夐€氱敤閰嶇疆椤广€?
+ *
+ * <p><b>閰嶇疆绀轰緥锛?/b>
+ * <pre>{@code
+ * remi:
+ *   web:
+ *     trace:
+ *       enabled: true
+ *       request-log-enabled: true
+ *       log-level: INFO
+ *       sampling-rate: 1.0
+ *       log-request-body: false
+ * }</pre>
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+@Data
+public abstract class BaseTraceProperties {
+
+    /**
+     * 鏄惁鍚敤閾捐矾杩借釜
+     *
+     * <p>鎺у埗 TraceFilter 鏄惁鐢熸晥銆傞粯璁?true銆?
+     */
+    private boolean enabled = true;
+
+    /**
+     * 鏄惁鍦ㄥ搷搴斿ご涓緭鍑鸿拷韪?璇锋眰 ID
+     *
+     * <p>鍚敤鍚庝細鍦ㄦ瘡涓?HTTP 鍝嶅簲澶翠腑娣诲姞 X-Request-Id銆?
+     * 榛樿 true锛屼究浜庡鎴风鍏宠仈鏃ュ織銆?
+     */
+    private boolean responseHeaderEnabled = true;
+
+    /**
+     * 璇锋眰 ID 鍝嶅簲澶村悕绉?
+     *
+     * <p>榛樿鍊间负 "X-Request-Id"锛屼笌涓绘祦缃戝叧銆丯ginx 绛変繚鎸佷竴鑷淬€?
+     */
+    private String requestIdHeaderName = "X-Request-Id";
+
+    /**
+     * 鏄惁鍚敤璇锋眰鏃ュ織璁板綍
+     *
+     * <p>鎺у埗 BaseRequestLogInterceptor 鏄惁璁板綍璇锋眰/鍝嶅簲鏃ュ織銆?
+     * 榛樿 true锛岀敓浜х幆澧冨彲鏍规嵁闇€瑕佸叧闂互鍑忓皯鏃ュ織閲忋€?
+     */
+    private boolean requestLogEnabled = true;
+
+    /**
+     * 璇锋眰鏃ュ織鏍煎紡
+     *
+     * <p>鏀寔 "simple" 鎴?"detailed"銆?
+     * 榛樿涓?"detailed"锛屽寘鍚?IP銆乁A銆佽姹傚弬鏁扮瓑璇︾粏淇℃伅銆?
+     */
+    private String requestLogFormat = "detailed";
+
+    /**
+     * 鏄惁璁板綍璇锋眰鍙傛暟
+     *
+     * <p>榛樿 true锛屼細杈撳嚭 queryString 鍜?form 鍙傛暟銆?
+     * 娉ㄦ剰锛氭晱鎰熷弬鏁帮紙濡傚瘑鐮併€乀oken锛夐渶鑷鑴辨晱銆?
+     */
+    private boolean logRequestParams = true;
+
+    /**
+     * 鏄惁璁板綍璇锋眰浣?
+     *
+     * <p>榛樿 false銆傚紑鍚悗浼氳褰曞畬鏁磋姹備綋锛屽彲鑳藉奖鍝嶆€ц兘骞跺甫鏉ユ晱鎰熶俊鎭硠闇查闄┿€?
+     */
+    private boolean logRequestBody = false;
+
+    /**
+     * 鏄惁璁板綍鍝嶅簲浣?
+     *
+     * <p>榛樿 false銆傚紑鍚悗鍙兘浜х敓澶ч噺鏃ュ織銆?
+     */
+    private boolean logResponseBody = false;
+
+    /**
+     * 璇锋眰鏃ュ織绾у埆
+     *
+     * <p>鏀寔 "INFO" 鎴?"DEBUG"銆傞粯璁や负 "INFO"銆?
+     */
+    private String logLevel = "INFO";
+
+    /**
+     * 鏃ュ織閲囨牱鐜?
+     *
+     * <p>鍙栧€艰寖鍥?[0, 1]锛?.0 琛ㄧず鍏ㄩ噺璁板綍锛?.0 琛ㄧず涓嶈褰曘€?
+     * 鐢ㄤ簬鍦ㄩ珮骞跺彂鍦烘櫙涓嬪噺灏戞棩蹇楄緭鍑洪噺銆?
+     */
+    private double samplingRate = 1.0;
+}
+
+
+=== FILE: com\remisoft\comm\base\constant\BaseFilterOrders.java ===
+package com.remisoft.comm.base.constant;
+
+/**
+ * Base 妯″潡妯垏鐐规墽琛岄『搴忓父閲? *
+ * <p>鎵€鏈夋暟瀛楀繀椤讳笌 {@code docs/BASE_INTERCEPTOR_ORDER.md} 淇濇寔涓€鑷淬€? * 淇敼浠讳綍鏁板瓧鍓嶈鍏堟洿鏂版枃妗ｃ€?/p>
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+public final class BaseFilterOrders {
+
+    private BaseFilterOrders() {
+        throw new UnsupportedOperationException("Constants class");
+    }
+
+    /** RequestIdResponseFilter锛氬湪鎵€鏈変笟鍔?Filter 涔嬪墠鐢熸垚/閫忎紶 traceId */
+    public static final int REQUEST_ID_RESPONSE_FILTER = OrderedConstants.HIGHEST_PRECEDENCE + 10;
+
+    /** ContentCachingFilter锛氬湪閴存潈涔嬪墠鍖呰 request body */
+    public static final int CONTENT_CACHING_FILTER = OrderedConstants.HIGHEST_PRECEDENCE + 20;
+
+    /** SecurityHeaderFilter锛氬湪鍝嶅簲涓拷鍔犲畨鍏ㄥご */
+    public static final int SECURITY_HEADER_FILTER = OrderedConstants.HIGHEST_PRECEDENCE + 30;
+
+    /** TraceIdResponseFilter锛歵raceId 娉ㄥ叆鍒?response header */
+    public static final int TRACE_ID_RESPONSE_FILTER = OrderedConstants.HIGHEST_PRECEDENCE + 40;
+
+    /** WebAuthFilter锛欽WT/Session 閴存潈 */
+    public static final int AUTH_FILTER = OrderedConstants.HIGHEST_PRECEDENCE + 50;
+
+    /** RequestContextCleanupFilter锛氳姹傜粨鏉熸竻鐞?TTL锛堟渶浣庝紭鍏堢骇锛?*/
+    public static final int REQUEST_CONTEXT_CLEANUP = OrderedConstants.LOWEST_PRECEDENCE;
+
+    /** Interceptor锛欻ttpInterceptor - 璺ㄥ煙/瀛楃缂栫爜鍩虹璁剧疆 */
+    public static final int INTERCEPTOR_HTTP = 0;
+
+    /** Interceptor锛歊equestLogInterceptor - 璇锋眰/鍝嶅簲鏃ュ織 */
+    public static final int INTERCEPTOR_REQUEST_LOG = 10;
+
+    /** Interceptor锛欰uthApiPermissionInterceptor - API 鏉冮檺 */
+    public static final int INTERCEPTOR_AUTH_API = 20;
+
+    /** Interceptor锛欰uthMenuPermissionInterceptor - 鑿滃崟鏉冮檺 */
+    public static final int INTERCEPTOR_AUTH_MENU = 30;
+
+    /** Interceptor锛欰uthRowPermissionInterceptor - 琛岀骇鏉冮檺 */
+    public static final int INTERCEPTOR_AUTH_ROW = 40;
+
+    /** Interceptor锛欰uthColPermissionInterceptor - 鍒楃骇鏉冮檺 */
+    public static final int INTERCEPTOR_AUTH_COL = 50;
+
+    /** Advice锛欸lobalResponseAdvice - 缁熶竴鍝嶅簲鍖呰锛堟渶鍏堬級 */
+    public static final int ADVICE_GLOBAL_RESPONSE = 0;
+
+    /** Advice锛欱aseExceptionHandler - 涓氬姟寮傚父 */
+    public static final int ADVICE_BASE_EXCEPTION = 10;
+
+    /** Advice锛歁vcExceptionHandler - MVC 妗嗘灦寮傚父 */
+    public static final int ADVICE_MVC_EXCEPTION = 20;
+
+    /** Advice锛歏alidationExceptionHandler - 鍙傛暟鏍￠獙寮傚父 */
+    public static final int ADVICE_VALIDATION_EXCEPTION = 30;
+
+    /**
+     * Spring Ordered 甯搁噺锛岄伩鍏嶅閮ㄤ緷璧?     */
+    public static final class OrderedConstants {
+        public static final int HIGHEST_PRECEDENCE = Integer.MIN_VALUE;
+        public static final int LOWEST_PRECEDENCE = Integer.MAX_VALUE;
+        private OrderedConstants() {}
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\filter\AbstractContentCachingFilter.java ===
+package com.remisoft.comm.base.filter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+
+import java.io.IOException;
+
+/**
+ * 璇锋眰浣撶紦瀛樿繃婊ゅ櫒鎶借薄鍩虹被
+ *
+ * <p>鍖呰璇锋眰涓?{@link ContentCachingRequestWrapper}锛屾敮鎸佽姹備綋澶氭璇诲彇銆?
+ * 璺宠繃 multipart 璇锋眰锛岄伩鍏嶅ぇ鏂囦欢涓婁紶鍦烘櫙涓嬬殑鍐呭瓨闂銆?/p>
+ *
+ * <p>榛樿缂撳瓨瀹归噺 512KB锛岃秴杩囬儴鍒嗕笉缂撳瓨锛堜笉浼?OOM锛夈€傚彲鐢卞瓙绫绘瀯閫犲櫒鑷畾涔夈€?/p>
+ *
+ * <p>Web 绔拰 App 绔户鎵挎鍩虹被鍗冲彲锛屾棤闇€閲嶅瀹炵幇銆?/p>
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ */
+public abstract class AbstractContentCachingFilter extends OncePerRequestFilter {
+
+    /**
+     * 榛樿缂撳瓨瀹归噺锛堝瓧鑺傦紝512KB锛夈€?
+     *
+     * <p>璇存槑锛欳ontentCachingRequestWrapper 鍦ㄨ秴杩?cacheCapacity 鏃朵笉浼氭姏閿欙紝
+     * 鍙槸鎴柇缂撳瓨銆?12KB 閫傚悎鍏稿瀷 JSON 璇锋眰浣擄紱濡傞渶鏀寔鏇村ぇ璇锋眰锛?
+     * 鍙敱瀛愮被浼犲叆鏇村ぇ鐨?cacheCapacity銆?/p>
+     */
+    protected static final int DEFAULT_CACHE_CAPACITY = 512 * 1024;
+
+    /**
+     * 缂撳瓨瀹归噺锛堝瓧鑺傦級
+     */
+    private int cacheCapacity;
+
+    /**
+     * 浣跨敤榛樿缂撳瓨瀹归噺鏋勯€?
+     */
+    protected AbstractContentCachingFilter() {
+        this(DEFAULT_CACHE_CAPACITY);
+    }
+
+    /**
+     * 浣跨敤鎸囧畾缂撳瓨瀹归噺鏋勯€?
+     *
+     * @param cacheCapacity 缂撳瓨瀹归噺锛堝瓧鑺傦級
+     */
+    protected AbstractContentCachingFilter(int cacheCapacity) {
+        this.cacheCapacity = cacheCapacity > 0 ? cacheCapacity : DEFAULT_CACHE_CAPACITY;
+    }
+
+    @Override
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
+        if (isMultipart(request)) {
+            filterChain.doFilter(request, response);
+        } else {
+            ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, getCacheCapacity());
+            filterChain.doFilter(wrappedRequest, response);
+        }
+    }
+
+    /**
+     * 鍒ゆ柇鏄惁涓?multipart 璇锋眰
+     */
+    protected boolean isMultipart(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        return contentType != null && contentType.toLowerCase().startsWith("multipart/");
+    }
+
+    /**
+     * 鑾峰彇缂撳瓨瀹归噺锛堝彲鐢卞瓙绫婚噸鍐欎互鏀寔鍔ㄦ€侀厤缃級
+     *
+     * @return 缂撳瓨瀹归噺锛堝瓧鑺傦級
+     */
+    protected int getCacheCapacity() {
+        return cacheCapacity;
+    }
+}
+
+=== FILE: com\remisoft\comm\base\filter\BaseRequestIdResponseFilter.java ===
+package com.remisoft.comm.base.filter;
+
+import com.remisoft.comm.base.config.BaseTraceProperties;
+import com.remisoft.comm.core.constant.HeaderConstants;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+/**
+ * 璇锋眰ID鍝嶅簲澶磋繃婊ゅ櫒锛圵eb/App 鍏变韩锛?
+ *
+ * <p>瀛愮被瑕嗙洊 {@link #resolveRequestId(HttpServletRequest)} 鎻愪緵涓嶅悓鐨?ID 鏉ユ簮銆?
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ */
+@Slf4j
+public abstract class BaseRequestIdResponseFilter extends OncePerRequestFilter {
+
+    protected static final String HEADER_REQUEST_ID = HeaderConstants.X_REQUEST_ID;
+
+    private final BaseTraceProperties traceProperties;
+
+    protected BaseRequestIdResponseFilter(BaseTraceProperties traceProperties) {
+        this.traceProperties = traceProperties;
+    }
+
+    @Override
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                     @NonNull HttpServletResponse response,
+                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
+        try {
+            if (traceProperties.isResponseHeaderEnabled()) {
+                String requestId = resolveRequestId(request);
+                if (requestId != null && !requestId.isBlank()) {
+                    response.setHeader(HEADER_REQUEST_ID, requestId);
+                    log.debug("璇锋眰ID [{}] 宸叉坊鍔犲埌璇锋眰 {} 鐨勫搷搴斿ご涓?, requestId, request.getRequestURI());
+                }
+            }
+            filterChain.doFilter(request, response);
+        } finally {
+            afterFilter(request, response);
+        }
+    }
+
+    /**
+     * 瀛愮被瑕嗙洊姝ゆ柟娉曟彁渚涘叿浣撶殑璇锋眰 ID 瑙ｆ瀽閫昏緫
+     */
+    protected abstract String resolveRequestId(HttpServletRequest request);
+
+    /**
+     * 璇锋眰缁撴潫鍚庢竻鐞嗭紙榛樿绌哄疄鐜帮紝瀛愮被鍙鐩栵級
+     */
+    protected void afterFilter(HttpServletRequest request, HttpServletResponse response) {
+        // 榛樿绌哄疄鐜?
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\filter\RequestContextCleanupFilter.java ===
+package com.remisoft.comm.base.filter;
+
+import com.remisoft.comm.core.context.RequestContext;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import org.slf4j.MDC;
+
+import java.io.IOException;
+
+/**
+ * 璇锋眰涓婁笅鏂囨竻鐞嗚繃婊ゅ櫒锛圵eb/App 鍏变韩锛?
+ *
+ * <p>鍦ㄨ姹傜粨鏉熸椂娓呯悊 {@link RequestContext} 鍜?{@link MDC}锛岄槻姝㈢嚎绋嬫硠婕忋€?
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ */
+public class RequestContextCleanupFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            RequestContext.clear();
+            MDC.clear();
+        }
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\filter\SecurityHeadersFilter.java ===
+package com.remisoft.comm.base.filter;
+
+import com.remisoft.comm.base.config.BaseSecurityHeadersProperties;
+import com.remisoft.comm.util.url.UrlPathUtils;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * 瀹夊叏鍝嶅簲澶磋繃婊ゅ櫒
+ *
+ * <p>涓?HTTP 鍝嶅簲娣诲姞瀹夊叏鐩稿叧鐨勫ご閮紝闃叉甯歌 Web 瀹夊叏濞佽儊锛? * <ul>
+ *   <li>X-Content-Type-Options: nosniff - 闃叉 MIME 绫诲瀷鍡呮帰</li>
+ *   <li>X-Frame-Options: DENY - 闃叉鐐瑰嚮鍔寔</li>
+ *   <li>X-XSS-Protection: 1; mode=block - 鍚敤娴忚鍣?XSS 杩囨护</li>
+ *   <li>Strict-Transport-Security - 寮哄埗 HTTPS</li>
+ *   <li>Content-Security-Policy - 鍐呭瀹夊叏绛栫暐</li>
+ *   <li>Referrer-Policy - 鎺у埗 Referer 澶?/li>
+ * </ul>
+ *
+ * <p>鎵€鏈夊ご閮ㄥ€煎潎閫氳繃 {@link BaseSecurityHeadersProperties} 閰嶇疆锛屾敮鎸佹帓闄ょ壒瀹氳矾寰勩€? *
+ * <p>鎵ц椤哄簭锛歿@code Ordered.HIGHEST_PRECEDENCE + 20}锛岀‘淇濆湪涓氬姟閫昏緫涔嬪墠鎵ц銆? *
+ * <p><b>涓?safe 妯″潡鐨勫叧绯伙細</b>
+ * 鏈繃婊ゅ櫒涓?base 妯″潡鐨勫厹搴曞疄鐜帮紝浠呭湪鏈紩鍏?safe/web/app 妯″潡鏃剁敓鏁堛€? * 褰撻」鐩腑瀛樺湪 web/app 妯″潡鏃讹紝瀹夊叏鍝嶅簲澶寸敱 safe 妯″潡鐨?{@code SecurityHeaderFilter} 缁熶竴绠＄悊銆? *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+public class SecurityHeadersFilter extends OncePerRequestFilter {
+
+    private static final String HEADER_X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
+    private static final String HEADER_X_FRAME_OPTIONS = "X-Frame-Options";
+    private static final String HEADER_X_XSS_PROTECTION = "X-XSS-Protection";
+    private static final String HEADER_STRICT_TRANSPORT_SECURITY = "Strict-Transport-Security";
+    private static final String HEADER_CONTENT_SECURITY_POLICY = "Content-Security-Policy";
+    private static final String HEADER_REFERRER_POLICY = "Referrer-Policy";
+
+    private final BaseSecurityHeadersProperties properties;
+
+    /**
+     * 鏋勯€犲畨鍏ㄥ搷搴斿ご杩囨护鍣?     *
+     * @param properties 瀹夊叏澶撮儴閰嶇疆灞炴€?     */
+    public SecurityHeadersFilter(BaseSecurityHeadersProperties properties) {
+        this.properties = properties;
+    }
+
+    @Override
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+        if (!isExcluded(request)) {
+            addSecurityHeaders(response);
+        }
+        filterChain.doFilter(request, response);
+    }
+
+    /**
+     * 娣诲姞瀹夊叏鍝嶅簲澶?     *
+     * @param response HTTP 鍝嶅簲瀵硅薄
+     */
+    private void addSecurityHeaders(HttpServletResponse response) {
+        addHeaderIfNotEmpty(response, HEADER_X_CONTENT_TYPE_OPTIONS, properties.getContentTypeOptions());
+        addHeaderIfNotEmpty(response, HEADER_X_FRAME_OPTIONS, properties.getFrameOptions());
+        addHeaderIfNotEmpty(response, HEADER_X_XSS_PROTECTION, properties.getXssProtection());
+        addHeaderIfNotEmpty(response, HEADER_STRICT_TRANSPORT_SECURITY, properties.getHsts());
+        addHeaderIfNotEmpty(response, HEADER_CONTENT_SECURITY_POLICY, properties.getCsp());
+        addHeaderIfNotEmpty(response, HEADER_REFERRER_POLICY, properties.getReferrerPolicy());
+    }
+
+    private void addHeaderIfNotEmpty(HttpServletResponse response, String headerName, String headerValue) {
+        if (headerValue != null && !headerValue.trim().isEmpty()) {
+            response.setHeader(headerName, headerValue);
+        }
+    }
+
+    /**
+     * 鍒ゆ柇璇锋眰璺緞鏄惁闇€瑕佹帓闄ゅ畨鍏ㄥご閮?     *
+     * @param request HTTP 璇锋眰
+     * @return 鏄惁闇€瑕佹帓闄?     */
+    private boolean isExcluded(HttpServletRequest request) {
+        List<String> excludes = properties.getExcludes();
+        if (excludes == null || excludes.isEmpty()) {
+            return false;
+        }
+        String servletPath = request.getServletPath();
+        return UrlPathUtils.matchAny(excludes, servletPath);
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\filter\TraceFilter.java ===
+package com.remisoft.comm.base.filter;
+
+import com.remisoft.comm.core.context.RequestContext;
+import com.remisoft.comm.core.trace.TraceIdGenerator;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
+import org.springframework.lang.NonNull;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+/**
+ * 閾捐矾杩借釜杩囨护鍣? *
+ * <p>鍔熻兘璇存槑锛? * <ul>
+ *   <li>鐢熸垚鎴栨彁鍙?traceId</li>
+ *   <li>灏?traceId 娉ㄥ叆 MDC锛屼緵鏃ュ織妗嗘灦浣跨敤</li>
+ *   <li>灏?traceId 瀛樺叆 RequestContext</li>
+ *   <li>鍦ㄥ搷搴斿ご涓繑鍥?traceId</li>
+ * </ul>
+ *
+ * <p>鎵ц椤哄簭锛欻IGH_PRECEDENCE + 10锛岀‘淇濆湪涓氬姟閫昏緫涔嬪墠鎵ц
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ */
+public class TraceFilter extends OncePerRequestFilter {
+
+    private static final String TRACE_ID_HEADER = "X-Trace-Id";
+    private static final String TRACE_ID_MDC_KEY = "traceId";
+
+    @Override
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+        try {
+            // 鎻愬彇鎴栫敓鎴?traceId
+            String traceId = extractOrGenerateTraceId(request);
+
+            // 娉ㄥ叆 MDC
+            MDC.put(TRACE_ID_MDC_KEY, traceId);
+
+            // 瀛樺叆 RequestContext
+            RequestContext.setTraceId(traceId);
+
+            // 璁剧疆鍝嶅簲澶?            response.setHeader(TRACE_ID_HEADER, traceId);
+
+            // 缁х画澶勭悊
+            filterChain.doFilter(request, response);
+        } finally {
+            // 娓呯悊 MDC锛堢敱 RequestContextCleanupFilter 缁熶竴娓呯悊锛?            MDC.remove(TRACE_ID_MDC_KEY);
+        }
+    }
+
+    /**
+     * 鎻愬彇鎴栫敓鎴?traceId
+     *
+     * @param request HTTP 璇锋眰
+     * @return traceId
+     */
+    private String extractOrGenerateTraceId(HttpServletRequest request) {
+        // 浼樺厛浠庤姹傚ご鎻愬彇
+        String traceId = request.getHeader(TRACE_ID_HEADER);
+
+        // 濡傛灉璇锋眰澶翠腑娌℃湁锛屽垯鐢熸垚鏂扮殑
+        if (traceId == null || traceId.isEmpty()) {
+            traceId = TraceIdGenerator.generate();
+        }
+
+        return traceId;
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\interceptor\BaseHttpInterceptor.java ===
+package com.remisoft.comm.base.interceptor;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+/**
+ * 璇锋眰缁撴潫娓呯悊鎷︽埅鍣紙Web/App 鍏变韩锛?
+ *
+ * <p>浣滀负榛樿鐨?{@link HandlerInterceptor} 瀹炵幇锛屽畾涔夊湪鎷︽埅鍣ㄩ摼鐨勬渶鏈锛?
+ * 鐢ㄤ簬鍦ㄨ姹傚畬鎴愬悗鎵ц娓呯悊鍔ㄤ綔銆?
+ *
+ * <p><b>鑱岃矗璇存槑锛?/b>
+ * <ul>
+ *   <li>{@link RequestHolder#remove()} 绛?ThreadLocal 娓呯悊鐢?
+ *       {@code BaseAuthFilter.doFilterInternal()} 鐨?finally 鍧楃粺涓€璐熻矗</li>
+ *   <li>姝ょ被浠呬綔涓哄崰浣嶆嫤鎴櫒锛屽彲鐢变笟鍔℃柟閫氳繃瑕嗙洊
+ *       {@link #afterCompletion(HttpServletRequest, HttpServletResponse, Object, Exception)}
+ *       鎵╁睍鑷畾涔夋竻鐞嗛€昏緫</li>
+ * </ul>
+ *
+ * <p>鎷︽埅鍣ㄦ墽琛岄『搴忓弬鑰?{@code docs/BASE_INTERCEPTOR_ORDER.md}銆?
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 3.5.0
+ */
+public class BaseHttpInterceptor implements HandlerInterceptor {
+
+    /**
+     * 璇锋眰瀹屾垚鍚庡洖璋?
+     *
+     * <p>榛樿绌哄疄鐜帮紝涓氬姟鏂瑰彲閫氳繃缁ф壙姝ゆ嫤鎴櫒骞惰鐩栨鏂规硶瀹炵幇鑷畾涔夋竻鐞嗐€?
+     *
+     * @param request  HTTP 璇锋眰
+     * @param response HTTP 鍝嶅簲
+     * @param handler  澶勭悊鍣?
+     * @param ex       澶勭悊杩囩▼涓姏鍑虹殑寮傚父锛堟棤寮傚父鏃朵负 null锛?
+     */
+    @Override
+    public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+                                @NonNull Object handler, @Nullable Exception ex) {
+        // RequestHolder.remove() 鐢?BaseAuthFilter.doFilterInternal() 鐨?finally 鍧楄礋璐ｆ竻鐞嗭紝姝ゅ涓嶅啀閲嶅璋冪敤
+    }
+}
+
+
+=== FILE: com\remisoft\comm\base\interceptor\BaseRequestLogInterceptor.java ===
+package com.remisoft.comm.base.interceptor;
+
+import com.remisoft.comm.base.config.BaseTraceProperties;
+import com.remisoft.comm.util.string.StringUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+/**
+ * 璇锋眰鏃ュ織鎷︽埅鍣紙Web/App 鍏变韩锛?
+ *
+ * <p>瀛愮被瑕嗙洊 {@link #resolveRequestId(HttpServletRequest)} 鎻愪緵涓嶅悓鐨?ID 鏉ユ簮锛?
+ * 瑕嗙洊 {@link #getLogger()} 鎻愪緵涓嶅悓鐨勬棩蹇楀疄渚嬨€?
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ */
+public abstract class BaseRequestLogInterceptor implements HandlerInterceptor {
+
+    private static final String REQUEST_START_TIME = "requestStartTime";
+
+    private final BaseTraceProperties traceProperties;
+
+    protected BaseRequestLogInterceptor(BaseTraceProperties traceProperties) {
+        this.traceProperties = traceProperties;
+    }
+
+    @Override
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
+        if (!traceProperties.isRequestLogEnabled()) {
+            return true;
+        }
+
+        if (ThreadLocalRandom.current().nextDouble() > traceProperties.getSamplingRate()) {
+            return true;
+        }
+
+        long startTime = System.currentTimeMillis();
+        request.setAttribute(REQUEST_START_TIME, startTime);
+
+        String method = request.getMethod();
+        String uri = request.getRequestURI();
+        String queryString = request.getQueryString();
+        String clientIp = getClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
+        String requestId = resolveRequestId(request);
+
+        String fullUri = StringUtils.isNotBlank(queryString) ? uri + "?" + queryString : uri;
+
+        if ("INFO".equalsIgnoreCase(traceProperties.getLogLevel())) {
+            getLogger().info("[TRACE] {} {} {} | ip={} | ua={}",
+                    requestId, method, fullUri, clientIp, truncateUserAgent(userAgent));
+        } else {
+            getLogger().debug("[TRACE] {} {} {} | ip={} | ua={}",
+                    requestId, method, fullUri, clientIp, truncateUserAgent(userAgent));
+        }
+
+        return true;
+    }
+
+    @Override
+    public void postHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+                          @NonNull Object handler, @Nullable ModelAndView modelAndView) {
+        if (!traceProperties.isRequestLogEnabled()) {
+            return;
+        }
+        Long startTime = (Long) request.getAttribute(REQUEST_START_TIME);
+        if (startTime != null) {
+            long cost = System.currentTimeMillis() - startTime;
+            String requestId = resolveRequestId(request);
+            if ("INFO".equalsIgnoreCase(traceProperties.getLogLevel())) {
+                getLogger().info("[TRACE] {} completed in {}ms", requestId, cost);
+            } else {
+                getLogger().debug("[TRACE] {} completed in {}ms", requestId, cost);
+            }
+        }
+    }
+
+    @Override
+    public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+                                @NonNull Object handler, @Nullable Exception ex) {
+        if (!traceProperties.isRequestLogEnabled()) {
+            return;
+        }
+
+        Long startTime = (Long) request.getAttribute(REQUEST_START_TIME);
+        long cost = 0L;
+        if (startTime != null) {
+            cost = System.currentTimeMillis() - startTime;
+        }
+
+        String requestId = resolveRequestId(request);
+        int status = response.getStatus();
+        String uri = request.getRequestURI();
+
+        if (ex != null) {
+            getLogger().error("[TRACE] {} {} | status={} | time={}ms | ERROR: {}",
+                    requestId, uri, status, cost, ex.getMessage());
+        } else {
+            if ("INFO".equalsIgnoreCase(traceProperties.getLogLevel())) {
+                getLogger().info("[TRACE] {} {} | status={} | time={}ms",
+                        requestId, uri, status, cost);
+            } else {
+                getLogger().debug("[TRACE] {} {} | status={} | time={}ms",
+                        requestId, uri, status, cost);
+            }
+        }
+    }
+
+    /**
+     * 瀛愮被瑕嗙洊姝ゆ柟娉曟彁渚涘叿浣撶殑璇锋眰 ID 瑙ｆ瀽閫昏緫
+     */
+    protected abstract String resolveRequestId(HttpServletRequest request);
+
+    /**
+     * 瀛愮被瑕嗙洊姝ゆ柟娉曟彁渚涘叿浣撶殑鏃ュ織瀹炰緥
+     */
+    protected abstract Logger getLogger();
+
+    protected String getClientIp(HttpServletRequest request) {
+        return com.remisoft.comm.util.http.ServletUtils.getClientIp(request);
+    }
+
+    protected String truncateUserAgent(String userAgent) {
+        if (StringUtils.isBlank(userAgent)) {
+            return "-";
+        }
+        if (userAgent.length() > 100) {
+            return userAgent.substring(0, 100) + "...";
+        }
+        return userAgent;
+    }
+}
+
+
+=== RESOURCE: META-INF\spring\org.springframework.boot.autoconfigure.AutoConfiguration.imports ===
+com.remisoft.comm.base.config.BaseAutoConfiguration
+
+

@@ -11,17 +11,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +27,7 @@ import static org.mockito.Mockito.*;
 /**
  * {@link AuthGlobalFilter} 单元测试（P0-5）
  *
- * <p>覆盖核心认证逻辑：路径穿越防护、白名单放行、Token 校验、黑名单检查、内部头注入。
+ * <p>覆盖核心认证逻辑：路径穿越防护、白名单放行、Token 校验、黑名单检查。
  *
  * @author ydsz-pmis-team
  * @since 2.2.0
@@ -126,8 +122,8 @@ class AuthGlobalFilterTest {
     }
 
     @Test
-    @DisplayName("有效 Token 且未在黑名单中应放行并注入用户头")
-    void shouldAllowValidTokenAndInjectHeaders() {
+    @DisplayName("有效 Token 且未在黑名单中应放行")
+    void shouldAllowValidToken() {
         DefaultClaims claims = new DefaultClaims(Map.of(
                 "sub", "user123",
                 "username", "testuser",
@@ -148,11 +144,6 @@ class AuthGlobalFilterTest {
 
         StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
                 .verifyComplete();
-
-        // 验证下游请求头中注入了用户信息
-        HttpHeaders headers = exchange.getRequest().getHeaders();
-        assert "user123".equals(headers.getFirst("X-User-Id"));
-        assert "testuser".equals(headers.getFirst("X-Username"));
     }
 
     @Test

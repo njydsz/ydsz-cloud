@@ -12,8 +12,11 @@
     <name>ydsz-pmis-finance-server</name>
     <description>DDD Module</description>
     <dependencies>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-infra</artifactId></dependency>
+                <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-infra</artifactId></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-web</artifactId></dependency>
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-domain</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-infra</artifactId><version>${project.version}</version></dependency>
+        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-server</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-server</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.alibaba.fastjson2</groupId><artifactId>fastjson2</artifactId></dependency>
         <dependency><groupId>cn.hutool</groupId><artifactId>hutool-all</artifactId></dependency>
