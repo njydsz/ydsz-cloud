@@ -80,7 +80,9 @@
         <module>ydsz-pmis-common-notify</module>
         <module>ydsz-pmis-common-queue</module>
         <module>ydsz-pmis-common-doc</module>
-        <!-- L6 应用层 -->
+        <!-- L6 基础设施层（PMIS 特有：AI、混沌工程、DAG、特性开关、Job、Webhook 等） -->
+        <module>ydsz-pmis-common-infra</module>
+        <!-- L7 应用层 -->
         <module>ydsz-pmis-common-base</module>
         <module>ydsz-pmis-common-web</module>
         <module>ydsz-pmis-common-app</module>
@@ -171,7 +173,13 @@
                 <artifactId>ydsz-pmis-common-doc</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!-- L6 -->
+            <!-- L6 基础设施层（PMIS 特有） -->
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- L7 -->
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-base</artifactId>

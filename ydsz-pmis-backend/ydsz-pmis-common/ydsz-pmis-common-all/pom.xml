@@ -80,7 +80,12 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-doc</artifactId>
         </dependency>
-        <!-- L6 应用层 -->
+        <!-- L6 基础设施层（PMIS 特有） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-infra</artifactId>
+        </dependency>
+        <!-- L7 应用层 -->
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-base</artifactId>
