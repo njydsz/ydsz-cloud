@@ -9,14 +9,7 @@ import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdService;
 import com.njydsz.pmis.literule.server.adaptive.ThresholdAnalysis;
-import com.njydsz.pmis.literule.server.agent.ReActAgentExecutor;
-import com.njydsz.pmis.literule.server.ai.AttributionReport;
-import com.njydsz.pmis.literule.server.ai.RuleAttributionService;
-import com.njydsz.pmis.literule.server.ai.RuleHealthScore;
-import com.njydsz.pmis.literule.server.ai.RuleHealthScoreService;
-import com.njydsz.pmis.literule.server.ai.RuleLLMService;
-import com.njydsz.pmis.literule.server.ai.RuleRecommendation;
-import com.njydsz.pmis.literule.server.ai.RuleRecommendationService;
+
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
@@ -27,7 +20,7 @@ import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.api.dto.ExpressionValidateDTO;
 import com.njydsz.pmis.literule.api.dto.RuleABTestDTO;
-import com.njydsz.pmis.literule.api.dto.RuleAiGenerateDTO;
+
 import com.njydsz.pmis.literule.api.dto.RuleApproveDTO;
 import com.njydsz.pmis.literule.api.dto.RuleBatchCategoryDTO;
 import com.njydsz.pmis.literule.api.dto.RuleBatchPriorityDTO;
@@ -35,7 +28,7 @@ import com.njydsz.pmis.literule.api.dto.RuleBatchToggleDTO;
 import com.njydsz.pmis.literule.api.dto.RuleDelegateDTO;
 import com.njydsz.pmis.literule.api.dto.RuleDependencyAddDTO;
 import com.njydsz.pmis.literule.api.dto.RuleImportDTO;
-import com.njydsz.pmis.literule.api.dto.RuleNL2RuleDTO;
+
 import com.njydsz.pmis.literule.api.dto.RuleRejectDTO;
 import com.njydsz.pmis.literule.api.dto.RuleStatusChangeDTO;
 import com.njydsz.pmis.literule.api.dto.RuleSubmitReviewDTO;
@@ -72,7 +65,7 @@ import com.njydsz.pmis.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.pmis.literule.server.spi.RuleConflictDetectorProvider;
 import com.njydsz.pmis.literule.server.spi.RuleConflictDetectorProvider.RuleConflictInfo;
 import com.njydsz.pmis.literule.server.spi.RuleDependencyProvider;
-import com.njydsz.pmis.literule.server.spi.RuleGenerationProvider;
+
 import com.njydsz.pmis.literule.server.spi.RulePackProvider;
 import com.njydsz.pmis.literule.server.spi.RulePackProvider.InstallResult;
 import com.njydsz.pmis.literule.server.spi.RulePackProvider.PackDiff;
@@ -111,7 +104,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -119,7 +112,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
+
 import java.util.stream.Collectors;
 
 /**

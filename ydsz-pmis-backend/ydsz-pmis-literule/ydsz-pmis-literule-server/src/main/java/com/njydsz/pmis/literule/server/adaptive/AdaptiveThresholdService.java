@@ -62,11 +62,6 @@ public class AdaptiveThresholdService {
     /** 自动应用置信度阈值（2.0.0） */
     private static final double AUTO_APPLY_CONFIDENCE_THRESHOLD = 0.75;
 
-    /** LLM 调整原因系统提示词 */
-    private static final String LLM_REASON_SYSTEM_PROMPT = "你是规则引擎风控专家。"
-            + "请基于给定的规则阈值分析数据，用 1~2 句中文解释为什么要调整阈值，"
-            + "语气专业简洁，不要带任何前后缀。";
-
     /** 规则配置提供者 */
     private final RuleConfigProvider configProvider;
 
@@ -75,9 +70,6 @@ public class AdaptiveThresholdService {
 
     /** 规则管理服务（用于应用阈值调整） */
     private final RuleAdminService ruleAdminService;
-
-    /** LLM 客户端（可选，用于生成调整原因） */
-    private final LLMClient llmClient;
 
     /** 待处理建议缓存（ruleCode → 建议列表），仅内存缓存，重启后需重新分析 */
     private final Map<String, List<ThresholdAnalysis>> pendingSuggestions = new ConcurrentHashMap<>();

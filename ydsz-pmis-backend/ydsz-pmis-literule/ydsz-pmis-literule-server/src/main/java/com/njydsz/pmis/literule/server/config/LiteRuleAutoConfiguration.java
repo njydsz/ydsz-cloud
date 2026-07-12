@@ -1,18 +1,6 @@
 package com.njydsz.pmis.literule.server.config;
 
 import com.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdService;
-import com.njydsz.pmis.literule.server.agent.AgentRuleNode;
-import com.njydsz.pmis.literule.server.agent.AgentRuleNodeFactory;
-import com.njydsz.pmis.literule.server.agent.ReActAgentExecutor;
-import com.njydsz.pmis.agent.api.llm.LlmClient;
-import com.njydsz.pmis.literule.server.ai.LLMClient;
-import com.njydsz.pmis.literule.server.ai.LlmClientDelegate;
-import com.njydsz.pmis.literule.server.ai.MockLLMClient;
-import com.njydsz.pmis.literule.server.ai.OpenAICompatibleLLMClient;
-import com.njydsz.pmis.literule.server.ai.RuleAttributionService;
-import com.njydsz.pmis.literule.server.ai.RuleHealthScoreService;
-import com.njydsz.pmis.literule.server.ai.RuleLLMService;
-import com.njydsz.pmis.literule.server.ai.RuleRecommendationService;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.server.approval.ApprovalPermissionChecker;
 import com.njydsz.pmis.literule.server.approval.ApprovalRecordRepository;
@@ -464,156 +452,6 @@ public class LiteRuleAutoConfiguration {
     }
 
     // ------------------------------------------------------------------
-    // P2-15 AI 增强
-    // ------------------------------------------------------------------
-
-    /**
-     * LLM 客户端（P2-15）
-     *
-     * <p>优先复用 common 模块的 {@link LlmClient} Bean（由 {@code LlmClientAutoConfiguration} 创建），
-     * 避免重复创建 LLM 客户端实例。若 common 模块未启用 AI（{@code pmis.common.ai.enabled=false}），
-     * 则回退到 literule 自有的配置创建 {@link MockLLMClient} 或 {@link OpenAICompatibleLLMClient}。
-     *
-     * <p>根据 {@code pmis.literule.ai.llm-client} 配置选择实现：
-     * <ul>
-     *   <li>OPENAI_COMPATIBLE：{@link OpenAICompatibleLLMClient}（OpenAI/DeepSeek/通义千问/Ollama 等兼容协议）</li>
-     *   <li>MOCK（默认）：{@link MockLLMClient}（离线/单元测试）</li>
-     * </ul>
-     *
-     * @param properties       配置
-     * @param commonLlmClientProvider common 模块 LLM 客户端（可选，优先使用）
-     * @return LLMClient 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
-    public LLMClient llmClient(LiteRuleProperties properties,
-                                 ObjectProvider<LlmClient> commonLlmClientProvider) {
-        // P0-2: 优先复用 common 模块的 LlmClient Bean
-        LlmClient commonClient = commonLlmClientProvider.getIfAvailable();
-        if (commonClient != null) {
-            log.info("[LiteRule-AI] 复用 common 模块 LlmClient（provider={}, model={}）",
-                    commonClient.provider(), commonClient.model());
-            return new LlmClientDelegate(commonClient);
-        }
-        // 回退到 literule 自有配置
-        LiteRuleProperties.Ai ai = properties.getAi();
-        String type = ai.getLlmClient();
-        if (type == null || type.isEmpty() || "MOCK".equalsIgnoreCase(type)) {
-            log.info("[LiteRule-AI] LLM 客户端使用 Mock 实现（provider=MOCK, model={}）",
-                    MockLLMClient.DEFAULT_MODEL);
-            return new MockLLMClient();
-        }
-        if ("OPENAI_COMPATIBLE".equalsIgnoreCase(type)) {
-            log.info("[LiteRule-AI] LLM 客户端使用 OpenAI 兼容协议（apiUrl={}, model={}）",
-                    ai.getLlmApiUrl(), ai.getLlmModel());
-            return new OpenAICompatibleLLMClient(ai);
-        }
-        log.warn("[LiteRule-AI] 未知的 llm-client 类型: {}，回退到 MOCK", type);
-        return new MockLLMClient();
-    }
-
-    /**
-     * 规则 LLM 服务（P2-15）
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
-    public RuleLLMService ruleLLMService(LLMClient llmClient,
-                                          ExpressionValidationService expressionValidationService) {
-        log.info("[LiteRule-AI] 规则 LLM 服务已初始化（provider={}, model={}）",
-                llmClient.provider(), llmClient.model());
-        return new RuleLLMService(llmClient, expressionValidationService);
-    }
-
-    /**
-     * 规则健康度评分服务（P2-15）
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
-    public RuleHealthScoreService ruleHealthScoreService(LiteRuleProperties properties) {
-        log.info("[LiteRule-AI] 规则健康度评分服务已初始化（hitRateWeight={}, errorRateWeight={}, complexityWeight={}, coverageWeight={}）",
-                properties.getAi().getHealthHitRateWeight(),
-                properties.getAi().getHealthErrorRateWeight(),
-                properties.getAi().getHealthComplexityWeight(),
-                properties.getAi().getHealthCoverageWeight());
-        return new RuleHealthScoreService(properties.getAi());
-    }
-
-    /**
-     * 规则推荐服务（P2-15）
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
-    public RuleRecommendationService ruleRecommendationService(LiteRuleProperties properties) {
-        log.info("[LiteRule-AI] 规则推荐服务已初始化（topN={}）",
-                properties.getAi().getRecommendTopN());
-        return new RuleRecommendationService(properties.getAi());
-    }
-
-    /**
-     * ReAct Agent 执行器（P3-5 AI Agent 规则编排）
-     *
-     * <p>依赖 {@link LLMClient}，仅当 AI 增强启用且 LLMClient Bean 存在时装配。
-     * 提供 ReAct 推理循环能力，供 {@link AgentRuleNode} 调用。
-     *
-     * @param llmClient LLM 客户端
-     * @return ReActAgentExecutor 实例
-     * @since 1.8.0
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnBean(LLMClient.class)
-    public ReActAgentExecutor reActAgentExecutor(LLMClient llmClient) {
-        log.info("[LiteRule-Agent] ReAct Agent 执行器已初始化（provider={}, model={}）",
-                llmClient.provider(), llmClient.model());
-        return new ReActAgentExecutor(llmClient);
-    }
-
-    /**
-     * AgentRuleNode 工厂（P3-5）
-     *
-     * <p>依赖 {@link ReActAgentExecutor}，
-     * 提供快速创建 {@link AgentRuleNode} 的便捷方法。
-     *
-     * @param executor ReAct 执行器
-     * @return AgentRuleNodeFactory 实例
-     * @since 1.8.0
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnBean(ReActAgentExecutor.class)
-    public AgentRuleNodeFactory agentRuleNodeFactory(
-            ReActAgentExecutor executor) {
-        log.info("[LiteRule-Agent] AgentRuleNode 工厂已初始化");
-        return new AgentRuleNodeFactory(executor);
-    }
-
-    /**
-     * 规则归因分析服务（P3-3 LLM 辅助归因分析）
-     *
-     * <p>当存在 {@link RuleAdminService} 时自动装配。基础归因（summary + factors）
-     * 不依赖 LLM；LLM 可用时附加 llmAnalysis 和 recommendation。
-     *
-     * @param ruleAdminService   规则管理服务
-     * @param llmClientProvider  LLM 客户端（可选，未启用 AI 时为空）
-     * @return RuleAttributionService 实例
-     * @since 1.8.0
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnBean(RuleAdminService.class)
-    public RuleAttributionService ruleAttributionService(
-            RuleAdminService ruleAdminService,
-            ObjectProvider<LLMClient> llmClientProvider) {
-        LLMClient llmClient = llmClientProvider.getIfAvailable();
-        log.info("[LiteRule-AI] 规则归因分析服务已初始化（llmEnabled={}）", llmClient != null);
-        return new RuleAttributionService(ruleAdminService, llmClient);
-    }
-
-    // ------------------------------------------------------------------
     // P1-1 多级缓存（Caffeine + Redis）
     // ------------------------------------------------------------------
 
@@ -756,14 +594,12 @@ public class LiteRuleAutoConfiguration {
      * <ul>
      *   <li>分析规则历史触发数据，计算最优阈值</li>
      *   <li>支持 PERCENTILE/FALSE_RATE/MISS_RATE/BALANCED 四种策略</li>
-     *   <li>LLM 可用时生成自然语言调整原因，不可用时降级为模板</li>
      *   <li>支持一键应用阈值调整</li>
      * </ul>
      *
      * @param configProvider        规则配置提供者
      * @param traceDataProvider     轨迹数据提供者（SPI，由消费方提供）
      * @param ruleAdminServiceProvider 规则管理服务（可选，仅 applyThreshold 需要）
-     * @param llmClientProvider     LLM 客户端（可选，用于生成调整原因）
      * @return AdaptiveThresholdService 实例
      * @since 1.8.0
      */
@@ -774,15 +610,13 @@ public class LiteRuleAutoConfiguration {
     public AdaptiveThresholdService adaptiveThresholdService(
             RuleConfigProvider configProvider,
             TraceDataProvider traceDataProvider,
-            ObjectProvider<RuleAdminService> ruleAdminServiceProvider,
-            ObjectProvider<LLMClient> llmClientProvider) {
+            ObjectProvider<RuleAdminService> ruleAdminServiceProvider) {
         RuleAdminService ruleAdminService = ruleAdminServiceProvider.getIfAvailable();
-        LLMClient llmClient = llmClientProvider.getIfAvailable();
         AdaptiveThresholdService service =
                 new AdaptiveThresholdService(
-                        configProvider, traceDataProvider, ruleAdminService, llmClient);
-        log.info("[LiteRule-Adaptive] 自适应阈值分析服务已初始化（ruleAdmin={}, llm={}）",
-                ruleAdminService != null, llmClient != null);
+                        configProvider, traceDataProvider, ruleAdminService, null);
+        log.info("[LiteRule-Adaptive] 自适应阈值分析服务已初始化（ruleAdmin={}）",
+                ruleAdminService != null);
         return service;
     }
 
